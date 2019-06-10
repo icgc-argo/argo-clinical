@@ -55,8 +55,8 @@ spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation: true
 
 ego:
   url: "https://ego.qa.cancercollaboratory.org/api"
-  client-id: "program-service"
-  client-secret: "qa-program-service"
+  client-id: "argo-clinical-service"
+  client-secret: "qa-argo-clinical-service"
 
 app:
   grpc-enabled: true
