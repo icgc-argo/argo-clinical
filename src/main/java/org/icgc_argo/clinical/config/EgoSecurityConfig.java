@@ -2,7 +2,9 @@ package org.icgc_argo.clinical.config;
 
 import static org.icgc_argo.clinical.util.PublicKeys.getPublicKey;
 
+import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -37,7 +39,7 @@ public class EgoSecurityConfig {
   }
 
   @Bean
-  public RSAPublicKey egoPublicKey() {
+  public RSAPublicKey egoPublicKey() throws InvalidKeySpecException, NoSuchAlgorithmException {
     val lenientEgoClient = buildLenientEgoClient();
     RSAPublicKey egoPublicKey = null;
     try {

@@ -30,7 +30,8 @@ import lombok.val;
 
 @Slf4j
 public class PublicKeys {
-  public static PublicKey getPublicKey(String key, String algorithm) {
+  public static PublicKey getPublicKey(String key, String algorithm)
+      throws NoSuchAlgorithmException, InvalidKeySpecException {
     key = key.replace("\n", "");
     key = key.replace("\r", "");
     key = key.replace("-----BEGIN PUBLIC KEY-----", "");
@@ -44,8 +45,10 @@ public class PublicKeys {
       publicKey = kf.generatePublic(keySpec);
     } catch (NoSuchAlgorithmException e) {
       log.error("Could not reconstruct the public key, the given algorithm could not be found.");
+      throw e;
     } catch (InvalidKeySpecException | IllegalArgumentException e) {
-      log.error("Could not reconstruct the public key");
+      log.error("Could not reconstruct the public key: {}", e.getMessage());
+      throw e;
     }
 
     return publicKey;

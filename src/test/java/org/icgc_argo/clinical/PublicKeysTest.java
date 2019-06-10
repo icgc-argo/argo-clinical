@@ -18,30 +18,36 @@
 
 package org.icgc_argo.clinical;
 
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.icgc_argo.clinical.util.PublicKeys.getPublicKey;
 import static org.icgc_argo.clinical.util.Strings.inputStreamToString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
-import org.icgc_argo.clinical.util.PublicKeys;
+import java.security.spec.InvalidKeySpecException;
 import org.junit.jupiter.api.Test;
 
 class PublicKeysTest {
+  private static final String VALID_PUBLIC_KEY =
+      "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0lOqMuPLCVusc6szklNXQL1FHhSkEgR7An+8BllBqTsRHM4bRYosseGFCbYPn8r8FsWuMDtxp0CwTyMQR2PCbJ740DdpbE1KC6jAfZxqcBete7gP0tooJtbvnA6X4vNpG4ukhtUoN9DzNOO0eqMU0Rgyy5HjERdYEWkwTNB30i9I+nHFOSj4MGLBSxNlnuo3keeomCRgtimCx+L/K3HNo0QHTG1J7RzLVAchfQT0lu3pUJ8kB+UM6/6NG+fVyysJyRZ9gadsr4gvHHckw8oUBp2tHvqBEkEdY+rt1Mf5jppt7JUV7HAPLB/qR5jhALY2FX/8MN+lPLmb/nLQQichVQIDAQAB-----END PUBLIC KEY-----";
+
   @Test
-  void getPublicKey() {
-    PublicKey rsa =
-        PublicKeys.getPublicKey(
-            "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0lOqMuPLCVusc6szklNXQL1FHhSkEgR7An+8BllBqTsRHM4bRYosseGFCbYPn8r8FsWuMDtxp0CwTyMQR2PCbJ740DdpbE1KC6jAfZxqcBete7gP0tooJtbvnA6X4vNpG4ukhtUoN9DzNOO0eqMU0Rgyy5HjERdYEWkwTNB30i9I+nHFOSj4MGLBSxNlnuo3keeomCRgtimCx+L/K3HNo0QHTG1J7RzLVAchfQT0lu3pUJ8kB+UM6/6NG+fVyysJyRZ9gadsr4gvHHckw8oUBp2tHvqBEkEdY+rt1Mf5jppt7JUV7HAPLB/qR5jhALY2FX/8MN+lPLmb/nLQQichVQIDAQAB-----END PUBLIC KEY-----",
-            "RSA");
+  void testGetPublicKey() throws InvalidKeySpecException, NoSuchAlgorithmException {
+    PublicKey rsa = getPublicKey(VALID_PUBLIC_KEY, "RSA");
     assertNotNull(rsa);
-    assertNull(PublicKeys.getPublicKey("wrongkey", "rsa"), "wrong key should return null");
+    assertThatExceptionOfType(InvalidKeySpecException.class)
+        .isThrownBy(() -> getPublicKey("wrongkey", "rsa"));
+
+    assertThatExceptionOfType(NoSuchAlgorithmException.class)
+        .isThrownBy(() -> getPublicKey(VALID_PUBLIC_KEY, "rsaSomething"));
   }
 
   @Test
-  void streamToString() throws IOException {
+  void testStreamToString() throws IOException {
     String s = "test123";
     assertEquals(inputStreamToString(new ByteArrayInputStream(s.getBytes())), s);
   }

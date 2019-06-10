@@ -48,7 +48,7 @@ services:
     depends_on:
       - ego-postgres
   ego-postgres:
-    image: postgres:9.5
+    image: postgres:10.8
     environment:
       - POSTGRES_DB=ego
       - POSTGRES_PASSWORD=password

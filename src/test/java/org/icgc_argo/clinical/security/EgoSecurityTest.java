@@ -21,14 +21,16 @@ package org.icgc_argo.clinical.security;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
 import lombok.val;
 import org.icgc_argo.clinical.util.PublicKeys;
 import org.junit.jupiter.api.Test;
 
 class EgoSecurityTest {
   @Test
-  void verifyKey() {
+  void verifyKey() throws InvalidKeySpecException, NoSuchAlgorithmException {
     val rsaPublicKey = (RSAPublicKey) PublicKeys.getPublicKey(publickKey, "RSA");
 
     val egoService = new EgoSecurity(rsaPublicKey);
