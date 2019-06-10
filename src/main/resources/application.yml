@@ -1,0 +1,84 @@
+server:
+  port : 8080
+  version: @project.version@
+  banner:
+    text: @project.name@ Server
+
+  # Refer to [Activating Spring Boot profile with Maven profile](http://dolszewski.com/spring/spring-boot-properties-per-maven-profile/)
+  # And [Automatically Expand Properties at Build Time](https://docs.spring.io/spring-boot/docs/current/reference/html/howto-properties-and-configuration.html#howto-automatic-expansion)
+spring:
+  application:
+    name: @project.name@
+
+# Url for spring boot admin client service
+  boot:
+    admin:
+      client:
+        url: http://localhost:8082
+
+
+retry:
+  # Connection retries in case of connection failure
+  connection:
+
+    # Max number of retries
+    max-retries: 5
+
+    # Initial timeoutMs before the first retry. In milliseconds.
+    initial-backoff: 15000
+
+    # Multiplier that defines value of consequent timeouts before the next retry.
+    # E.g. TIMEOUT(n) = TIMEOUT(n-1) * MULTIPLIER
+    multiplier: 2.0
+
+logging:
+  console:
+    enabled: true
+    threshold: ALL
+  level:
+    root: info
+    #org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+    #org.springframework.boot: INFO
+    org.icgc.argo.argo_template_grpc_service: DEBUG
+
+management.endpoints.web.exposure.include: "*"
+
+ego:
+  url: "https://ego.qa.cancercollaboratory.org/api"
+  client-id: "program-service"
+  client-secret: "qa-program-service"
+
+app:
+  grpc-enabled: true
+  grpc-port: 50051
+
+---
+###############################################################################
+# Profile - "test"
+###############################################################################
+spring:
+  profiles: test
+
+---
+###############################################################################
+# Profile - "auth"
+###############################################################################
+spring:
+  profiles: auth
+
+---
+###############################################################################
+# Profile - "docker"
+###############################################################################
+spring.profiles: docker
+spring:
+  profiles:
+    include: [default]
+  boot:
+    admin:
+      client:
+        url: http://localhost:9081
+
+ego:
+  url: "http://localhost:9082"
+
