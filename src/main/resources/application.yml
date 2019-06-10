@@ -1,0 +1,120 @@
+server:
+  port : 8080
+  version: @project.version@
+  banner:
+    text: @project.name@ Server
+
+  # Refer to [Activating Spring Boot profile with Maven profile](http://dolszewski.com/spring/spring-boot-properties-per-maven-profile/)
+  # And [Automatically Expand Properties at Build Time](https://docs.spring.io/spring-boot/docs/current/reference/html/howto-properties-and-configuration.html#howto-automatic-expansion)
+spring:
+  application:
+    name: @project.name@
+  flyway:
+    enabled: false
+    locations: "classpath:flyway/sql"
+
+# Url for spring boot admin client service
+  boot:
+    admin:
+      client:
+        url: http://localhost:8082
+  datasource:
+    url: jdbc:postgresql://localhost:5432/argo_clinical
+    username: postgres
+    password: password
+
+
+retry:
+  # Connection retries in case of connection failure
+  connection:
+
+    # Max number of retries
+    max-retries: 5
+
+    # Initial timeoutMs before the first retry. In milliseconds.
+    initial-backoff: 15000
+
+    # Multiplier that defines value of consequent timeouts before the next retry.
+    # E.g. TIMEOUT(n) = TIMEOUT(n-1) * MULTIPLIER
+    multiplier: 2.0
+
+logging:
+  console:
+    enabled: true
+    threshold: ALL
+  level:
+    root: info
+    #org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+    #org.springframework.boot: INFO
+    org.icgc.argo.argo_template_grpc_service: DEBUG
+
+management.endpoints.web.exposure.include: "*"
+
+# set this flag in Spring 2.0 because of this open issue: https://hibernate.atlassian.net/browse/HHH-12368
+spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation: true
+
+ego:
+  url: "https://ego.qa.cancercollaboratory.org/api"
+  client-id: "argo-clinical-service"
+  client-secret: "qa-argo-clinical-service"
+
+app:
+  grpc-enabled: true
+  grpc-port: 50051
+
+# Hibernate SQL Debugging
+#spring.jpa.properties.hibernate.format_sql: true
+#logging.level.org.hibernate.SQL: DEBUG
+#logging.level.org.hibernate.type.descriptor.sql: TRACE
+
+# When you are desperate, use this...
+#logging.level.org.hibernate: TRACE
+
+---
+###############################################################################
+# Profile - "test"
+###############################################################################
+spring.profiles: test
+spring:
+  profiles:
+    include: [default]
+  flyway:
+    enabled: true
+  datasource:
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    # Using 10.8 since the current version of flyway supports up to major version 10
+    url: jdbc:tc:postgresql:10.8://localhost:5432/argo_clinical
+    username: postgres
+    password:
+
+app:
+  grpc-port: 50052
+
+---
+###############################################################################
+# Profile - "auth"
+###############################################################################
+spring:
+  profiles: auth
+
+---
+###############################################################################
+# Profile - "docker"
+###############################################################################
+spring.profiles: docker
+spring:
+  profiles:
+    include: [default]
+  boot:
+    admin:
+      client:
+        url: http://localhost:9081
+  datasource:
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    url: jdbc:tc:postgresql:10.8://localhost:5432/argo_clinical
+    username: postgres
+    password:
+
+ego:
+  url: "http://localhost:9082"
+
