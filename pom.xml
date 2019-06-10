@@ -24,10 +24,9 @@
 	<groupId>org.icgc_argo</groupId>
 	<artifactId>clinical</artifactId>
 	<!--Uncomment this for Maven CI Friendly-->
-	<!--<version>${revision}${sha1}${changelist}</version>-->
-	<version>1.0-SNAPSHOT</version>
-	<name>clinical</name>
-	<description>Template GRPC project used to generate an archetype</description>
+	<version>${revision}${sha1}${changelist}</version>
+	<name>argo-clinical</name>
+	<description>Clinical data submission for ARGO programs</description>
 
 	<properties>
 		<!--MUST MATCH PARENT POM VERSION-->
@@ -37,6 +36,7 @@
 		<!-- Maven Friendly CI Version: https://maven.apache.org/maven-ci-friendly.html -->
 		<revision>0.0.1</revision>
 		<changelist>-SNAPSHOT</changelist>
+        <sha1></sha1>
 
 		<!--Dependencies-->
 		<java.version>11</java.version>
