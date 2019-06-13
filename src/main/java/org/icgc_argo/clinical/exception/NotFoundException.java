@@ -1,13 +1,12 @@
 package org.icgc_argo.clinical.exception;
 
-import lombok.NonNull;
-
 import static java.lang.String.format;
+
+import lombok.NonNull;
 
 public class NotFoundException extends RuntimeException {
 
-  public NotFoundException() {
-  }
+  public NotFoundException() {}
 
   public NotFoundException(String message) {
     super(message);
@@ -17,14 +16,14 @@ public class NotFoundException extends RuntimeException {
     super(message, cause);
   }
 
-  public static void checkNotFound(boolean expression,String formattedString, Object ...args){
-    if (!expression){
+  public static void checkNotFound(boolean expression, String formattedString, Object... args) {
+    if (!expression) {
       throw createNotFoundException(formattedString, args);
     }
   }
 
-  public static NotFoundException createNotFoundException(@NonNull String formattedString, Object ...args){
+  public static NotFoundException createNotFoundException(
+      @NonNull String formattedString, Object... args) {
     return new NotFoundException(format(formattedString, args));
   }
-
 }

@@ -18,10 +18,9 @@
 
 package org.icgc_argo.clinical.model.entity;
 
-import lombok.Data;
-import lombok.experimental.Accessors;
-import org.icgc_argo.clinical.model.constants.Tables;
+import static org.icgc_argo.clinical.model.constants.SqlFields.SIMPLE_ID;
 
+import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -29,9 +28,9 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
-import java.util.UUID;
-
-import static org.icgc_argo.clinical.model.constants.SqlFields.SIMPLE_ID;
+import lombok.Data;
+import lombok.experimental.Accessors;
+import org.icgc_argo.clinical.model.constants.Tables;
 
 @Data
 @Entity
@@ -47,10 +46,7 @@ public class DonorEntity implements ClinicalEntity<UUID> {
   @Column(name = SIMPLE_ID, insertable = false)
   private Integer simpleId;
 
-  @NotNull
-  private String submitterId;
+  @NotNull private String submitterId;
 
-  @NotNull
-  private UUID programId;
-
+  @NotNull private UUID programId;
 }

@@ -18,6 +18,11 @@
 
 package org.icgc_argo.clinical.jpa;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+
+import java.util.Random;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc_argo.clinical.model.entity.DonorEntity;
@@ -28,13 +33,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-
-import java.util.Random;
-import java.util.UUID;
-
-import static java.util.stream.StreamSupport.stream;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @Slf4j
 @SpringBootTest
@@ -47,31 +45,17 @@ public class DonorJPATest {
 
   @Autowired private DonorRepository repository;
 
-  private String generateUniqueSubmitterId(){
-    String submitterId = null;
-    do {
-      submitterId = SUBMITTER_ID_PREFIX+(RANDOM.nextInt()<<16);
-    } while (repository.existsBySubmitterId(submitterId));
-    return submitterId;
-  }
-
-  /**
-   * Create a donor using the minimal amount of data
-   */
+  /** Create a donor using the minimal amount of data */
   @Test
-  public void createDonor_minimal_success(){
+  public void createDonor_minimal_success() {
     val programId = UUID.randomUUID();
 
     // Create entities
     val submitterId1 = generateUniqueSubmitterId();
-    val donor1 = new DonorEntity()
-        .setProgramId(programId)
-        .setSubmitterId(submitterId1);
+    val donor1 = new DonorEntity().setProgramId(programId).setSubmitterId(submitterId1);
 
     val submitterId2 = generateUniqueSubmitterId();
-    val donor2 = new DonorEntity()
-        .setProgramId(programId)
-        .setSubmitterId(submitterId2);
+    val donor2 = new DonorEntity().setProgramId(programId).setSubmitterId(submitterId2);
 
     // Check that id and simpleId fields are null
     assertThat(donor1.getId()).isNull();
@@ -99,37 +83,29 @@ public class DonorJPATest {
     assertThat(result1.getSubmitterId()).isEqualTo(submitterId1);
     assertThat(result2.getSubmitterId()).isEqualTo(submitterId2);
 
-    // Verify sequential auto incrementing works by ensuring the simpleId for result2 is greater than result1's
+    // Verify sequential auto incrementing works by ensuring the simpleId for result2 is greater
+    // than result1's
     assertThat(result1.getSimpleId()).isLessThan(result2.getSimpleId());
   }
 
   @Test
-  public void nonInsertableSimpleId_nonExisting_success(){
+  public void nonInsertableSimpleId_nonExisting_success() {
     val programId = UUID.randomUUID();
 
-    // Find the largest simpleId
-    val largestSimpleId = stream(repository.findAll().spliterator(), false)
-        .map(DonorEntity::getSimpleId)
-        .reduce(-1, (currMax, x) -> {
-          if (currMax < x){
-            return x;
-          }
-          return currMax;
-        } );
-
-    // Pick a simpleId to test
-    val newSimpleId = largestSimpleId*2;
-
     // Create entities using the newSimpleId
-    val donor1 = new DonorEntity()
-        .setSimpleId(newSimpleId)
-        .setProgramId(programId)
-        .setSubmitterId(generateUniqueSubmitterId());
+    val simpleId1 = generateUniqueSimpleId();
+    val donor1 =
+        new DonorEntity()
+            .setSimpleId(simpleId1)
+            .setProgramId(programId)
+            .setSubmitterId(generateUniqueSubmitterId());
 
-    val donor2 = new DonorEntity()
-        .setSimpleId(newSimpleId+2)
-        .setProgramId(programId)
-        .setSubmitterId(generateUniqueSubmitterId());
+    val simpleId2 = generateUniqueSimpleId();
+    val donor2 =
+        new DonorEntity()
+            .setSimpleId(simpleId2)
+            .setProgramId(programId)
+            .setSubmitterId(generateUniqueSubmitterId());
     repository.save(donor1);
     repository.save(donor2);
 
@@ -148,11 +124,11 @@ public class DonorJPATest {
     assertThat(result2.getSimpleId()).isGreaterThan(0);
 
     // Verify that simpleIds supplied during a persist operation are ignored
-    assertThat(result1.getSimpleId()).isNotEqualTo(newSimpleId);
-    assertThat(result2.getSimpleId()).isNotEqualTo(newSimpleId+2);
+    assertThat(result1.getSimpleId()).isNotEqualTo(simpleId1);
+    assertThat(result2.getSimpleId()).isNotEqualTo(simpleId2);
 
     // Update donor1 with newSimpleId
-    donor1.setSimpleId(newSimpleId);
+    donor1.setSimpleId(simpleId1);
     repository.save(donor1);
 
     // Read the updated value
@@ -161,39 +137,50 @@ public class DonorJPATest {
     // Verify simpleId field was updated
     assertThat(update.getSimpleId()).isNotNull();
     assertThat(update.getSimpleId()).isGreaterThan(0);
-    assertThat(update.getSimpleId()).isEqualTo(newSimpleId);
+    assertThat(update.getSimpleId()).isEqualTo(simpleId1);
   }
 
   @Test
-  public void uniqueConstraintDetection_ExistingEntities_Error(){
+  public void uniqueConstraintDetection_ExistingEntities_Error() {
     val programId = UUID.randomUUID();
     val submitterId1 = generateUniqueSubmitterId();
 
     // Create entities
-    val donor1 = new DonorEntity()
-        .setProgramId(programId)
-        .setSubmitterId(submitterId1);
+    val donor1 = new DonorEntity().setProgramId(programId).setSubmitterId(submitterId1);
 
-    val donor2 = new DonorEntity()
-        .setProgramId(programId)
-        .setSubmitterId(generateUniqueSubmitterId());
+    val donor2 =
+        new DonorEntity().setProgramId(programId).setSubmitterId(generateUniqueSubmitterId());
 
     repository.save(donor1);
     repository.save(donor2);
 
     // Verify unique submitter ids
-    val donor3 = new DonorEntity()
-        .setProgramId(programId)
-        .setSubmitterId(submitterId1);
+    val donor3 = new DonorEntity().setProgramId(programId).setSubmitterId(submitterId1);
     assertThatExceptionOfType(DataIntegrityViolationException.class)
         .isThrownBy(() -> repository.save(donor3));
 
     // Verify unique simple ids
-    val donor4 = new DonorEntity()
-        .setProgramId(programId)
-        .setSubmitterId(generateUniqueSubmitterId());
+    donor2.setSimpleId(donor1.getSimpleId());
     assertThatExceptionOfType(DataIntegrityViolationException.class)
-        .isThrownBy(() -> repository.save(donor4));
+        .isThrownBy(() -> repository.save(donor2));
   }
 
+  private String generateUniqueSubmitterId() {
+    String submitterId = null;
+    do {
+      submitterId = SUBMITTER_ID_PREFIX + (RANDOM.nextInt() << 16);
+    } while (repository.existsBySubmitterId(submitterId));
+    return submitterId;
+  }
+
+  private Integer generateUniqueSimpleId() {
+    int simpleId;
+    do {
+      simpleId = RANDOM.nextInt() << 16;
+      if (simpleId < 0) {
+        simpleId *= -1;
+      }
+    } while (repository.existsBySimpleId(simpleId));
+    return simpleId;
+  }
 }
