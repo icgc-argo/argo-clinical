@@ -27,7 +27,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
@@ -41,19 +40,12 @@ import java.util.UUID;
 })
 public class DonorEntity {
 
-//  private static final long serialVersionUID = 1L;
-
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
   private UUID id;
 
-  @Column(name = "entity_id")
-  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "donor_entity_id_seq")
-  @SequenceGenerator(
-      name = "donor_entity_id_seq",
-      sequenceName = "donor_entity_id_seq" )
+  @Column(name = "entity_id", insertable = false)
   private Integer entityId;
-
 
   @NotNull
   private String submitterId;

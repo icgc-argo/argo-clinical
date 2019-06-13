@@ -43,11 +43,20 @@ public class DonorDBTest {
     val programId = UUID.randomUUID();
     val donor1 = new DonorEntity().setProgramId(programId).setSubmitterId("D_SUB_1");
     val donor2 = new DonorEntity().setProgramId(programId).setSubmitterId("D_SUB_2");
+    val donor3 = new DonorEntity().setEntityId(888).setProgramId(programId).setSubmitterId("D_SUB_3");
     repository.save(donor1);
     repository.save(donor2);
+    repository.save(donor3);
 
-//    val donorActual1 = repository.findById(donor1.getId());
-//    val donorActual2 = repository.findById(donor2.getId());
+
+    val donorActual1 = repository.findById(donor1.getId());
+    val donorActual2 = repository.findById(donor2.getId());
+    val donorActual3 = repository.findById(donor3.getId());
+
+    donor1.setEntityId(777);
+    repository.save(donor1);
+
+    val donor1Updates = repository.findById(donor1.getId());
     log.info("sdfsdf");
   }
 }
