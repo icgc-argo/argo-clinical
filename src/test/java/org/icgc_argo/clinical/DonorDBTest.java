@@ -30,6 +30,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -46,9 +47,10 @@ public class DonorDBTest {
     val donor1 = new DonorEntity().setProgramId(programId).setSubmitterId("D_SUB_1");
     val donor2 = new DonorEntity().setProgramId(programId).setSubmitterId("D_SUB_2");
     val donor3 = new DonorEntity().setSimpleId(888).setProgramId(programId).setSubmitterId("D_SUB_3");
-    repository.save(donor1);
-    repository.save(donor2);
-    repository.save(donor3);
+    repository.saveAll(List.of(donor1, donor2, donor3));
+//    repository.save(donor1);
+//    repository.save(donor2);
+//    repository.save(donor3);
 
 
     val donorActual1 = repository.findById(donor1.getId());
