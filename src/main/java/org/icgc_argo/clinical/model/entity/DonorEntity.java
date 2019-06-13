@@ -37,7 +37,7 @@ import static org.icgc_argo.clinical.model.constants.SqlFields.SIMPLE_ID;
 @Entity
 @Accessors(chain = true)
 @Table(name = Tables.DONOR)
-public class DonorEntity {
+public class DonorEntity implements ClinicalEntity<UUID> {
 
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
