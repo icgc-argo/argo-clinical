@@ -58,6 +58,7 @@
 		<flyway.version>5.2.4</flyway.version>
 		<javax.validation.version>2.0.1.Final</javax.validation.version>
 		<hibernate.validator.version>6.0.4.Final</hibernate.validator.version>
+		<hibernate.types.version>2.4.4</hibernate.types.version>
 
 		<!--Plugins-->
 		<plugin.compiler.version>3.8.1</plugin.compiler.version>
@@ -172,6 +173,15 @@
 			<artifactId>hibernate-validator-annotation-processor</artifactId>
 			<version>${hibernate.validator.version}</version>
 		</dependency>
+
+        <!-- Convert interpret CamelCase model names as snake_case db fields-->
+        <!-- https://vladmihalcea.com/map-camel-case-properties-snake-case-column-names-hibernate/ -->
+		<dependency>
+			<groupId>com.vladmihalcea</groupId>
+			<artifactId>hibernate-types-52</artifactId>
+			<version>${hibernate.types.version}</version>
+		</dependency>
+
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-annotations</artifactId>

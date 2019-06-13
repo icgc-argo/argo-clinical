@@ -29,6 +29,15 @@ services:
       SPRING_PROFILES: auth
     depends_on:
       - ego-api
+  postgres:
+    image: postgres:10.8
+    environment:
+      - POSTGRES_DB=argo_clinical
+      - POSTGRES_PASSWORD=password
+    expose:
+      - "5432"
+    ports:
+      - "9544:5432"
   ego-api:
     restart: always
     image: "overture/ego:latest"
