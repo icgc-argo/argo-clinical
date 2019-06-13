@@ -20,11 +20,13 @@ package org.icgc_argo.clinical;
 
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.assertj.core.api.Assertions;
 import org.icgc_argo.clinical.model.entity.DonorEntity;
 import org.icgc_argo.clinical.repository.DonorRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
@@ -43,7 +45,7 @@ public class DonorDBTest {
     val programId = UUID.randomUUID();
     val donor1 = new DonorEntity().setProgramId(programId).setSubmitterId("D_SUB_1");
     val donor2 = new DonorEntity().setProgramId(programId).setSubmitterId("D_SUB_2");
-    val donor3 = new DonorEntity().setEntityId(888).setProgramId(programId).setSubmitterId("D_SUB_3");
+    val donor3 = new DonorEntity().setSimpleId(888).setProgramId(programId).setSubmitterId("D_SUB_3");
     repository.save(donor1);
     repository.save(donor2);
     repository.save(donor3);
@@ -53,10 +55,16 @@ public class DonorDBTest {
     val donorActual2 = repository.findById(donor2.getId());
     val donorActual3 = repository.findById(donor3.getId());
 
-    donor1.setEntityId(777);
+    donor1.setSimpleId(777);
     repository.save(donor1);
 
     val donor1Updates = repository.findById(donor1.getId());
+
+    Assertions.assertThatExceptionOfType(DataIntegrityViolationException.class)
+        .isThrownBy(() -> {
+          donor1.setSubmitterId(donor2.getSubmitterId());
+          repository.save(donor1);
+        });
     log.info("sdfsdf");
   }
 }

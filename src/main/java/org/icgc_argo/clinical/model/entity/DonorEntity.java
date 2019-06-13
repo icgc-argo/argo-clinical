@@ -28,24 +28,24 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 import java.util.UUID;
+
+import static org.icgc_argo.clinical.model.constants.SqlFields.SIMPLE_ID;
 
 @Data
 @Entity
 @Accessors(chain = true)
-@Table(name = Tables.DONOR, uniqueConstraints = {
-    @UniqueConstraint(columnNames = "entity_id" )
-})
+@Table(name = Tables.DONOR)
 public class DonorEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
   private UUID id;
 
-  @Column(name = "entity_id", insertable = false)
-  private Integer entityId;
+  // Refer to sql schema. Insertable set to false to trigger auto incrementing
+  @Column(name = SIMPLE_ID, insertable = false)
+  private Integer simpleId;
 
   @NotNull
   private String submitterId;
