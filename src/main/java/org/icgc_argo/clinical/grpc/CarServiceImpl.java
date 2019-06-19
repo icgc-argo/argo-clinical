@@ -18,11 +18,6 @@
 
 package org.icgc_argo.clinical.grpc;
 
-import bio.overture.proto.car_service.CarServiceGrpc;
-import bio.overture.proto.car_service.CreateCarRequest;
-import bio.overture.proto.car_service.CreateCarResponse;
-import bio.overture.proto.car_service.GetCarRequest;
-import bio.overture.proto.car_service.GetCarResponse;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import java.util.UUID;
@@ -32,6 +27,11 @@ import lombok.val;
 import org.icgc_argo.clinical.client.EgoClient;
 import org.icgc_argo.clinical.converter.CarConverter;
 import org.icgc_argo.clinical.grpc.interceptor.EgoAuthInterceptor;
+import org.icgc_argo.clinical.proto.car_service.CarServiceGrpc;
+import org.icgc_argo.clinical.proto.car_service.CreateCarRequest;
+import org.icgc_argo.clinical.proto.car_service.CreateCarResponse;
+import org.icgc_argo.clinical.proto.car_service.GetCarRequest;
+import org.icgc_argo.clinical.proto.car_service.GetCarResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
