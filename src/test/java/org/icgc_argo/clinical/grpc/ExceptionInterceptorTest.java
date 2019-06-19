@@ -18,11 +18,7 @@
 
 package org.icgc_argo.clinical.grpc;
 
-import io.grpc.Channel;
-import io.grpc.BindableService;
-import io.grpc.ServerInterceptors;
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
+import io.grpc.*;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
@@ -67,7 +63,7 @@ public class ExceptionInterceptorTest {
       @Override
       public void createCar(
         CreateCarRequest request, StreamObserver<CreateCarResponse> responseObserver) {
-        throw new Error("Everything is wrong");
+        throw new Error("Everything is wrong!");
       }
     };
 
@@ -76,7 +72,12 @@ public class ExceptionInterceptorTest {
       client.createCar(CreateCarRequest.getDefaultInstance());
     } catch (StatusRuntimeException e) {
       assertEquals(e.getStatus().getCode(), Status.Code.INTERNAL);
-      assertEquals(e.getStatus().getDescription(), "Everything is wrong");
+      assertEquals(e.getStatus().getDescription(), "Everything is wrong!");
+      val metadata = e.getTrailers();
+      assertEquals(metadata.get(key("name")),"java.lang.Error");
+      val stacktrace = metadata.get(key("stacktrace"));
+      assertNotNull(stacktrace);
+      System.out.println("stacktrace="+stacktrace);
     }
 
   }
@@ -116,6 +117,10 @@ public class ExceptionInterceptorTest {
     val result = client.createCar(CreateCarRequest.getDefaultInstance());
     assertNotNull(result);
 
+  }
+
+  private Metadata.Key<String> key(String s) {
+    return Metadata.Key.of(s, Metadata.ASCII_STRING_MARSHALLER);
   }
 
   private CarServiceGrpc.CarServiceBlockingStub setupTest(BindableService service) throws IOException {
