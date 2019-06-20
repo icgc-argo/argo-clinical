@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-option java_package = "bio.overture.proto.car_service";
+option java_package = "org.icgc_argo.clinical.proto.car_service";
 option java_outer_classname = "CarServiceProto";
 option objc_class_prefix = "CSP";
 

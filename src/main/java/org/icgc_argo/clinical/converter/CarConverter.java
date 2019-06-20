@@ -2,13 +2,13 @@ package org.icgc_argo.clinical.converter;
 
 import static org.mapstruct.MappingConstants.NULL;
 
-import bio.overture.proto.car_service.CarData;
-import bio.overture.proto.car_service.CreateCarRequest;
-import bio.overture.proto.car_service.CreateCarResponse;
-import bio.overture.proto.car_service.DriveTypeValue;
 import lombok.val;
 import org.icgc_argo.clinical.model.CarModel;
 import org.icgc_argo.clinical.model.DriveType;
+import org.icgc_argo.clinical.proto.car_service.CarData;
+import org.icgc_argo.clinical.proto.car_service.CreateCarRequest;
+import org.icgc_argo.clinical.proto.car_service.CreateCarResponse;
+import org.icgc_argo.clinical.proto.car_service.DriveTypeValue;
 import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -41,10 +41,10 @@ public interface CarConverter {
   @ValueMapping(source = "BACK_WHEEL", target = "BACK")
   @ValueMapping(source = "FRONT_WHEEL", target = "FRONT")
   @ValueMapping(source = "UNRECOGNIZED", target = NULL)
-  DriveType driveTypeProtoToModel(bio.overture.proto.car_service.DriveType proto);
+  DriveType driveTypeProtoToModel(org.icgc_argo.clinical.proto.car_service.DriveType proto);
 
   @InheritInverseConfiguration
-  bio.overture.proto.car_service.DriveType driveTypeModelToProto(DriveType model);
+  org.icgc_argo.clinical.proto.car_service.DriveType driveTypeModelToProto(DriveType model);
 
   @Mapping(target = "clearField", ignore = true)
   @Mapping(target = "clearOneof", ignore = true)
@@ -73,11 +73,11 @@ public interface CarConverter {
    *
    * @param proto
    */
-  default DriveTypeValue boxDriveType(bio.overture.proto.car_service.DriveType proto) {
+  default DriveTypeValue boxDriveType(org.icgc_argo.clinical.proto.car_service.DriveType proto) {
     return DriveTypeValue.newBuilder().setValue(proto).build();
   }
 
-  default bio.overture.proto.car_service.DriveType unboxDriveType(DriveTypeValue v) {
+  default org.icgc_argo.clinical.proto.car_service.DriveType unboxDriveType(DriveTypeValue v) {
     return v.getValue();
   }
 }

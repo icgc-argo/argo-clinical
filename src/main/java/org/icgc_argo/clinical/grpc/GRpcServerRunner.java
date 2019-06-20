@@ -33,6 +33,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.icgc_argo.clinical.grpc.interceptor.AuthInterceptor;
+import org.icgc_argo.clinical.grpc.interceptor.ExceptionInterceptor;
 import org.icgc_argo.clinical.properties.AppProperties;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,23 +52,26 @@ public class GRpcServerRunner implements CommandLineRunner, DisposableBean {
   private final AuthInterceptor authInterceptor;
   private final HealthStatusManager healthStatusManager;
   private final AppProperties appProperties;
+  private final ExceptionInterceptor exceptionInterceptor;
 
   @Autowired
   public GRpcServerRunner(
       @NonNull CarServiceImpl carServiceImpl,
       @NonNull AuthInterceptor authInterceptor,
-      @NonNull AppProperties appProperties) {
+      @NonNull AppProperties appProperties,
+      @NonNull ExceptionInterceptor exceptionInterceptor) {
     this.carServiceImpl = carServiceImpl;
     this.authInterceptor = authInterceptor;
     this.healthStatusManager = new HealthStatusManager();
     this.appProperties = appProperties;
+    this.exceptionInterceptor = exceptionInterceptor;
   }
 
   @Override
   public void run(String... args) throws Exception {
 
     // Interceptor bean depends on run profile.
-    val templateCarService = ServerInterceptors.intercept(carServiceImpl, authInterceptor);
+    val templateCarService = ServerInterceptors.intercept(carServiceImpl, exceptionInterceptor, authInterceptor);
 
     try {
       server =
