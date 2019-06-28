@@ -6,6 +6,6 @@ const app = express();
 
 app.set("port", 3000);
 
-app.get("/", (req, res) => res.send("Hello World!"));
+app.get("/", (req, res) => res.send("Hello World 2!"));
 
 export default app;
