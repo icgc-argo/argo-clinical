@@ -1,5 +1,6 @@
 
 export interface Donor {
+    donorId: string;
     gender: string;
     submitterId: string;
     programId: string;
@@ -12,13 +13,13 @@ export interface Donor {
     HormoneTherapy: Array<Object>;
 }
 
-interface Specimen {
+export interface Specimen {
     samples: Array<Sample>;
     submitterId: string;
     clinicalInfo: object;
 }
 
-interface Sample {
+export interface Sample {
     sampleType: string;
     submitterId: string;
 }

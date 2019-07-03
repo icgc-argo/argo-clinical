@@ -1,32 +1,60 @@
-import { SchemaService } from "./schema";
+import  * as schemaSvc from "./schema";
+import * as dataValidator from "./validation";
+import { donorDao } from "../ports/dao";
+import { Donor } from "../../domain/clinical/entities";
+import { CreateDonorDto } from "../ports/dao";
 
-export class SubmissionManager {
-    constructor(private schemaSvc: SchemaService) {
-        this.schemaSvc = new SchemaService();
-    }
+export namespace operations {
+    export const createRegistration = async (command: CreateRegistrationCommand): Promise<CreateRegistrationResult> => {
+        const {errors: schemaErrors} = schemaSvc.validate("registration", command.records);
+        const {errors: dataErrors} = dataValidator.validateRegistrationData(command.records);
 
-    public createRegistration(command: CreateRegistrationCommand): CreateRegistrationResult {
-        const result = this.schemaSvc.validate("registration", command.records);
-        if (result.errors.length > 0) {
+        if (schemaErrors.length > 0 || dataErrors.length > 0) {
             return {
                 registrationId: undefined,
-                errors: [],
-                successful: false
+                errors: [...schemaErrors, ...dataErrors],
+                successful: false,
+                donors: []
             };
         }
 
+        const donor: CreateDonorDto = {
+            submitterId: "DONOR1000",
+            gender: "male",
+            programId: "PEME-CA",
+            specimens: [{
+                samples: [{
+                    sampleType: "RNA",
+                    submitterId: "SAMP1038RNA"
+                }],
+                submitterId: "SPEC10999"
+            }]
+        };
+
+        const created: Donor = await donorDao.createDonor(donor);
         return {
             registrationId: "abcd1234",
             errors: [],
-            successful: true
+            successful: true,
+            donors: [created]
         };
-    }
+    };
 
-    public doRegisteration(command: CreateRegistrationCommand): void {
+    export const doRegisteration = (command: CreateRegistrationCommand): void => {
         // TODO: implement
-    }
+    };
 }
 
+export interface CreateRegistrationCommand {
+    records: Array<RegistrationRecord>;
+}
+
+export interface CreateRegistrationResult {
+    registrationId: string;
+    errors: Array<String>;
+    successful: boolean;
+    donors: Donor[];
+}
 
 export interface RegistrationRecord {
     program_id: string;
@@ -39,12 +67,6 @@ export interface RegistrationRecord {
     sample_type: string;
 }
 
-interface CreateRegistrationCommand {
-    records: Array<RegistrationRecord>;
-}
-
-interface CreateRegistrationResult {
-    registrationId: string;
-    errors: Array<String>;
-    successful: boolean;
+export interface ValidationResult {
+    errors: Array<any>;
 }

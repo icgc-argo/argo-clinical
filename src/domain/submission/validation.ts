@@ -1,33 +1,32 @@
-import { RegistrationRecord } from "./submission";
+import { RegistrationRecord, ValidationResult } from "./submission";
 
-export class DataValidator {
-    constructor() {
-    }
+export const validateRegistrationData = (records: Array<RegistrationRecord>): ValidationResult => {
+    checkNotDuplicated();
+    checkSpecimenDonorFK();
+    checkSampleSpecimenFK();
+    return {
+        errors: []
+    };
+};
 
-    public validateRegistrationData(records: RegistrationRecord) {
-        this.checkNotDuplicated();
-        this.checkSpecimenDonorFK();
-        this.checkSampleSpecimenFK();
-    }
+const checkNotDuplicated = (): boolean => {
+    return true;
+};
 
-    private checkNotDuplicated(): boolean {
-        return true;
-    }
+const checkSpecimenDonorFK = (): boolean => {
+    return checkFKExistsOrNew();
+};
 
-    private checkSpecimenDonorFK(): boolean {
-        return this.checkFKExistsOrNew();
-    }
+const checkFKExistsOrNew = (): boolean => {
+    // 1. get donor by Id & check it does have that specimen already
+    //  count(where(donors().id() == $donorId)) == 1;
+    // 2. if 1 is false, check that this specimen is not associated to another donor
+    // => count(where("donors().specimens().submitterId() == $FK")) == 0
+      return true;
+};
 
-    private checkFKExistsOrNew(): boolean {
-        // 1. get donor by Id & check it does have that specimen already
-        //  count(where(donors().id() == $donorId)) == 1;
-        // 2. if 1 is false, check that this specimen is not associated to another donor
-        // => count(where("donors().specimens().submitterId() == $FK")) == 0
-        return true;
-    }
-    private checkSampleSpecimenFK(): boolean {
-        // check that this sample is not associated to another donor specimen already
-        // => count(where("donors().specimens().samples().submitterId() == $FK")) == 0
-        return true;
-    }
-}
+const checkSampleSpecimenFK = (): boolean => {
+    // check that this sample is not associated to another donor specimen already
+    // => count(where("donors().specimens().samples().submitterId() == $FK")) == 0
+    return true;
+};
