@@ -13,16 +13,5 @@ export const errorHandler = (err: Error, req: Request, res: Response, next: Next
     if (res.headersSent) {
         return next(err);
     }
-    switch (err.name) {
-        case "Conflict":
-            res.status(409);
-            break;
-        case "BadRequest":
-            res.status(400);
-            break;
-        default:
-            res.status(500);
-            break;
-    }
-    res.send({ error: err.name, message: err.message });
+    res.status(500).send({ error: err.name, message: err.message });
 };

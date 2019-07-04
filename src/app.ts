@@ -34,27 +34,24 @@ mongoose.connection.on("error", (error) => {
 });
 
 const connectToDb = async (delayMillis: number) => setTimeout(async () => {
-    console.log("connecting to mongo");
-    try {
-        await mongoose.connect("mongodb://localhost:27017/clinical", {
-            autoReconnect: true,
-            socketTimeoutMS: 0,
-            keepAlive: false,
-            reconnectTries: 1,
-            reconnectInterval: 3000,
-            bufferMaxEntries: 0, // Disable node driver's buffering as well
-            useNewUrlParser: true
-        });
-    } catch (err) {
-        console.error("failed to connect to mongo", err);
-        // retry in 5 sec
-        // connectToDb(5000);
-    }
-}, delayMillis);
+        console.log("connecting to mongo");
+        try {
+            await mongoose.connect("mongodb://localhost:27017/clinical", {
+                autoReconnect: true,
+                socketTimeoutMS: 0,
+                keepAlive: true,
+                reconnectTries: 1000,
+                reconnectInterval: 3000,
+                bufferMaxEntries: 0, // Disable node driver's buffering as well
+                useNewUrlParser: true
+            });
+        } catch (err) {
+            console.error("failed to connect to mongo", err);
+            connectToDb(5000);
+        }
+    }, delayMillis);
 
-// try connecting to db.
- connectToDb(0);
-
+connectToDb(1000);
 app.get("/", (req, res) => res.send("Hello World 2!"));
 
 app.get("/submission/registration", middleware.wrapAsync(submissionAPI.getRegistrationByProgramId));
