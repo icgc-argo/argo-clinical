@@ -1,7 +1,7 @@
 import  * as schemaSvc from "./schema";
 import * as dataValidator from "./validation";
 import { donorDao } from "../../adapters/clinical/repository/clinical/donor";
-import { registrationDao } from "../../adapters/clinical/repository/submission/registration"
+import { registrationDao } from "../../adapters/clinical/repository/submission/registration";
 import { Donor } from "../entities/clinical";
 import { RegisterDonorDto } from "../../adapters/clinical/repository/clinical/donor";
 
@@ -36,7 +36,7 @@ export namespace operations {
      * TBD
      * This method will move the registered donor document to donor collection
      * and remove it from active registration collection.
-     * 
+     *
      * @param command CommitRegistrationCommand the id of the registration to close.
      */
     export const commitRegisteration = async (command: CommitRegistrationCommand): Promise<void> => {
