@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
-import { Donor, Sample, Specimen } from "../../domain/clinical/entities";
-import { DonorDAO, CreateDonorDto } from "../../domain/ports/dao";
+import { Donor } from "../../../domain/entities/clinical";
 
 type DonorDocument = mongoose.Document & Donor;
 

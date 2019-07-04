@@ -1,12 +1,12 @@
-import { DonorModel } from "../../infra/db/model";
-import { Donor, Sample, Specimen } from "../../domain/clinical/entities";
+import { DonorModel } from "../../../../infra/mongoose/clinical/donor";
+import { Donor, Sample, Specimen } from "../../../../domain/entities/clinical";
 
-export interface DonorDAO {
-    createDonor(donor: CreateDonorDto): Promise<Donor>;
+export interface DonorRepository {
+    register(donor: RegisterDonorDto): Promise<Donor>;
 }
 
-export const donorDao: DonorDAO = {
-    async createDonor(createDonorDto: CreateDonorDto): Promise<Donor> {
+export const donorDao: DonorRepository = {
+    async register(createDonorDto: RegisterDonorDto): Promise<Donor> {
         const donor: Donor = {
             donorId: undefined,
             gender: createDonorDto.gender,
@@ -32,7 +32,6 @@ export const donorDao: DonorDAO = {
             treatments: undefined,
             chemotherapy:  undefined,
             HormoneTherapy:  undefined,
-
         };
         const newDonor = new DonorModel(donor);
         await newDonor.save();
@@ -40,19 +39,19 @@ export const donorDao: DonorDAO = {
     }
 };
 
-export interface CreateDonorDto {
+export interface RegisterDonorDto {
     gender: string;
     submitterId: string;
     programId: string;
-    specimens: Array<CreateSpecimen>;
+    specimens: Array<RegisterSpecimenDto>;
 }
 
-export interface CreateSpecimen {
-    samples: Array<CreateSample>;
+export interface RegisterSpecimenDto {
+    samples: Array<RegisterSampleDto>;
     submitterId: string;
 }
 
-export interface CreateSample {
+export interface RegisterSampleDto {
     sampleType: string;
     submitterId: string;
 }

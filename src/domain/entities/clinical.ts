@@ -1,4 +1,3 @@
-
 export interface Donor {
     donorId: string;
     gender: string;
@@ -23,4 +22,3 @@ export interface Sample {
     sampleType: string;
     submitterId: string;
 }
-

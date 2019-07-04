@@ -1,6 +1,6 @@
-import { RegistrationRecord, ValidationResult } from "./submission";
+import { CreateRegistrationRecord, ValidationResult } from "./submission";
 
-export const validateRegistrationData = (records: Array<RegistrationRecord>): ValidationResult => {
+export const validateRegistrationData = (records: Array<CreateRegistrationRecord>): ValidationResult => {
     checkNotDuplicated();
     checkSpecimenDonorFK();
     checkSampleSpecimenFK();
