@@ -5,10 +5,16 @@ debug:
 
 stop:
 	docker-compose down --remove-orphans 
-
-register:
-	curl -X POST \
-	http://localhost:3000/submission/ \
-	-H 'Content-Type: application/json' \
+curl file upload relative path
+registration-upload:
+	pwd
+	# todo check why this doesn't work 
+	curl -v -X POST \
+	http://localhost:3000/submission/registration/ \
 	-H 'cache-control: no-cache' \
-	-d '{"hey": "hi"}' 
+	-H 'content-type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW' \
+	-F programId=PEME-CA \
+	-F creator=bashar \
+	-F 'registrationFile=@/home/ballabadi/dev/repos/argo/argo-clinical/sampleFiles/registration.tsv'
+
+registration-get:

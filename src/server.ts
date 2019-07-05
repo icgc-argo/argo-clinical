@@ -1,20 +1,13 @@
-import errorHandler from "errorhandler";
-
+import * as bootstrap from "./bootstrap";
 import app from "./app";
-
-/**
- * Error Handler. Provides full stack - remove for production
- */
-if (!process.env.PRODUCTION) {
-  app.use(errorHandler());
-}
 
 /**
  * Start Express server.
  */
+bootstrap.run();
 const server = app.listen(app.get("port"), () => {
   console.log(
-    "  App is running at http://localhost:%d in %s mode",
+    " App is running at http://localhost:%d in %s mode",
     app.get("port"),
     app.get("env")
   );

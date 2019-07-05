@@ -7,7 +7,7 @@ export const wrapAsync = (fn: RequestHandler): RequestHandler => {
     return (req, res, next) => {
         const routePromise = fn(req, res, next);
         if (routePromise.catch) {
-            routePromise.catch( (err: Error) => next(err));
+            routePromise.catch(next);
         }
     };
 };
@@ -17,4 +17,6 @@ export const errorHandler = (err: Error, req: Request, res: Response, next: Next
         return next(err);
     }
     res.status(500).send({ error: err.name, message: err.message });
+    // pass the error down (so other error handlers can also process the error)
+    next(err);
 };

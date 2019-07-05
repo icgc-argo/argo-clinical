@@ -4,6 +4,7 @@ import { donorDao } from "../../adapters/clinical/repository/clinical/donor";
 import { registrationRepository } from "../../adapters/clinical/repository/submission/registration";
 import { Donor } from "../entities/clinical";
 import { RegisterDonorDto } from "../../adapters/clinical/repository/clinical/donor";
+import { ActiveRegistration, RegistrationRecord } from "../../domain/entities/submission";
 
 export namespace operations {
     /**
@@ -14,7 +15,7 @@ export namespace operations {
      */
     export const createRegistration = async (command: CreateRegistrationCommand): Promise<CreateRegistrationResult> => {
         const schemaErrors: SchemaValidationError = schemaSvc.validate("registration", command.records);
-        const records: Array<CreateRegistrationRecord> = command.records.map(r => {
+        const registrationRecords: Array<CreateRegistrationRecord> = command.records.map(r => {
             const rec: CreateRegistrationRecord = {
                 programId: r.program_id,
                 donorSubmitterId: r.donor_submitter_id,
@@ -27,7 +28,7 @@ export namespace operations {
             };
             return rec;
         });
-        const {errors: dataErrors} = dataValidator.validateRegistrationData(records);
+        const {errors: dataErrors} = dataValidator.validateRegistrationData(registrationRecords);
         if (schemaErrors.generalErrors.length > 0 || schemaErrors.recordsErrors.length > 0 || dataErrors.length > 0) {
             return {
                 registrationId: undefined,
@@ -36,9 +37,25 @@ export namespace operations {
                 successful: false
             };
         }
-        const registration = await registrationRepository.create(command);
+        const registration: ActiveRegistration = {
+            programId: command.programId,
+            creator: command.creator,
+            records: registrationRecords.map(r => {
+                const record: RegistrationRecord = {
+                    donorSubmitterId: r.donorSubmitterId,
+                    gender: r.gender,
+                    specimenSubmitterId: r.specimenSubmitterId,
+                    specimenType: r.specimenType,
+                    tumorNormalDesignation: r.tumorNormalDesignation,
+                    sampleSubmitterId: r.sampleSubmitterId,
+                    sampleType: r.sampleType
+                };
+                return record;
+            })
+        };
+        const savedRegistration = await registrationRepository.create(registration);
         return {
-            registrationId: registration.id,
+            registrationId: savedRegistration.id,
             state: "uncommitted",
             errors: [],
             successful: true
