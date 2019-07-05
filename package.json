@@ -43,6 +43,7 @@
     "@types/mongodb": "^3.1.28",
     "@types/mongoose": "^5.5.6",
     "@types/morgan": "^1.7.35",
+    "@types/multer": "^1.3.7",
     "@types/node": "^12.0.10",
     "@types/nodemailer": "^6.2.0",
     "@types/request": "^2.48.1",
@@ -60,9 +61,9 @@
     "typescript": "^3.5.2"
   },
   "dependencies": {
-    "bluebird": "^3.5.5",
     "async": "^3.0.1",
     "bcrypt-nodejs": "^0.0.3",
+    "bluebird": "^3.5.5",
     "body-parser": "^1.19.0",
     "compression": "^1.7.4",
     "connect-mongo": "^3.0.0",
@@ -74,6 +75,7 @@
     "express-validator": "^6.0.1",
     "lodash": "^4.17.11",
     "mongoose": "^5.6.0",
+    "multer": "^1.4.1",
     "nodemailer": "^6.2.1",
     "request": "^2.88.0",
     "request-promise": "^4.2.4"

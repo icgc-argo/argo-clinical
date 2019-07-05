@@ -1,4 +1,7 @@
 import express, { NextFunction, Request, Response, RequestHandler } from "express";
+import multer from "multer";
+
+export const upload = multer({ dest: "/tmp" });
 
 export const wrapAsync = (fn: RequestHandler): RequestHandler => {
     return (req, res, next) => {

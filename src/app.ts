@@ -4,15 +4,20 @@ import dotenv from "dotenv";
 import * as submissionAPI from "./infra/rest/submission";
 import mongoose from "mongoose";
 import * as middleware from "./middleware";
+import multer from "multer";
+
+const upload = multer({ dest: "/tmp" });
+
 // Create Express server
 const app = express();
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
     extended: true
 }));
 app.set("port", 3000);
 
-mongoose.Promise = Promise;
+// mongoose.Promise = Promise;
 mongoose.connection.on("connected", () => {
     console.log("Connection Established");
 });
@@ -47,6 +52,7 @@ const connectToDb = async (delayMillis: number) => setTimeout(async () => {
             });
         } catch (err) {
             console.error("failed to connect to mongo", err);
+            // retry in 5 secs
             connectToDb(5000);
         }
     }, delayMillis);
@@ -55,7 +61,7 @@ connectToDb(1000);
 app.get("/", (req, res) => res.send("Hello World 2!"));
 
 app.get("/submission/registration", middleware.wrapAsync(submissionAPI.getRegistrationByProgramId));
-app.post("/submission/registration", middleware.wrapAsync(submissionAPI.createRegistration));
+app.post("/submission/registration", upload.single("registrationFile"), middleware.wrapAsync(submissionAPI.createRegistration));
 app.patch("/submission/registration/:id", middleware.wrapAsync(submissionAPI.commitRegistration));
 
 app.use(middleware.errorHandler);

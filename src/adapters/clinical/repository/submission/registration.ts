@@ -7,7 +7,7 @@ export interface RegistrationRepository {
     findByProgramId(programId: string): Promise<ActiveRegistration>;
 }
 
-export const registrationDao: RegistrationRepository = {
+export const registrationRepository: RegistrationRepository = {
     async findByProgramId(programId: string): Promise<ActiveRegistration> {
         console.debug("in findByProgramId programId: ", programId);
         const activeRegistration = await ActiveRegistrationModel.findOne({ programId: programId }).exec();
@@ -37,6 +37,6 @@ export const registrationDao: RegistrationRepository = {
         registration.id = doc.id;
         console.debug("new registration doc created: ", activeRegistrationModel);
         console.info("saved new registration: program: ", registration.programId, " id: ", registration.id);
-        return registration;
+        return doc;
     }
 };
