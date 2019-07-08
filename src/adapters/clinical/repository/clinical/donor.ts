@@ -5,6 +5,7 @@ export interface DonorRepository {
     register(donor: RegisterDonorDto): Promise<Donor>;
 }
 
+// Mongoose implementation of the DonorRepository
 export const donorDao: DonorRepository = {
     async register(createDonorDto: RegisterDonorDto): Promise<Donor> {
         const donor: Donor = {

@@ -9,50 +9,36 @@ import { ActiveRegistration, RegistrationRecord } from "../../domain/entities/su
 export namespace operations {
     /**
      * This method creates an in progress registration after validating but doesn't create the donors in the donor collection
-     * it overrides and closes any previously uncomitted registrations.
+     * it overrides and deletes any previously uncomitted registrations.
      * @param command CreateRegistrationCommand the records to register,
      *  can contain new donors or existing donors but new samples.
      */
     export const createRegistration = async (command: CreateRegistrationCommand): Promise<CreateRegistrationResult> => {
         const schemaErrors: SchemaValidationError = schemaSvc.validate("registration", command.records);
-        const registrationRecords: Array<CreateRegistrationRecord> = command.records.map(r => {
-            const rec: CreateRegistrationRecord = {
-                programId: r.program_id,
-                donorSubmitterId: r.donor_submitter_id,
-                gender: r.gender,
-                specimenSubmitterId: r.specimen_submitter_id,
-                specimenType: r.specimen_type,
-                tumorNormalDesignation: r.tumor_normal_designation,
-                sampleSubmitterId: r.sample_submitter_id,
-                sampleType: r.sample_type
-            };
-            return rec;
-        });
+        const registrationRecords: Array<CreateRegistrationRecord> = mapToRegistrationRecord(command);
         const {errors: dataErrors} = dataValidator.validateRegistrationData(registrationRecords);
-        if (schemaErrors.generalErrors.length > 0 || schemaErrors.recordsErrors.length > 0 || dataErrors.length > 0) {
+
+        // if there are errors terminate the creation.
+        if (anyErrors(schemaErrors, dataErrors)) {
             return {
                 registrationId: undefined,
                 state: undefined,
-                errors: [...schemaErrors.generalErrors, ...schemaErrors.recordsErrors, ...dataErrors],
+                errors: [...schemaErrors.recordsErrors, ...dataErrors],
                 successful: false
             };
         }
-        const registration: ActiveRegistration = {
-            programId: command.programId,
-            creator: command.creator,
-            records: registrationRecords.map(r => {
-                const record: RegistrationRecord = {
-                    donorSubmitterId: r.donorSubmitterId,
-                    gender: r.gender,
-                    specimenSubmitterId: r.specimenSubmitterId,
-                    specimenType: r.specimenType,
-                    tumorNormalDesignation: r.tumorNormalDesignation,
-                    sampleSubmitterId: r.sampleSubmitterId,
-                    sampleType: r.sampleType
-                };
-                return record;
-            })
-        };
+
+        // build the registration object
+        const registration: ActiveRegistration = toActiveRegistration(command, registrationRecords);
+
+        // delete any existing active registration to replace it with the new one
+        // we can only have 1 active registration per program
+        const existingActivRegistration = await registrationRepository.findByProgramId(command.programId);
+        if (existingActivRegistration != undefined) {
+            await registrationRepository.delete(existingActivRegistration.id);
+        }
+
+        // save the new registration object
         const savedRegistration = await registrationRepository.create(registration);
         return {
             registrationId: savedRegistration.id,
@@ -92,6 +78,46 @@ export namespace operations {
     export const findByProgramId = async (programId: string) => {
         return await registrationRepository.findByProgramId(programId);
     };
+
+    /************* Private methods *************/
+    function toActiveRegistration(command: CreateRegistrationCommand, registrationRecords: CreateRegistrationRecord[]): ActiveRegistration {
+        return {
+            programId: command.programId,
+            creator: command.creator,
+            records: registrationRecords.map(r => {
+                const record: RegistrationRecord = {
+                    donorSubmitterId: r.donorSubmitterId,
+                    gender: r.gender,
+                    specimenSubmitterId: r.specimenSubmitterId,
+                    specimenType: r.specimenType,
+                    tumorNormalDesignation: r.tumorNormalDesignation,
+                    sampleSubmitterId: r.sampleSubmitterId,
+                    sampleType: r.sampleType
+                };
+                return record;
+            })
+        };
+    }
+
+    function anyErrors(schemaErrors: SchemaValidationError, dataErrors: any[]) {
+        return schemaErrors.generalErrors.length > 0 || schemaErrors.recordsErrors.length > 0 || dataErrors.length > 0;
+    }
+
+    function mapToRegistrationRecord(command: CreateRegistrationCommand): CreateRegistrationRecord[] {
+        return command.records.map(r => {
+            const rec: CreateRegistrationRecord = {
+                programId: r.program_id,
+                donorSubmitterId: r.donor_submitter_id,
+                gender: r.gender,
+                specimenSubmitterId: r.specimen_submitter_id,
+                specimenType: r.specimen_type,
+                tumorNormalDesignation: r.tumor_normal_designation,
+                sampleSubmitterId: r.sample_submitter_id,
+                sampleType: r.sample_type
+            };
+            return rec;
+        });
+    }
 }
 
 export interface CreateRegistrationRecord {

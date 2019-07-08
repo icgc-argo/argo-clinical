@@ -1,17 +1,35 @@
 import * as submission from "../../domain/services/submission";
 import { Request, Response } from "express";
-import fs from "fs";
-const fsPromises = fs.promises;
+import { TsvUtils, ControllerUtils } from "../utils";
 
 export const getRegistrationByProgramId = async (req: Request, res: Response) => {
-    return res.status(200).send(await submission.operations.findByProgramId(req.query.programId));
+    if (req.query == undefined || req.query.programId == undefined || req.query.programId.trim() == "") {
+        return ControllerUtils.badRequest(res, `programId query param missing`);
+    }
+    const programId = req.query.programId;
+    const registration = await submission.operations.findByProgramId(programId);
+    if (registration == undefined) {
+        return ControllerUtils.notFound(res, `no active registration for this program '${programId}'`);
+    }
+    return res.status(200).send(registration);
 };
-export const createRegistration = async (req: Request, res: Response) => {
+
+export const createRegistrationWithTsv = async (req: Request, res: Response) => {
+    if (!isValidCreateBody(req, res)) {
+        return;
+    }
     const { programId, creator } = req.body;
+    const file = req.file;
+    let records = [];
+    try {
+        records = await TsvUtils.tsvToJson(file);
+    } catch (err) {
+        return ControllerUtils.badRequest(res, `failed to parse the tsv file: ${err}`);
+    }
     const command: submission.CreateRegistrationCommand = {
         programId,
         creator,
-        records : await tsvToJson(req.file)
+        records : records
     };
     res.set("Content-Type", "application/json");
     return res.status(201).send(await submission.operations.createRegistration(command));
@@ -24,23 +42,22 @@ export const commitRegistration = async (req: Request, res: Response) => {
     return res.status(200).send();
 };
 
-const tsvToJson = async (file: Express.Multer.File): Promise<Array<{[key: string]: any}>> => {
-    const contents = await fsPromises.readFile(file.path, "utf-8");
-    return parseTsvToJson(contents);
-};
-
-const parseTsvToJson = (content: string) => {
-    const lines = content.split("\n");
-    const headers = lines.slice(0, 1)[0].split("\t");
-    const rows = lines.slice(1, lines.length).map(line => {
-        if (line.trim() === "") {
-            return undefined;
-        }
-        const data = line.split("\t");
-        return headers.reduce<{[k: string]: string}>((obj, nextKey, index) => {
-        obj[nextKey] = data[index];
-        return obj;
-        }, {});
-    });
-    return rows.filter((el) => el != undefined);
+const isValidCreateBody = (req: Request, res: Response): boolean => {
+    if (req.body == undefined) {
+        ControllerUtils.badRequest(res, `no body`);
+        return false;
+    }
+    if (req.body.programId == undefined) {
+        ControllerUtils.badRequest(res, `programId is required`);
+        return false;
+    }
+    if (req.body.creator == undefined) {
+        ControllerUtils.badRequest(res, `creator is required`);
+        return false;
+    }
+    if (req.file == undefined) {
+        ControllerUtils.badRequest(res, `registrationFile file is required`);
+        return false;
+    }
+    return true;
 };

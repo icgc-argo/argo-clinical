@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-
+import { configManager } from "./config";
 const setupDB = () => {
     // mongoose.Promise = Promise;
     mongoose.connection.on("connected", () => {
@@ -25,7 +25,7 @@ const setupDB = () => {
     const connectToDb = async (delayMillis: number) => setTimeout(async () => {
             console.log("connecting to mongo");
             try {
-                await mongoose.connect("mongodb://localhost:27017/clinical", {
+                await mongoose.connect(configManager.getConfig().getMongoUrl(), {
                     autoReconnect: true,
                     socketTimeoutMS: 0,
                     keepAlive: true,
@@ -43,6 +43,8 @@ const setupDB = () => {
 
     connectToDb(1000);
 };
+
+
 
 export const run = () => {
     setupDB();

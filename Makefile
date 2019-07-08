@@ -1,11 +1,12 @@
 
 debug:
 	docker-compose up -d
-	npm run watch-debug
+	npm run debug
 
 stop:
 	docker-compose down --remove-orphans 
-curl file upload relative path
+
+# curl file upload relative path
 registration-upload:
 	pwd
 	# todo check why this doesn't work 
@@ -18,3 +19,6 @@ registration-upload:
 	-F 'registrationFile=@/home/ballabadi/dev/repos/argo/argo-clinical/sampleFiles/registration.tsv'
 
 registration-get:
+	curl -X GET \
+	'http://localhost:3000/submission/registration?programId=PEME-CA' \
+	-H 'cache-control: no-cache'

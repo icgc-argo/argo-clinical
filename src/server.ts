@@ -1,10 +1,13 @@
-import * as bootstrap from "./bootstrap";
+import dotenv from "dotenv";
 import app from "./app";
+import { configManager, defaultAppConfigImpl } from "./config";
 
 /**
  * Start Express server.
  */
-bootstrap.run();
+dotenv.config();
+configManager.setConfigImpl(defaultAppConfigImpl);
+
 const server = app.listen(app.get("port"), () => {
   console.log(
     " App is running at http://localhost:%d in %s mode",

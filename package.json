@@ -4,7 +4,7 @@
   "description": "Clinical submission system and repo",
   "scripts": {
     "start": "npm run serve",
-    "build": "npm run build-ts && npm run tslint",
+    "build": "npm run build-ts && npm run resources && npm run tslint",
     "serve": "node dist/server.js",
     "watch-node": "nodemon dist/server.js",
     "test": "npm run build-ts && mocha -r ts-node/register test/**/*.ts",
@@ -12,6 +12,7 @@
     "watch-ts": "tsc -w",
     "tslint": "tslint -c tslint.json -p tsconfig.json",
     "debug": "npm run build && npm run watch-debug",
+    "resources": "copyfiles -u 1 src/resources/*.* dist/",
     "serve-debug": "nodemon --inspect dist/server.js",
     "watch-debug": "concurrently -k -p \"[{name}]\" -n \"TypeScript,Node\" -c \"yellow.bold,cyan.bold,green.bold\" \"npm run watch-ts\" \"npm run serve-debug\""
   },
@@ -52,10 +53,12 @@
     "chai": "^4.2.0",
     "chai-http": "^4.3.0",
     "concurrently": "^4.1.0",
+    "copyfiles": "^2.1.0",
     "mocha": "^6.1.4",
     "nodemon": "^1.19.1",
     "shelljs": "^0.8.3",
     "supertest": "^4.0.2",
+    "testcontainers": "^1.1.19",
     "ts-node": "^8.3.0",
     "tslint": "^5.18.0",
     "typescript": "^3.5.2"
