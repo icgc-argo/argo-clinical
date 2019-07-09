@@ -13,6 +13,9 @@ spec:
   - name: node
     image: mhart/alpine-node:latest
     tty: true
+    env:
+    - name: DOCKER_HOST
+      value: tcp://localhost:2375
   - name: helm
     image: alpine/helm:2.12.3
     tty: true
@@ -24,7 +27,16 @@ spec:
     volumeMounts:
     - mountPath: /var/run/docker.sock
       name: docker-sock
+  - name: dind-daemon
+    image: docker:18.06-dind
+    securityContext:
+      privileged: true
+    volumeMounts:
+    - name: docker-graph-storage
+      mountPath: /var/lib/docker
   volumes:
+  - name: docker-graph-storage
+    emptyDir: {}
   - name: docker-sock
     hostPath:
       path: /var/run/docker.sock
@@ -46,7 +58,8 @@ spec:
         stage('Test') {
             steps {
                 container('node') {
-                    sh "npm ci %% npm run build"
+                    sh "npm ci"
+                    sh "npm run test"
                 }
             }
         }
