@@ -2,6 +2,8 @@ import { ActiveRegistrationModel } from "../../../../infra/mongoose/submission/r
 import { CreateRegistrationCommand } from "../../../../domain/services/submission";
 import { ActiveRegistration } from "../../../../domain/entities/submission";
 import { InternalError } from "../../../../domain/errors";
+import { loggerFor } from "../../../../logger";
+const L = loggerFor(__filename);
 
 export interface RegistrationRepository {
     delete(id: string): void;
@@ -12,35 +14,35 @@ export interface RegistrationRepository {
 // Mongoose implementation of the RegistrationRepository
 export const registrationRepository: RegistrationRepository = {
     async findByProgramId(programId: string): Promise<ActiveRegistration> {
-        console.debug(`in findByProgramId programId: ${programId}`);
+        L.debug(`in findByProgramId programId: ${programId}`);
         try {
             const activeRegistration = await ActiveRegistrationModel.findOne({ programId: programId }).exec();
             if (activeRegistration == undefined) {
                 return undefined;
             }
-            console.info(`found registration for program ${programId}: ${activeRegistration}`);
+            L.info(`found registration for program ${programId}: ${activeRegistration}`);
             return activeRegistration;
         } catch (err) {
-            console.error("failed to fetch registration", err);
+            L.error("failed to fetch registration", err);
             throw new InternalError("failed to fetch registration", err);
         }
     },
     async create(registration: ActiveRegistration): Promise<ActiveRegistration> {
-        console.debug(`creating new registration: ${registration}`);
+        L.debug(`creating new registration: ${registration}`);
         const activeRegistrationModel = new ActiveRegistrationModel(registration);
         try {
             const doc = await activeRegistrationModel.save();
             registration.id = doc.id;
-            console.debug(`new registration doc created: ${activeRegistrationModel}`);
-            console.info(`saved new registration: program: ${registration.programId} id: ${registration.id}`);
+            L.debug(`new registration doc created: ${activeRegistrationModel}`);
+            L.info(`saved new registration: program: ${registration.programId} id: ${registration.id}`);
             return doc;
         } catch (err) {
-            console.error("failed to save registration", err);
+            L.error("failed to save registration", err);
             throw new InternalError("failed to save registration", err);
         }
     },
     async delete(id: string): Promise<void> {
-        console.debug(`in delete registration id: ${id}`);
+        L.debug(`in delete registration id: ${id}`);
         try {
             await ActiveRegistrationModel.deleteOne({ _id: id }).exec();
         } catch (err) {

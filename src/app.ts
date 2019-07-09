@@ -3,10 +3,12 @@ import errorHandler from "errorhandler";
 import bodyParser from "body-parser";
 
 import * as submissionAPI from "./infra/controllers/submission";
-import * as bootstrap from "./bootstrap";
+
 import * as middleware from "./middleware";
 import multer from "multer";
 import mongoose from "mongoose";
+import { loggerFor } from "./logger";
+const L = loggerFor(__filename);
 
 const upload = multer({ dest: "/tmp" });
 
@@ -26,17 +28,17 @@ app.patch("/submission/registration/:id", middleware.wrapAsync(submissionAPI.com
 
 // this has to be defined after all routes for it to work for these paths.
 app.use(middleware.errorHandler);
-if (!process.env.NODE_ENV) {
+if (process.env.NODE_ENV !== "PRODUCTION") {
     app.use(errorHandler());
 }
 
 app.use((req, res, next) => {
     // action after response
     const afterResponse = function() {
-     console.info({req: req}, "End request");
+     L.info(`${req} End request`);
       // any other clean ups
       mongoose.connection.close(function () {
-        console.log("Mongoose connection disconnected");
+        L.info("Mongoose connection disconnected");
       });
     };
     // hooks to execute after response
@@ -44,17 +46,5 @@ app.use((req, res, next) => {
     res.on("close", afterResponse);
     next();
 });
-
-bootstrap.run();
-
-const gracefulExit = () => {
-    mongoose.connection.close(function () {
-        console.log("Mongoose default connection is disconnected through app termination");
-        process.exit(0);
-    });
-};
-  // If the Node process ends, close the Mongoose connection
-process.on("SIGINT", gracefulExit).on("SIGTERM", gracefulExit);
-
 
 export default app;

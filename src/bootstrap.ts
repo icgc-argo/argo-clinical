@@ -1,51 +1,86 @@
 import mongoose from "mongoose";
-import { configManager } from "./config";
-const setupDB = () => {
-    // mongoose.Promise = Promise;
+import { loggerFor } from "./logger";
+const L = loggerFor(__filename);
+
+namespace Configs {
+    export let config: Configs.ConfigManager;
+
+    export class ConfigManager {
+        constructor(private impl: AppConfig) {}
+        getConfig(): AppConfig {
+            return this.impl;
+        }
+    }
+
+    export const initConfigs = (configs: AppConfig) => {
+        if (configs == undefined) {
+            configs = defaultAppConfigImpl;
+        }
+        config = new ConfigManager(configs);
+        return configs;
+    };
+
+    export interface AppConfig {
+        getMongoUrl(): string;
+    }
+}
+
+const defaultAppConfigImpl: Configs.AppConfig = {
+    getMongoUrl(): string {
+        return process.env.CLINICAL_DB_URL;
+    }
+};
+
+const setupDBConnection = () => {
     mongoose.connection.on("connected", () => {
-        console.log("Connection Established");
+        L.debug("Connection Established");
     });
-
     mongoose.connection.on("reconnected", () => {
-        console.log("Connection Reestablished");
+        L.debug("Connection Reestablished");
     });
-
     mongoose.connection.on("disconnected", () => {
-        console.log("Connection Disconnected");
+        L.debug("Connection Disconnected");
     });
-
     mongoose.connection.on("close", () => {
-        console.log("Connection Closed");
+        L.debug("Connection Closed");
     });
-
     mongoose.connection.on("error", (error) => {
-        console.log("ERROR: " + error);
+        L.debug("ERROR: " + error);
     });
 
-    const connectToDb = async (delayMillis: number) => setTimeout(async () => {
-            console.log("connecting to mongo");
+    const connectToDb = async (delayMillis: number) => {
+        setTimeout(async () => {
+            L.debug("connecting to mongo");
             try {
-                await mongoose.connect(configManager.getConfig().getMongoUrl(), {
+                await mongoose.connect(Configs.config.getConfig().getMongoUrl(), {
                     autoReconnect: true,
                     socketTimeoutMS: 0,
                     keepAlive: true,
                     reconnectTries: 1000,
                     reconnectInterval: 3000,
-                    bufferMaxEntries: 0, // Disable node driver's buffering as well
                     useNewUrlParser: true
                 });
             } catch (err) {
-                console.error("failed to connect to mongo", err);
+                L.error("failed to connect to mongo", err);
                 // retry in 5 secs
                 connectToDb(5000);
             }
         }, delayMillis);
-
-    connectToDb(1000);
+    };
+    // initialize connection attempts
+    connectToDb(1);
 };
+export const run = (configs?: Configs.AppConfig | undefined) => {
+    configs = Configs.initConfigs(configs);
+    setupDBConnection();
+    // close app connections on termination
+    const gracefulExit = () => {
+        mongoose.connection.close(function () {
+            L.debug("Mongoose default connection is disconnected through app termination");
+            process.exit(0);
+        });
+    };
 
-
-
-export const run = () => {
-    setupDB();
+    // If the Node process ends, close the Mongoose connection
+    process.on("SIGINT", gracefulExit).on("SIGTERM", gracefulExit);
 };

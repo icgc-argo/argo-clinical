@@ -7,7 +7,7 @@
     "build": "npm run build-ts && npm run resources && npm run tslint",
     "serve": "node dist/server.js",
     "watch-node": "nodemon dist/server.js",
-    "test": "npm run build-ts && mocha -r ts-node/register test/**/*.ts",
+    "test": "npm run build-ts && mocha --exit --timeout 10000 -r ts-node/register test/**/*.ts",
     "build-ts": "tsc",
     "watch-ts": "tsc -w",
     "tslint": "tslint -c tslint.json -p tsconfig.json",
@@ -81,6 +81,7 @@
     "multer": "^1.4.1",
     "nodemailer": "^6.2.1",
     "request": "^2.88.0",
-    "request-promise": "^4.2.4"
+    "request-promise": "^4.2.4",
+    "winston": "^3.2.1"
   }
 }

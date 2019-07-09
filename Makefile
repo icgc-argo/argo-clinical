@@ -3,6 +3,9 @@ debug:
 	docker-compose up -d
 	npm run debug
 
+verify:
+	npm run test
+
 stop:
 	docker-compose down --remove-orphans 
 

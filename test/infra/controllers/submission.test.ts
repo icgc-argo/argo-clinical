@@ -2,57 +2,38 @@
 // import * as chai from "chai";
 const chai = require("chai");
 const mongoose = require("mongoose");
-const { GenericContainer } = require("testcontainers");
+import { GenericContainer } from "testcontainers";
+import fs from "fs";
 // needed for types
 import "chai-http";
 import "mocha";
-import { configManager } from "../../../src/config";
-
 import app from "../../../src/app";
+import * as bootstrap from "../../../src/bootstrap";
+
 chai.use(require("chai-http"));
 chai.should();
 let container: any;
 
-describe("Submission", () => {
+describe("Submission", async function() {
   // will run when all tests are finished
-  before(async (done) => {
+  before(async function() {
     try {
       container = await new GenericContainer("mongo")
         .withExposedPorts(27017)
         .start();
-      configManager.setConfigImpl({
+      bootstrap.run({
         getMongoUrl: () => {
-          return "";
+          return `mongodb://${container.getContainerIpAddress()}:${container.getMappedPort(27017)}/clinical`;
         }
       });
     } catch (err) {
       console.error("before >>>>>>>>>>>", err);
     }
-    await new Promise(done => setTimeout(done, 5000));
+
   });
 
-  // will run when all tests are finished
-  after(async () => {
-    let error;
-    try {
-      if (container) {
-        await container.stop();
-      }
-    } catch (err) {
-      console.error("after >>>>>>>>>>>", err);
-      error = err;
-    }
-    try {
-      await mongoose.connection.close();
-    } catch (err) {
-      console.error("after >>>>>>>>>>>", err);
-      error = err;
-    }
-    return error;
-  });
-
-  describe("registration", () => {
-    it("should return 404 if no registration found", (done) => {
+  describe("registration", function() {
+    it("should return 404 if no registration found", function(done) {
       chai.request(app)
         .get("/submission/registration?programId=NONE-EX")
         .end((err: any, res: any) => {
@@ -60,6 +41,53 @@ describe("Submission", () => {
           done();
         });
     });
+
+    it("should upload registration tsv", function(done) {
+      let file: Buffer;
+      try {
+        file = fs.readFileSync("./test/infra/controllers/registration.tsv");
+      } catch (err) {
+        done(err);
+      }
+      chai.request(app)
+        .post("/submission/registration")
+        .type("form")
+        .attach("registrationFile", file, "registration.tsv")
+        .field("creator", "testor")
+        .field("programId", "PEXA-MX")
+        .end((err: any, res: any) => {
+          res.should.have.status(201);
+          done();
+        });
+    });
+
+
   });
+
+  // will run when all tests are finished
+  after(async function() {
+    let error;
+    try {
+      console.log("in after");
+      if (container) {
+        await container.stop();
+      }
+    } catch (err) {
+      console.error("after >>>>>>>>>>>", err);
+      error = err;
+    }
+    console.log("container stoped");
+    try {
+      await mongoose.connection.close();
+    } catch (err) {
+      console.error("after >>>>>>>>>>>", err);
+      error = err;
+    }
+    console.log("conn stopped");
+    return error;
+  });
+
 });
+
+
 

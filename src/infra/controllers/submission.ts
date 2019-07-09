@@ -1,6 +1,8 @@
 import * as submission from "../../domain/services/submission";
 import { Request, Response } from "express";
 import { TsvUtils, ControllerUtils } from "../utils";
+import { loggerFor } from "../../logger";
+const L = loggerFor(__filename);
 
 export const getRegistrationByProgramId = async (req: Request, res: Response) => {
     if (req.query == undefined || req.query.programId == undefined || req.query.programId.trim() == "") {
@@ -44,18 +46,22 @@ export const commitRegistration = async (req: Request, res: Response) => {
 
 const isValidCreateBody = (req: Request, res: Response): boolean => {
     if (req.body == undefined) {
+        L.debug("request body missing");
         ControllerUtils.badRequest(res, `no body`);
         return false;
     }
     if (req.body.programId == undefined) {
+        L.debug("programId missing");
         ControllerUtils.badRequest(res, `programId is required`);
         return false;
     }
     if (req.body.creator == undefined) {
+        L.debug("creator missing");
         ControllerUtils.badRequest(res, `creator is required`);
         return false;
     }
     if (req.file == undefined) {
+        L.debug("registrationFile missing");
         ControllerUtils.badRequest(res, `registrationFile file is required`);
         return false;
     }
