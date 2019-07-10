@@ -1,13 +1,13 @@
 {
   "name": "argo-clinical",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Clinical submission system and repo",
   "scripts": {
     "start": "npm run serve",
     "build": "npm run build-ts && npm run resources && npm run tslint",
     "serve": "node dist/server.js",
     "watch-node": "nodemon dist/server.js",
-    "test": "npm run build && mocha --exit --timeout 10000 -r ts-node/register test/**/*.ts",
+    "test": "npm run build && mocha --exit --timeout 30000 -r ts-node/register test/**/*.ts",
     "build-ts": "tsc",
     "watch-ts": "tsc -w",
     "tslint": "tslint -c tslint.json -p tsconfig.json",
