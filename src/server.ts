@@ -1,20 +1,15 @@
-import errorHandler from "errorhandler";
-
+import dotenv from "dotenv";
 import app from "./app";
-
-/**
- * Error Handler. Provides full stack - remove for production
- */
-if (!process.env.PRODUCTION) {
-  app.use(errorHandler());
-}
+import * as bootstrap from "./bootstrap";
 
 /**
  * Start Express server.
  */
+dotenv.config();
+bootstrap.run();
+
 const server = app.listen(app.get("port"), () => {
-  console.log(
-    "  App is running at http://localhost:%d in %s mode",
+  console.log(" App is running at http://localhost:%d in %s mode",
     app.get("port"),
     app.get("env")
   );

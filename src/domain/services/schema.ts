@@ -1,7 +1,8 @@
-import { ValidationResult } from "./submission";
+import { SchemaValidationError } from "./submission";
 
-export const validate = (fileName: string, records: Array<any>): ValidationResult => {
+export const validate = (fileName: string, records: Array<any>): SchemaValidationError => {
     return {
-        errors: []
+        generalErrors: [],
+        recordsErrors: []
     };
 };

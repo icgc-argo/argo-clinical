@@ -1,31 +1,47 @@
 import  * as schemaSvc from "./schema";
 import * as dataValidator from "./validation";
 import { donorDao } from "../../adapters/clinical/repository/clinical/donor";
-import { registrationDao } from "../../adapters/clinical/repository/submission/registration";
+import { registrationRepository } from "../../adapters/clinical/repository/submission/registration";
 import { Donor } from "../entities/clinical";
 import { RegisterDonorDto } from "../../adapters/clinical/repository/clinical/donor";
+import { ActiveRegistration, RegistrationRecord } from "../../domain/entities/submission";
 
 export namespace operations {
     /**
      * This method creates an in progress registration after validating but doesn't create the donors in the donor collection
-     * it overrides and closes any previously uncomitted registrations.
+     * it overrides and deletes any previously uncomitted registrations.
      * @param command CreateRegistrationCommand the records to register,
      *  can contain new donors or existing donors but new samples.
      */
     export const createRegistration = async (command: CreateRegistrationCommand): Promise<CreateRegistrationResult> => {
-        const {errors: schemaErrors} = schemaSvc.validate("registration", command.records);
-        const {errors: dataErrors} = dataValidator.validateRegistrationData(command.records);
-        if (schemaErrors.length > 0 || dataErrors.length > 0) {
+        const schemaErrors: SchemaValidationError = schemaSvc.validate("registration", command.records);
+        const registrationRecords: Array<CreateRegistrationRecord> = mapToRegistrationRecord(command);
+        const {errors: dataErrors} = dataValidator.validateRegistrationData(registrationRecords);
+
+        // if there are errors terminate the creation.
+        if (anyErrors(schemaErrors, dataErrors)) {
             return {
                 registrationId: undefined,
                 state: undefined,
-                errors: [...schemaErrors, ...dataErrors],
+                errors: [...schemaErrors.recordsErrors, ...dataErrors],
                 successful: false
             };
         }
-        const registration = await registrationDao.create(command);
+
+        // build the registration object
+        const registration: ActiveRegistration = toActiveRegistration(command, registrationRecords);
+
+        // delete any existing active registration to replace it with the new one
+        // we can only have 1 active registration per program
+        const existingActivRegistration = await registrationRepository.findByProgramId(command.programId);
+        if (existingActivRegistration != undefined) {
+            await registrationRepository.delete(existingActivRegistration.id);
+        }
+
+        // save the new registration object
+        const savedRegistration = await registrationRepository.create(registration);
         return {
-            registrationId: registration.id,
+            registrationId: savedRegistration.id,
             state: "uncommitted",
             errors: [],
             successful: true
@@ -60,8 +76,48 @@ export namespace operations {
      * @param programId string
      */
     export const findByProgramId = async (programId: string) => {
-        return await registrationDao.findByProgramId(programId);
+        return await registrationRepository.findByProgramId(programId);
     };
+
+    /************* Private methods *************/
+    function toActiveRegistration(command: CreateRegistrationCommand, registrationRecords: CreateRegistrationRecord[]): ActiveRegistration {
+        return {
+            programId: command.programId,
+            creator: command.creator,
+            records: registrationRecords.map(r => {
+                const record: RegistrationRecord = {
+                    donorSubmitterId: r.donorSubmitterId,
+                    gender: r.gender,
+                    specimenSubmitterId: r.specimenSubmitterId,
+                    specimenType: r.specimenType,
+                    tumorNormalDesignation: r.tumorNormalDesignation,
+                    sampleSubmitterId: r.sampleSubmitterId,
+                    sampleType: r.sampleType
+                };
+                return record;
+            })
+        };
+    }
+
+    function anyErrors(schemaErrors: SchemaValidationError, dataErrors: any[]) {
+        return schemaErrors.generalErrors.length > 0 || schemaErrors.recordsErrors.length > 0 || dataErrors.length > 0;
+    }
+
+    function mapToRegistrationRecord(command: CreateRegistrationCommand): CreateRegistrationRecord[] {
+        return command.records.map(r => {
+            const rec: CreateRegistrationRecord = {
+                programId: r.program_id,
+                donorSubmitterId: r.donor_submitter_id,
+                gender: r.gender,
+                specimenSubmitterId: r.specimen_submitter_id,
+                specimenType: r.specimen_type,
+                tumorNormalDesignation: r.tumor_normal_designation,
+                sampleSubmitterId: r.sample_submitter_id,
+                sampleType: r.sample_type
+            };
+            return rec;
+        });
+    }
 }
 
 export interface CreateRegistrationRecord {
@@ -80,7 +136,9 @@ export interface CommitRegistrationCommand {
 }
 
 export interface CreateRegistrationCommand {
-    records: Array<CreateRegistrationRecord>;
+    // we define the records as arbitrary key value pairs to be validated by the schema
+    // before we put them in a CreateRegistrationRecord, in case a column is missing so we let dictionary handle error collection.
+    records: Array<{[key: string]: any}>;
     creator: string;
     programId: string;
 }
@@ -94,4 +152,9 @@ export interface CreateRegistrationResult {
 
 export interface ValidationResult {
     errors: Array<any>;
+}
+
+export interface SchemaValidationError {
+    generalErrors: Array<any>;
+    recordsErrors: Array<any>;
 }
