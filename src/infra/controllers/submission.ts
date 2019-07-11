@@ -5,6 +5,7 @@ import { loggerFor } from "../../logger";
 const L = loggerFor(__filename);
 
 export const getRegistrationByProgramId = async (req: Request, res: Response) => {
+    L.debug("in getRegistrationByProgramId");
     if (req.query == undefined || req.query.programId == undefined || req.query.programId.trim() == "") {
         return ControllerUtils.badRequest(res, `programId query param missing`);
     }

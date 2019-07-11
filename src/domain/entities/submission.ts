@@ -18,3 +18,8 @@ export interface RegistrationRecord {
     sampleSubmitterId: string;
     sampleType: string;
 }
+
+export interface DataSchema {
+    version: string;
+    definitions: [];
+}

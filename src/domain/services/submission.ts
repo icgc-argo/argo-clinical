@@ -1,9 +1,9 @@
 import  * as schemaSvc from "./schema";
 import * as dataValidator from "./validation";
-import { donorDao } from "../../adapters/clinical/repository/clinical/donor";
-import { registrationRepository } from "../../adapters/clinical/repository/submission/registration";
+import { donorDao } from "../../adapters/repository/clinical/donor";
+import { registrationRepository } from "../../adapters/repository/submission/registrationRepo";
 import { Donor } from "../entities/clinical";
-import { RegisterDonorDto } from "../../adapters/clinical/repository/clinical/donor";
+import { RegisterDonorDto } from "../../adapters/repository/clinical/donor";
 import { ActiveRegistration, RegistrationRecord } from "../../domain/entities/submission";
 
 export namespace operations {

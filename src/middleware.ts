@@ -14,7 +14,6 @@ export const wrapAsync = (fn: RequestHandler): RequestHandler => {
     };
 };
 
-
 // general catch all error handler
 export const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction): any => {
     console.error("error handler received error: ", err);
