@@ -1,6 +1,0 @@
-
-> argo-clinical@0.2.0 build-ts /home/ballabadi/dev/repos/argo/argo-clinical
-> tsc
-
-node_modules/@types/superagent/index.d.ts(31,29): error TS2304: Cannot find name 'Blob'.
-node_modules/@types/superagent/index.d.ts(119,14): error TS2304: Cannot find name 'XMLHttpRequest'.
