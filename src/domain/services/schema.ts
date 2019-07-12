@@ -66,9 +66,17 @@ const getRecordsMissingFieldsErrors = (rec: Record, index: number, fields: Array
     }).filter(e => e);
 };
 
-const isInvalidFieldType = (valueType: ValueType, recordFieldValue: string | boolean | number) => {
+const isInvalidFieldType = (valueType: ValueType, recordFieldValue: string) => {
     if (valueType == ValueType.string) {
         return true;
+    }
+    if (valueType == ValueType.integer) {
+        try {
+            parseInt(recordFieldValue);
+            return true;
+        } catch (err) {
+            return false;
+        }
     }
     return false;
 };
@@ -117,5 +125,5 @@ export const loadSchema = async (initialVersion: string): Promise<DataSchema> =>
 };
 
 export interface Record {
-    [k: string]: string | boolean | number;
+    [k: string]: string;
 }
