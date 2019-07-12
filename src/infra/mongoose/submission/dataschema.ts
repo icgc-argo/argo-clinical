@@ -4,8 +4,8 @@ import { DataSchema } from "../../../domain/entities/submission";
 type DataSchemaDocument = mongoose.Document & DataSchema;
 
 const DataSchemaMongooseSchema = new mongoose.Schema({
-    name: {type: String, unique: true},
-    version: {type: String},
+    name: { type: String, unique: true },
+    version: { type: String },
     definitions: [],
 }, { timestamps: true });
 

@@ -4,8 +4,11 @@ import * as bootstrap from "./bootstrap";
 import app from "./app";
 
 const defaultAppConfigImpl: AppConfig = {
-  getMongoUrl(): string {
-      return process.env.CLINICAL_DB_URL;
+  mongoUrl(): string {
+    return process.env.CLINICAL_DB_URL;
+  },
+  initialSchemaVersion(): string {
+    return process.env.INITIAL_SCHEMA_VERSION;
   }
 };
 

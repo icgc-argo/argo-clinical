@@ -10,7 +10,8 @@ export const initConfigs = (configs: AppConfig) => {
 };
 
 export interface AppConfig {
-    getMongoUrl(): string;
+    mongoUrl(): string;
+    initialSchemaVersion(): string;
 }
 
 class ConfigManager {

@@ -6,10 +6,7 @@ export let schema: any = {};
 
 export const fetchSchema = async (version: string): Promise<DataSchema> => {
     const result = delay(1000);
-    return result({
-      version: version,
-      definitions: stuff
-    });
+    return result(stuff[0]);
 };
 
 function delay(milliseconds: number) {

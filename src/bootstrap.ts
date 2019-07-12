@@ -1,10 +1,9 @@
 import mongoose from "mongoose";
 import { loggerFor } from "./logger";
 import { config, AppConfig, initConfigs } from "./config";
-
+import * as schemaSvc from "./domain/services/schema";
 const L = loggerFor(__filename);
-const setupDBConnection = () => {
-    const MONGO_URL = config.getConfig().getMongoUrl();
+const setupDBConnection = (mongoUrl: string) => {
     mongoose.connection.on("connected", () => {
         L.debug("Connection Established");
     });
@@ -24,7 +23,7 @@ const setupDBConnection = () => {
         setTimeout(async () => {
             L.debug("connecting to mongo");
             try {
-                await mongoose.connect(MONGO_URL, {
+                await mongoose.connect(mongoUrl, {
                     autoReconnect: true,
                     socketTimeoutMS: 0,
                     keepAlive: true,
@@ -45,7 +44,8 @@ const setupDBConnection = () => {
 
 export const run = (config: AppConfig) => {
     initConfigs(config);
-    setupDBConnection();
+    setupDBConnection(config.mongoUrl());
+    schemaSvc.loadSchema(config.initialSchemaVersion());
     // close app connections on termination
     const gracefulExit = () => {
         mongoose.connection.close(function () {
