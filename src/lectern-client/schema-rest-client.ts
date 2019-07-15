@@ -4,11 +4,11 @@ const L = loggerFor(__filename);
 const stuff = require("../resources/stub-schema.json");
 
 export interface SchemaServiceRestClient {
-  fetchSchema(version: string): Promise<DataSchema>;
+  fetchSchema(name: string, version: string): Promise<DataSchema>;
 }
 
 export const schemaClient: SchemaServiceRestClient = {
-  fetchSchema: async (version: string): Promise<DataSchema> => {
+  fetchSchema: async (name: string, version: string): Promise<DataSchema> => {
     L.debug(`in fetch schema ${version}`);
     const result = delay(1000);
     const stubb = await result((stuff[0]));

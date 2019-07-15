@@ -5,19 +5,19 @@ const L = loggerFor(__filename);
 
 export interface SchemaRepository {
     createOrUpdate(schema: DataSchema): Promise<DataSchema>;
-    get(): Promise<DataSchema>;
+    get(name: String): Promise<DataSchema>;
 }
 
 export const schemaRepo: SchemaRepository = {
     createOrUpdate: async(schema: DataSchema): Promise<DataSchema> => {
         const newSchema = new DataSchemaModel(schema);
         return await DataSchemaModel.findOneAndUpdate({
-            name: "ARGO"
+            name: schema.name
         }, newSchema, { upsert: true }).exec();
     },
-    get: async (): Promise<DataSchema> => {
+    get: async (name: String): Promise<DataSchema> => {
         L.debug("in Schema repo get");
-        return await DataSchemaModel.findOne({ name: "ARGO" }).exec();
+        return await DataSchemaModel.findOne({ name: name }).exec();
     },
 };
 

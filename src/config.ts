@@ -11,6 +11,7 @@ export const initConfigs = (configs: AppConfig) => {
 
 export interface AppConfig {
     mongoUrl(): string;
+    schemaName(): string;
     initialSchemaVersion(): string;
 }
 

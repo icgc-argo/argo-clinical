@@ -94,21 +94,22 @@ export const getCurrent = async (): Promise<DataSchema> => {
     return schema;
 };
 
-export const updateVersion = async (newVersion: string): Promise<DataSchema> => {
-    const newSchema = await schemaServiceAdapter.fetchSchema(newVersion);
+export const updateVersion = async (name: string, newVersion: string): Promise<DataSchema> => {
+    const newSchema = await schemaServiceAdapter.fetchSchema(name, newVersion);
     return await schemaRepo.createOrUpdate(newSchema);
 };
 
-export const loadSchema = async (initialVersion: string): Promise<DataSchema> => {
+export const loadSchema = async (name: string, initialVersion: string): Promise<DataSchema> => {
     L.debug(`in loadSchema ${initialVersion}`);
     if (!initialVersion) {
         throw new Error("initial version cannot be empty");
     }
-    schema = await schemaRepo.get();
+    schema = await schemaRepo.get(name);
     if (!schema) {
         L.info(`schema not found in db`);
         schema = {
             definitions: [],
+            name: name,
             version: initialVersion
         };
     }
@@ -117,7 +118,7 @@ export const loadSchema = async (initialVersion: string): Promise<DataSchema> =>
     // schema service (lectern)
     if (!schema.definitions || schema.definitions.length == 0) {
         L.debug(`fetching schema from schema service`);
-        const result = await schemaServiceAdapter.fetchSchema(schema.version);
+        const result = await schemaServiceAdapter.fetchSchema(name, schema.version);
         L.info(`fetched schema ${result.version}`);
         schema.definitions = result.definitions;
         return await schemaRepo.createOrUpdate(schema);

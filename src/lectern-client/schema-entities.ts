@@ -3,6 +3,7 @@ const L = loggerFor(__filename);
 
 export interface DataSchema {
     version: string;
+    name: string;
     definitions: Array<SchemaDefinition>;
 }
 
@@ -14,9 +15,6 @@ export interface SchemaDefinition {
 
 }
 
-export enum ValueType {
-    string = "string", integer = "integer", number = "number", boolean = "boolean"
-}
 export interface FieldDefinition {
     name: string;
     valueType: ValueType;
@@ -25,4 +23,7 @@ export interface FieldDefinition {
     restrictions?: { codeList?: Array<string>; regex?: string; script?: string };
 }
 
+export enum ValueType {
+    string = "string", integer = "integer", number = "number", boolean = "boolean"
+}
 

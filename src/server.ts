@@ -9,6 +9,9 @@ const defaultAppConfigImpl: AppConfig = {
   },
   initialSchemaVersion(): string {
     return process.env.INITIAL_SCHEMA_VERSION;
+  },
+  schemaName(): string {
+    return process.env.SCHEMA_NAME;
   }
 };
 
