@@ -1,7 +1,7 @@
 import { SchemaValidationError, SchemaValidationErrors } from "./submission";
 import { DataSchema, SchemaDefinition, FieldDefinition, ValueType,  } from "../entities/submission";
-import { schemaRepo } from "../../adapters/repository/submission/dataschemaRepo";
-import { fetchSchema } from "../../adapters/schema-client";
+import { schemaRepo } from "../../adapters/repository/submission/dataschema-repo";
+import { schemaClient as schemaServiceAdapter } from "../../adapters/schema-service-client";
 import { loggerFor } from "../../logger";
 const L = loggerFor(__filename);
 export let schema: DataSchema;
@@ -94,7 +94,7 @@ export const getCurrent = async (): Promise<DataSchema> => {
 };
 
 export const updateVersion = async (newVersion: string): Promise<DataSchema> => {
-    const newSchema = await fetchSchema(newVersion);
+    const newSchema = await schemaServiceAdapter.fetchSchema(newVersion);
     return await schemaRepo.createOrUpdate(newSchema);
 };
 
@@ -116,7 +116,7 @@ export const loadSchema = async (initialVersion: string): Promise<DataSchema> =>
     // schema service (lectern)
     if (!schema.definitions || schema.definitions.length == 0) {
         L.debug(`fetching schema from schema service`);
-        const result = await fetchSchema(schema.version);
+        const result = await schemaServiceAdapter.fetchSchema(schema.version);
         L.info(`fetched schema ${result.version}`);
         schema.definitions = result.definitions;
         return await schemaRepo.createOrUpdate(schema);

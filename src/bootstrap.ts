@@ -3,6 +3,7 @@ import { loggerFor } from "./logger";
 import { config, AppConfig, initConfigs } from "./config";
 import * as schemaSvc from "./domain/services/schema";
 const L = loggerFor(__filename);
+
 const setupDBConnection = (mongoUrl: string) => {
     mongoose.connection.on("connected", () => {
         L.debug("Connection Established");
@@ -23,13 +24,19 @@ const setupDBConnection = (mongoUrl: string) => {
         setTimeout(async () => {
             L.debug("connecting to mongo");
             try {
+                // https://mongoosejs.com/docs/connections.html
                 await mongoose.connect(mongoUrl, {
                     autoReconnect: true,
-                    socketTimeoutMS: 0,
+                    // http://mongodb.github.io/node-mongodb-native/3.1/reference/faq/
+                    socketTimeoutMS: 10000,
+                    connectTimeoutMS: 30000,
                     keepAlive: true,
                     reconnectTries: 1000,
                     reconnectInterval: 3000,
-                    useNewUrlParser: true
+                    bufferMaxEntries: 0,
+                    // https://mongoosejs.com/docs/deprecations.html
+                    useNewUrlParser: true,
+                    useFindAndModify: false
                 });
             } catch (err) {
                 L.error("failed to connect to mongo", err);
@@ -42,10 +49,10 @@ const setupDBConnection = (mongoUrl: string) => {
     connectToDb(1);
 };
 
-export const run = (config: AppConfig) => {
+export const run = async (config: AppConfig) => {
     initConfigs(config);
     setupDBConnection(config.mongoUrl());
-    schemaSvc.loadSchema(config.initialSchemaVersion());
+    await schemaSvc.loadSchema(config.initialSchemaVersion());
     // close app connections on termination
     const gracefulExit = () => {
         mongoose.connection.close(function () {

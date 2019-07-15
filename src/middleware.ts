@@ -1,6 +1,7 @@
 import express, { NextFunction, Request, Response, RequestHandler } from "express";
 import multer from "multer";
-
+import { loggerFor } from "./logger";
+const L = loggerFor(__filename);
 // multer file upload handler
 export const upload = multer({ dest: "/tmp" });
 
@@ -16,9 +17,9 @@ export const wrapAsync = (fn: RequestHandler): RequestHandler => {
 
 // general catch all error handler
 export const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction): any => {
-    console.error("error handler received error: ", err);
+    L.error("error handler received error: ", err);
     if (res.headersSent) {
-        console.debug("error handler skipped");
+        L.debug("error handler skipped");
         return next(err);
     }
     res.status(500).send({ error: err.name, message: err.message });

@@ -21,9 +21,12 @@ describe("Submission", async function() {
       mongoContainer = await new GenericContainer("mongo")
         .withExposedPorts(27017)
         .start();
-      bootstrap.run({
-        getMongoUrl: () => {
+      await bootstrap.run({
+        mongoUrl: () => {
             return `mongodb://${mongoContainer.getContainerIpAddress()}:${mongoContainer.getMappedPort(27017)}/clinical`;
+        },
+        initialSchemaVersion() {
+          return "1.0";
         }
       });
     } catch (err) {
