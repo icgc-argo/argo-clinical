@@ -1,4 +1,4 @@
-import { CreateRegistrationRecord, ValidationResult } from "./submission";
+import { CreateRegistrationRecord, ValidationResult } from "./submission-service";
 
 export const validateRegistrationData = (records: Array<CreateRegistrationRecord>): ValidationResult => {
     checkNotDuplicated();

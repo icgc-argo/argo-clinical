@@ -1,10 +1,12 @@
-import  * as schemaSvc from "../lectern-client/schema-service";
+import  * as schemaSvc from "../lectern-client/schema-functions";
 import * as dataValidator from "./validation";
 import { donorDao } from "../clinical/donor-repo";
 import { registrationRepository } from "./registration-repo";
 import { Donor } from "../clinical/clinical-entities";
 import { RegisterDonorDto } from "../clinical/donor-repo";
-import { ActiveRegistration, RegistrationRecord } from "../submission/submission-entities";
+import { ActiveRegistration, RegistrationRecord } from "./submission-entities";
+import * as manager  from "../lectern-client/schema-manager";
+import { SchemaValidationErrors } from "../lectern-client/schema-entities";
 
 export namespace operations {
     /**
@@ -14,7 +16,8 @@ export namespace operations {
      *  can contain new donors or existing donors but new samples.
      */
     export const createRegistration = async (command: CreateRegistrationCommand): Promise<CreateRegistrationResult> => {
-        const schemaErrors: SchemaValidationErrors = schemaSvc.validate("registration", command.records);
+        const fullyPopulatedRecords =  manager.populateDefaults("registration", command.records);
+        const schemaErrors: SchemaValidationErrors = manager.validate("registration", fullyPopulatedRecords);
         const registrationRecords: Array<CreateRegistrationRecord> = mapToRegistrationRecord(command);
         const {errors: dataErrors} = dataValidator.validateRegistrationData(registrationRecords);
 
@@ -138,7 +141,7 @@ export interface CommitRegistrationCommand {
 export interface CreateRegistrationCommand {
     // we define the records as arbitrary key value pairs to be validated by the schema
     // before we put them in a CreateRegistrationRecord, in case a column is missing so we let dictionary handle error collection.
-    records: Array<{[key: string]: any}>;
+    records: Array<{[key: string]: string}>;
     creator: string;
     programId: string;
 }
@@ -152,15 +155,4 @@ export interface CreateRegistrationResult {
 
 export interface ValidationResult {
     errors: Array<any>;
-}
-
-export interface SchemaValidationErrors {
-    generalErrors: Array<any>;
-    recordsErrors: Array<SchemaValidationError>;
-}
-
-export interface SchemaValidationError {
-    errorType: "MISSING_REQUIRED_FIELD" | "INVALID_FIELD_VALUE_TYPE" | "INVALID_REGEX" | "INVALID_SCRIPT";
-    index: number;
-    fieldName: string;
 }

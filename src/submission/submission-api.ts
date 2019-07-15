@@ -1,17 +1,9 @@
-import * as submission from "./submission";
-import * as schemaSvc from "../lectern-client/schema-service";
+import * as submission from "./submission-service";
 import { Request, Response } from "express";
 import { TsvUtils, ControllerUtils } from "../utils";
 import { loggerFor } from "../logger";
 const L = loggerFor(__filename);
 
-export const getSchema = async (req: Request, res: Response) => {
-    const schema = await schemaSvc.getCurrent();
-    if (!schema) {
-        return ControllerUtils.notFound(res, "no schema found");
-    }
-    return res.status(200).send(schema);
-};
 
 export const getRegistrationByProgramId = async (req: Request, res: Response) => {
     L.debug("in getRegistrationByProgramId");

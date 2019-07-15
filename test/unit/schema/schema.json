@@ -11,10 +11,11 @@
                         "valueType": "string",
                         "description": "Unique identifier for program",
                         "meta": {
-                            "key": true
+                            "key": true,
+                            "required": true
                         },
                         "restrictions": {
-                            "script": "field.length > 5"
+                            "regex": "[A-Z]{2,8}-[A-Z]{2}"
                         }
                     },
                     {
@@ -22,10 +23,8 @@
                         "valueType": "string",
                         "description": "Unique identifier for donor; assigned by data provider",
                         "meta": {
-                            "key": true
-                        },
-                        "restrictions": {
-                            "script": "field.length > 5"
+                            "key": true,
+                            "required": true
                         }
                     },
                     {
@@ -49,10 +48,8 @@
                         "valueType": "string",
                         "description": "Submitter assigned specimen id",
                         "meta": {
-                            "key": true
-                        },
-                        "restrictions": {
-                            "script": "field.length > 5"
+                            "key": true,
+                            "required": true
                         }
                     },
                     {
@@ -80,10 +77,8 @@
                         "valueType": "string",
                         "description": "Submitter assigned sample id",
                         "meta": {
-                            "key": true
-                        },
-                        "restrictions": {
-                            "script": "field.length > 5"
+                            "key": true,
+                            "required": true
                         }
                     },
                     {

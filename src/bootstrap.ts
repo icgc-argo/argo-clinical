@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { loggerFor } from "./logger";
 import { AppConfig, initConfigs } from "./config";
-import * as schemaSvc from "./lectern-client/schema-service";
+import * as manager from "./lectern-client/schema-manager";
 const L = loggerFor(__filename);
 
 const setupDBConnection = (mongoUrl: string) => {
@@ -52,7 +52,7 @@ const setupDBConnection = (mongoUrl: string) => {
 export const run = async (config: AppConfig) => {
     initConfigs(config);
     setupDBConnection(config.mongoUrl());
-    await schemaSvc.loadSchema(config.schemaName(), config.initialSchemaVersion());
+    await manager.loadSchema(config.schemaName(), config.initialSchemaVersion());
     // close app connections on termination
     const gracefulExit = () => {
         mongoose.connection.close(function () {

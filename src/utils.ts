@@ -35,3 +35,18 @@ export namespace ControllerUtils {
         res.status(400).send({message: msg});
     };
 }
+
+export namespace Checks {
+    export const checkNotNull = (argName: string, arg: any) => {
+        if (!arg) {
+            throw new Errors.InvalidArgument(argName);
+        }
+    };
+}
+export namespace Errors {
+    export class InvalidArgument extends Error {
+        constructor(argumentName: string) {
+            super(`Invalid argument : ${argumentName}`);
+        }
+    }
+}

@@ -1,5 +1,5 @@
 import { ActiveRegistrationModel } from "./registration";
-import { CreateRegistrationCommand } from "./submission";
+import { CreateRegistrationCommand } from "./submission-service";
 import { ActiveRegistration } from "./submission-entities";
 import { InternalError } from "./errors";
 import { loggerFor } from "../logger";
@@ -7,7 +7,7 @@ const L = loggerFor(__filename);
 
 export interface RegistrationRepository {
     delete(id: string): void;
-    create(command: CreateRegistrationCommand): Promise<ActiveRegistration>;
+    create(command: ActiveRegistration): Promise<ActiveRegistration>;
     findByProgramId(programId: string): Promise<ActiveRegistration>;
 }
 

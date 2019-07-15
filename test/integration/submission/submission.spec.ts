@@ -7,14 +7,13 @@ import fs from "fs";
 import "chai-http";
 import "mocha";
 import { GenericContainer } from "testcontainers";
-import app from "../../src/app";
-import * as bootstrap from "../../src/bootstrap";
+import app from "../../../src/app";
+import * as bootstrap from "../../../src/bootstrap";
 export let mongoContainer: any;
 chai.use(require("chai-http"));
 chai.should();
 
-
-describe("Submission", async function() {
+describe("Submission Api", async function() {
   // will run when all tests are finished
   before(async function() {
     try {
@@ -50,7 +49,7 @@ describe("Submission", async function() {
     it("should upload registration tsv", function(done) {
       let file: Buffer;
       try {
-        file = fs.readFileSync("./test/submission/registration.tsv");
+        file = fs.readFileSync(__dirname + "/registration.tsv");
       } catch (err) {
         done(err);
       }
