@@ -1,23 +1,5 @@
-
-/**
- * Represents a valid registration that is not yet committed (in progress)
- */
-export interface ActiveRegistration {
-    id?: string;
-    programId: string;
-    creator: string;
-    records: Array<RegistrationRecord>;
-}
-
-export interface RegistrationRecord {
-    donorSubmitterId: string;
-    gender: string;
-    specimenSubmitterId: string;
-    specimenType: string;
-    tumorNormalDesignation: string;
-    sampleSubmitterId: string;
-    sampleType: string;
-}
+import { loggerFor } from "../logger";
+const L = loggerFor(__filename);
 
 export interface DataSchema {
     version: string;
@@ -42,3 +24,5 @@ export interface FieldDefinition {
     meta?: { key?: boolean; required?: { default: string | number | boolean } };
     restrictions?: { codeList?: Array<string>; regex?: string; script?: string };
 }
+
+

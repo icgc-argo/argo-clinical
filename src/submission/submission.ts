@@ -1,10 +1,10 @@
-import  * as schemaSvc from "./schema";
+import  * as schemaSvc from "../lectern-client/schema-service";
 import * as dataValidator from "./validation";
-import { donorDao } from "../../adapters/repository/clinical/donor";
-import { registrationRepository } from "../../adapters/repository/submission/registration-repo";
-import { Donor } from "../entities/clinical";
-import { RegisterDonorDto } from "../../adapters/repository/clinical/donor";
-import { ActiveRegistration, RegistrationRecord } from "../../domain/entities/submission";
+import { donorDao } from "../clinical/donor-repo";
+import { registrationRepository } from "./registration-repo";
+import { Donor } from "../clinical/clinical-entities";
+import { RegisterDonorDto } from "../clinical/donor-repo";
+import { ActiveRegistration, RegistrationRecord } from "../submission/submission-entities";
 
 export namespace operations {
     /**

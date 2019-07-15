@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { loggerFor } from "./logger";
 import { config, AppConfig, initConfigs } from "./config";
-import * as schemaSvc from "./domain/services/schema";
+import * as schemaSvc from "./lectern-client/schema-service";
 const L = loggerFor(__filename);
 
 const setupDBConnection = (mongoUrl: string) => {

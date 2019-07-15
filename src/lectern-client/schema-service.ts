@@ -1,12 +1,13 @@
-import { SchemaValidationError, SchemaValidationErrors } from "./submission";
-import { DataSchema, SchemaDefinition, FieldDefinition, ValueType,  } from "../entities/submission";
-import { schemaRepo } from "../../adapters/repository/submission/dataschema-repo";
-import { schemaClient as schemaServiceAdapter } from "../../adapters/schema-service-client";
-import { loggerFor } from "../../logger";
+import { SchemaValidationError, SchemaValidationErrors } from "../submission/submission";
+import { DataSchema, SchemaDefinition, FieldDefinition, ValueType,  } from "./schema-entities";
+import { schemaRepo } from "./schema-repo";
+import { schemaClient as schemaServiceAdapter } from "./schema-rest-client";
+import { loggerFor } from "../logger";
 const L = loggerFor(__filename);
+
 export let schema: DataSchema;
 
-export const validate = (definition: string, records: Array<Record>): SchemaValidationErrors => {
+export const validate = (definition: string, records: Array<DataRecord>): SchemaValidationErrors => {
     const schemaDef: SchemaDefinition = schema.definitions.find(e => e.name === definition);
     if (!schemaDef) {
         throw new Error(`no schema found for : ${definition}`);
@@ -28,26 +29,26 @@ export const validate = (definition: string, records: Array<Record>): SchemaVali
     return errors;
 };
 
-type ValidationFunction = (rec: Record, index: number, fields: Array<FieldDefinition>) => Array<SchemaValidationError>;
-const runValidationPipeline = (rec: Record,
+type ValidationFunction = (rec: DataRecord, index: number, fields: Array<FieldDefinition>) => Array<SchemaValidationError>;
+const runValidationPipeline = (rec: DataRecord,
     index: number,
     fields: Array<FieldDefinition>,
     funs: Array<ValidationFunction>) => {
 
     let result: Array<SchemaValidationError> = [];
     for (const fun of funs) {
-        result = result.concat(fun(rec, index, getHealthyFields(result, fields)));
+        result = result.concat(fun(rec, index, getValidFields(result, fields)));
     }
     return result;
 };
 
-const getHealthyFields = (errs: Array<SchemaValidationError>, fields: Array<FieldDefinition>) => {
+const getValidFields = (errs: Array<SchemaValidationError>, fields: Array<FieldDefinition>) => {
     return fields.filter(field => {
         return !errs.find(e => e.fieldName != field.name);
     });
 };
 
-const getInvalidTypeValuesErrors = (rec: Record, index: number, fields: Array<FieldDefinition>) => {
+const getInvalidTypeValuesErrors = (rec: DataRecord, index: number, fields: Array<FieldDefinition>) => {
     return fields.map(field => {
         if (isInvalidFieldType(field.valueType, rec[field.name])) {
             const err: SchemaValidationError =  {errorType: "INVALID_FIELD_VALUE_TYPE", fieldName: field.name, index: index};
@@ -56,7 +57,7 @@ const getInvalidTypeValuesErrors = (rec: Record, index: number, fields: Array<Fi
     }).filter(e => e);
 };
 
-const getRecordsMissingFieldsErrors = (rec: Record, index: number, fields: Array<FieldDefinition>) => {
+const getRecordsMissingFieldsErrors = (rec: DataRecord, index: number, fields: Array<FieldDefinition>) => {
     return fields.map(field => {
         if (isRequiredMissing(field, rec)) {
             const err: SchemaValidationError = {errorType: "MISSING_REQUIRED_FIELD", fieldName: field.name, index: index};
@@ -81,7 +82,7 @@ const isInvalidFieldType = (valueType: ValueType, recordFieldValue: string) => {
     return false;
 };
 
-const isRequiredMissing = (field: FieldDefinition, record: Record) => {
+const isRequiredMissing = (field: FieldDefinition, record: DataRecord) => {
     if (!record[field.name] && field.meta && field.meta.required) {
         return true;
     }
@@ -124,6 +125,6 @@ export const loadSchema = async (initialVersion: string): Promise<DataSchema> =>
     return schema;
 };
 
-export interface Record {
+export interface DataRecord {
     [k: string]: string;
 }

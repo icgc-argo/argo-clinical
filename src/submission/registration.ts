@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { ActiveRegistration } from "../../../domain/entities/submission";
+import { ActiveRegistration } from "./submission-entities";
 
 type ActiveRegistrationDocument = mongoose.Document & ActiveRegistration;
 

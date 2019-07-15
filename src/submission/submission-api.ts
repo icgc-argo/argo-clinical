@@ -1,8 +1,8 @@
-import * as submission from "../../domain/services/submission";
-import * as schemaSvc from "../../domain/services/schema";
+import * as submission from "./submission";
+import * as schemaSvc from "../lectern-client/schema-service";
 import { Request, Response } from "express";
 import { TsvUtils, ControllerUtils } from "../utils";
-import { loggerFor } from "../../logger";
+import { loggerFor } from "../logger";
 const L = loggerFor(__filename);
 
 export const getSchema = async (req: Request, res: Response) => {

@@ -1,13 +1,13 @@
 import { loggerFor } from "../logger";
-import { DataSchema } from "../domain/entities/submission";
+import { DataSchema } from "./schema-entities";
 const L = loggerFor(__filename);
 const stuff = require("../resources/stub-schema.json");
 
-export interface SchemaServiceClient {
+export interface SchemaServiceRestClient {
   fetchSchema(version: string): Promise<DataSchema>;
 }
 
-export const schemaClient: SchemaServiceClient = {
+export const schemaClient: SchemaServiceRestClient = {
   fetchSchema: async (version: string): Promise<DataSchema> => {
     L.debug(`in fetch schema ${version}`);
     const result = delay(1000);

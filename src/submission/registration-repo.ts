@@ -1,8 +1,8 @@
-import { ActiveRegistrationModel } from "../../../infra/mongoose/submission/registration";
-import { CreateRegistrationCommand } from "../../../domain/services/submission";
-import { ActiveRegistration } from "../../../domain/entities/submission";
-import { InternalError } from "../../../domain/errors";
-import { loggerFor } from "../../../logger";
+import { ActiveRegistrationModel } from "./registration";
+import { CreateRegistrationCommand } from "./submission";
+import { ActiveRegistration } from "./submission-entities";
+import { InternalError } from "./errors";
+import { loggerFor } from "../logger";
 const L = loggerFor(__filename);
 
 export interface RegistrationRepository {

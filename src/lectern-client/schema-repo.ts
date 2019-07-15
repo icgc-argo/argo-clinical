@@ -1,6 +1,6 @@
-import { DataSchema } from "../../../domain/entities/submission";
-import { DataSchemaModel } from "../../../infra/mongoose/submission/dataschema";
-import { loggerFor } from "../../../logger";
+import mongoose from "mongoose";
+import { DataSchema } from "./schema-entities";
+import { loggerFor } from "../logger";
 const L = loggerFor(__filename);
 
 export interface SchemaRepository {
@@ -20,3 +20,14 @@ export const schemaRepo: SchemaRepository = {
         return await DataSchemaModel.findOne({ name: "ARGO" }).exec();
     },
 };
+
+type DataSchemaDocument = mongoose.Document & DataSchema;
+
+const DataSchemaMongooseSchema = new mongoose.Schema({
+    name: { type: String, unique: true },
+    version: { type: String },
+    definitions: [],
+}, { timestamps: true });
+
+
+export const DataSchemaModel = mongoose.model<DataSchemaDocument>("dataschema", DataSchemaMongooseSchema);
