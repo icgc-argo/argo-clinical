@@ -9,7 +9,7 @@ const ActiveRegistrationItem = new mongoose.Schema(
     gender: { type: String, required: true },
     specimenSubmitterId: { type: String, required: true },
     specimenType: { type: String, required: true },
-    tumorNormalDesignation: { type: String, required: true },
+    tumourNormalDesignation: { type: String, required: true },
     sampleSubmitterId: { type: String, required: true },
     sampleType: { type: String, required: true }
   },

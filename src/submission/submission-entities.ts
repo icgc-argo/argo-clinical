@@ -13,7 +13,7 @@ export interface RegistrationRecord {
   gender: string;
   specimenSubmitterId: string;
   specimenType: string;
-  tumorNormalDesignation: string;
+  tumourNormalDesignation: string;
   sampleSubmitterId: string;
   sampleType: string;
 }

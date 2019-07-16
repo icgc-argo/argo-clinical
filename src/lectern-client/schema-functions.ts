@@ -1,4 +1,5 @@
 import { SchemaValidationError, SchemaValidationErrors } from "./schema-entities";
+import vm from "vm";
 import {
   DataSchema,
   SchemaDefinition,
@@ -68,9 +69,9 @@ export const validate = (
       errors = validation.runValidationPipeline(rec, index, schemaDef.fields, [
         validation.validateRequiredFields,
         validation.validateValueTypes,
-        validation.validateRegex
-        // enum
-        // script
+        validation.validateRegex,
+        validation.validateEnum,
+        validation.validateScript
       ]);
       return errors;
     })
@@ -106,9 +107,39 @@ namespace validation {
         if (
           field.restrictions &&
           field.restrictions.regex &&
-          isValidRegexValue(field.restrictions.regex, rec[field.name])
+          isInvalidRegexValue(field.restrictions.regex, rec[field.name])
         ) {
           return buildError(ErrorTypes.INVALID_BY_REGEX, field.name, index);
+        }
+        return undefined;
+      })
+      .filter(Boolean);
+  };
+
+  export const validateScript = (
+    rec: DataRecord,
+    index: number,
+    fields: Array<FieldDefinition>
+  ) => {
+    return fields
+      .map(field => {
+        if (field.restrictions && field.restrictions.script && isInvalidByScript(field, rec)) {
+          return buildError(ErrorTypes.INVALID_BY_SCRIPT, field.name, index);
+        }
+        return undefined;
+      })
+      .filter(Boolean);
+  };
+
+  export const validateEnum = (rec: DataRecord, index: number, fields: Array<FieldDefinition>) => {
+    return fields
+      .map(field => {
+        if (
+          field.restrictions &&
+          field.restrictions.codeList &&
+          isInvalidEnumValue(field.restrictions.codeList, rec[field.name])
+        ) {
+          return buildError(ErrorTypes.INVALID_ENUM_VALUE, field.name, index);
         }
         return undefined;
       })
@@ -122,7 +153,7 @@ namespace validation {
   ) => {
     return fields
       .map(field => {
-        if (isInvalidFieldType(field.valueType, rec[field.name])) {
+        if (rec[field.name] && isInvalidFieldType(field.valueType, rec[field.name])) {
           return buildError(ErrorTypes.INVALID_FIELD_VALUE_TYPE, field.name, index);
         }
         return undefined;
@@ -154,57 +185,68 @@ namespace validation {
     });
   };
 
+  // return false if the record value is a valid type
+  export const isInvalidFieldType = (valueType: ValueType, value: string) => {
+    if (!isNotEmptyString(value)) return false;
+    switch (valueType) {
+      case ValueType.STRING:
+        return false;
+      case ValueType.INTEGER:
+        return Number(value) == NaN || !Number.isInteger(Number(value));
+      case ValueType.NUMBER:
+        return Number(value) == NaN;
+      case ValueType.BOOLEAN:
+        return !(value.toLowerCase() === "true" || value.toLowerCase() === "false");
+    }
+  };
+
+  export const isAbsentOrEmpty = (field: FieldDefinition, record: DataRecord) => {
+    return !isNotEmptyString(record[field.name]);
+  };
+
+  export const isRequiredMissing = (field: FieldDefinition, record: DataRecord) => {
+    if (field.restrictions && field.restrictions.required && isAbsentOrEmpty(field, record)) {
+      return true;
+    }
+    return false;
+  };
+
+  const isInvalidEnumValue = (codeList: Array<string | number>, value: string) => {
+    if (!isNotEmptyString(value)) return false;
+    return !codeList.find(e => e == value);
+  };
+
+  const isInvalidRegexValue = (regex: string, value: string) => {
+    if (!isNotEmptyString(value)) return false;
+    const regexPattern = new RegExp(regex);
+    return !regexPattern.test(value);
+  };
+
+  const isInvalidByScript = (field: FieldDefinition, record: DataRecord) => {
+    try {
+      const sandbox = {
+        $row: record,
+        $field: record[field.name]
+      };
+      const script = new vm.Script(field.restrictions.script);
+      const ctx = vm.createContext(sandbox);
+      const result = script.runInContext(ctx);
+      return !result.valid;
+    } catch (err) {
+      console.error(`failed running validation script ${field.name} for record: ${record}`);
+      return true;
+    }
+  };
+
+  const isNotEmptyString = (value: string) => {
+    return value !== null && value !== undefined && value.trim() !== "";
+  };
+
   const buildError = (
     errorType: ErrorTypes,
     fieldName: string,
     index: number
   ): SchemaValidationError => {
     return { errorType, fieldName, index };
-  };
-
-  const isValidRegexValue = (regex: string, value: string) => {
-    const regexPattern = new RegExp(regex);
-    regexPattern.compile();
-    return regexPattern.test(value);
-  };
-
-  // return false if the record value is a valid type
-  export const isInvalidFieldType = (valueType: ValueType, recordFieldValue: string) => {
-    switch (valueType) {
-      case ValueType.string:
-        return false;
-      case ValueType.integer:
-        try {
-          parseInt(recordFieldValue);
-          return false;
-        } catch (err) {
-          return true;
-        }
-      case ValueType.number:
-        try {
-          new Number(recordFieldValue);
-          return false;
-        } catch (err) {
-          return true;
-        }
-      case ValueType.boolean:
-        return !(
-          recordFieldValue.toLowerCase() === "true" || recordFieldValue.toLowerCase() === "false"
-        );
-    }
-  };
-
-  export const isAbsentOrEmpty = (field: FieldDefinition, record: DataRecord) => {
-    if (!record[field.name] || record[field.name].trim() === "") {
-      return true;
-    }
-    return false;
-  };
-
-  export const isRequiredMissing = (field: FieldDefinition, record: DataRecord) => {
-    if (field.meta && field.meta.required && isAbsentOrEmpty(field, record)) {
-      return true;
-    }
-    return false;
   };
 }

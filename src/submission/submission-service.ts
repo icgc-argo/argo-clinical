@@ -107,7 +107,7 @@ export namespace operations {
           gender: r.gender,
           specimenSubmitterId: r.specimenSubmitterId,
           specimenType: r.specimenType,
-          tumorNormalDesignation: r.tumorNormalDesignation,
+          tumourNormalDesignation: r.tumourNormalDesignation,
           sampleSubmitterId: r.sampleSubmitterId,
           sampleType: r.sampleType
         };
@@ -132,7 +132,7 @@ export namespace operations {
         gender: r.gender,
         specimenSubmitterId: r.specimen_submitter_id,
         specimenType: r.specimen_type,
-        tumorNormalDesignation: r.tumor_normal_designation,
+        tumourNormalDesignation: r.tumor_normal_designation,
         sampleSubmitterId: r.sample_submitter_id,
         sampleType: r.sample_type
       };
@@ -147,7 +147,7 @@ export interface CreateRegistrationRecord {
   gender: string;
   specimenSubmitterId: string;
   specimenType: string;
-  tumorNormalDesignation: string;
+  tumourNormalDesignation: string;
   sampleSubmitterId: string;
   sampleType: string;
 }

@@ -1,108 +1,148 @@
 [
-    {
-        "definitions": [
-            {
-                "name": "registration",
-                "description": "TSV for Registration of Donor-Specimen-Sample",
-                "key": "donor_submitter_id",
-                "fields": [
-                    {
-                        "name": "program_id",
-                        "valueType": "string",
-                        "description": "Unique identifier for program",
-                        "meta": {
-                            "key": true
-                        },
-                        "restrictions": {
-                            "script": "field.length > 5"
-                        }
-                    },
-                    {
-                        "name": "donor_submitter_id",
-                        "valueType": "string",
-                        "description": "Unique identifier for donor; assigned by data provider",
-                        "meta": {
-                            "key": true
-                        },
-                        "restrictions": {
-                            "script": "field.length > 5"
-                        }
-                    },
-                    {
-                        "name": "gender",
-                        "valueType": "string",
-                        "description": "Donor Biological Sex",
-                        "meta": {
-                            "default": "Other",
-                            "required": true
-                        },
-                        "restrictions": {
-                            "codeList": [
-                                "Male",
-                                "Female",
-                                "Other"
-                            ]
-                        }
-                    },
-                    {
-                        "name": "specimen_submitter_id",
-                        "valueType": "string",
-                        "description": "Submitter assigned specimen id",
-                        "meta": {
-                            "key": true
-                        },
-                        "restrictions": {
-                            "script": "field.length > 5"
-                        }
-                    },
-                    {
-                        "name": "specimen_type",
-                        "valueType": "string",
-                        "description": "Specimen Type",
-                        "meta": {
-                            "default": "Unknown",
-                            "required": true
-                        }
-                    },
-                    {
-                        "name": "tumor_normal_designation",
-                        "valueType": "string",
-                        "description": "Indicating if specimen is tumor or normal",
-                        "restrictions": {
-                            "codeList": [
-                                "Tumor",
-                                "Normal"
-                            ]
-                        }
-                    },
-                    {
-                        "name": "sample_submitter_id",
-                        "valueType": "string",
-                        "description": "Submitter assigned sample id",
-                        "meta": {
-                            "key": true
-                        },
-                        "restrictions": {
-                            "script": "field.length > 5"
-                        }
-                    },
-                    {
-                        "name": "sample_type",
-                        "valueType": "string",
-                        "description": "Specimen Type",
-                        "meta": {
-                            "default": "Unknown",
-                            "required": true
-                        }
-                    }
-                ]
+  {
+    "definitions": [
+      {
+        "name": "registration",
+        "description": "TSV for Registration of Donor-Specimen-Sample",
+        "key": "donor_submitter_id",
+        "fields": [
+          {
+            "name": "program_id",
+            "valueType": "string",
+            "description": "Unique identifier for program",
+            "meta": {
+              "key": true
+            },
+            "restrictions": {
+              "required": true,
+              "regex": "^[A-Z1-9][_A-Z1-9]{2,7}(-[A-Z][A-Z])$"
             }
-        ],
-        "_id": "5d250369f38d1f0d9376fd38",
-        "name": "ARGO Dictionary",
-        "version": "1.0",
-        "createdAt": "2019-07-09T21:13:13.683Z",
-        "updatedAt": "2019-07-09T21:13:13.683Z",
-        "__v": 0
-    }
+          },
+          {
+            "name": "donor_submitter_id",
+            "valueType": "string",
+            "description": "Unique identifier for donor, assigned by the data provider.",
+            "meta": {
+              "key": true
+            },
+            "restrictions": {
+              "required": true,
+              "regex": "^(?!(DO|do)).+"
+            }
+          },
+          {
+            "name": "gender",
+            "valueType": "string",
+            "description": "The gender of the patient",
+            "restrictions": {
+              "required": true,
+              "codeList": ["Male", "Female", "Other"]
+            }
+          },
+          {
+            "name": "specimen_submitter_id",
+            "valueType": "string",
+            "description": "Submitter assigned specimen id",
+            "meta": {
+              "key": true
+            },
+            "restrictions": {
+              "required": true,
+              "regex": "^(?!(SP|sp)).+"
+            }
+          },
+          {
+            "name": "specimen_type",
+            "valueType": "string",
+            "description": "Indicate the tissue source of the biospecimen",
+            "meta": {
+              "default": "Other"
+            },
+            "restrictions": {
+              "required": true,
+              "codeList": [
+                "Blood derived",
+                "Blood derived - bone marrow",
+                "Blood derived - peripheral blood",
+                "Bone marrow",
+                "Buccal cell",
+                "Lymph node",
+                "Solid tissue",
+                "Plasma",
+                "Serum",
+                "Urine",
+                "Cerebrospinal fluid",
+                "Sputum",
+                "NOS (Not otherwise specified)",
+                "Other",
+                "FFPE",
+                "Pleural effusion",
+                "Mononuclear cells from bone marrow",
+                "Saliva",
+                "Skin"
+              ]
+            }
+          },
+          {
+            "name": "tumour_normal_designation",
+            "valueType": "string",
+            "description": "Indicate whether specimen is tumour or normal type",
+            "restrictions": {
+              "required": true,
+              "codeList": [
+                "Normal",
+                "Normal - tissue adjacent to primary tumour",
+                "Primary tumour",
+                "Primary tumour - adjacent to normal",
+                "Primary tumour - additional new primary",
+                "Recurrent tumour",
+                "Metastatic tumour",
+                "Metastatic tumour - metastasis local to lymph node",
+                "Metastatic tumour - metastasis to distant location",
+                "Metastatic tumour - additional metastatic",
+                "Xenograft - derived from primary tumour",
+                "Xenograft - derived from tumour cell line",
+                "Cell line - derived from xenograft tissue",
+                "Cell line - derived from tumour",
+                "Cell line - derived from normal"
+              ]
+            }
+          },
+          {
+            "name": "sample_submitter_id",
+            "valueType": "string",
+            "description": "Submitter assigned sample id",
+            "restrictions": {
+              "required": true,
+              "regex": "^(?!(SA|sa)).+"
+            }
+          },
+          {
+            "name": "sample_type",
+            "valueType": "string",
+            "description": "Specimen Type",
+            "restrictions": {
+              "required": true,
+              "codeList": [
+                "Total DNA",
+                "Amplified DNA",
+                "ctDNA",
+                "other DNA enrichments",
+                "Total RNA",
+                "Ribo-Zero RNA",
+                "polyA+ RNA",
+                "other RNA fractions"
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "_id": "5d250369f38d1f0d9376fd38",
+    "name": "ARGO Dictionary",
+    "version": "1.0",
+    "createdAt": "2019-07-09T21:13:13.683Z",
+    "updatedAt": "2019-07-09T21:13:13.683Z",
+    "__v": 0
+  }
 ]
