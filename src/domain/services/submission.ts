@@ -1,9 +1,9 @@
 import  * as schemaSvc from "./schema";
 import * as dataValidator from "./validation";
-import { donorDao } from "../../adapters/clinical/repository/clinical/donor";
-import { registrationRepository } from "../../adapters/clinical/repository/submission/registration";
+import { donorDao } from "../../adapters/repository/clinical/donor";
+import { registrationRepository } from "../../adapters/repository/submission/registration-repo";
 import { Donor } from "../entities/clinical";
-import { RegisterDonorDto } from "../../adapters/clinical/repository/clinical/donor";
+import { RegisterDonorDto } from "../../adapters/repository/clinical/donor";
 import { ActiveRegistration, RegistrationRecord } from "../../domain/entities/submission";
 
 export namespace operations {
@@ -14,7 +14,7 @@ export namespace operations {
      *  can contain new donors or existing donors but new samples.
      */
     export const createRegistration = async (command: CreateRegistrationCommand): Promise<CreateRegistrationResult> => {
-        const schemaErrors: SchemaValidationError = schemaSvc.validate("registration", command.records);
+        const schemaErrors: SchemaValidationErrors = schemaSvc.validate("registration", command.records);
         const registrationRecords: Array<CreateRegistrationRecord> = mapToRegistrationRecord(command);
         const {errors: dataErrors} = dataValidator.validateRegistrationData(registrationRecords);
 
@@ -99,7 +99,7 @@ export namespace operations {
         };
     }
 
-    function anyErrors(schemaErrors: SchemaValidationError, dataErrors: any[]) {
+    function anyErrors(schemaErrors: SchemaValidationErrors, dataErrors: any[]) {
         return schemaErrors.generalErrors.length > 0 || schemaErrors.recordsErrors.length > 0 || dataErrors.length > 0;
     }
 
@@ -154,7 +154,13 @@ export interface ValidationResult {
     errors: Array<any>;
 }
 
-export interface SchemaValidationError {
+export interface SchemaValidationErrors {
     generalErrors: Array<any>;
-    recordsErrors: Array<any>;
+    recordsErrors: Array<SchemaValidationError>;
+}
+
+export interface SchemaValidationError {
+    errorType: "MISSING_REQUIRED_FIELD" | "INVALID_FIELD_VALUE_TYPE" | "INVALID_REGEX" | "INVALID_SCRIPT";
+    index: number;
+    fieldName: string;
 }

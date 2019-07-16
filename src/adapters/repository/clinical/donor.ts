@@ -1,5 +1,5 @@
-import { DonorModel } from "../../../../infra/mongoose/clinical/donor";
-import { Donor, Sample, Specimen } from "../../../../domain/entities/clinical";
+import { DonorModel } from "../../../infra/mongoose/clinical/donor";
+import { Donor, Sample, Specimen } from "../../../domain/entities/clinical";
 
 export interface DonorRepository {
     register(donor: RegisterDonorDto): Promise<Donor>;

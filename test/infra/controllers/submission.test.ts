@@ -2,34 +2,36 @@
 // import * as chai from "chai";
 const chai = require("chai");
 const mongoose = require("mongoose");
-import { GenericContainer } from "testcontainers";
 import fs from "fs";
 // needed for types
 import "chai-http";
 import "mocha";
+import { GenericContainer } from "testcontainers";
 import app from "../../../src/app";
 import * as bootstrap from "../../../src/bootstrap";
-
+export let mongoContainer: any;
 chai.use(require("chai-http"));
 chai.should();
-let container: any;
+
 
 describe("Submission", async function() {
   // will run when all tests are finished
   before(async function() {
     try {
-      container = await new GenericContainer("mongo")
+      mongoContainer = await new GenericContainer("mongo")
         .withExposedPorts(27017)
         .start();
-      bootstrap.run({
-        getMongoUrl: () => {
-          return `mongodb://${container.getContainerIpAddress()}:${container.getMappedPort(27017)}/clinical`;
+      await bootstrap.run({
+        mongoUrl: () => {
+            return `mongodb://${mongoContainer.getContainerIpAddress()}:${mongoContainer.getMappedPort(27017)}/clinical`;
+        },
+        initialSchemaVersion() {
+          return "1.0";
         }
       });
     } catch (err) {
       console.error("before >>>>>>>>>>>", err);
     }
-
   });
 
   describe("registration", function() {
@@ -60,33 +62,7 @@ describe("Submission", async function() {
           done();
         });
     });
-
-
   });
-
-  // will run when all tests are finished
-  after(async function() {
-    let error;
-    try {
-      console.log("in after");
-      if (container) {
-        await container.stop();
-      }
-    } catch (err) {
-      console.error("after >>>>>>>>>>>", err);
-      error = err;
-    }
-    console.log("container stoped");
-    try {
-      await mongoose.connection.close();
-    } catch (err) {
-      console.error("after >>>>>>>>>>>", err);
-      error = err;
-    }
-    console.log("conn stopped");
-    return error;
-  });
-
 });
 
 

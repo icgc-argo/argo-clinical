@@ -21,10 +21,10 @@ donorSchema.pre("save", async function save(next) {
     const newDonor = this as DonorDocument;
     if (!newDonor.isNew) { return next(); }
     try {
-    const latestDonor = await DonorModel
-        .findOne({}, undefined, { collation : { locale: "en_US", numericOrdering: true }})
-        .sort({ "donorId": -1 })
-        .exec();
+        const latestDonor = await DonorModel
+            .findOne({}, undefined, { collation : { locale: "en_US", numericOrdering: true }})
+            .sort({ "donorId": -1 })
+            .exec();
         if (latestDonor == undefined) {
             newDonor.donorId = "DO" + 1;
             return next();
