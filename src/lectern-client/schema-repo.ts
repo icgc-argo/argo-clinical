@@ -4,30 +4,39 @@ import { loggerFor } from "../logger";
 const L = loggerFor(__filename);
 
 export interface SchemaRepository {
-    createOrUpdate(schema: DataSchema): Promise<DataSchema>;
-    get(name: String): Promise<DataSchema>;
+  createOrUpdate(schema: DataSchema): Promise<DataSchema>;
+  get(name: String): Promise<DataSchema>;
 }
 
 export const schemaRepo: SchemaRepository = {
-    createOrUpdate: async(schema: DataSchema): Promise<DataSchema> => {
-        const newSchema = new DataSchemaModel(schema);
-        return await DataSchemaModel.findOneAndUpdate({
-            name: schema.name
-        }, newSchema, { upsert: true }).exec();
-    },
-    get: async (name: String): Promise<DataSchema> => {
-        L.debug("in Schema repo get");
-        return await DataSchemaModel.findOne({ name: name }).exec();
-    },
+  createOrUpdate: async (schema: DataSchema): Promise<DataSchema> => {
+    const newSchema = new DataSchemaModel(schema);
+    return await DataSchemaModel.findOneAndUpdate(
+      {
+        name: schema.name
+      },
+      newSchema,
+      { upsert: true }
+    ).exec();
+  },
+  get: async (name: String): Promise<DataSchema> => {
+    L.debug("in Schema repo get");
+    return await DataSchemaModel.findOne({ name: name }).exec();
+  }
 };
 
 type DataSchemaDocument = mongoose.Document & DataSchema;
 
-const DataSchemaMongooseSchema = new mongoose.Schema({
+const DataSchemaMongooseSchema = new mongoose.Schema(
+  {
     name: { type: String, unique: true },
     version: { type: String },
-    definitions: [],
-}, { timestamps: true });
+    definitions: []
+  },
+  { timestamps: true }
+);
 
-
-export const DataSchemaModel = mongoose.model<DataSchemaDocument>("dataschema", DataSchemaMongooseSchema);
+export const DataSchemaModel = mongoose.model<DataSchemaDocument>(
+  "dataschema",
+  DataSchemaMongooseSchema
+);
