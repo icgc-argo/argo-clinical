@@ -53,5 +53,6 @@ export const validate = (
   definition: string,
   records: Array<DataRecord>
 ): SchemaValidationErrors => {
+  L.debug(`in validate ${definition}`);
   return service.validate(getCurrent(), definition, records);
 };

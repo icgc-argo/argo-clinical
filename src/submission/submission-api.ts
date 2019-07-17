@@ -39,7 +39,11 @@ export const createRegistrationWithTsv = async (req: Request, res: Response) => 
     records: records
   };
   res.set("Content-Type", "application/json");
-  return res.status(201).send(await submission.operations.createRegistration(command));
+  const result = await submission.operations.createRegistration(command);
+  if (!result.successful) {
+    return res.status(422).send(result);
+  }
+  return res.status(201).send(result);
 };
 
 export const commitRegistration = async (req: Request, res: Response) => {

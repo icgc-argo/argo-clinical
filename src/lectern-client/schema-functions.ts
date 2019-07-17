@@ -65,15 +65,13 @@ export const validate = (
   };
   const recordsErrors: Array<SchemaValidationError> = records
     .flatMap((rec, index) => {
-      let errors: Array<SchemaValidationError> = [];
-      errors = validation.runValidationPipeline(rec, index, schemaDef.fields, [
+      return validation.runValidationPipeline(rec, index, schemaDef.fields, [
         validation.validateRequiredFields,
         validation.validateValueTypes,
         validation.validateRegex,
         validation.validateEnum,
         validation.validateScript
       ]);
-      return errors;
     })
     .filter(Boolean);
 
@@ -181,7 +179,7 @@ namespace validation {
     fields: Array<FieldDefinition>
   ) => {
     return fields.filter(field => {
-      return !errs.find(e => e.fieldName != field.name);
+      return !errs.find(e => e.fieldName == field.name);
     });
   };
 

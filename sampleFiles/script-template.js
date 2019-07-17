@@ -1,11 +1,11 @@
-var person = $row;
-var postalCode = $field;
-
-/**  important to return the result object here here */
+/* important to return the result object here here */
 function validate() {
   var result = { valid: true, message: "ok" };
 
   /* custom logic start */
+  var person = $row;
+  var postalCode = $field;
+
   if (person.country === "US") {
     var valid = /^[0-9]{5}(?:-[0-9]{4})?$/.test(postalCode);
     if (!valid) {

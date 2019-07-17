@@ -7,6 +7,8 @@ import { RegisterDonorDto } from "../clinical/donor-repo";
 import { ActiveRegistration, RegistrationRecord } from "./submission-entities";
 import * as manager from "../lectern-client/schema-manager";
 import { SchemaValidationErrors } from "../lectern-client/schema-entities";
+import { loggerFor } from "../logger";
+const L = loggerFor(__filename);
 
 export namespace operations {
   /**
@@ -23,19 +25,29 @@ export namespace operations {
       "registration",
       fullyPopulatedRecords
     );
-    const registrationRecords: Array<CreateRegistrationRecord> = mapToRegistrationRecord(command);
-    const { errors: dataErrors } = dataValidator.validateRegistrationData(registrationRecords);
 
     // if there are errors terminate the creation.
-    if (anyErrors(schemaErrors, dataErrors)) {
+    if (anyErrors(schemaErrors)) {
+      L.info(`found ${schemaErrors.recordsErrors.length} schema errors in registration attempt`);
       return {
         registrationId: undefined,
         state: undefined,
-        errors: [...schemaErrors.recordsErrors, ...dataErrors],
+        errors: schemaErrors.recordsErrors,
         successful: false
       };
     }
 
+    const registrationRecords: Array<CreateRegistrationRecord> = mapToRegistrationRecord(command);
+    const { errors: dataErrors } = dataValidator.validateRegistrationData(registrationRecords);
+    if (dataErrors.length > 0) {
+      L.info(`found ${dataErrors.length} data errors in registration attempt`);
+      return {
+        registrationId: undefined,
+        state: undefined,
+        errors: dataErrors,
+        successful: false
+      };
+    }
     // build the registration object
     const registration: ActiveRegistration = toActiveRegistration(command, registrationRecords);
 
@@ -116,12 +128,8 @@ export namespace operations {
     };
   }
 
-  function anyErrors(schemaErrors: SchemaValidationErrors, dataErrors: any[]) {
-    return (
-      schemaErrors.generalErrors.length > 0 ||
-      schemaErrors.recordsErrors.length > 0 ||
-      dataErrors.length > 0
-    );
+  function anyErrors(schemaErrors: SchemaValidationErrors) {
+    return schemaErrors.generalErrors.length > 0 || schemaErrors.recordsErrors.length > 0;
   }
 
   function mapToRegistrationRecord(command: CreateRegistrationCommand): CreateRegistrationRecord[] {
@@ -132,7 +140,7 @@ export namespace operations {
         gender: r.gender,
         specimenSubmitterId: r.specimen_submitter_id,
         specimenType: r.specimen_type,
-        tumourNormalDesignation: r.tumor_normal_designation,
+        tumourNormalDesignation: r.tumour_normal_designation,
         sampleSubmitterId: r.sample_submitter_id,
         sampleType: r.sample_type
       };
@@ -167,7 +175,7 @@ export interface CreateRegistrationCommand {
 export interface CreateRegistrationResult {
   registrationId: string;
   state: string;
-  errors: Array<String>;
+  errors: Array<any>;
   successful: boolean;
 }
 
