@@ -4,7 +4,7 @@ export interface Donor {
   submitterId: string;
   programId: string;
   specimens: Array<Specimen>;
-  clinicalInfo: object;
+  clinicalInfo: object | undefined;
   primaryDiagnosis: object;
   followUps: Array<object>;
   treatments: Array<object>;
@@ -15,7 +15,7 @@ export interface Donor {
 export interface Specimen {
   samples: Array<Sample>;
   submitterId: string;
-  clinicalInfo: object;
+  clinicalInfo: object | undefined;
 }
 
 export interface Sample {

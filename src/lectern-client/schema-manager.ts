@@ -14,6 +14,9 @@ export const getCurrent = (): DataSchema => {
 export const updateVersion = async (name: string, newVersion: string): Promise<DataSchema> => {
   const newSchema = await schemaServiceAdapter.fetchSchema(name, newVersion);
   const result = await schemaRepo.createOrUpdate(newSchema);
+  if (!result) {
+    throw new Error("couldn't save/update new schema");
+  }
   schema = result;
   return schema;
 };
@@ -23,14 +26,16 @@ export const loadSchema = async (name: string, initialVersion: string): Promise<
   if (!initialVersion) {
     throw new Error("initial version cannot be empty");
   }
-  schema = await schemaRepo.get(name);
-  if (!schema) {
+  const storedSchema = await schemaRepo.get(name);
+  if (storedSchema === null) {
     L.info(`schema not found in db`);
     schema = {
       definitions: [],
       name: name,
       version: initialVersion
     };
+  } else {
+    schema = storedSchema;
   }
 
   // if the schema is not complete we need to load it from the
@@ -40,18 +45,22 @@ export const loadSchema = async (name: string, initialVersion: string): Promise<
     const result = await schemaServiceAdapter.fetchSchema(name, schema.version);
     L.info(`fetched schema ${result.version}`);
     schema.definitions = result.definitions;
-    return await schemaRepo.createOrUpdate(schema);
+    const saved = await schemaRepo.createOrUpdate(schema);
+    if (!saved) {
+      throw new Error("couldn't save/update new schema");
+    }
+    return saved;
   }
   return schema;
 };
 
-export const populateDefaults = (definition: string, records: Array<DataRecord>) => {
+export const populateDefaults = (definition: string, records: ReadonlyArray<DataRecord>) => {
   return service.populateDefaults(getCurrent(), definition, records);
 };
 
 export const validate = (
   definition: string,
-  records: Array<DataRecord>
+  records: ReadonlyArray<DataRecord>
 ): SchemaValidationErrors => {
   L.debug(`in validate ${definition}`);
   return service.validate(getCurrent(), definition, records);

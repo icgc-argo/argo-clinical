@@ -9,7 +9,7 @@ export interface DonorRepository {
 export const donorDao: DonorRepository = {
   async register(createDonorDto: RegisterDonorDto): Promise<Donor> {
     const donor: Donor = {
-      donorId: undefined,
+      donorId: "",
       gender: createDonorDto.gender,
       submitterId: createDonorDto.submitterId,
       programId: createDonorDto.programId,
@@ -27,12 +27,12 @@ export const donorDao: DonorRepository = {
         };
         return spec;
       }),
-      clinicalInfo: undefined,
-      primaryDiagnosis: undefined,
-      followUps: undefined,
-      treatments: undefined,
-      chemotherapy: undefined,
-      HormoneTherapy: undefined
+      clinicalInfo: {},
+      primaryDiagnosis: {},
+      followUps: [],
+      treatments: [],
+      chemotherapy: [],
+      HormoneTherapy: []
     };
     const newDonor = new DonorModel(donor);
     await newDonor.save();

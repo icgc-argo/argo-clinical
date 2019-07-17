@@ -2,7 +2,7 @@ import { loggerFor } from "../logger";
 const L = loggerFor(__filename);
 
 export interface DataRecord {
-  [k: string]: string;
+  readonly [k: string]: string;
 }
 
 export interface DataSchema {
@@ -39,8 +39,8 @@ export enum ValueType {
 }
 
 export interface SchemaValidationErrors {
-  generalErrors: Array<any>;
-  recordsErrors: Array<SchemaValidationError>;
+  readonly generalErrors: ReadonlyArray<Readonly<any>>;
+  readonly recordsErrors: ReadonlyArray<SchemaValidationError>;
 }
 
 export enum ErrorTypes {
@@ -52,7 +52,7 @@ export enum ErrorTypes {
 }
 
 export interface SchemaValidationError {
-  errorType: ErrorTypes;
-  index: number;
-  fieldName: string;
+  readonly errorType: ErrorTypes;
+  readonly index: number;
+  readonly fieldName: string;
 }

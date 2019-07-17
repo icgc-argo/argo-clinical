@@ -9,7 +9,7 @@ import {
   ErrorTypes
 } from "./schema-entities";
 import { loggerFor } from "../logger";
-import { Errors, Checks } from "../utils";
+import { Errors, Checks, notEmpty } from "../utils";
 const L = loggerFor(__filename);
 
 /**
@@ -21,26 +21,28 @@ const L = loggerFor(__filename);
 export const populateDefaults = (
   dataSchema: DataSchema,
   definition: string,
-  records: Array<DataRecord>
-) => {
+  records: ReadonlyArray<DataRecord>
+): ReadonlyArray<DataRecord> => {
   Checks.checkNotNull("records", records);
   Checks.checkNotNull("dataSchema", records);
   L.debug(`in populateDefaults ${definition}, ${records.length}`);
-  const schemaDef: SchemaDefinition = dataSchema.definitions.find(e => e.name === definition);
+  const schemaDef: SchemaDefinition | undefined = dataSchema.definitions.find(
+    e => e.name === definition
+  );
   if (!schemaDef) {
     throw new Error(`no schema found for : ${definition}`);
   }
-  records.forEach(rec => {
+  return records.map(rec => {
+    const record: { [key: string]: string } = rec;
     schemaDef.fields.forEach(field => {
       if (validation.isAbsentOrEmpty(field, rec) && field.meta && field.meta.default) {
         L.debug(`populating Default: ${field.meta.default} for ${field.name} in record : ${rec}`);
-        rec[field.name] = `${field.meta.default}`;
+        record[field.name] = `${field.meta.default}`;
       }
       return undefined;
     });
+    return { ...record };
   });
-
-  return records;
 };
 
 /**
@@ -51,19 +53,18 @@ export const populateDefaults = (
 export const validate = (
   dataSchema: DataSchema,
   definition: string,
-  records: Array<DataRecord>
-): SchemaValidationErrors => {
+  records: ReadonlyArray<DataRecord>
+): Readonly<SchemaValidationErrors> => {
   Checks.checkNotNull("records", records);
   Checks.checkNotNull("dataSchema", records);
-  const schemaDef: SchemaDefinition = dataSchema.definitions.find(e => e.name === definition);
+  const schemaDef: SchemaDefinition | undefined = dataSchema.definitions.find(
+    e => e.name === definition
+  );
   if (!schemaDef) {
     throw new Error(`no schema found for : ${definition}`);
   }
-  const errors: SchemaValidationErrors = {
-    generalErrors: [],
-    recordsErrors: []
-  };
-  const recordsErrors: Array<SchemaValidationError> = records
+
+  const recordsErrors: ReadonlyArray<SchemaValidationError> = records
     .flatMap((rec, index) => {
       return validation.runValidationPipeline(rec, index, schemaDef.fields, [
         validation.validateRequiredFields,
@@ -75,7 +76,10 @@ export const validate = (
     })
     .filter(Boolean);
 
-  errors.recordsErrors = recordsErrors;
+  const errors: SchemaValidationErrors = {
+    generalErrors: [],
+    recordsErrors: recordsErrors
+  };
   return errors;
 };
 
@@ -111,7 +115,7 @@ namespace validation {
         }
         return undefined;
       })
-      .filter(Boolean);
+      .filter(notEmpty);
   };
 
   export const validateScript = (
@@ -126,7 +130,7 @@ namespace validation {
         }
         return undefined;
       })
-      .filter(Boolean);
+      .filter(notEmpty);
   };
 
   export const validateEnum = (rec: DataRecord, index: number, fields: Array<FieldDefinition>) => {
@@ -141,7 +145,7 @@ namespace validation {
         }
         return undefined;
       })
-      .filter(Boolean);
+      .filter(notEmpty);
   };
 
   export const validateValueTypes = (
@@ -156,7 +160,7 @@ namespace validation {
         }
         return undefined;
       })
-      .filter(Boolean);
+      .filter(notEmpty);
   };
 
   export const validateRequiredFields = (
@@ -171,7 +175,7 @@ namespace validation {
         }
         return undefined;
       })
-      .filter(Boolean);
+      .filter(notEmpty);
   };
 
   export const getValidFields = (
@@ -226,6 +230,11 @@ namespace validation {
         $row: record,
         $field: record[field.name]
       };
+
+      if (!field.restrictions || !field.restrictions.script) {
+        throw new Error("called validation by script without script provided");
+      }
+
       const script = new vm.Script(field.restrictions.script);
       const ctx = vm.createContext(sandbox);
       const result = script.runInContext(ctx);

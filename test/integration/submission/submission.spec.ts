@@ -1,7 +1,6 @@
 // using import fails when running the test
 // import * as chai from "chai";
-const chai = require("chai");
-const mongoose = require("mongoose");
+import chai from "chai";
 import mongo from "mongodb";
 import fs from "fs";
 // needed for types
@@ -64,7 +63,7 @@ describe("Submission Api", () => {
       try {
         file = fs.readFileSync(__dirname + "/registration.tsv");
       } catch (err) {
-        done(err);
+        return done(err);
       }
       chai
         .request(app)
@@ -95,7 +94,7 @@ describe("Submission Api", () => {
       try {
         file = fs.readFileSync(__dirname + "/registration.invalid.tsv");
       } catch (err) {
-        done(err);
+        return done(err);
       }
       chai
         .request(app)

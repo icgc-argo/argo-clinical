@@ -1,7 +1,7 @@
 import { CreateRegistrationRecord, ValidationResult } from "./submission-service";
 
 export const validateRegistrationData = (
-  records: Array<CreateRegistrationRecord>
+  records: ReadonlyArray<CreateRegistrationRecord>
 ): ValidationResult => {
   checkNotDuplicated();
   checkSpecimenDonorFK();

@@ -1,4 +1,3 @@
-import * as schemaSvc from "../lectern-client/schema-functions";
 import * as dataValidator from "./validation";
 import { donorDao } from "../clinical/donor-repo";
 import { registrationRepository } from "./registration-repo";
@@ -37,7 +36,7 @@ export namespace operations {
       };
     }
 
-    const registrationRecords: Array<CreateRegistrationRecord> = mapToRegistrationRecord(command);
+    const registrationRecords = mapToRegistrationRecord(command);
     const { errors: dataErrors } = dataValidator.validateRegistrationData(registrationRecords);
     if (dataErrors.length > 0) {
       L.info(`found ${dataErrors.length} data errors in registration attempt`);
@@ -56,7 +55,7 @@ export namespace operations {
     const existingActivRegistration = await registrationRepository.findByProgramId(
       command.programId
     );
-    if (existingActivRegistration != undefined) {
+    if (existingActivRegistration != undefined && existingActivRegistration.id) {
       await registrationRepository.delete(existingActivRegistration.id);
     }
 
@@ -77,7 +76,9 @@ export namespace operations {
    *
    * @param command CommitRegistrationCommand the id of the registration to close.
    */
-  export const commitRegisteration = async (command: CommitRegistrationCommand): Promise<void> => {
+  export const commitRegisteration = async (
+    command: Readonly<CommitRegistrationCommand>
+  ): Promise<void> => {
     const donor: RegisterDonorDto = {
       submitterId: "DONOR1000",
       gender: "male",
@@ -108,13 +109,13 @@ export namespace operations {
   /************* Private methods *************/
   function toActiveRegistration(
     command: CreateRegistrationCommand,
-    registrationRecords: CreateRegistrationRecord[]
-  ): ActiveRegistration {
+    registrationRecords: ReadonlyArray<CreateRegistrationRecord>
+  ): Readonly<ActiveRegistration> {
     return {
       programId: command.programId,
       creator: command.creator,
       records: registrationRecords.map(r => {
-        const record: RegistrationRecord = {
+        const record: Readonly<RegistrationRecord> = {
           donorSubmitterId: r.donorSubmitterId,
           gender: r.gender,
           specimenSubmitterId: r.specimenSubmitterId,
@@ -132,7 +133,9 @@ export namespace operations {
     return schemaErrors.generalErrors.length > 0 || schemaErrors.recordsErrors.length > 0;
   }
 
-  function mapToRegistrationRecord(command: CreateRegistrationCommand): CreateRegistrationRecord[] {
+  function mapToRegistrationRecord(
+    command: CreateRegistrationCommand
+  ): ReadonlyArray<CreateRegistrationRecord> {
     return command.records.map(r => {
       const rec: CreateRegistrationRecord = {
         programId: r.program_id,
@@ -150,35 +153,35 @@ export namespace operations {
 }
 
 export interface CreateRegistrationRecord {
-  programId: string;
-  donorSubmitterId: string;
-  gender: string;
-  specimenSubmitterId: string;
-  specimenType: string;
-  tumourNormalDesignation: string;
-  sampleSubmitterId: string;
-  sampleType: string;
+  readonly programId: string;
+  readonly donorSubmitterId: string;
+  readonly gender: string;
+  readonly specimenSubmitterId: string;
+  readonly specimenType: string;
+  readonly tumourNormalDesignation: string;
+  readonly sampleSubmitterId: string;
+  readonly sampleType: string;
 }
 
 export interface CommitRegistrationCommand {
-  registrationId: string;
+  readonly registrationId: string;
 }
 
 export interface CreateRegistrationCommand {
   // we define the records as arbitrary key value pairs to be validated by the schema
   // before we put them in a CreateRegistrationRecord, in case a column is missing so we let dictionary handle error collection.
-  records: Array<{ [key: string]: string }>;
-  creator: string;
-  programId: string;
+  records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
+  readonly creator: string;
+  readonly programId: string;
 }
 
 export interface CreateRegistrationResult {
-  registrationId: string;
-  state: string;
-  errors: Array<any>;
-  successful: boolean;
+  readonly registrationId: string | undefined;
+  readonly state: string | undefined;
+  readonly successful: boolean;
+  errors: ReadonlyArray<Readonly<any>>;
 }
 
 export interface ValidationResult {
-  errors: Array<any>;
+  errors: ReadonlyArray<Readonly<any>>;
 }

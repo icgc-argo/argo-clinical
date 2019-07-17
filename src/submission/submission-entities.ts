@@ -3,17 +3,17 @@
  */
 export interface ActiveRegistration {
   id?: string;
-  programId: string;
-  creator: string;
-  records: Array<RegistrationRecord>;
+  readonly programId: string;
+  readonly creator: string;
+  readonly records: Array<RegistrationRecord>;
 }
 
 export interface RegistrationRecord {
-  donorSubmitterId: string;
-  gender: string;
-  specimenSubmitterId: string;
-  specimenType: string;
-  tumourNormalDesignation: string;
-  sampleSubmitterId: string;
-  sampleType: string;
+  readonly donorSubmitterId: string;
+  readonly gender: string;
+  readonly specimenSubmitterId: string;
+  readonly specimenType: string;
+  readonly tumourNormalDesignation: string;
+  readonly sampleSubmitterId: string;
+  readonly sampleType: string;
 }

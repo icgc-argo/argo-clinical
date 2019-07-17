@@ -1,19 +1,18 @@
 import { ActiveRegistrationModel } from "./registration";
-import { CreateRegistrationCommand } from "./submission-service";
 import { ActiveRegistration } from "./submission-entities";
 import { InternalError } from "./errors";
 import { loggerFor } from "../logger";
 const L = loggerFor(__filename);
 
 export interface RegistrationRepository {
-  delete(id: string): void;
+  delete(id: string): Promise<void>;
   create(command: ActiveRegistration): Promise<ActiveRegistration>;
-  findByProgramId(programId: string): Promise<ActiveRegistration>;
+  findByProgramId(programId: string): Promise<ActiveRegistration | undefined>;
 }
 
 // Mongoose implementation of the RegistrationRepository
 export const registrationRepository: RegistrationRepository = {
-  async findByProgramId(programId: string): Promise<ActiveRegistration> {
+  async findByProgramId(programId: string): Promise<ActiveRegistration | undefined> {
     L.debug(`in findByProgramId programId: ${programId}`);
     try {
       const activeRegistration = await ActiveRegistrationModel.findOne({
@@ -47,6 +46,7 @@ export const registrationRepository: RegistrationRepository = {
     L.debug(`in delete registration id: ${id}`);
     try {
       await ActiveRegistrationModel.deleteOne({ _id: id }).exec();
+      return;
     } catch (err) {
       throw new InternalError(`failed to delete registration with Id: ${id}`, err);
     }

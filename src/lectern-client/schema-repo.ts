@@ -4,12 +4,12 @@ import { loggerFor } from "../logger";
 const L = loggerFor(__filename);
 
 export interface SchemaRepository {
-  createOrUpdate(schema: DataSchema): Promise<DataSchema>;
-  get(name: String): Promise<DataSchema>;
+  createOrUpdate(schema: DataSchema): Promise<DataSchema | null>;
+  get(name: String): Promise<DataSchema | null>;
 }
 
 export const schemaRepo: SchemaRepository = {
-  createOrUpdate: async (schema: DataSchema): Promise<DataSchema> => {
+  createOrUpdate: async (schema: DataSchema): Promise<DataSchema | null> => {
     const newSchema = new DataSchemaModel(schema);
     return await DataSchemaModel.findOneAndUpdate(
       {
@@ -19,7 +19,7 @@ export const schemaRepo: SchemaRepository = {
       { upsert: true }
     ).exec();
   },
-  get: async (name: String): Promise<DataSchema> => {
+  get: async (name: String): Promise<DataSchema | null> => {
     L.debug("in Schema repo get");
     return await DataSchemaModel.findOne({ name: name }).exec();
   }

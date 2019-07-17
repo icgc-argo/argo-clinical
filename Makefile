@@ -11,6 +11,9 @@ test-submission:
 stop:
 	docker-compose down --remove-orphans 
 
+nuke:
+	docker-compose down --volumes --remove-orphans 
+
 # curl file upload relative path
 registration-upload:
 	pwd

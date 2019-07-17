@@ -27,17 +27,18 @@ export const createRegistrationWithTsv = async (req: Request, res: Response) => 
   }
   const { programId, creator } = req.body;
   const file = req.file;
-  let records = [];
+  let records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
   try {
     records = await TsvUtils.tsvToJson(file);
   } catch (err) {
     return ControllerUtils.badRequest(res, `failed to parse the tsv file: ${err}`);
   }
   const command: submission.CreateRegistrationCommand = {
-    programId,
-    creator,
+    programId: programId,
+    creator: creator,
     records: records
   };
+
   res.set("Content-Type", "application/json");
   const result = await submission.operations.createRegistration(command);
   if (!result.successful) {

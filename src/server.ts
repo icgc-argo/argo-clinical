@@ -5,13 +5,13 @@ import app from "./app";
 
 const defaultAppConfigImpl: AppConfig = {
   mongoUrl(): string {
-    return process.env.CLINICAL_DB_URL;
+    return process.env.CLINICAL_DB_URL || "";
   },
   initialSchemaVersion(): string {
-    return process.env.INITIAL_SCHEMA_VERSION;
+    return process.env.INITIAL_SCHEMA_VERSION || "";
   },
   schemaName(): string {
-    return process.env.SCHEMA_NAME;
+    return process.env.SCHEMA_NAME || "";
   }
 };
 
