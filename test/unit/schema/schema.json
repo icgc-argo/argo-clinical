@@ -15,7 +15,7 @@
             },
             "restrictions": {
               "required": true,
-              "regex": "^[A-Z1-9][_A-Z1-9]{2,7}(-[A-Z][A-Z])$"
+              "regex": "^[A-Z1-9][-_A-Z1-9]{2,7}(-[A-Z][A-Z])$"
             }
           },
           {
@@ -34,6 +34,9 @@
             "name": "gender",
             "valueType": "string",
             "description": "The gender of the patient",
+            "meta": {
+              "default": "Other"
+            },
             "restrictions": {
               "required": true,
               "codeList": ["Male", "Female", "Other"]
@@ -133,6 +136,35 @@
                 "polyA+ RNA",
                 "other RNA fractions"
               ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "address",
+        "description": "adderss schema",
+        "fields": [
+          {
+            "name": "postal_code",
+            "valueType": "string",
+            "description": "postal code",
+            "restrictions": {
+              "required": true,
+              "script": "var person = $row;\r\nvar postalCode = $field;\r\n\r\n/**  important to return the result object here here */\r\nfunction validate() {\r\n    var result = { valid: true, message: \"ok\"};\r\n\r\n    /* custom logic start */\r\n    if (person.country === \"US\") {\r\n        var valid = /^[0-9]{5}(?:-[0-9]{4})?$/.test(postalCode);\r\n        if (!valid) {\r\n            result.valid = false;\r\n            result.message = \"invalid postal code for US\";\r\n        }\r\n    } else if (person.country === \"CANADA\") {\r\n        var valid = /^[A-Za-z]\\d[A-Za-z][ -]?\\d[A-Za-z]\\d$/.test(postalCode);\r\n        if (!valid) {\r\n            result.valid = false;\r\n            result.message = \"invalid postal code for CANADA\";\r\n        }\r\n    }\r\n    /* custom logic end */\r\n\r\n    return result;\r\n}\r\n\r\nvalidate();"
+            }
+          },
+          {
+            "name": "unit_number",
+            "valueType": "integer",
+            "description": "unit number"
+          },
+          {
+            "name": "country",
+            "valueType": "string",
+            "description": "Country",
+            "restrictions": {
+              "required": true,
+              "codeList": ["US", "CANADA"]
             }
           }
         ]

@@ -1,13 +1,15 @@
 {
   "name": "argo-clinical",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Clinical submission system and repo",
   "scripts": {
     "start": "npm run serve",
     "build": "npm run build-ts && npm run resources && npm run tslint",
     "serve": "node dist/server.js",
     "watch-node": "nodemon dist/server.js",
-    "test": "npm run build && mocha --exit --timeout 30000 -r ts-node/register test/**/*.ts",
+    "test": "npm run build && mocha --exit --timeout 30000 -r ts-node/register test/**/**/*.ts",
+    "int-test": "npm run build && mocha --exit --timeout 30000 -r ts-node/register test/integration/**/*.ts",
+    "unit-test": "npm run build && mocha --exit --timeout 5000 -r ts-node/register test/unit/**/*.ts",
     "build-ts": "tsc",
     "watch-ts": "tsc -w",
     "tslint": "tslint -c tslint.json -p tsconfig.json",
@@ -52,8 +54,11 @@
     "chai-http": "^4.3.0",
     "concurrently": "^4.1.0",
     "copyfiles": "^2.1.0",
+    "husky": "^3.0.0",
     "mocha": "^6.1.4",
     "nodemon": "^1.19.1",
+    "prettier": "1.18.2",
+    "pretty-quick": "^1.11.1",
     "shelljs": "^0.8.3",
     "testcontainers": "^1.1.19",
     "ts-node": "^8.3.0",
@@ -80,5 +85,14 @@
     "request": "^2.88.0",
     "request-promise": "^4.2.4",
     "winston": "^3.2.1"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged"
+    }
+  },
+  "prettier": {
+    "printWidth": 100,
+    "tabWidth": 2
   }
 }
