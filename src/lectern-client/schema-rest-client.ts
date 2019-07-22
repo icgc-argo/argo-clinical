@@ -1,14 +1,14 @@
 import { loggerFor } from "../logger";
-import { DataSchema } from "./schema-entities";
+import { SchemasDictionary } from "./schema-entities";
 const L = loggerFor(__filename);
-const stuff = require("../resources/stub-schema.json");
+import stuff from "./stub-schema.json";
 
 export interface SchemaServiceRestClient {
-  fetchSchema(name: string, version: string): Promise<DataSchema>;
+  fetchSchema(name: string, version: string): Promise<SchemasDictionary>;
 }
 
 export const schemaClient: SchemaServiceRestClient = {
-  fetchSchema: async (name: string, version: string): Promise<DataSchema> => {
+  fetchSchema: async (name: string, version: string): Promise<SchemasDictionary> => {
     L.debug(`in fetch schema ${version}`);
     const result = delay(1000);
     const stubb = await result(stuff[0]);
@@ -18,8 +18,8 @@ export const schemaClient: SchemaServiceRestClient = {
 };
 
 function delay(milliseconds: number) {
-  return async (result: DataSchema) => {
-    return new Promise<DataSchema>(async (resolve, reject) => {
+  return async (result: SchemasDictionary) => {
+    return new Promise<SchemasDictionary>(async (resolve, reject) => {
       setTimeout(() => resolve(result), milliseconds);
     });
   };

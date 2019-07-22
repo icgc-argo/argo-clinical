@@ -1,15 +1,15 @@
 import mongoose from "mongoose";
-import { DataSchema } from "./schema-entities";
+import { SchemasDictionary } from "./schema-entities";
 import { loggerFor } from "../logger";
 const L = loggerFor(__filename);
 
 export interface SchemaRepository {
-  createOrUpdate(schema: DataSchema): Promise<DataSchema | null>;
-  get(name: String): Promise<DataSchema | null>;
+  createOrUpdate(schema: SchemasDictionary): Promise<SchemasDictionary | null>;
+  get(name: String): Promise<SchemasDictionary | null>;
 }
 
 export const schemaRepo: SchemaRepository = {
-  createOrUpdate: async (schema: DataSchema): Promise<DataSchema | null> => {
+  createOrUpdate: async (schema: SchemasDictionary): Promise<SchemasDictionary | null> => {
     const newSchema = new DataSchemaModel(schema);
     return await DataSchemaModel.findOneAndUpdate(
       {
@@ -19,13 +19,13 @@ export const schemaRepo: SchemaRepository = {
       { upsert: true }
     ).exec();
   },
-  get: async (name: String): Promise<DataSchema | null> => {
+  get: async (name: String): Promise<SchemasDictionary | null> => {
     L.debug("in Schema repo get");
     return await DataSchemaModel.findOne({ name: name }).exec();
   }
 };
 
-type DataSchemaDocument = mongoose.Document & DataSchema;
+type DataSchemaDocument = mongoose.Document & SchemasDictionary;
 
 const DataSchemaMongooseSchema = new mongoose.Schema(
   {

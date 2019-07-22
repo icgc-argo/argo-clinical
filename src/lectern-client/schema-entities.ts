@@ -1,28 +1,34 @@
 import { loggerFor } from "../logger";
 const L = loggerFor(__filename);
 
-export interface DataRecord {
+export class DataRecord {
   readonly [k: string]: string;
 }
 
-export interface DataSchema {
+export class TypedDataRecord {
+  readonly [k: string]: SchemaTypes;
+}
+
+export type SchemaTypes = string | boolean | number;
+
+export interface SchemasDictionary {
   version: string;
   name: string;
-  definitions: Array<SchemaDefinition>;
+  schemas: Array<SchemaDefinition>;
 }
 
 export interface SchemaDefinition {
-  name: string;
-  description: string;
-  key: string;
-  fields: Array<FieldDefinition>;
+  readonly name: string;
+  readonly description: string;
+  readonly key: string;
+  readonly fields: ReadonlyArray<FieldDefinition>;
 }
 
 export interface FieldDefinition {
   name: string;
   valueType: ValueType;
   description: string;
-  meta?: { key?: boolean; default?: string | number | boolean };
+  meta?: { key?: boolean; default?: SchemaTypes };
   restrictions?: {
     codeList?: Array<string | number>;
     regex?: string;

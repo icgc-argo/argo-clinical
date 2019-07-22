@@ -1,6 +1,6 @@
 [
   {
-    "definitions": [
+    "schemas": [
       {
         "name": "registration",
         "description": "TSV for Registration of Donor-Specimen-Sample",

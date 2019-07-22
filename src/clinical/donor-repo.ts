@@ -2,11 +2,23 @@ import { Donor, Sample, Specimen } from "./clinical-entities";
 import mongoose from "mongoose";
 
 export interface DonorRepository {
+  findByProgramAndSubmitterId(
+    filter: { programId: string; submitterId: string }[]
+  ): Promise<Donor[] | undefined>;
   register(donor: RegisterDonorDto): Promise<Donor>;
 }
 
 // Mongoose implementation of the DonorRepository
 export const donorDao: DonorRepository = {
+  async findByProgramAndSubmitterId(
+    filter: { programId: string; submitterId: string }[]
+  ): Promise<Donor[] | undefined> {
+    return (
+      (await DonorModel.find({
+        $or: [...filter]
+      }).exec()) || undefined
+    );
+  },
   async register(createDonorDto: RegisterDonorDto): Promise<Donor> {
     const donor: Donor = {
       donorId: "",
@@ -22,7 +34,7 @@ export const donorDao: DonorRepository = {
             };
             return sample;
           }),
-          clinicalInfo: undefined,
+          clinicalInfo: {},
           submitterId: s.submitterId
         };
         return spec;

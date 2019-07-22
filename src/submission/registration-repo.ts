@@ -8,10 +8,18 @@ export interface RegistrationRepository {
   delete(id: string): Promise<void>;
   create(command: ActiveRegistration): Promise<ActiveRegistration>;
   findByProgramId(programId: string): Promise<ActiveRegistration | undefined>;
+  findById(id: string): Promise<ActiveRegistration | undefined>;
 }
 
 // Mongoose implementation of the RegistrationRepository
 export const registrationRepository: RegistrationRepository = {
+  async findById(id: string): Promise<ActiveRegistration | undefined> {
+    const registration = await ActiveRegistrationModel.findById(id);
+    if (registration === null) {
+      return undefined;
+    }
+    return registration;
+  },
   async findByProgramId(programId: string): Promise<ActiveRegistration | undefined> {
     L.debug(`in findByProgramId programId: ${programId}`);
     try {

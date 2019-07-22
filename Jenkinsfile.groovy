@@ -63,6 +63,7 @@ spec:
                 }
             }
         }
+        
        // publish the edge tag
         stage('Publish Develop') {
             when {

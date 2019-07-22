@@ -1,12 +1,19 @@
 import * as dataValidator from "./validation";
-import { donorDao } from "../clinical/donor-repo";
+import { donorDao, RegisterSpecimenDto } from "../clinical/donor-repo";
 import { registrationRepository } from "./registration-repo";
 import { Donor } from "../clinical/clinical-entities";
 import { RegisterDonorDto } from "../clinical/donor-repo";
 import { ActiveRegistration, RegistrationRecord } from "./submission-entities";
-import * as manager from "../lectern-client/schema-manager";
-import { SchemaValidationErrors } from "../lectern-client/schema-entities";
+import * as schemaManager from "../lectern-client/schema-manager";
+import {
+  SchemaValidationErrors,
+  SchemaValidationError,
+  TypedDataRecord
+} from "../lectern-client/schema-entities";
 import { loggerFor } from "../logger";
+import { Errors } from "../utils";
+import { map } from "bluebird";
+import { add } from "winston";
 const L = loggerFor(__filename);
 
 export namespace operations {
@@ -19,24 +26,28 @@ export namespace operations {
   export const createRegistration = async (
     command: CreateRegistrationCommand
   ): Promise<CreateRegistrationResult> => {
-    const fullyPopulatedRecords = manager.populateDefaults("registration", command.records);
-    const schemaErrors: SchemaValidationErrors = manager.validate(
-      "registration",
-      fullyPopulatedRecords
-    );
+    const schemaResult = schemaManager.process("registration", command.records);
+    const processedRecords = schemaResult.processedRecords;
 
     // if there are errors terminate the creation.
-    if (anyErrors(schemaErrors)) {
-      L.info(`found ${schemaErrors.recordsErrors.length} schema errors in registration attempt`);
+    if (anyErrors(schemaResult.validationErrors)) {
+      L.info(`found ${schemaResult.validationErrors.length} schema errors in registration attempt`);
       return {
         registrationId: undefined,
         state: undefined,
-        errors: schemaErrors.recordsErrors,
+        errors: schemaResult.validationErrors,
         successful: false
       };
     }
 
-    const registrationRecords = mapToRegistrationRecord(command);
+    const registrationRecords = mapToRegistrationRecord(processedRecords);
+    const filter = registrationRecords.map(rc => {
+      return {
+        programId: rc.programId,
+        submitterId: rc.donorSubmitterId
+      };
+    });
+    const donorDocs = await donorDao.findByProgramAndSubmitterId(filter);
     const { errors: dataErrors } = dataValidator.validateRegistrationData(registrationRecords);
     if (dataErrors.length > 0) {
       L.info(`found ${dataErrors.length} data errors in registration attempt`);
@@ -78,26 +89,76 @@ export namespace operations {
    */
   export const commitRegisteration = async (
     command: Readonly<CommitRegistrationCommand>
-  ): Promise<void> => {
-    const donor: RegisterDonorDto = {
-      submitterId: "DONOR1000",
-      gender: "male",
-      programId: "PEME-CA",
-      specimens: [
+  ): Promise<Donor[]> => {
+    const registration = await registrationRepository.findById(command.registrationId);
+    if (registration == undefined) {
+      throw new Errors.NotFound(`no registration with id :${command.registrationId} found`);
+    }
+
+    const donorRecords: ReadonlyArray<RegisterDonorDto> = mapToDonorRecords(registration);
+    const savedDonors: Donor[] = [];
+
+    donorRecords.forEach(async rd => {
+      const donors = await donorDao.findByProgramAndSubmitterId([
+        { programId: rd.programId, submitterId: rd.submitterId }
+      ]);
+      if (donors && donors.length == 0) {
+        const saved = await donorDao.register(rd);
+        savedDonors.push(saved);
+        return;
+      }
+
+      return undefined;
+    });
+
+    // todo: delete registration
+    return savedDonors;
+  };
+
+  const mapToDonorRecords = (registration: ActiveRegistration) => {
+    const donors: RegisterDonorDto[] = [];
+    registration.records.forEach(rec => {
+      // if the donor doesn't exist add it
+      let donor = donors.find(d => d.submitterId === rec.donorSubmitterId);
+      if (!donor) {
+        const firstSpecimen = getDonorSpecimen(rec);
+        donor = {
+          submitterId: rec.donorSubmitterId,
+          gender: rec.gender,
+          programId: registration.programId,
+          specimens: [firstSpecimen]
+        };
+        donors.push(donor);
+        return;
+      }
+
+      // if the specimen doesn't exist add it
+      let specimen = donor.specimens.find(s => s.submitterId === rec.specimenSubmitterId);
+      if (!specimen) {
+        specimen = getDonorSpecimen(rec);
+        donor.specimens.push(specimen);
+      } else {
+        specimen.samples.push({
+          sampleType: rec.sampleType,
+          submitterId: rec.sampleSubmitterId
+        });
+      }
+      return donor;
+    });
+    return donors;
+  };
+
+  const getDonorSpecimen = (record: RegistrationRecord): RegisterSpecimenDto => {
+    return {
+      submitterId: record.specimenSubmitterId,
+      samples: [
         {
-          samples: [
-            {
-              sampleType: "RNA",
-              submitterId: "SAMP1038RNA"
-            }
-          ],
-          submitterId: "SPEC10999"
+          sampleType: record.sampleType,
+          submitterId: record.sampleSubmitterId
         }
       ]
     };
-    const created: Donor = await donorDao.register(donor);
   };
-
   /**
    * find registration by program Id
    * @param programId string
@@ -129,23 +190,23 @@ export namespace operations {
     };
   }
 
-  function anyErrors(schemaErrors: SchemaValidationErrors) {
-    return schemaErrors.generalErrors.length > 0 || schemaErrors.recordsErrors.length > 0;
+  function anyErrors(schemaErrors: SchemaValidationError[]) {
+    return schemaErrors.length > 0 || schemaErrors.length > 0;
   }
 
   function mapToRegistrationRecord(
-    command: CreateRegistrationCommand
+    records: TypedDataRecord[]
   ): ReadonlyArray<CreateRegistrationRecord> {
-    return command.records.map(r => {
+    return records.map(r => {
       const rec: CreateRegistrationRecord = {
-        programId: r.program_id,
-        donorSubmitterId: r.donor_submitter_id,
-        gender: r.gender,
-        specimenSubmitterId: r.specimen_submitter_id,
-        specimenType: r.specimen_type,
-        tumourNormalDesignation: r.tumour_normal_designation,
-        sampleSubmitterId: r.sample_submitter_id,
-        sampleType: r.sample_type
+        programId: r.program_id as string,
+        donorSubmitterId: r.donor_submitter_id as string,
+        gender: r.gender as string,
+        specimenSubmitterId: r.specimen_submitter_id as string,
+        specimenType: r.specimen_type as string,
+        tumourNormalDesignation: r.tumour_normal_designation as string,
+        sampleSubmitterId: r.sample_submitter_id as string,
+        sampleType: r.sample_type as string
       };
       return rec;
     });
