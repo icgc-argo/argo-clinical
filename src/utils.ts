@@ -1,5 +1,6 @@
 import fs from "fs";
 import { Request, Response } from "express";
+import deepFreeze from "deep-freeze";
 const fsPromises = fs.promises;
 
 export namespace TsvUtils {
@@ -85,3 +86,5 @@ export const isAbsent = (value: string | number | boolean) => {
 export const isNotAbsent = (value: string | number | boolean) => {
   return value !== null && value !== undefined;
 };
+
+export const F = deepFreeze;

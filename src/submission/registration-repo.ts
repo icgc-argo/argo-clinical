@@ -2,25 +2,27 @@ import { ActiveRegistrationModel } from "./registration";
 import { ActiveRegistration } from "./submission-entities";
 import { InternalError } from "./errors";
 import { loggerFor } from "../logger";
+import { F } from "../utils";
+import { DeepReadonly } from "deep-freeze";
 const L = loggerFor(__filename);
 
 export interface RegistrationRepository {
   delete(id: string): Promise<void>;
-  create(command: ActiveRegistration): Promise<ActiveRegistration>;
-  findByProgramId(programId: string): Promise<ActiveRegistration | undefined>;
-  findById(id: string): Promise<ActiveRegistration | undefined>;
+  create(command: DeepReadonly<ActiveRegistration>): Promise<DeepReadonly<ActiveRegistration>>;
+  findByProgramId(programId: string): Promise<DeepReadonly<ActiveRegistration> | undefined>;
+  findById(id: string): Promise<DeepReadonly<ActiveRegistration> | undefined>;
 }
 
 // Mongoose implementation of the RegistrationRepository
 export const registrationRepository: RegistrationRepository = {
-  async findById(id: string): Promise<ActiveRegistration | undefined> {
+  async findById(id: string) {
     const registration = await ActiveRegistrationModel.findById(id);
     if (registration === null) {
       return undefined;
     }
-    return registration;
+    return F(registration);
   },
-  async findByProgramId(programId: string): Promise<ActiveRegistration | undefined> {
+  async findByProgramId(programId: string) {
     L.debug(`in findByProgramId programId: ${programId}`);
     try {
       const activeRegistration = await ActiveRegistrationModel.findOne({
@@ -30,13 +32,13 @@ export const registrationRepository: RegistrationRepository = {
         return undefined;
       }
       L.info(`found registration for program ${programId}: ${activeRegistration}`);
-      return activeRegistration;
+      return F(activeRegistration);
     } catch (err) {
       L.error("failed to fetch registration", err);
       throw new InternalError("failed to fetch registration", err);
     }
   },
-  async create(registration: ActiveRegistration): Promise<ActiveRegistration> {
+  async create(registration: ActiveRegistration) {
     L.debug(`creating new registration: ${registration}`);
     const activeRegistrationModel = new ActiveRegistrationModel(registration);
     try {
@@ -44,7 +46,7 @@ export const registrationRepository: RegistrationRepository = {
       registration.id = doc.id;
       L.debug(`new registration doc created: ${activeRegistrationModel}`);
       L.info(`saved new registration: program: ${registration.programId} id: ${registration.id}`);
-      return doc;
+      return F(doc);
     } catch (err) {
       L.error("failed to save registration", err);
       throw new InternalError("failed to save registration", err);

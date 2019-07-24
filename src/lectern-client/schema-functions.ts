@@ -1,9 +1,4 @@
-import {
-  SchemaValidationError,
-  SchemaValidationErrors,
-  TypedDataRecord,
-  SchemaTypes
-} from "./schema-entities";
+import { SchemaValidationError, TypedDataRecord, SchemaTypes } from "./schema-entities";
 import vm from "vm";
 import {
   SchemasDictionary,
@@ -14,7 +9,7 @@ import {
   ErrorTypes
 } from "./schema-entities";
 import { loggerFor } from "../logger";
-import { Checks, notEmpty, isEmptyString, isNotEmptyString, isAbsent } from "../utils";
+import { Checks, notEmpty, isEmptyString, isNotEmptyString, isAbsent, F } from "../utils";
 const L = loggerFor(__filename);
 
 export const process = (
@@ -37,7 +32,7 @@ export const process = (
   const processedRecords: TypedDataRecord[] = [];
 
   records.forEach((rec, index) => {
-    const defaultedRecord: DataRecord = populateDefaults(schemaDef, rec, index);
+    const defaultedRecord: DataRecord = populateDefaults(schemaDef, F(rec), index);
     const result = validate(schemaDef, defaultedRecord, index);
     if (result && result.length > 0) {
       validationErrors = validationErrors.concat(result);
@@ -56,10 +51,10 @@ export const process = (
     processedRecords.push(convertedRecord);
   });
 
-  return {
+  return F({
     validationErrors,
     processedRecords
-  };
+  });
 };
 
 /**
@@ -69,13 +64,14 @@ export const process = (
  * @param records the list of records to populate with the default values.
  */
 const populateDefaults = (
-  schemaDef: SchemaDefinition,
-  record: Readonly<DataRecord>,
+  schemaDef: Readonly<SchemaDefinition>,
+  record: DataRecord,
   index: number
 ): DataRecord => {
   Checks.checkNotNull("records", record);
   L.debug(`in populateDefaults ${schemaDef.name}, ${record.length}`);
   const mutableRecord: RawMutableRecord = { ...record };
+  const x: SchemaDefinition = schemaDef;
   schemaDef.fields.forEach(field => {
     if (isEmptyString(record[field.name]) && field.meta && field.meta.default) {
       L.debug(`populating Default: ${field.meta.default} for ${field.name} in record : ${record}`);
@@ -83,7 +79,7 @@ const populateDefaults = (
     }
     return undefined;
   });
-  return Object.freeze(mutableRecord);
+  return F(mutableRecord);
 };
 
 const convertFromRawStrings = (
@@ -116,7 +112,7 @@ const convertFromRawStrings = (
     }
     mutableRecord[field.name] = typedValue;
   });
-  return Object.freeze(mutableRecord);
+  return F(mutableRecord);
 };
 /**
  * Run schema validation pipeline for a schema defintion on the list of records provided.

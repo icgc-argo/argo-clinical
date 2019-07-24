@@ -1,4 +1,5 @@
 export interface Donor {
+  _id?: string;
   donorId: string;
   gender: string;
   submitterId: string;
@@ -14,7 +15,9 @@ export interface Donor {
 
 export interface Specimen {
   samples: Array<Sample>;
+  specimenType: string;
   submitterId: string;
+  tumourNormalDesignation: string;
   clinicalInfo: object | undefined;
 }
 
@@ -22,3 +25,5 @@ export interface Sample {
   sampleType: string;
   submitterId: string;
 }
+
+export type DonorMap = Readonly<{ [submitterId: string]: Donor }>;

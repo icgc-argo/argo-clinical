@@ -1,25 +1,48 @@
 import { Donor, Sample, Specimen } from "./clinical-entities";
-import mongoose from "mongoose";
+import mongoose = require("mongoose");
+import { filter } from "bluebird";
+import { DeepReadonly } from "deep-freeze";
+import { F } from "../utils";
+
+export const SUBMITTER_ID = "submitterId";
+export const SPECIMEN_SUBMITTER_ID = "specimen.submitterId";
+export const SPECIMEN_SAMPLE_SUBMITTER_ID = "specimen.sample.submitterId";
+
+export enum DONOR_FIELDS {
+  SUBMITTER_ID = "submitterId",
+  SPECIMEN_SUBMITTER_ID = "specimen.submitterId",
+  SPECIMEN_SAMPLE_SUBMITTER_ID = "specimen.sample.submitterId"
+}
 
 export interface DonorRepository {
   findByProgramAndSubmitterId(
-    filter: { programId: string; submitterId: string }[]
+    filter: DeepReadonly<{ programId: string; submitterId: string }[]>
   ): Promise<Donor[] | undefined>;
-  register(donor: RegisterDonorDto): Promise<Donor>;
+  register(donor: DeepReadonly<RegisterDonorDto>): Promise<DeepReadonly<Donor>>;
+  countByExpression(filter: any): Promise<number>;
 }
 
 // Mongoose implementation of the DonorRepository
 export const donorDao: DonorRepository = {
+  async countByExpression(filter: any) {
+    return await DonorModel.count(filter)
+      .lean()
+      .exec();
+  },
   async findByProgramAndSubmitterId(
     filter: { programId: string; submitterId: string }[]
   ): Promise<Donor[] | undefined> {
-    return (
-      (await DonorModel.find({
-        $or: [...filter]
-      }).exec()) || undefined
-    );
+    const result: DonorDocument[] = await DonorModel.find({
+      $or: [...filter]
+    })
+      .lean()
+      .exec();
+    result.forEach((d: DonorDocument) => {
+      if (d._id) d._id = d._id.toString();
+    });
+    return result;
   },
-  async register(createDonorDto: RegisterDonorDto): Promise<Donor> {
+  async register(createDonorDto: DeepReadonly<RegisterDonorDto>) {
     const donor: Donor = {
       donorId: "",
       gender: createDonorDto.gender,
@@ -35,6 +58,8 @@ export const donorDao: DonorRepository = {
             return sample;
           }),
           clinicalInfo: {},
+          specimenType: s.specimenType,
+          tumourNormalDesignation: s.tumourNormalDesignation,
           submitterId: s.submitterId
         };
         return spec;
@@ -48,7 +73,7 @@ export const donorDao: DonorRepository = {
     };
     const newDonor = new DonorModel(donor);
     await newDonor.save();
-    return newDonor;
+    return F(newDonor);
   }
 };
 
@@ -61,6 +86,8 @@ export interface RegisterDonorDto {
 
 export interface RegisterSpecimenDto {
   samples: Array<RegisterSampleDto>;
+  specimenType: string;
+  tumourNormalDesignation: string;
   submitterId: string;
 }
 
@@ -71,6 +98,7 @@ export interface RegisterSampleDto {
 
 type DonorDocument = mongoose.Document & Donor;
 
+mongoose.SchemaTypes.Number;
 const donorSchema = new mongoose.Schema(
   {
     donorId: { type: String, index: true, unique: true },
