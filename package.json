@@ -4,7 +4,7 @@
   "description": "Clinical submission system and repo",
   "scripts": {
     "start": "npm run serve",
-    "stop": "pkill --signal SIGINT clinical",
+    "stop": "pkill --signal 9 clinical",
     "build": "npm run build-ts && npm run resources && npm run tslint",
     "serve": "node dist/src/server.js",
     "watch-node": "nodemon dist/src/server.js",
@@ -14,10 +14,11 @@
     "build-ts": "tsc",
     "watch-ts": "tsc -w",
     "tslint": "tslint -c tslint.json -p tsconfig.json",
-    "debug": "npm run build && npm run watch-debug",
+    "debug": "npm run build && sleep 3 && npm run watch-debug",
     "resources": "copyfiles -u 1 src/resources/*.* dist/",
     "serve-debug": "nodemon --inspect dist/src/server.js",
-    "watch-debug": "concurrently -k -p \"[{name}]\" -n \"TypeScript,Node\" -c \"yellow.bold,cyan.bold,green.bold\" \"npm run watch-ts\" \"npm run serve-debug\""
+    "watch-debug": "nodemon --watch 'src/**/*.ts' --ignore 'src/**/*.spec.ts' --exec node --inspect-brk -r ts-node/register ./src/server.ts",
+    "watch-debug-deprecated": "concurrently -k -p \"[{name}]\" -n \"TypeScript,Node\" -c \"yellow.bold,cyan.bold,green.bold\" \"npm run watch-ts\" \"npm run serve-debug\""
   },
   "repository": {
     "type": "git",

@@ -10,14 +10,19 @@ export interface SchemaRepository {
 
 export const schemaRepo: SchemaRepository = {
   createOrUpdate: async (schema: SchemasDictionary): Promise<SchemasDictionary | null> => {
-    const newSchema = new DataSchemaModel(schema);
-    return await DataSchemaModel.findOneAndUpdate(
+    let newSchema = new DataSchemaModel(schema);
+    await DataSchemaModel.findOneAndUpdate(
       {
         name: schema.name
       },
       newSchema,
       { upsert: true }
-    ).exec();
+    )
+      .lean()
+      .exec();
+    newSchema = newSchema.toObject();
+    newSchema._id = newSchema._id.toString();
+    return newSchema;
   },
   get: async (name: String): Promise<SchemasDictionary | null> => {
     L.debug("in Schema repo get");
@@ -31,7 +36,7 @@ const DataSchemaMongooseSchema = new mongoose.Schema(
   {
     name: { type: String, unique: true },
     version: { type: String },
-    definitions: []
+    schemas: []
   },
   { timestamps: true }
 );

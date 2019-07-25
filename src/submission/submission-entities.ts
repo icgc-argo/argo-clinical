@@ -2,36 +2,40 @@
  * Represents a valid registration that is not yet committed (in progress)
  */
 export interface ActiveRegistration {
-  id?: string;
+  _id?: string;
   readonly programId: string;
   readonly creator: string;
+  readonly stats: RegistrationStats;
   readonly records: Array<RegistrationRecord>;
 }
 
 export interface RegistrationRecord {
-  readonly donorSubmitterId: string;
+  readonly program_id: string;
+  readonly donor_submitter_id: string;
   readonly gender: string;
-  readonly specimenSubmitterId: string;
-  readonly specimenType: string;
-  readonly tumourNormalDesignation: string;
-  readonly sampleSubmitterId: string;
-  readonly sampleType: string;
+  readonly specimen_submitter_id: string;
+  readonly specimen_type: string;
+  readonly tumour_normal_designation: string;
+  readonly sample_submitter_id: string;
+  readonly sample_type: string;
 }
 
 export type DataValidationError = {
-  errorType: DataValidationErrors;
+  type: DataValidationErrors;
   fieldName: RegistrationFields;
+  info: object;
   index: number;
 };
 
 export enum DataValidationErrors {
-  SAMPLE_ALREADY_ADDED = "SAMPLE_ALREADY_ADDED",
-  SPECIMEN_SUBMITTER_ID = "SPECIMEN_SUBMITTER_ID",
   SPECIMEN_SUBMITTER_ID_TAKEN = "SPECIMEN_SUBMITTER_ID_TAKEN",
   SAMPLE_SUBMITTER_ID_TAKEN = "SAMPLE_SUBMITTER_ID_TAKEN",
   MUTATING_EXISTING_DATA = "MUTATING_EXISTING_DATA",
-  SAMPLE_BELONGS_TO_OTHER_DONOR_SPECIMEN = "SAMPLE_BELONGS_TO_OTHER_DONOR_SPECIMEN",
-  SPECIMEN_BELONGS_TO_OTHER_DONOR = "SPECIMEN_BELONGS_TO_OTHER_DONOR"
+  SAMPLE_BELONGS_TO_OTHER_SPECIMEN = "SAMPLE_BELONGS_TO_OTHER_SPECIMEN",
+  SPECIMEN_BELONGS_TO_OTHER_DONOR = "SPECIMEN_BELONGS_TO_OTHER_DONOR",
+  NEW_SPECIMEN_CONFLICT = "NEW_SPECIMEN_CONFLICT",
+  NEW_SAMPLE_CONFLICT = "NEW_SAMPLE_CONFLICT",
+  INVALID_PROGRAM_ID = "INVALID_PROGRAM_ID"
 }
 
 export enum RegistrationFields {

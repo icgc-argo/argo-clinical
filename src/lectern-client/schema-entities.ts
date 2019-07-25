@@ -61,4 +61,5 @@ export interface SchemaValidationError {
   readonly errorType: ErrorTypes;
   readonly index: number;
   readonly fieldName: string;
+  // todo add server message for script validation.
 }

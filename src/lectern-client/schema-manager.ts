@@ -32,7 +32,7 @@ export const updateVersion = async (
   const newSchema = await schemaServiceAdapter.fetchSchema(name, newVersion);
   const result = await schemaRepo.createOrUpdate(newSchema);
   if (!result) {
-    throw new Error("couldn't save/update new schema");
+    throw new Error("couldn't save/update new schema.");
   }
   schema = result;
   return schema;

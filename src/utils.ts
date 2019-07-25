@@ -1,6 +1,7 @@
 import fs from "fs";
 import { Request, Response } from "express";
 import deepFreeze from "deep-freeze";
+import mongoose from "mongoose";
 const fsPromises = fs.promises;
 
 export namespace TsvUtils {
@@ -59,6 +60,16 @@ export namespace Errors {
       super(msg);
     }
   }
+}
+
+export namespace MongooseUtils {
+  export const toPojo = (doc: mongoose.Document) => {
+    const pojo = doc.toObject();
+    if (pojo._id) {
+      pojo._id = pojo._id.toString();
+    }
+    return pojo;
+  };
 }
 
 // type gaurd to filter out undefined and null
