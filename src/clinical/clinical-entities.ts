@@ -5,12 +5,12 @@ export interface Donor {
   submitterId: string;
   programId: string;
   specimens: Array<Specimen>;
-  clinicalInfo: object | undefined;
-  primaryDiagnosis: object;
-  followUps: Array<object>;
-  treatments: Array<object>;
-  chemotherapy: Array<Object>;
-  HormoneTherapy: Array<Object>;
+  clinicalInfo?: object | undefined;
+  primaryDiagnosis?: object;
+  followUps?: Array<object>;
+  treatments?: Array<object>;
+  chemotherapy?: Array<Object>;
+  HormoneTherapy?: Array<Object>;
 }
 
 export interface Specimen {
@@ -18,7 +18,7 @@ export interface Specimen {
   specimenType: string;
   submitterId: string;
   tumourNormalDesignation: string;
-  clinicalInfo: object | undefined;
+  clinicalInfo?: object | undefined;
 }
 
 export interface Sample {

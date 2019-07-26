@@ -1,3 +1,5 @@
+import { DeepReadonly } from "deep-freeze";
+
 /**
  * Represents a valid registration that is not yet committed (in progress)
  */
@@ -22,7 +24,7 @@ export interface RegistrationRecord {
 
 export type DataValidationError = {
   type: DataValidationErrors;
-  fieldName: RegistrationFields;
+  fieldName: keyof RegistrationRecord;
   info: object;
   index: number;
 };
@@ -38,16 +40,6 @@ export enum DataValidationErrors {
   INVALID_PROGRAM_ID = "INVALID_PROGRAM_ID"
 }
 
-export enum RegistrationFields {
-  SAMPLE_SUBMITTER_ID = "SAMPLE_SUBMITTER_ID",
-  SPECIMEN_SUBMITTER_ID = "SPECIMEN_SUBMITTER_ID",
-  PROGRAM_ID = "PROGRAM_ID",
-  GENDER = "GENDER",
-  SPECIMEN_TYPE = "SPECIMEN_TYPE",
-  TUMOUR_NORMAL_DESIGNATION = "TUMOUR_NORMAL_DESIGNATION",
-  SAMPLE_TYPE = "SAMPLE_TYPE"
-}
-
 export type RegistrationStat = { [submitterId: string]: number[] };
 
 export interface RegistrationStats {
@@ -55,4 +47,37 @@ export interface RegistrationStats {
   newSpecimenIds: RegistrationStat;
   newSampleIds: RegistrationStat;
   alreadyRegistered: RegistrationStat;
+}
+
+export interface CreateRegistrationRecord {
+  readonly programId: string;
+  readonly donorSubmitterId: string;
+  readonly gender: string;
+  readonly specimenSubmitterId: string;
+  readonly specimenType: string;
+  readonly tumourNormalDesignation: string;
+  readonly sampleSubmitterId: string;
+  readonly sampleType: string;
+}
+
+export interface CommitRegistrationCommand {
+  readonly registrationId: string;
+}
+
+export interface CreateRegistrationCommand {
+  // we define the records as arbitrary key value pairs to be validated by the schema
+  // before we put them in a CreateRegistrationRecord, in case a column is missing so we let dictionary handle error collection.
+  records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
+  readonly creator: string;
+  readonly programId: string;
+}
+
+export interface CreateRegistrationResult {
+  readonly registration: DeepReadonly<ActiveRegistration> | undefined;
+  readonly successful: boolean;
+  errors: ReadonlyArray<Readonly<any>>;
+}
+
+export interface ValidationResult {
+  errors: DeepReadonly<DataValidationError[]>;
 }

@@ -2,6 +2,7 @@ import * as submission from "./submission-service";
 import { Request, Response } from "express";
 import { TsvUtils, ControllerUtils } from "../utils";
 import { loggerFor } from "../logger";
+import { CreateRegistrationCommand } from "./submission-entities";
 const L = loggerFor(__filename);
 
 export const getRegistrationByProgramId = async (req: Request, res: Response) => {
@@ -33,7 +34,7 @@ export const createRegistrationWithTsv = async (req: Request, res: Response) => 
   } catch (err) {
     return ControllerUtils.badRequest(res, `failed to parse the tsv file: ${err}`);
   }
-  const command: submission.CreateRegistrationCommand = {
+  const command: CreateRegistrationCommand = {
     programId: programId,
     creator: creator,
     records: records

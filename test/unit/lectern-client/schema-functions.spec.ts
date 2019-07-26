@@ -1,6 +1,6 @@
 import chai from "chai";
-import * as schemaService from "../../src/lectern-client/schema-functions";
-import { SchemasDictionary, ErrorTypes } from "../../src/lectern-client/schema-entities";
+import * as schemaService from "../../../src/lectern-client/schema-functions";
+import { SchemasDictionary, ErrorTypes } from "../../../src/lectern-client/schema-entities";
 chai.should();
 const schema: SchemasDictionary = require("./schema.json")[0];
 

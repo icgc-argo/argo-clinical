@@ -4,7 +4,16 @@ import * as _ from "lodash";
 import { registrationRepository } from "./registration-repo";
 import { Donor, DonorMap } from "../clinical/clinical-entities";
 import { RegisterDonorDto } from "../clinical/donor-repo";
-import { ActiveRegistration, RegistrationRecord, RegistrationStats } from "./submission-entities";
+import {
+  ActiveRegistration,
+  RegistrationRecord,
+  RegistrationStats,
+  DataValidationError,
+  CreateRegistrationRecord,
+  CommitRegistrationCommand,
+  CreateRegistrationCommand,
+  CreateRegistrationResult
+} from "./submission-entities";
 import * as schemaManager from "../lectern-client/schema-manager";
 import { SchemaValidationError, TypedDataRecord } from "../lectern-client/schema-entities";
 import { loggerFor } from "../logger";
@@ -320,37 +329,4 @@ export namespace operations {
       })
     );
   }
-}
-
-export interface CreateRegistrationRecord {
-  readonly programId: string;
-  readonly donorSubmitterId: string;
-  readonly gender: string;
-  readonly specimenSubmitterId: string;
-  readonly specimenType: string;
-  readonly tumourNormalDesignation: string;
-  readonly sampleSubmitterId: string;
-  readonly sampleType: string;
-}
-
-export interface CommitRegistrationCommand {
-  readonly registrationId: string;
-}
-
-export interface CreateRegistrationCommand {
-  // we define the records as arbitrary key value pairs to be validated by the schema
-  // before we put them in a CreateRegistrationRecord, in case a column is missing so we let dictionary handle error collection.
-  records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
-  readonly creator: string;
-  readonly programId: string;
-}
-
-export interface CreateRegistrationResult {
-  readonly registration: DeepReadonly<ActiveRegistration> | undefined;
-  readonly successful: boolean;
-  errors: ReadonlyArray<Readonly<any>>;
-}
-
-export interface ValidationResult {
-  errors: ReadonlyArray<Readonly<any>>;
 }
