@@ -17,7 +17,7 @@ export const getRegistrationByProgramId = async (req: Request, res: Response) =>
   const programId = req.query.programId;
   const registration = await submission.operations.findByProgramId(programId);
   if (registration == undefined) {
-    return ControllerUtils.notFound(res, `no active registration for this program '${programId}'`);
+    return res.status(200).send({});
   }
   return res.status(200).send(registration);
 };
@@ -64,11 +64,6 @@ const isValidCreateBody = (req: Request, res: Response): boolean => {
   if (req.body.programId == undefined) {
     L.debug("programId missing");
     ControllerUtils.badRequest(res, `programId is required`);
-    return false;
-  }
-  if (req.body.creator == undefined) {
-    L.debug("creator missing");
-    ControllerUtils.badRequest(res, `creator is required`);
     return false;
   }
   if (req.file == undefined) {

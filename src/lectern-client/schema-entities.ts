@@ -1,4 +1,5 @@
 import { loggerFor } from "../logger";
+import { DeepReadonly } from "deep-freeze";
 const L = loggerFor(__filename);
 
 export class DataRecord {
@@ -44,12 +45,12 @@ export enum ValueType {
   BOOLEAN = "boolean"
 }
 
-export interface SchemaValidationErrors {
-  readonly generalErrors: ReadonlyArray<Readonly<any>>;
-  readonly recordsErrors: ReadonlyArray<SchemaValidationError>;
-}
+export type SchemaProcessingResult = DeepReadonly<{
+  validationErrors: SchemaValidationError[];
+  processedRecords: TypedDataRecord[];
+}>;
 
-export enum ErrorTypes {
+export enum SchemaValidationErrorTypes {
   MISSING_REQUIRED_FIELD = "MISSING_REQUIRED_FIELD",
   INVALID_FIELD_VALUE_TYPE = "INVALID_FIELD_VALUE_TYPE",
   INVALID_BY_REGEX = "INVALID_BY_REGEX",
@@ -58,7 +59,7 @@ export enum ErrorTypes {
 }
 
 export interface SchemaValidationError {
-  readonly errorType: ErrorTypes;
+  readonly errorType: SchemaValidationErrorTypes;
   readonly index: number;
   readonly fieldName: string;
   readonly info: object;

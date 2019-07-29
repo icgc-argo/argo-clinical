@@ -1,5 +1,5 @@
 import * as dataValidator from "./validation";
-import { donorDao, RegisterSpecimenDto } from "../clinical/donor-repo";
+import { donorDao } from "../clinical/donor-repo";
 import * as _ from "lodash";
 import { registrationRepository } from "./registration-repo";
 import { Donor, DonorMap } from "../clinical/clinical-entities";
@@ -8,14 +8,20 @@ import {
   ActiveRegistration,
   RegistrationRecord,
   RegistrationStats,
-  DataValidationError,
+  RegistrationValidationError,
   CreateRegistrationRecord,
   CommitRegistrationCommand,
   CreateRegistrationCommand,
-  CreateRegistrationResult
+  CreateRegistrationResult,
+  RegistrationRecordFields
 } from "./submission-entities";
 import * as schemaManager from "../lectern-client/schema-manager";
-import { SchemaValidationError, TypedDataRecord } from "../lectern-client/schema-entities";
+import {
+  SchemaValidationError,
+  TypedDataRecord,
+  DataRecord,
+  SchemaProcessingResult
+} from "../lectern-client/schema-entities";
 import { loggerFor } from "../logger";
 import { Errors, F } from "../utils";
 import { DeepReadonly } from "deep-freeze";
@@ -36,10 +42,11 @@ export namespace operations {
 
     // if there are errors terminate the creation.
     if (anyErrors(schemaResult.validationErrors)) {
+      const unifiedSchemaErrors = unifySchemaErrors(schemaResult, command.records);
       L.info(`found ${schemaResult.validationErrors.length} schema errors in registration attempt`);
       return {
         registration: undefined,
-        errors: schemaResult.validationErrors,
+        errors: unifiedSchemaErrors,
         successful: false
       };
     }
@@ -103,6 +110,24 @@ export namespace operations {
       errors: [],
       successful: true
     });
+  };
+
+  const unifySchemaErrors = (
+    result: SchemaProcessingResult,
+    records: ReadonlyArray<DataRecord>
+  ) => {
+    const errorsList = new Array<RegistrationValidationError>();
+    result.validationErrors.forEach(schemaErr => {
+      errorsList.push({
+        index: schemaErr.index,
+        donorSubmitterId: records[schemaErr.index].donorSubmitterId,
+        type: schemaErr.errorType,
+        info: schemaErr.info,
+        fieldName: schemaErr.fieldName as RegistrationRecordFields
+      });
+    });
+
+    return F(errorsList);
   };
 
   const calculateUpdates = (

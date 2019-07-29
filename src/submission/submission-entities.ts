@@ -1,4 +1,5 @@
 import { DeepReadonly } from "deep-freeze";
+import { SchemaValidationErrorTypes } from "../lectern-client/schema-entities";
 
 /**
  * Represents a valid registration that is not yet committed (in progress)
@@ -22,16 +23,17 @@ export interface RegistrationRecord {
   readonly sample_type: string;
 }
 
-export type DataValidationError = {
-  type: DataValidationErrors;
+export type RegistrationRecordFields = keyof RegistrationRecord;
+
+export type RegistrationValidationError = {
+  type: DataValidationErrors | SchemaValidationErrorTypes;
   fieldName: keyof RegistrationRecord;
   info: object;
+  donorSubmitterId: string;
   index: number;
 };
 
 export enum DataValidationErrors {
-  SPECIMEN_SUBMITTER_ID_TAKEN = "SPECIMEN_SUBMITTER_ID_TAKEN",
-  SAMPLE_SUBMITTER_ID_TAKEN = "SAMPLE_SUBMITTER_ID_TAKEN",
   MUTATING_EXISTING_DATA = "MUTATING_EXISTING_DATA",
   SAMPLE_BELONGS_TO_OTHER_SPECIMEN = "SAMPLE_BELONGS_TO_OTHER_SPECIMEN",
   SPECIMEN_BELONGS_TO_OTHER_DONOR = "SPECIMEN_BELONGS_TO_OTHER_DONOR",
@@ -75,9 +77,9 @@ export interface CreateRegistrationCommand {
 export interface CreateRegistrationResult {
   readonly registration: DeepReadonly<ActiveRegistration> | undefined;
   readonly successful: boolean;
-  errors: ReadonlyArray<Readonly<any>>;
+  errors: DeepReadonly<RegistrationValidationError[]>;
 }
 
 export interface ValidationResult {
-  errors: DeepReadonly<DataValidationError[]>;
+  errors: DeepReadonly<RegistrationValidationError[]>;
 }

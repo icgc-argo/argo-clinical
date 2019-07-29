@@ -1,6 +1,9 @@
 import chai from "chai";
 import * as schemaService from "../../../src/lectern-client/schema-functions";
-import { SchemasDictionary, ErrorTypes } from "../../../src/lectern-client/schema-entities";
+import {
+  SchemasDictionary,
+  SchemaValidationErrorTypes
+} from "../../../src/lectern-client/schema-entities";
 chai.should();
 const schema: SchemasDictionary = require("./schema.json")[0];
 
@@ -45,7 +48,7 @@ describe("schema-functions", () => {
       }
     ]);
     chai.expect(result.validationErrors).to.deep.include({
-      errorType: ErrorTypes.MISSING_REQUIRED_FIELD,
+      errorType: SchemaValidationErrorTypes.MISSING_REQUIRED_FIELD,
       fieldName: "program_id",
       index: 0,
       info: {}
@@ -61,7 +64,7 @@ describe("schema-functions", () => {
       }
     ]);
     chai.expect(result.validationErrors).to.deep.include({
-      errorType: ErrorTypes.INVALID_FIELD_VALUE_TYPE,
+      errorType: SchemaValidationErrorTypes.INVALID_FIELD_VALUE_TYPE,
       fieldName: "unit_number",
       index: 0,
       info: {}
@@ -82,7 +85,7 @@ describe("schema-functions", () => {
       }
     ]);
     chai.expect(result.validationErrors).to.deep.include({
-      errorType: ErrorTypes.INVALID_BY_REGEX,
+      errorType: SchemaValidationErrorTypes.INVALID_BY_REGEX,
       fieldName: "program_id",
       index: 0,
       info: {}
@@ -106,13 +109,13 @@ describe("schema-functions", () => {
     ]);
     chai.expect(result.validationErrors.length).to.eq(2);
     chai.expect(result.validationErrors).to.deep.include({
-      errorType: ErrorTypes.INVALID_BY_SCRIPT,
+      errorType: SchemaValidationErrorTypes.INVALID_BY_SCRIPT,
       fieldName: "postal_code",
       index: 0,
       info: { message: "invalid postal code for US" }
     });
     chai.expect(result.validationErrors).to.deep.include({
-      errorType: ErrorTypes.INVALID_BY_SCRIPT,
+      errorType: SchemaValidationErrorTypes.INVALID_BY_SCRIPT,
       fieldName: "postal_code",
       index: 1,
       info: { message: "invalid postal code for CANADA" }

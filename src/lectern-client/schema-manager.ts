@@ -1,5 +1,5 @@
 import * as service from "./schema-functions";
-import { SchemasDictionary, DataRecord, SchemaValidationErrors } from "./schema-entities";
+import { SchemasDictionary, DataRecord, SchemaProcessingResult } from "./schema-entities";
 import { schemaClient as schemaServiceAdapter } from "./schema-rest-client";
 import { schemaRepo } from "./schema-repo";
 import { loggerFor } from "../logger";
@@ -21,7 +21,10 @@ export const getCurrent = (): SchemasDictionary => {
  *
  * @returns object contains the validation errors and the valid processed records.
  */
-export const process = (definition: string, records: ReadonlyArray<DataRecord>) => {
+export const process = (
+  definition: string,
+  records: ReadonlyArray<DataRecord>
+): SchemaProcessingResult => {
   return service.process(getCurrent(), definition, records);
 };
 

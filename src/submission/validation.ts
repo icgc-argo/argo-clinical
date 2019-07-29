@@ -1,7 +1,7 @@
 import { DonorMap } from "../clinical/clinical-entities";
 import {
   DataValidationErrors,
-  DataValidationError,
+  RegistrationValidationError,
   RegistrationRecord,
   CreateRegistrationRecord,
   ValidationResult
@@ -14,7 +14,7 @@ export const validateRegistrationData = async (
   newRecords: DeepReadonly<CreateRegistrationRecord[]>,
   existingDonors: DeepReadonly<DonorMap>
 ): Promise<ValidationResult> => {
-  let errors: DataValidationError[] = [];
+  let errors: RegistrationValidationError[] = [];
 
   // caching in case we encounter same ids more than once
   const newSpecimens = new Set<string>();
@@ -54,12 +54,18 @@ const usingInvalidProgramId = (
   registrationRecord: CreateRegistrationRecord,
   expectedProgram: string
 ) => {
-  const errors: DataValidationError[] = [];
+  const errors: RegistrationValidationError[] = [];
   if (expectedProgram !== registrationRecord.programId) {
     errors.push(
-      buildError(DataValidationErrors.INVALID_PROGRAM_ID, "program_id", newDonorIndex, {
-        expectedProgram
-      })
+      buildError(
+        DataValidationErrors.INVALID_PROGRAM_ID,
+        "program_id",
+        newDonorIndex,
+        registrationRecord.donorSubmitterId,
+        {
+          expectedProgram
+        }
+      )
     );
   }
   return errors;
@@ -70,7 +76,7 @@ const conflictingNewSpecimen = (
   newDonor: CreateRegistrationRecord,
   newRecords: DeepReadonly<CreateRegistrationRecord[]>
 ) => {
-  const errors: DataValidationError[] = [];
+  const errors: RegistrationValidationError[] = [];
 
   // these arrays to store the indices of rows that conflict with the current record we validate
   const conflictingSpecimensIndices: number[] = [];
@@ -112,6 +118,7 @@ const conflictingNewSpecimen = (
         DataValidationErrors.NEW_SPECIMEN_CONFLICT,
         "specimen_submitter_id",
         newDonorIndex,
+        newDonor.donorSubmitterId,
         {
           conflictingRows: conflictingSpecimensIndices
         }
@@ -121,9 +128,15 @@ const conflictingNewSpecimen = (
 
   if (conflictingSpecimenTypesIndices.length !== 0) {
     errors.push(
-      buildError(DataValidationErrors.NEW_SPECIMEN_CONFLICT, "specimen_type", newDonorIndex, {
-        conflictingRows: conflictingSpecimenTypesIndices
-      })
+      buildError(
+        DataValidationErrors.NEW_SPECIMEN_CONFLICT,
+        "specimen_type",
+        newDonorIndex,
+        newDonor.donorSubmitterId,
+        {
+          conflictingRows: conflictingSpecimenTypesIndices
+        }
+      )
     );
   }
 
@@ -133,6 +146,7 @@ const conflictingNewSpecimen = (
         DataValidationErrors.NEW_SPECIMEN_CONFLICT,
         "tumour_normal_designation",
         newDonorIndex,
+        newDonor.donorSubmitterId,
         {
           conflictingRows: conflictingSpecimenTumourDesignationIndices
         }
@@ -148,7 +162,7 @@ const conflictingNewSample = (
   newDonor: CreateRegistrationRecord,
   newRecords: DeepReadonly<CreateRegistrationRecord[]>
 ) => {
-  const errors: DataValidationError[] = [];
+  const errors: RegistrationValidationError[] = [];
   const conflictingSamplesIndices: number[] = [];
   const conflictingSampleTypesIndices: number[] = [];
 
@@ -177,21 +191,31 @@ const conflictingNewSample = (
     }
   });
 
-  // if no errors return the empty array
-  if (conflictingSamplesIndices.length == 0) {
-    return errors;
+  if (conflictingSamplesIndices.length !== 0) {
+    const err = buildError(
+      DataValidationErrors.NEW_SAMPLE_CONFLICT,
+      "sample_submitter_id",
+      newDonorIndex,
+      newDonor.donorSubmitterId,
+      {
+        conflictingRows: conflictingSamplesIndices
+      }
+    );
+    errors.push(err);
   }
 
-  const err = buildError(
-    DataValidationErrors.NEW_SAMPLE_CONFLICT,
-    "sample_submitter_id",
-    newDonorIndex,
-    {
-      conflictingRows: conflictingSamplesIndices
-    }
-  );
-
-  errors.push(err);
+  if (conflictingSampleTypesIndices.length !== 0) {
+    const err = buildError(
+      DataValidationErrors.NEW_SAMPLE_CONFLICT,
+      "sample_type",
+      newDonorIndex,
+      newDonor.donorSubmitterId,
+      {
+        conflictingRows: conflictingSampleTypesIndices
+      }
+    );
+    errors.push(err);
+  }
   return errors;
 };
 
@@ -219,14 +243,22 @@ const mutatingExistingData = (
   existingDonors: DeepReadonly<DonorMap>
 ) => {
   // if the donor doesn't exist => return
-  const errors: DataValidationError[] = [];
+  const errors: RegistrationValidationError[] = [];
   const existingDonor = existingDonors[newDonor.donorSubmitterId];
   if (!existingDonor) return errors;
 
   // we don't check program id here because we check it specifically in the program validation
 
   if (newDonor.gender != existingDonor.gender) {
-    errors.push(buildError(DataValidationErrors.MUTATING_EXISTING_DATA, "gender", index, {}));
+    errors.push(
+      buildError(
+        DataValidationErrors.MUTATING_EXISTING_DATA,
+        "gender",
+        index,
+        newDonor.donorSubmitterId,
+        {}
+      )
+    );
   }
 
   // if specimen doesn't exist => return
@@ -237,7 +269,13 @@ const mutatingExistingData = (
 
   if (newDonor.specimenType !== existingSpecimen.specimenType) {
     errors.push(
-      buildError(DataValidationErrors.MUTATING_EXISTING_DATA, "specimen_type", index, {})
+      buildError(
+        DataValidationErrors.MUTATING_EXISTING_DATA,
+        "specimen_type",
+        index,
+        newDonor.donorSubmitterId,
+        {}
+      )
     );
   }
 
@@ -247,6 +285,7 @@ const mutatingExistingData = (
         DataValidationErrors.MUTATING_EXISTING_DATA,
         "tumour_normal_designation",
         index,
+        newDonor.donorSubmitterId,
         {}
       )
     );
@@ -257,13 +296,21 @@ const mutatingExistingData = (
   if (!sample) return errors;
 
   if (newDonor.sampleType !== sample.sampleType) {
-    errors.push(buildError(DataValidationErrors.MUTATING_EXISTING_DATA, "sample_type", index, {}));
+    errors.push(
+      buildError(
+        DataValidationErrors.MUTATING_EXISTING_DATA,
+        "sample_type",
+        index,
+        newDonor.donorSubmitterId,
+        {}
+      )
+    );
   }
   return errors;
 };
 
 const specimenBelongsToOtherDonor = async (index: number, newDonor: CreateRegistrationRecord) => {
-  const errors: DataValidationError[] = [];
+  const errors: RegistrationValidationError[] = [];
   const count = await donorDao.countBy({
     [DONOR_FIELDS.PROGRAM_ID]: { $eq: newDonor.programId },
     [DONOR_FIELDS.SUBMITTER_ID]: { $ne: newDonor.donorSubmitterId },
@@ -275,6 +322,7 @@ const specimenBelongsToOtherDonor = async (index: number, newDonor: CreateRegist
         DataValidationErrors.SPECIMEN_BELONGS_TO_OTHER_DONOR,
         "specimen_submitter_id",
         index,
+        newDonor.donorSubmitterId,
         {}
       )
     );
@@ -286,7 +334,7 @@ const sampleBelongsToAnotherSpecimen = async (
   index: number,
   newDonor: CreateRegistrationRecord
 ) => {
-  const errors: DataValidationError[] = [];
+  const errors: RegistrationValidationError[] = [];
   const count = await donorDao.countBy({
     [DONOR_FIELDS.PROGRAM_ID]: { $eq: newDonor.programId },
     [DONOR_FIELDS.SPECIMEN_SUBMITTER_ID]: { $ne: newDonor.specimenSubmitterId },
@@ -299,6 +347,7 @@ const sampleBelongsToAnotherSpecimen = async (
         DataValidationErrors.SAMPLE_BELONGS_TO_OTHER_SPECIMEN,
         "sample_submitter_id",
         index,
+        newDonor.donorSubmitterId,
         {}
       )
     );
@@ -311,7 +360,8 @@ const buildError = (
   type: DataValidationErrors,
   fieldName: keyof RegistrationRecord,
   index: number,
+  donorSubmitterId: string,
   info: object
-): DataValidationError => {
-  return { type, fieldName, index, info };
+): RegistrationValidationError => {
+  return { type, donorSubmitterId, fieldName, index, info };
 };

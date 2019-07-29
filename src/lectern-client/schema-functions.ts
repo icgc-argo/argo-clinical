@@ -1,4 +1,9 @@
-import { SchemaValidationError, TypedDataRecord, SchemaTypes } from "./schema-entities";
+import {
+  SchemaValidationError,
+  TypedDataRecord,
+  SchemaTypes,
+  SchemaProcessingResult
+} from "./schema-entities";
 import vm from "vm";
 import {
   SchemasDictionary,
@@ -6,7 +11,7 @@ import {
   FieldDefinition,
   ValueType,
   DataRecord,
-  ErrorTypes
+  SchemaValidationErrorTypes
 } from "./schema-entities";
 import { loggerFor } from "../logger";
 import { Checks, notEmpty, isEmptyString, isNotEmptyString, isAbsent, F } from "../utils";
@@ -16,7 +21,7 @@ export const process = (
   dataSchema: SchemasDictionary,
   definition: string,
   records: ReadonlyArray<DataRecord>
-) => {
+): SchemaProcessingResult => {
   Checks.checkNotNull("records", records);
   Checks.checkNotNull("dataSchema", dataSchema);
   Checks.checkNotNull("definition", definition);
@@ -210,7 +215,7 @@ namespace validation {
           field.restrictions.regex &&
           isInvalidRegexValue(field.restrictions.regex, value)
         ) {
-          return buildError(ErrorTypes.INVALID_BY_REGEX, field.name, index);
+          return buildError(SchemaValidationErrorTypes.INVALID_BY_REGEX, field.name, index);
         }
         return undefined;
       })
@@ -227,7 +232,7 @@ namespace validation {
         if (field.restrictions && field.restrictions.script) {
           const scriptResult = validateWithScript(field, rec);
           if (!scriptResult.valid) {
-            return buildError(ErrorTypes.INVALID_BY_SCRIPT, field.name, index, {
+            return buildError(SchemaValidationErrorTypes.INVALID_BY_SCRIPT, field.name, index, {
               message: scriptResult.message
             });
           }
@@ -249,7 +254,7 @@ namespace validation {
           field.restrictions.codeList &&
           isInvalidEnumValue(field.restrictions.codeList, rec[field.name])
         ) {
-          return buildError(ErrorTypes.INVALID_ENUM_VALUE, field.name, index);
+          return buildError(SchemaValidationErrorTypes.INVALID_ENUM_VALUE, field.name, index);
         }
         return undefined;
       })
@@ -264,7 +269,7 @@ namespace validation {
     return fields
       .map(field => {
         if (rec[field.name] && isInvalidFieldType(field.valueType, rec[field.name])) {
-          return buildError(ErrorTypes.INVALID_FIELD_VALUE_TYPE, field.name, index);
+          return buildError(SchemaValidationErrorTypes.INVALID_FIELD_VALUE_TYPE, field.name, index);
         }
         return undefined;
       })
@@ -279,7 +284,7 @@ namespace validation {
     return fields
       .map(field => {
         if (isRequiredMissing(field, rec)) {
-          return buildError(ErrorTypes.MISSING_REQUIRED_FIELD, field.name, index);
+          return buildError(SchemaValidationErrorTypes.MISSING_REQUIRED_FIELD, field.name, index);
         }
         return undefined;
       })
@@ -365,7 +370,7 @@ namespace validation {
   };
 
   const buildError = (
-    errorType: ErrorTypes,
+    errorType: SchemaValidationErrorTypes,
     fieldName: string,
     index: number,
     info: object = {}
