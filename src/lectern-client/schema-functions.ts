@@ -224,8 +224,13 @@ namespace validation {
   ) => {
     return fields
       .map(field => {
-        if (field.restrictions && field.restrictions.script && isInvalidByScript(field, rec)) {
-          return buildError(ErrorTypes.INVALID_BY_SCRIPT, field.name, index);
+        if (field.restrictions && field.restrictions.script) {
+          const scriptResult = validateWithScript(field, rec);
+          if (!scriptResult.valid) {
+            return buildError(ErrorTypes.INVALID_BY_SCRIPT, field.name, index, {
+              message: scriptResult.message
+            });
+          }
         }
         return undefined;
       })
@@ -326,7 +331,13 @@ namespace validation {
     return !regexPattern.test(value);
   };
 
-  const isInvalidByScript = (field: FieldDefinition, record: TypedDataRecord) => {
+  const validateWithScript = (
+    field: FieldDefinition,
+    record: TypedDataRecord
+  ): {
+    valid: boolean;
+    message: string;
+  } => {
     try {
       const sandbox = {
         $row: record,
@@ -340,18 +351,25 @@ namespace validation {
       const script = new vm.Script(field.restrictions.script);
       const ctx = vm.createContext(sandbox);
       const result = script.runInContext(ctx);
-      return !result.valid;
+      return {
+        valid: result.valid,
+        message: result.message || ""
+      };
     } catch (err) {
       console.error(`failed running validation script ${field.name} for record: ${record}`);
-      return true;
+      return {
+        valid: false,
+        message: "failed to run script validation, check script and the input"
+      };
     }
   };
 
   const buildError = (
     errorType: ErrorTypes,
     fieldName: string,
-    index: number
+    index: number,
+    info: object = {}
   ): SchemaValidationError => {
-    return { errorType, fieldName, index };
+    return { errorType, fieldName, index, info };
   };
 }

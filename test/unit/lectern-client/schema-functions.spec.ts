@@ -47,7 +47,8 @@ describe("schema-functions", () => {
     chai.expect(result.validationErrors).to.deep.include({
       errorType: ErrorTypes.MISSING_REQUIRED_FIELD,
       fieldName: "program_id",
-      index: 0
+      index: 0,
+      info: {}
     });
   });
 
@@ -62,7 +63,8 @@ describe("schema-functions", () => {
     chai.expect(result.validationErrors).to.deep.include({
       errorType: ErrorTypes.INVALID_FIELD_VALUE_TYPE,
       fieldName: "unit_number",
-      index: 0
+      index: 0,
+      info: {}
     });
   });
 
@@ -82,7 +84,8 @@ describe("schema-functions", () => {
     chai.expect(result.validationErrors).to.deep.include({
       errorType: ErrorTypes.INVALID_BY_REGEX,
       fieldName: "program_id",
-      index: 0
+      index: 0,
+      info: {}
     });
   });
 
@@ -105,12 +108,14 @@ describe("schema-functions", () => {
     chai.expect(result.validationErrors).to.deep.include({
       errorType: ErrorTypes.INVALID_BY_SCRIPT,
       fieldName: "postal_code",
-      index: 0
+      index: 0,
+      info: { message: "invalid postal code for US" }
     });
     chai.expect(result.validationErrors).to.deep.include({
       errorType: ErrorTypes.INVALID_BY_SCRIPT,
       fieldName: "postal_code",
-      index: 1
+      index: 1,
+      info: { message: "invalid postal code for CANADA" }
     });
   });
 });
