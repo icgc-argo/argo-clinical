@@ -105,7 +105,7 @@ spec:
           }
         }
     }
-    post{
+    post {
       failure {
         when {
           expression {
@@ -115,7 +115,7 @@ spec:
         steps {
           // i used node container since it has curl already
           container("node") {
-            withCredentials([string(credentialsId: 'JenkinsFailuresSlackChannelURL', variable: 'SLACK_URL') { 
+            withCredentials([string(credentialsId: 'JenkinsFailuresSlackChannelURL', variable: 'SLACK_URL')]) { 
               sh "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"Build: ${env.JOB_NAME} [${env.BUILD_NUMBER}]  (${env.BUILD_URL}) \"}' ${JenkinsFailuresSlackChannelURL}"
             }
           }
