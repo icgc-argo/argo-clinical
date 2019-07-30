@@ -1,37 +1,10 @@
 import mongoose from "mongoose";
 import { loggerFor } from "./logger";
+import { AppConfig, initConfigs } from "./config";
+import * as manager from "./lectern-client/schema-manager";
 const L = loggerFor(__filename);
 
-namespace Configs {
-    export let config: Configs.ConfigManager;
-
-    export class ConfigManager {
-        constructor(private impl: AppConfig) {}
-        getConfig(): AppConfig {
-            return this.impl;
-        }
-    }
-
-    export const initConfigs = (configs: AppConfig) => {
-        if (configs == undefined) {
-            configs = defaultAppConfigImpl;
-        }
-        config = new ConfigManager(configs);
-        return configs;
-    };
-
-    export interface AppConfig {
-        getMongoUrl(): string;
-    }
-}
-
-const defaultAppConfigImpl: Configs.AppConfig = {
-    getMongoUrl(): string {
-        return process.env.CLINICAL_DB_URL;
-    }
-};
-
-const setupDBConnection = () => {
+const setupDBConnection = (mongoUrl: string) => {
     mongoose.connection.on("connected", () => {
         L.debug("Connection Established");
     });
@@ -47,18 +20,23 @@ const setupDBConnection = () => {
     mongoose.connection.on("error", (error) => {
         L.debug("ERROR: " + error);
     });
-
     const connectToDb = async (delayMillis: number) => {
         setTimeout(async () => {
             L.debug("connecting to mongo");
             try {
-                await mongoose.connect(Configs.config.getConfig().getMongoUrl(), {
+                // https://mongoosejs.com/docs/connections.html
+                await mongoose.connect(mongoUrl, {
                     autoReconnect: true,
-                    socketTimeoutMS: 0,
+                    // http://mongodb.github.io/node-mongodb-native/3.1/reference/faq/
+                    socketTimeoutMS: 10000,
+                    connectTimeoutMS: 30000,
                     keepAlive: true,
                     reconnectTries: 1000,
                     reconnectInterval: 3000,
-                    useNewUrlParser: true
+                    bufferMaxEntries: 0,
+                    // https://mongoosejs.com/docs/deprecations.html
+                    useNewUrlParser: true,
+                    useFindAndModify: false
                 });
             } catch (err) {
                 L.error("failed to connect to mongo", err);
@@ -70,9 +48,11 @@ const setupDBConnection = () => {
     // initialize connection attempts
     connectToDb(1);
 };
-export const run = (configs?: Configs.AppConfig | undefined) => {
-    configs = Configs.initConfigs(configs);
-    setupDBConnection();
+
+export const run = async (config: AppConfig) => {
+    initConfigs(config);
+    setupDBConnection(config.mongoUrl());
+    await manager.loadSchema(config.schemaName(), config.initialSchemaVersion());
     // close app connections on termination
     const gracefulExit = () => {
         mongoose.connection.close(function () {

@@ -6,8 +6,13 @@ debug:
 verify:
 	npm run test
 
+test-submission:
+	npx mocha --exit --timeout 30000 -r ts-node/register test/integration/submission/submission.spec.ts
 stop:
 	docker-compose down --remove-orphans 
+
+nuke:
+	docker-compose down --volumes --remove-orphans 
 
 # curl file upload relative path
 registration-upload:
@@ -25,3 +30,4 @@ registration-get:
 	curl -X GET \
 	'http://localhost:3000/submission/registration?programId=PEME-CA' \
 	-H 'cache-control: no-cache'
+
