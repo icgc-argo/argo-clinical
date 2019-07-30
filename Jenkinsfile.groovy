@@ -106,17 +106,26 @@ spec:
         }
     }
     post {
-      failure {
-        when {
-          expression {
-            branch == "develop" || branch == "master" 
-          } 
+      unsuccessful {
+        // i used node container since it has curl already
+        container("node") {
+          script {
+            if (env.BRANCH_NAME == "master" || env.BRANCH_NAME == "develop") {
+              withCredentials([string(credentialsId: 'JenkinsFailuresSlackChannelURL', variable: 'JenkinsFailuresSlackChannelURL')]) { 
+                sh "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"Build Failed: ${env.JOB_NAME} [${env.BUILD_NUMBER}] (${env.BUILD_URL}) \"}' ${JenkinsFailuresSlackChannelURL}"
+              }
+            }
+          }
         }
-        steps {
-          // i used node container since it has curl already
-          container("node") {
-            withCredentials([string(credentialsId: 'JenkinsFailuresSlackChannelURL', variable: 'SLACK_URL')]) { 
-              sh "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"Build: ${env.JOB_NAME} [${env.BUILD_NUMBER}]  (${env.BUILD_URL}) \"}' ${JenkinsFailuresSlackChannelURL}"
+      }
+      fixed {
+        // i used node container since it has curl already
+        container("node") {
+          script {
+            if (env.BRANCH_NAME == "master" || env.BRANCH_NAME == "develop") {
+              withCredentials([string(credentialsId: 'JenkinsFailuresSlackChannelURL', variable: 'JenkinsFailuresSlackChannelURL')]) { 
+                sh "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"Build Fixed: ${env.JOB_NAME} [${env.BUILD_NUMBER}] (${env.BUILD_URL}) \"}' ${JenkinsFailuresSlackChannelURL}"
+              }
             }
           }
         }
