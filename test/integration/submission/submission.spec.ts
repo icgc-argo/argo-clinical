@@ -53,7 +53,8 @@ describe("Submission Api", () => {
         .request(app)
         .get("/submission/registration?programId=NONE-EX")
         .end((err: any, res: any) => {
-          res.should.have.status(404);
+          res.should.have.status(200);
+          res.body.should.deep.eq({});
           done();
         });
     });
