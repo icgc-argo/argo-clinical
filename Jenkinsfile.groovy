@@ -107,7 +107,6 @@ spec:
     }
     post {
       unsuccessful {
-        steps {
           // i used node container since it has curl already
           container("node") {
             script {
@@ -118,7 +117,6 @@ spec:
               }
             }
           }
-        }
       }
     }
 }
