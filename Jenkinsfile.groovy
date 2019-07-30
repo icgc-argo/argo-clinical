@@ -55,6 +55,7 @@ spec:
                 }
             }
         }
+
         stage('Test') {
             steps {
                 container('node') {
@@ -63,7 +64,7 @@ spec:
                 }
             }
         }
-        
+
        // publish the edge tag
         stage('Publish Develop') {
             when {
