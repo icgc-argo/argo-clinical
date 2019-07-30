@@ -1,12 +1,30 @@
 import * as dataValidator from "./validation";
 import { donorDao } from "../clinical/donor-repo";
+import * as _ from "lodash";
 import { registrationRepository } from "./registration-repo";
-import { Donor } from "../clinical/clinical-entities";
+import { Donor, DonorMap } from "../clinical/clinical-entities";
 import { RegisterDonorDto } from "../clinical/donor-repo";
-import { ActiveRegistration, RegistrationRecord } from "./submission-entities";
-import * as manager from "../lectern-client/schema-manager";
-import { SchemaValidationErrors } from "../lectern-client/schema-entities";
+import {
+  ActiveRegistration,
+  RegistrationRecord,
+  RegistrationStats,
+  RegistrationValidationError,
+  CreateRegistrationRecord,
+  CommitRegistrationCommand,
+  CreateRegistrationCommand,
+  CreateRegistrationResult,
+  RegistrationRecordFields
+} from "./submission-entities";
+import * as schemaManager from "../lectern-client/schema-manager";
+import {
+  SchemaValidationError,
+  TypedDataRecord,
+  DataRecord,
+  SchemaProcessingResult
+} from "../lectern-client/schema-entities";
 import { loggerFor } from "../logger";
+import { Errors, F } from "../utils";
+import { DeepReadonly } from "deep-freeze";
 const L = loggerFor(__filename);
 
 export namespace operations {
@@ -19,54 +37,186 @@ export namespace operations {
   export const createRegistration = async (
     command: CreateRegistrationCommand
   ): Promise<CreateRegistrationResult> => {
-    const fullyPopulatedRecords = manager.populateDefaults("registration", command.records);
-    const schemaErrors: SchemaValidationErrors = manager.validate(
-      "registration",
-      fullyPopulatedRecords
-    );
+    const schemaResult = schemaManager.process("registration", command.records);
+    const processedRecords = schemaResult.processedRecords;
 
     // if there are errors terminate the creation.
-    if (anyErrors(schemaErrors)) {
-      L.info(`found ${schemaErrors.recordsErrors.length} schema errors in registration attempt`);
+    if (anyErrors(schemaResult.validationErrors)) {
+      const unifiedSchemaErrors = unifySchemaErrors(schemaResult, command.records);
+      L.info(`found ${schemaResult.validationErrors.length} schema errors in registration attempt`);
       return {
-        registrationId: undefined,
-        state: undefined,
-        errors: schemaErrors.recordsErrors,
+        registration: undefined,
+        errors: unifiedSchemaErrors,
         successful: false
       };
     }
 
-    const registrationRecords = mapToRegistrationRecord(command);
-    const { errors: dataErrors } = dataValidator.validateRegistrationData(registrationRecords);
-    if (dataErrors.length > 0) {
-      L.info(`found ${dataErrors.length} data errors in registration attempt`);
-      return {
-        registrationId: undefined,
-        state: undefined,
-        errors: dataErrors,
-        successful: false
-      };
+    const registrationRecords = mapToRegistrationRecord(processedRecords);
+    const filter = F(
+      registrationRecords.map(rc => {
+        return {
+          programId: rc.programId,
+          submitterId: rc.donorSubmitterId
+        };
+      })
+    );
+
+    // fetch related donor docs from the db
+    let donorDocs = await donorDao.findByProgramAndSubmitterId(filter);
+    if (!donorDocs) {
+      donorDocs = [];
     }
-    // build the registration object
-    const registration: ActiveRegistration = toActiveRegistration(command, registrationRecords);
+
+    const donors = F(donorDocs);
+    // build a donor hash map for faster access to donors
+    const donorByIdMapTemp: { [id: string]: DeepReadonly<Donor> } = {};
+    donors.forEach(dc => {
+      donorByIdMapTemp[dc.submitterId] = _.cloneDeep(dc);
+    });
+    const donorsBySubmitterIdMap: DeepReadonly<DonorMap> = F(donorByIdMapTemp);
+
+    const { errors } = await dataValidator.validateRegistrationData(
+      command.programId,
+      registrationRecords,
+      donorsBySubmitterIdMap
+    );
+    if (errors.length > 0) {
+      L.info(`found ${errors.length} data errors in registration attempt`);
+      return F({
+        registration: undefined,
+        stats: undefined,
+        errors: errors,
+        successful: false
+      });
+    }
+
+    const stats = calculateUpdates(registrationRecords, donorsBySubmitterIdMap);
 
     // delete any existing active registration to replace it with the new one
     // we can only have 1 active registration per program
     const existingActivRegistration = await registrationRepository.findByProgramId(
       command.programId
     );
-    if (existingActivRegistration != undefined && existingActivRegistration.id) {
-      await registrationRepository.delete(existingActivRegistration.id);
+
+    if (existingActivRegistration != undefined && existingActivRegistration._id) {
+      await registrationRepository.delete(existingActivRegistration._id);
     }
 
     // save the new registration object
+    const registration = toActiveRegistration(command, registrationRecords, stats);
     const savedRegistration = await registrationRepository.create(registration);
-    return {
-      registrationId: savedRegistration.id,
-      state: "uncommitted",
+    return F({
+      registration: savedRegistration,
       errors: [],
       successful: true
+    });
+  };
+
+  const unifySchemaErrors = (
+    result: SchemaProcessingResult,
+    records: ReadonlyArray<DataRecord>
+  ) => {
+    const errorsList = new Array<RegistrationValidationError>();
+    result.validationErrors.forEach(schemaErr => {
+      errorsList.push({
+        index: schemaErr.index,
+        donorSubmitterId: records[schemaErr.index].donorSubmitterId,
+        type: schemaErr.errorType,
+        info: schemaErr.info,
+        fieldName: schemaErr.fieldName as RegistrationRecordFields
+      });
+    });
+
+    return F(errorsList);
+  };
+
+  const calculateUpdates = (
+    records: DeepReadonly<CreateRegistrationRecord[]>,
+    donorsBySubmitterIdMap: DeepReadonly<DonorMap>
+  ) => {
+    const stats: RegistrationStats = {
+      newDonorIds: {},
+      newSpecimenIds: {},
+      newSampleIds: {},
+      alreadyRegistered: {}
     };
+
+    records.forEach((nd, index) => {
+      const existingDonor = donorsBySubmitterIdMap[nd.donorSubmitterId];
+      if (!existingDonor) {
+        addNewDonorToStats(stats, nd, index);
+        addNewSpecimenToStats(stats, nd, index);
+        addNewSampleToStats(stats, nd, index);
+        return;
+      }
+
+      const existingSpecimen = existingDonor.specimens.find(
+        s => s.submitterId === nd.specimenSubmitterId
+      );
+      if (!existingSpecimen) {
+        addNewSpecimenToStats(stats, nd, index);
+        addNewSampleToStats(stats, nd, index);
+        return;
+      }
+
+      const existingSample = existingSpecimen.samples.find(
+        sa => sa.submitterId === nd.sampleSubmitterId
+      );
+      if (!existingSample) return addNewSampleToStats(stats, nd, index);
+
+      // otherwise it's already registered record
+      if (!stats.alreadyRegistered[nd.donorSubmitterId]) {
+        stats.alreadyRegistered[nd.donorSubmitterId] = [index];
+        return;
+      }
+
+      stats.alreadyRegistered[nd.donorSubmitterId].push(index);
+      return;
+    });
+
+    return F(stats);
+  };
+
+  const addNewDonorToStats = (
+    stats: RegistrationStats,
+    newDonor: CreateRegistrationRecord,
+    index: number
+  ) => {
+    // if we didn't encounter this donor id in a previous row then
+    // the sample and specimen ids are new
+    if (!stats.newDonorIds[newDonor.donorSubmitterId]) {
+      stats.newDonorIds[newDonor.donorSubmitterId] = [index];
+      return;
+    }
+    // otherwise we encountered the same donor but different specimen or sample
+    stats.newDonorIds[newDonor.donorSubmitterId].push(index);
+  };
+
+  const addNewSpecimenToStats = (
+    stats: RegistrationStats,
+    newDonor: CreateRegistrationRecord,
+    index: number
+  ) => {
+    // if the specimen id is not encountered we add it along with the sampleId
+    if (!stats.newSpecimenIds[newDonor.specimenSubmitterId]) {
+      stats.newSpecimenIds[newDonor.specimenSubmitterId] = [index];
+      return;
+    }
+    // otherwise just add the new row number (same donor, same specimen, different row)
+    stats.newSpecimenIds[newDonor.specimenSubmitterId].push(index);
+  };
+
+  const addNewSampleToStats = (
+    stats: RegistrationStats,
+    newDonor: CreateRegistrationRecord,
+    index: number
+  ) => {
+    if (!stats.newSampleIds[newDonor.sampleSubmitterId]) {
+      stats.newSampleIds[newDonor.sampleSubmitterId] = [index];
+      return;
+    }
+    stats.newSampleIds[newDonor.sampleSubmitterId].push(index);
+    return;
   };
 
   /**
@@ -78,26 +228,76 @@ export namespace operations {
    */
   export const commitRegisteration = async (
     command: Readonly<CommitRegistrationCommand>
-  ): Promise<void> => {
-    const donor: RegisterDonorDto = {
-      submitterId: "DONOR1000",
-      gender: "male",
-      programId: "PEME-CA",
-      specimens: [
+  ): Promise<DeepReadonly<Donor[]>> => {
+    const registration = await registrationRepository.findById(command.registrationId);
+    if (registration == undefined) {
+      throw new Errors.NotFound(`no registration with id :${command.registrationId} found`);
+    }
+
+    const donorRecords: DeepReadonly<RegisterDonorDto[]> = mapToDonorRecords(registration);
+    const savedDonors: Array<DeepReadonly<Donor>> = [];
+
+    for (const rd of donorRecords) {
+      const existingDonor = await donorDao.findByProgramAndSubmitterId([
+        { programId: rd.programId, submitterId: rd.submitterId }
+      ]);
+      if (existingDonor && existingDonor.length > 0) {
+        const mergedDonor = _.mergeWith(existingDonor[0], rd);
+        const saved = await donorDao.register(mergedDonor);
+        continue;
+      }
+      const saved = await donorDao.register(rd);
+      savedDonors.push(saved);
+    }
+    // todo: delete registration
+    return F(savedDonors);
+  };
+
+  const mapToDonorRecords = (registration: DeepReadonly<ActiveRegistration>) => {
+    const donors: RegisterDonorDto[] = [];
+    registration.records.forEach(rec => {
+      // if the donor doesn't exist add it
+      let donor = donors.find(d => d.submitterId === rec.donor_submitter_id);
+      if (!donor) {
+        const firstSpecimen = getDonorSpecimen(rec);
+        donor = {
+          submitterId: rec.donor_submitter_id,
+          gender: rec.gender,
+          programId: registration.programId,
+          specimens: [firstSpecimen]
+        };
+        donors.push(donor);
+        return;
+      }
+
+      // if the specimen doesn't exist add it
+      let specimen = donor.specimens.find(s => s.submitterId === rec.specimen_submitter_id);
+      if (!specimen) {
+        specimen = getDonorSpecimen(rec);
+        donor.specimens.push(specimen);
+      } else {
+        specimen.samples.push({
+          sampleType: rec.sample_type,
+          submitterId: rec.sample_submitter_id
+        });
+      }
+    });
+    return F(donors);
+  };
+
+  const getDonorSpecimen = (record: RegistrationRecord) => {
+    return {
+      specimenType: record.specimen_type,
+      tumourNormalDesignation: record.tumour_normal_designation,
+      submitterId: record.specimen_submitter_id,
+      samples: [
         {
-          samples: [
-            {
-              sampleType: "RNA",
-              submitterId: "SAMP1038RNA"
-            }
-          ],
-          submitterId: "SPEC10999"
+          sampleType: record.sample_type,
+          submitterId: record.sample_submitter_id
         }
       ]
     };
-    const created: Donor = await donorDao.register(donor);
   };
-
   /**
    * find registration by program Id
    * @param programId string
@@ -109,79 +309,49 @@ export namespace operations {
   /************* Private methods *************/
   function toActiveRegistration(
     command: CreateRegistrationCommand,
-    registrationRecords: ReadonlyArray<CreateRegistrationRecord>
-  ): Readonly<ActiveRegistration> {
-    return {
+    registrationRecords: ReadonlyArray<CreateRegistrationRecord>,
+    stats: DeepReadonly<RegistrationStats>
+  ): DeepReadonly<ActiveRegistration> {
+    return F({
       programId: command.programId,
+      status: "uncommitted",
       creator: command.creator,
+      stats: stats,
       records: registrationRecords.map(r => {
         const record: Readonly<RegistrationRecord> = {
-          donorSubmitterId: r.donorSubmitterId,
+          program_id: command.programId,
+          donor_submitter_id: r.donorSubmitterId,
           gender: r.gender,
-          specimenSubmitterId: r.specimenSubmitterId,
-          specimenType: r.specimenType,
-          tumourNormalDesignation: r.tumourNormalDesignation,
-          sampleSubmitterId: r.sampleSubmitterId,
-          sampleType: r.sampleType
+          specimen_submitter_id: r.specimenSubmitterId,
+          specimen_type: r.specimenType,
+          tumour_normal_designation: r.tumourNormalDesignation,
+          sample_submitter_id: r.sampleSubmitterId,
+          sample_type: r.sampleType
         };
         return record;
       })
-    };
-  }
-
-  function anyErrors(schemaErrors: SchemaValidationErrors) {
-    return schemaErrors.generalErrors.length > 0 || schemaErrors.recordsErrors.length > 0;
-  }
-
-  function mapToRegistrationRecord(
-    command: CreateRegistrationCommand
-  ): ReadonlyArray<CreateRegistrationRecord> {
-    return command.records.map(r => {
-      const rec: CreateRegistrationRecord = {
-        programId: r.program_id,
-        donorSubmitterId: r.donor_submitter_id,
-        gender: r.gender,
-        specimenSubmitterId: r.specimen_submitter_id,
-        specimenType: r.specimen_type,
-        tumourNormalDesignation: r.tumour_normal_designation,
-        sampleSubmitterId: r.sample_submitter_id,
-        sampleType: r.sample_type
-      };
-      return rec;
     });
   }
-}
 
-export interface CreateRegistrationRecord {
-  readonly programId: string;
-  readonly donorSubmitterId: string;
-  readonly gender: string;
-  readonly specimenSubmitterId: string;
-  readonly specimenType: string;
-  readonly tumourNormalDesignation: string;
-  readonly sampleSubmitterId: string;
-  readonly sampleType: string;
-}
+  function anyErrors(schemaErrors: DeepReadonly<SchemaValidationError[]>) {
+    return schemaErrors.length > 0 || schemaErrors.length > 0;
+  }
 
-export interface CommitRegistrationCommand {
-  readonly registrationId: string;
-}
-
-export interface CreateRegistrationCommand {
-  // we define the records as arbitrary key value pairs to be validated by the schema
-  // before we put them in a CreateRegistrationRecord, in case a column is missing so we let dictionary handle error collection.
-  records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
-  readonly creator: string;
-  readonly programId: string;
-}
-
-export interface CreateRegistrationResult {
-  readonly registrationId: string | undefined;
-  readonly state: string | undefined;
-  readonly successful: boolean;
-  errors: ReadonlyArray<Readonly<any>>;
-}
-
-export interface ValidationResult {
-  errors: ReadonlyArray<Readonly<any>>;
+  function mapToRegistrationRecord(records: DeepReadonly<TypedDataRecord[]>) {
+    return F(
+      records.map(r => {
+        const rec: CreateRegistrationRecord = {
+          programId: r.program_id as string,
+          donorSubmitterId: r.donor_submitter_id as string,
+          gender: r.gender as string,
+          specimenSubmitterId: r.specimen_submitter_id as string,
+          specimenType: r.specimen_type as string,
+          tumourNormalDesignation: r.tumour_normal_designation as string,
+          sampleSubmitterId: r.sample_submitter_id as string,
+          sampleType: r.sample_type as string
+        };
+        return rec;
+      })
+    );
+  }
 }

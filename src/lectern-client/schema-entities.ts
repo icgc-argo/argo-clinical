@@ -1,28 +1,35 @@
 import { loggerFor } from "../logger";
+import { DeepReadonly } from "deep-freeze";
 const L = loggerFor(__filename);
 
-export interface DataRecord {
+export class DataRecord {
   readonly [k: string]: string;
 }
 
-export interface DataSchema {
+export class TypedDataRecord {
+  readonly [k: string]: SchemaTypes;
+}
+
+export type SchemaTypes = string | boolean | number;
+
+export interface SchemasDictionary {
   version: string;
   name: string;
-  definitions: Array<SchemaDefinition>;
+  schemas: Array<SchemaDefinition>;
 }
 
 export interface SchemaDefinition {
-  name: string;
-  description: string;
-  key: string;
-  fields: Array<FieldDefinition>;
+  readonly name: string;
+  readonly description: string;
+  readonly key: string;
+  readonly fields: ReadonlyArray<FieldDefinition>;
 }
 
 export interface FieldDefinition {
   name: string;
   valueType: ValueType;
   description: string;
-  meta?: { key?: boolean; default?: string | number | boolean };
+  meta?: { key?: boolean; default?: SchemaTypes };
   restrictions?: {
     codeList?: Array<string | number>;
     regex?: string;
@@ -38,12 +45,12 @@ export enum ValueType {
   BOOLEAN = "boolean"
 }
 
-export interface SchemaValidationErrors {
-  readonly generalErrors: ReadonlyArray<Readonly<any>>;
-  readonly recordsErrors: ReadonlyArray<SchemaValidationError>;
-}
+export type SchemaProcessingResult = DeepReadonly<{
+  validationErrors: SchemaValidationError[];
+  processedRecords: TypedDataRecord[];
+}>;
 
-export enum ErrorTypes {
+export enum SchemaValidationErrorTypes {
   MISSING_REQUIRED_FIELD = "MISSING_REQUIRED_FIELD",
   INVALID_FIELD_VALUE_TYPE = "INVALID_FIELD_VALUE_TYPE",
   INVALID_BY_REGEX = "INVALID_BY_REGEX",
@@ -52,7 +59,8 @@ export enum ErrorTypes {
 }
 
 export interface SchemaValidationError {
-  readonly errorType: ErrorTypes;
+  readonly errorType: SchemaValidationErrorTypes;
   readonly index: number;
   readonly fieldName: string;
+  readonly info: object;
 }

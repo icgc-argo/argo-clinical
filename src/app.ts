@@ -14,7 +14,7 @@ const upload = multer({ dest: "/tmp" });
 
 // Create Express server
 const app = express();
-
+process.title = "clinical";
 app.use(bodyParser.json());
 app.use(
   bodyParser.urlencoded({

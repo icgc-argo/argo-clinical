@@ -1,5 +1,7 @@
 import fs from "fs";
 import { Request, Response } from "express";
+import deepFreeze from "deep-freeze";
+import mongoose from "mongoose";
 const fsPromises = fs.promises;
 
 export namespace TsvUtils {
@@ -52,6 +54,22 @@ export namespace Errors {
       super(`Invalid argument : ${argumentName}`);
     }
   }
+
+  export class NotFound extends Error {
+    constructor(msg: string) {
+      super(msg);
+    }
+  }
+}
+
+export namespace MongooseUtils {
+  export const toPojo = (doc: mongoose.Document) => {
+    const pojo = doc.toObject();
+    if (pojo._id) {
+      pojo._id = pojo._id.toString();
+    }
+    return pojo;
+  };
 }
 
 // type gaurd to filter out undefined and null
@@ -59,3 +77,25 @@ export namespace Errors {
 export function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
   return value !== null && value !== undefined;
 }
+
+export function isString(value: any): value is string {
+  return value instanceof String;
+}
+
+export const isNotEmptyString = (value: string) => {
+  return isNotAbsent(value) && value.trim() !== "";
+};
+
+export const isEmptyString = (value: string) => {
+  return !isNotEmptyString(value);
+};
+
+export const isAbsent = (value: string | number | boolean) => {
+  return !isNotAbsent(value);
+};
+
+export const isNotAbsent = (value: string | number | boolean) => {
+  return value !== null && value !== undefined;
+};
+
+export const F = deepFreeze;

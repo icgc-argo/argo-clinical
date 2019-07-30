@@ -1,8 +1,9 @@
 # Argo clinical
 
 ## TODOs
-- switch to moca and chai
-- 
 
+-
+
+requirements:
 
 Mongo 4.0 + (transaction support)
