@@ -106,7 +106,7 @@ spec:
         }
     }
     post {
-      failure {
+      unsuccessful {
         when {
           expression {
             branch == "develop" || branch == "master" 
