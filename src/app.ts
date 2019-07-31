@@ -1,7 +1,7 @@
 import express, { NextFunction, Request, Response, RequestHandler } from "express";
 import errorHandler from "errorhandler";
 import bodyParser from "body-parser";
-
+import path from "path";
 import * as submissionAPI from "./submission/submission-api";
 import * as schemaApi from "./lectern-client/schema-api";
 import * as middleware from "./middleware";
@@ -22,8 +22,8 @@ app.use(
   })
 );
 
-app.set("port", 3000);
-app.get("/", (req, res) => res.sendFile(__dirname + "/resources/working.gif"));
+app.set("port", process.env.PORT || 3000);
+app.get("/", (req, res) => res.sendFile(path.join(__dirname, "./resources/working.gif")));
 app.get("/submission/registration", middleware.wrapAsync(submissionAPI.getRegistrationByProgramId));
 app.post(
   "/submission/registration",
