@@ -1,4 +1,4 @@
-FROM node:12.5.0-alpine
+FROM node:12.5.0-alpine as builder
 
 # Create app directory
 WORKDIR /app
@@ -11,7 +11,9 @@ RUN npm ci
 COPY . ./
 RUN npm run build
 
+FROM node:12.5.0-alpine
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
 EXPOSE 3000
-
-COPY . .
-CMD ["npm", "start"]
+CMD ["node", "dist/src/server.js"]

@@ -14,6 +14,7 @@ stop:
 nuke:
 	docker-compose down --volumes --remove-orphans 
 
+
 # curl file upload relative path
 registration-upload:
 	pwd
