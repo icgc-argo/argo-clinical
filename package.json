@@ -8,7 +8,7 @@
     "build": "npm run build-ts && npm run resources && npm run tslint",
     "serve": "node dist/src/server.js",
     "watch-node": "nodemon dist/src/server.js",
-    "test": "npm run build && mocha --exit --timeout 30000 -r ts-node/register test/**/**/*.ts",
+    "test": "npm run build && mocha --exit --timeout 60000 -r ts-node/register test/**/**/*.ts",
     "int-test": "npm run build && mocha --exit --timeout 30000 -r ts-node/register test/integration/**/*.ts",
     "unit-test": "npm run build && mocha --exit --timeout 5000 -r ts-node/register src/**/unit/*.spec.ts",
     "build-ts": "tsc",
