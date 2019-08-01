@@ -3,57 +3,59 @@ import { Request, Response } from "express";
 import { TsvUtils, ControllerUtils } from "../utils";
 import { loggerFor } from "../logger";
 import { CreateRegistrationCommand } from "./submission-entities";
+import { HasSubmitionAccess as HasSubmittionAccess } from "../auth-decorators";
+
 const L = loggerFor(__filename);
 
-export const getRegistrationByProgramId = async (req: Request, res: Response) => {
-  L.debug("in getRegistrationByProgramId");
-  if (
-    req.query == undefined ||
-    req.query.programId == undefined ||
-    req.query.programId.trim() == ""
-  ) {
-    return ControllerUtils.badRequest(res, `programId query param missing`);
+class SubmissionController {
+  @HasSubmittionAccess((req: Request) => req.params.programId)
+  async getRegistrationByProgramId(req: Request, res: Response) {
+    L.debug("in getRegistrationByProgramId");
+    const programId = req.params.programId;
+    const registration = await submission.operations.findByProgramId(programId);
+    if (registration == undefined) {
+      return res.status(200).send({});
+    }
+    return res.status(200).send(registration);
   }
-  const programId = req.query.programId;
-  const registration = await submission.operations.findByProgramId(programId);
-  if (registration == undefined) {
-    return res.status(200).send({});
-  }
-  return res.status(200).send(registration);
-};
 
-export const createRegistrationWithTsv = async (req: Request, res: Response) => {
-  if (!isValidCreateBody(req, res)) {
-    return;
+  @HasSubmittionAccess((req: Request) => req.params.programId)
+  async createRegistrationWithTsv(req: Request, res: Response) {
+    if (!isValidCreateBody(req, res)) {
+      return;
+    }
+    const programId = req.params.programId;
+    const { creator } = req.body;
+    const file = req.file;
+    let records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
+    try {
+      records = await TsvUtils.tsvToJson(file);
+    } catch (err) {
+      return ControllerUtils.badRequest(res, `failed to parse the tsv file: ${err}`);
+    }
+    const command: CreateRegistrationCommand = {
+      programId: programId,
+      creator: creator,
+      records: records
+    };
+    res.set("Content-Type", "application/json");
+    const result = await submission.operations.createRegistration(command);
+    if (!result.successful) {
+      return res.status(422).send(result);
+    }
+    return res.status(201).send(result);
   }
-  const { programId, creator } = req.body;
-  const file = req.file;
-  let records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
-  try {
-    records = await TsvUtils.tsvToJson(file);
-  } catch (err) {
-    return ControllerUtils.badRequest(res, `failed to parse the tsv file: ${err}`);
-  }
-  const command: CreateRegistrationCommand = {
-    programId: programId,
-    creator: creator,
-    records: records
-  };
 
-  res.set("Content-Type", "application/json");
-  const result = await submission.operations.createRegistration(command);
-  if (!result.successful) {
-    return res.status(422).send(result);
+  @HasSubmittionAccess((req: Request) => req.params.programId)
+  async commitRegistration(req: Request, res: Response) {
+    const programId = req.params.programId;
+    await submission.operations.commitRegisteration({
+      registrationId: req.params.id,
+      programId
+    });
+    return res.status(200).send();
   }
-  return res.status(201).send(result);
-};
-
-export const commitRegistration = async (req: Request, res: Response) => {
-  await submission.operations.commitRegisteration({
-    registrationId: req.params.id
-  });
-  return res.status(200).send();
-};
+}
 
 const isValidCreateBody = (req: Request, res: Response): boolean => {
   if (req.body == undefined) {
@@ -61,7 +63,7 @@ const isValidCreateBody = (req: Request, res: Response): boolean => {
     ControllerUtils.badRequest(res, `no body`);
     return false;
   }
-  if (req.body.programId == undefined) {
+  if (req.params.programId == undefined) {
     L.debug("programId missing");
     ControllerUtils.badRequest(res, `programId is required`);
     return false;
@@ -73,3 +75,5 @@ const isValidCreateBody = (req: Request, res: Response): boolean => {
   }
   return true;
 };
+
+export default new SubmissionController();
