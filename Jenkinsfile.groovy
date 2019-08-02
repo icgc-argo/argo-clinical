@@ -85,8 +85,7 @@ spec:
             }
         }
 
-        // deploy to argo-dev
-        stage('depploy to argo-dev') {
+        stage('deploy to argo-dev') {
             when {
                 branch "develop"
             }
@@ -117,18 +116,17 @@ spec:
              }
           }
         }
-    }
 
-    // deploy to argo-qa
-    stage('depploy to argo-qa') {
-        when {
-            branch "master"
-        }
-        steps {
-            build(job: "/ARGO/provision/clinical", parameters: [
-                  [$class: 'StringParameterValue', name: 'AP_ARGO_ENV', value: 'qa' ],
-                  [$class: 'StringParameterValue', name: 'AP_ARGS_LINE', value: "--set-string image.tag=${version}" ]
-            ])
+        stage('deploy to argo-qa') {
+            when {
+                branch "master"
+            }
+            steps {
+                build(job: "/ARGO/provision/clinical", parameters: [
+                      [$class: 'StringParameterValue', name: 'AP_ARGO_ENV', value: 'qa' ],
+                      [$class: 'StringParameterValue', name: 'AP_ARGS_LINE', value: "--set-string image.tag=${version}" ]
+                ])
+            }
         }
     }
 
