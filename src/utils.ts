@@ -2,7 +2,6 @@ import fs from "fs";
 import { Request, Response } from "express";
 import deepFreeze from "deep-freeze";
 import mongoose from "mongoose";
-import jwtDecoder from "jwt-decode";
 const fsPromises = fs.promises;
 
 export namespace TsvUtils {

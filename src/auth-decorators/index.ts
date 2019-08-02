@@ -17,8 +17,13 @@ const decodeAndVerify = (tokenJwtString: string) => {
   if (key.trim() === "") {
     throw new Error("no key found to verify the token");
   }
-  const decoded = jwt.verify(tokenJwtString, key);
-  return decoded;
+  try {
+    const decoded = jwt.verify(tokenJwtString, key);
+    return decoded;
+  } catch (err) {
+    L.debug(`invalid token provided ${err}`);
+    return undefined;
+  }
 };
 
 const hasScope = (scopes: string[], token: any) => {
@@ -31,7 +36,7 @@ const hasScope = (scopes: string[], token: any) => {
 const checkAuthorization = (scopes: string[], request: Request, response: Response) => {
   const token = getToken(request);
   if (!token) {
-    return response.status(401).send("this endpoint needs authentication");
+    return response.status(401).send("this endpoint needs a valid authentication token");
   }
   if (!hasScope(scopes, token)) {
     return response.status(403).send("Caller doesn't have the required permissions");
