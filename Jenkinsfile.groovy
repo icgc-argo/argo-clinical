@@ -85,6 +85,19 @@ spec:
             }
         }
 
+        // deploy to argo-dev
+        stage('depploy to argo-dev') {
+            when {
+                branch "develop"
+            }
+            steps {
+                build(job: "/ARGO/provision/clinical", parameters: [
+                     [$class: 'StringParameterValue', name: 'AP_ARGO_ENV', value: 'dev' ],
+                     [$class: 'StringParameterValue', name: 'AP_ARGS_LINE', value: "--set-string image.tag=${version}-${commit}" ]
+                ])
+            }
+        }
+
         stage('Release & tag') {
           when {
             branch "master"
@@ -105,6 +118,20 @@ spec:
           }
         }
     }
+
+    // deploy to argo-qa
+    stage('depploy to argo-qa') {
+        when {
+            branch "master"
+        }
+        steps {
+            build(job: "/ARGO/provision/clinical", parameters: [
+                  [$class: 'StringParameterValue', name: 'AP_ARGO_ENV', value: 'qa' ],
+                  [$class: 'StringParameterValue', name: 'AP_ARGS_LINE', value: "--set-string image.tag=${version}" ]
+            ])
+        }
+    }
+
     post {
       unsuccessful {
         // i used node container since it has curl already
@@ -119,7 +146,6 @@ spec:
         }
       }
       fixed {
-        // i used node container since it has curl already
         container("node") {
           script {
             if (env.BRANCH_NAME == "master" || env.BRANCH_NAME == "develop") {

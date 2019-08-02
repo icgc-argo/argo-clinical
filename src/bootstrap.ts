@@ -42,7 +42,7 @@ const setupDBConnection = (mongoUrl: string) => {
       } catch (err) {
         L.error("failed to connect to mongo", err);
         // retry in 5 secs
-        connectToDb(5000);
+        connectToDb(8000);
       }
     }, delayMillis);
   };
@@ -56,7 +56,12 @@ const setJwtPublicKey = async (keyUrl: string) => {
       try {
         const response = await fetch(keyUrl);
         const key = await response.text();
-        process.env[JWT_TOKEN_PUBLIC_KEY] = key;
+        // make sure there is a new line before & after the begin/end marks
+        const correctFormatKey = `-----BEGIN PUBLIC KEY-----\n${key
+          .replace("-----BEGIN PUBLIC KEY-----", "")
+          .replace("-----END PUBLIC KEY-----", "")
+          .trim()}\n-----END PUBLIC KEY-----`;
+        process.env[JWT_TOKEN_PUBLIC_KEY] = correctFormatKey;
       } catch (err) {
         // retry in 5 secs
         getKey(5000);

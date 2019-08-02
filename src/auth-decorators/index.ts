@@ -22,7 +22,7 @@ const decodeAndVerify = (tokenJwtString: string) => {
 };
 
 const hasScope = (scopes: string[], token: any) => {
-  if (!token.scope || !token.scope.filter((s: string) => scopes.indexOf(s))) {
+  if (!token.scope || token.scope.filter((s: string) => scopes.indexOf(s) >= 0).length === 0) {
     return false;
   }
   return true;
