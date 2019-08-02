@@ -10,11 +10,12 @@ import { GenericContainer } from "testcontainers";
 import app from "../../../src/app";
 import * as bootstrap from "../../../src/bootstrap";
 import { cleanCollection } from "../testutils";
+import { TEST_PUB_KEY, JWT_ABCDEF } from "./test.jwt";
 export let mongoContainer: any;
 chai.use(require("chai-http"));
 chai.should();
-
 let dburl = ``;
+
 describe("Submission Api", () => {
   // will run when all tests are finished
   before(() => {
@@ -34,6 +35,12 @@ describe("Submission Api", () => {
           },
           schemaName() {
             return "ARGO Dictionary";
+          },
+          jwtPubKey() {
+            return TEST_PUB_KEY;
+          },
+          jwtPubKeyUrl() {
+            return "";
           }
         });
       } catch (err) {
@@ -51,7 +58,8 @@ describe("Submission Api", () => {
     it("should return 404 if no registration found", function(done) {
       chai
         .request(app)
-        .get("/submission/registration?programId=NONE-EX")
+        .get("/submission/program/NONE-EX/registration")
+        .auth(JWT_ABCDEF, { type: "bearer" })
         .end((err: any, res: any) => {
           res.should.have.status(200);
           res.body.should.deep.eq({});
@@ -68,11 +76,10 @@ describe("Submission Api", () => {
       }
       chai
         .request(app)
-        .post("/submission/registration")
+        .post("/submission/program/ABCD-EF/registration")
+        .auth(JWT_ABCDEF, { type: "bearer" })
         .type("form")
         .attach("registrationFile", file, "registration.tsv")
-        .field("creator", "testor")
-        .field("programId", "PEXA-MX")
         .end(async (err: any, res: any) => {
           res.should.have.status(201);
           try {
@@ -82,7 +89,7 @@ describe("Submission Api", () => {
               .collection("activeregistrations")
               .findOne({});
             conn.close();
-            chai.expect(reg.programId).to.eq("PEXA-MX");
+            chai.expect(reg.programId).to.eq("ABCD-EF");
           } catch (err) {
             return done(err);
           }
@@ -99,11 +106,10 @@ describe("Submission Api", () => {
       }
       chai
         .request(app)
-        .post("/submission/registration")
+        .post("/submission/program/ABCD-EF/registration")
         .type("form")
         .attach("registrationFile", file, "registration.invalid.tsv")
-        .field("creator", "testor")
-        .field("programId", "PEXA-MX")
+        .auth(JWT_ABCDEF, { type: "bearer" })
         .end(async (err: any, res: any) => {
           res.should.have.status(422);
           try {
