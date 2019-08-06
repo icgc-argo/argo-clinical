@@ -1,8 +1,9 @@
 import mongoose from "mongoose";
 import { loggerFor } from "./logger";
-import { AppConfig, initConfigs, config, JWT_TOKEN_PUBLIC_KEY } from "./config";
+import { AppConfig, initConfigs, JWT_TOKEN_PUBLIC_KEY } from "./config";
 import * as manager from "./lectern-client/schema-manager";
 import * as utils from "./utils";
+import fetch from "node-fetch";
 const L = loggerFor(__filename);
 
 const setupDBConnection = (mongoUrl: string) => {
@@ -63,6 +64,7 @@ const setJwtPublicKey = async (keyUrl: string) => {
           .trim()}\n-----END PUBLIC KEY-----`;
         process.env[JWT_TOKEN_PUBLIC_KEY] = correctFormatKey;
       } catch (err) {
+        L.error("couldn't fetch token public key", err);
         // retry in 5 secs
         getKey(5000);
       }
