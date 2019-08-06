@@ -314,7 +314,6 @@ export namespace operations {
   ): DeepReadonly<ActiveRegistration> {
     return F({
       programId: command.programId,
-      status: "uncommitted",
       creator: command.creator,
       stats: stats,
       records: registrationRecords.map(r => {

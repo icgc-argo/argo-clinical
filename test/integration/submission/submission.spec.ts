@@ -11,7 +11,10 @@ import app from "../../../src/app";
 import * as bootstrap from "../../../src/bootstrap";
 import { cleanCollection } from "../testutils";
 import { TEST_PUB_KEY, JWT_ABCDEF, JWT_WXYZEF } from "./test.jwt";
-import { ActiveRegistration } from "../../../src/submission/submission-entities";
+import {
+  ActiveRegistration,
+  CreateRegistrationResult
+} from "../../../src/submission/submission-entities";
 export let mongoContainer: any;
 chai.use(require("chai-http"));
 chai.should();
@@ -20,7 +23,7 @@ let dburl = ``;
 const expectedResponse1 = {
   registration: {
     programId: "ABCD-EF",
-    status: "uncommitted",
+    creator: "Test User",
     stats: {
       newDonorIds: {
         abcd123: [0]
@@ -171,7 +174,7 @@ describe("Submission Api", () => {
             chai.expect(savedRegistration.programId).to.eq("ABCD-EF");
             chai.expect(savedRegistration.stats).to.deep.eq(expectedResponse1.registration.stats);
             res.body.errors.length.should.eq(0);
-            res.body.registration.status.should.deep.eq(expectedResponse1.registration.status);
+            res.body.registration.creator.should.eq("Test User");
             res.body.registration.records.should.deep.eq(expectedResponse1.registration.records);
             res.body.registration._id.should.be.a("string");
             res.body.registration.programId.should.eq(expectedResponse1.registration.programId);
