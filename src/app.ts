@@ -46,7 +46,11 @@ app.get("/submission/schema/", middleware.wrapAsync(schemaApi.getSchema));
 
 // this has to be defined after all routes for it to work for these paths.
 app.use(middleware.errorHandler);
-app.use("/swagger", swaggerUi.serve, swaggerUi.setup(yaml.load(__dirname + "/swagger.yaml")));
+app.use(
+  "/swagger",
+  swaggerUi.serve,
+  swaggerUi.setup(yaml.load(path.join(__dirname, "./resources/swagger.yaml")))
+);
 if (process.env.NODE_ENV !== "PRODUCTION") {
   app.use(errorHandler());
 }
