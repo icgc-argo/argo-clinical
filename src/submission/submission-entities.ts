@@ -64,6 +64,7 @@ export interface CreateRegistrationRecord {
 
 export interface CommitRegistrationCommand {
   readonly registrationId: string;
+  readonly programId: string;
 }
 
 export interface CreateRegistrationCommand {

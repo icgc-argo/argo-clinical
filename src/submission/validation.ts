@@ -24,7 +24,13 @@ export const validateRegistrationData = async (
     const registrationRecord = newRecords[index];
 
     // checks against db
-    errors = errors.concat(usingInvalidProgramId(index, registrationRecord, expectedProgram));
+    const programIdErrors = usingInvalidProgramId(index, registrationRecord, expectedProgram);
+    errors = errors.concat(programIdErrors);
+    // we don't continue validation if the program id is invalid
+    if (programIdErrors.length > 0) {
+      continue;
+    }
+
     errors = errors.concat(mutatingExistingData(index, registrationRecord, existingDonors));
     errors = errors.concat(await specimenBelongsToOtherDonor(index, registrationRecord));
     errors = errors.concat(await sampleBelongsToAnotherSpecimen(index, registrationRecord));

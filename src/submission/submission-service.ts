@@ -230,7 +230,7 @@ export namespace operations {
     command: Readonly<CommitRegistrationCommand>
   ): Promise<DeepReadonly<Donor[]>> => {
     const registration = await registrationRepository.findById(command.registrationId);
-    if (registration == undefined) {
+    if (registration === undefined || registration.programId !== command.programId) {
       throw new Errors.NotFound(`no registration with id :${command.registrationId} found`);
     }
 
@@ -314,7 +314,6 @@ export namespace operations {
   ): DeepReadonly<ActiveRegistration> {
     return F({
       programId: command.programId,
-      status: "uncommitted",
       creator: command.creator,
       stats: stats,
       records: registrationRecords.map(r => {

@@ -2,7 +2,7 @@ import { ActiveRegistration } from "./submission-entities";
 import { InternalError } from "./errors";
 import { loggerFor } from "../logger";
 import { F, MongooseUtils } from "../utils";
-import * as _ from "lodash";
+import _ from "lodash";
 import { DeepReadonly } from "deep-freeze";
 import mongoose from "mongoose";
 const L = loggerFor(__filename);

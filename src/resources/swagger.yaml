@@ -1,0 +1,195 @@
+openapi: 3.0.0
+info:
+  title: Clinical
+  version: 1.0.0
+security:
+  - bearerAuth: ["PROGRAMDATA-${programId}.WRITE", "CLINICALSERVICE.WRITE"]
+paths:
+  /submission/program/{programId}/registration:
+    parameters:
+      - name: programId
+        description: the short name of the program
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get registration for a program
+      description: returns the current in progress registration for a program if any
+      responses:
+        "200":
+          description: "the current in progress registration or empty body if nothing found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Registration"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    post:
+      summary: Upload a new registration file for a program
+      description: This will validate and save the new registration file overwriting any existing registration
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                registrationFile:
+                  type: string
+                  format: binary
+        description: the tsv registration file
+        required: true
+      responses:
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+        "500":
+          $ref: "#/components/responses/ServerError"
+        "201":
+          description: "the file is valid and registration was created"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateRegistration"
+
+  /submission/program/{programId}/registration/{id}:
+    patch:
+      parameters:
+        - name: id
+          description: the id of the registration
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: programId
+          description: the short name of the program
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+        "500":
+          $ref: "#/components/responses/ServerError"
+        "200":
+          description: "the registration was committed and the donors / specimens/ samples added to the clinical db"
+servers:
+  - url: /
+components:
+  responses:
+    UnauthorizedError:
+      description: Access token is missing or invalid
+    ServerError:
+      description: Server error
+    ForbiddenError:
+      description: if the token has incorrect scopes
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    RegistrationValidationError:
+      type: object
+      properties:
+        fieldName:
+          type: string
+          description: the field name that the error is related to
+        info:
+          type: object
+          description: contains context information related to the error
+        donorSubmitterId:
+          type: string
+          description: the donor Id in that row
+        index:
+          type: number
+          format: integer
+          description: the 0 based index of the row for this error
+        type:
+          type: string
+          description: The name of the parameter
+          enum:
+            # data validation errors
+            - SPECIMEN_BELONGS_TO_OTHER_DONOR
+            - MUTATING_EXISTING_DATA
+            - SAMPLE_BELONGS_TO_OTHER_SPECIMEN
+            - NEW_SPECIMEN_CONFLICT
+            - NEW_SAMPLE_CONFLICT
+            - INVALID_PROGRAM_ID
+            # dictionary schema errors
+            - MISSING_REQUIRED_FIELD
+            - INVALID_FIELD_VALUE_TYPE
+            - INVALID_BY_REGEX
+            - INVALID_BY_SCRIPT
+            - INVALID_ENUM_VALUE
+
+    Registration:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: the id of the registration
+        programId:
+          type: string
+          description: the program short name this registration is for
+        creator:
+          type: string
+          description: first name and last name of the user who created this registration
+        stats:
+          type: object
+          properties:
+            newDonorIds:
+              $ref: "#/components/schemas/RegistrationStat"
+            newSpecimenIds:
+              $ref: "#/components/schemas/RegistrationStat"
+            newSampleIds:
+              $ref: "#/components/schemas/RegistrationStat"
+            alreadyRegistered:
+              $ref: "#/components/schemas/RegistrationStat"
+        records:
+          type: array
+          items:
+            $ref: "#/components/schemas/Record"
+
+    Record:
+      properties:
+        program_id:
+          type: string
+        donor_submitter_id:
+          type: string
+        gender:
+          type: string
+        specimen_submitter_id:
+          type: string
+        specimen_type:
+          type: string
+        tumour_normal_designation:
+          type: string
+        sample_submitter_id:
+          type: string
+        sample_type:
+          type: string
+
+    RegistrationStat:
+      type: object
+
+    CreateRegistration:
+      type: object
+      properties:
+        registration:
+          $ref: "#/components/schemas/Registration"
+        successful:
+          type: boolean
+          description: whether the file was valid or not
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/RegistrationValidationError"
