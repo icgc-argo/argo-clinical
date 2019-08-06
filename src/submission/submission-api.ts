@@ -4,7 +4,7 @@ import { TsvUtils, ControllerUtils } from "../utils";
 import { loggerFor } from "../logger";
 import { CreateRegistrationCommand } from "./submission-entities";
 import { HasSubmitionAccess as HasSubmittionAccess } from "../auth-decorators";
-
+import jwt from "jsonwebtoken";
 const L = loggerFor(__filename);
 
 class SubmissionController {
@@ -25,7 +25,15 @@ class SubmissionController {
       return;
     }
     const programId = req.params.programId;
-    const { creator } = req.body;
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      throw new Error("can't get here without auth header");
+    }
+    const decoded = jwt.decode(authHeader.split(" ")[1]) as any;
+    if (!decoded) {
+      throw new Error("invalid token structure");
+    }
+    const creator = decoded.context.user.firstName + " " + decoded.context.user.lastName;
     const file = req.file;
     let records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
     try {
