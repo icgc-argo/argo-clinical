@@ -5,6 +5,8 @@ import path from "path";
 import submissionAPI from "./submission/submission-api";
 import * as schemaApi from "./lectern-client/schema-api";
 import * as middleware from "./middleware";
+import * as swaggerUi from "swagger-ui-express";
+import yaml from "yamljs";
 import multer from "multer";
 import { loggerFor } from "./logger";
 
@@ -23,6 +25,7 @@ app.use(
 );
 
 app.set("port", process.env.PORT || 3000);
+
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "./resources/working.gif")));
 app.get(
   "/submission/program/:programId/registration",
@@ -43,7 +46,7 @@ app.get("/submission/schema/", middleware.wrapAsync(schemaApi.getSchema));
 
 // this has to be defined after all routes for it to work for these paths.
 app.use(middleware.errorHandler);
-
+app.use("/swagger", swaggerUi.serve, swaggerUi.setup(yaml.load(__dirname + "/swagger.yaml")));
 if (process.env.NODE_ENV !== "PRODUCTION") {
   app.use(errorHandler());
 }
