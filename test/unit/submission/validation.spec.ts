@@ -245,12 +245,8 @@ describe("data-validator", () => {
     );
 
     // assertions
-    chai.expect(result.errors.length).to.eq(5);
-    chai.expect(result.errors).to.deep.include(sampleTypeMutatedError);
-    chai.expect(result.errors).to.deep.include(specimenMutatedErr);
-    chai.expect(result.errors).to.deep.include(genderMutatedErr);
+    chai.expect(result.errors.length).to.eq(1);
     chai.expect(result.errors).to.deep.include(programInvalidErr);
-    chai.expect(result.errors).to.deep.include(tndError);
   });
 
   it("should detect specimen belongs to other donor", async () => {
