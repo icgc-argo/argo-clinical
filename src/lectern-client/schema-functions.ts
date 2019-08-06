@@ -38,12 +38,16 @@ export const process = (
 
   records.forEach((rec, index) => {
     const defaultedRecord: DataRecord = populateDefaults(schemaDef, F(rec), index);
+    L.debug(`done populating defaults for record #${index}`);
     const result = validate(schemaDef, defaultedRecord, index);
+    L.debug(`done validation for record #${index}`);
     if (result && result.length > 0) {
+      L.debug(`${result.length} validation errors for record #${index}`);
       validationErrors = validationErrors.concat(result);
       return;
     }
     const convertedRecord = convertFromRawStrings(schemaDef, defaultedRecord, index);
+    L.debug(`converted row #${index} from raw strings`);
     const postTypeConversionValidationResult = validateAfterTypeConversion(
       schemaDef,
       convertedRecord,
@@ -55,7 +59,9 @@ export const process = (
     }
     processedRecords.push(convertedRecord);
   });
-
+  L.debug(
+    `done processing all rows, validationErrors: ${validationErrors.length}, validRecords: ${processedRecords.length}`
+  );
   return F({
     validationErrors,
     processedRecords
@@ -74,7 +80,7 @@ const populateDefaults = (
   index: number
 ): DataRecord => {
   Checks.checkNotNull("records", record);
-  L.debug(`in populateDefaults ${schemaDef.name}, ${record.length}`);
+  L.debug(`in populateDefaults ${schemaDef.name}, ${record}`);
   const mutableRecord: RawMutableRecord = { ...record };
   const x: SchemaDefinition = schemaDef;
   schemaDef.fields.forEach(field => {

@@ -1,5 +1,5 @@
 // Has to import config before any other import uses the configurations
-import { AppConfig, initConfigs } from "./config";
+import { AppConfig } from "./config";
 import * as bootstrap from "./bootstrap";
 import app from "./app";
 
@@ -12,6 +12,12 @@ const defaultAppConfigImpl: AppConfig = {
   },
   schemaName(): string {
     return process.env.SCHEMA_NAME || "";
+  },
+  jwtPubKeyUrl(): string {
+    return process.env.JWT_TOKEN_PUBLIC_KEY_URL || "";
+  },
+  jwtPubKey(): string {
+    return process.env.JWT_TOKEN_PUBLIC_KEY || "";
   }
 };
 
