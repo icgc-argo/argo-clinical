@@ -11,7 +11,7 @@ export const schemaClient: SchemaServiceRestClient = {
   fetchSchema: async (name: string, version: string): Promise<SchemasDictionary> => {
     L.debug(`in fetch schema ${version}`);
     const result = delay(1000);
-    const stubb = await result(stuff[0]);
+    const stubb = await result(stuff[0] as SchemasDictionary);
     L.debug(`schema found ${stubb.version}`);
     return stubb;
   }

@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { SchemasDictionary } from "./schema-entities";
 import { loggerFor } from "../logger";
+import { MongooseUtils } from "../utils";
 const L = loggerFor(__filename);
 
 export interface SchemaRepository {
@@ -10,19 +11,20 @@ export interface SchemaRepository {
 
 export const schemaRepo: SchemaRepository = {
   createOrUpdate: async (schema: SchemasDictionary): Promise<SchemasDictionary | null> => {
-    let newSchema = new DataSchemaModel(schema);
-    await DataSchemaModel.findOneAndUpdate(
+    const result = await DataSchemaModel.findOneAndUpdate(
       {
         name: schema.name
       },
-      newSchema,
-      { upsert: true }
-    )
-      .lean()
-      .exec();
-    newSchema = newSchema.toObject();
-    newSchema._id = newSchema._id.toString();
-    return newSchema;
+      {
+        name: schema.name,
+        schema: schema.version,
+        schemas: schema.schemas
+      },
+      { upsert: true, new: true }
+    ).exec();
+
+    const resultObj = MongooseUtils.toPojo(result);
+    return resultObj;
   },
   get: async (name: String): Promise<SchemasDictionary | null> => {
     L.debug("in Schema repo get");

@@ -209,6 +209,14 @@ describe("Submission Api", () => {
                   type: "MISSING_REQUIRED_FIELD",
                   info: {},
                   fieldName: "tumour_normal_designation"
+                },
+                {
+                  fieldName: "program_id",
+                  index: 0,
+                  info: {
+                    expectedProgram: "ABCD-EF"
+                  },
+                  type: "INVALID_PROGRAM_ID"
                 }
               ],
               successful: false

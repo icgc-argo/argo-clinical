@@ -1,18 +1,16 @@
-
-version: '2'
+version: "2"
 
 services:
   mongodb:
-    image: 'bitnami/mongodb:4.0'
+    image: "bitnami/mongodb:4.0"
     ports:
-      - "27017:27017"
+      - "27027:27017"
     volumes:
-      - 'mongodb_data:/bitnami'
+      - "mongodb_data:/bitnami"
 
 volumes:
   mongodb_data:
     driver: local
-
 # version: '2'
 
 # services:
@@ -24,7 +22,7 @@ volumes:
 #       - MONGODB_REPLICA_SET_KEY=replicasetkey123
 #     volumes:
 #       - 'mongodb_master_data:/bitnami'
-#     ports: 
+#     ports:
 #     - "27016:27017"
 
 #   mongodb-secondary:
@@ -37,7 +35,7 @@ volumes:
 #       - MONGODB_PRIMARY_PORT_NUMBER=27017
 #       - MONGODB_PRIMARY_ROOT_PASSWORD=password123
 #       - MONGODB_REPLICA_SET_KEY=replicasetkey123
-#     ports: 
+#     ports:
 #     - "27018:27017"
 #   mongodb-arbiter:
 #     image: 'bitnami/mongodb:4.0'
@@ -49,7 +47,7 @@ volumes:
 #       - MONGODB_PRIMARY_PORT_NUMBER=27017
 #       - MONGODB_PRIMARY_ROOT_PASSWORD=password123
 #       - MONGODB_REPLICA_SET_KEY=replicasetkey123
-#     ports: 
+#     ports:
 #       - "27019:2701"
 # volumes:
 #   mongodb_master_data:

@@ -38,19 +38,30 @@ export namespace operations {
     command: CreateRegistrationCommand
   ): Promise<CreateRegistrationResult> => {
     const schemaResult = schemaManager.process("registration", command.records);
-    const processedRecords = schemaResult.processedRecords;
-
-    // if there are errors terminate the creation.
+    let unifiedSchemaErrors: DeepReadonly<RegistrationValidationError[]> = [];
     if (anyErrors(schemaResult.validationErrors)) {
-      const unifiedSchemaErrors = unifySchemaErrors(schemaResult, command.records);
+      unifiedSchemaErrors = unifySchemaErrors(schemaResult, command.records);
       L.info(`found ${schemaResult.validationErrors.length} schema errors in registration attempt`);
+    }
+
+    // check the program id if it matches the authorized one
+    // This check is used to validate the program Id along with the schema validations
+    // to save extra round trips
+    let programIdErrors: DeepReadonly<RegistrationValidationError[]> = [];
+    command.records.forEach((r, index) => {
+      const programIdError = dataValidator.usingInvalidProgramId(index, r, command.programId);
+      programIdErrors = programIdErrors.concat(programIdError);
+    });
+
+    if (unifiedSchemaErrors.length > 0) {
+      // if there are errors terminate the creation.
       return {
         registration: undefined,
-        errors: unifiedSchemaErrors,
+        errors: unifiedSchemaErrors.concat(programIdErrors),
         successful: false
       };
     }
-
+    const processedRecords = schemaResult.processedRecords;
     const registrationRecords = mapToRegistrationRecord(processedRecords);
     const filter = F(
       registrationRecords.map(rc => {
@@ -85,7 +96,7 @@ export namespace operations {
       return F({
         registration: undefined,
         stats: undefined,
-        errors: errors,
+        errors: errors.concat(programIdErrors),
         successful: false
       });
     }
