@@ -5,10 +5,10 @@ import { schemaRepo } from "./schema-repo";
 import { loggerFor } from "../logger";
 const L = loggerFor(__filename);
 
-export let schema: SchemasDictionary;
+export let currentSchema: SchemasDictionary;
 
 export const getCurrent = (): SchemasDictionary => {
-  return schema;
+  return currentSchema;
 };
 /**
  * This method does three things:
@@ -37,8 +37,17 @@ export const updateVersion = async (
   if (!result) {
     throw new Error("couldn't save/update new schema.");
   }
-  schema = result;
-  return schema;
+  currentSchema = result;
+  return currentSchema;
+};
+
+export const replace = async (newSchema: SchemasDictionary): Promise<SchemasDictionary> => {
+  const result = await schemaRepo.createOrUpdate(newSchema);
+  if (!result) {
+    throw new Error("couldn't save/update new schema.");
+  }
+  currentSchema = result;
+  return currentSchema;
 };
 
 export const loadSchema = async (
@@ -52,27 +61,27 @@ export const loadSchema = async (
   const storedSchema = await schemaRepo.get(name);
   if (storedSchema === null) {
     L.info(`schema not found in db`);
-    schema = {
+    currentSchema = {
       schemas: [],
       name: name,
       version: initialVersion
     };
   } else {
-    schema = storedSchema;
+    currentSchema = storedSchema;
   }
 
   // if the schema is not complete we need to load it from the
   // schema service (lectern)
-  if (!schema.schemas || schema.schemas.length == 0) {
+  if (!currentSchema.schemas || currentSchema.schemas.length == 0) {
     L.debug(`fetching schema from schema service`);
-    const result = await schemaServiceAdapter.fetchSchema(name, schema.version);
+    const result = await schemaServiceAdapter.fetchSchema(name, currentSchema.version);
     L.info(`fetched schema ${result.version}`);
-    schema.schemas = result.schemas;
-    const saved = await schemaRepo.createOrUpdate(schema);
+    currentSchema.schemas = result.schemas;
+    const saved = await schemaRepo.createOrUpdate(currentSchema);
     if (!saved) {
       throw new Error("couldn't save/update new schema");
     }
     return saved;
   }
-  return schema;
+  return currentSchema;
 };

@@ -82,26 +82,24 @@ describe("data-validator", () => {
   it("should detect invalid program id", async () => {
     donorDaoCountByStub.returns(Promise.resolve(0));
     // test call
-    const result = await dv.validateRegistrationData(
-      "PEME-CA",
-      [
-        {
-          donorSubmitterId: "AB1",
-          gender: "Male",
-          programId: "PEM-CA",
-          sampleSubmitterId: "AM1",
-          specimenType: "XYZ",
-          sampleType: "ST1",
-          specimenSubmitterId: "SP1",
-          tumourNormalDesignation: "Normal"
-        }
-      ],
-      {}
+    const result = await dv.usingInvalidProgramId(
+      0,
+      {
+        donorSubmitterId: "AB1",
+        gender: "Male",
+        program_id: "PEM-CA",
+        sampleSubmitterId: "AM1",
+        specimenType: "XYZ",
+        sampleType: "ST1",
+        specimenSubmitterId: "SP1",
+        tumourNormalDesignation: "Normal"
+      },
+      "PEME-CA"
     );
 
     // assertions
-    chai.expect(result.errors.length).to.eq(1);
-    chai.expect(result.errors[0]).to.deep.eq(programInvalidErr);
+    chai.expect(result.length).to.eq(1);
+    chai.expect(result[0]).to.deep.eq(programInvalidErr);
   });
 
   it("should detect gender update", async () => {
@@ -245,8 +243,11 @@ describe("data-validator", () => {
     );
 
     // assertions
-    chai.expect(result.errors.length).to.eq(1);
-    chai.expect(result.errors).to.deep.include(programInvalidErr);
+    chai.expect(result.errors.length).to.eq(4);
+    chai.expect(result.errors).to.deep.include(sampleTypeMutatedError);
+    chai.expect(result.errors).to.deep.include(specimenMutatedErr);
+    chai.expect(result.errors).to.deep.include(tndError);
+    chai.expect(result.errors).to.deep.include(genderMutatedErr);
   });
 
   it("should detect specimen belongs to other donor", async () => {

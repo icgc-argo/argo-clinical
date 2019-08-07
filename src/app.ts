@@ -42,8 +42,11 @@ app.patch(
 );
 
 /** Schema API */
-app.get("/submission/schema/", middleware.wrapAsync(schemaApi.getSchema));
+app.get("/submission/schema/", middleware.wrapAsync(schemaApi.get));
+// temporary api
+app.post("/submission/schema/hack/refresh", middleware.wrapAsync(schemaApi.update));
 
+app.post("/submission/schema/hack/replace", middleware.wrapAsync(schemaApi.replace));
 // this has to be defined after all routes for it to work for these paths.
 app.use(middleware.errorHandler);
 app.use(

@@ -44,6 +44,8 @@ paths:
         description: the tsv registration file
         required: true
       responses:
+        "422":
+          description: "invalid registration file"
         "401":
           $ref: "#/components/responses/UnauthorizedError"
         "403":

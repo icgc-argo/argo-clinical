@@ -15,7 +15,10 @@ export namespace TsvUtils {
 
   export const parseTsvToJson = (content: string): ReadonlyArray<{ [key: string]: string }> => {
     const lines = content.split("\n");
-    const headers = lines.slice(0, 1)[0].split("\t");
+    const headers = lines
+      .slice(0, 1)[0]
+      .trim()
+      .split("\t");
     const rows = lines.slice(1, lines.length).map(line => {
       // check for any empty lines
       if (line.trim() === "") {
@@ -23,7 +26,7 @@ export namespace TsvUtils {
       }
       const data = line.split("\t");
       return headers.reduce<{ [k: string]: string }>((obj, nextKey, index) => {
-        obj[nextKey] = data[index];
+        obj[nextKey] = data[index].trim();
         return obj;
       }, {});
     });

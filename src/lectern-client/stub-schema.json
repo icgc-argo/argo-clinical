@@ -138,11 +138,7 @@
         ]
       }
     ],
-    "_id": "5d250369f38d1f0d9376fd38",
     "name": "ARGO Dictionary",
-    "version": "1.0",
-    "createdAt": "2019-07-09T21:13:13.683Z",
-    "updatedAt": "2019-07-09T21:13:13.683Z",
-    "__v": 0
+    "version": "1.0"
   }
 ]
