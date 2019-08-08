@@ -21,12 +21,12 @@ export namespace TsvUtils {
       .split("\t");
     const rows = lines.slice(1, lines.length).map(line => {
       // check for any empty lines
-      if (line.trim() === "") {
+      if (!line || line.trim() === "") {
         return undefined;
       }
       const data = line.split("\t");
       return headers.reduce<{ [k: string]: string }>((obj, nextKey, index) => {
-        obj[nextKey] = data[index].trim();
+        obj[nextKey] = (data[index] && data[index].trim()) || "";
         return obj;
       }, {});
     });
@@ -39,8 +39,11 @@ export namespace ControllerUtils {
     res.status(404).send({ message: msg });
   };
 
-  export const badRequest = (res: Response, msg: string): any => {
-    res.status(400).send({ message: msg });
+  export const badRequest = (res: Response, msg: string | object): any => {
+    if (typeof msg === "string") {
+      return res.status(400).send({ message: msg });
+    }
+    res.status(400).send(msg);
   };
 }
 

@@ -14,7 +14,15 @@ import {
   SchemaValidationErrorTypes
 } from "./schema-entities";
 import { loggerFor } from "../logger";
-import { Checks, notEmpty, isEmptyString, isNotEmptyString, isAbsent, F } from "../utils";
+import {
+  Checks,
+  notEmpty,
+  isEmptyString,
+  isNotEmptyString,
+  isAbsent,
+  F,
+  isNotAbsent
+} from "../utils";
 const L = loggerFor(__filename);
 
 export const process = (
@@ -84,7 +92,7 @@ const populateDefaults = (
   const mutableRecord: RawMutableRecord = { ...record };
   const x: SchemaDefinition = schemaDef;
   schemaDef.fields.forEach(field => {
-    if (isEmptyString(record[field.name]) && field.meta && field.meta.default) {
+    if (!isNotAbsent(record[field.name]) && field.meta && field.meta.default) {
       L.debug(`populating Default: ${field.meta.default} for ${field.name} in record : ${record}`);
       mutableRecord[field.name] = `${field.meta.default}`;
     }
