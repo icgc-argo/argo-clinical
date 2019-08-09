@@ -207,14 +207,22 @@ describe("Submission Api", () => {
                 {
                   index: 0,
                   type: "MISSING_REQUIRED_FIELD",
-                  info: {},
+                  info: {
+                    donorSubmitterId: "abcd123",
+                    sampleSubmitterId: "sp123",
+                    specimenSubmitterId: "sp123"
+                  },
                   fieldName: "tumour_normal_designation"
                 },
                 {
                   fieldName: "program_id",
                   index: 0,
                   info: {
-                    expectedProgram: "ABCD-EF"
+                    expectedProgram: "ABCD-EF",
+                    donorSubmitterId: "abcd123",
+                    sampleSubmitterId: "sam123",
+                    specimenSubmitterId: "sp123",
+                    value: "PEXA-MX"
                   },
                   type: "INVALID_PROGRAM_ID"
                 }
