@@ -83,6 +83,29 @@ paths:
           $ref: "#/components/responses/ServerError"
         "200":
           description: "the registration was committed and the donors / specimens/ samples added to the clinical db"
+    delete:
+      parameters:
+        - name: id
+          description: the id of the registration
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: programId
+          description: the short name of the program
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+        "500":
+          $ref: "#/components/responses/ServerError"
+        "200":
+          description: "the registration was deleted from db"
 servers:
   - url: /
 components:

@@ -317,6 +317,19 @@ export namespace operations {
     return await registrationRepository.findByProgramId(programId);
   };
 
+  /**
+   * delete registration by registration Id
+   * @param registrationId string
+   * @param programId string
+   */
+  export const deleteRegistration = async (registrationId: string, programId: string) => {
+    const registration = await registrationRepository.findById(registrationId);
+    if (registration === undefined || registration.programId !== programId) {
+      return `Cannot delete non-existent registration with id :${registrationId}`;
+    }
+    return await registrationRepository.delete(registrationId);
+  };
+
   /************* Private methods *************/
   function toActiveRegistration(
     command: CreateRegistrationCommand,

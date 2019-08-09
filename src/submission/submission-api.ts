@@ -63,6 +63,17 @@ class SubmissionController {
     });
     return res.status(200).send();
   }
+
+  @HasSubmittionAccess((req: Request) => req.params.programId)
+  async deleteRegistration(req: Request, res: Response) {
+    const programId = req.params.programId;
+    const registrationId = req.params.id;
+    const result = await submission.operations.deleteRegistration(registrationId, programId);
+    if (result) {
+      return ControllerUtils.notFound(res, result);
+    }
+    return res.status(200).send();
+  }
 }
 
 const isValidCreateBody = (req: Request, res: Response): boolean => {

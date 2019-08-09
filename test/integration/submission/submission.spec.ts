@@ -9,8 +9,9 @@ import "mocha";
 import { GenericContainer } from "testcontainers";
 import app from "../../../src/app";
 import * as bootstrap from "../../../src/bootstrap";
-import { cleanCollection } from "../testutils";
+import { cleanCollection, insertData } from "../testutils";
 import { TEST_PUB_KEY, JWT_ABCDEF, JWT_WXYZEF } from "./test.jwt";
+import { ABCD_REGISTRATION_DOC } from "./test.data";
 import {
   ActiveRegistration,
   CreateRegistrationResult
@@ -232,6 +233,40 @@ describe("Submission Api", () => {
             return done(err);
           }
           return done();
+        });
+    });
+  });
+
+  describe("deletion", function() {
+    this.beforeEach(() => {
+      console.log("deletion beforeAll called");
+      return insertData(dburl, "activeregistrations", ABCD_REGISTRATION_DOC);
+    });
+
+    it("Should return 200 if deleted existing registration", async () => {
+      console.log("Run test here ");
+      const conn = await mongo.connect(dburl);
+      const registration = await conn
+        .db("clinical")
+        .collection("activeregistrations")
+        .findOne({});
+      chai
+        .request(app)
+        .delete("/submission/program/ABCD-EF/registration/" + registration._id)
+        .auth(JWT_ABCDEF, { type: "bearer" })
+        .end(async (err: any, res: any) => {
+          console.log(res);
+          try {
+            res.should.have.status(200);
+            const count = await conn
+              .db("clinical")
+              .collection("activeregistrations")
+              .count({});
+            conn.close();
+            chai.expect(count).to.eq(0);
+          } catch (err) {
+            return err;
+          }
         });
     });
   });
