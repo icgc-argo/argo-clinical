@@ -6,14 +6,15 @@ import { Donor, DonorMap } from "../clinical/clinical-entities";
 import { RegisterDonorDto } from "../clinical/donor-repo";
 import {
   ActiveRegistration,
-  RegistrationRecord,
+  SubmittedRegistrationRecord,
   RegistrationStats,
   RegistrationValidationError,
   CreateRegistrationRecord,
   CommitRegistrationCommand,
   CreateRegistrationCommand,
   CreateRegistrationResult,
-  RegistrationRecordFields
+  RegistrationRecordFields,
+  RegistrationFieldsEnum
 } from "./submission-entities";
 import * as schemaManager from "../lectern-client/schema-manager";
 import {
@@ -131,9 +132,15 @@ export namespace operations {
     result.validationErrors.forEach(schemaErr => {
       errorsList.push({
         index: schemaErr.index,
-        donorSubmitterId: records[schemaErr.index].donorSubmitterId,
         type: schemaErr.errorType,
-        info: schemaErr.info,
+        info: {
+          ...schemaErr.info,
+          value: records[schemaErr.index][schemaErr.fieldName],
+          donorSubmitterId: records[schemaErr.index][RegistrationFieldsEnum.donor_submitter_id],
+          specimenSubmitterId:
+            records[schemaErr.index][RegistrationFieldsEnum.specimen_submitter_id],
+          sampleSubmitterId: records[schemaErr.index][RegistrationFieldsEnum.specimen_submitter_id]
+        },
         fieldName: schemaErr.fieldName as RegistrationRecordFields
       });
     });
@@ -296,7 +303,7 @@ export namespace operations {
     return F(donors);
   };
 
-  const getDonorSpecimen = (record: RegistrationRecord) => {
+  const getDonorSpecimen = (record: SubmittedRegistrationRecord) => {
     return {
       specimenType: record.specimen_type,
       tumourNormalDesignation: record.tumour_normal_designation,
@@ -328,7 +335,7 @@ export namespace operations {
       creator: command.creator,
       stats: stats,
       records: registrationRecords.map(r => {
-        const record: Readonly<RegistrationRecord> = {
+        const record: Readonly<SubmittedRegistrationRecord> = {
           program_id: command.programId,
           donor_submitter_id: r.donorSubmitterId,
           gender: r.gender,

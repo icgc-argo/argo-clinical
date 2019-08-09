@@ -44,8 +44,32 @@ paths:
         description: the tsv registration file
         required: true
       responses:
+        "400":
+          description: "the file is valid and registration was created"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  code:
+                    type: string
+                    enum: ["TSV_PARSING_FAILED"]
         "422":
           description: "invalid registration file"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  successful:
+                    type: boolean
+                    description: will be false in this case
+                  errors:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/RegistrationValidationError"
         "401":
           $ref: "#/components/responses/UnauthorizedError"
         "403":
@@ -193,5 +217,6 @@ components:
           description: whether the file was valid or not
         errors:
           type: array
+          description:
           items:
             $ref: "#/components/schemas/RegistrationValidationError"

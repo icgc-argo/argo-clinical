@@ -7,6 +7,9 @@ import { HasSubmitionAccess as HasSubmittionAccess } from "../auth-decorators";
 import jwt from "jsonwebtoken";
 const L = loggerFor(__filename);
 
+export enum ErrorCodes {
+  TSV_PARSING_FAILED = "TSV_PARSING_FAILED"
+}
 class SubmissionController {
   @HasSubmittionAccess((req: Request) => req.params.programId)
   async getRegistrationByProgramId(req: Request, res: Response) {
@@ -39,7 +42,10 @@ class SubmissionController {
     try {
       records = await TsvUtils.tsvToJson(file);
     } catch (err) {
-      return ControllerUtils.badRequest(res, `failed to parse the tsv file: ${err}`);
+      return ControllerUtils.badRequest(res, {
+        msg: `failed to parse the tsv file: ${err}`,
+        code: ErrorCodes.TSV_PARSING_FAILED
+      });
     }
     const command: CreateRegistrationCommand = {
       programId: programId,

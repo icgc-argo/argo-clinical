@@ -2,9 +2,10 @@ import { DonorMap } from "../clinical/clinical-entities";
 import {
   DataValidationErrors,
   RegistrationValidationError,
-  RegistrationRecord,
   CreateRegistrationRecord,
-  ValidationResult
+  ValidationResult,
+  RegistrationFieldsEnum,
+  RegistrationToCreateRegistrationFieldsMap
 } from "./submission-entities";
 import { donorDao, DONOR_FIELDS } from "../clinical/donor-repo";
 import { DeepReadonly } from "deep-freeze";
@@ -65,17 +66,18 @@ export const usingInvalidProgramId = (
   const programId = registrationRecord.program_id;
   if (programId) {
     if (expectedProgram !== programId) {
-      errors.push(
-        buildError(
-          DataValidationErrors.INVALID_PROGRAM_ID,
-          "program_id",
-          newDonorIndex,
-          registrationRecord.donorSubmitterId,
-          {
-            expectedProgram
-          }
-        )
-      );
+      errors.push({
+        type: DataValidationErrors.INVALID_PROGRAM_ID,
+        fieldName: RegistrationFieldsEnum.program_id,
+        index: newDonorIndex,
+        info: {
+          value: registrationRecord[RegistrationFieldsEnum.program_id],
+          sampleSubmitterId: registrationRecord[RegistrationFieldsEnum.sample_submitter_id],
+          specimenSubmitterId: registrationRecord[RegistrationFieldsEnum.specimen_submitter_id],
+          donorSubmitterId: registrationRecord[RegistrationFieldsEnum.donor_submitter_id],
+          expectedProgram
+        }
+      });
     }
     return errors;
   }
@@ -126,10 +128,10 @@ const conflictingNewSpecimen = (
   if (conflictingSpecimensIndices.length !== 0) {
     errors.push(
       buildError(
+        newDonor,
         DataValidationErrors.NEW_SPECIMEN_CONFLICT,
-        "specimen_submitter_id",
+        RegistrationFieldsEnum.specimen_submitter_id,
         newDonorIndex,
-        newDonor.donorSubmitterId,
         {
           conflictingRows: conflictingSpecimensIndices
         }
@@ -140,10 +142,10 @@ const conflictingNewSpecimen = (
   if (conflictingSpecimenTypesIndices.length !== 0) {
     errors.push(
       buildError(
+        newDonor,
         DataValidationErrors.NEW_SPECIMEN_CONFLICT,
-        "specimen_type",
+        RegistrationFieldsEnum.specimen_type,
         newDonorIndex,
-        newDonor.donorSubmitterId,
         {
           conflictingRows: conflictingSpecimenTypesIndices
         }
@@ -154,10 +156,10 @@ const conflictingNewSpecimen = (
   if (conflictingSpecimenTumourDesignationIndices.length !== 0) {
     errors.push(
       buildError(
+        newDonor,
         DataValidationErrors.NEW_SPECIMEN_CONFLICT,
-        "tumour_normal_designation",
+        RegistrationFieldsEnum.tumour_normal_designation,
         newDonorIndex,
-        newDonor.donorSubmitterId,
         {
           conflictingRows: conflictingSpecimenTumourDesignationIndices
         }
@@ -204,10 +206,10 @@ const conflictingNewSample = (
 
   if (conflictingSamplesIndices.length !== 0) {
     const err = buildError(
+      newDonor,
       DataValidationErrors.NEW_SAMPLE_CONFLICT,
-      "sample_submitter_id",
+      RegistrationFieldsEnum.sample_submitter_id,
       newDonorIndex,
-      newDonor.donorSubmitterId,
       {
         conflictingRows: conflictingSamplesIndices
       }
@@ -217,10 +219,10 @@ const conflictingNewSample = (
 
   if (conflictingSampleTypesIndices.length !== 0) {
     const err = buildError(
+      newDonor,
       DataValidationErrors.NEW_SAMPLE_CONFLICT,
-      "sample_type",
+      RegistrationFieldsEnum.sample_type,
       newDonorIndex,
-      newDonor.donorSubmitterId,
       {
         conflictingRows: conflictingSampleTypesIndices
       }
@@ -266,10 +268,10 @@ const mutatingExistingData = (
   if (newDonor.gender != existingDonor.gender) {
     errors.push(
       buildError(
+        newDonor,
         DataValidationErrors.MUTATING_EXISTING_DATA,
-        "gender",
+        RegistrationFieldsEnum.gender,
         index,
-        newDonor.donorSubmitterId,
         {}
       )
     );
@@ -284,10 +286,10 @@ const mutatingExistingData = (
   if (newDonor.specimenType !== existingSpecimen.specimenType) {
     errors.push(
       buildError(
+        newDonor,
         DataValidationErrors.MUTATING_EXISTING_DATA,
-        "specimen_type",
+        RegistrationFieldsEnum.specimen_type,
         index,
-        newDonor.donorSubmitterId,
         {}
       )
     );
@@ -296,10 +298,10 @@ const mutatingExistingData = (
   if (newDonor.tumourNormalDesignation !== existingSpecimen.tumourNormalDesignation) {
     errors.push(
       buildError(
+        newDonor,
         DataValidationErrors.MUTATING_EXISTING_DATA,
-        "tumour_normal_designation",
+        RegistrationFieldsEnum.tumour_normal_designation,
         index,
-        newDonor.donorSubmitterId,
         {}
       )
     );
@@ -312,10 +314,10 @@ const mutatingExistingData = (
   if (newDonor.sampleType !== sample.sampleType) {
     errors.push(
       buildError(
+        newDonor,
         DataValidationErrors.MUTATING_EXISTING_DATA,
-        "sample_type",
+        RegistrationFieldsEnum.sample_type,
         index,
-        newDonor.donorSubmitterId,
         {}
       )
     );
@@ -337,10 +339,10 @@ const specimenBelongsToOtherDonor = async (
   if (count > 0) {
     errors.push(
       buildError(
+        newDonor,
         DataValidationErrors.SPECIMEN_BELONGS_TO_OTHER_DONOR,
-        "specimen_submitter_id",
+        RegistrationFieldsEnum.specimen_submitter_id,
         index,
-        newDonor.donorSubmitterId,
         {}
       )
     );
@@ -363,10 +365,10 @@ const sampleBelongsToAnotherSpecimen = async (
   if (count > 0) {
     errors.push(
       buildError(
+        newDonor,
         DataValidationErrors.SAMPLE_BELONGS_TO_OTHER_SPECIMEN,
-        "sample_submitter_id",
+        RegistrationFieldsEnum.sample_submitter_id,
         index,
-        newDonor.donorSubmitterId,
         {}
       )
     );
@@ -376,11 +378,22 @@ const sampleBelongsToAnotherSpecimen = async (
 };
 
 const buildError = (
+  newDonor: CreateRegistrationRecord,
   type: DataValidationErrors,
-  fieldName: keyof RegistrationRecord,
+  fieldName: RegistrationFieldsEnum,
   index: number,
-  donorSubmitterId: string,
-  info: object
+  info: object = {}
 ): RegistrationValidationError => {
-  return { type, donorSubmitterId, fieldName, index, info };
+  return {
+    type,
+    fieldName,
+    index,
+    info: {
+      ...info,
+      donorSubmitterId: newDonor.donorSubmitterId,
+      specimenSubmitterId: newDonor.specimenSubmitterId,
+      sampleSubmitterId: newDonor.sampleSubmitterId,
+      value: newDonor[RegistrationToCreateRegistrationFieldsMap[fieldName]]
+    }
+  };
 };

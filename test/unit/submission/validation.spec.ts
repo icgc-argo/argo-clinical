@@ -5,7 +5,8 @@ import * as dv from "../../../src/submission/validation";
 import {
   RegistrationValidationError,
   DataValidationErrors,
-  CreateRegistrationRecord
+  CreateRegistrationRecord,
+  RegistrationFieldsEnum
 } from "../../../src/submission/submission-entities";
 import { Donor } from "../../../src/clinical/clinical-entities";
 import { stubs } from "./stubs";
@@ -15,61 +16,94 @@ const donorDaoCountByStub = sinon.stub(donorDao, "countBy");
 const genderMutatedErr: RegistrationValidationError = {
   fieldName: "gender",
   index: 0,
-  donorSubmitterId: "AB1",
-  info: {},
+  info: {
+    donorSubmitterId: "AB1",
+    sampleSubmitterId: "AM1",
+    specimenSubmitterId: "SP1",
+    value: "Male"
+  },
   type: DataValidationErrors.MUTATING_EXISTING_DATA
 };
 const programInvalidErr: RegistrationValidationError = {
   fieldName: "program_id",
   index: 0,
-  donorSubmitterId: "AB1",
-  info: { expectedProgram: "PEME-CA" },
+  info: {
+    expectedProgram: "PEME-CA",
+    donorSubmitterId: "AB1",
+    specimenSubmitterId: "SP1",
+    sampleSubmitterId: "AM1",
+    value: "PEM-CA"
+  },
   type: DataValidationErrors.INVALID_PROGRAM_ID
 };
 const specimenMutatedErr: RegistrationValidationError = {
   fieldName: "specimen_type",
   index: 0,
-  donorSubmitterId: "AB1",
-  info: {},
+  info: {
+    donorSubmitterId: "AB1",
+    specimenSubmitterId: "SP1",
+    sampleSubmitterId: "AM1",
+    value: "XYZ1"
+  },
   type: DataValidationErrors.MUTATING_EXISTING_DATA
 };
 const tndError: RegistrationValidationError = {
   fieldName: "tumour_normal_designation",
   index: 0,
-  info: {},
-  donorSubmitterId: "AB1",
+  info: {
+    donorSubmitterId: "AB1",
+    specimenSubmitterId: "SP1",
+    sampleSubmitterId: "AM1",
+    value: "Normal2"
+  },
   type: DataValidationErrors.MUTATING_EXISTING_DATA
 };
 
 const sampleTypeMutatedError: RegistrationValidationError = {
   fieldName: "sample_type",
   index: 0,
-  donorSubmitterId: "AB1",
-  info: {},
+  info: {
+    donorSubmitterId: "AB1",
+    specimenSubmitterId: "SP1",
+    sampleSubmitterId: "AM1",
+    value: "ST11"
+  },
   type: DataValidationErrors.MUTATING_EXISTING_DATA
 };
 
 const specimenBelongsToOtherDonor: RegistrationValidationError = {
   fieldName: "specimen_submitter_id",
   index: 0,
-  donorSubmitterId: "AB2",
-  info: {},
+  info: {
+    donorSubmitterId: "AB2",
+    specimenSubmitterId: "SP1",
+    sampleSubmitterId: "AM1",
+    value: "SP1"
+  },
   type: DataValidationErrors.SPECIMEN_BELONGS_TO_OTHER_DONOR
 };
 
 const sampleBelongsToOtherSpecimenAB2: RegistrationValidationError = {
   fieldName: "sample_submitter_id",
   index: 0,
-  donorSubmitterId: "AB2",
-  info: {},
+  info: {
+    donorSubmitterId: "AB2",
+    specimenSubmitterId: "SP2",
+    sampleSubmitterId: "AM1",
+    value: "AM1"
+  },
   type: DataValidationErrors.SAMPLE_BELONGS_TO_OTHER_SPECIMEN
 };
 
 const sampleBelongsToOtherSpecimenAB1: RegistrationValidationError = {
   fieldName: "sample_submitter_id",
   index: 0,
-  donorSubmitterId: "AB1",
-  info: {},
+  info: {
+    donorSubmitterId: "AB1",
+    specimenSubmitterId: "SP2",
+    sampleSubmitterId: "AM1",
+    value: "AM1"
+  },
   type: DataValidationErrors.SAMPLE_BELONGS_TO_OTHER_SPECIMEN
 };
 
@@ -85,14 +119,14 @@ describe("data-validator", () => {
     const result = await dv.usingInvalidProgramId(
       0,
       {
-        donorSubmitterId: "AB1",
+        donor_submitter_id: "AB1",
         gender: "Male",
         program_id: "PEM-CA",
-        sampleSubmitterId: "AM1",
-        specimenType: "XYZ",
-        sampleType: "ST1",
-        specimenSubmitterId: "SP1",
-        tumourNormalDesignation: "Normal"
+        sample_submitter_id: "AM1",
+        specimen_type: "XYZ",
+        sample_type: "ST1",
+        specimen_submitter_id: "SP1",
+        tumour_normal_designation: "Normal"
       },
       "PEME-CA"
     );
@@ -218,7 +252,7 @@ describe("data-validator", () => {
       gender: "Male",
       programId: "PEME-CA",
       sampleSubmitterId: "AM13",
-      specimenType: "X",
+      specimenType: "XYZ1",
       sampleType: "S",
       specimenSubmitterId: "RR",
       tumourNormalDesignation: "Normal"
@@ -245,7 +279,18 @@ describe("data-validator", () => {
     // assertions
     chai.expect(result.errors.length).to.eq(4);
     chai.expect(result.errors).to.deep.include(sampleTypeMutatedError);
-    chai.expect(result.errors).to.deep.include(specimenMutatedErr);
+    const specimenMutatedError: RegistrationValidationError = {
+      fieldName: "specimen_type",
+      index: 0,
+      info: {
+        donorSubmitterId: "AB1",
+        specimenSubmitterId: "SP1",
+        sampleSubmitterId: "AM1",
+        value: "XYZQ"
+      },
+      type: DataValidationErrors.MUTATING_EXISTING_DATA
+    };
+    chai.expect(result.errors).to.deep.include(specimenMutatedError);
     chai.expect(result.errors).to.deep.include(tndError);
     chai.expect(result.errors).to.deep.include(genderMutatedErr);
   });
@@ -374,9 +419,12 @@ describe("data-validator", () => {
     const row0Err = {
       fieldName: "sample_submitter_id",
       index: 0,
-      donorSubmitterId: "AB1",
       info: {
-        conflictingRows: [1]
+        conflictingRows: [1],
+        donorSubmitterId: "AB1",
+        sampleSubmitterId: "AM1",
+        specimenSubmitterId: "SP2",
+        value: "AM1"
       },
       type: DataValidationErrors.NEW_SAMPLE_CONFLICT
     };
@@ -384,16 +432,19 @@ describe("data-validator", () => {
     const row1Err = {
       fieldName: "sample_submitter_id",
       index: 1,
-      donorSubmitterId: "AB2",
       info: {
-        conflictingRows: [0]
+        conflictingRows: [0],
+        donorSubmitterId: "AB2",
+        sampleSubmitterId: "AM1",
+        specimenSubmitterId: "SP1",
+        value: "AM1"
       },
       type: DataValidationErrors.NEW_SAMPLE_CONFLICT
     };
 
     chai.expect(result.errors.length).to.eq(2);
-    chai.expect(result.errors[0]).to.deep.eq(row0Err);
-    chai.expect(result.errors[1]).to.deep.eq(row1Err);
+    chai.expect(result.errors).to.deep.include(row0Err);
+    chai.expect(result.errors).to.deep.include(row1Err);
   });
 
   // different donors & samples same specimen Id
@@ -442,9 +493,12 @@ describe("data-validator", () => {
     const row0Err = {
       fieldName: "specimen_submitter_id",
       index: 0,
-      donorSubmitterId: "AB1",
       info: {
-        conflictingRows: [2]
+        conflictingRows: [2],
+        donorSubmitterId: "AB1",
+        sampleSubmitterId: "AM1",
+        specimenSubmitterId: "SP1",
+        value: "SP1"
       },
       type: DataValidationErrors.NEW_SPECIMEN_CONFLICT
     };
@@ -452,16 +506,19 @@ describe("data-validator", () => {
     const row2Err = {
       fieldName: "specimen_submitter_id",
       index: 2,
-      donorSubmitterId: "AB2",
       info: {
-        conflictingRows: [0]
+        conflictingRows: [0],
+        donorSubmitterId: "AB2",
+        sampleSubmitterId: "AM2",
+        specimenSubmitterId: "SP1",
+        value: "SP1"
       },
       type: DataValidationErrors.NEW_SPECIMEN_CONFLICT
     };
 
     chai.expect(result.errors.length).to.eq(2);
-    chai.expect(result.errors[0]).to.deep.eq(row0Err);
-    chai.expect(result.errors[1]).to.deep.eq(row2Err);
+    chai.expect(result.errors).to.deep.include(row0Err);
+    chai.expect(result.errors).to.deep.include(row2Err);
   });
 
   // same donor same specimen different specimen type
@@ -510,8 +567,11 @@ describe("data-validator", () => {
     const row0Err: RegistrationValidationError = {
       fieldName: "specimen_type",
       index: 0,
-      donorSubmitterId: "AB1",
       info: {
+        donorSubmitterId: "AB1",
+        sampleSubmitterId: "AM1",
+        specimenSubmitterId: "SP1",
+        value: "XYX",
         conflictingRows: [2]
       },
       type: DataValidationErrors.NEW_SPECIMEN_CONFLICT
@@ -520,16 +580,19 @@ describe("data-validator", () => {
     const row2Err: RegistrationValidationError = {
       fieldName: "specimen_type",
       index: 2,
-      donorSubmitterId: "AB1",
       info: {
+        donorSubmitterId: "AB1",
+        sampleSubmitterId: "AM2",
+        specimenSubmitterId: "SP1",
+        value: "XYz",
         conflictingRows: [0]
       },
       type: DataValidationErrors.NEW_SPECIMEN_CONFLICT
     };
 
     chai.expect(result.errors.length).to.eq(2);
-    chai.expect(result.errors[0]).to.deep.eq(row0Err);
-    chai.expect(result.errors[1]).to.deep.eq(row2Err);
+    chai.expect(result.errors).to.deep.include(row0Err);
+    chai.expect(result.errors).to.deep.include(row2Err);
   });
 
   // same donor same specimen different specimen type
@@ -578,8 +641,11 @@ describe("data-validator", () => {
     const row0Err: RegistrationValidationError = {
       fieldName: "sample_type",
       index: 0,
-      donorSubmitterId: "AB1",
       info: {
+        donorSubmitterId: "AB1",
+        sampleSubmitterId: "AM1",
+        specimenSubmitterId: "SP1",
+        value: "ST-2",
         conflictingRows: [2]
       },
       type: DataValidationErrors.NEW_SAMPLE_CONFLICT
@@ -588,19 +654,22 @@ describe("data-validator", () => {
     const row2Err: RegistrationValidationError = {
       fieldName: "sample_type",
       index: 2,
-      donorSubmitterId: "AB1",
       info: {
+        donorSubmitterId: "AB1",
+        sampleSubmitterId: "AM1",
+        specimenSubmitterId: "SP1",
+        value: "ST2",
         conflictingRows: [0]
       },
       type: DataValidationErrors.NEW_SAMPLE_CONFLICT
     };
 
     chai.expect(result.errors.length).to.eq(2);
-    chai.expect(result.errors[0]).to.deep.eq(row0Err);
-    chai.expect(result.errors[1]).to.deep.eq(row2Err);
+    chai.expect(result.errors).to.deep.include(row0Err);
+    chai.expect(result.errors).to.deep.include(row2Err);
   });
 
-  it("should detect specimen id conflict for same donor & sample Id", async () => {
+  it("should detect sample id conflict for same donor & different specimen Id", async () => {
     donorDaoCountByStub.returns(Promise.resolve(0));
     // test call
     const result = await dv.validateRegistrationData(
@@ -643,28 +712,34 @@ describe("data-validator", () => {
 
     // assertions
     const row0Err: RegistrationValidationError = {
-      fieldName: "sample_submitter_id",
+      fieldName: RegistrationFieldsEnum.sample_submitter_id,
       index: 0,
-      donorSubmitterId: "AB1",
       info: {
+        donorSubmitterId: "AB1",
+        sampleSubmitterId: "AM1",
+        specimenSubmitterId: "SP1",
+        value: "AM1",
         conflictingRows: [2]
       },
       type: DataValidationErrors.NEW_SAMPLE_CONFLICT
     };
 
     const row2Err: RegistrationValidationError = {
-      fieldName: "sample_submitter_id",
+      fieldName: RegistrationFieldsEnum.sample_submitter_id,
       index: 2,
-      donorSubmitterId: "AB1",
       info: {
+        donorSubmitterId: "AB1",
+        sampleSubmitterId: "AM1",
+        specimenSubmitterId: "SP2",
+        value: "AM1",
         conflictingRows: [0]
       },
       type: DataValidationErrors.NEW_SAMPLE_CONFLICT
     };
 
     chai.expect(result.errors.length).to.eq(2);
-    chai.expect(result.errors[0]).to.deep.eq(row0Err);
-    chai.expect(result.errors[1]).to.deep.eq(row2Err);
+    chai.expect(result.errors).to.deep.include(row0Err);
+    chai.expect(result.errors).to.deep.include(row2Err);
   });
 
   it("should detect sample type conflict for same new specimen & sample Id", async () => {
@@ -712,8 +787,11 @@ describe("data-validator", () => {
     const row0Err: RegistrationValidationError = {
       fieldName: "sample_type",
       index: 0,
-      donorSubmitterId: "AB1",
       info: {
+        donorSubmitterId: "AB1",
+        sampleSubmitterId: "AM1",
+        specimenSubmitterId: "SP1",
+        value: "ST-2",
         conflictingRows: [2]
       },
       type: DataValidationErrors.NEW_SAMPLE_CONFLICT
@@ -722,15 +800,18 @@ describe("data-validator", () => {
     const row2Err = {
       fieldName: "sample_type",
       index: 2,
-      donorSubmitterId: "AB1",
       info: {
+        donorSubmitterId: "AB1",
+        sampleSubmitterId: "AM1",
+        specimenSubmitterId: "SP1",
+        value: "ST2",
         conflictingRows: [0]
       },
       type: DataValidationErrors.NEW_SAMPLE_CONFLICT
     };
 
     chai.expect(result.errors.length).to.eq(2);
-    chai.expect(result.errors[0]).to.deep.eq(row0Err);
-    chai.expect(result.errors[1]).to.deep.eq(row2Err);
+    chai.expect(result.errors).to.deep.include(row0Err);
+    chai.expect(result.errors).to.deep.include(row2Err);
   });
 });
