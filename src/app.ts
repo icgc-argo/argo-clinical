@@ -36,8 +36,8 @@ app.post(
   upload.single("registrationFile"),
   middleware.wrapAsync(submissionAPI.createRegistrationWithTsv)
 );
-app.patch(
-  "/submission/program/:programId/registration/:id",
+app.post(
+  "/submission/program/:programId/registration/:id/commit",
   middleware.wrapAsync(submissionAPI.commitRegistration)
 );
 
