@@ -92,7 +92,12 @@ const populateDefaults = (
   const mutableRecord: RawMutableRecord = { ...record };
   const x: SchemaDefinition = schemaDef;
   schemaDef.fields.forEach(field => {
-    if (!isNotAbsent(record[field.name]) && field.meta && field.meta.default) {
+    if (
+      isNotAbsent(record[field.name]) &&
+      record[field.name].trim() === "" &&
+      field.meta &&
+      field.meta.default
+    ) {
       L.debug(`populating Default: ${field.meta.default} for ${field.name} in record : ${record}`);
       mutableRecord[field.name] = `${field.meta.default}`;
     }

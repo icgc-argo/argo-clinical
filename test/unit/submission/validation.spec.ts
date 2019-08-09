@@ -5,7 +5,8 @@ import * as dv from "../../../src/submission/validation";
 import {
   RegistrationValidationError,
   DataValidationErrors,
-  CreateRegistrationRecord
+  CreateRegistrationRecord,
+  RegistrationFieldsEnum
 } from "../../../src/submission/submission-entities";
 import { Donor } from "../../../src/clinical/clinical-entities";
 import { stubs } from "./stubs";
@@ -433,10 +434,10 @@ describe("data-validator", () => {
       index: 1,
       info: {
         conflictingRows: [0],
-        donorSubmitterId: "AB1",
-        sampleSubmitterId: "AM2",
+        donorSubmitterId: "AB2",
+        sampleSubmitterId: "AM1",
         specimenSubmitterId: "SP1",
-        value: "SP1"
+        value: "AM1"
       },
       type: DataValidationErrors.NEW_SAMPLE_CONFLICT
     };
@@ -508,9 +509,9 @@ describe("data-validator", () => {
       info: {
         conflictingRows: [0],
         donorSubmitterId: "AB2",
-        sampleSubmitterId: "AM1",
+        sampleSubmitterId: "AM2",
         specimenSubmitterId: "SP1",
-        value: "AM1"
+        value: "SP1"
       },
       type: DataValidationErrors.NEW_SPECIMEN_CONFLICT
     };
@@ -570,7 +571,7 @@ describe("data-validator", () => {
         donorSubmitterId: "AB1",
         sampleSubmitterId: "AM1",
         specimenSubmitterId: "SP1",
-        value: "AM1",
+        value: "XYX",
         conflictingRows: [2]
       },
       type: DataValidationErrors.NEW_SPECIMEN_CONFLICT
@@ -581,9 +582,9 @@ describe("data-validator", () => {
       index: 2,
       info: {
         donorSubmitterId: "AB1",
-        sampleSubmitterId: "AM1",
+        sampleSubmitterId: "AM2",
         specimenSubmitterId: "SP1",
-        value: "ST-2",
+        value: "XYz",
         conflictingRows: [0]
       },
       type: DataValidationErrors.NEW_SPECIMEN_CONFLICT
@@ -642,6 +643,9 @@ describe("data-validator", () => {
       index: 0,
       info: {
         donorSubmitterId: "AB1",
+        sampleSubmitterId: "AM1",
+        specimenSubmitterId: "SP1",
+        value: "ST-2",
         conflictingRows: [2]
       },
       type: DataValidationErrors.NEW_SAMPLE_CONFLICT
@@ -652,6 +656,9 @@ describe("data-validator", () => {
       index: 2,
       info: {
         donorSubmitterId: "AB1",
+        sampleSubmitterId: "AM1",
+        specimenSubmitterId: "SP1",
+        value: "ST2",
         conflictingRows: [0]
       },
       type: DataValidationErrors.NEW_SAMPLE_CONFLICT
@@ -662,7 +669,7 @@ describe("data-validator", () => {
     chai.expect(result.errors).to.deep.include(row2Err);
   });
 
-  it("should detect specimen id conflict for same donor & sample Id", async () => {
+  it("should detect sample id conflict for same donor & different specimen Id", async () => {
     donorDaoCountByStub.returns(Promise.resolve(0));
     // test call
     const result = await dv.validateRegistrationData(
@@ -705,20 +712,26 @@ describe("data-validator", () => {
 
     // assertions
     const row0Err: RegistrationValidationError = {
-      fieldName: "sample_submitter_id",
+      fieldName: RegistrationFieldsEnum.sample_submitter_id,
       index: 0,
       info: {
         donorSubmitterId: "AB1",
+        sampleSubmitterId: "AM1",
+        specimenSubmitterId: "SP1",
+        value: "AM1",
         conflictingRows: [2]
       },
       type: DataValidationErrors.NEW_SAMPLE_CONFLICT
     };
 
     const row2Err: RegistrationValidationError = {
-      fieldName: "sample_submitter_id",
+      fieldName: RegistrationFieldsEnum.sample_submitter_id,
       index: 2,
       info: {
         donorSubmitterId: "AB1",
+        sampleSubmitterId: "AM1",
+        specimenSubmitterId: "SP2",
+        value: "AM1",
         conflictingRows: [0]
       },
       type: DataValidationErrors.NEW_SAMPLE_CONFLICT
@@ -776,6 +789,9 @@ describe("data-validator", () => {
       index: 0,
       info: {
         donorSubmitterId: "AB1",
+        sampleSubmitterId: "AM1",
+        specimenSubmitterId: "SP1",
+        value: "ST-2",
         conflictingRows: [2]
       },
       type: DataValidationErrors.NEW_SAMPLE_CONFLICT
@@ -786,6 +802,9 @@ describe("data-validator", () => {
       index: 2,
       info: {
         donorSubmitterId: "AB1",
+        sampleSubmitterId: "AM1",
+        specimenSubmitterId: "SP1",
+        value: "ST2",
         conflictingRows: [0]
       },
       type: DataValidationErrors.NEW_SAMPLE_CONFLICT

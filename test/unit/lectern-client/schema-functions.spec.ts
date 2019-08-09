@@ -35,6 +35,37 @@ describe("schema-functions", () => {
     chai.expect(result.processedRecords[1].gender).to.eq("Other");
   });
 
+  it("should NOT populate missing columns based on default value ", () => {
+    const result = schemaService.process(schema, "registration", [
+      {
+        program_id: "PEME-CA",
+        donor_submitter_id: "OD1234",
+        gendr: "",
+        specimen_submitter_id: "87813",
+        specimen_type: "Skin",
+        tumour_normal_designation: "Normal",
+        sample_submitter_id: "MAS123",
+        sample_type: "ctDNA"
+      },
+      {
+        program_id: "PEME-CA",
+        donor_submitter_id: "OD1234",
+        gender: "",
+        specimen_submitter_id: "87812",
+        specimen_type: "Skin",
+        tumour_normal_designation: "Normal",
+        sample_submitter_id: "MAS1234",
+        sample_type: "ctDNA"
+      }
+    ]);
+    chai.expect(result.validationErrors).to.deep.include({
+      errorType: SchemaValidationErrorTypes.MISSING_REQUIRED_FIELD,
+      fieldName: "gender",
+      index: 0,
+      info: {}
+    });
+  });
+
   it("should validate required", () => {
     const result = schemaService.process(schema, "registration", [
       {
