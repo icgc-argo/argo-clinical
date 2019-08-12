@@ -19,5 +19,7 @@ export const insertData = async (
     .db("clinical")
     .collection(collection)
     .insert(document);
+  console.log("doc Id is:" + document._id);
   conn.close();
+  return document._id;
 };

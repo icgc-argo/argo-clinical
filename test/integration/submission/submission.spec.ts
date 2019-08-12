@@ -16,6 +16,7 @@ import {
   ActiveRegistration,
   CreateRegistrationResult
 } from "../../../src/submission/submission-entities";
+import { doesNotReject } from "assert";
 export let mongoContainer: any;
 chai.use(require("chai-http"));
 chai.should();
@@ -235,29 +236,29 @@ describe("Submission Api", () => {
           return done();
         });
     });
-  });
-
-  describe("deletion", function() {
-    this.beforeEach(() => {
-      console.log("deletion beforeAll called");
-      return insertData(dburl, "activeregistrations", ABCD_REGISTRATION_DOC);
-    });
-
-    it("Should return 200 if deleted existing registration", async () => {
-      console.log("Run test here ");
-      const conn = await mongo.connect(dburl);
-      const registration = await conn
-        .db("clinical")
-        .collection("activeregistrations")
-        .findOne({});
+    it("Registration should return 404 if try to delete non exsistent registration", done => {
       chai
         .request(app)
-        .delete("/submission/program/ABCD-EF/registration/" + registration._id)
+        // data base is empty so ID shouldn't exist
+        .delete("/submission/program/ABCD-EF/registration/5d51800c9014b11151d419cf")
+        .auth(JWT_ABCDEF, { type: "bearer" })
+        .end((err: any, res: any) => {
+          res.should.have.status(404);
+          done();
+        });
+    });
+    it("Registration should return 200 if deleted existing registration", async () => {
+      console.log("Runing deleteion test here ");
+      const registrationId = insertData(dburl, "activeregistrations", ABCD_REGISTRATION_DOC);
+      chai
+        .request(app)
+        .delete("/submission/program/ABCD-EF/registration/" + registrationId)
         .auth(JWT_ABCDEF, { type: "bearer" })
         .end(async (err: any, res: any) => {
           console.log(res);
           try {
             res.should.have.status(200);
+            const conn = await mongo.connect(dburl);
             const count = await conn
               .db("clinical")
               .collection("activeregistrations")
