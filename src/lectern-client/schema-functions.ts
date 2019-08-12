@@ -52,9 +52,8 @@ export const process = (
     if (result && result.length > 0) {
       L.debug(`${result.length} validation errors for record #${index}`);
       validationErrors = validationErrors.concat(result);
-      return;
     }
-    const convertedRecord = convertFromRawStrings(schemaDef, defaultedRecord, index);
+    const convertedRecord = convertFromRawStrings(schemaDef, defaultedRecord, index, result);
     L.debug(`converted row #${index} from raw strings`);
     const postTypeConversionValidationResult = validateAfterTypeConversion(
       schemaDef,
@@ -109,10 +108,23 @@ const populateDefaults = (
 const convertFromRawStrings = (
   schemaDef: SchemaDefinition,
   record: DataRecord,
-  index: number
+  index: number,
+  recordErrors: ReadonlyArray<SchemaValidationError>
 ): TypedDataRecord => {
   const mutableRecord: MutableRecord = { ...record };
   schemaDef.fields.forEach(field => {
+    // if there was an error for this field don't convert it. this means a string was passed instead of number or boolean
+    // this allows us to continue other validations without hiding possible errors down.
+    if (
+      recordErrors.find(
+        er =>
+          er.errorType == SchemaValidationErrorTypes.INVALID_FIELD_VALUE_TYPE &&
+          er.fieldName == field.name
+      )
+    ) {
+      return undefined;
+    }
+
     if (isNotEmptyString(record[field.name])) {
       return undefined;
     }

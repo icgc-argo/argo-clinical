@@ -1,9 +1,11 @@
 # Argo clinical
 
-## TODOs
+## Requirements:
 
--
+- node 12+
+- Mongo 4.0 + (transaction support)
 
-requirements:
+## How to:
 
-Mongo 4.0 + (transaction support)
+- run: `make debug`
+- tests: `make verify`
