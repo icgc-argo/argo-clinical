@@ -1,6 +1,7 @@
 import express, { NextFunction, Request, Response, RequestHandler } from "express";
 import multer from "multer";
 import { loggerFor } from "./logger";
+import { Errors } from "./utils";
 const L = loggerFor(__filename);
 // multer file upload handler
 export const upload = multer({ dest: "/tmp" });
@@ -22,7 +23,13 @@ export const errorHandler = (err: Error, req: Request, res: Response, next: Next
     L.debug("error handler skipped");
     return next(err);
   }
-  res.status(500).send({ error: err.name, message: err.message });
+  let status: number;
+  if (err instanceof Errors.NotFound) {
+    status = 404;
+  } else {
+    status = 500;
+  }
+  res.status(status).send({ error: err.name, message: err.message });
   // pass the error down (so other error handlers can also process the error)
   next(err);
 };

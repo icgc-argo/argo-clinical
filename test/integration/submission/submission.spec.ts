@@ -11,7 +11,6 @@ import app from "../../../src/app";
 import * as bootstrap from "../../../src/bootstrap";
 import { cleanCollection, insertData } from "../testutils";
 import { TEST_PUB_KEY, JWT_ABCDEF, JWT_WXYZEF } from "./test.jwt";
-import { ABCD_REGISTRATION_DOC } from "./test.data";
 import {
   ActiveRegistration,
   CreateRegistrationResult
@@ -121,6 +120,33 @@ const expectedResponse1 = {
   },
   errors: [],
   successful: true
+};
+const ABCD_REGISTRATION_DOC = {
+  programId: "ABCD-EF",
+  creator: "Test User",
+  stats: {
+    newDonorIds: {
+      abcd123: [0]
+    },
+    newSpecimenIds: {
+      ss123: [0]
+    },
+    newSampleIds: {
+      sm123: [0]
+    }
+  },
+  records: [
+    {
+      program_id: "ABCD-EF",
+      donor_submitter_id: "abcd123",
+      gender: "Male",
+      specimen_submitter_id: "ss123",
+      specimen_type: "FFPE",
+      tumour_normal_designation: "Normal",
+      sample_submitter_id: "sm123",
+      sample_type: "ctDNA"
+    }
+  ]
 };
 
 describe("Submission Api", () => {

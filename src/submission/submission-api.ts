@@ -74,10 +74,7 @@ class SubmissionController {
   async deleteRegistration(req: Request, res: Response) {
     const programId = req.params.programId;
     const registrationId = req.params.id;
-    const errored = await submission.operations.deleteRegistration(registrationId, programId);
-    if (errored) {
-      return ControllerUtils.notFound(res, errored);
-    }
+    await submission.operations.deleteRegistration(registrationId, programId);
     return res.status(200).send();
   }
 }

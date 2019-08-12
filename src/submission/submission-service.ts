@@ -174,9 +174,9 @@ export namespace operations {
   export const deleteRegistration = async (registrationId: string, programId: string) => {
     const registration = await registrationRepository.findById(registrationId);
     if (registration === undefined || registration.programId !== programId) {
-      return `Cannot delete non-existent registration with id :${registrationId}`;
+      throw new Errors.NotFound(`no registration with id :${registrationId} found`);
     }
-    return await registrationRepository.delete(registrationId);
+    await registrationRepository.delete(registrationId);
   };
   /************* Private methods *************/
 
