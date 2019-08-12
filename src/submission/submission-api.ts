@@ -70,6 +70,14 @@ class SubmissionController {
     });
     return res.status(200).send();
   }
+
+  @HasSubmittionAccess((req: Request) => req.params.programId)
+  async deleteRegistration(req: Request, res: Response) {
+    const programId = req.params.programId;
+    const registrationId = req.params.id;
+    await submission.operations.deleteRegistration(registrationId, programId);
+    return res.status(200).send();
+  }
 }
 
 const isValidCreateBody = (req: Request, res: Response): boolean => {

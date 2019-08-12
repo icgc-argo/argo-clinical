@@ -82,7 +82,32 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CreateRegistration"
-
+  /submission/program/{programId}/registration/{id}:
+    delete:
+      parameters:
+        - name: id
+          description: the id of the registration
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: programId
+          description: the short name of the program
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+        "500":
+          $ref: "#/components/responses/ServerError"
+        "200":
+          description: "the registration was deleted from db"
   /submission/program/{programId}/registration/{id}/commit:
     post:
       parameters:
@@ -107,6 +132,7 @@ paths:
           $ref: "#/components/responses/ServerError"
         "200":
           description: "the registration was committed and the donors / specimens / samples added to the clinical db"
+
 servers:
   - url: /
 components:
@@ -117,6 +143,8 @@ components:
       description: Server error
     ForbiddenError:
       description: if the token has incorrect scopes
+    NotFoundError:
+      description: The requested resource was not found
   securitySchemes:
     bearerAuth:
       type: http
