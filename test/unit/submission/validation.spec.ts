@@ -11,8 +11,6 @@ import {
 import { Donor } from "../../../src/clinical/clinical-entities";
 import { stubs } from "./stubs";
 
-const donorDaoCountByStub = sinon.stub(donorDao, "countBy");
-
 const genderMutatedErr: RegistrationValidationError = {
   fieldName: "gender",
   index: 0,
@@ -108,11 +106,16 @@ const sampleBelongsToOtherSpecimenAB1: RegistrationValidationError = {
 };
 
 describe("data-validator", () => {
+  let donorDaoCountByStub: sinon.SinonStub;
   beforeEach(done => {
-    donorDaoCountByStub.reset();
+    donorDaoCountByStub = sinon.stub(donorDao, "countBy");
     done();
   });
 
+  afterEach(done => {
+    donorDaoCountByStub.restore();
+    done();
+  });
   it("should detect invalid program id", async () => {
     donorDaoCountByStub.returns(Promise.resolve(0));
     // test call

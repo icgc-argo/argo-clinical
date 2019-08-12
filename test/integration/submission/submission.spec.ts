@@ -414,6 +414,7 @@ async function assertUploadOK(res: any) {
     .collection("activeregistrations")
     .findOne({});
   conn.close();
+  console.log(" registration in db ", savedRegistration);
   if (!savedRegistration) {
     throw new Error("saved registration shouldn't be null");
   }

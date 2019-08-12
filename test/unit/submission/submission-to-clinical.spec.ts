@@ -11,12 +11,6 @@ import {
 import { ActiveRegistration } from "../../../src/submission/submission-entities";
 import { Donor } from "../../../src/clinical/clinical-entities";
 
-const registrationRepoFindByIdStub = sinon.stub(registrationRepository, "findById");
-const findByProgramAndSubmitterIdStub = sinon.stub(donorDao, "findByProgramAndSubmitterId");
-const deleteRegStub = sinon.stub(registrationRepository, "delete");
-const createDonorStub = sinon.stub(donorDao, "create");
-const updateDonorStub = sinon.stub(donorDao, "update");
-
 const id1 = "04042314bacas";
 const id2 = "lafdksaf92149123";
 const reg1: ActiveRegistration = {
@@ -78,16 +72,31 @@ const reg2: ActiveRegistration = {
 };
 
 describe("submission-to-clinical", () => {
-  beforeEach(done => {
-    registrationRepoFindByIdStub.reset();
-    findByProgramAndSubmitterIdStub.reset();
-    deleteRegStub.reset();
-    updateDonorStub.reset();
-    createDonorStub.reset();
-    done();
-  });
+  console.log("mocha is here");
 
   describe("commit registration", () => {
+    let registrationRepoFindByIdStub: sinon.SinonStub;
+    let findByProgramAndSubmitterIdStub: sinon.SinonStub;
+    let deleteRegStub: sinon.SinonStub;
+    let createDonorStub: sinon.SinonStub;
+    let updateDonorStub: sinon.SinonStub;
+    const sandBox = sinon.createSandbox();
+
+    beforeEach(done => {
+      // it's important to define stubs in scope otherwise mocha will excute them globally.
+      registrationRepoFindByIdStub = sandBox.stub(registrationRepository, "findById");
+      findByProgramAndSubmitterIdStub = sandBox.stub(donorDao, "findByProgramAndSubmitterId");
+      deleteRegStub = sandBox.stub(registrationRepository, "delete");
+      createDonorStub = sandBox.stub(donorDao, "create");
+      updateDonorStub = sandBox.stub(donorDao, "update");
+      done();
+    });
+
+    afterEach(done => {
+      sandBox.restore();
+      done();
+    });
+
     it("should create donor if not existing", async () => {
       const filter: FindByProgramAndSubmitterFilter = {
         submitterId: "abcd123",
