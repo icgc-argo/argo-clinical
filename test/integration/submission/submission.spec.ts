@@ -9,7 +9,7 @@ import "mocha";
 import { GenericContainer } from "testcontainers";
 import app from "../../../src/app";
 import * as bootstrap from "../../../src/bootstrap";
-import { cleanCollection } from "../testutils";
+import { cleanCollection, insertData } from "../testutils";
 import { TEST_PUB_KEY, JWT_ABCDEF, JWT_WXYZEF } from "./test.jwt";
 import {
   ActiveRegistration,
@@ -120,6 +120,34 @@ const expectedResponse1 = {
   },
   errors: [],
   successful: true
+};
+const ABCD_REGISTRATION_DOC: ActiveRegistration = {
+  programId: "ABCD-EF",
+  creator: "Test User",
+  stats: {
+    newDonorIds: {
+      abcd123: [0]
+    },
+    newSpecimenIds: {
+      ss123: [0]
+    },
+    newSampleIds: {
+      sm123: [0]
+    },
+    alreadyRegistered: {}
+  },
+  records: [
+    {
+      program_id: "ABCD-EF",
+      donor_submitter_id: "abcd123",
+      gender: "Male",
+      specimen_submitter_id: "ss123",
+      specimen_type: "FFPE",
+      tumour_normal_designation: "Normal",
+      sample_submitter_id: "sm123",
+      sample_type: "ctDNA"
+    }
+  ]
 };
 
 describe("Submission Api", () => {
@@ -326,6 +354,40 @@ describe("Submission Api", () => {
             return done(err);
           }
           return done();
+        });
+    });
+    it("Registration should return 404 if try to delete non exsistent registration", done => {
+      chai
+        .request(app)
+        // data base is empty so ID shouldn't exist
+        .delete("/submission/program/ABCD-EF/registration/5d51800c9014b11151d419cf")
+        .auth(JWT_ABCDEF, { type: "bearer" })
+        .end((err: any, res: any) => {
+          res.should.have.status(404);
+          done();
+        });
+    });
+    it("Registration should return 200 if deleted existing registration", async () => {
+      console.log("Runing deleteion test here ");
+      const registrationId = await insertData(dburl, "activeregistrations", ABCD_REGISTRATION_DOC);
+      console.log("Deleting registration " + registrationId);
+      chai
+        .request(app)
+        .delete("/submission/program/ABCD-EF/registration/" + registrationId)
+        .auth(JWT_ABCDEF, { type: "bearer" })
+        .end(async (err: any, res: any) => {
+          try {
+            res.should.have.status(200);
+            const conn = await mongo.connect(dburl);
+            const count = await conn
+              .db("clinical")
+              .collection("activeregistrations")
+              .count({});
+            conn.close();
+            chai.expect(count).to.eq(0);
+          } catch (err) {
+            return err;
+          }
         });
     });
   });
