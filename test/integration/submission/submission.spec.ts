@@ -20,6 +20,75 @@ chai.use(require("chai-http"));
 chai.should();
 let dburl = ``;
 
+const expectedErrors = [
+  {
+    index: 0,
+    type: "MISSING_REQUIRED_FIELD",
+    info: {
+      donorSubmitterId: "abcd123",
+      sampleSubmitterId: "sp123",
+      specimenSubmitterId: "sp123"
+    },
+    fieldName: "tumour_normal_designation"
+  },
+  {
+    fieldName: "specimen_submitter_id",
+    index: 0,
+    info: {
+      donorSubmitterId: "abcd123",
+      sampleSubmitterId: "sp123",
+      specimenSubmitterId: "sp123",
+      value: "sp123"
+    },
+    type: "INVALID_BY_REGEX"
+  },
+  {
+    fieldName: "sample_submitter_id",
+    index: 0,
+    info: {
+      donorSubmitterId: "abcd123",
+      sampleSubmitterId: "sp123",
+      specimenSubmitterId: "sp123",
+      value: "sam123"
+    },
+    type: "INVALID_BY_REGEX"
+  },
+  {
+    fieldName: "gender",
+    index: 0,
+    info: {
+      donorSubmitterId: "abcd123",
+      sampleSubmitterId: "sp123",
+      specimenSubmitterId: "sp123",
+      value: "male"
+    },
+    type: "INVALID_ENUM_VALUE"
+  },
+  {
+    fieldName: "sample_type",
+    index: 0,
+    info: {
+      donorSubmitterId: "abcd123",
+      sampleSubmitterId: "sp123",
+      specimenSubmitterId: "sp123",
+      value: "RNA"
+    },
+    type: "INVALID_ENUM_VALUE"
+  },
+  {
+    fieldName: "program_id",
+    index: 0,
+    info: {
+      expectedProgram: "ABCD-EF",
+      donorSubmitterId: "abcd123",
+      sampleSubmitterId: "sam123",
+      specimenSubmitterId: "sp123",
+      value: "PEXA-MX"
+    },
+    type: "INVALID_PROGRAM_ID"
+  }
+];
+
 const expectedResponse1 = {
   registration: {
     programId: "ABCD-EF",
@@ -88,9 +157,14 @@ describe("Submission Api", () => {
   });
 
   describe("registration", function() {
-    this.beforeEach(() => {
-      console.log("registration beforeAll called");
-      return cleanCollection(dburl, "activeregistrations");
+    this.beforeEach(async () => {
+      try {
+        console.log("registration beforeAll called");
+        await cleanCollection(dburl, "donors");
+        return await cleanCollection(dburl, "activeregistrations");
+      } catch (err) {
+        return err;
+      }
     });
 
     it("should return 200 and empty json if no registration found", function(done) {
@@ -143,6 +217,41 @@ describe("Submission Api", () => {
         .end((err: any, res: any) => {
           res.should.have.status(403);
           done();
+        });
+    });
+
+    it("should commit registration", done => {
+      let file: Buffer;
+      try {
+        file = fs.readFileSync(__dirname + "/registration.tsv");
+      } catch (err) {
+        return done(err);
+      }
+      chai
+        .request(app)
+        .post("/submission/program/ABCD-EF/registration")
+        .auth(JWT_ABCDEF, { type: "bearer" })
+        .type("form")
+        .attach("registrationFile", file, "registration.tsv")
+        .end(async (err: any, res: any) => {
+          try {
+            await assertUploadOK(res);
+            const regId = res.body.registration._id;
+            chai
+              .request(app)
+              .post(`/submission/program/ABCD-EF/registration/${regId}/commit`)
+              .auth(JWT_ABCDEF, { type: "bearer" })
+              .end(async (err: any, res: any) => {
+                try {
+                  await asserCommitOK(res);
+                } catch (err) {
+                  return done(err);
+                }
+                return done();
+              });
+          } catch (err) {
+            return done(err);
+          }
         });
     });
 
@@ -203,30 +312,7 @@ describe("Submission Api", () => {
           try {
             res.should.have.status(422);
             res.body.should.deep.eq({
-              errors: [
-                {
-                  index: 0,
-                  type: "MISSING_REQUIRED_FIELD",
-                  info: {
-                    donorSubmitterId: "abcd123",
-                    sampleSubmitterId: "sp123",
-                    specimenSubmitterId: "sp123"
-                  },
-                  fieldName: "tumour_normal_designation"
-                },
-                {
-                  fieldName: "program_id",
-                  index: 0,
-                  info: {
-                    expectedProgram: "ABCD-EF",
-                    donorSubmitterId: "abcd123",
-                    sampleSubmitterId: "sam123",
-                    specimenSubmitterId: "sp123",
-                    value: "PEXA-MX"
-                  },
-                  type: "INVALID_PROGRAM_ID"
-                }
-              ],
+              errors: expectedErrors,
               successful: false
             });
             const conn = await mongo.connect(dburl);
@@ -244,3 +330,29 @@ describe("Submission Api", () => {
     });
   });
 });
+
+async function asserCommitOK(res: any) {
+  res.should.have.status(200);
+  const conn = await mongo.connect(dburl);
+  const donor: ActiveRegistration | null = await conn
+    .db("clinical")
+    .collection("donors")
+    .findOne({});
+  conn.close();
+  if (!donor) {
+    throw new Error("saved registration shouldn't be null");
+  }
+}
+
+async function assertUploadOK(res: any) {
+  res.should.have.status(201);
+  const conn = await mongo.connect(dburl);
+  const savedRegistration: ActiveRegistration | null = await conn
+    .db("clinical")
+    .collection("activeregistrations")
+    .findOne({});
+  conn.close();
+  if (!savedRegistration) {
+    throw new Error("saved registration shouldn't be null");
+  }
+}
