@@ -44,8 +44,32 @@ paths:
         description: the tsv registration file
         required: true
       responses:
+        "400":
+          description: "the file structure is invalid, couldn't be parsed correctly"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  code:
+                    type: string
+                    enum: ["TSV_PARSING_FAILED"]
         "422":
           description: "invalid registration file"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  successful:
+                    type: boolean
+                    description: will be false in this case
+                  errors:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/RegistrationValidationError"
         "401":
           $ref: "#/components/responses/UnauthorizedError"
         "403":
@@ -59,8 +83,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/CreateRegistration"
 
-  /submission/program/{programId}/registration/{id}:
-    patch:
+  /submission/program/{programId}/registration/{id}/commit:
+    post:
       parameters:
         - name: id
           description: the id of the registration
@@ -126,6 +150,11 @@ components:
   schemas:
     RegistrationValidationError:
       type: object
+      required:
+        - fieldName
+        - info
+        - index
+        - type
       properties:
         fieldName:
           type: string
@@ -133,9 +162,24 @@ components:
         info:
           type: object
           description: contains context information related to the error
-        donorSubmitterId:
-          type: string
-          description: the donor Id in that row
+          properties:
+            value:
+              type: string
+              nullable: true
+              description: the faulty value
+            sampleSubmitterId:
+              type: string
+              nullable: true
+              description: the sample Id in that row
+            donorSubmitterId:
+              type: string
+              nullable: true
+              description: the donor Id in that row
+            specimenSubmitterId:
+              type: string
+              nullable: true
+              description: the specimen Id in that row
+          additionalProperties: true
         index:
           type: number
           format: integer
@@ -160,6 +204,12 @@ components:
 
     Registration:
       type: object
+      required:
+        - _id
+        - programId
+        - creatorId
+        - stats
+        - records
       properties:
         _id:
           type: string
@@ -187,6 +237,15 @@ components:
             $ref: "#/components/schemas/Record"
 
     Record:
+      required:
+        - program_id
+        - donor_submitter_id
+        - gender
+        - specimen_submitter_id
+        - specimen_type
+        - tumour_normal_designation
+        - sample_submitter_id
+        - sample_type
       properties:
         program_id:
           type: string
@@ -209,6 +268,8 @@ components:
       type: object
 
     CreateRegistration:
+      required:
+        - successful
       type: object
       properties:
         registration:
@@ -218,5 +279,6 @@ components:
           description: whether the file was valid or not
         errors:
           type: array
+          description: list of all errors, should be empty on success
           items:
             $ref: "#/components/schemas/RegistrationValidationError"

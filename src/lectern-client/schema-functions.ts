@@ -14,7 +14,15 @@ import {
   SchemaValidationErrorTypes
 } from "./schema-entities";
 import { loggerFor } from "../logger";
-import { Checks, notEmpty, isEmptyString, isNotEmptyString, isAbsent, F } from "../utils";
+import {
+  Checks,
+  notEmpty,
+  isEmptyString,
+  isNotEmptyString,
+  isAbsent,
+  F,
+  isNotAbsent
+} from "../utils";
 const L = loggerFor(__filename);
 
 export const process = (
@@ -44,9 +52,8 @@ export const process = (
     if (result && result.length > 0) {
       L.debug(`${result.length} validation errors for record #${index}`);
       validationErrors = validationErrors.concat(result);
-      return;
     }
-    const convertedRecord = convertFromRawStrings(schemaDef, defaultedRecord, index);
+    const convertedRecord = convertFromRawStrings(schemaDef, defaultedRecord, index, result);
     L.debug(`converted row #${index} from raw strings`);
     const postTypeConversionValidationResult = validateAfterTypeConversion(
       schemaDef,
@@ -84,7 +91,12 @@ const populateDefaults = (
   const mutableRecord: RawMutableRecord = { ...record };
   const x: SchemaDefinition = schemaDef;
   schemaDef.fields.forEach(field => {
-    if (isEmptyString(record[field.name]) && field.meta && field.meta.default) {
+    if (
+      isNotAbsent(record[field.name]) &&
+      record[field.name].trim() === "" &&
+      field.meta &&
+      field.meta.default
+    ) {
       L.debug(`populating Default: ${field.meta.default} for ${field.name} in record : ${record}`);
       mutableRecord[field.name] = `${field.meta.default}`;
     }
@@ -96,10 +108,23 @@ const populateDefaults = (
 const convertFromRawStrings = (
   schemaDef: SchemaDefinition,
   record: DataRecord,
-  index: number
+  index: number,
+  recordErrors: ReadonlyArray<SchemaValidationError>
 ): TypedDataRecord => {
   const mutableRecord: MutableRecord = { ...record };
   schemaDef.fields.forEach(field => {
+    // if there was an error for this field don't convert it. this means a string was passed instead of number or boolean
+    // this allows us to continue other validations without hiding possible errors down.
+    if (
+      recordErrors.find(
+        er =>
+          er.errorType == SchemaValidationErrorTypes.INVALID_FIELD_VALUE_TYPE &&
+          er.fieldName == field.name
+      )
+    ) {
+      return undefined;
+    }
+
     if (isNotEmptyString(record[field.name])) {
       return undefined;
     }
