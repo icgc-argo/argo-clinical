@@ -121,7 +121,7 @@ const expectedResponse1 = {
   errors: [],
   successful: true
 };
-const ABCD_REGISTRATION_DOC = {
+const ABCD_REGISTRATION_DOC: ActiveRegistration = {
   programId: "ABCD-EF",
   creator: "Test User",
   stats: {
@@ -133,7 +133,8 @@ const ABCD_REGISTRATION_DOC = {
     },
     newSampleIds: {
       sm123: [0]
-    }
+    },
+    alreadyRegistered: {}
   },
   records: [
     {
