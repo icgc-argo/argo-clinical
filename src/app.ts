@@ -40,6 +40,10 @@ app.post(
   "/submission/program/:programId/registration/:id/commit",
   middleware.wrapAsync(submissionAPI.commitRegistration)
 );
+app.delete(
+  "/submission/program/:programId/registration/:id",
+  middleware.wrapAsync(submissionAPI.deleteRegistration)
+);
 
 /** Schema API */
 app.get("/submission/schema/", middleware.wrapAsync(schemaApi.get));
