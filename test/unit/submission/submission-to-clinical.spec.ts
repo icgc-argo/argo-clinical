@@ -1,6 +1,6 @@
 import chai from "chai";
 import * as sinon from "sinon";
-import * as s2c from "../../../src/submission/submissio-to-clinical";
+import * as s2c from "../../../src/submission/submission-to-clinical";
 
 import { registrationRepository } from "../../../src/submission/registration-repo";
 import {
@@ -185,16 +185,16 @@ describe("submission-to-clinical", () => {
         submitterId: "abcd123"
       };
 
-      registrationRepoFindByIdStub.withArgs(id1).returns(Promise.resolve(reg1));
+      registrationRepoFindByIdStub.withArgs(id2).returns(Promise.resolve(reg2));
       findByProgramAndSubmitterIdStub
         .withArgs(sinon.match([filter]))
         .returns(Promise.resolve([existingDonor]));
       const result = await s2c.commitRegisteration({
-        programId: reg1.programId,
-        registrationId: reg1._id as string
+        programId: reg2.programId,
+        registrationId: reg2._id as string
       });
       chai.expect(updateDonorStub.calledOnceWith(sinon.match(expectedDonorDto))).to.eq(true);
-      chai.expect(deleteRegStub.calledOnceWithExactly(id1)).to.eq(true);
+      chai.expect(deleteRegStub.calledOnceWithExactly(id2)).to.eq(true);
     });
   });
 });

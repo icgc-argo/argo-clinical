@@ -1,5 +1,5 @@
 import * as submission from "./submission-service";
-import * as submission2Clinical from "./submissio-to-clinical";
+import * as submission2Clinical from "./submission-to-clinical";
 import { Request, Response } from "express";
 import { TsvUtils, ControllerUtils } from "../utils";
 import { loggerFor } from "../logger";

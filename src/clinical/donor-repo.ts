@@ -10,9 +10,9 @@ const AutoIncrement = require("mongoose-sequence")(mongoose);
 
 export enum DONOR_FIELDS {
   SUBMITTER_ID = "submitterId",
-  SPECIMEN_SUBMITTER_ID = "specimen.submitterId",
-  SPECIMEN_SAMPLE_SUBMITTER_ID = "specimen.sample.submitterId",
-  PROGRAM_ID = "PROGRAM_ID"
+  SPECIMEN_SUBMITTER_ID = "specimens.submitterId",
+  SPECIMEN_SAMPLE_SUBMITTER_ID = "specimens.samples.submitterId",
+  PROGRAM_ID = "programId"
 }
 
 export type FindByProgramAndSubmitterFilter = DeepReadonly<{
@@ -31,9 +31,7 @@ export interface DonorRepository {
 // Mongoose implementation of the DonorRepository
 export const donorDao: DonorRepository = {
   async countBy(filter: any) {
-    return await DonorModel.count(filter)
-      .lean()
-      .exec();
+    return await DonorModel.count(filter).exec();
   },
 
   async findByProgramAndSubmitterId(
@@ -41,9 +39,7 @@ export const donorDao: DonorRepository = {
   ): Promise<DeepReadonly<Donor[]> | undefined> {
     const result = await DonorModel.find({
       $or: [...filter]
-    })
-      .lean()
-      .exec();
+    }).exec();
     // convert the id to string to avoid runtime error on freezing
     const mapped = result.map((d: DonorDocument) => {
       return MongooseUtils.toPojo(d);

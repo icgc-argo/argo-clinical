@@ -92,7 +92,8 @@ export namespace operations {
       registrationRecords,
       donorsBySubmitterIdMap
     );
-    if (errors.length > 0) {
+
+    if (errors.length > 0 || programIdErrors.length > 0) {
       L.info(`found ${errors.length} data errors in registration attempt`);
       return F({
         registration: undefined,
