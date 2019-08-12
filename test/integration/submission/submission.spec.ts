@@ -342,13 +342,13 @@ describe("Submission Api", () => {
     });
     it("Registration should return 200 if deleted existing registration", async () => {
       console.log("Runing deleteion test here ");
-      const registrationId = insertData(dburl, "activeregistrations", ABCD_REGISTRATION_DOC);
+      const registrationId = await insertData(dburl, "activeregistrations", ABCD_REGISTRATION_DOC);
+      console.log("Deleting registration " + registrationId);
       chai
         .request(app)
         .delete("/submission/program/ABCD-EF/registration/" + registrationId)
         .auth(JWT_ABCDEF, { type: "bearer" })
         .end(async (err: any, res: any) => {
-          console.log(res);
           try {
             res.should.have.status(200);
             const conn = await mongo.connect(dburl);
