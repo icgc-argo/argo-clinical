@@ -106,7 +106,7 @@ paths:
         "500":
           $ref: "#/components/responses/ServerError"
         "200":
-          description: "the registration was committed and the donors / specimens/ samples added to the clinical db"
+          description: "the registration was committed and the donors / specimens / samples added to the clinical db"
     delete:
       parameters:
         - name: id

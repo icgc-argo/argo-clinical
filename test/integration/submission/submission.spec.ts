@@ -16,7 +16,6 @@ import {
   ActiveRegistration,
   CreateRegistrationResult
 } from "../../../src/submission/submission-entities";
-import { doesNotReject } from "assert";
 export let mongoContainer: any;
 chai.use(require("chai-http"));
 chai.should();
