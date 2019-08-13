@@ -1,22 +1,25 @@
+/**
+ * This module is to host the operations that moves submission data
+ * to the clinical model, somehow as set of ETL operations.
+ */
 import { DeepReadonly } from "deep-freeze";
-import { Donor } from "../clinical/clinical-entities";
+import { Donor, Specimen, Sample } from "../clinical/clinical-entities";
 import {
   CommitRegistrationCommand,
   ActiveRegistration,
   SubmittedRegistrationRecord,
   RegistrationStat
 } from "./submission-entities";
-import { CreateDonorDto } from "../clinical/donor-repo";
+import {
+  CreateDonorDto as CreateDonorSampleDto,
+  CreateSpecimenDto,
+  CreateSampleDto
+} from "../clinical/donor-repo";
 import { Errors } from "../utils";
 import { donorDao } from "../clinical/donor-repo";
 import _ from "lodash";
 import { F } from "../utils";
 import { registrationRepository } from "./registration-repo";
-
-/**
- * This module is to host the operations that moves submission data
- * to the clinical model, somehow as set of ETL operations.
- */
 
 /**
  * This method will move the registered donor document to donor collection
@@ -30,24 +33,22 @@ export const commitRegisteration = async (command: Readonly<CommitRegistrationCo
     throw new Errors.NotFound(`no registration with id :${command.registrationId} found`);
   }
 
-  const donorRecords: DeepReadonly<CreateDonorDto[]> = mapToDonorRecords(registration);
+  const donorSampleDtos: DeepReadonly<CreateDonorSampleDto[]> = mapToCreateDonorSampleDto(
+    registration
+  );
   const savedDonors: Array<DeepReadonly<Donor>> = [];
 
-  for (const rd of donorRecords) {
+  for (const dto of donorSampleDtos) {
     const existingDonor = await donorDao.findByProgramAndSubmitterId([
-      { programId: rd.programId, submitterId: rd.submitterId }
+      { programId: dto.programId, submitterId: dto.submitterId }
     ]);
     if (existingDonor && existingDonor.length > 0) {
-      const mergedDonor = _.mergeWith(existingDonor[0], rd, (obj, src) => {
-        if (_.isArray(obj)) {
-          return obj.concat(src);
-        }
-      }) as Donor;
+      const mergedDonor = addSamplesToDonor(existingDonor[0], dto);
       const saved = await donorDao.update(mergedDonor);
       savedDonors.push(saved);
       continue;
     }
-    const saved = await donorDao.create(rd);
+    const saved = await donorDao.create(fromCreateDonorDtoToDonor(dto));
     savedDonors.push(saved);
   }
 
@@ -55,8 +56,67 @@ export const commitRegisteration = async (command: Readonly<CommitRegistrationCo
   return registration.stats.newSampleIds;
 };
 
-const mapToDonorRecords = (registration: DeepReadonly<ActiveRegistration>) => {
-  const donors: CreateDonorDto[] = [];
+const fromCreateDonorDtoToDonor = (createDonorDto: DeepReadonly<CreateDonorSampleDto>) => {
+  const donor: Donor = {
+    donorId: "",
+    gender: createDonorDto.gender,
+    submitterId: createDonorDto.submitterId,
+    programId: createDonorDto.programId,
+    specimens: createDonorDto.specimens.map(toSpecimen),
+    clinicalInfo: {},
+    primaryDiagnosis: {},
+    followUps: [],
+    treatments: [],
+    chemotherapy: [],
+    HormoneTherapy: []
+  };
+  return donor;
+};
+
+const toSpecimen = (s: DeepReadonly<CreateSpecimenDto>) => {
+  const spec: Specimen = {
+    samples: s.samples.map(toSample),
+    clinicalInfo: {},
+    specimenType: s.specimenType,
+    tumourNormalDesignation: s.tumourNormalDesignation,
+    submitterId: s.submitterId
+  };
+  return spec;
+};
+
+const toSample = (sa: DeepReadonly<CreateSampleDto>) => {
+  const sample: Sample = {
+    sampleType: sa.sampleType,
+    submitterId: sa.submitterId
+  };
+  return sample;
+};
+
+const addSamplesToDonor = (
+  existingDonor: DeepReadonly<Donor>,
+  donorSampleDto: DeepReadonly<CreateDonorSampleDto>
+) => {
+  const mergedDonor = _.cloneDeep(existingDonor) as Donor;
+  donorSampleDto.specimens.forEach(sp => {
+    // new specimen ?
+    const specimen = mergedDonor.specimens.find(s => s.submitterId == sp.submitterId);
+    if (!specimen) {
+      mergedDonor.specimens.push(toSpecimen(sp));
+      return;
+    }
+
+    sp.samples.forEach(sa => {
+      // new sample ?
+      if (!specimen.samples.find(s => s.submitterId === sa.submitterId)) {
+        specimen.samples.push(toSample(sa));
+      }
+    });
+  });
+  return F(mergedDonor);
+};
+
+const mapToCreateDonorSampleDto = (registration: DeepReadonly<ActiveRegistration>) => {
+  const donors: CreateDonorSampleDto[] = [];
   registration.records.forEach(rec => {
     // if the donor doesn't exist add it
     let donor = donors.find(d => d.submitterId === rec.donor_submitter_id);
