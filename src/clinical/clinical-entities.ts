@@ -17,11 +17,13 @@ export interface Specimen {
   samples: Array<Sample>;
   specimenType: string;
   submitterId: string;
+  specimenId?: string;
   tumourNormalDesignation: string;
   clinicalInfo?: object | undefined;
 }
 
 export interface Sample {
+  sampleId?: string;
   sampleType: string;
   submitterId: string;
 }

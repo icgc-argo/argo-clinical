@@ -77,6 +77,9 @@ const setJwtPublicKey = async (keyUrl: string) => {
 export const run = async (config: AppConfig) => {
   initConfigs(config);
   setupDBConnection(config.mongoUrl());
+  if (process.env.LOG_LEVEL === "debug") {
+    mongoose.set("debug", true);
+  }
   await manager.loadSchema(config.schemaName(), config.initialSchemaVersion());
   // close app connections on termination
   const gracefulExit = () => {

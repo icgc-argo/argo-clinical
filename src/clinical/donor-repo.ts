@@ -10,14 +10,18 @@ const AutoIncrement = require("mongoose-sequence")(mongoose);
 
 export enum DONOR_FIELDS {
   SUBMITTER_ID = "submitterId",
-  SPECIMEN_SUBMITTER_ID = "specimen.submitterId",
-  SPECIMEN_SAMPLE_SUBMITTER_ID = "specimen.sample.submitterId",
-  PROGRAM_ID = "PROGRAM_ID"
+  SPECIMEN_SUBMITTER_ID = "specimens.submitterId",
+  SPECIMEN_SAMPLE_SUBMITTER_ID = "specimens.samples.submitterId",
+  PROGRAM_ID = "programId"
 }
 
+export type FindByProgramAndSubmitterFilter = DeepReadonly<{
+  programId: string;
+  submitterId: string;
+}>;
 export interface DonorRepository {
   findByProgramAndSubmitterId(
-    filter: DeepReadonly<{ programId: string; submitterId: string }[]>
+    filters: DeepReadonly<FindByProgramAndSubmitterFilter[]>
   ): Promise<DeepReadonly<Donor[]> | undefined>;
   create(donor: DeepReadonly<CreateDonorDto>): Promise<DeepReadonly<Donor>>;
   update(donor: Donor): Promise<DeepReadonly<Donor>>;
@@ -27,29 +31,28 @@ export interface DonorRepository {
 // Mongoose implementation of the DonorRepository
 export const donorDao: DonorRepository = {
   async countBy(filter: any) {
-    return await DonorModel.count(filter)
-      .lean()
-      .exec();
+    return await DonorModel.count(filter).exec();
   },
+
   async findByProgramAndSubmitterId(
     filter: { programId: string; submitterId: string }[]
   ): Promise<DeepReadonly<Donor[]> | undefined> {
     const result = await DonorModel.find({
       $or: [...filter]
-    })
-      .lean()
-      .exec();
+    }).exec();
     // convert the id to string to avoid runtime error on freezing
-    result.forEach((d: DonorDocument) => {
-      if (d._id) d._id = d._id.toString();
+    const mapped = result.map((d: DonorDocument) => {
+      return MongooseUtils.toPojo(d);
     });
-    return F(result);
+    return F(mapped);
   },
+
   async update(donor: Donor) {
     const model = new DonorModel();
     const result = await model.update(donor);
     return F(MongooseUtils.toPojo(result));
   },
+
   async create(createDonorDto: DeepReadonly<CreateDonorDto>) {
     const donor: Donor = {
       donorId: "",
@@ -108,7 +111,7 @@ type DonorDocument = mongoose.Document & Donor;
 
 const SampleSchema = new mongoose.Schema(
   {
-    sampleId: { type: Number, index: true, unique: true },
+    sampleId: { type: Number, index: true, unique: true, get: prefixSampleId, immutable: true },
     sampleType: { type: String },
     submitterId: { type: String, index: true, required: true }
   },
@@ -119,7 +122,7 @@ SampleSchema.plugin(AutoIncrement, { inc_field: "sampleId" });
 
 const SpecimenSchema = new mongoose.Schema(
   {
-    specimenId: { type: Number, index: true, unique: true },
+    specimenId: { type: Number, index: true, unique: true, get: prefixSpecimenId, immutable: true },
     specimenType: { type: String },
     clinicalInfo: Object,
     tumourNormalDesignation: String,
@@ -132,7 +135,7 @@ SpecimenSchema.plugin(AutoIncrement, { inc_field: "specimenId" });
 
 const DonorSchema = new mongoose.Schema(
   {
-    donorId: { type: Number, index: true, unique: true, get: prefixDonorId },
+    donorId: { type: Number, index: true, unique: true, get: prefixDonorId, immutable: true },
     gender: { type: String, required: true },
     submitterId: { type: String, index: true, required: true },
     programId: { type: String, required: true },
@@ -149,6 +152,14 @@ const DonorSchema = new mongoose.Schema(
 
 function prefixDonorId(id: any) {
   return `DO${id}`;
+}
+
+function prefixSpecimenId(id: any) {
+  return `SP${id}`;
+}
+
+function prefixSampleId(id: any) {
+  return `SA${id}`;
 }
 
 DonorSchema.plugin(AutoIncrement, { inc_field: "donorId" });

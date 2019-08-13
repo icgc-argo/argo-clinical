@@ -103,16 +103,16 @@ spec:
           }
           steps {
               container('docker') {
-                    withCredentials([usernamePassword(credentialsId:'argoDockerHub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        sh 'docker login -u $USERNAME -p $PASSWORD'
-                    }
-                    sh "docker  build --network=host -f Dockerfile . -t icgcargo/clinical:latest -t icgcargo/clinical:${version}"
-                    sh "docker push icgcargo/clinical:${version}"
-                    sh "docker push icgcargo/clinical:latest"
-                    withCredentials([usernamePassword(credentialsId: 'argoGithub', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-                        sh "git tag ${version}"
-                        sh "git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/icgc-argo/argo-clinical --tags"
-                    }
+                  withCredentials([usernamePassword(credentialsId: 'argoGithub', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                      sh "git tag ${version}"
+                      sh "git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/icgc-argo/argo-clinical --tags"
+                  }
+                  withCredentials([usernamePassword(credentialsId:'argoDockerHub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                      sh 'docker login -u $USERNAME -p $PASSWORD'
+                  }
+                  sh "docker  build --network=host -f Dockerfile . -t icgcargo/clinical:latest -t icgcargo/clinical:${version}"
+                  sh "docker push icgcargo/clinical:${version}"
+                  sh "docker push icgcargo/clinical:latest"
              }
           }
         }
