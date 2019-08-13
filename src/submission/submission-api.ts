@@ -1,4 +1,5 @@
 import * as submission from "./submission-service";
+import * as submission2Clinical from "./submission-to-clinical";
 import { Request, Response } from "express";
 import { TsvUtils, ControllerUtils } from "../utils";
 import { loggerFor } from "../logger";
@@ -63,7 +64,7 @@ class SubmissionController {
   @HasSubmittionAccess((req: Request) => req.params.programId)
   async commitRegistration(req: Request, res: Response) {
     const programId = req.params.programId;
-    await submission.operations.commitRegisteration({
+    await submission2Clinical.commitRegisteration({
       registrationId: req.params.id,
       programId
     });

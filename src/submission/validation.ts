@@ -21,6 +21,7 @@ export const validateRegistrationData = async (
   // caching in case we encounter same ids more than once
   const newSpecimens = new Set<string>();
   const newSamples = new Set<string>();
+  const newDonors = new Set<string>();
 
   for (let index = 0; index < newRecords.length; index++) {
     const registrationRecord = newRecords[index];
@@ -35,6 +36,14 @@ export const validateRegistrationData = async (
     );
 
     // cross checking new records in file
+    if (
+      newDonors.has(registrationRecord.donorSubmitterId) ||
+      isNewDonor(registrationRecord, expectedProgram)
+    ) {
+      newDonors.add(registrationRecord.donorSubmitterId);
+      errors = errors.concat(conflictingNewDonor(index, registrationRecord, newRecords));
+    }
+
     if (
       newSpecimens.has(registrationRecord.specimenSubmitterId) ||
       isNewSpecimen(registrationRecord, expectedProgram)
@@ -170,6 +179,44 @@ const conflictingNewSpecimen = (
   return errors;
 };
 
+const conflictingNewDonor = (
+  newDonorIndex: number,
+  newDonor: CreateRegistrationRecord,
+  newRecords: DeepReadonly<CreateRegistrationRecord[]>
+) => {
+  const errors: RegistrationValidationError[] = [];
+  const conflictingGendersIndexes: number[] = [];
+
+  newRecords.forEach((rec, index) => {
+    // if same record return
+    if (newDonorIndex === index) {
+      return;
+    }
+
+    // same donor same specimen and sample Ids
+    if (newDonor.donorSubmitterId === rec.donorSubmitterId) {
+      if (newDonor.gender !== rec.gender) {
+        conflictingGendersIndexes.push(index);
+      }
+      return;
+    }
+  });
+
+  if (conflictingGendersIndexes.length !== 0) {
+    const err = buildError(
+      newDonor,
+      DataValidationErrors.NEW_DONOR_CONFLICT,
+      RegistrationFieldsEnum.gender,
+      newDonorIndex,
+      {
+        conflictingRows: conflictingGendersIndexes
+      }
+    );
+    errors.push(err);
+  }
+  return errors;
+};
+
 const conflictingNewSample = (
   newDonorIndex: number,
   newDonor: CreateRegistrationRecord,
@@ -239,6 +286,15 @@ const isNewSpecimen = async (
   const count = await donorDao.countBy({
     [DONOR_FIELDS.PROGRAM_ID]: { $eq: programId },
     [DONOR_FIELDS.SPECIMEN_SUBMITTER_ID]: { $eq: newDonor.specimenSubmitterId }
+  });
+
+  return count == 0;
+};
+
+const isNewDonor = async (newDonor: DeepReadonly<CreateRegistrationRecord>, programId: string) => {
+  const count = await donorDao.countBy({
+    [DONOR_FIELDS.PROGRAM_ID]: { $eq: programId },
+    [DONOR_FIELDS.SUBMITTER_ID]: { $eq: newDonor.donorSubmitterId }
   });
 
   return count == 0;

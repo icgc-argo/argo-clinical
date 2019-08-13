@@ -11,8 +11,6 @@ import {
 import { Donor } from "../../../src/clinical/clinical-entities";
 import { stubs } from "./stubs";
 
-const donorDaoCountByStub = sinon.stub(donorDao, "countBy");
-
 const genderMutatedErr: RegistrationValidationError = {
   fieldName: "gender",
   index: 0,
@@ -108,11 +106,16 @@ const sampleBelongsToOtherSpecimenAB1: RegistrationValidationError = {
 };
 
 describe("data-validator", () => {
+  let donorDaoCountByStub: sinon.SinonStub;
   beforeEach(done => {
-    donorDaoCountByStub.reset();
+    donorDaoCountByStub = sinon.stub(donorDao, "countBy");
     done();
   });
 
+  afterEach(done => {
+    donorDaoCountByStub.restore();
+    done();
+  });
   it("should detect invalid program id", async () => {
     donorDaoCountByStub.returns(Promise.resolve(0));
     // test call
@@ -551,7 +554,7 @@ describe("data-validator", () => {
         },
         {
           donorSubmitterId: "AB1",
-          gender: "Female",
+          gender: "Male",
           programId: "PEME-CA",
           sampleSubmitterId: "AM2",
           specimenType: "XYz",
@@ -625,7 +628,7 @@ describe("data-validator", () => {
         },
         {
           donorSubmitterId: "AB1",
-          gender: "Female",
+          gender: "Male",
           programId: "PEME-CA",
           sampleSubmitterId: "AM1",
           specimenType: "XYZ",
@@ -662,6 +665,79 @@ describe("data-validator", () => {
         conflictingRows: [0]
       },
       type: DataValidationErrors.NEW_SAMPLE_CONFLICT
+    };
+
+    chai.expect(result.errors.length).to.eq(2);
+    chai.expect(result.errors).to.deep.include(row0Err);
+    chai.expect(result.errors).to.deep.include(row2Err);
+  });
+
+  it("should detect gender conflict in new donors", async () => {
+    donorDaoCountByStub.returns(Promise.resolve(0));
+    // test call
+    const result = await dv.validateRegistrationData(
+      "PEME-CA",
+      [
+        {
+          donorSubmitterId: "AB1",
+          gender: "Male",
+          programId: "PEME-CA",
+          sampleSubmitterId: "AM1",
+          specimenType: "XYZ",
+          sampleType: "ST-2",
+          specimenSubmitterId: "SP1",
+          tumourNormalDesignation: "Normal"
+        },
+        // dummy ok row to make sure indexes detected correctly
+        {
+          donorSubmitterId: "AB3",
+          gender: "Male",
+          programId: "PEME-CA",
+          sampleSubmitterId: "AM4",
+          specimenType: "XYZ",
+          sampleType: "ST11",
+          specimenSubmitterId: "SP4",
+          tumourNormalDesignation: "Normal"
+        },
+        {
+          donorSubmitterId: "AB1",
+          gender: "Female",
+          programId: "PEME-CA",
+          sampleSubmitterId: "AM1",
+          specimenType: "XYZ",
+          sampleType: "ST-2",
+          specimenSubmitterId: "SP1",
+          tumourNormalDesignation: "Normal"
+        }
+      ],
+      {}
+    );
+
+    // assertions
+    const row0Err: RegistrationValidationError = {
+      fieldName: "gender",
+      index: 0,
+      info: {
+        donorSubmitterId: "AB1",
+        sampleSubmitterId: "AM1",
+        specimenSubmitterId: "SP1",
+        value: "Male",
+        conflictingRows: [2]
+      },
+      type: DataValidationErrors.NEW_DONOR_CONFLICT
+    };
+
+    const row2Err: RegistrationValidationError = {
+      fieldName: "gender",
+      index: 2,
+      info: {
+        donorSubmitterId: "AB1",
+        sampleSubmitterId: "AM1",
+        specimenSubmitterId: "SP1",
+        value: "Female",
+        conflictingRows: [0]
+      },
+      type: DataValidationErrors.NEW_DONOR_CONFLICT
     };
 
     chai.expect(result.errors.length).to.eq(2);
@@ -771,7 +847,7 @@ describe("data-validator", () => {
         },
         {
           donorSubmitterId: "AB1",
-          gender: "Female",
+          gender: "Male",
           programId: "PEME-CA",
           sampleSubmitterId: "AM1",
           specimenType: "XYZ",
