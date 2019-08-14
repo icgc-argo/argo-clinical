@@ -132,6 +132,15 @@ paths:
           $ref: "#/components/responses/ServerError"
         "200":
           description: "the registration was committed and the donors / specimens / samples added to the clinical db"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  newSamples:
+                    type: array
+                    items:
+                      type: string
 
 servers:
   - url: /

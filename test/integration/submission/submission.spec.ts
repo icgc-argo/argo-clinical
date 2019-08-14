@@ -435,6 +435,9 @@ describe("Submission Api", () => {
 
 async function asserCommit2_OK(res: any) {
   res.should.have.status(200);
+  chai.expect(res.body).to.deep.eq({
+    newSamples: ["sm123-00-1", "sm123-129", "sm128-1", "sm200-1"]
+  });
   const donorsFromDB = await donorDao.findByProgramId("ABCD-EF");
   chai.expect(donorsFromDB[0]).to.deep.include(comittedDonors2[0]);
 }
