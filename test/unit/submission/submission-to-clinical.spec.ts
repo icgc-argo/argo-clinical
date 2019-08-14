@@ -3,11 +3,7 @@ import * as sinon from "sinon";
 import * as s2c from "../../../src/submission/submission-to-clinical";
 
 import { registrationRepository } from "../../../src/submission/registration-repo";
-import {
-  donorDao,
-  FindByProgramAndSubmitterFilter,
-  CreateDonorDto
-} from "../../../src/clinical/donor-repo";
+import { donorDao, FindByProgramAndSubmitterFilter } from "../../../src/clinical/donor-repo";
 import { ActiveRegistration } from "../../../src/submission/submission-entities";
 import { Donor } from "../../../src/clinical/clinical-entities";
 
@@ -103,7 +99,7 @@ describe("submission-to-clinical", () => {
         programId: "ABCD-EF"
       };
 
-      const expectedDonorDto: CreateDonorDto = {
+      const expectedDonorDto: s2c.CreateDonorSampleDto = {
         gender: "Male",
         programId: "ABCD-EF",
         specimens: [
@@ -139,19 +135,19 @@ describe("submission-to-clinical", () => {
 
       const existingDonor: Donor = {
         _id: "lkjsdal214",
-        donorId: "DO3023",
+        donorId: 3023,
         gender: "Male",
         programId: "ABCD-EF",
         submitterId: "abcd123",
         specimens: [
           {
-            specimenId: "SP320",
+            specimenId: 320,
             specimenType: "FFPE",
             submitterId: "ss330",
             tumourNormalDesignation: "Normal",
             samples: [
               {
-                sampleId: "SA39",
+                sampleId: 39,
                 sampleType: "RNA",
                 submitterId: "sr342"
               }
@@ -162,18 +158,18 @@ describe("submission-to-clinical", () => {
 
       const expectedDonorDto: Donor = {
         _id: "lkjsdal214",
-        donorId: "DO3023",
+        donorId: 3023,
         gender: "Male",
         programId: "ABCD-EF",
         specimens: [
           {
-            specimenId: "SP320",
+            specimenId: 320,
             specimenType: "FFPE",
             submitterId: "ss330",
             tumourNormalDesignation: "Normal",
             samples: [
               {
-                sampleId: "SA39",
+                sampleId: 39,
                 sampleType: "RNA",
                 submitterId: "sr342"
               }

@@ -7,14 +7,9 @@ import { Donor, Specimen, Sample } from "../clinical/clinical-entities";
 import {
   CommitRegistrationCommand,
   ActiveRegistration,
-  SubmittedRegistrationRecord,
-  RegistrationStat
+  SubmittedRegistrationRecord
 } from "./submission-entities";
-import {
-  CreateDonorDto as CreateDonorSampleDto,
-  CreateSpecimenDto,
-  CreateSampleDto
-} from "../clinical/donor-repo";
+
 import { Errors } from "../utils";
 import { donorDao } from "../clinical/donor-repo";
 import _ from "lodash";
@@ -36,7 +31,6 @@ export const commitRegisteration = async (command: Readonly<CommitRegistrationCo
   const donorSampleDtos: DeepReadonly<CreateDonorSampleDto[]> = mapToCreateDonorSampleDto(
     registration
   );
-  const savedDonors: Array<DeepReadonly<Donor>> = [];
 
   for (const dto of donorSampleDtos) {
     const existingDonor = await donorDao.findByProgramAndSubmitterId([
@@ -45,11 +39,9 @@ export const commitRegisteration = async (command: Readonly<CommitRegistrationCo
     if (existingDonor && existingDonor.length > 0) {
       const mergedDonor = addSamplesToDonor(existingDonor[0], dto);
       const saved = await donorDao.update(mergedDonor);
-      savedDonors.push(saved);
       continue;
     }
     const saved = await donorDao.create(fromCreateDonorDtoToDonor(dto));
-    savedDonors.push(saved);
   }
 
   registrationRepository.delete(command.registrationId);
@@ -58,7 +50,6 @@ export const commitRegisteration = async (command: Readonly<CommitRegistrationCo
 
 const fromCreateDonorDtoToDonor = (createDonorDto: DeepReadonly<CreateDonorSampleDto>) => {
   const donor: Donor = {
-    donorId: "",
     gender: createDonorDto.gender,
     submitterId: createDonorDto.submitterId,
     programId: createDonorDto.programId,
@@ -98,7 +89,7 @@ const addSamplesToDonor = (
 ) => {
   const mergedDonor = _.cloneDeep(existingDonor) as Donor;
   donorSampleDto.specimens.forEach(sp => {
-    // new specimen ?
+    // new specimen ? add it with all the samples
     const specimen = mergedDonor.specimens.find(s => s.submitterId == sp.submitterId);
     if (!specimen) {
       mergedDonor.specimens.push(toSpecimen(sp));
@@ -106,7 +97,7 @@ const addSamplesToDonor = (
     }
 
     sp.samples.forEach(sa => {
-      // new sample ?
+      // new sample ? add it to the specimen
       if (!specimen.samples.find(s => s.submitterId === sa.submitterId)) {
         specimen.samples.push(toSample(sa));
       }
@@ -160,3 +151,22 @@ const getDonorSpecimen = (record: SubmittedRegistrationRecord) => {
     ]
   };
 };
+
+export interface CreateDonorSampleDto {
+  gender: string;
+  submitterId: string;
+  programId: string;
+  specimens: Array<CreateSpecimenDto>;
+}
+
+export interface CreateSpecimenDto {
+  samples: Array<CreateSampleDto>;
+  specimenType: string;
+  tumourNormalDesignation: string;
+  submitterId: string;
+}
+
+export interface CreateSampleDto {
+  sampleType: string;
+  submitterId: string;
+}
