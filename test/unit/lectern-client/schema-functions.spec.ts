@@ -12,22 +12,22 @@ describe("schema-functions", () => {
     const result = schemaService.process(schema, "registration", [
       {
         program_id: "PEME-CA",
-        donor_submitter_id: "OD1234",
+        submitter_donor_id: "OD1234",
         gender: "",
         submitter_specimen_id: "87813",
         specimen_type: "Skin",
         tumour_normal_designation: "Normal",
-        sample_submitter_id: "MAS123",
+        submitter_sample_id: "MAS123",
         sample_type: "ctDNA"
       },
       {
         program_id: "PEME-CA",
-        donor_submitter_id: "OD1234",
+        submitter_donor_id: "OD1234",
         gender: "",
         submitter_specimen_id: "87812",
         specimen_type: "Skin",
         tumour_normal_designation: "Normal",
-        sample_submitter_id: "MAS1234",
+        submitter_sample_id: "MAS1234",
         sample_type: "ctDNA"
       }
     ]);
@@ -39,22 +39,22 @@ describe("schema-functions", () => {
     const result = schemaService.process(schema, "registration", [
       {
         program_id: "PEME-CA",
-        donor_submitter_id: "OD1234",
+        submitter_donor_id: "OD1234",
         gendr: "",
         submitter_specimen_id: "87813",
         specimen_type: "Skin",
         tumour_normal_designation: "Normal",
-        sample_submitter_id: "MAS123",
+        submitter_sample_id: "MAS123",
         sample_type: "ctDNA"
       },
       {
         program_id: "PEME-CA",
-        donor_submitter_id: "OD1234",
+        submitter_donor_id: "OD1234",
         gender: "",
         submitter_specimen_id: "87812",
         specimen_type: "Skin",
         tumour_normal_designation: "Normal",
-        sample_submitter_id: "MAS1234",
+        submitter_sample_id: "MAS1234",
         sample_type: "ctDNA"
       }
     ]);
@@ -69,12 +69,12 @@ describe("schema-functions", () => {
   it("should validate required", () => {
     const result = schemaService.process(schema, "registration", [
       {
-        donor_submitter_id: "OD1234",
+        submitter_donor_id: "OD1234",
         gender: "Female",
         submitter_specimen_id: "87813",
         specimen_type: "Skin",
         tumour_normal_designation: "Normal",
-        sample_submitter_id: "MAS123",
+        submitter_sample_id: "MAS123",
         sample_type: "ctDNA"
       }
     ]);
@@ -106,12 +106,12 @@ describe("schema-functions", () => {
     const result = schemaService.process(schema, "registration", [
       {
         program_id: "PEME-CAA",
-        donor_submitter_id: "OD1234",
+        submitter_donor_id: "OD1234",
         gender: "Female",
         submitter_specimen_id: "87813",
         specimen_type: "Skin",
         tumour_normal_designation: "Normal",
-        sample_submitter_id: "MAS123",
+        submitter_sample_id: "MAS123",
         sample_type: "ctDNA"
       }
     ]);

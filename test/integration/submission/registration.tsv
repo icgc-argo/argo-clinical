@@ -1,2 +1,2 @@
-program_id	donor_submitter_id	gender	submitter_specimen_id	specimen_type	tumour_normal_designation	sample_submitter_id	sample_type
+program_id	submitter_donor_id	gender	submitter_specimen_id	specimen_type	tumour_normal_designation	submitter_sample_id	sample_type
 ABCD-EF	abcd123	Male	ss123	FFPE	Normal	sm123	ctDNA	

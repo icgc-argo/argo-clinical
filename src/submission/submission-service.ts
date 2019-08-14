@@ -272,12 +272,12 @@ export namespace operations {
       records: registrationRecords.map(r => {
         const record: Readonly<SubmittedRegistrationRecord> = {
           program_id: command.programId,
-          donor_submitter_id: r.donorSubmitterId,
+          submitter_donor_id: r.donorSubmitterId,
           gender: r.gender,
           submitter_specimen_id: r.specimenSubmitterId,
           specimen_type: r.specimenType,
           tumour_normal_designation: r.tumourNormalDesignation,
-          sample_submitter_id: r.sampleSubmitterId,
+          submitter_sample_id: r.sampleSubmitterId,
           sample_type: r.sampleType
         };
         return record;

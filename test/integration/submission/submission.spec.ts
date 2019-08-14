@@ -13,7 +13,8 @@ import { cleanCollection, insertData } from "../testutils";
 import { TEST_PUB_KEY, JWT_ABCDEF, JWT_WXYZEF } from "./test.jwt";
 import {
   ActiveRegistration,
-  CreateRegistrationResult
+  CreateRegistrationResult,
+  RegistrationFieldsEnum
 } from "../../../src/submission/submission-entities";
 export let mongoContainer: any;
 chai.use(require("chai-http"));
@@ -32,7 +33,7 @@ const expectedErrors = [
     fieldName: "tumour_normal_designation"
   },
   {
-    fieldName: "submitter_specimen_id",
+    fieldName: RegistrationFieldsEnum.specimen_submitter_id,
     index: 0,
     info: {
       donorSubmitterId: "abcd123",
@@ -43,7 +44,7 @@ const expectedErrors = [
     type: "INVALID_BY_REGEX"
   },
   {
-    fieldName: "sample_submitter_id",
+    fieldName: RegistrationFieldsEnum.sample_submitter_id,
     index: 0,
     info: {
       donorSubmitterId: "abcd123",
@@ -107,12 +108,12 @@ const expectedResponse1 = {
     records: [
       {
         program_id: "ABCD-EF",
-        donor_submitter_id: "abcd123",
+        submitter_donor_id: "abcd123",
         gender: "Male",
         submitter_specimen_id: "ss123",
         specimen_type: "FFPE",
         tumour_normal_designation: "Normal",
-        sample_submitter_id: "sm123",
+        submitter_sample_id: "sm123",
         sample_type: "ctDNA"
       }
     ],
@@ -139,12 +140,12 @@ const ABCD_REGISTRATION_DOC: ActiveRegistration = {
   records: [
     {
       program_id: "ABCD-EF",
-      donor_submitter_id: "abcd123",
+      submitter_donor_id: "abcd123",
       gender: "Male",
       submitter_specimen_id: "ss123",
       specimen_type: "FFPE",
       tumour_normal_designation: "Normal",
-      sample_submitter_id: "sm123",
+      submitter_sample_id: "sm123",
       sample_type: "ctDNA"
     }
   ]
