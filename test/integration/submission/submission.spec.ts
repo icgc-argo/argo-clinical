@@ -448,19 +448,19 @@ async function asserCommit1OK(res: any, rows: any[]) {
       emptyDonorDocument({
         donorId: i,
         gender: r[RegistrationFieldsEnum.gender],
-        submitterId: r[RegistrationFieldsEnum.donor_submitter_id],
+        submitterId: r[RegistrationFieldsEnum.submitter_donor_id],
         programId: r[RegistrationFieldsEnum.program_id],
         specimens: [
           {
             specimenId: i,
-            submitterId: r[RegistrationFieldsEnum.specimen_submitter_id],
+            submitterId: r[RegistrationFieldsEnum.submitter_specimen_id],
             specimenType: r[RegistrationFieldsEnum.specimen_type],
             tumourNormalDesignation: r[RegistrationFieldsEnum.tumour_normal_designation],
             samples: [
               {
                 sampleId: i,
                 sampleType: r[RegistrationFieldsEnum.sample_type],
-                submitterId: r[RegistrationFieldsEnum.sample_submitter_id]
+                submitterId: r[RegistrationFieldsEnum.submitter_sample_id]
               }
             ]
           }
