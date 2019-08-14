@@ -33,7 +33,7 @@ const expectedErrors = [
     fieldName: "tumour_normal_designation"
   },
   {
-    fieldName: RegistrationFieldsEnum.specimen_submitter_id,
+    fieldName: RegistrationFieldsEnum.submitter_specimen_id,
     index: 0,
     info: {
       donorSubmitterId: "abcd123",
@@ -44,7 +44,7 @@ const expectedErrors = [
     type: "INVALID_BY_REGEX"
   },
   {
-    fieldName: RegistrationFieldsEnum.sample_submitter_id,
+    fieldName: RegistrationFieldsEnum.submitter_sample_id,
     index: 0,
     info: {
       donorSubmitterId: "abcd123",

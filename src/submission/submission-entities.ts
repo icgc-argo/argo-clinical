@@ -40,12 +40,12 @@ export const RegistrationToCreateRegistrationFieldsMap: x = {
 
 export enum RegistrationFieldsEnum {
   program_id = "program_id",
-  donor_submitter_id = "submitter_donor_id",
+  submitter_donor_id = "submitter_donor_id",
   gender = "gender",
-  specimen_submitter_id = "submitter_specimen_id",
+  submitter_specimen_id = "submitter_specimen_id",
   specimen_type = "specimen_type",
   tumour_normal_designation = "tumour_normal_designation",
-  sample_submitter_id = "submitter_sample_id",
+  submitter_sample_id = "submitter_sample_id",
   sample_type = "sample_type"
 }
 
