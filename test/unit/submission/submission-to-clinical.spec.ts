@@ -99,8 +99,9 @@ describe("submission-to-clinical", () => {
         programId: "ABCD-EF"
       };
 
-      const expectedDonorDto: s2c.CreateDonorSampleDto = {
+      const expectedDonorDto: Donor = {
         gender: "Male",
+        submitterId: "abcd123",
         programId: "ABCD-EF",
         specimens: [
           {
@@ -110,13 +111,20 @@ describe("submission-to-clinical", () => {
                 submitterId: "sm123"
               }
             ],
+            clinicalInfo: {},
             specimenType: "FFPE",
-            submitterId: "ss123",
-            tumourNormalDesignation: "Normal"
+            tumourNormalDesignation: "Normal",
+            submitterId: "ss123"
           }
         ],
-        submitterId: "abcd123"
+        clinicalInfo: {},
+        primaryDiagnosis: {},
+        followUps: [],
+        treatments: [],
+        chemotherapy: [],
+        HormoneTherapy: []
       };
+
       registrationRepoFindByIdStub.withArgs(id1).returns(Promise.resolve(reg1));
       findByProgramAndSubmitterIdStub.withArgs(sinon.match([filter])).returns(Promise.resolve([]));
       const result = await s2c.commitRegisteration({
@@ -161,6 +169,7 @@ describe("submission-to-clinical", () => {
         donorId: 3023,
         gender: "Male",
         programId: "ABCD-EF",
+        submitterId: "abcd123",
         specimens: [
           {
             specimenId: 320,
@@ -182,12 +191,12 @@ describe("submission-to-clinical", () => {
                 submitterId: "sm123"
               }
             ],
+            clinicalInfo: {},
             specimenType: "FFPE",
-            submitterId: "ss123",
-            tumourNormalDesignation: "Normal"
+            tumourNormalDesignation: "Normal",
+            submitterId: "ss123"
           }
-        ],
-        submitterId: "abcd123"
+        ]
       };
 
       registrationRepoFindByIdStub.withArgs(id2).returns(Promise.resolve(reg2));
