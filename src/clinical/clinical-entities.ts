@@ -1,11 +1,11 @@
 export interface Donor {
   _id?: string;
-  donorId: string;
+  donorId?: number;
   gender: string;
   submitterId: string;
   programId: string;
   specimens: Array<Specimen>;
-  clinicalInfo?: object | undefined;
+  clinicalInfo?: object;
   primaryDiagnosis?: object;
   followUps?: Array<object>;
   treatments?: Array<object>;
@@ -17,13 +17,13 @@ export interface Specimen {
   samples: Array<Sample>;
   specimenType: string;
   submitterId: string;
-  specimenId?: string;
+  specimenId?: number;
   tumourNormalDesignation: string;
-  clinicalInfo?: object | undefined;
+  clinicalInfo?: object;
 }
 
 export interface Sample {
-  sampleId?: string;
+  sampleId?: number;
   sampleType: string;
   submitterId: string;
 }
