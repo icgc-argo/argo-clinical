@@ -3,14 +3,12 @@ import { donorDao, FindByProgramAndSubmitterFilter } from "../clinical/donor-rep
 import * as _ from "lodash";
 import { registrationRepository } from "./registration-repo";
 import { Donor, DonorMap } from "../clinical/clinical-entities";
-import { CreateDonorDto } from "../clinical/donor-repo";
 import {
   ActiveRegistration,
   SubmittedRegistrationRecord,
   RegistrationStats,
   RegistrationValidationError,
   CreateRegistrationRecord,
-  CommitRegistrationCommand,
   CreateRegistrationCommand,
   CreateRegistrationResult,
   RegistrationRecordFields,

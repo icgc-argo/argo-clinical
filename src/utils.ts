@@ -6,9 +6,9 @@ const fsPromises = fs.promises;
 
 export namespace TsvUtils {
   export const tsvToJson = async (
-    file: Express.Multer.File
+    file: string
   ): Promise<ReadonlyArray<{ [key: string]: string }>> => {
-    const contents = await fsPromises.readFile(file.path, "utf-8");
+    const contents = await fsPromises.readFile(file, "utf-8");
     const arr = parseTsvToJson(contents);
     return arr;
   };

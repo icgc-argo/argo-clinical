@@ -9,13 +9,16 @@ import "mocha";
 import { GenericContainer } from "testcontainers";
 import app from "../../../src/app";
 import * as bootstrap from "../../../src/bootstrap";
-import { cleanCollection, insertData } from "../testutils";
+import { cleanCollection, insertData, emptyDonorDocument } from "../testutils";
 import { TEST_PUB_KEY, JWT_ABCDEF, JWT_WXYZEF } from "./test.jwt";
 import {
   ActiveRegistration,
   CreateRegistrationResult,
   RegistrationFieldsEnum
 } from "../../../src/submission/submission-entities";
+import { TsvUtils } from "../../../src/utils";
+import { donorDao } from "../../../src/clinical/donor-repo";
+import { Donor } from "../../../src/clinical/clinical-entities";
 export let mongoContainer: any;
 chai.use(require("chai-http"));
 chai.should();
@@ -249,34 +252,70 @@ describe("Submission Api", () => {
         });
     });
 
-    it("should commit registration", done => {
+    it("should commit registration, create donors", done => {
       let file: Buffer;
+      let file2: Buffer;
+      let rows: any[];
       try {
-        file = fs.readFileSync(__dirname + "/registration.tsv");
+        file = fs.readFileSync(__dirname + "/registration.1.tsv");
+        (async () =>
+          (rows = (await TsvUtils.tsvToJson(__dirname + "/registration.1.tsv")) as any[]))();
       } catch (err) {
         return done(err);
       }
+
+      try {
+        file2 = fs.readFileSync(__dirname + "/registration.2.tsv");
+      } catch (err) {
+        return done(err);
+      }
+
       chai
         .request(app)
         .post("/submission/program/ABCD-EF/registration")
         .auth(JWT_ABCDEF, { type: "bearer" })
         .type("form")
-        .attach("registrationFile", file, "registration.tsv")
+        .attach("registrationFile", file, "registration.1.tsv")
         .end(async (err: any, res: any) => {
           try {
-            await assertUploadOK(res);
-            const regId = res.body.registration._id;
+            await assertUpload1OK(res);
+            const reg1Id = res.body.registration._id;
             chai
               .request(app)
-              .post(`/submission/program/ABCD-EF/registration/${regId}/commit`)
+              .post(`/submission/program/ABCD-EF/registration/${reg1Id}/commit`)
               .auth(JWT_ABCDEF, { type: "bearer" })
               .end(async (err: any, res: any) => {
                 try {
-                  await asserCommitOK(res);
+                  await asserCommit1OK(res, rows);
+                  chai
+                    .request(app)
+                    .post("/submission/program/ABCD-EF/registration")
+                    .auth(JWT_ABCDEF, { type: "bearer" })
+                    .type("form")
+                    .attach("registrationFile", file2, "registration.2.tsv")
+                    .end(async (err: any, res: any) => {
+                      try {
+                        await assertUpload1OK(res);
+                        const regId = res.body.registration._id;
+                        chai
+                          .request(app)
+                          .post(`/submission/program/ABCD-EF/registration/${regId}/commit`)
+                          .auth(JWT_ABCDEF, { type: "bearer" })
+                          .end(async (err: any, res: any) => {
+                            try {
+                              await asserCommit2_OK(res);
+                              return done();
+                            } catch (err) {
+                              return done(err);
+                            }
+                          });
+                      } catch (err) {
+                        return done(err);
+                      }
+                    });
                 } catch (err) {
                   return done(err);
                 }
-                return done();
               });
           } catch (err) {
             return done(err);
@@ -394,20 +433,61 @@ describe("Submission Api", () => {
   });
 });
 
-async function asserCommitOK(res: any) {
+async function asserCommit2_OK(res: any) {
   res.should.have.status(200);
+  const donorsFromDB = await donorDao.findByProgramId("ABCD-EF");
+  chai.expect(donorsFromDB[0]).to.deep.include(comittedDonors2[0]);
+}
+
+async function asserCommit1OK(res: any, rows: any[]) {
+  res.should.have.status(200);
+  const donorRows: any[] = [];
+  rows.forEach((r, idx) => {
+    const i = idx + 1;
+    donorRows.push(
+      emptyDonorDocument({
+        donorId: i,
+        gender: r[RegistrationFieldsEnum.gender],
+        submitterId: r[RegistrationFieldsEnum.donor_submitter_id],
+        programId: r[RegistrationFieldsEnum.program_id],
+        specimens: [
+          {
+            specimenId: i,
+            submitterId: r[RegistrationFieldsEnum.specimen_submitter_id],
+            specimenType: r[RegistrationFieldsEnum.specimen_type],
+            tumourNormalDesignation: r[RegistrationFieldsEnum.tumour_normal_designation],
+            samples: [
+              {
+                sampleId: i,
+                sampleType: r[RegistrationFieldsEnum.sample_type],
+                submitterId: r[RegistrationFieldsEnum.sample_submitter_id]
+              }
+            ]
+          }
+        ]
+      })
+    );
+  });
+
   const conn = await mongo.connect(dburl);
-  const donor: ActiveRegistration | null = await conn
+  const donors: any[] | null = await conn
     .db("clinical")
     .collection("donors")
-    .findOne({});
+    .find({})
+    .sort("donorId", 1)
+    .toArray();
   conn.close();
-  if (!donor) {
+
+  chai.expect(donors.length).to.eq(4);
+  donorRows.forEach((dr, i) => {
+    chai.expect(donors[i]).to.deep.include(dr);
+  });
+  if (!donors) {
     throw new Error("saved registration shouldn't be null");
   }
 }
 
-async function assertUploadOK(res: any) {
+async function assertUpload1OK(res: any) {
   res.should.have.status(201);
   const conn = await mongo.connect(dburl);
   const savedRegistration: ActiveRegistration | null = await conn
@@ -420,3 +500,183 @@ async function assertUploadOK(res: any) {
     throw new Error("saved registration shouldn't be null");
   }
 }
+
+const comittedDonors2: Donor[] = [
+  {
+    followUps: [],
+    treatments: [],
+    chemotherapy: [],
+    HormoneTherapy: [],
+    gender: "Male",
+    submitterId: "abcd-125",
+    programId: "ABCD-EF",
+    specimens: [
+      {
+        samples: [
+          {
+            sampleType: "polyA+ RNA",
+            submitterId: "sm123-4",
+            sampleId: 1
+          }
+        ],
+        specimenType: "Bone marrow",
+        tumourNormalDesignation: "Xenograft - derived from primary tumour",
+        submitterId: "ss123-jdjr-ak",
+        specimenId: 1
+      }
+    ],
+    donorId: 1
+  },
+  {
+    followUps: [],
+    treatments: [],
+    chemotherapy: [],
+    HormoneTherapy: [],
+    gender: "Female",
+    submitterId: "abcd-126",
+    programId: "ABCD-EF",
+    specimens: [
+      {
+        samples: [
+          {
+            sampleType: "Ribo-Zero RNA",
+            submitterId: "sm123-5",
+            sampleId: 2
+          }
+        ],
+        specimenType: "Serum",
+        tumourNormalDesignation: "Cell line - derived from xenograft tissue",
+        submitterId: "ss123-sjdm",
+        specimenId: 2
+      },
+      {
+        samples: [
+          {
+            sampleType: "ctDNA",
+            submitterId: "sm123-00-1",
+            sampleId: 5
+          }
+        ],
+        specimenType: "FFPE",
+        tumourNormalDesignation: "Normal",
+        submitterId: "ss123-sjdm-2",
+        specimenId: 5
+      }
+    ],
+    donorId: 2
+  },
+  {
+    followUps: [],
+    treatments: [],
+    chemotherapy: [],
+    HormoneTherapy: [],
+    gender: "Male",
+    submitterId: "abcd-127",
+    programId: "ABCD-EF",
+    specimens: [
+      {
+        samples: [
+          {
+            sampleType: "polyA+ RNA",
+            submitterId: "sm123-6",
+            sampleId: 3
+          }
+        ],
+        specimenType: "Pleural effusion",
+        tumourNormalDesignation: "Primary tumour - adjacent to normal",
+        submitterId: "ss123-1123",
+        specimenId: 3
+      }
+    ],
+    donorId: 3
+  },
+  {
+    followUps: [],
+    treatments: [],
+    chemotherapy: [],
+    HormoneTherapy: [],
+    gender: "Female",
+    submitterId: "abcd-128",
+    programId: "ABCD-EF",
+    specimens: [
+      {
+        samples: [
+          {
+            sampleType: "ctDNA",
+            submitterId: "sm123-7",
+            sampleId: 4
+          }
+        ],
+        specimenType: "FFPE",
+        tumourNormalDesignation: "Metastatic tumour",
+        submitterId: "ss123=@@abnc",
+        specimenId: 4
+      },
+      {
+        samples: [
+          {
+            sampleType: "ctDNA",
+            submitterId: "sm128-1",
+            sampleId: 7
+          }
+        ],
+        specimenType: "FFPE",
+        tumourNormalDesignation: "Metastatic tumour",
+        submitterId: "ss123=@@abnc0",
+        specimenId: 7
+      }
+    ],
+    donorId: 4
+  },
+  {
+    followUps: [],
+    treatments: [],
+    chemotherapy: [],
+    HormoneTherapy: [],
+    _id: "5d534820ae008e4dcb205274",
+    gender: "Female",
+    submitterId: "abcd-129",
+    programId: "ABCD-EF",
+    specimens: [
+      {
+        samples: [
+          {
+            sampleType: "polyA+ RNA",
+            submitterId: "sm123-129",
+            sampleId: 6
+          }
+        ],
+        specimenType: "Pleural effusion",
+        tumourNormalDesignation: "Metastatic tumour",
+        submitterId: "ss123-129",
+        specimenId: 6
+      }
+    ],
+    donorId: 5
+  },
+  {
+    followUps: [],
+    treatments: [],
+    chemotherapy: [],
+    HormoneTherapy: [],
+    gender: "Male",
+    submitterId: "abcd-200",
+    programId: "ABCD-EF",
+    specimens: [
+      {
+        samples: [
+          {
+            sampleType: "Amplified DNA",
+            submitterId: "sm200-1",
+            sampleId: 8
+          }
+        ],
+        specimenType: "Blood derived",
+        tumourNormalDesignation: "Recurrent tumour",
+        submitterId: "ss200-1",
+        specimenId: 8
+      }
+    ],
+    donorId: 6
+  }
+];

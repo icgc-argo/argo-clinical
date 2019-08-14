@@ -1,15 +1,18 @@
 import { Donor, Sample, Specimen } from "./clinical-entities";
 import mongoose from "mongoose";
 import { DeepReadonly } from "deep-freeze";
-import { F, MongooseUtils } from "../utils";
+import { F, MongooseUtils, notEmpty } from "../utils";
+import { loggerFor } from "../logger";
 export const SUBMITTER_ID = "submitterId";
 export const SPECIMEN_SUBMITTER_ID = "specimen.submitterId";
 export const SPECIMEN_SAMPLE_SUBMITTER_ID = "specimen.sample.submitterId";
+const L = loggerFor(__filename);
 
 const AutoIncrement = require("mongoose-sequence")(mongoose);
 
 export enum DONOR_FIELDS {
   SUBMITTER_ID = "submitterId",
+  DONOR_ID = "donorId",
   SPECIMEN_SUBMITTER_ID = "specimens.submitterId",
   SPECIMEN_SAMPLE_SUBMITTER_ID = "specimens.samples.submitterId",
   PROGRAM_ID = "programId"
@@ -20,11 +23,12 @@ export type FindByProgramAndSubmitterFilter = DeepReadonly<{
   submitterId: string;
 }>;
 export interface DonorRepository {
+  findByProgramId(programId: string): Promise<DeepReadonly<Donor[]>>;
   findByProgramAndSubmitterId(
     filters: DeepReadonly<FindByProgramAndSubmitterFilter[]>
   ): Promise<DeepReadonly<Donor[]> | undefined>;
-  create(donor: DeepReadonly<CreateDonorDto>): Promise<DeepReadonly<Donor>>;
-  update(donor: Donor): Promise<DeepReadonly<Donor>>;
+  create(donor: DeepReadonly<Donor>): Promise<DeepReadonly<Donor>>;
+  update(donor: DeepReadonly<Donor>): Promise<DeepReadonly<Donor>>;
   countBy(filter: any): Promise<number>;
 }
 
@@ -32,6 +36,23 @@ export interface DonorRepository {
 export const donorDao: DonorRepository = {
   async countBy(filter: any) {
     return await DonorModel.count(filter).exec();
+  },
+
+  async findByProgramId(programId: string): Promise<DeepReadonly<Donor[]>> {
+    const result = await DonorModel.find(
+      {
+        [DONOR_FIELDS.PROGRAM_ID]: programId
+      },
+      undefined,
+      { sort: { [DONOR_FIELDS.DONOR_ID]: 1 } }
+    ).exec();
+    // convert the id to string to avoid runtime error on freezing
+    const mapped = result
+      .map((d: DonorDocument) => {
+        return MongooseUtils.toPojo(d);
+      })
+      .filter(notEmpty);
+    return F(mapped);
   },
 
   async findByProgramAndSubmitterId(
@@ -47,71 +68,36 @@ export const donorDao: DonorRepository = {
     return F(mapped);
   },
 
-  async update(donor: Donor) {
-    const model = new DonorModel();
-    const result = await model.update(donor);
-    return F(MongooseUtils.toPojo(result));
+  async update(donor: DeepReadonly<Donor>) {
+    const newDonor = new DonorModel(donor);
+    newDonor.isNew = false;
+    newDonor.specimens.forEach(sp => {
+      if (sp.specimenId) {
+        (sp as any).isNew = false;
+      }
+
+      sp.samples.forEach(sa => {
+        if (sa.sampleId) {
+          (sa as any).isNew = false;
+        }
+      });
+    });
+    await newDonor.save();
+    return F(MongooseUtils.toPojo(newDonor));
   },
 
-  async create(createDonorDto: DeepReadonly<CreateDonorDto>) {
-    const donor: Donor = {
-      donorId: "",
-      gender: createDonorDto.gender,
-      submitterId: createDonorDto.submitterId,
-      programId: createDonorDto.programId,
-      specimens: createDonorDto.specimens.map(s => {
-        const spec: Specimen = {
-          samples: s.samples.map(sa => {
-            const sample: Sample = {
-              sampleType: sa.sampleType,
-              submitterId: sa.submitterId
-            };
-            return sample;
-          }),
-          clinicalInfo: {},
-          specimenType: s.specimenType,
-          tumourNormalDesignation: s.tumourNormalDesignation,
-          submitterId: s.submitterId
-        };
-        return spec;
-      }),
-      clinicalInfo: {},
-      primaryDiagnosis: {},
-      followUps: [],
-      treatments: [],
-      chemotherapy: [],
-      HormoneTherapy: []
-    };
+  async create(donor: DeepReadonly<Donor>) {
     const newDonor = new DonorModel(donor);
     await newDonor.save();
     return F(MongooseUtils.toPojo(newDonor));
   }
 };
 
-export interface CreateDonorDto {
-  gender: string;
-  submitterId: string;
-  programId: string;
-  specimens: Array<CreateSpecimenDto>;
-}
-
-export interface CreateSpecimenDto {
-  samples: Array<CreateSampleDto>;
-  specimenType: string;
-  tumourNormalDesignation: string;
-  submitterId: string;
-}
-
-export interface CreateSampleDto {
-  sampleType: string;
-  submitterId: string;
-}
-
 type DonorDocument = mongoose.Document & Donor;
 
 const SampleSchema = new mongoose.Schema(
   {
-    sampleId: { type: Number, index: true, unique: true, get: prefixSampleId, immutable: true },
+    sampleId: { type: Number, index: true, unique: true, get: prefixSampleId },
     sampleType: { type: String },
     submitterId: { type: String, index: true, required: true }
   },
@@ -122,9 +108,9 @@ SampleSchema.plugin(AutoIncrement, { inc_field: "sampleId" });
 
 const SpecimenSchema = new mongoose.Schema(
   {
-    specimenId: { type: Number, index: true, unique: true, get: prefixSpecimenId, immutable: true },
+    specimenId: { type: Number, index: true, unique: true, get: prefixSpecimenId },
     specimenType: { type: String },
-    clinicalInfo: Object,
+    clinicalInfo: {},
     tumourNormalDesignation: String,
     submitterId: { type: String, index: true, required: true },
     samples: [SampleSchema]
@@ -135,13 +121,13 @@ SpecimenSchema.plugin(AutoIncrement, { inc_field: "specimenId" });
 
 const DonorSchema = new mongoose.Schema(
   {
-    donorId: { type: Number, index: true, unique: true, get: prefixDonorId, immutable: true },
+    donorId: { type: Number, index: true, unique: true, get: prefixDonorId },
     gender: { type: String, required: true },
     submitterId: { type: String, index: true, required: true },
     programId: { type: String, required: true },
     specimens: [SpecimenSchema],
-    clinicalInfo: Map,
-    primaryDiagnosis: Object,
+    clinicalInfo: {},
+    primaryDiagnosis: {},
     followUps: Array,
     treatments: Array,
     chemotherapy: Array,
@@ -151,41 +137,21 @@ const DonorSchema = new mongoose.Schema(
 );
 
 function prefixDonorId(id: any) {
+  if (!id) return undefined;
   return `DO${id}`;
 }
 
 function prefixSpecimenId(id: any) {
+  if (!id) return undefined;
   return `SP${id}`;
 }
 
 function prefixSampleId(id: any) {
+  if (!id) return undefined;
   return `SA${id}`;
 }
 
 DonorSchema.plugin(AutoIncrement, { inc_field: "donorId" });
 DonorSchema.index({ submitterId: 1, programId: 1 }, { unique: true });
-
-// donorSchema.pre("save", async function save(next) {
-//   const newDonor = this as DonorDocument;
-//   if (!newDonor.isNew) {
-//     return next();
-//   }
-//   try {
-//     const latestDonor = await DonorModel.findOne({}, undefined, {
-//       collation: { locale: "en_US", numericOrdering: true }
-//     })
-//       .sort({ donorId: -1 })
-//       .exec();
-//     if (latestDonor == undefined) {
-//       newDonor.donorId = "DO" + 1;
-//       return next();
-//     }
-//     const donorNum: number = parseInt(latestDonor.donorId.substring(2));
-//     newDonor.donorId = "DO" + (donorNum + 1);
-//     next();
-//   } catch (err) {
-//     return next(err);
-//   }
-// });
 
 export const DonorModel = mongoose.model<DonorDocument>("Donor", DonorSchema);

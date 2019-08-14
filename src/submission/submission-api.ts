@@ -41,7 +41,7 @@ class SubmissionController {
     const file = req.file;
     let records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
     try {
-      records = await TsvUtils.tsvToJson(file);
+      records = await TsvUtils.tsvToJson(file.path);
     } catch (err) {
       return ControllerUtils.badRequest(res, {
         msg: `failed to parse the tsv file: ${err}`,
