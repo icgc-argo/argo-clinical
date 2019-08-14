@@ -199,10 +199,10 @@ export namespace operations {
         info: {
           ...schemaErr.info,
           value: records[schemaErr.index][schemaErr.fieldName],
-          donorSubmitterId: records[schemaErr.index][RegistrationFieldsEnum.donor_submitter_id],
+          donorSubmitterId: records[schemaErr.index][RegistrationFieldsEnum.submitter_donor_id],
           specimenSubmitterId:
-            records[schemaErr.index][RegistrationFieldsEnum.specimen_submitter_id],
-          sampleSubmitterId: records[schemaErr.index][RegistrationFieldsEnum.specimen_submitter_id]
+            records[schemaErr.index][RegistrationFieldsEnum.submitter_specimen_id],
+          sampleSubmitterId: records[schemaErr.index][RegistrationFieldsEnum.submitter_specimen_id]
         },
         fieldName: schemaErr.fieldName as RegistrationRecordFields
       });
@@ -270,12 +270,12 @@ export namespace operations {
       records: registrationRecords.map(r => {
         const record: Readonly<SubmittedRegistrationRecord> = {
           program_id: command.programId,
-          donor_submitter_id: r.donorSubmitterId,
+          submitter_donor_id: r.donorSubmitterId,
           gender: r.gender,
-          specimen_submitter_id: r.specimenSubmitterId,
+          submitter_specimen_id: r.specimenSubmitterId,
           specimen_type: r.specimenType,
           tumour_normal_designation: r.tumourNormalDesignation,
-          sample_submitter_id: r.sampleSubmitterId,
+          submitter_sample_id: r.sampleSubmitterId,
           sample_type: r.sampleType
         };
         return record;
@@ -291,14 +291,14 @@ export namespace operations {
     return F(
       records.map(r => {
         const rec: CreateRegistrationRecord = {
-          programId: r.program_id as string,
-          donorSubmitterId: r.donor_submitter_id as string,
-          gender: r.gender as string,
-          specimenSubmitterId: r.specimen_submitter_id as string,
-          specimenType: r.specimen_type as string,
-          tumourNormalDesignation: r.tumour_normal_designation as string,
-          sampleSubmitterId: r.sample_submitter_id as string,
-          sampleType: r.sample_type as string
+          programId: r[RegistrationFieldsEnum.program_id] as string,
+          donorSubmitterId: r[RegistrationFieldsEnum.submitter_donor_id] as string,
+          gender: r[RegistrationFieldsEnum.gender] as string,
+          specimenSubmitterId: r[RegistrationFieldsEnum.submitter_specimen_id] as string,
+          specimenType: r[RegistrationFieldsEnum.specimen_type] as string,
+          tumourNormalDesignation: r[RegistrationFieldsEnum.tumour_normal_designation] as string,
+          sampleSubmitterId: r[RegistrationFieldsEnum.submitter_sample_id] as string,
+          sampleType: r[RegistrationFieldsEnum.sample_type] as string
         };
         return rec;
       })

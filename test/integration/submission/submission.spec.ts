@@ -36,7 +36,7 @@ const expectedErrors = [
     fieldName: "tumour_normal_designation"
   },
   {
-    fieldName: "specimen_submitter_id",
+    fieldName: RegistrationFieldsEnum.submitter_specimen_id,
     index: 0,
     info: {
       donorSubmitterId: "abcd123",
@@ -47,7 +47,7 @@ const expectedErrors = [
     type: "INVALID_BY_REGEX"
   },
   {
-    fieldName: "sample_submitter_id",
+    fieldName: RegistrationFieldsEnum.submitter_sample_id,
     index: 0,
     info: {
       donorSubmitterId: "abcd123",
@@ -111,12 +111,12 @@ const expectedResponse1 = {
     records: [
       {
         program_id: "ABCD-EF",
-        donor_submitter_id: "abcd123",
+        submitter_donor_id: "abcd123",
         gender: "Male",
-        specimen_submitter_id: "ss123",
+        submitter_specimen_id: "ss123",
         specimen_type: "FFPE",
         tumour_normal_designation: "Normal",
-        sample_submitter_id: "sm123",
+        submitter_sample_id: "sm123",
         sample_type: "ctDNA"
       }
     ],
@@ -143,12 +143,12 @@ const ABCD_REGISTRATION_DOC: ActiveRegistration = {
   records: [
     {
       program_id: "ABCD-EF",
-      donor_submitter_id: "abcd123",
+      submitter_donor_id: "abcd123",
       gender: "Male",
-      specimen_submitter_id: "ss123",
+      submitter_specimen_id: "ss123",
       specimen_type: "FFPE",
       tumour_normal_designation: "Normal",
-      sample_submitter_id: "sm123",
+      submitter_sample_id: "sm123",
       sample_type: "ctDNA"
     }
   ]
@@ -448,19 +448,19 @@ async function asserCommit1OK(res: any, rows: any[]) {
       emptyDonorDocument({
         donorId: i,
         gender: r[RegistrationFieldsEnum.gender],
-        submitterId: r[RegistrationFieldsEnum.donor_submitter_id],
+        submitterId: r[RegistrationFieldsEnum.submitter_donor_id],
         programId: r[RegistrationFieldsEnum.program_id],
         specimens: [
           {
             specimenId: i,
-            submitterId: r[RegistrationFieldsEnum.specimen_submitter_id],
+            submitterId: r[RegistrationFieldsEnum.submitter_specimen_id],
             specimenType: r[RegistrationFieldsEnum.specimen_type],
             tumourNormalDesignation: r[RegistrationFieldsEnum.tumour_normal_designation],
             samples: [
               {
                 sampleId: i,
                 sampleType: r[RegistrationFieldsEnum.sample_type],
-                submitterId: r[RegistrationFieldsEnum.sample_submitter_id]
+                submitterId: r[RegistrationFieldsEnum.submitter_sample_id]
               }
             ]
           }
