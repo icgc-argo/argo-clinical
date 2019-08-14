@@ -9,7 +9,7 @@ export const stubs = {
       _id: "i8321321",
       submitterId: "AB1",
       programId: "PEME-CA",
-      donorId: "DO10",
+      donorId: 10,
       clinicalInfo: {},
       gender: "Female",
       specimens: [

@@ -1,0 +1,5 @@
+program_id	donor_submitter_id	gender	specimen_submitter_id	specimen_type	tumour_normal_designation	sample_submitter_id	sample_type
+ABCD-EF	abcd-125	Male	ss123-jdjr-ak	Bone marrow	Xenograft - derived from primary tumour	sm123-4	polyA+ RNA	
+ABCD-EF	abcd-126	Female	ss123-sjdm	Serum	Cell line - derived from xenograft tissue	sm123-5	Ribo-Zero RNA	
+ABCD-EF	abcd-127	Male	ss123-1123	Pleural effusion	Primary tumour - adjacent to normal	sm123-6	polyA+ RNA	
+ABCD-EF	abcd-128	Female	ss123=@@abnc	FFPE	Metastatic tumour	sm123-7	ctDNA

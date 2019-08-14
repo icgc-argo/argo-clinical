@@ -1,4 +1,6 @@
 import mongo from "mongodb";
+import { Donor } from "../../src/clinical/clinical-entities";
+import _ from "lodash";
 
 export const cleanCollection = async (dburl: string, collection: string): Promise<any> => {
   console.log(`dburl ${dburl}`);
@@ -22,4 +24,21 @@ export const insertData = async (
   console.log("doc Id is:" + document._id);
   conn.close();
   return document._id;
+};
+export const emptyDonorDocument = (overrides?: object) => {
+  const donor = {
+    donorId: "",
+    gender: "",
+    submitterId: "",
+    programId: "",
+    specimens: [],
+    followUps: [],
+    treatments: [],
+    chemotherapy: [],
+    HormoneTherapy: []
+  };
+  if (!overrides) {
+    return donor;
+  }
+  return _.merge(donor, overrides);
 };
