@@ -70,7 +70,7 @@ const sampleTypeMutatedError: RegistrationValidationError = {
 };
 
 const specimenBelongsToOtherDonor: RegistrationValidationError = {
-  fieldName: "specimen_submitter_id",
+  fieldName: RegistrationFieldsEnum.specimen_submitter_id,
   index: 0,
   info: {
     donorSubmitterId: "AB2",
@@ -128,7 +128,7 @@ describe("data-validator", () => {
         sample_submitter_id: "AM1",
         specimen_type: "XYZ",
         sample_type: "ST1",
-        specimen_submitter_id: "SP1",
+        submitter_specimen_id: "SP1",
         tumour_normal_designation: "Normal"
       },
       "PEME-CA"
@@ -494,7 +494,7 @@ describe("data-validator", () => {
 
     // assertions
     const row0Err = {
-      fieldName: "specimen_submitter_id",
+      fieldName: RegistrationFieldsEnum.specimen_submitter_id,
       index: 0,
       info: {
         conflictingRows: [2],
@@ -507,7 +507,7 @@ describe("data-validator", () => {
     };
 
     const row2Err = {
-      fieldName: "specimen_submitter_id",
+      fieldName: RegistrationFieldsEnum.specimen_submitter_id,
       index: 2,
       info: {
         conflictingRows: [0],

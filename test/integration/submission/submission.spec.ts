@@ -32,7 +32,7 @@ const expectedErrors = [
     fieldName: "tumour_normal_designation"
   },
   {
-    fieldName: "specimen_submitter_id",
+    fieldName: "submitter_specimen_id",
     index: 0,
     info: {
       donorSubmitterId: "abcd123",
@@ -109,7 +109,7 @@ const expectedResponse1 = {
         program_id: "ABCD-EF",
         donor_submitter_id: "abcd123",
         gender: "Male",
-        specimen_submitter_id: "ss123",
+        submitter_specimen_id: "ss123",
         specimen_type: "FFPE",
         tumour_normal_designation: "Normal",
         sample_submitter_id: "sm123",
@@ -141,7 +141,7 @@ const ABCD_REGISTRATION_DOC: ActiveRegistration = {
       program_id: "ABCD-EF",
       donor_submitter_id: "abcd123",
       gender: "Male",
-      specimen_submitter_id: "ss123",
+      submitter_specimen_id: "ss123",
       specimen_type: "FFPE",
       tumour_normal_designation: "Normal",
       sample_submitter_id: "sm123",

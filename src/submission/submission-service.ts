@@ -274,7 +274,7 @@ export namespace operations {
           program_id: command.programId,
           donor_submitter_id: r.donorSubmitterId,
           gender: r.gender,
-          specimen_submitter_id: r.specimenSubmitterId,
+          submitter_specimen_id: r.specimenSubmitterId,
           specimen_type: r.specimenType,
           tumour_normal_designation: r.tumourNormalDesignation,
           sample_submitter_id: r.sampleSubmitterId,
@@ -293,14 +293,14 @@ export namespace operations {
     return F(
       records.map(r => {
         const rec: CreateRegistrationRecord = {
-          programId: r.program_id as string,
-          donorSubmitterId: r.donor_submitter_id as string,
-          gender: r.gender as string,
-          specimenSubmitterId: r.specimen_submitter_id as string,
-          specimenType: r.specimen_type as string,
-          tumourNormalDesignation: r.tumour_normal_designation as string,
-          sampleSubmitterId: r.sample_submitter_id as string,
-          sampleType: r.sample_type as string
+          programId: r[RegistrationFieldsEnum.program_id] as string,
+          donorSubmitterId: r[RegistrationFieldsEnum.donor_submitter_id] as string,
+          gender: r[RegistrationFieldsEnum.gender] as string,
+          specimenSubmitterId: r[RegistrationFieldsEnum.specimen_submitter_id] as string,
+          specimenType: r[RegistrationFieldsEnum.specimen_type] as string,
+          tumourNormalDesignation: r[RegistrationFieldsEnum.tumour_normal_designation] as string,
+          sampleSubmitterId: r[RegistrationFieldsEnum.sample_submitter_id] as string,
+          sampleType: r[RegistrationFieldsEnum.sample_type] as string
         };
         return rec;
       })

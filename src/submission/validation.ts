@@ -72,7 +72,7 @@ export const usingInvalidProgramId = (
   expectedProgram: string
 ) => {
   const errors: RegistrationValidationError[] = [];
-  const programId = registrationRecord.program_id;
+  const programId = registrationRecord[RegistrationFieldsEnum.program_id];
   if (programId) {
     if (expectedProgram !== programId) {
       errors.push({

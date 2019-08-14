@@ -71,7 +71,7 @@ const ActiveRegistrationItem = new mongoose.Schema(
     program_id: { type: String, required: true },
     donor_submitter_id: { type: String, required: true },
     gender: { type: String, required: true },
-    specimen_submitter_id: { type: String, required: true },
+    submitter_specimen_id: { type: String, required: true },
     specimen_type: { type: String, required: true },
     tumour_normal_designation: { type: String, required: true },
     sample_submitter_id: { type: String, required: true },

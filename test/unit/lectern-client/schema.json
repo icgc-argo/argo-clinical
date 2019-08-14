@@ -43,7 +43,7 @@
             }
           },
           {
-            "name": "specimen_submitter_id",
+            "name": "submitter_specimen_id",
             "valueType": "string",
             "description": "Submitter assigned specimen id",
             "meta": {
