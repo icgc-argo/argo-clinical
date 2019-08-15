@@ -24,6 +24,7 @@ export type FindByProgramAndSubmitterFilter = DeepReadonly<{
 }>;
 export interface DonorRepository {
   findByProgramId(programId: string): Promise<DeepReadonly<Donor[]>>;
+  deleteByProgramId(programId: string): Promise<void>;
   findByProgramAndSubmitterId(
     filters: DeepReadonly<FindByProgramAndSubmitterFilter[]>
   ): Promise<DeepReadonly<Donor[]> | undefined>;
@@ -36,6 +37,12 @@ export interface DonorRepository {
 export const donorDao: DonorRepository = {
   async countBy(filter: any) {
     return await DonorModel.count(filter).exec();
+  },
+
+  async deleteByProgramId(programId: string): Promise<void> {
+    await DonorModel.deleteMany({
+      [DONOR_FIELDS.PROGRAM_ID]: programId
+    }).exec();
   },
 
   async findByProgramId(programId: string): Promise<DeepReadonly<Donor[]>> {

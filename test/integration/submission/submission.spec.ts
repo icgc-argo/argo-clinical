@@ -13,7 +13,6 @@ import { cleanCollection, insertData, emptyDonorDocument, resetCounters } from "
 import { TEST_PUB_KEY, JWT_ABCDEF, JWT_WXYZEF } from "./test.jwt";
 import {
   ActiveRegistration,
-  CreateRegistrationResult,
   RegistrationFieldsEnum
 } from "../../../src/submission/submission-entities";
 import { TsvUtils } from "../../../src/utils";
