@@ -141,7 +141,47 @@ paths:
                     type: array
                     items:
                       type: string
-
+  /clinical/donors:
+    delete:
+      parameters:
+        - name: programId
+          description: the short name of the program
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+        "500":
+          $ref: "#/components/responses/ServerError"
+        "200":
+          description: "all donors deleted"
+    get:
+      parameters:
+        - name: programId
+          description: the short name of the program
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+        "500":
+          $ref: "#/components/responses/ServerError"
+        "200":
+          description: "donors of program "
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
 servers:
   - url: /
 components:
