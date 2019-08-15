@@ -1,7 +1,7 @@
 import * as submission from "./submission-service";
 import * as submission2Clinical from "./submission-to-clinical";
 import { Request, Response } from "express";
-import { TsvUtils, ControllerUtils } from "../utils";
+import { TsvUtils, ControllerUtils, isStringMatchRegex } from "../utils";
 import { loggerFor } from "../logger";
 import { CreateRegistrationCommand } from "./submission-entities";
 import { HasSubmitionAccess as HasSubmittionAccess } from "../auth-decorators";
@@ -9,7 +9,14 @@ import jwt from "jsonwebtoken";
 const L = loggerFor(__filename);
 
 export enum ErrorCodes {
-  TSV_PARSING_FAILED = "TSV_PARSING_FAILED"
+  TSV_PARSING_FAILED = "TSV_PARSING_FAILED",
+  INVALID_FILE_NAME = "INVALID_FILE_NAME"
+}
+
+export enum FileNameRegex {
+  REGISTRATION = "registration.*.tsv",
+  DONOR = "donor.*.tsv",
+  SPECIMEN = "specimen.*.tsv"
 }
 class SubmissionController {
   @HasSubmittionAccess((req: Request) => req.params.programId)
@@ -51,7 +58,8 @@ class SubmissionController {
     const command: CreateRegistrationCommand = {
       programId: programId,
       creator: creator,
-      records: records
+      records: records,
+      batchName: file.originalname
     };
     res.set("Content-Type", "application/json");
     const result = await submission.operations.createRegistration(command);
@@ -96,6 +104,14 @@ const isValidCreateBody = (req: Request, res: Response): boolean => {
   if (req.file == undefined) {
     L.debug("registrationFile missing");
     ControllerUtils.badRequest(res, `registrationFile file is required`);
+    return false;
+  }
+  if (!isStringMatchRegex(FileNameRegex.REGISTRATION, req.file.originalname)) {
+    L.debug("registrationFile name is invalid");
+    ControllerUtils.badRequest(res, {
+      msg: `invalid file name, must start with registration and have .tsv extension`,
+      code: ErrorCodes.INVALID_FILE_NAME
+    });
     return false;
   }
   return true;

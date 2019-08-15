@@ -88,6 +88,10 @@ export function isString(value: any): value is string {
   return value instanceof String;
 }
 
+export const isStringMatchRegex = (expression: string, value: string) => {
+  return RegExp(expression).test(value);
+};
+
 export const isNotEmptyString = (value: string) => {
   return isNotAbsent(value) && value.trim() !== "";
 };
