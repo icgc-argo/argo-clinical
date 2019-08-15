@@ -77,7 +77,7 @@ const ActiveRegistrationItem = new mongoose.Schema(
     submitter_sample_id: { type: String, required: true },
     sample_type: { type: String, required: true }
   },
-  { _id: false }
+  { _id: false, minimize: false }
 );
 
 const ActiveRegistrationSchema = new mongoose.Schema(
@@ -88,7 +88,7 @@ const ActiveRegistrationSchema = new mongoose.Schema(
     stats: { type: Object },
     records: [ActiveRegistrationItem]
   },
-  { timestamps: true }
+  { timestamps: true, minimize: false }
 );
 
 export const ActiveRegistrationModel = mongoose.model<ActiveRegistrationDocument>(

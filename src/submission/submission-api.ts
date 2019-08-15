@@ -64,11 +64,13 @@ class SubmissionController {
   @HasSubmittionAccess((req: Request) => req.params.programId)
   async commitRegistration(req: Request, res: Response) {
     const programId = req.params.programId;
-    await submission2Clinical.commitRegisteration({
+    const newSamples: string[] = await submission2Clinical.commitRegisteration({
       registrationId: req.params.id,
       programId
     });
-    return res.status(200).send();
+    return res.status(200).send({
+      newSamples
+    });
   }
 
   @HasSubmittionAccess((req: Request) => req.params.programId)

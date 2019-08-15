@@ -9,6 +9,7 @@ import * as swaggerUi from "swagger-ui-express";
 import yaml from "yamljs";
 import multer from "multer";
 import { loggerFor } from "./logger";
+import { findDonors, deleteDonors } from "./clinical/clinical-api";
 
 const L = loggerFor(__filename);
 
@@ -47,10 +48,16 @@ app.delete(
 
 /** Schema API */
 app.get("/submission/schema/", middleware.wrapAsync(schemaApi.get));
+
 // temporary api
 app.post("/submission/schema/hack/refresh", middleware.wrapAsync(schemaApi.update));
 
 app.post("/submission/schema/hack/replace", middleware.wrapAsync(schemaApi.replace));
+
+/** clinical API */
+app.get("/clinical/donors", middleware.wrapAsync(findDonors));
+app.delete("/clinical/donors", middleware.wrapAsync(deleteDonors));
+
 // this has to be defined after all routes for it to work for these paths.
 app.use(middleware.errorHandler);
 app.use(
@@ -58,6 +65,7 @@ app.use(
   swaggerUi.serve,
   swaggerUi.setup(yaml.load(path.join(__dirname, "./resources/swagger.yaml")))
 );
+
 if (process.env.NODE_ENV !== "PRODUCTION") {
   app.use(errorHandler());
 }

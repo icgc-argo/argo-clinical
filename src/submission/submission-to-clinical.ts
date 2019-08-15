@@ -46,7 +46,12 @@ export const commitRegisteration = async (command: Readonly<CommitRegistrationCo
   }
 
   registrationRepository.delete(command.registrationId);
-  return registration.stats.newSampleIds;
+  return (
+    (registration.stats &&
+      registration.stats.newSampleIds &&
+      Object.keys(registration.stats.newSampleIds)) ||
+    []
+  );
 };
 
 const fromCreateDonorDtoToDonor = (createDonorDto: DeepReadonly<CreateDonorSampleDto>) => {
