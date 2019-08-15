@@ -397,6 +397,33 @@ describe("Submission Api", () => {
           return done();
         });
     });
+    it("should not accept invalid file names", done => {
+      let file: Buffer;
+      try {
+        file = fs.readFileSync(__dirname + "/thisIsARegistration.tsv");
+      } catch (err) {
+        return done(err);
+      }
+      console.log(file);
+      chai
+        .request(app)
+        .post("/submission/program/ABCD-EF/registration")
+        .type("form")
+        .attach("registrationFile", file, "thisIsARegistration.tsv")
+        .auth(JWT_ABCDEF, { type: "bearer" })
+        .end(async (err: any, res: any) => {
+          try {
+            res.should.have.status(400);
+            res.body.should.deep.eq({
+              msg: "invalid file name, must be registration*.tsv",
+              code: "INVALID_FILE_NAME"
+            });
+          } catch (err) {
+            return done(err);
+          }
+          return done();
+        });
+    });
     it("Registration should return 404 if try to delete non exsistent registration", done => {
       chai
         .request(app)
