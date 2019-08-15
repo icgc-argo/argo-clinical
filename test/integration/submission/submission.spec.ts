@@ -19,6 +19,7 @@ import {
 import { TsvUtils } from "../../../src/utils";
 import { donorDao } from "../../../src/clinical/donor-repo";
 import { Donor } from "../../../src/clinical/clinical-entities";
+import { ErrorCodes } from "../../../src/submission/submission-api";
 export let mongoContainer: any;
 chai.use(require("chai-http"));
 chai.should();
@@ -416,7 +417,7 @@ describe("Submission Api", () => {
             res.should.have.status(400);
             res.body.should.deep.eq({
               msg: "invalid file name, must be registration*.tsv",
-              code: "INVALID_FILE_NAME"
+              code: ErrorCodes.INVALID_FILE_NAME
             });
           } catch (err) {
             return done(err);

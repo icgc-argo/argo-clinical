@@ -55,7 +55,7 @@ paths:
                     type: string
                   code:
                     type: string
-                    enum: ["TSV_PARSING_FAILED", "INVALID_FILE_ERROR"]
+                    enum: ["TSV_PARSING_FAILED", "INVALID_FILE_NAME"]
               examples:
                 TSVParseError:
                   value:
@@ -64,7 +64,7 @@ paths:
                 InvalidFIleNameError:
                   value:
                     msg: "string"
-                    code: "INVALID_FILE_ERROR"
+                    code: "INVALID_FILE_NAME"
 
         "422":
           description: "invalid registration file"
@@ -233,6 +233,9 @@ components:
         creator:
           type: string
           description: first name and last name of the user who created this registration
+        batchName:
+          type: string
+          description: a valid registration file name
         stats:
           type: object
           properties:
