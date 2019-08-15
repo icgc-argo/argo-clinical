@@ -28,12 +28,12 @@ const reg1: ActiveRegistration = {
   records: [
     {
       program_id: "ABCD-EF",
-      donor_submitter_id: "abcd123",
+      submitter_donor_id: "abcd123",
       gender: "Male",
-      specimen_submitter_id: "ss123",
+      submitter_specimen_id: "ss123",
       specimen_type: "FFPE",
       tumour_normal_designation: "Normal",
-      sample_submitter_id: "sm123",
+      submitter_sample_id: "sm123",
       sample_type: "ctDNA"
     }
   ]
@@ -56,12 +56,12 @@ const reg2: ActiveRegistration = {
   records: [
     {
       program_id: "ABCD-EF",
-      donor_submitter_id: "abcd123",
+      submitter_donor_id: "abcd123",
       gender: "Male",
-      specimen_submitter_id: "ss123",
+      submitter_specimen_id: "ss123",
       specimen_type: "FFPE",
       tumour_normal_designation: "Normal",
-      sample_submitter_id: "sm123",
+      submitter_sample_id: "sm123",
       sample_type: "ctDNA"
     }
   ]

@@ -72,7 +72,7 @@ export const usingInvalidProgramId = (
   expectedProgram: string
 ) => {
   const errors: RegistrationValidationError[] = [];
-  const programId = registrationRecord.program_id;
+  const programId = registrationRecord[RegistrationFieldsEnum.program_id];
   if (programId) {
     if (expectedProgram !== programId) {
       errors.push({
@@ -81,9 +81,9 @@ export const usingInvalidProgramId = (
         index: newDonorIndex,
         info: {
           value: registrationRecord[RegistrationFieldsEnum.program_id],
-          sampleSubmitterId: registrationRecord[RegistrationFieldsEnum.sample_submitter_id],
-          specimenSubmitterId: registrationRecord[RegistrationFieldsEnum.specimen_submitter_id],
-          donorSubmitterId: registrationRecord[RegistrationFieldsEnum.donor_submitter_id],
+          sampleSubmitterId: registrationRecord[RegistrationFieldsEnum.submitter_sample_id],
+          specimenSubmitterId: registrationRecord[RegistrationFieldsEnum.submitter_specimen_id],
+          donorSubmitterId: registrationRecord[RegistrationFieldsEnum.submitter_donor_id],
           expectedProgram
         }
       });
@@ -139,7 +139,7 @@ const conflictingNewSpecimen = (
       buildError(
         newDonor,
         DataValidationErrors.NEW_SPECIMEN_CONFLICT,
-        RegistrationFieldsEnum.specimen_submitter_id,
+        RegistrationFieldsEnum.submitter_specimen_id,
         newDonorIndex,
         {
           conflictingRows: conflictingSpecimensIndices
@@ -255,7 +255,7 @@ const conflictingNewSample = (
     const err = buildError(
       newDonor,
       DataValidationErrors.NEW_SAMPLE_CONFLICT,
-      RegistrationFieldsEnum.sample_submitter_id,
+      RegistrationFieldsEnum.submitter_sample_id,
       newDonorIndex,
       {
         conflictingRows: conflictingSamplesIndices
@@ -397,7 +397,7 @@ const specimenBelongsToOtherDonor = async (
       buildError(
         newDonor,
         DataValidationErrors.SPECIMEN_BELONGS_TO_OTHER_DONOR,
-        RegistrationFieldsEnum.specimen_submitter_id,
+        RegistrationFieldsEnum.submitter_specimen_id,
         index,
         {}
       )
@@ -423,7 +423,7 @@ const sampleBelongsToAnotherSpecimen = async (
       buildError(
         newDonor,
         DataValidationErrors.SAMPLE_BELONGS_TO_OTHER_SPECIMEN,
-        RegistrationFieldsEnum.sample_submitter_id,
+        RegistrationFieldsEnum.submitter_sample_id,
         index,
         {}
       )

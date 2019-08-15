@@ -1,4 +1,4 @@
-program_id	donor_submitter_id	gender	specimen_submitter_id	specimen_type	tumour_normal_designation	sample_submitter_id	sample_type
+program_id	submitter_donor_id	gender	submitter_specimen_id	specimen_type	tumour_normal_designation	submitter_sample_id	sample_type
 PACA-AU	abcd-124	Female	ss123-ooo	Saliva	Primary tumour	sm123-124-1	Amplified DNA
 PACA-AU	abcd-125	Male	ss123-jdjr-ak	Bone marrow	Xenograft - derived from primary tumour	sm123-4	polyA+ RNA	
 PACA-AU	abcd-128	Female	ss123=@@abnc	FFPE	Metastatic tumour	sm123-7	ctDNA

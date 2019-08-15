@@ -70,7 +70,7 @@ const sampleTypeMutatedError: RegistrationValidationError = {
 };
 
 const specimenBelongsToOtherDonor: RegistrationValidationError = {
-  fieldName: "specimen_submitter_id",
+  fieldName: RegistrationFieldsEnum.submitter_specimen_id,
   index: 0,
   info: {
     donorSubmitterId: "AB2",
@@ -82,7 +82,7 @@ const specimenBelongsToOtherDonor: RegistrationValidationError = {
 };
 
 const sampleBelongsToOtherSpecimenAB2: RegistrationValidationError = {
-  fieldName: "sample_submitter_id",
+  fieldName: RegistrationFieldsEnum.submitter_sample_id,
   index: 0,
   info: {
     donorSubmitterId: "AB2",
@@ -94,7 +94,7 @@ const sampleBelongsToOtherSpecimenAB2: RegistrationValidationError = {
 };
 
 const sampleBelongsToOtherSpecimenAB1: RegistrationValidationError = {
-  fieldName: "sample_submitter_id",
+  fieldName: RegistrationFieldsEnum.submitter_sample_id,
   index: 0,
   info: {
     donorSubmitterId: "AB1",
@@ -122,13 +122,13 @@ describe("data-validator", () => {
     const result = await dv.usingInvalidProgramId(
       0,
       {
-        donor_submitter_id: "AB1",
+        submitter_donor_id: "AB1",
         gender: "Male",
         program_id: "PEM-CA",
-        sample_submitter_id: "AM1",
+        submitter_sample_id: "AM1",
         specimen_type: "XYZ",
         sample_type: "ST1",
-        specimen_submitter_id: "SP1",
+        submitter_specimen_id: "SP1",
         tumour_normal_designation: "Normal"
       },
       "PEME-CA"
@@ -420,7 +420,7 @@ describe("data-validator", () => {
 
     // assertions
     const row0Err = {
-      fieldName: "sample_submitter_id",
+      fieldName: RegistrationFieldsEnum.submitter_sample_id,
       index: 0,
       info: {
         conflictingRows: [1],
@@ -433,7 +433,7 @@ describe("data-validator", () => {
     };
 
     const row1Err = {
-      fieldName: "sample_submitter_id",
+      fieldName: RegistrationFieldsEnum.submitter_sample_id,
       index: 1,
       info: {
         conflictingRows: [0],
@@ -494,7 +494,7 @@ describe("data-validator", () => {
 
     // assertions
     const row0Err = {
-      fieldName: "specimen_submitter_id",
+      fieldName: RegistrationFieldsEnum.submitter_specimen_id,
       index: 0,
       info: {
         conflictingRows: [2],
@@ -507,7 +507,7 @@ describe("data-validator", () => {
     };
 
     const row2Err = {
-      fieldName: "specimen_submitter_id",
+      fieldName: RegistrationFieldsEnum.submitter_specimen_id,
       index: 2,
       info: {
         conflictingRows: [0],
@@ -788,7 +788,7 @@ describe("data-validator", () => {
 
     // assertions
     const row0Err: RegistrationValidationError = {
-      fieldName: RegistrationFieldsEnum.sample_submitter_id,
+      fieldName: RegistrationFieldsEnum.submitter_sample_id,
       index: 0,
       info: {
         donorSubmitterId: "AB1",
@@ -801,7 +801,7 @@ describe("data-validator", () => {
     };
 
     const row2Err: RegistrationValidationError = {
-      fieldName: RegistrationFieldsEnum.sample_submitter_id,
+      fieldName: RegistrationFieldsEnum.submitter_sample_id,
       index: 2,
       info: {
         donorSubmitterId: "AB1",

@@ -14,12 +14,12 @@ export interface ActiveRegistration {
 
 export interface SubmittedRegistrationRecord {
   readonly program_id: string;
-  readonly donor_submitter_id: string;
+  readonly submitter_donor_id: string;
   readonly gender: string;
-  readonly specimen_submitter_id: string;
+  readonly submitter_specimen_id: string;
   readonly specimen_type: string;
   readonly tumour_normal_designation: string;
-  readonly sample_submitter_id: string;
+  readonly submitter_sample_id: string;
   readonly sample_type: string;
 }
 
@@ -29,23 +29,23 @@ type x = { [key in keyof SubmittedRegistrationRecord]: keyof CreateRegistrationR
 
 export const RegistrationToCreateRegistrationFieldsMap: x = {
   program_id: "programId",
-  donor_submitter_id: "donorSubmitterId",
+  submitter_donor_id: "donorSubmitterId",
   gender: "gender",
-  specimen_submitter_id: "specimenSubmitterId",
+  submitter_specimen_id: "specimenSubmitterId",
   specimen_type: "specimenType",
   tumour_normal_designation: "tumourNormalDesignation",
-  sample_submitter_id: "sampleSubmitterId",
+  submitter_sample_id: "sampleSubmitterId",
   sample_type: "sampleType"
 };
 
 export enum RegistrationFieldsEnum {
   program_id = "program_id",
-  donor_submitter_id = "donor_submitter_id",
+  submitter_donor_id = "submitter_donor_id",
   gender = "gender",
-  specimen_submitter_id = "specimen_submitter_id",
+  submitter_specimen_id = "submitter_specimen_id",
   specimen_type = "specimen_type",
   tumour_normal_designation = "tumour_normal_designation",
-  sample_submitter_id = "sample_submitter_id",
+  submitter_sample_id = "submitter_sample_id",
   sample_type = "sample_type"
 }
 

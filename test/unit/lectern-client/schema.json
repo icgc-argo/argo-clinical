@@ -4,7 +4,7 @@
       {
         "name": "registration",
         "description": "TSV for Registration of Donor-Specimen-Sample",
-        "key": "donor_submitter_id",
+        "key": "submitter_donor_id",
         "fields": [
           {
             "name": "program_id",
@@ -19,7 +19,7 @@
             }
           },
           {
-            "name": "donor_submitter_id",
+            "name": "submitter_donor_id",
             "valueType": "string",
             "description": "Unique identifier for donor, assigned by the data provider.",
             "meta": {
@@ -43,7 +43,7 @@
             }
           },
           {
-            "name": "specimen_submitter_id",
+            "name": "submitter_specimen_id",
             "valueType": "string",
             "description": "Submitter assigned specimen id",
             "meta": {
@@ -112,7 +112,7 @@
             }
           },
           {
-            "name": "sample_submitter_id",
+            "name": "submitter_sample_id",
             "valueType": "string",
             "description": "Submitter assigned sample id",
             "restrictions": {

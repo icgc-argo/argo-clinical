@@ -1,6 +1,6 @@
 {
   "name": "argo-clinical",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Clinical submission system and repo",
   "scripts": {
     "start": "npm run serve",
