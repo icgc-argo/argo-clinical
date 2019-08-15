@@ -84,6 +84,7 @@ const ActiveRegistrationSchema = new mongoose.Schema(
   {
     programId: { type: String, unique: true, required: true },
     creator: { type: String },
+    batchName: { type: String },
     status: { type: String },
     stats: { type: Object },
     records: [ActiveRegistrationItem]

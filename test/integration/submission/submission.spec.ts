@@ -128,6 +128,7 @@ const expectedResponse1 = {
 const ABCD_REGISTRATION_DOC: ActiveRegistration = {
   programId: "ABCD-EF",
   creator: "Test User",
+  batchName: "registration.tsv",
   stats: {
     newDonorIds: {
       abcd123: [0]

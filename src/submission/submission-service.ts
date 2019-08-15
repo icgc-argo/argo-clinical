@@ -266,6 +266,7 @@ export namespace operations {
     return F({
       programId: command.programId,
       creator: command.creator,
+      batchName: command.batchName,
       stats: stats,
       records: registrationRecords.map(r => {
         const record: Readonly<SubmittedRegistrationRecord> = {

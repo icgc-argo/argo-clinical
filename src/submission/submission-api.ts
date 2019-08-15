@@ -51,7 +51,8 @@ class SubmissionController {
     const command: CreateRegistrationCommand = {
       programId: programId,
       creator: creator,
-      records: records
+      records: records,
+      batchName: file.originalname
     };
     res.set("Content-Type", "application/json");
     const result = await submission.operations.createRegistration(command);
