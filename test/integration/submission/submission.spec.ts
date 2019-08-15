@@ -181,6 +181,9 @@ describe("Submission Api", () => {
           },
           jwtPubKeyUrl() {
             return "";
+          },
+          schemaServiceUrl() {
+            return "";
           }
         });
       } catch (err) {

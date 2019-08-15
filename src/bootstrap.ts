@@ -80,7 +80,8 @@ export const run = async (config: AppConfig) => {
   if (process.env.LOG_LEVEL === "debug") {
     mongoose.set("debug", true);
   }
-  await manager.loadSchema(config.schemaName(), config.initialSchemaVersion());
+  manager.create(config.schemaServiceUrl());
+  await manager.instance().loadSchema(config.schemaName(), config.initialSchemaVersion());
   // close app connections on termination
   const gracefulExit = () => {
     mongoose.connection.close(function() {

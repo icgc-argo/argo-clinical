@@ -5,83 +5,102 @@ import { schemaRepo } from "./schema-repo";
 import { loggerFor } from "../logger";
 const L = loggerFor(__filename);
 
-export let currentSchema: SchemasDictionary;
+let manager: SchemaManager;
 
-export const getCurrent = (): SchemasDictionary => {
-  return currentSchema;
-};
-/**
- * This method does three things:
- * 1- populate default values for missing fields
- * 2- validate the record against the schema
- * 3- convert the raw data from strings to their proper type if needed.
- *
- * @param definition the schema we want to process records for
- * @param records the raw records list
- *
- * @returns object contains the validation errors and the valid processed records.
- */
-export const process = (
-  definition: string,
-  records: ReadonlyArray<DataRecord>
-): SchemaProcessingResult => {
-  return service.process(getCurrent(), definition, records);
-};
+class SchemaManager {
+  private currentSchema: SchemasDictionary = {
+    schemas: [],
+    name: name,
+    version: ""
+  };
+  constructor(private schemaServiceUrl: string) {}
 
-export const updateVersion = async (
-  name: string,
-  newVersion: string
-): Promise<SchemasDictionary> => {
-  const newSchema = await schemaServiceAdapter.fetchSchema(name, newVersion);
-  const result = await schemaRepo.createOrUpdate(newSchema);
-  if (!result) {
-    throw new Error("couldn't save/update new schema.");
-  }
-  currentSchema = result;
-  return currentSchema;
-};
+  getCurrent = (): SchemasDictionary => {
+    return this.currentSchema;
+  };
+  /**
+   * This method does three things:
+   * 1- populate default values for missing fields
+   * 2- validate the record against the schema
+   * 3- convert the raw data from strings to their proper type if needed.
+   *
+   * @param definition the schema we want to process records for
+   * @param records the raw records list
+   *
+   * @returns object contains the validation errors and the valid processed records.
+   */
+  process = (definition: string, records: ReadonlyArray<DataRecord>): SchemaProcessingResult => {
+    return service.process(this.getCurrent(), definition, records);
+  };
 
-export const replace = async (newSchema: SchemasDictionary): Promise<SchemasDictionary> => {
-  const result = await schemaRepo.createOrUpdate(newSchema);
-  if (!result) {
-    throw new Error("couldn't save/update new schema.");
-  }
-  currentSchema = result;
-  return currentSchema;
-};
-
-export const loadSchema = async (
-  name: string,
-  initialVersion: string
-): Promise<SchemasDictionary> => {
-  L.debug(`in loadSchema ${initialVersion}`);
-  if (!initialVersion) {
-    throw new Error("initial version cannot be empty");
-  }
-  const storedSchema = await schemaRepo.get(name);
-  if (storedSchema === null) {
-    L.info(`schema not found in db`);
-    currentSchema = {
-      schemas: [],
-      name: name,
-      version: initialVersion
-    };
-  } else {
-    currentSchema = storedSchema;
-  }
-
-  // if the schema is not complete we need to load it from the
-  // schema service (lectern)
-  if (!currentSchema.schemas || currentSchema.schemas.length == 0) {
-    L.debug(`fetching schema from schema service`);
-    const result = await schemaServiceAdapter.fetchSchema(name, currentSchema.version);
-    L.info(`fetched schema ${result.version}`);
-    currentSchema.schemas = result.schemas;
-    const saved = await schemaRepo.createOrUpdate(currentSchema);
-    if (!saved) {
-      throw new Error("couldn't save/update new schema");
+  updateVersion = async (name: string, newVersion: string): Promise<SchemasDictionary> => {
+    const newSchema = await schemaServiceAdapter.fetchSchema(
+      this.schemaServiceUrl,
+      name,
+      newVersion
+    );
+    const result = await schemaRepo.createOrUpdate(newSchema);
+    if (!result) {
+      throw new Error("couldn't save/update new schema.");
     }
-    return saved;
+    this.currentSchema = result;
+    return this.currentSchema;
+  };
+
+  replace = async (newSchema: SchemasDictionary): Promise<SchemasDictionary> => {
+    const result = await schemaRepo.createOrUpdate(newSchema);
+    if (!result) {
+      throw new Error("couldn't save/update new schema.");
+    }
+    this.currentSchema = result;
+    return this.currentSchema;
+  };
+
+  loadSchema = async (name: string, initialVersion: string): Promise<SchemasDictionary> => {
+    L.debug(`in loadSchema ${initialVersion}`);
+    if (!initialVersion) {
+      throw new Error("initial version cannot be empty");
+    }
+    const storedSchema = await schemaRepo.get(name);
+    if (storedSchema === null) {
+      L.info(`schema not found in db`);
+      this.currentSchema = {
+        schemas: [],
+        name: name,
+        version: initialVersion
+      };
+    } else {
+      this.currentSchema = storedSchema;
+    }
+
+    // if the schema is not complete we need to load it from the
+    // schema service (lectern)
+    if (!this.currentSchema.schemas || this.currentSchema.schemas.length == 0) {
+      L.debug(`fetching schema from schema service`);
+      const result = await schemaServiceAdapter.fetchSchema(
+        this.schemaServiceUrl,
+        name,
+        this.currentSchema.version
+      );
+      L.info(`fetched schema ${result.version}`);
+      this.currentSchema.schemas = result.schemas;
+      const saved = await schemaRepo.createOrUpdate(this.currentSchema);
+      if (!saved) {
+        throw new Error("couldn't save/update new schema");
+      }
+      return saved;
+    }
+    return this.currentSchema;
+  };
+}
+
+export function instance() {
+  if (manager == undefined) {
+    throw new Error("manager not initialized, you should call create first");
   }
-  return currentSchema;
-};
+  return manager;
+}
+
+export function create(schemaServiceUrl: string) {
+  manager = new SchemaManager(schemaServiceUrl);
+}
