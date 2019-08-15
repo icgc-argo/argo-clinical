@@ -104,7 +104,7 @@ const isValidCreateBody = (req: Request, res: Response): boolean => {
     ControllerUtils.badRequest(res, `registrationFile file is required`);
     return false;
   }
-  if (!isStringMatchRegex("[", req.file.originalname)) {
+  if (!isStringMatchRegex(FileNameRegex.REGISTRATION, req.file.originalname)) {
     L.debug("registrationFile name is invalid");
     ControllerUtils.badRequest(res, {
       msg: `invalid file name, must be registration*.tsv`,
