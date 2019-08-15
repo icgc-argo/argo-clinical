@@ -492,7 +492,7 @@ describe("Submission Api", () => {
           try {
             res.should.have.status(400);
             res.body.should.deep.eq({
-              msg: "invalid file name, must be registration*.tsv",
+              msg: "invalid file name, must start with registration and have .tsv extension",
               code: ErrorCodes.INVALID_FILE_NAME
             });
           } catch (err) {
