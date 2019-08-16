@@ -61,7 +61,7 @@ paths:
                   value:
                     msg: "string"
                     code: "TSV_PARSING_FAILED"
-                InvalidFIleNameError:
+                InvalidFileNameError:
                   value:
                     msg: "string"
                     code: "INVALID_FILE_NAME"
