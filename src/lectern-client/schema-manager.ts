@@ -30,6 +30,9 @@ class SchemaManager {
    * @returns object contains the validation errors and the valid processed records.
    */
   process = (definition: string, records: ReadonlyArray<DataRecord>): SchemaProcessingResult => {
+    if (this.getCurrent() == undefined) {
+      throw new Error("schema manager not initialized correctly");
+    }
     return service.process(this.getCurrent(), definition, records);
   };
 

@@ -5,7 +5,7 @@ import { SchemasDictionary } from "./schema-entities";
 const L = loggerFor(__filename);
 
 export const get = async (req: Request, res: Response) => {
-  const schema = manager.getCurrent();
+  const schema = manager.instance().getCurrent();
   if (!schema) {
     return res.status(404).send("no schema found");
   }
@@ -14,12 +14,14 @@ export const get = async (req: Request, res: Response) => {
 
 export const update = async (req: Request, res: Response) => {
   // currently we only use 1 version
-  await manager.updateVersion(manager.getCurrent().name, manager.getCurrent().version);
-  return res.status(200).send(manager.getCurrent());
+  await manager
+    .instance()
+    .updateVersion(manager.instance().getCurrent().name, manager.instance().getCurrent().version);
+  return res.status(200).send(manager.instance().getCurrent());
 };
 
 export const replace = async (req: Request, res: Response) => {
   // currently we only use 1 version
-  await manager.replace(req.body as SchemasDictionary);
-  return res.status(200).send(manager.getCurrent());
+  await manager.instance().replace(req.body as SchemasDictionary);
+  return res.status(200).send(manager.instance().getCurrent());
 };

@@ -81,7 +81,11 @@ export const run = async (config: AppConfig) => {
     mongoose.set("debug", true);
   }
   manager.create(config.schemaServiceUrl());
-  await manager.instance().loadSchema(config.schemaName(), config.initialSchemaVersion());
+  try {
+    await manager.instance().loadSchema(config.schemaName(), config.initialSchemaVersion());
+  } catch (err) {
+    L.error("failed to load the schema", err);
+  }
   // close app connections on termination
   const gracefulExit = () => {
     mongoose.connection.close(function() {
