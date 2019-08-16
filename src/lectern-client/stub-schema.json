@@ -136,6 +136,82 @@
             }
           }
         ]
+      },
+      {
+        "name": "donor",
+        "description": "TSV for donor",
+        "key": "submitter_donor_id",
+        "fields": [
+          {
+            "name": "program_short_name",
+            "valueType": "string",
+            "description": "Unique identifier for program",
+            "meta": {
+              "key": true
+            },
+            "restrictions": {
+              "required": true,
+              "regex": "^[A-Z1-9][-_A-Z1-9]{2,7}(-[A-Z][A-Z])$"
+            }
+          },
+          {
+            "name": "submitter_donor_id",
+            "valueType": "string",
+            "description": "Unique identifier for donor, assigned by the data provider.",
+            "meta": {
+              "key": true
+            },
+            "restrictions": {
+              "required": true,
+              "regex": "^(?!(DO|do)).+"
+            }
+          },
+          {
+            "name": "gender",
+            "valueType": "string",
+            "description": "The gender of the patient",
+            "restrictions": {
+              "required": true,
+              "codeList": ["Male", "Female", "Other"]
+            }
+          },
+          {
+            "name": "ethnicity",
+            "valueType": "string",
+            "description": "The ethnicity of the patient",
+            "restrictions": {
+              "required": true,
+              "codeList": ["asian", "black or african american", "caucasion", "not reported"]
+            }
+          },
+          {
+            "name": "vital_status",
+            "valueType": "string",
+            "description": "Indicate the vital status of the patient",
+            "restrictions": {
+              "required": true,
+              "codeList": ["alive", "deceased"]
+            }
+          },
+          {
+            "name": "cause_of_death",
+            "valueType": "string",
+            "description": "Indicate the cause of death of patient",
+            "restrictions": {
+              "required": true,
+              "codeList": ["died of cancer", "died of other reasons", "not dead?"]
+            }
+          },
+          {
+            "name": "survival_time",
+            "valueType": "string",
+            "description": "Submitter assigned sample id",
+            "restrictions": {
+              "required": true,
+              "regex": "^[1-9][0-9]*$"
+            }
+          }
+        ]
       }
     ],
     "name": "ARGO Dictionary",
