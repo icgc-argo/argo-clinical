@@ -17,7 +17,7 @@ export const schemaRepo: SchemaRepository = {
       },
       {
         name: schema.name,
-        version: schema.version,
+        schema: schema.version,
         schemas: schema.schemas
       },
       { upsert: true, new: true }
@@ -37,7 +37,7 @@ type DataSchemaDocument = mongoose.Document & SchemasDictionary;
 const DataSchemaMongooseSchema = new mongoose.Schema(
   {
     name: { type: String, unique: true },
-    version: { type: String, required: true },
+    version: { type: String },
     schemas: []
   },
   { timestamps: true }

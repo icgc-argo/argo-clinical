@@ -3,14 +3,13 @@ import errorHandler from "errorhandler";
 import bodyParser from "body-parser";
 import path from "path";
 import submissionAPI from "./submission/submission-api";
-import * as schemaApi from "./submission/schema-api";
+import * as schemaApi from "./lectern-client/schema-api";
 import * as middleware from "./middleware";
 import * as swaggerUi from "swagger-ui-express";
 import yaml from "yamljs";
 import multer from "multer";
 import { loggerFor } from "./logger";
 import { findDonors, deleteDonors } from "./clinical/clinical-api";
-import { getHealth } from "./app-health";
 
 const L = loggerFor(__filename);
 
@@ -29,17 +28,6 @@ app.use(
 app.set("port", process.env.PORT || 3000);
 
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "./resources/working.gif")));
-app.get("/health", (req, res) => {
-  const health = getHealth();
-  const resBody = {
-    version: `${process.env.CLINICAL_VERSION} - ${process.env.CLINICAL_COMMIT_ID}`,
-    health: health
-  };
-  if (health.all.status == "GREEN") {
-    return res.status(200).send(resBody);
-  }
-  return res.status(500).send(resBody);
-});
 app.get(
   "/submission/program/:programId/registration",
   middleware.wrapAsync(submissionAPI.getRegistrationByProgramId)
@@ -73,7 +61,7 @@ app.delete("/clinical/donors", middleware.wrapAsync(deleteDonors));
 // this has to be defined after all routes for it to work for these paths.
 app.use(middleware.errorHandler);
 app.use(
-  "/api-docs",
+  "/swagger",
   swaggerUi.serve,
   swaggerUi.setup(yaml.load(path.join(__dirname, "./resources/swagger.yaml")))
 );

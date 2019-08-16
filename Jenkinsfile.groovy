@@ -78,7 +78,7 @@ spec:
 
                     // the network=host needed to download dependencies using the host network (since we are inside 'docker'
                     // container)
-                    sh "docker build --build-arg COMMIT_ID=${commit} --build-arg VERSION=${version} --network=host -f Dockerfile . -t icgcargo/clinical:edge -t icgcargo/clinical:${version}-${commit}"
+                    sh "docker build --network=host -f Dockerfile . -t icgcargo/clinical:edge -t icgcargo/clinical:${version}-${commit}"
                     sh "docker push icgcargo/clinical:${version}-${commit}"
                     sh "docker push icgcargo/clinical:edge"
                }
@@ -110,7 +110,7 @@ spec:
                   withCredentials([usernamePassword(credentialsId:'argoDockerHub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                       sh 'docker login -u $USERNAME -p $PASSWORD'
                   }
-                  sh "docker  build --build-arg COMMIT_ID=${commit} --build-arg VERSION=${version} --network=host -f Dockerfile . -t icgcargo/clinical:latest -t icgcargo/clinical:${version}"
+                  sh "docker  build --network=host -f Dockerfile . -t icgcargo/clinical:latest -t icgcargo/clinical:${version}"
                   sh "docker push icgcargo/clinical:${version}"
                   sh "docker push icgcargo/clinical:latest"
              }
