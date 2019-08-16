@@ -15,6 +15,7 @@ export interface AppConfig {
   initialSchemaVersion(): string;
   jwtPubKeyUrl(): string;
   jwtPubKey(): string;
+  schemaServiceUrl(): string;
 }
 
 class ConfigManager {
