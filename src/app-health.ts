@@ -5,23 +5,29 @@ export type AppHealth = {
   egoPublicKey: ComponentStatus;
 };
 
+// source : https://unicode.org/Public/emoji/12.0/emoji-test.txt
+export enum Status {
+  OK = "😇",
+  UNKNOWN = "🤔",
+  ERROR = "😱"
+}
 export type ComponentStatus = {
-  status: "GREEN" | "RED" | "UNKNOWN";
+  status: Status;
   info?: any;
 };
 
 const health: AppHealth = {
   all: {
-    status: "UNKNOWN"
+    status: Status.UNKNOWN
   },
   db: {
-    status: "UNKNOWN"
+    status: Status.UNKNOWN
   },
   schema: {
-    status: "UNKNOWN"
+    status: Status.UNKNOWN
   },
   egoPublicKey: {
-    status: "UNKNOWN"
+    status: Status.UNKNOWN
   }
 };
 
@@ -32,12 +38,12 @@ export function setStatus(component: keyof AppHealth, status: ComponentStatus) {
     if (key == "all") {
       continue;
     }
-    if (health[key].status !== "GREEN") {
-      health["all"].status = "RED";
+    if (health[key].status !== Status.OK) {
+      health["all"].status = Status.ERROR;
       return;
     }
   }
-  health["all"].status = "GREEN";
+  health["all"].status = Status.OK;
 }
 
 export function getHealth(): AppHealth {

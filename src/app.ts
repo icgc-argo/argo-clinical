@@ -10,7 +10,7 @@ import yaml from "yamljs";
 import multer from "multer";
 import { loggerFor } from "./logger";
 import { findDonors, deleteDonors } from "./clinical/clinical-api";
-import { getHealth } from "./app-health";
+import { getHealth, Status } from "./app-health";
 
 const L = loggerFor(__filename);
 
@@ -35,7 +35,7 @@ app.get("/health", (req, res) => {
     version: `${process.env.CLINICAL_VERSION} - ${process.env.CLINICAL_COMMIT_ID}`,
     health: health
   };
-  if (health.all.status == "GREEN") {
+  if (health.all.status == Status.OK) {
     return res.status(200).send(resBody);
   }
   return res.status(500).send(resBody);

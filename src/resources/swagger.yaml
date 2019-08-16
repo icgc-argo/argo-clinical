@@ -192,6 +192,55 @@ paths:
                 type: array
                 items:
                   type: object
+
+  /health:
+    get:
+      responses:
+        "500":
+          description: "app is not fully healthy"
+        "200":
+          description: "all components reporting healthy status"
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /submission/schema:
+    get:
+      responses:
+        "200":
+          description: "the current loaded schema by the clinical submission"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+  /submission/schema/hack/refresh:
+    post:
+      description: force reload the schema from the schema service and override the cache
+      responses:
+        "200":
+          description: "the current loaded schema by the clinical submission"
+          content:
+            application/json:
+              schema:
+                type: object
+  /submission/schema/hack/replace:
+    post:
+      description: force replace the schema from the provided schema in body
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: "the current loaded schema by the clinical submission"
+          content:
+            application/json:
+              schema:
+                type: object
 servers:
   - url: /
 components:
