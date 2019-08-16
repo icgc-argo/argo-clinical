@@ -18,6 +18,7 @@ import {
 import { TsvUtils } from "../../../src/utils";
 import { donorDao } from "../../../src/clinical/donor-repo";
 import { Donor } from "../../../src/clinical/clinical-entities";
+import { ErrorCodes } from "../../../src/submission/submission-api";
 export let mongoContainer: any;
 chai.use(require("chai-http"));
 chai.should();
@@ -128,6 +129,7 @@ const expectedResponse1 = {
 const ABCD_REGISTRATION_DOC: ActiveRegistration = {
   programId: "ABCD-EF",
   creator: "Test User",
+  batchName: "registration.tsv",
   stats: {
     newDonorIds: {
       abcd123: [0]
@@ -466,6 +468,33 @@ describe("Submission Api", () => {
               .count({});
             await conn.close();
             chai.expect(count).to.eq(0);
+          } catch (err) {
+            return done(err);
+          }
+          return done();
+        });
+    });
+    it("should not accept invalid file names", done => {
+      let file: Buffer;
+      try {
+        file = fs.readFileSync(__dirname + "/thisIsARegistration.tsv");
+      } catch (err) {
+        return done(err);
+      }
+      console.log(file);
+      chai
+        .request(app)
+        .post("/submission/program/ABCD-EF/registration")
+        .type("form")
+        .attach("registrationFile", file, "thisIsARegistration.tsv")
+        .auth(JWT_ABCDEF, { type: "bearer" })
+        .end(async (err: any, res: any) => {
+          try {
+            res.should.have.status(400);
+            res.body.should.deep.eq({
+              msg: "invalid file name, must start with registration and have .tsv extension",
+              code: ErrorCodes.INVALID_FILE_NAME
+            });
           } catch (err) {
             return done(err);
           }

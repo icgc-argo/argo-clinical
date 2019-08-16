@@ -13,6 +13,7 @@ const reg1: ActiveRegistration = {
   _id: id1,
   creator: "test",
   programId: "ABCD-EF",
+  batchName: "registration1.tsv",
   stats: {
     alreadyRegistered: {},
     newDonorIds: {
@@ -43,6 +44,7 @@ const reg2: ActiveRegistration = {
   _id: id2,
   creator: "test",
   programId: "ABCD-EF",
+  batchName: "registration2.tsv",
   stats: {
     alreadyRegistered: {},
     newDonorIds: {},

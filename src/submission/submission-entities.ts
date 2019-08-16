@@ -8,6 +8,7 @@ export interface ActiveRegistration {
   _id?: string;
   readonly programId: string;
   readonly creator: string;
+  readonly batchName: string;
   readonly stats: RegistrationStats;
   readonly records: Array<SubmittedRegistrationRecord>;
 }
@@ -97,6 +98,7 @@ export interface CreateRegistrationCommand {
   records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
   readonly creator: string;
   readonly programId: string;
+  readonly batchName: string;
 }
 
 export interface CreateRegistrationResult {
