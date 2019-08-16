@@ -1,6 +1,6 @@
 import * as dataValidator from "./validation";
 import { donorDao, FindByProgramAndSubmitterFilter } from "../clinical/donor-repo";
-import _ from "lodash";
+import * as _ from "lodash";
 import { registrationRepository } from "./registration-repo";
 import { Donor, DonorMap } from "../clinical/clinical-entities";
 import {
@@ -36,7 +36,7 @@ export namespace operations {
   export const createRegistration = async (
     command: CreateRegistrationCommand
   ): Promise<CreateRegistrationResult> => {
-    const schemaResult = schemaManager.instance().process("registration", command.records);
+    const schemaResult = schemaManager.process("registration", command.records);
     let unifiedSchemaErrors: DeepReadonly<RegistrationValidationError[]> = [];
     if (anyErrors(schemaResult.validationErrors)) {
       unifiedSchemaErrors = unifySchemaErrors(schemaResult, command.records);

@@ -18,9 +18,6 @@ const defaultAppConfigImpl: AppConfig = {
   },
   jwtPubKey(): string {
     return process.env.JWT_TOKEN_PUBLIC_KEY || "";
-  },
-  schemaServiceUrl(): string {
-    return process.env.LECTERN_URL || "";
   }
 };
 

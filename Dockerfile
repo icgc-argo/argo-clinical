@@ -15,9 +15,5 @@ FROM node:12.5.0-alpine
 WORKDIR /app
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
-ARG COMMIT_ID
-ENV CLINICAL_COMMIT_ID=${COMMIT_ID}
-ARG VERSION
-ENV CLINICAL_VERSION=${VERSION}
 EXPOSE 3000
 CMD ["node", "dist/src/server.js"]
