@@ -10,7 +10,7 @@ let manager: SchemaManager;
 class SchemaManager {
   private currentSchema: SchemasDictionary = {
     schemas: [],
-    name: name,
+    name: "",
     version: ""
   };
   constructor(private schemaServiceUrl: string) {}

@@ -3,7 +3,7 @@ import errorHandler from "errorhandler";
 import bodyParser from "body-parser";
 import path from "path";
 import submissionAPI from "./submission/submission-api";
-import * as schemaApi from "./lectern-client/schema-api";
+import * as schemaApi from "./submission/schema-api";
 import * as middleware from "./middleware";
 import * as swaggerUi from "swagger-ui-express";
 import yaml from "yamljs";

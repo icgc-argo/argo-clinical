@@ -1,7 +1,7 @@
-import * as manager from "./schema-manager";
+import * as manager from "../lectern-client/schema-manager";
 import { Request, Response } from "express";
 import { loggerFor } from "../logger";
-import { SchemasDictionary } from "./schema-entities";
+import { SchemasDictionary } from "../lectern-client/schema-entities";
 const L = loggerFor(__filename);
 
 export const get = async (req: Request, res: Response) => {

@@ -183,7 +183,7 @@ describe("Submission Api", () => {
             return "";
           },
           schemaServiceUrl() {
-            return "";
+            return `file://${__dirname}/stub-schema.json`;
           }
         });
       } catch (err) {
