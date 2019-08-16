@@ -88,6 +88,27 @@ class SubmissionController {
     await submission.operations.deleteRegistration(registrationId, programId);
     return res.status(200).send();
   }
+
+  @HasSubmittionAccess((req: Request) => req.params.programId)
+  async createDonors(req: Request, res: Response) {
+    const file = req.file;
+    let records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
+    try {
+      records = await TsvUtils.tsvToJson(file.path);
+    } catch (err) {
+      return ControllerUtils.badRequest(res, {
+        msg: `failed to parse the tsv file: ${err}`,
+        code: ErrorCodes.TSV_PARSING_FAILED
+      });
+    }
+    res.set("Content-Type", "application/json");
+    const result = await submission.operations.uploadDonors(records);
+    console.log(result);
+    if (!result.successful) {
+      return res.status(422).send(result);
+    }
+    return res.status(200).send({});
+  }
 }
 
 const isValidCreateBody = (req: Request, res: Response): boolean => {

@@ -57,7 +57,11 @@ app.delete(
   "/submission/program/:programId/registration/:id",
   middleware.wrapAsync(submissionAPI.deleteRegistration)
 );
-
+app.post(
+  "/submission/program/:programId/donors",
+  upload.single("donorFile"),
+  middleware.wrapAsync(submissionAPI.createDonors)
+);
 /** Schema API */
 app.get("/submission/schema/", middleware.wrapAsync(schemaApi.get));
 

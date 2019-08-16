@@ -151,6 +151,43 @@ paths:
                     type: array
                     items:
                       type: string
+  /submission/program/{programId}/donors:
+    post:
+      parameters:
+        - name: programId
+          description: the short name of the program
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                donorFile:
+                  type: string
+                  format: binary
+        description: the tsv donor file
+        required: true
+      responses:
+        "200":
+          description: "Everything is OK"
+        "422":
+          description: "invalid donor file"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  successful:
+                    type: boolean
+                    description: will be false in this case
+                  errors:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DonorValidationError"
   /clinical/donors:
     delete:
       parameters:
@@ -257,6 +294,40 @@ components:
             - NEW_SPECIMEN_CONFLICT
             - NEW_SAMPLE_CONFLICT
             - INVALID_PROGRAM_ID
+            # dictionary schema errors
+            - MISSING_REQUIRED_FIELD
+            - INVALID_FIELD_VALUE_TYPE
+            - INVALID_BY_REGEX
+            - INVALID_BY_SCRIPT
+            - INVALID_ENUM_VALUE
+    DonorValidationError:
+      type: object
+      required:
+        - fieldName
+        - info
+        - index
+        - type
+      properties:
+        fieldName:
+          type: string
+          description: the field name that the error is related to
+        info:
+          type: object
+          description: contains context information related to the error
+          properties:
+            value:
+              type: string
+              nullable: true
+              description: the faulty value
+          additionalProperties: true
+        index:
+          type: number
+          format: integer
+          description: the 0 based index of the row for this error
+        type:
+          type: string
+          description: The name of the parameter
+          enum:
             # dictionary schema errors
             - MISSING_REQUIRED_FIELD
             - INVALID_FIELD_VALUE_TYPE

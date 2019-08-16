@@ -143,6 +143,25 @@ export namespace operations {
     }
     await registrationRepository.delete(registrationId);
   };
+  /**
+   * upload donor
+   * @param TBD
+   */
+  export const uploadDonors = async (records: ReadonlyArray<DataRecord>) => {
+    const schemaResult = schemaManager.instance().process("donor", records);
+    if (schemaResult.validationErrors.length > 0) {
+      const unifiedSchemaErrors = unifyDonorSchemaErrors(schemaResult, records);
+      return {
+        errors: unifiedSchemaErrors,
+        successful: false
+      };
+    }
+    return {
+      errors: [],
+      successful: true
+    };
+  };
+
   /************* Private methods *************/
 
   const addNewDonorToStats = (
@@ -211,6 +230,26 @@ export namespace operations {
     return F(errorsList);
   };
 
+  const unifyDonorSchemaErrors = (
+    result: SchemaProcessingResult,
+    records: ReadonlyArray<DataRecord>
+  ) => {
+    const errorsList = new Array<SchemaValidationError>();
+    result.validationErrors.forEach(schemaErr => {
+      errorsList.push({
+        index: schemaErr.index,
+        errorType: schemaErr.errorType,
+        info: {
+          ...schemaErr.info,
+          value: records[schemaErr.index][schemaErr.fieldName],
+          // printing all because not sure what feilds should be printed
+          ...records[schemaErr.index]
+        },
+        fieldName: schemaErr.fieldName
+      });
+    });
+    return F(errorsList);
+  };
   const calculateUpdates = (
     records: DeepReadonly<CreateRegistrationRecord[]>,
     donorsBySubmitterIdMap: DeepReadonly<DonorMap>
