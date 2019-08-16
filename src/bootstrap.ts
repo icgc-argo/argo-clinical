@@ -4,28 +4,28 @@ import { AppConfig, initConfigs, JWT_TOKEN_PUBLIC_KEY } from "./config";
 import * as manager from "./lectern-client/schema-manager";
 import * as utils from "./utils";
 import fetch from "node-fetch";
-import { setStatus } from "./app-health";
+import { setStatus, Status } from "./app-health";
 const L = loggerFor(__filename);
 
 const setupDBConnection = (mongoUrl: string) => {
   mongoose.connection.on("connected", () => {
     L.debug("Connection Established");
-    setStatus("db", { status: "GREEN" });
+    setStatus("db", { status: Status.OK });
   });
   mongoose.connection.on("reconnected", () => {
     L.debug("Connection Reestablished");
-    setStatus("db", { status: "GREEN" });
+    setStatus("db", { status: Status.OK });
   });
   mongoose.connection.on("disconnected", () => {
     L.debug("Connection Disconnected");
-    setStatus("db", { status: "RED" });
+    setStatus("db", { status: Status.ERROR });
   });
   mongoose.connection.on("close", () => {
     L.debug("Connection Closed");
   });
   mongoose.connection.on("error", error => {
     L.debug("ERROR: " + error);
-    setStatus("db", { status: "RED", info: { error } });
+    setStatus("db", { status: Status.ERROR, info: { error } });
   });
   const connectToDb = async (delayMillis: number) => {
     setTimeout(async () => {
@@ -48,7 +48,7 @@ const setupDBConnection = (mongoUrl: string) => {
         });
       } catch (err) {
         L.error("failed to connect to mongo", err);
-        setStatus("db", { status: "RED" });
+        setStatus("db", { status: Status.ERROR });
         // retry in 5 secs
         connectToDb(8000);
       }
@@ -75,11 +75,11 @@ const setJwtPublicKey = async (keyUrl: string) => {
           .replace("-----END PUBLIC KEY-----", "")
           .trim()}\n-----END PUBLIC KEY-----`;
         process.env[JWT_TOKEN_PUBLIC_KEY] = correctFormatKey;
-        setStatus("egoPublicKey", { status: "GREEN" });
+        setStatus("egoPublicKey", { status: Status.OK });
       } catch (err) {
         L.error("couldn't fetch token public key", err);
         setStatus("egoPublicKey", {
-          status: "RED",
+          status: Status.ERROR,
           info: {
             error: err
           }
@@ -102,10 +102,10 @@ export const run = async (config: AppConfig) => {
   try {
     manager.create(config.schemaServiceUrl());
     await manager.instance().loadSchema(config.schemaName(), config.initialSchemaVersion());
-    setStatus("schema", { status: "GREEN" });
+    setStatus("schema", { status: Status.OK });
   } catch (err) {
     L.error("failed to load the schema", err);
-    setStatus("schema", { status: "RED", info: { error: err } });
+    setStatus("schema", { status: Status.ERROR, info: { error: err } });
   }
   // close app connections on termination
   const gracefulExit = () => {
