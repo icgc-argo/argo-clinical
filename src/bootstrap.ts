@@ -4,23 +4,28 @@ import { AppConfig, initConfigs, JWT_TOKEN_PUBLIC_KEY } from "./config";
 import * as manager from "./lectern-client/schema-manager";
 import * as utils from "./utils";
 import fetch from "node-fetch";
+import { setStatus, Status } from "./app-health";
 const L = loggerFor(__filename);
 
 const setupDBConnection = (mongoUrl: string) => {
   mongoose.connection.on("connected", () => {
     L.debug("Connection Established");
+    setStatus("db", { status: Status.OK });
   });
   mongoose.connection.on("reconnected", () => {
     L.debug("Connection Reestablished");
+    setStatus("db", { status: Status.OK });
   });
   mongoose.connection.on("disconnected", () => {
     L.debug("Connection Disconnected");
+    setStatus("db", { status: Status.ERROR });
   });
   mongoose.connection.on("close", () => {
     L.debug("Connection Closed");
   });
   mongoose.connection.on("error", error => {
     L.debug("ERROR: " + error);
+    setStatus("db", { status: Status.ERROR, info: { error } });
   });
   const connectToDb = async (delayMillis: number) => {
     setTimeout(async () => {
@@ -35,6 +40,7 @@ const setupDBConnection = (mongoUrl: string) => {
           keepAlive: true,
           reconnectTries: 1000,
           reconnectInterval: 3000,
+          bufferCommands: false,
           bufferMaxEntries: 0,
           // https://mongoosejs.com/docs/deprecations.html
           useNewUrlParser: true,
@@ -42,6 +48,7 @@ const setupDBConnection = (mongoUrl: string) => {
         });
       } catch (err) {
         L.error("failed to connect to mongo", err);
+        setStatus("db", { status: Status.ERROR });
         // retry in 5 secs
         connectToDb(8000);
       }
@@ -56,15 +63,27 @@ const setJwtPublicKey = async (keyUrl: string) => {
     setTimeout(async () => {
       try {
         const response = await fetch(keyUrl);
+
         const key = await response.text();
+        if (response.status != 200 || key.indexOf("-----BEGIN PUBLIC KEY-----") === -1) {
+          throw new Error(`failed to fetch valid JwtPublicKey, response:  ${key}`);
+        }
+
         // make sure there is a new line before & after the begin/end marks
         const correctFormatKey = `-----BEGIN PUBLIC KEY-----\n${key
           .replace("-----BEGIN PUBLIC KEY-----", "")
           .replace("-----END PUBLIC KEY-----", "")
           .trim()}\n-----END PUBLIC KEY-----`;
         process.env[JWT_TOKEN_PUBLIC_KEY] = correctFormatKey;
+        setStatus("egoPublicKey", { status: Status.OK });
       } catch (err) {
         L.error("couldn't fetch token public key", err);
+        setStatus("egoPublicKey", {
+          status: Status.ERROR,
+          info: {
+            error: err
+          }
+        });
         // retry in 5 secs
         getKey(5000);
       }
@@ -80,7 +99,14 @@ export const run = async (config: AppConfig) => {
   if (process.env.LOG_LEVEL === "debug") {
     mongoose.set("debug", true);
   }
-  await manager.loadSchema(config.schemaName(), config.initialSchemaVersion());
+  try {
+    manager.create(config.schemaServiceUrl());
+    await manager.instance().loadSchema(config.schemaName(), config.initialSchemaVersion());
+    setStatus("schema", { status: Status.OK });
+  } catch (err) {
+    L.error("failed to load the schema", err);
+    setStatus("schema", { status: Status.ERROR, info: { error: err } });
+  }
   // close app connections on termination
   const gracefulExit = () => {
     mongoose.connection.close(function() {
