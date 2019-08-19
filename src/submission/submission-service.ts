@@ -202,7 +202,7 @@ export namespace operations {
           donorSubmitterId: records[schemaErr.index][RegistrationFieldsEnum.submitter_donor_id],
           specimenSubmitterId:
             records[schemaErr.index][RegistrationFieldsEnum.submitter_specimen_id],
-          sampleSubmitterId: records[schemaErr.index][RegistrationFieldsEnum.submitter_specimen_id]
+          sampleSubmitterId: records[schemaErr.index][RegistrationFieldsEnum.submitter_sample_id]
         },
         fieldName: schemaErr.fieldName as RegistrationRecordFields
       });
