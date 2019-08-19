@@ -60,7 +60,7 @@ app.delete(
 app.post(
   "/submission/program/:programId/donors",
   upload.single("donorFile"),
-  middleware.wrapAsync(submissionAPI.createDonors)
+  middleware.wrapAsync(submissionAPI.createDonorWithTsv)
 );
 /** Schema API */
 app.get("/submission/schema/", middleware.wrapAsync(schemaApi.get));

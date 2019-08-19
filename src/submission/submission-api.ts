@@ -94,7 +94,7 @@ class SubmissionController {
   }
 
   @HasSubmittionAccess((req: Request) => req.params.programId)
-  async createDonors(req: Request, res: Response) {
+  async createDonorWithTsv(req: Request, res: Response) {
     if (!isValidCreateBody(req, res, FileType.DONOR)) {
       return;
     }
