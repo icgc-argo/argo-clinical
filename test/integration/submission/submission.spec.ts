@@ -30,7 +30,7 @@ const expectedErrors = [
     type: "MISSING_REQUIRED_FIELD",
     info: {
       donorSubmitterId: "abcd123",
-      sampleSubmitterId: "sp123",
+      sampleSubmitterId: "sam123",
       specimenSubmitterId: "sp123"
     },
     fieldName: "tumour_normal_designation"
@@ -40,7 +40,7 @@ const expectedErrors = [
     index: 0,
     info: {
       donorSubmitterId: "abcd123",
-      sampleSubmitterId: "sp123",
+      sampleSubmitterId: "sam123",
       specimenSubmitterId: "sp123",
       value: "sp123"
     },
@@ -51,7 +51,7 @@ const expectedErrors = [
     index: 0,
     info: {
       donorSubmitterId: "abcd123",
-      sampleSubmitterId: "sp123",
+      sampleSubmitterId: "sam123",
       specimenSubmitterId: "sp123",
       value: "sam123"
     },
@@ -62,7 +62,7 @@ const expectedErrors = [
     index: 0,
     info: {
       donorSubmitterId: "abcd123",
-      sampleSubmitterId: "sp123",
+      sampleSubmitterId: "sam123",
       specimenSubmitterId: "sp123",
       value: "male"
     },
@@ -73,7 +73,7 @@ const expectedErrors = [
     index: 0,
     info: {
       donorSubmitterId: "abcd123",
-      sampleSubmitterId: "sp123",
+      sampleSubmitterId: "sam123",
       specimenSubmitterId: "sp123",
       value: "RNA"
     },
