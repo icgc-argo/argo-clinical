@@ -45,27 +45,7 @@ paths:
         required: true
       responses:
         "400":
-          description: "the file structure is invalid, couldn't be parsed correctly"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  code:
-                    type: string
-                    enum: ["TSV_PARSING_FAILED", "INVALID_FILE_NAME"]
-              examples:
-                TSVParseError:
-                  value:
-                    msg: "string"
-                    code: "TSV_PARSING_FAILED"
-                InvalidFileNameError:
-                  value:
-                    msg: "string"
-                    code: "INVALID_FILE_NAME"
-
+          $ref: "#/components/responses/InvalidFileStructureError"
         "422":
           description: "invalid registration file"
           content:
@@ -174,6 +154,8 @@ paths:
       responses:
         "200":
           description: "Everything is OK"
+        "400":
+          $ref: "#/components/responses/InvalidFileStructureError"
         "422":
           description: "invalid donor file"
           content:
@@ -241,6 +223,27 @@ components:
       description: if the token has incorrect scopes
     NotFoundError:
       description: The requested resource was not found
+    InvalidFileStructureError:
+      description: "the file structure is invalid, couldn't be parsed correctly"
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+              code:
+                type: string
+                enum: ["TSV_PARSING_FAILED", "INVALID_FILE_NAME"]
+          examples:
+            TSVParseError:
+              value:
+                msg: "string"
+                code: "TSV_PARSING_FAILED"
+            InvalidFileNameError:
+              value:
+                msg: "string"
+                code: "INVALID_FILE_NAME"
   securitySchemes:
     bearerAuth:
       type: http

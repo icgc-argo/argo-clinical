@@ -12,12 +12,16 @@ export enum ErrorCodes {
   TSV_PARSING_FAILED = "TSV_PARSING_FAILED",
   INVALID_FILE_NAME = "INVALID_FILE_NAME"
 }
-
-export enum FileNameRegex {
-  REGISTRATION = "registration.*.tsv",
-  DONOR = "donor.*.tsv",
-  SPECIMEN = "specimen.*.tsv"
+export enum FileType {
+  REGISTRATION = "registration",
+  DONOR = "donor",
+  SPECIMEN = "specimen"
 }
+export const FileNameRegex = {
+  [FileType.REGISTRATION]: "registration.*.tsv",
+  [FileType.DONOR]: "donor.*.tsv",
+  [FileType.SPECIMEN]: "specimen.*.tsv"
+};
 class SubmissionController {
   @HasSubmittionAccess((req: Request) => req.params.programId)
   async getRegistrationByProgramId(req: Request, res: Response) {
@@ -32,7 +36,7 @@ class SubmissionController {
 
   @HasSubmittionAccess((req: Request) => req.params.programId)
   async createRegistrationWithTsv(req: Request, res: Response) {
-    if (!isValidCreateBody(req, res)) {
+    if (!isValidCreateBody(req, res, FileType.REGISTRATION)) {
       return;
     }
     const programId = req.params.programId;
@@ -91,6 +95,9 @@ class SubmissionController {
 
   @HasSubmittionAccess((req: Request) => req.params.programId)
   async createDonors(req: Request, res: Response) {
+    if (!isValidCreateBody(req, res, FileType.DONOR)) {
+      return;
+    }
     const file = req.file;
     let records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
     try {
@@ -111,7 +118,7 @@ class SubmissionController {
   }
 }
 
-const isValidCreateBody = (req: Request, res: Response): boolean => {
+const isValidCreateBody = (req: Request, res: Response, type: FileType): boolean => {
   if (req.body == undefined) {
     L.debug("request body missing");
     ControllerUtils.badRequest(res, `no body`);
@@ -123,14 +130,14 @@ const isValidCreateBody = (req: Request, res: Response): boolean => {
     return false;
   }
   if (req.file == undefined) {
-    L.debug("registrationFile missing");
-    ControllerUtils.badRequest(res, `registrationFile file is required`);
+    L.debug(`${type}File missing`);
+    ControllerUtils.badRequest(res, `${type}File file is required`);
     return false;
   }
-  if (!isStringMatchRegex(FileNameRegex.REGISTRATION, req.file.originalname)) {
-    L.debug("registrationFile name is invalid");
+  if (!isStringMatchRegex(FileNameRegex[type], req.file.originalname)) {
+    L.debug(`${type}File name is invalid`);
     ControllerUtils.badRequest(res, {
-      msg: `invalid file name, must start with registration and have .tsv extension`,
+      msg: `invalid file name, must start with ${type} and have .tsv extension`,
       code: ErrorCodes.INVALID_FILE_NAME
     });
     return false;
