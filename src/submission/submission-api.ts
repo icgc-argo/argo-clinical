@@ -114,7 +114,7 @@ class SubmissionController {
     if (!result.successful) {
       return res.status(422).send(result);
     }
-    return res.status(200).send({});
+    return res.status(200).send(result);
   }
 }
 

@@ -12,7 +12,10 @@ import {
   CreateRegistrationCommand,
   CreateRegistrationResult,
   RegistrationRecordFields,
-  RegistrationFieldsEnum
+  RegistrationFieldsEnum,
+  DonorValidationError,
+  DonorRecordFeilds,
+  CreateDonorResult
 } from "./submission-entities";
 import * as schemaManager from "../lectern-client/schema-manager";
 import {
@@ -147,16 +150,20 @@ export namespace operations {
    * upload donor
    * @param TBD
    */
-  export const uploadDonors = async (records: ReadonlyArray<DataRecord>) => {
+  export const uploadDonors = async (
+    records: ReadonlyArray<DataRecord>
+  ): Promise<CreateDonorResult> => {
     const schemaResult = schemaManager.instance().process("donor", records);
     if (schemaResult.validationErrors.length > 0) {
       const unifiedSchemaErrors = unifyDonorSchemaErrors(schemaResult, records);
       return {
+        donor: undefined,
         errors: unifiedSchemaErrors,
         successful: false
       };
     }
     return {
+      donor: undefined,
       errors: [],
       successful: true
     };
@@ -234,18 +241,18 @@ export namespace operations {
     result: SchemaProcessingResult,
     records: ReadonlyArray<DataRecord>
   ) => {
-    const errorsList = new Array<SchemaValidationError>();
+    const errorsList = new Array<DonorValidationError>();
     result.validationErrors.forEach(schemaErr => {
       errorsList.push({
         index: schemaErr.index,
-        errorType: schemaErr.errorType,
+        type: schemaErr.errorType,
         info: {
           ...schemaErr.info,
           value: records[schemaErr.index][schemaErr.fieldName],
           // printing all because not sure what feilds should be printed
           ...records[schemaErr.index]
         },
-        fieldName: schemaErr.fieldName
+        fieldName: schemaErr.fieldName as DonorRecordFeilds
       });
     });
     return F(errorsList);

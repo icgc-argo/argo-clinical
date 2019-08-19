@@ -110,3 +110,28 @@ export interface CreateRegistrationResult {
 export interface ValidationResult {
   errors: DeepReadonly<RegistrationValidationError[]>;
 }
+
+export interface SubmittedDonorRecord {
+  readonly program_short_name: string;
+  readonly submitter_donor_id: string;
+  readonly gender: string;
+  readonly ethnicity: string;
+  readonly vital_status: string;
+  readonly cause_of_death: string;
+  readonly survival_time: string;
+}
+
+export interface CreateDonorResult {
+  readonly donor: undefined;
+  readonly successful: boolean;
+  errors: DeepReadonly<DonorValidationError[]>;
+}
+
+export type DonorValidationError = {
+  type: DataValidationErrors | SchemaValidationErrorTypes;
+  fieldName: keyof SubmittedDonorRecord;
+  info: object;
+  index: number;
+};
+
+export type DonorRecordFeilds = keyof SubmittedDonorRecord;
