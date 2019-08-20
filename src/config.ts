@@ -11,6 +11,8 @@ export const initConfigs = (configs: AppConfig) => {
 
 export interface AppConfig {
   mongoUrl(): string;
+  mongoUser(): string;
+  mongoPassword(): string;
   schemaName(): string;
   initialSchemaVersion(): string;
   jwtPubKeyUrl(): string;
