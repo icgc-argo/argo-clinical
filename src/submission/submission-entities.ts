@@ -111,27 +111,21 @@ export interface ValidationResult {
   errors: DeepReadonly<RegistrationValidationError[]>;
 }
 
-export interface SubmittedDonorRecord {
-  readonly program_short_name: string;
-  readonly submitter_donor_id: string;
-  readonly gender: string;
-  readonly ethnicity: string;
-  readonly vital_status: string;
-  readonly cause_of_death: string;
-  readonly survival_time: string;
+export interface SaveClinicalCommand {
+  records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
+  readonly programId: string;
+  readonly clinicalType: string;
 }
 
-export interface CreateDonorResult {
-  readonly donor: undefined;
+export interface CreateClinicalResult {
+  readonly clinicalData: undefined;
   readonly successful: boolean;
-  errors: DeepReadonly<DonorValidationError[]>;
+  errors: DeepReadonly<ClinicalValidationError[]>;
 }
 
-export type DonorValidationError = {
+export type ClinicalValidationError = {
   type: DataValidationErrors | SchemaValidationErrorTypes;
-  fieldName: keyof SubmittedDonorRecord;
+  fieldName: string;
   info: object;
   index: number;
 };
-
-export type DonorRecordFeilds = keyof SubmittedDonorRecord;

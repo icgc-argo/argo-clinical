@@ -131,7 +131,7 @@ paths:
                     type: array
                     items:
                       type: string
-  /submission/program/{programId}/donors:
+  /submission/program/{programId}/clinical/{clinicalType}:
     post:
       parameters:
         - name: programId
@@ -140,16 +140,23 @@ paths:
           required: true
           schema:
             type: string
+        - name: clinicalType
+          description: the type of clinical submission
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: ["donor", "specimen", "sample"] #add more as needed
       requestBody:
         content:
           multipart/form-data:
             schema:
               type: object
               properties:
-                donorFile:
+                clinicalFile:
                   type: string
                   format: binary
-        description: the tsv donor file
+        description: the tsv clinical submission file
         required: true
       responses:
         "200":
@@ -157,7 +164,7 @@ paths:
         "400":
           $ref: "#/components/responses/InvalidFileStructureError"
         "422":
-          description: "invalid donor file"
+          description: "invalid clinical submission file"
           content:
             application/json:
               schema:
@@ -169,7 +176,7 @@ paths:
                   errors:
                     type: array
                     items:
-                      $ref: "#/components/schemas/DonorValidationError"
+                      $ref: "#/components/schemas/ValidationError"
   /clinical/donors:
     delete:
       parameters:
@@ -299,7 +306,7 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
-    RegistrationValidationError:
+    ValidationError:
       type: object
       required:
         - fieldName
@@ -318,18 +325,10 @@ components:
               type: string
               nullable: true
               description: the faulty value
-            sampleSubmitterId:
-              type: string
-              nullable: true
-              description: the sample Id in that row
             donorSubmitterId:
               type: string
               nullable: true
               description: the donor Id in that row
-            specimenSubmitterId:
-              type: string
-              nullable: true
-              description: the specimen Id in that row
           additionalProperties: true
         index:
           type: number
@@ -352,40 +351,20 @@ components:
             - INVALID_BY_REGEX
             - INVALID_BY_SCRIPT
             - INVALID_ENUM_VALUE
-    DonorValidationError:
-      type: object
-      required:
-        - fieldName
-        - info
-        - index
-        - type
-      properties:
-        fieldName:
-          type: string
-          description: the field name that the error is related to
-        info:
-          type: object
-          description: contains context information related to the error
-          properties:
-            value:
-              type: string
-              nullable: true
-              description: the faulty value
-          additionalProperties: true
-        index:
-          type: number
-          format: integer
-          description: the 0 based index of the row for this error
-        type:
-          type: string
-          description: The name of the parameter
-          enum:
-            # dictionary schema errors
-            - MISSING_REQUIRED_FIELD
-            - INVALID_FIELD_VALUE_TYPE
-            - INVALID_BY_REGEX
-            - INVALID_BY_SCRIPT
-            - INVALID_ENUM_VALUE
+    RegistrationValidationError: # "extends" ValidationError
+      allOf:
+        - $ref: "#/components/schemas/ValidationError"
+        - properties:
+            info:
+              properties:
+                sampleSubmitterId:
+                  type: string
+                  nullable: true
+                  description: the sample Id in that row
+                specimenSubmitterId:
+                  type: string
+                  nullable: true
+                  description: the specimen Id in that row
 
     Registration:
       type: object

@@ -3,7 +3,7 @@ import * as submission2Clinical from "./submission-to-clinical";
 import { Request, Response } from "express";
 import { TsvUtils, ControllerUtils, isStringMatchRegex } from "../utils";
 import { loggerFor } from "../logger";
-import { CreateRegistrationCommand } from "./submission-entities";
+import { CreateRegistrationCommand, SaveClinicalCommand } from "./submission-entities";
 import { HasSubmitionAccess as HasSubmittionAccess } from "../auth-decorators";
 import jwt from "jsonwebtoken";
 const L = loggerFor(__filename);
@@ -94,8 +94,8 @@ class SubmissionController {
   }
 
   @HasSubmittionAccess((req: Request) => req.params.programId)
-  async createDonorWithTsv(req: Request, res: Response) {
-    if (!isValidCreateBody(req, res, FileType.DONOR)) {
+  async saveClinicalTsvFile(req: Request, res: Response) {
+    if (!isValidCreateBody(req, res, req.params.clinicalType)) {
       return;
     }
     const file = req.file;
@@ -109,7 +109,12 @@ class SubmissionController {
       });
     }
     res.set("Content-Type", "application/json");
-    const result = await submission.operations.uploadDonors(records);
+    const command: SaveClinicalCommand = {
+      records: records,
+      programId: req.params.programId,
+      clinicalType: req.params.clinicalType
+    };
+    const result = await submission.operations.uploadClinical(command);
     console.log(result);
     if (!result.successful) {
       return res.status(422).send(result);
@@ -132,6 +137,10 @@ const isValidCreateBody = (req: Request, res: Response, type: FileType): boolean
   if (req.file == undefined) {
     L.debug(`${type}File missing`);
     ControllerUtils.badRequest(res, `${type}File file is required`);
+    return false;
+  }
+  if (!Object.values(FileType).includes(type)) {
+    ControllerUtils.badRequest(res, `invalid clinical submission type ${type}`);
     return false;
   }
   if (!isStringMatchRegex(FileNameRegex[type], req.file.originalname)) {

@@ -142,7 +142,7 @@
       "key": "submitter_donor_id",
       "fields": [
         {
-          "name": "program_short_name",
+          "name": "program_id",
           "valueType": "string",
           "description": "Unique identifier for program",
           "meta": {
@@ -198,7 +198,7 @@
           "description": "Indicate the cause of death of patient",
           "restrictions": {
             "required": false,
-            "codeList": ["died of cancer", "died of other reasons"]
+            "codeList": ["died of cancer", "died of other reasons, N/A"]
           }
         },
         {

@@ -13,9 +13,9 @@ import {
   CreateRegistrationResult,
   RegistrationRecordFields,
   RegistrationFieldsEnum,
-  DonorValidationError,
-  DonorRecordFeilds,
-  CreateDonorResult
+  ClinicalValidationError,
+  SaveClinicalCommand,
+  CreateClinicalResult
 } from "./submission-entities";
 import * as schemaManager from "../lectern-client/schema-manager";
 import {
@@ -27,6 +27,7 @@ import {
 import { loggerFor } from "../logger";
 import { Errors, F } from "../utils";
 import { DeepReadonly } from "deep-freeze";
+import { FileType } from "./submission-api";
 const L = loggerFor(__filename);
 
 export namespace operations {
@@ -148,22 +149,36 @@ export namespace operations {
   };
   /**
    * upload donor
-   * @param TBD
+   * @param command SaveClinicalCommand
    */
-  export const uploadDonors = async (
-    records: ReadonlyArray<DataRecord>
-  ): Promise<CreateDonorResult> => {
-    const schemaResult = schemaManager.instance().process("donor", records);
+  export const uploadClinical = async (
+    command: SaveClinicalCommand
+  ): Promise<CreateClinicalResult> => {
+    let programIdErrors: DeepReadonly<ClinicalValidationError[]> = [];
+    command.records.forEach((r, index) => {
+      const programIdError = dataValidator.usingInvalidClinicalProgramId(
+        index,
+        r,
+        command.clinicalType,
+        command.programId
+      );
+      programIdErrors = programIdErrors.concat(programIdError);
+    });
+    const schemaResult = schemaManager.instance().process(command.clinicalType, command.records);
     if (schemaResult.validationErrors.length > 0) {
-      const unifiedSchemaErrors = unifyDonorSchemaErrors(schemaResult, records);
+      const unifiedSchemaErrors = unifyClinicalSchemaErrors(
+        command.clinicalType,
+        schemaResult,
+        command.records
+      );
       return {
-        donor: undefined,
-        errors: unifiedSchemaErrors,
+        clinicalData: undefined,
+        errors: unifiedSchemaErrors.concat(programIdErrors),
         successful: false
       };
     }
     return {
-      donor: undefined,
+      clinicalData: undefined,
       errors: [],
       successful: true
     };
@@ -237,11 +252,12 @@ export namespace operations {
     return F(errorsList);
   };
 
-  const unifyDonorSchemaErrors = (
+  const unifyClinicalSchemaErrors = (
+    type: string,
     result: SchemaProcessingResult,
     records: ReadonlyArray<DataRecord>
   ) => {
-    const errorsList = new Array<DonorValidationError>();
+    const errorsList = new Array<ClinicalValidationError>();
     result.validationErrors.forEach(schemaErr => {
       errorsList.push({
         index: schemaErr.index,
@@ -249,10 +265,10 @@ export namespace operations {
         info: {
           ...schemaErr.info,
           value: records[schemaErr.index][schemaErr.fieldName],
-          // printing all because not sure what feilds should be printed
-          ...records[schemaErr.index]
+          donorSubmitterId: records[schemaErr.index][RegistrationFieldsEnum.submitter_donor_id],
+          type: type
         },
-        fieldName: schemaErr.fieldName as DonorRecordFeilds
+        fieldName: schemaErr.fieldName
       });
     });
     return F(errorsList);

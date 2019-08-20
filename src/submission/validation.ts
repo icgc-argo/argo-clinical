@@ -5,7 +5,8 @@ import {
   CreateRegistrationRecord,
   ValidationResult,
   RegistrationFieldsEnum,
-  RegistrationToCreateRegistrationFieldsMap
+  RegistrationToCreateRegistrationFieldsMap,
+  ClinicalValidationError
 } from "./submission-entities";
 import { donorDao, DONOR_FIELDS } from "../clinical/donor-repo";
 import { DeepReadonly } from "deep-freeze";
@@ -93,6 +94,32 @@ export const usingInvalidProgramId = (
   return [];
 };
 
+export const usingInvalidClinicalProgramId = (
+  newDonorIndex: number,
+  clinicalRecord: DataRecord,
+  type: string,
+  expectedProgram: string
+) => {
+  const errors: ClinicalValidationError[] = [];
+  const programId = clinicalRecord[RegistrationFieldsEnum.program_id];
+  if (programId) {
+    if (expectedProgram !== programId) {
+      errors.push({
+        type: DataValidationErrors.INVALID_PROGRAM_ID,
+        fieldName: RegistrationFieldsEnum.program_id,
+        index: newDonorIndex,
+        info: {
+          value: clinicalRecord[RegistrationFieldsEnum.program_id],
+          donorSubmitterId: clinicalRecord[RegistrationFieldsEnum.submitter_donor_id],
+          type,
+          expectedProgram
+        }
+      });
+    }
+    return errors;
+  }
+  return [];
+};
 const conflictingNewSpecimen = (
   newDonorIndex: number,
   newDonor: CreateRegistrationRecord,

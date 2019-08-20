@@ -58,9 +58,9 @@ app.delete(
   middleware.wrapAsync(submissionAPI.deleteRegistration)
 );
 app.post(
-  "/submission/program/:programId/donors",
-  upload.single("donorFile"),
-  middleware.wrapAsync(submissionAPI.createDonorWithTsv)
+  "/submission/program/:programId/clinical/:clinicalType",
+  upload.single("clinicalFile"),
+  middleware.wrapAsync(submissionAPI.saveClinicalTsvFile)
 );
 /** Schema API */
 app.get("/submission/schema/", middleware.wrapAsync(schemaApi.get));
