@@ -11,4 +11,4 @@ fun(){
 }
 
 fun &
-vault server -dev
+vault server -config=/scripts/config.hcl -dev

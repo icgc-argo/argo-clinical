@@ -22,7 +22,7 @@ let server: Server;
       throw new Error("failed to load secrets from vault.");
     }
 
-    console.log(`secrets ===============> ${JSON.stringify(secrets)}`);
+    console.log(`secret keys found ====> ${Object.keys(secrets)}`);
   }
 
   const defaultAppConfigImpl: AppConfig = {

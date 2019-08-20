@@ -1,10 +1,10 @@
 import vault from "node-vault";
-
+import { promises } from "fs";
 let vaultClient: vault.Client;
 
 async function login() {
   // if the app provided a token in the env use that
-  let givenToken = process.env.VAULT_TOKEN;
+  const givenToken = process.env.VAULT_TOKEN;
   if (givenToken) {
     const options: vault.VaultOptions = {
       apiVersion: "v1", // default
@@ -16,9 +16,7 @@ async function login() {
   }
 
   // otherwise try and load the token from kubernetes
-  // load from the file /var/run/secrets/kubernetes.io/token
-  givenToken =
-    "eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJhcmdvLXFhIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6ImRlZmF1bHQtdG9rZW4tdm5zODgiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC5uYW1lIjoiZGVmYXVsdCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6ImYyYjhmYTVhLTczMjgtMTFlOS05ZWY1LWZhMTYzZTE4NzExYSIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDphcmdvLXFhOmRlZmF1bHQifQ.0UOxSTWNUb5OeT9AhVepURmmtLAWDrhaXjYmqCSdOHVj_MSGGotYqZPamQ1ktriqnYvP1vFyzcGWWp2U8KU-yNoF9RIGqRb5TRM3d_lSxR0Q8LeEj-by45BetUX7cmGiuOwTne3UHir9k6_C7Sjbjs8IRlWH1nDJuteZaXcYUIODITx3-7gCPwOcbOXOdR1llLDZynJKkKA1A4XHHR2l4Y-I23WuAQG3GGBRghfD01n3xUrUXtPz";
+  const k8sToken = await promises.readFile("/var/run/secrets/kubernetes.io/token", "utf-8");
 
   // exchange for a vault token
   const options: vault.VaultOptions = {
@@ -29,10 +27,11 @@ async function login() {
   vaultClient = vault(options);
   const response = await vaultClient.kubernetesLogin({
     role: process.env.VAULT_ROLE,
-    jwt: givenToken
+    jwt: k8sToken
   });
-  const clientToken = response.auth.client_token;
-  console.log("login successful");
+
+  const clientToken = response.auth.client_token as string;
+  console.log(`login successful, token length: ${clientToken.length}`);
 }
 
 export async function loadSecret(key: string) {
