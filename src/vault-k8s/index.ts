@@ -4,7 +4,7 @@ let vaultClient: vault.Client;
 
 async function login() {
   // if the app provided a token in the env use that
-  let givenToken = process.env.VAULT_TEST_TOKEN;
+  let givenToken = process.env.VAULT_TOKEN;
   if (givenToken) {
     const options: vault.VaultOptions = {
       apiVersion: "v1", // default
