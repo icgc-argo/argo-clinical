@@ -95,8 +95,11 @@ class SubmissionController {
 
   @HasSubmittionAccess((req: Request) => req.params.programId)
   async saveClinicalTsvFile(req: Request, res: Response) {
-    // need to check if clinicalType is registration and ignore it somehow
-    if (!isValidCreateBody(req, res, req.params.clinicalType)) {
+    const clinicalType = req.params.clinicalType;
+    if (clinicalType == FileType.REGISTRATION) {
+      return res.status(404).send("Error 404 not found.");
+    }
+    if (!isValidCreateBody(req, res, clinicalType)) {
       return;
     }
     const file = req.file;
@@ -113,7 +116,7 @@ class SubmissionController {
     const command: SaveClinicalCommand = {
       records: records,
       programId: req.params.programId,
-      clinicalType: req.params.clinicalType
+      clinicalType: clinicalType
     };
     const result = await submission.operations.uploadClinical(command);
     if (!result.successful) {
