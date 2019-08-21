@@ -5,9 +5,10 @@ import * as manager from "./lectern-client/schema-manager";
 import * as utils from "./utils";
 import fetch from "node-fetch";
 import { setStatus, Status } from "./app-health";
+
 const L = loggerFor(__filename);
 
-const setupDBConnection = (mongoUrl: string) => {
+const setupDBConnection = (mongoUrl: string, userName: string, password: string) => {
   mongoose.connection.on("connected", () => {
     L.debug("Connection Established");
     setStatus("db", { status: Status.OK });
@@ -44,6 +45,8 @@ const setupDBConnection = (mongoUrl: string) => {
           bufferMaxEntries: 0,
           // https://mongoosejs.com/docs/deprecations.html
           useNewUrlParser: true,
+          user: userName,
+          pass: password,
           useFindAndModify: false
         });
       } catch (err) {
@@ -95,7 +98,7 @@ const setJwtPublicKey = async (keyUrl: string) => {
 
 export const run = async (config: AppConfig) => {
   initConfigs(config);
-  setupDBConnection(config.mongoUrl());
+  setupDBConnection(config.mongoUrl(), config.mongoUser(), config.mongoPassword());
   if (process.env.LOG_LEVEL === "debug") {
     mongoose.set("debug", true);
   }
