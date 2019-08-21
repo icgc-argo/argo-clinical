@@ -203,11 +203,10 @@
         },
         {
           "name": "survival_time",
-          "valueType": "string",
+          "valueType": "integer",
           "description": "Survival time",
           "restrictions": {
-            "required": false,
-            "regex": "^[1-9][0-9]*$"
+            "required": false
           }
         }
       ]

@@ -26,6 +26,7 @@ import {
 import { loggerFor } from "../logger";
 import { Errors, F } from "../utils";
 import { DeepReadonly } from "deep-freeze";
+import { FileType } from "./submission-api";
 const L = loggerFor(__filename);
 
 export namespace operations {
@@ -41,7 +42,7 @@ export namespace operations {
     const schemaResult = schemaManager.instance().process("registration", command.records);
     let unifiedSchemaErrors: DeepReadonly<SubmissionValidationError[]> = [];
     if (anyErrors(schemaResult.validationErrors)) {
-      unifiedSchemaErrors = unifySchemaErrors(schemaResult, command.records);
+      unifiedSchemaErrors = unifySchemaErrors(FileType.REGISTRATION, schemaResult, command.records);
       L.info(`found ${schemaResult.validationErrors.length} schema errors in registration attempt`);
     }
 
@@ -50,7 +51,12 @@ export namespace operations {
     // to save extra round trips
     let programIdErrors: DeepReadonly<SubmissionValidationError[]> = [];
     command.records.forEach((r, index) => {
-      const programIdError = dataValidator.usingInvalidProgramId(index, r, command.programId);
+      const programIdError = dataValidator.usingInvalidProgramId(
+        FileType.REGISTRATION,
+        index,
+        r,
+        command.programId
+      );
       programIdErrors = programIdErrors.concat(programIdError);
     });
 
@@ -154,7 +160,8 @@ export namespace operations {
   ): Promise<CreateClinicalResult> => {
     let programIdErrors: DeepReadonly<SubmissionValidationError[]> = [];
     command.records.forEach((r, index) => {
-      const programIdError = dataValidator.usingInvalidClinicalProgramId(
+      const programIdError = dataValidator.usingInvalidProgramId(
+        command.clinicalType,
         index,
         r,
         command.programId
@@ -163,7 +170,11 @@ export namespace operations {
     });
     const schemaResult = schemaManager.instance().process(command.clinicalType, command.records);
     if (schemaResult.validationErrors.length > 0) {
-      const unifiedSchemaErrors = unifyClinicalSchemaErrors(schemaResult, command.records);
+      const unifiedSchemaErrors = unifySchemaErrors(
+        command.clinicalType,
+        schemaResult,
+        command.records
+      );
       return {
         clinicalData: undefined,
         errors: unifiedSchemaErrors.concat(programIdErrors),
@@ -222,6 +233,7 @@ export namespace operations {
   };
 
   const unifySchemaErrors = (
+    type: string,
     result: SchemaProcessingResult,
     records: ReadonlyArray<DataRecord>
   ) => {
@@ -230,38 +242,37 @@ export namespace operations {
       errorsList.push({
         index: schemaErr.index,
         type: schemaErr.errorType,
-        info: {
-          ...schemaErr.info,
-          value: records[schemaErr.index][schemaErr.fieldName],
-          donorSubmitterId: records[schemaErr.index][FieldsEnum.submitter_donor_id],
-          specimenSubmitterId: records[schemaErr.index][FieldsEnum.submitter_specimen_id],
-          sampleSubmitterId: records[schemaErr.index][FieldsEnum.submitter_sample_id]
-        },
-        fieldName: schemaErr.fieldName as RegistrationRecordFields
-      });
-    });
-
-    return F(errorsList);
-  };
-
-  const unifyClinicalSchemaErrors = (
-    result: SchemaProcessingResult,
-    records: ReadonlyArray<DataRecord>
-  ) => {
-    const errorsList = new Array<SubmissionValidationError>();
-    result.validationErrors.forEach(schemaErr => {
-      errorsList.push({
-        index: schemaErr.index,
-        type: schemaErr.errorType,
-        info: {
-          ...schemaErr.info,
-          value: records[schemaErr.index][schemaErr.fieldName],
-          donorSubmitterId: records[schemaErr.index][FieldsEnum.submitter_donor_id]
-        },
+        info: getInfoObject(type, schemaErr, records[schemaErr.index]),
         fieldName: schemaErr.fieldName
       });
     });
     return F(errorsList);
+  };
+  const getInfoObject = (
+    type: string,
+    schemaErr: DeepReadonly<SchemaValidationError>,
+    record: DeepReadonly<DataRecord>
+  ) => {
+    switch (type) {
+      case FileType.REGISTRATION: {
+        return F({
+          ...schemaErr.info,
+          value: record[schemaErr.fieldName],
+          donorSubmitterId: record[FieldsEnum.submitter_donor_id],
+          specimenSubmitterId: record[FieldsEnum.submitter_specimen_id],
+          sampleSubmitterId: record[FieldsEnum.submitter_sample_id]
+        });
+      }
+      case FileType.DONOR:
+      case FileType.SPECIMEN: {
+        return F({
+          ...schemaErr.info,
+          value: record[schemaErr.fieldName],
+          donorSubmitterId: record[FieldsEnum.submitter_donor_id]
+        });
+      }
+    }
+    return {};
   };
   const calculateUpdates = (
     records: DeepReadonly<CreateRegistrationRecord[]>,

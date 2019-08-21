@@ -10,6 +10,7 @@ import {
 } from "../../../src/submission/submission-entities";
 import { Donor } from "../../../src/clinical/clinical-entities";
 import { stubs } from "./stubs";
+import { FileType } from "../../../src/submission/submission-api";
 
 const genderMutatedErr: SubmissionValidationError = {
   fieldName: "gender",
@@ -120,6 +121,7 @@ describe("data-validator", () => {
     donorDaoCountByStub.returns(Promise.resolve(0));
     // test call
     const result = await dv.usingInvalidProgramId(
+      FileType.REGISTRATION,
       0,
       {
         submitter_donor_id: "AB1",

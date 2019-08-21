@@ -152,6 +152,55 @@ const ABCD_REGISTRATION_DOC: ActiveRegistration = {
     }
   ]
 };
+const expectedDonorErrors = [
+  {
+    index: 0,
+    type: "INVALID_FIELD_VALUE_TYPE",
+    info: {
+      value: "acdc",
+      donorSubmitterId: "ICGC_0002"
+    },
+
+    fieldName: "survival_time"
+  },
+  {
+    index: 0,
+    type: "INVALID_ENUM_VALUE",
+    info: {
+      value: "mail",
+      donorSubmitterId: "ICGC_0002"
+    },
+    fieldName: "gender"
+  },
+  {
+    index: 0,
+    type: "INVALID_ENUM_VALUE",
+    info: {
+      value: "martian",
+      donorSubmitterId: "ICGC_0002"
+    },
+    fieldName: "ethnicity"
+  },
+  {
+    index: 0,
+    type: "INVALID_ENUM_VALUE",
+    info: {
+      value: "undecided",
+      donorSubmitterId: "ICGC_0002"
+    },
+    fieldName: "vital_status"
+  },
+  {
+    type: "INVALID_PROGRAM_ID",
+    fieldName: "program_id",
+    index: 0,
+    info: {
+      value: "PACA-AU",
+      donorSubmitterId: "ICGC_0002",
+      expectedProgram: "ABCD-EF"
+    }
+  }
+];
 
 describe("Submission Api", () => {
   // will run when all tests are finished
@@ -481,7 +530,6 @@ describe("Submission Api", () => {
       } catch (err) {
         return done(err);
       }
-      console.log(file);
       chai
         .request(app)
         .post("/submission/program/ABCD-EF/registration")
@@ -532,6 +580,50 @@ describe("Submission Api", () => {
           } catch (err) {
             return err;
           }
+        });
+    });
+    it("should return 200 if valid donor file", done => {
+      let file: Buffer;
+      try {
+        file = fs.readFileSync(__dirname + "/donor.tsv");
+      } catch (err) {
+        return done(err);
+      }
+      chai
+        .request(app)
+        .post("/submission/program/ABCD-EF/clinical/donor")
+        .type("form")
+        .attach("clinicalFile", file, "donor.tsv")
+        .auth(JWT_ABCDEF, { type: "bearer" })
+        .end((err: any, res: any) => {
+          res.should.have.status(200);
+          res.body.should.deep.eq({
+            errors: [],
+            successful: true
+          });
+          done();
+        });
+    });
+    it("should return 422 if invalid donor file", done => {
+      let file: Buffer;
+      try {
+        file = fs.readFileSync(__dirname + "/donor.invalid.tsv");
+      } catch (err) {
+        return done(err);
+      }
+      chai
+        .request(app)
+        .post("/submission/program/ABCD-EF/clinical/donor")
+        .type("form")
+        .attach("clinicalFile", file, "donor.invalid.tsv")
+        .auth(JWT_ABCDEF, { type: "bearer" })
+        .end((err: any, res: any) => {
+          res.should.have.status(422);
+          res.body.should.deep.eq({
+            errors: expectedDonorErrors,
+            successful: false
+          });
+          done();
         });
     });
   });

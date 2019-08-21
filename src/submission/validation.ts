@@ -10,6 +10,7 @@ import {
 import { donorDao, DONOR_FIELDS } from "../clinical/donor-repo";
 import { DeepReadonly } from "deep-freeze";
 import { DataRecord } from "../lectern-client/schema-entities";
+import { FileType } from "./submission-api";
 
 export const validateRegistrationData = async (
   expectedProgram: string,
@@ -67,32 +68,48 @@ export const validateRegistrationData = async (
 };
 
 export const usingInvalidProgramId = (
+  type: string,
   newDonorIndex: number,
-  registrationRecord: DataRecord,
+  record: DataRecord,
   expectedProgram: string
 ) => {
   const errors: SubmissionValidationError[] = [];
-  const programId = registrationRecord[FieldsEnum.program_id];
+  const programId = record[FieldsEnum.program_id];
   if (programId) {
     if (expectedProgram !== programId) {
       errors.push({
         type: DataValidationErrors.INVALID_PROGRAM_ID,
         fieldName: FieldsEnum.program_id,
         index: newDonorIndex,
-        info: {
-          value: registrationRecord[FieldsEnum.program_id],
-          sampleSubmitterId: registrationRecord[FieldsEnum.submitter_sample_id],
-          specimenSubmitterId: registrationRecord[FieldsEnum.submitter_specimen_id],
-          donorSubmitterId: registrationRecord[FieldsEnum.submitter_donor_id],
-          expectedProgram
-        }
+        info: getInfoObject(type, record, expectedProgram)
       });
     }
     return errors;
   }
   return [];
 };
-
+const getInfoObject = (type: string, record: DeepReadonly<DataRecord>, expectedProgram: string) => {
+  switch (type) {
+    case FileType.REGISTRATION: {
+      return {
+        value: record[FieldsEnum.program_id],
+        sampleSubmitterId: record[FieldsEnum.submitter_sample_id],
+        specimenSubmitterId: record[FieldsEnum.submitter_specimen_id],
+        donorSubmitterId: record[FieldsEnum.submitter_donor_id],
+        expectedProgram
+      };
+    }
+    case FileType.DONOR:
+    case FileType.SPECIMEN: {
+      return {
+        value: record[FieldsEnum.program_id],
+        donorSubmitterId: record[FieldsEnum.submitter_donor_id],
+        expectedProgram
+      };
+    }
+  }
+  return {};
+};
 export const usingInvalidClinicalProgramId = (
   newDonorIndex: number,
   clinicalRecord: DataRecord,

@@ -95,6 +95,7 @@ class SubmissionController {
 
   @HasSubmittionAccess((req: Request) => req.params.programId)
   async saveClinicalTsvFile(req: Request, res: Response) {
+    // need to check if clinicalType is registration and ignore it somehow
     if (!isValidCreateBody(req, res, req.params.clinicalType)) {
       return;
     }
