@@ -16,7 +16,10 @@ async function login() {
   }
 
   // otherwise try and load the token from kubernetes
-  const k8sToken = await promises.readFile("/var/run/secrets/kubernetes.io/token", "utf-8");
+  const k8sToken = await promises.readFile(
+    "/var/run/secrets/kubernetes.io/serviceaccount/token",
+    "utf-8"
+  );
 
   // exchange for a vault token
   const options: vault.VaultOptions = {
