@@ -97,7 +97,6 @@ export const usingInvalidProgramId = (
 export const usingInvalidClinicalProgramId = (
   newDonorIndex: number,
   clinicalRecord: DataRecord,
-  type: string,
   expectedProgram: string
 ) => {
   const errors: ClinicalValidationError[] = [];
@@ -111,7 +110,6 @@ export const usingInvalidClinicalProgramId = (
         info: {
           value: clinicalRecord[RegistrationFieldsEnum.program_id],
           donorSubmitterId: clinicalRecord[RegistrationFieldsEnum.submitter_donor_id],
-          type,
           expectedProgram
         }
       });

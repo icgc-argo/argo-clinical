@@ -159,7 +159,6 @@ export namespace operations {
       const programIdError = dataValidator.usingInvalidClinicalProgramId(
         index,
         r,
-        command.clinicalType,
         command.programId
       );
       programIdErrors = programIdErrors.concat(programIdError);
