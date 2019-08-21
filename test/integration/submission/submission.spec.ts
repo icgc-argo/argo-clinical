@@ -11,10 +11,7 @@ import app from "../../../src/app";
 import * as bootstrap from "../../../src/bootstrap";
 import { cleanCollection, insertData, emptyDonorDocument, resetCounters } from "../testutils";
 import { TEST_PUB_KEY, JWT_ABCDEF, JWT_WXYZEF } from "./test.jwt";
-import {
-  ActiveRegistration,
-  RegistrationFieldsEnum
-} from "../../../src/submission/submission-entities";
+import { ActiveRegistration, FieldsEnum } from "../../../src/submission/submission-entities";
 import { TsvUtils } from "../../../src/utils";
 import { donorDao } from "../../../src/clinical/donor-repo";
 import { Donor } from "../../../src/clinical/clinical-entities";
@@ -36,7 +33,7 @@ const expectedErrors = [
     fieldName: "tumour_normal_designation"
   },
   {
-    fieldName: RegistrationFieldsEnum.submitter_specimen_id,
+    fieldName: FieldsEnum.submitter_specimen_id,
     index: 0,
     info: {
       donorSubmitterId: "abcd123",
@@ -47,7 +44,7 @@ const expectedErrors = [
     type: "INVALID_BY_REGEX"
   },
   {
-    fieldName: RegistrationFieldsEnum.submitter_sample_id,
+    fieldName: FieldsEnum.submitter_sample_id,
     index: 0,
     info: {
       donorSubmitterId: "abcd123",
@@ -566,20 +563,20 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[]) {
     donorRows.push(
       emptyDonorDocument({
         donorId: i,
-        gender: r[RegistrationFieldsEnum.gender],
-        submitterId: r[RegistrationFieldsEnum.submitter_donor_id],
-        programId: r[RegistrationFieldsEnum.program_id],
+        gender: r[FieldsEnum.gender],
+        submitterId: r[FieldsEnum.submitter_donor_id],
+        programId: r[FieldsEnum.program_id],
         specimens: [
           {
             specimenId: i,
-            submitterId: r[RegistrationFieldsEnum.submitter_specimen_id],
-            specimenType: r[RegistrationFieldsEnum.specimen_type],
-            tumourNormalDesignation: r[RegistrationFieldsEnum.tumour_normal_designation],
+            submitterId: r[FieldsEnum.submitter_specimen_id],
+            specimenType: r[FieldsEnum.specimen_type],
+            tumourNormalDesignation: r[FieldsEnum.tumour_normal_designation],
             samples: [
               {
                 sampleId: i,
-                sampleType: r[RegistrationFieldsEnum.sample_type],
-                submitterId: r[RegistrationFieldsEnum.submitter_sample_id]
+                sampleType: r[FieldsEnum.sample_type],
+                submitterId: r[FieldsEnum.submitter_sample_id]
               }
             ]
           }

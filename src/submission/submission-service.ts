@@ -7,13 +7,12 @@ import {
   ActiveRegistration,
   SubmittedRegistrationRecord,
   RegistrationStats,
-  RegistrationValidationError,
+  ClinicalValidationError,
   CreateRegistrationRecord,
   CreateRegistrationCommand,
   CreateRegistrationResult,
   RegistrationRecordFields,
-  RegistrationFieldsEnum,
-  ClinicalValidationError,
+  FieldsEnum,
   SaveClinicalCommand,
   CreateClinicalResult
 } from "./submission-entities";
@@ -41,7 +40,7 @@ export namespace operations {
     command: CreateRegistrationCommand
   ): Promise<CreateRegistrationResult> => {
     const schemaResult = schemaManager.instance().process("registration", command.records);
-    let unifiedSchemaErrors: DeepReadonly<RegistrationValidationError[]> = [];
+    let unifiedSchemaErrors: DeepReadonly<ClinicalValidationError[]> = [];
     if (anyErrors(schemaResult.validationErrors)) {
       unifiedSchemaErrors = unifySchemaErrors(schemaResult, command.records);
       L.info(`found ${schemaResult.validationErrors.length} schema errors in registration attempt`);
@@ -50,7 +49,7 @@ export namespace operations {
     // check the program id if it matches the authorized one
     // This check is used to validate the program Id along with the schema validations
     // to save extra round trips
-    let programIdErrors: DeepReadonly<RegistrationValidationError[]> = [];
+    let programIdErrors: DeepReadonly<ClinicalValidationError[]> = [];
     command.records.forEach((r, index) => {
       const programIdError = dataValidator.usingInvalidProgramId(index, r, command.programId);
       programIdErrors = programIdErrors.concat(programIdError);
@@ -227,7 +226,7 @@ export namespace operations {
     result: SchemaProcessingResult,
     records: ReadonlyArray<DataRecord>
   ) => {
-    const errorsList = new Array<RegistrationValidationError>();
+    const errorsList = new Array<ClinicalValidationError>();
     result.validationErrors.forEach(schemaErr => {
       errorsList.push({
         index: schemaErr.index,
@@ -235,10 +234,9 @@ export namespace operations {
         info: {
           ...schemaErr.info,
           value: records[schemaErr.index][schemaErr.fieldName],
-          donorSubmitterId: records[schemaErr.index][RegistrationFieldsEnum.submitter_donor_id],
-          specimenSubmitterId:
-            records[schemaErr.index][RegistrationFieldsEnum.submitter_specimen_id],
-          sampleSubmitterId: records[schemaErr.index][RegistrationFieldsEnum.submitter_sample_id]
+          donorSubmitterId: records[schemaErr.index][FieldsEnum.submitter_donor_id],
+          specimenSubmitterId: records[schemaErr.index][FieldsEnum.submitter_specimen_id],
+          sampleSubmitterId: records[schemaErr.index][FieldsEnum.submitter_sample_id]
         },
         fieldName: schemaErr.fieldName as RegistrationRecordFields
       });
@@ -259,7 +257,7 @@ export namespace operations {
         info: {
           ...schemaErr.info,
           value: records[schemaErr.index][schemaErr.fieldName],
-          donorSubmitterId: records[schemaErr.index][RegistrationFieldsEnum.submitter_donor_id]
+          donorSubmitterId: records[schemaErr.index][FieldsEnum.submitter_donor_id]
         },
         fieldName: schemaErr.fieldName
       });
@@ -347,14 +345,14 @@ export namespace operations {
     return F(
       records.map(r => {
         const rec: CreateRegistrationRecord = {
-          programId: r[RegistrationFieldsEnum.program_id] as string,
-          donorSubmitterId: r[RegistrationFieldsEnum.submitter_donor_id] as string,
-          gender: r[RegistrationFieldsEnum.gender] as string,
-          specimenSubmitterId: r[RegistrationFieldsEnum.submitter_specimen_id] as string,
-          specimenType: r[RegistrationFieldsEnum.specimen_type] as string,
-          tumourNormalDesignation: r[RegistrationFieldsEnum.tumour_normal_designation] as string,
-          sampleSubmitterId: r[RegistrationFieldsEnum.submitter_sample_id] as string,
-          sampleType: r[RegistrationFieldsEnum.sample_type] as string
+          programId: r[FieldsEnum.program_id] as string,
+          donorSubmitterId: r[FieldsEnum.submitter_donor_id] as string,
+          gender: r[FieldsEnum.gender] as string,
+          specimenSubmitterId: r[FieldsEnum.submitter_specimen_id] as string,
+          specimenType: r[FieldsEnum.specimen_type] as string,
+          tumourNormalDesignation: r[FieldsEnum.tumour_normal_designation] as string,
+          sampleSubmitterId: r[FieldsEnum.submitter_sample_id] as string,
+          sampleType: r[FieldsEnum.sample_type] as string
         };
         return rec;
       })

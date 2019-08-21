@@ -39,7 +39,7 @@ export const RegistrationToCreateRegistrationFieldsMap: x = {
   sample_type: "sampleType"
 };
 
-export enum RegistrationFieldsEnum {
+export enum FieldsEnum {
   program_id = "program_id",
   submitter_donor_id = "submitter_donor_id",
   gender = "gender",
@@ -50,9 +50,9 @@ export enum RegistrationFieldsEnum {
   sample_type = "sample_type"
 }
 
-export type RegistrationValidationError = {
+export type ClinicalValidationError = {
   type: DataValidationErrors | SchemaValidationErrorTypes;
-  fieldName: keyof SubmittedRegistrationRecord;
+  fieldName: string;
   info: object;
   index: number;
 };
@@ -104,11 +104,11 @@ export interface CreateRegistrationCommand {
 export interface CreateRegistrationResult {
   readonly registration: DeepReadonly<ActiveRegistration> | undefined;
   readonly successful: boolean;
-  errors: DeepReadonly<RegistrationValidationError[]>;
+  errors: DeepReadonly<ClinicalValidationError[]>;
 }
 
 export interface ValidationResult {
-  errors: DeepReadonly<RegistrationValidationError[]>;
+  errors: DeepReadonly<ClinicalValidationError[]>;
 }
 
 export interface SaveClinicalCommand {
@@ -122,10 +122,3 @@ export interface CreateClinicalResult {
   readonly successful: boolean;
   errors: DeepReadonly<ClinicalValidationError[]>;
 }
-
-export type ClinicalValidationError = {
-  type: DataValidationErrors | SchemaValidationErrorTypes;
-  fieldName: string;
-  info: object;
-  index: number;
-};

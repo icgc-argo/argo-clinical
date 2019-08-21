@@ -3,15 +3,15 @@ import sinon from "sinon";
 import { donorDao } from "../../../src/clinical/donor-repo";
 import * as dv from "../../../src/submission/validation";
 import {
-  RegistrationValidationError,
+  ClinicalValidationError,
   DataValidationErrors,
   CreateRegistrationRecord,
-  RegistrationFieldsEnum
+  FieldsEnum
 } from "../../../src/submission/submission-entities";
 import { Donor } from "../../../src/clinical/clinical-entities";
 import { stubs } from "./stubs";
 
-const genderMutatedErr: RegistrationValidationError = {
+const genderMutatedErr: ClinicalValidationError = {
   fieldName: "gender",
   index: 0,
   info: {
@@ -22,7 +22,7 @@ const genderMutatedErr: RegistrationValidationError = {
   },
   type: DataValidationErrors.MUTATING_EXISTING_DATA
 };
-const programInvalidErr: RegistrationValidationError = {
+const programInvalidErr: ClinicalValidationError = {
   fieldName: "program_id",
   index: 0,
   info: {
@@ -34,7 +34,7 @@ const programInvalidErr: RegistrationValidationError = {
   },
   type: DataValidationErrors.INVALID_PROGRAM_ID
 };
-const specimenMutatedErr: RegistrationValidationError = {
+const specimenMutatedErr: ClinicalValidationError = {
   fieldName: "specimen_type",
   index: 0,
   info: {
@@ -45,7 +45,7 @@ const specimenMutatedErr: RegistrationValidationError = {
   },
   type: DataValidationErrors.MUTATING_EXISTING_DATA
 };
-const tndError: RegistrationValidationError = {
+const tndError: ClinicalValidationError = {
   fieldName: "tumour_normal_designation",
   index: 0,
   info: {
@@ -57,7 +57,7 @@ const tndError: RegistrationValidationError = {
   type: DataValidationErrors.MUTATING_EXISTING_DATA
 };
 
-const sampleTypeMutatedError: RegistrationValidationError = {
+const sampleTypeMutatedError: ClinicalValidationError = {
   fieldName: "sample_type",
   index: 0,
   info: {
@@ -69,8 +69,8 @@ const sampleTypeMutatedError: RegistrationValidationError = {
   type: DataValidationErrors.MUTATING_EXISTING_DATA
 };
 
-const specimenBelongsToOtherDonor: RegistrationValidationError = {
-  fieldName: RegistrationFieldsEnum.submitter_specimen_id,
+const specimenBelongsToOtherDonor: ClinicalValidationError = {
+  fieldName: FieldsEnum.submitter_specimen_id,
   index: 0,
   info: {
     donorSubmitterId: "AB2",
@@ -81,8 +81,8 @@ const specimenBelongsToOtherDonor: RegistrationValidationError = {
   type: DataValidationErrors.SPECIMEN_BELONGS_TO_OTHER_DONOR
 };
 
-const sampleBelongsToOtherSpecimenAB2: RegistrationValidationError = {
-  fieldName: RegistrationFieldsEnum.submitter_sample_id,
+const sampleBelongsToOtherSpecimenAB2: ClinicalValidationError = {
+  fieldName: FieldsEnum.submitter_sample_id,
   index: 0,
   info: {
     donorSubmitterId: "AB2",
@@ -93,8 +93,8 @@ const sampleBelongsToOtherSpecimenAB2: RegistrationValidationError = {
   type: DataValidationErrors.SAMPLE_BELONGS_TO_OTHER_SPECIMEN
 };
 
-const sampleBelongsToOtherSpecimenAB1: RegistrationValidationError = {
-  fieldName: RegistrationFieldsEnum.submitter_sample_id,
+const sampleBelongsToOtherSpecimenAB1: ClinicalValidationError = {
+  fieldName: FieldsEnum.submitter_sample_id,
   index: 0,
   info: {
     donorSubmitterId: "AB1",
@@ -282,7 +282,7 @@ describe("data-validator", () => {
     // assertions
     chai.expect(result.errors.length).to.eq(4);
     chai.expect(result.errors).to.deep.include(sampleTypeMutatedError);
-    const specimenMutatedError: RegistrationValidationError = {
+    const specimenMutatedError: ClinicalValidationError = {
       fieldName: "specimen_type",
       index: 0,
       info: {
@@ -420,7 +420,7 @@ describe("data-validator", () => {
 
     // assertions
     const row0Err = {
-      fieldName: RegistrationFieldsEnum.submitter_sample_id,
+      fieldName: FieldsEnum.submitter_sample_id,
       index: 0,
       info: {
         conflictingRows: [1],
@@ -433,7 +433,7 @@ describe("data-validator", () => {
     };
 
     const row1Err = {
-      fieldName: RegistrationFieldsEnum.submitter_sample_id,
+      fieldName: FieldsEnum.submitter_sample_id,
       index: 1,
       info: {
         conflictingRows: [0],
@@ -494,7 +494,7 @@ describe("data-validator", () => {
 
     // assertions
     const row0Err = {
-      fieldName: RegistrationFieldsEnum.submitter_specimen_id,
+      fieldName: FieldsEnum.submitter_specimen_id,
       index: 0,
       info: {
         conflictingRows: [2],
@@ -507,7 +507,7 @@ describe("data-validator", () => {
     };
 
     const row2Err = {
-      fieldName: RegistrationFieldsEnum.submitter_specimen_id,
+      fieldName: FieldsEnum.submitter_specimen_id,
       index: 2,
       info: {
         conflictingRows: [0],
@@ -567,7 +567,7 @@ describe("data-validator", () => {
     );
 
     // assertions
-    const row0Err: RegistrationValidationError = {
+    const row0Err: ClinicalValidationError = {
       fieldName: "specimen_type",
       index: 0,
       info: {
@@ -580,7 +580,7 @@ describe("data-validator", () => {
       type: DataValidationErrors.NEW_SPECIMEN_CONFLICT
     };
 
-    const row2Err: RegistrationValidationError = {
+    const row2Err: ClinicalValidationError = {
       fieldName: "specimen_type",
       index: 2,
       info: {
@@ -641,7 +641,7 @@ describe("data-validator", () => {
     );
 
     // assertions
-    const row0Err: RegistrationValidationError = {
+    const row0Err: ClinicalValidationError = {
       fieldName: "sample_type",
       index: 0,
       info: {
@@ -654,7 +654,7 @@ describe("data-validator", () => {
       type: DataValidationErrors.NEW_SAMPLE_CONFLICT
     };
 
-    const row2Err: RegistrationValidationError = {
+    const row2Err: ClinicalValidationError = {
       fieldName: "sample_type",
       index: 2,
       info: {
@@ -714,7 +714,7 @@ describe("data-validator", () => {
     );
 
     // assertions
-    const row0Err: RegistrationValidationError = {
+    const row0Err: ClinicalValidationError = {
       fieldName: "gender",
       index: 0,
       info: {
@@ -727,7 +727,7 @@ describe("data-validator", () => {
       type: DataValidationErrors.NEW_DONOR_CONFLICT
     };
 
-    const row2Err: RegistrationValidationError = {
+    const row2Err: ClinicalValidationError = {
       fieldName: "gender",
       index: 2,
       info: {
@@ -787,8 +787,8 @@ describe("data-validator", () => {
     );
 
     // assertions
-    const row0Err: RegistrationValidationError = {
-      fieldName: RegistrationFieldsEnum.submitter_sample_id,
+    const row0Err: ClinicalValidationError = {
+      fieldName: FieldsEnum.submitter_sample_id,
       index: 0,
       info: {
         donorSubmitterId: "AB1",
@@ -800,8 +800,8 @@ describe("data-validator", () => {
       type: DataValidationErrors.NEW_SAMPLE_CONFLICT
     };
 
-    const row2Err: RegistrationValidationError = {
-      fieldName: RegistrationFieldsEnum.submitter_sample_id,
+    const row2Err: ClinicalValidationError = {
+      fieldName: FieldsEnum.submitter_sample_id,
       index: 2,
       info: {
         donorSubmitterId: "AB1",
@@ -860,7 +860,7 @@ describe("data-validator", () => {
     );
 
     // assertions
-    const row0Err: RegistrationValidationError = {
+    const row0Err: ClinicalValidationError = {
       fieldName: "sample_type",
       index: 0,
       info: {

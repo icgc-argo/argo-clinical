@@ -115,7 +115,6 @@ class SubmissionController {
       clinicalType: req.params.clinicalType
     };
     const result = await submission.operations.uploadClinical(command);
-    console.log(result);
     if (!result.successful) {
       return res.status(422).send(result);
     }

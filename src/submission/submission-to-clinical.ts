@@ -8,7 +8,7 @@ import {
   CommitRegistrationCommand,
   ActiveRegistration,
   SubmittedRegistrationRecord,
-  RegistrationFieldsEnum
+  FieldsEnum
 } from "./submission-entities";
 
 import { Errors } from "../utils";
@@ -116,12 +116,12 @@ const mapToCreateDonorSampleDto = (registration: DeepReadonly<ActiveRegistration
   const donors: CreateDonorSampleDto[] = [];
   registration.records.forEach(rec => {
     // if the donor doesn't exist add it
-    let donor = donors.find(d => d.submitterId === rec[RegistrationFieldsEnum.submitter_donor_id]);
+    let donor = donors.find(d => d.submitterId === rec[FieldsEnum.submitter_donor_id]);
     if (!donor) {
       const firstSpecimen = getDonorSpecimen(rec);
       donor = {
-        submitterId: rec[RegistrationFieldsEnum.submitter_donor_id],
-        gender: rec[RegistrationFieldsEnum.gender],
+        submitterId: rec[FieldsEnum.submitter_donor_id],
+        gender: rec[FieldsEnum.gender],
         programId: registration.programId,
         specimens: [firstSpecimen]
       };
@@ -131,15 +131,15 @@ const mapToCreateDonorSampleDto = (registration: DeepReadonly<ActiveRegistration
 
     // if the specimen doesn't exist add it
     let specimen = donor.specimens.find(
-      s => s.submitterId === rec[RegistrationFieldsEnum.submitter_specimen_id]
+      s => s.submitterId === rec[FieldsEnum.submitter_specimen_id]
     );
     if (!specimen) {
       specimen = getDonorSpecimen(rec);
       donor.specimens.push(specimen);
     } else {
       specimen.samples.push({
-        sampleType: rec[RegistrationFieldsEnum.sample_type],
-        submitterId: rec[RegistrationFieldsEnum.submitter_sample_id]
+        sampleType: rec[FieldsEnum.sample_type],
+        submitterId: rec[FieldsEnum.submitter_sample_id]
       });
     }
   });
@@ -148,13 +148,13 @@ const mapToCreateDonorSampleDto = (registration: DeepReadonly<ActiveRegistration
 
 const getDonorSpecimen = (record: SubmittedRegistrationRecord) => {
   return {
-    specimenType: record[RegistrationFieldsEnum.specimen_type],
-    tumourNormalDesignation: record[RegistrationFieldsEnum.tumour_normal_designation],
-    submitterId: record[RegistrationFieldsEnum.submitter_specimen_id],
+    specimenType: record[FieldsEnum.specimen_type],
+    tumourNormalDesignation: record[FieldsEnum.tumour_normal_designation],
+    submitterId: record[FieldsEnum.submitter_specimen_id],
     samples: [
       {
-        sampleType: record[RegistrationFieldsEnum.sample_type],
-        submitterId: record[RegistrationFieldsEnum.submitter_sample_id]
+        sampleType: record[FieldsEnum.sample_type],
+        submitterId: record[FieldsEnum.submitter_sample_id]
       }
     ]
   };
