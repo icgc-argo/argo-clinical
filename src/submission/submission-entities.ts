@@ -50,7 +50,7 @@ export enum FieldsEnum {
   sample_type = "sample_type"
 }
 
-export type ClinicalValidationError = {
+export type SubmissionValidationError = {
   type: DataValidationErrors | SchemaValidationErrorTypes;
   fieldName: string;
   info: object;
@@ -104,11 +104,11 @@ export interface CreateRegistrationCommand {
 export interface CreateRegistrationResult {
   readonly registration: DeepReadonly<ActiveRegistration> | undefined;
   readonly successful: boolean;
-  errors: DeepReadonly<ClinicalValidationError[]>;
+  errors: DeepReadonly<SubmissionValidationError[]>;
 }
 
 export interface ValidationResult {
-  errors: DeepReadonly<ClinicalValidationError[]>;
+  errors: DeepReadonly<SubmissionValidationError[]>;
 }
 
 export interface SaveClinicalCommand {
@@ -120,5 +120,5 @@ export interface SaveClinicalCommand {
 export interface CreateClinicalResult {
   readonly clinicalData: undefined;
   readonly successful: boolean;
-  errors: DeepReadonly<ClinicalValidationError[]>;
+  errors: DeepReadonly<SubmissionValidationError[]>;
 }

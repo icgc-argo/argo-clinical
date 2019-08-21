@@ -7,7 +7,7 @@ import {
   ActiveRegistration,
   SubmittedRegistrationRecord,
   RegistrationStats,
-  ClinicalValidationError,
+  SubmissionValidationError,
   CreateRegistrationRecord,
   CreateRegistrationCommand,
   CreateRegistrationResult,
@@ -26,7 +26,6 @@ import {
 import { loggerFor } from "../logger";
 import { Errors, F } from "../utils";
 import { DeepReadonly } from "deep-freeze";
-import { FileType } from "./submission-api";
 const L = loggerFor(__filename);
 
 export namespace operations {
@@ -40,7 +39,7 @@ export namespace operations {
     command: CreateRegistrationCommand
   ): Promise<CreateRegistrationResult> => {
     const schemaResult = schemaManager.instance().process("registration", command.records);
-    let unifiedSchemaErrors: DeepReadonly<ClinicalValidationError[]> = [];
+    let unifiedSchemaErrors: DeepReadonly<SubmissionValidationError[]> = [];
     if (anyErrors(schemaResult.validationErrors)) {
       unifiedSchemaErrors = unifySchemaErrors(schemaResult, command.records);
       L.info(`found ${schemaResult.validationErrors.length} schema errors in registration attempt`);
@@ -49,7 +48,7 @@ export namespace operations {
     // check the program id if it matches the authorized one
     // This check is used to validate the program Id along with the schema validations
     // to save extra round trips
-    let programIdErrors: DeepReadonly<ClinicalValidationError[]> = [];
+    let programIdErrors: DeepReadonly<SubmissionValidationError[]> = [];
     command.records.forEach((r, index) => {
       const programIdError = dataValidator.usingInvalidProgramId(index, r, command.programId);
       programIdErrors = programIdErrors.concat(programIdError);
@@ -153,7 +152,7 @@ export namespace operations {
   export const uploadClinical = async (
     command: SaveClinicalCommand
   ): Promise<CreateClinicalResult> => {
-    let programIdErrors: DeepReadonly<ClinicalValidationError[]> = [];
+    let programIdErrors: DeepReadonly<SubmissionValidationError[]> = [];
     command.records.forEach((r, index) => {
       const programIdError = dataValidator.usingInvalidClinicalProgramId(
         index,
@@ -226,7 +225,7 @@ export namespace operations {
     result: SchemaProcessingResult,
     records: ReadonlyArray<DataRecord>
   ) => {
-    const errorsList = new Array<ClinicalValidationError>();
+    const errorsList = new Array<SubmissionValidationError>();
     result.validationErrors.forEach(schemaErr => {
       errorsList.push({
         index: schemaErr.index,
@@ -249,7 +248,7 @@ export namespace operations {
     result: SchemaProcessingResult,
     records: ReadonlyArray<DataRecord>
   ) => {
-    const errorsList = new Array<ClinicalValidationError>();
+    const errorsList = new Array<SubmissionValidationError>();
     result.validationErrors.forEach(schemaErr => {
       errorsList.push({
         index: schemaErr.index,

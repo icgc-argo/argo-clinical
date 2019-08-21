@@ -1,7 +1,7 @@
 import { DonorMap } from "../clinical/clinical-entities";
 import {
   DataValidationErrors,
-  ClinicalValidationError,
+  SubmissionValidationError,
   CreateRegistrationRecord,
   ValidationResult,
   FieldsEnum,
@@ -16,7 +16,7 @@ export const validateRegistrationData = async (
   newRecords: DeepReadonly<CreateRegistrationRecord[]>,
   existingDonors: DeepReadonly<DonorMap>
 ): Promise<ValidationResult> => {
-  let errors: ClinicalValidationError[] = [];
+  let errors: SubmissionValidationError[] = [];
 
   // caching in case we encounter same ids more than once
   const newSpecimens = new Set<string>();
@@ -71,7 +71,7 @@ export const usingInvalidProgramId = (
   registrationRecord: DataRecord,
   expectedProgram: string
 ) => {
-  const errors: ClinicalValidationError[] = [];
+  const errors: SubmissionValidationError[] = [];
   const programId = registrationRecord[FieldsEnum.program_id];
   if (programId) {
     if (expectedProgram !== programId) {
@@ -98,7 +98,7 @@ export const usingInvalidClinicalProgramId = (
   clinicalRecord: DataRecord,
   expectedProgram: string
 ) => {
-  const errors: ClinicalValidationError[] = [];
+  const errors: SubmissionValidationError[] = [];
   const programId = clinicalRecord[FieldsEnum.program_id];
   if (programId) {
     if (expectedProgram !== programId) {
@@ -122,7 +122,7 @@ const conflictingNewSpecimen = (
   newDonor: CreateRegistrationRecord,
   newRecords: DeepReadonly<CreateRegistrationRecord[]>
 ) => {
-  const errors: ClinicalValidationError[] = [];
+  const errors: SubmissionValidationError[] = [];
 
   // these arrays to store the indices of rows that conflict with the current record we validate
   const conflictingSpecimensIndices: number[] = [];
@@ -208,7 +208,7 @@ const conflictingNewDonor = (
   newDonor: CreateRegistrationRecord,
   newRecords: DeepReadonly<CreateRegistrationRecord[]>
 ) => {
-  const errors: ClinicalValidationError[] = [];
+  const errors: SubmissionValidationError[] = [];
   const conflictingGendersIndexes: number[] = [];
 
   newRecords.forEach((rec, index) => {
@@ -246,7 +246,7 @@ const conflictingNewSample = (
   newDonor: CreateRegistrationRecord,
   newRecords: DeepReadonly<CreateRegistrationRecord[]>
 ) => {
-  const errors: ClinicalValidationError[] = [];
+  const errors: SubmissionValidationError[] = [];
   const conflictingSamplesIndices: number[] = [];
   const conflictingSampleTypesIndices: number[] = [];
 
@@ -339,7 +339,7 @@ const mutatingExistingData = (
   existingDonors: DeepReadonly<DonorMap>
 ) => {
   // if the donor doesn't exist => return
-  const errors: ClinicalValidationError[] = [];
+  const errors: SubmissionValidationError[] = [];
   const existingDonor = existingDonors[newDonor.donorSubmitterId];
   if (!existingDonor) return errors;
 
@@ -410,7 +410,7 @@ const specimenBelongsToOtherDonor = async (
   newDonor: CreateRegistrationRecord,
   programId: string
 ) => {
-  const errors: ClinicalValidationError[] = [];
+  const errors: SubmissionValidationError[] = [];
   const count = await donorDao.countBy({
     [DONOR_FIELDS.PROGRAM_ID]: { $eq: programId },
     [DONOR_FIELDS.SUBMITTER_ID]: { $ne: newDonor.donorSubmitterId },
@@ -435,7 +435,7 @@ const sampleBelongsToAnotherSpecimen = async (
   newDonor: CreateRegistrationRecord,
   programId: string
 ) => {
-  const errors: ClinicalValidationError[] = [];
+  const errors: SubmissionValidationError[] = [];
   const count = await donorDao.countBy({
     [DONOR_FIELDS.PROGRAM_ID]: { $eq: programId },
     [DONOR_FIELDS.SPECIMEN_SUBMITTER_ID]: { $ne: newDonor.specimenSubmitterId },
@@ -463,7 +463,7 @@ const buildError = (
   fieldName: FieldsEnum,
   index: number,
   info: object = {}
-): ClinicalValidationError => {
+): SubmissionValidationError => {
   return {
     type,
     fieldName,

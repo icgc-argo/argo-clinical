@@ -3,7 +3,7 @@ import sinon from "sinon";
 import { donorDao } from "../../../src/clinical/donor-repo";
 import * as dv from "../../../src/submission/validation";
 import {
-  ClinicalValidationError,
+  SubmissionValidationError,
   DataValidationErrors,
   CreateRegistrationRecord,
   FieldsEnum
@@ -11,7 +11,7 @@ import {
 import { Donor } from "../../../src/clinical/clinical-entities";
 import { stubs } from "./stubs";
 
-const genderMutatedErr: ClinicalValidationError = {
+const genderMutatedErr: SubmissionValidationError = {
   fieldName: "gender",
   index: 0,
   info: {
@@ -22,7 +22,7 @@ const genderMutatedErr: ClinicalValidationError = {
   },
   type: DataValidationErrors.MUTATING_EXISTING_DATA
 };
-const programInvalidErr: ClinicalValidationError = {
+const programInvalidErr: SubmissionValidationError = {
   fieldName: "program_id",
   index: 0,
   info: {
@@ -34,7 +34,7 @@ const programInvalidErr: ClinicalValidationError = {
   },
   type: DataValidationErrors.INVALID_PROGRAM_ID
 };
-const specimenMutatedErr: ClinicalValidationError = {
+const specimenMutatedErr: SubmissionValidationError = {
   fieldName: "specimen_type",
   index: 0,
   info: {
@@ -45,7 +45,7 @@ const specimenMutatedErr: ClinicalValidationError = {
   },
   type: DataValidationErrors.MUTATING_EXISTING_DATA
 };
-const tndError: ClinicalValidationError = {
+const tndError: SubmissionValidationError = {
   fieldName: "tumour_normal_designation",
   index: 0,
   info: {
@@ -57,7 +57,7 @@ const tndError: ClinicalValidationError = {
   type: DataValidationErrors.MUTATING_EXISTING_DATA
 };
 
-const sampleTypeMutatedError: ClinicalValidationError = {
+const sampleTypeMutatedError: SubmissionValidationError = {
   fieldName: "sample_type",
   index: 0,
   info: {
@@ -69,7 +69,7 @@ const sampleTypeMutatedError: ClinicalValidationError = {
   type: DataValidationErrors.MUTATING_EXISTING_DATA
 };
 
-const specimenBelongsToOtherDonor: ClinicalValidationError = {
+const specimenBelongsToOtherDonor: SubmissionValidationError = {
   fieldName: FieldsEnum.submitter_specimen_id,
   index: 0,
   info: {
@@ -81,7 +81,7 @@ const specimenBelongsToOtherDonor: ClinicalValidationError = {
   type: DataValidationErrors.SPECIMEN_BELONGS_TO_OTHER_DONOR
 };
 
-const sampleBelongsToOtherSpecimenAB2: ClinicalValidationError = {
+const sampleBelongsToOtherSpecimenAB2: SubmissionValidationError = {
   fieldName: FieldsEnum.submitter_sample_id,
   index: 0,
   info: {
@@ -93,7 +93,7 @@ const sampleBelongsToOtherSpecimenAB2: ClinicalValidationError = {
   type: DataValidationErrors.SAMPLE_BELONGS_TO_OTHER_SPECIMEN
 };
 
-const sampleBelongsToOtherSpecimenAB1: ClinicalValidationError = {
+const sampleBelongsToOtherSpecimenAB1: SubmissionValidationError = {
   fieldName: FieldsEnum.submitter_sample_id,
   index: 0,
   info: {
@@ -282,7 +282,7 @@ describe("data-validator", () => {
     // assertions
     chai.expect(result.errors.length).to.eq(4);
     chai.expect(result.errors).to.deep.include(sampleTypeMutatedError);
-    const specimenMutatedError: ClinicalValidationError = {
+    const specimenMutatedError: SubmissionValidationError = {
       fieldName: "specimen_type",
       index: 0,
       info: {
@@ -567,7 +567,7 @@ describe("data-validator", () => {
     );
 
     // assertions
-    const row0Err: ClinicalValidationError = {
+    const row0Err: SubmissionValidationError = {
       fieldName: "specimen_type",
       index: 0,
       info: {
@@ -580,7 +580,7 @@ describe("data-validator", () => {
       type: DataValidationErrors.NEW_SPECIMEN_CONFLICT
     };
 
-    const row2Err: ClinicalValidationError = {
+    const row2Err: SubmissionValidationError = {
       fieldName: "specimen_type",
       index: 2,
       info: {
@@ -641,7 +641,7 @@ describe("data-validator", () => {
     );
 
     // assertions
-    const row0Err: ClinicalValidationError = {
+    const row0Err: SubmissionValidationError = {
       fieldName: "sample_type",
       index: 0,
       info: {
@@ -654,7 +654,7 @@ describe("data-validator", () => {
       type: DataValidationErrors.NEW_SAMPLE_CONFLICT
     };
 
-    const row2Err: ClinicalValidationError = {
+    const row2Err: SubmissionValidationError = {
       fieldName: "sample_type",
       index: 2,
       info: {
@@ -714,7 +714,7 @@ describe("data-validator", () => {
     );
 
     // assertions
-    const row0Err: ClinicalValidationError = {
+    const row0Err: SubmissionValidationError = {
       fieldName: "gender",
       index: 0,
       info: {
@@ -727,7 +727,7 @@ describe("data-validator", () => {
       type: DataValidationErrors.NEW_DONOR_CONFLICT
     };
 
-    const row2Err: ClinicalValidationError = {
+    const row2Err: SubmissionValidationError = {
       fieldName: "gender",
       index: 2,
       info: {
@@ -787,7 +787,7 @@ describe("data-validator", () => {
     );
 
     // assertions
-    const row0Err: ClinicalValidationError = {
+    const row0Err: SubmissionValidationError = {
       fieldName: FieldsEnum.submitter_sample_id,
       index: 0,
       info: {
@@ -800,7 +800,7 @@ describe("data-validator", () => {
       type: DataValidationErrors.NEW_SAMPLE_CONFLICT
     };
 
-    const row2Err: ClinicalValidationError = {
+    const row2Err: SubmissionValidationError = {
       fieldName: FieldsEnum.submitter_sample_id,
       index: 2,
       info: {
@@ -860,7 +860,7 @@ describe("data-validator", () => {
     );
 
     // assertions
-    const row0Err: ClinicalValidationError = {
+    const row0Err: SubmissionValidationError = {
       fieldName: "sample_type",
       index: 0,
       info: {

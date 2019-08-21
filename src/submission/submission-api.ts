@@ -133,13 +133,13 @@ const isValidCreateBody = (req: Request, res: Response, type: FileType): boolean
     ControllerUtils.badRequest(res, `programId is required`);
     return false;
   }
+  if (!Object.values(FileType).includes(type)) {
+    ControllerUtils.badRequest(res, `invalid clinical submission type ${type}`);
+    return false;
+  }
   if (req.file == undefined) {
     L.debug(`${type}File missing`);
     ControllerUtils.badRequest(res, `${type}File file is required`);
-    return false;
-  }
-  if (!Object.values(FileType).includes(type)) {
-    ControllerUtils.badRequest(res, `invalid clinical submission type ${type}`);
     return false;
   }
   if (!isStringMatchRegex(FileNameRegex[type], req.file.originalname)) {
