@@ -166,11 +166,7 @@ export namespace operations {
     });
     const schemaResult = schemaManager.instance().process(command.clinicalType, command.records);
     if (schemaResult.validationErrors.length > 0) {
-      const unifiedSchemaErrors = unifyClinicalSchemaErrors(
-        command.clinicalType,
-        schemaResult,
-        command.records
-      );
+      const unifiedSchemaErrors = unifyClinicalSchemaErrors(schemaResult, command.records);
       return {
         clinicalData: undefined,
         errors: unifiedSchemaErrors.concat(programIdErrors),
@@ -253,7 +249,6 @@ export namespace operations {
   };
 
   const unifyClinicalSchemaErrors = (
-    type: string,
     result: SchemaProcessingResult,
     records: ReadonlyArray<DataRecord>
   ) => {
@@ -265,8 +260,7 @@ export namespace operations {
         info: {
           ...schemaErr.info,
           value: records[schemaErr.index][schemaErr.fieldName],
-          donorSubmitterId: records[schemaErr.index][RegistrationFieldsEnum.submitter_donor_id],
-          type: type
+          donorSubmitterId: records[schemaErr.index][RegistrationFieldsEnum.submitter_donor_id]
         },
         fieldName: schemaErr.fieldName
       });
