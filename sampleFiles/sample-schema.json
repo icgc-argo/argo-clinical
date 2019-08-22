@@ -198,7 +198,7 @@
           "description": "Indicate the cause of death of patient",
           "restrictions": {
             "required": false,
-            "codeList": ["died of cancer", "died of other reasons, N/A"]
+            "codeList": ["died of cancer", "died of other reasons", "N/A"]
           }
         },
         {

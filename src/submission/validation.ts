@@ -110,30 +110,7 @@ const getInfoObject = (type: string, record: DeepReadonly<DataRecord>, expectedP
   }
   return {};
 };
-export const usingInvalidClinicalProgramId = (
-  newDonorIndex: number,
-  clinicalRecord: DataRecord,
-  expectedProgram: string
-) => {
-  const errors: SubmissionValidationError[] = [];
-  const programId = clinicalRecord[FieldsEnum.program_id];
-  if (programId) {
-    if (expectedProgram !== programId) {
-      errors.push({
-        type: DataValidationErrors.INVALID_PROGRAM_ID,
-        fieldName: FieldsEnum.program_id,
-        index: newDonorIndex,
-        info: {
-          value: clinicalRecord[FieldsEnum.program_id],
-          donorSubmitterId: clinicalRecord[FieldsEnum.submitter_donor_id],
-          expectedProgram
-        }
-      });
-    }
-    return errors;
-  }
-  return [];
-};
+
 const conflictingNewSpecimen = (
   newDonorIndex: number,
   newDonor: CreateRegistrationRecord,
