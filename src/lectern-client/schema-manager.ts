@@ -62,7 +62,7 @@ class SchemaManager {
   loadSchema = async (name: string, initialVersion: string): Promise<SchemasDictionary> => {
     L.debug(`in loadSchema ${initialVersion}`);
     if (!initialVersion) {
-      throw new Error("initial version cannot be empty");
+      throw new Error("initial version cannot be empty.");
     }
     const storedSchema = await schemaRepo.get(name);
     if (storedSchema === null) {
@@ -79,7 +79,7 @@ class SchemaManager {
     // if the schema is not complete we need to load it from the
     // schema service (lectern)
     if (!this.currentSchema.schemas || this.currentSchema.schemas.length == 0) {
-      L.debug(`fetching schema from schema service`);
+      L.debug(`fetching schema from schema service.`);
       const result = await schemaServiceAdapter.fetchSchema(
         this.schemaServiceUrl,
         name,
