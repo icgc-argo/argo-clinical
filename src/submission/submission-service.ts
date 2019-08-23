@@ -27,6 +27,9 @@ import { loggerFor } from "../logger";
 import { Errors, F } from "../utils";
 import { DeepReadonly } from "deep-freeze";
 import { FileType } from "./submission-api";
+import { workspaceRepository } from "../workspace/workspace-repo";
+import { SUBMISSION_STATE } from "../workspace/workspace-entites";
+import { saveUnvalidatedSubmission } from "./submission-to-workspace";
 const L = loggerFor(__filename);
 
 export namespace operations {
@@ -181,6 +184,18 @@ export namespace operations {
         successful: false
       };
     }
+
+    // create program if not exist
+    let activeSubmission = await workspaceRepository.findByProgramId(command.programId);
+    if (!activeSubmission) {
+      activeSubmission = await workspaceRepository.create({
+        programId: command.programId,
+        state: SUBMISSION_STATE.OPEN,
+        hashVersion: "42",
+        clinicalEntities: []
+      });
+    }
+    await saveUnvalidatedSubmission(command);
     return {
       clinicalData: undefined,
       errors: [],

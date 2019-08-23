@@ -118,7 +118,7 @@ export interface SaveClinicalCommand {
 }
 
 export interface CreateClinicalResult {
-  readonly clinicalData: undefined;
+  readonly clinicalData: Object | undefined;
   readonly successful: boolean;
   errors: DeepReadonly<SubmissionValidationError[]>;
 }
