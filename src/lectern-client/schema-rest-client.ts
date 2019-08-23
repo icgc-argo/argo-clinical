@@ -52,7 +52,7 @@ export const schemaClient: SchemaServiceRestClient = {
 
 function delay(milliseconds: number) {
   return async (result: () => SchemasDictionary) => {
-    return new Promise<SchemasDictionary>(async (resolve, reject) => {
+    return new Promise<SchemasDictionary>((resolve, reject) => {
       setTimeout(() => resolve(result()), milliseconds);
     });
   };

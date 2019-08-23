@@ -28,7 +28,7 @@ const setupDBConnection = (mongoUrl: string, userName: string, password: string)
     L.debug("ERROR: " + error);
     setStatus("db", { status: Status.ERROR, info: { error } });
   });
-  const connectToDb = async (delayMillis: number) => {
+  const connectToDb = (delayMillis: number) => {
     setTimeout(async () => {
       L.debug("connecting to mongo");
       try {
@@ -39,30 +39,30 @@ const setupDBConnection = (mongoUrl: string, userName: string, password: string)
           socketTimeoutMS: 10000,
           connectTimeoutMS: 30000,
           keepAlive: true,
-          reconnectTries: 1000,
+          reconnectTries: 10,
           reconnectInterval: 3000,
           bufferCommands: false,
           bufferMaxEntries: 0,
-          // https://mongoosejs.com/docs/deprecations.html
-          useNewUrlParser: true,
           user: userName,
           pass: password,
+          // https://mongoosejs.com/docs/deprecations.html
+          useNewUrlParser: true,
           useFindAndModify: false
         });
       } catch (err) {
         L.error("failed to connect to mongo", err);
         setStatus("db", { status: Status.ERROR });
-        // retry in 5 secs
+        // retry in 8 secs
         connectToDb(8000);
       }
     }, delayMillis);
   };
   // initialize connection attempts
-  connectToDb(1);
+  return connectToDb(1);
 };
 
-const setJwtPublicKey = async (keyUrl: string) => {
-  const getKey = async (delayMillis: number) => {
+const setJwtPublicKey = (keyUrl: string) => {
+  const getKey = (delayMillis: number) => {
     setTimeout(async () => {
       try {
         const response = await fetch(keyUrl);
