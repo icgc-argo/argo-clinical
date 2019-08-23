@@ -1,6 +1,6 @@
 {
   "name": "argo-clinical",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "Clinical submission system and repo",
   "scripts": {
     "start": "npm run serve",
@@ -17,8 +17,7 @@
     "debug": "npm run build && sleep 3 && npm run watch-debug",
     "resources": "copyfiles -u 1 src/resources/*.* dist/src",
     "serve-debug": "nodemon --inspect dist/src/server.js",
-    "watch-debug": "nodemon --watch 'src/**/*.ts' --ignore 'src/**/*.spec.ts' --exec node --inspect-brk -r ts-node/register ./src/server.ts",
-    "watch-debug-deprecated": "concurrently -k -p \"[{name}]\" -n \"TypeScript,Node\" -c \"yellow.bold,cyan.bold,green.bold\" \"npm run watch-ts\" \"npm run serve-debug\""
+    "watch-debug": "nodemon --watch 'src/**/*.ts' --ignore 'src/**/*.spec.ts' --exec node --inspect-brk -r ts-node/register ./src/server.ts"
   },
   "repository": {
     "type": "git",
