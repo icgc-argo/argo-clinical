@@ -582,50 +582,6 @@ describe("Submission Api", () => {
           }
         });
     });
-    it("should return 200 if valid donor file", done => {
-      let file: Buffer;
-      try {
-        file = fs.readFileSync(__dirname + "/donor.tsv");
-      } catch (err) {
-        return done(err);
-      }
-      chai
-        .request(app)
-        .post("/submission/program/ABCD-EF/clinical/donor")
-        .type("form")
-        .attach("clinicalFile", file, "donor.tsv")
-        .auth(JWT_ABCDEF, { type: "bearer" })
-        .end((err: any, res: any) => {
-          res.should.have.status(200);
-          res.body.should.deep.eq({
-            errors: [],
-            successful: true
-          });
-          done();
-        });
-    });
-    it("should return 422 if invalid donor file", done => {
-      let file: Buffer;
-      try {
-        file = fs.readFileSync(__dirname + "/donor.invalid.tsv");
-      } catch (err) {
-        return done(err);
-      }
-      chai
-        .request(app)
-        .post("/submission/program/ABCD-EF/clinical/donor")
-        .type("form")
-        .attach("clinicalFile", file, "donor.invalid.tsv")
-        .auth(JWT_ABCDEF, { type: "bearer" })
-        .end((err: any, res: any) => {
-          res.should.have.status(422);
-          res.body.should.deep.eq({
-            errors: expectedDonorErrors,
-            successful: false
-          });
-          done();
-        });
-    });
   });
 });
 
