@@ -38,7 +38,7 @@ export const validateRegistrationData = async (
     // cross checking new records in file
     if (
       newDonors.has(registrationRecord.donorSubmitterId) ||
-      isNewDonor(registrationRecord, expectedProgram)
+      (await isNewDonor(registrationRecord, expectedProgram))
     ) {
       newDonors.add(registrationRecord.donorSubmitterId);
       errors = errors.concat(conflictingNewDonor(index, registrationRecord, newRecords));
@@ -46,7 +46,7 @@ export const validateRegistrationData = async (
 
     if (
       newSpecimens.has(registrationRecord.specimenSubmitterId) ||
-      isNewSpecimen(registrationRecord, expectedProgram)
+      (await isNewSpecimen(registrationRecord, expectedProgram))
     ) {
       newSpecimens.add(registrationRecord.specimenSubmitterId);
       errors = errors.concat(conflictingNewSpecimen(index, registrationRecord, newRecords));
@@ -54,7 +54,7 @@ export const validateRegistrationData = async (
 
     if (
       newSamples.has(registrationRecord.sampleSubmitterId) ||
-      isNewSample(registrationRecord, expectedProgram)
+      (await isNewSample(registrationRecord, expectedProgram))
     ) {
       newSamples.add(registrationRecord.sampleSubmitterId);
       errors = errors.concat(conflictingNewSample(index, registrationRecord, newRecords));
