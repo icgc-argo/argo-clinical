@@ -429,7 +429,7 @@ describe("data-validator", () => {
         specimenSubmitterId: "SP2",
         value: "AM1"
       },
-      type: DataValidationErrors.NEW_SAMPLE_CONFLICT
+      type: DataValidationErrors.NEW_SAMPLE_ID_CONFLICT
     };
 
     const row1Err = {
@@ -442,7 +442,7 @@ describe("data-validator", () => {
         specimenSubmitterId: "SP1",
         value: "AM1"
       },
-      type: DataValidationErrors.NEW_SAMPLE_CONFLICT
+      type: DataValidationErrors.NEW_SAMPLE_ID_CONFLICT
     };
 
     chai.expect(result.errors.length).to.eq(2);
@@ -503,7 +503,7 @@ describe("data-validator", () => {
         specimenSubmitterId: "SP1",
         value: "SP1"
       },
-      type: DataValidationErrors.NEW_SPECIMEN_CONFLICT
+      type: DataValidationErrors.NEW_SPECIMEN_ID_CONFLICT
     };
 
     const row2Err = {
@@ -516,7 +516,7 @@ describe("data-validator", () => {
         specimenSubmitterId: "SP1",
         value: "SP1"
       },
-      type: DataValidationErrors.NEW_SPECIMEN_CONFLICT
+      type: DataValidationErrors.NEW_SPECIMEN_ID_CONFLICT
     };
 
     chai.expect(result.errors.length).to.eq(2);
@@ -577,7 +577,7 @@ describe("data-validator", () => {
         value: "XYX",
         conflictingRows: [2]
       },
-      type: DataValidationErrors.NEW_SPECIMEN_CONFLICT
+      type: DataValidationErrors.NEW_SPECIMEN_ATTR_CONFLICT
     };
 
     const row2Err: RegistrationValidationError = {
@@ -590,7 +590,7 @@ describe("data-validator", () => {
         value: "XYz",
         conflictingRows: [0]
       },
-      type: DataValidationErrors.NEW_SPECIMEN_CONFLICT
+      type: DataValidationErrors.NEW_SPECIMEN_ATTR_CONFLICT
     };
 
     chai.expect(result.errors.length).to.eq(2);
@@ -651,7 +651,7 @@ describe("data-validator", () => {
         value: "ST-2",
         conflictingRows: [2]
       },
-      type: DataValidationErrors.NEW_SAMPLE_CONFLICT
+      type: DataValidationErrors.NEW_SAMPLE_ATTR_CONFLICT
     };
 
     const row2Err: RegistrationValidationError = {
@@ -664,7 +664,7 @@ describe("data-validator", () => {
         value: "ST2",
         conflictingRows: [0]
       },
-      type: DataValidationErrors.NEW_SAMPLE_CONFLICT
+      type: DataValidationErrors.NEW_SAMPLE_ATTR_CONFLICT
     };
 
     chai.expect(result.errors.length).to.eq(2);
@@ -797,7 +797,7 @@ describe("data-validator", () => {
         value: "AM1",
         conflictingRows: [2]
       },
-      type: DataValidationErrors.NEW_SAMPLE_CONFLICT
+      type: DataValidationErrors.NEW_SAMPLE_ID_CONFLICT
     };
 
     const row2Err: RegistrationValidationError = {
@@ -810,7 +810,7 @@ describe("data-validator", () => {
         value: "AM1",
         conflictingRows: [0]
       },
-      type: DataValidationErrors.NEW_SAMPLE_CONFLICT
+      type: DataValidationErrors.NEW_SAMPLE_ID_CONFLICT
     };
 
     chai.expect(result.errors.length).to.eq(2);
@@ -870,7 +870,7 @@ describe("data-validator", () => {
         value: "ST-2",
         conflictingRows: [2]
       },
-      type: DataValidationErrors.NEW_SAMPLE_CONFLICT
+      type: DataValidationErrors.NEW_SAMPLE_ATTR_CONFLICT
     };
 
     const row2Err = {
@@ -883,7 +883,7 @@ describe("data-validator", () => {
         value: "ST2",
         conflictingRows: [0]
       },
-      type: DataValidationErrors.NEW_SAMPLE_CONFLICT
+      type: DataValidationErrors.NEW_SAMPLE_ATTR_CONFLICT
     };
 
     chai.expect(result.errors.length).to.eq(2);
