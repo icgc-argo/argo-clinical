@@ -9,5 +9,5 @@ export interface ActiveSubmission {
   programId: String;
   state: SUBMISSION_STATE;
   hashVersion: String;
-  clinicalEntities: Array<object>;
+  clinicalEntities: Object;
 }

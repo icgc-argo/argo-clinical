@@ -90,7 +90,7 @@ const ActiveSubmissionSchema = new mongoose.Schema(
       required: true
     },
     hasVersion: { type: String, default: "42" },
-    clinicalEntities: []
+    clinicalEntities: { type: Object, required: false }
   },
   { timestamps: true }
 );
