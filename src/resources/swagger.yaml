@@ -131,7 +131,7 @@ paths:
                     type: array
                     items:
                       type: string
-  /submission/program/{programId}/clinical/{clinicalType}:
+  /submission/program/{programId}/clinical/upload:
     post:
       parameters:
         - name: programId
@@ -140,22 +140,17 @@ paths:
           required: true
           schema:
             type: string
-        - name: clinicalType
-          description: the type of clinical submission
-          in: path
-          required: true
-          schema:
-            type: string
-            enum: ["donor", "specimen", "sample"] #add more as needed
       requestBody:
         content:
           multipart/form-data:
             schema:
               type: object
               properties:
-                clinicalFile:
-                  type: string
-                  format: binary
+                clinicalFiles:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
         description: the tsv clinical submission file
         required: true
       responses:

@@ -111,14 +111,33 @@ export interface ValidationResult {
   errors: DeepReadonly<SubmissionValidationError[]>;
 }
 
+// refactor (only need one)
 export interface SaveClinicalCommand {
   records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
   readonly programId: string;
   readonly clinicalType: string;
 }
 
+export interface SaveClinicalCommand2 {
+  clinicalEntities: Readonly<{ [key: string]: ClinicalEntity }>;
+  readonly programId: string;
+}
+
 export interface CreateClinicalResult {
   readonly clinicalData: Object | undefined;
   readonly successful: boolean;
   errors: DeepReadonly<SubmissionValidationError[]>;
+}
+
+export interface ClinicalEntity {
+  batchName: String;
+  creator: String;
+  records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
+  schemaErrors: [];
+  stats: {
+    new: Number[];
+    noUpdate: Number[];
+    updated: Number[];
+    errorsFound: Number[];
+  };
 }

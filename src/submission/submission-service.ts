@@ -11,10 +11,9 @@ import {
   CreateRegistrationRecord,
   CreateRegistrationCommand,
   CreateRegistrationResult,
-  RegistrationRecordFields,
   FieldsEnum,
   SaveClinicalCommand,
-  CreateClinicalResult
+  SaveClinicalCommand2
 } from "./submission-entities";
 import * as schemaManager from "../lectern-client/schema-manager";
 import {
@@ -158,9 +157,7 @@ export namespace operations {
    * upload donor
    * @param command SaveClinicalCommand
    */
-  export const uploadClinical = async (
-    command: SaveClinicalCommand
-  ): Promise<CreateClinicalResult> => {
+  export const uploadClinical = async (command: SaveClinicalCommand): Promise<any> => {
     let programIdErrors: DeepReadonly<SubmissionValidationError[]> = [];
     command.records.forEach((r, index) => {
       const programIdError = dataValidator.usingInvalidProgramId(
@@ -178,11 +175,18 @@ export namespace operations {
         schemaResult,
         command.records
       );
-      return {
-        clinicalData: undefined,
-        errors: unifiedSchemaErrors.concat(programIdErrors),
-        successful: false
-      };
+      return unifiedSchemaErrors.concat(programIdErrors);
+    }
+    return [];
+  };
+
+  export const uploadClinicalMultiple = async (command: SaveClinicalCommand2): Promise<any> => {
+    for (const clinicalType in command.clinicalEntities) {
+      command.clinicalEntities[clinicalType].schemaErrors = await uploadClinical({
+        records: command.clinicalEntities[clinicalType].records,
+        programId: command.programId,
+        clinicalType: clinicalType
+      });
     }
 
     // create program if not exist
@@ -192,17 +196,12 @@ export namespace operations {
         programId: command.programId,
         state: SUBMISSION_STATE.OPEN,
         hashVersion: "42",
-        clinicalEntities: []
+        clinicalEntities: {}
       });
     }
     await saveUnvalidatedSubmission(command);
-    return {
-      clinicalData: undefined,
-      errors: [],
-      successful: true
-    };
+    return command.clinicalEntities;
   };
-
   /************* Private methods *************/
 
   const addNewDonorToStats = (

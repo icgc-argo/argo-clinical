@@ -3,7 +3,11 @@ import * as submission2Clinical from "./submission-to-clinical";
 import { Request, Response } from "express";
 import { TsvUtils, ControllerUtils, isStringMatchRegex } from "../utils";
 import { loggerFor } from "../logger";
-import { CreateRegistrationCommand, SaveClinicalCommand } from "./submission-entities";
+import {
+  CreateRegistrationCommand,
+  ClinicalEntity,
+  SaveClinicalCommand2
+} from "./submission-entities";
 import { HasSubmitionAccess as HasSubmittionAccess } from "../auth-decorators";
 import jwt from "jsonwebtoken";
 const L = loggerFor(__filename);
@@ -15,12 +19,14 @@ export enum ErrorCodes {
 export enum FileType {
   REGISTRATION = "registration",
   DONOR = "donor",
-  SPECIMEN = "specimen"
+  SPECIMEN = "specimen",
+  SAMPLE = "sample"
 }
 export const FileNameRegex = {
   [FileType.REGISTRATION]: "registration.*.tsv",
   [FileType.DONOR]: "donor.*.tsv",
-  [FileType.SPECIMEN]: "specimen.*.tsv"
+  [FileType.SPECIMEN]: "specimen.*.tsv",
+  [FileType.SAMPLE]: "sample.*.tsv"
 };
 class SubmissionController {
   @HasSubmittionAccess((req: Request) => req.params.programId)
@@ -40,15 +46,7 @@ class SubmissionController {
       return;
     }
     const programId = req.params.programId;
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-      throw new Error("can't get here without auth header");
-    }
-    const decoded = jwt.decode(authHeader.split(" ")[1]) as any;
-    if (!decoded) {
-      throw new Error("invalid token structure");
-    }
-    const creator = decoded.context.user.firstName + " " + decoded.context.user.lastName;
+    const creator = checkAuthReCreator(req);
     const file = req.file;
     let records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
     try {
@@ -95,33 +93,50 @@ class SubmissionController {
 
   @HasSubmittionAccess((req: Request) => req.params.programId)
   async saveClinicalTsvFile(req: Request, res: Response) {
-    const clinicalType = req.params.clinicalType;
-    if (clinicalType == FileType.REGISTRATION) {
-      return res.status(404).send("Error 404 not found.");
-    }
-    if (!isValidCreateBody(req, res, clinicalType)) {
-      return;
-    }
-    const file = req.file;
-    let records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
-    try {
-      records = await TsvUtils.tsvToJson(file.path);
-    } catch (err) {
-      return ControllerUtils.badRequest(res, {
-        msg: `failed to parse the tsv file: ${err}`,
-        code: ErrorCodes.TSV_PARSING_FAILED
-      });
+    // checkFiles(req, res);
+    const creator = checkAuthReCreator(req);
+
+    const files = req.files as Express.Multer.File[];
+    const clinicalEntities: { [k: string]: ClinicalEntity } = {};
+    // files.forEach(async (file) => {
+    for (const file of files) {
+      let type: string = "notype";
+      // todo refactor
+      for (const exp in FileNameRegex) {
+        if (isStringMatchRegex(exp, file.originalname)) {
+          type = exp.split(".")[0]; // make more generic
+          break;
+        }
+      }
+      // common code move to function?
+      let records: ReadonlyArray<Readonly<{ [key: string]: string }>> = [];
+      try {
+        records = await TsvUtils.tsvToJson(file.path);
+      } catch (err) {
+        return ControllerUtils.badRequest(res, {
+          msg: `failed to parse the tsv file: ${err}`,
+          code: ErrorCodes.TSV_PARSING_FAILED
+        });
+      }
+      clinicalEntities[type] = {
+        batchName: file.originalname,
+        creator: creator,
+        records: records,
+        schemaErrors: [],
+        stats: {
+          new: [],
+          noUpdate: [],
+          updated: [],
+          errorsFound: []
+        }
+      };
     }
     res.set("Content-Type", "application/json");
-    const command: SaveClinicalCommand = {
-      records: records,
-      programId: req.params.programId,
-      clinicalType: clinicalType
+    const command: SaveClinicalCommand2 = {
+      clinicalEntities: clinicalEntities,
+      programId: req.params.programId
     };
-    const result = await submission.operations.uploadClinical(command);
-    if (!result.successful) {
-      return res.status(422).send(result);
-    }
+    const result = await submission.operations.uploadClinicalMultiple(command);
     return res.status(200).send(result);
   }
 }
@@ -153,6 +168,51 @@ const isValidCreateBody = (req: Request, res: Response, type: FileType): boolean
       code: ErrorCodes.INVALID_FILE_NAME
     });
     return false;
+  }
+  return true;
+};
+
+// checks authHeader + decoded jwt and returns the creator
+const checkAuthReCreator = (req: Request): string => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    throw new Error("can't get here without auth header");
+  }
+  const decoded = jwt.decode(authHeader.split(" ")[1]) as any;
+  if (!decoded) {
+    throw new Error("invalid token structure");
+  }
+  return decoded.context.user.firstName + " " + decoded.context.user.lastName;
+};
+
+// todo Refactor, also check for duplicate entities
+const checkFiles = (req: Request, res: Response) => {
+  console.log("Files are: " + req.files);
+  const files = req.files as Express.Multer.File[];
+
+  if (files == undefined) {
+    L.debug(`File(s) missing`);
+    ControllerUtils.badRequest(res, `Clinical file(s) upload required`);
+    return false;
+  }
+  const errorList: Array<any> = [];
+  files.forEach(file => {
+    let found: boolean = false;
+    for (const exp in FileNameRegex) {
+      if (isStringMatchRegex(exp, file.originalname)) {
+        found = true;
+      }
+    }
+    if (!found) {
+      L.debug(`File name is invalid - ${file.originalname}`);
+      errorList.push({
+        msg: `invalid file name ${file.originalname}, must start with entity and have .tsv extension (e.g. donor*.tsv)`,
+        code: ErrorCodes.INVALID_FILE_NAME
+      });
+    }
+  });
+  if (errorList.length > 0) {
+    ControllerUtils.badRequest(res, errorList);
   }
   return true;
 };
