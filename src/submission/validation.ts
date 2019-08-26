@@ -1,4 +1,4 @@
-import { DonorMap } from "../clinical/clinical-entities";
+import { DonorMap, Specimen, Sample } from "../clinical/clinical-entities";
 import {
   DataValidationErrors,
   RegistrationValidationError,
@@ -27,7 +27,7 @@ export const validateRegistrationData = async (
     const registrationRecord = newRecords[index];
 
     // checks against db
-    errors = errors.concat(mutatingExistingData(index, registrationRecord, existingDonors));
+    errors = errors.concat(await mutatingExistingData(index, registrationRecord, existingDonors));
     errors = errors.concat(
       await specimenBelongsToOtherDonor(index, registrationRecord, expectedProgram)
     );
@@ -309,7 +309,7 @@ const isNewSample = async (newDonor: DeepReadonly<CreateRegistrationRecord>, pro
   return count == 0;
 };
 
-const mutatingExistingData = (
+const mutatingExistingData = async (
   index: number,
   newDonor: CreateRegistrationRecord,
   existingDonors: DeepReadonly<DonorMap>
@@ -317,57 +317,95 @@ const mutatingExistingData = (
   // if the donor doesn't exist => return
   const errors: RegistrationValidationError[] = [];
   const existingDonor = existingDonors[newDonor.donorSubmitterId];
-  if (!existingDonor) return errors;
+  let existingSpecimen: DeepReadonly<Specimen> | undefined = undefined;
+  let existingSample: DeepReadonly<Sample> | undefined = undefined;
 
-  // we don't check program id here because we check it specifically in the program validation
-
-  if (newDonor.gender != existingDonor.gender) {
-    errors.push(
-      buildError(
-        newDonor,
-        DataValidationErrors.MUTATING_EXISTING_DATA,
-        RegistrationFieldsEnum.gender,
-        index,
-        {}
-      )
+  if (existingDonor) {
+    // we don't check program id here because we check it specifically in the program validation
+    if (newDonor.gender != existingDonor.gender) {
+      errors.push(
+        buildError(
+          newDonor,
+          DataValidationErrors.MUTATING_EXISTING_DATA,
+          RegistrationFieldsEnum.gender,
+          index,
+          {}
+        )
+      );
+    }
+    existingSpecimen = existingDonor.specimens.find(
+      s => s.submitterId === newDonor.specimenSubmitterId
     );
   }
 
-  // if specimen doesn't exist => return
-  const existingSpecimen = existingDonor.specimens.find(
-    s => s.submitterId === newDonor.specimenSubmitterId
-  );
-  if (!existingSpecimen) return errors;
+  if (!existingSpecimen) {
+    const otherDonorWithSameSpecimenId = await donorDao.findBySpecimenSubmitterIdAndProgramId({
+      programId: newDonor.programId,
+      submitterId: newDonor.specimenSubmitterId
+    });
 
-  if (newDonor.specimenType !== existingSpecimen.specimenType) {
-    errors.push(
-      buildError(
-        newDonor,
-        DataValidationErrors.MUTATING_EXISTING_DATA,
-        RegistrationFieldsEnum.specimen_type,
-        index,
-        {}
-      )
+    if (!otherDonorWithSameSpecimenId) {
+      return errors;
+    }
+
+    existingSpecimen = otherDonorWithSameSpecimenId.specimens.find(
+      s => s.submitterId === newDonor.specimenSubmitterId
     );
   }
 
-  if (newDonor.tumourNormalDesignation !== existingSpecimen.tumourNormalDesignation) {
-    errors.push(
-      buildError(
-        newDonor,
-        DataValidationErrors.MUTATING_EXISTING_DATA,
-        RegistrationFieldsEnum.tumour_normal_designation,
-        index,
-        {}
-      )
+  // is there an existing specimen registered with this submitter Id?
+  if (existingSpecimen) {
+    if (newDonor.specimenType !== existingSpecimen.specimenType) {
+      errors.push(
+        buildError(
+          newDonor,
+          DataValidationErrors.MUTATING_EXISTING_DATA,
+          RegistrationFieldsEnum.specimen_type,
+          index,
+          {}
+        )
+      );
+    }
+
+    if (newDonor.tumourNormalDesignation !== existingSpecimen.tumourNormalDesignation) {
+      errors.push(
+        buildError(
+          newDonor,
+          DataValidationErrors.MUTATING_EXISTING_DATA,
+          RegistrationFieldsEnum.tumour_normal_designation,
+          index,
+          {}
+        )
+      );
+    }
+    existingSample = existingSpecimen.samples.find(
+      sa => sa.submitterId === newDonor.sampleSubmitterId
     );
   }
 
-  // if sample does exist => check mutations
-  const sample = existingSpecimen.samples.find(sa => sa.submitterId === newDonor.sampleSubmitterId);
-  if (!sample) return errors;
+  if (!existingSample) {
+    const otherDonorWithSameSampleId = await donorDao.findBySampleSubmitterIdAndProgramId({
+      programId: newDonor.programId,
+      submitterId: newDonor.sampleSubmitterId
+    });
 
-  if (newDonor.sampleType !== sample.sampleType) {
+    if (!otherDonorWithSameSampleId) {
+      return errors;
+    }
+
+    let found = false;
+    otherDonorWithSameSampleId.specimens.forEach(s => {
+      if (found) return;
+      existingSample = s.samples.find(sa => sa.submitterId === newDonor.sampleSubmitterId);
+      if (existingSample) {
+        found = true;
+      }
+    });
+  }
+
+  // if sample does not exist => no need to check mutations, return
+  if (!existingSample) return errors;
+  if (newDonor.sampleType !== existingSample.sampleType) {
     errors.push(
       buildError(
         newDonor,
