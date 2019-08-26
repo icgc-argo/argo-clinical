@@ -12,9 +12,11 @@ import {
   CreateRegistrationCommand,
   CreateRegistrationResult,
   FieldsEnum,
-  SaveClinicalCommand,
-  SaveClinicalCommand2,
-  CreateSubmissionResult
+  SaubmissionCommand,
+  SubmissionMultipleCommand,
+  CreateSubmissionResult,
+  SUBMISSION_STATE,
+  ActiveSubmission
 } from "./submission-entities";
 import * as schemaManager from "../lectern-client/schema-manager";
 import {
@@ -27,9 +29,7 @@ import { loggerFor } from "../logger";
 import { Errors, F } from "../utils";
 import { DeepReadonly } from "deep-freeze";
 import { FileType } from "./submission-api";
-import { workspaceRepository } from "../workspace/workspace-repo";
-import { SUBMISSION_STATE } from "../workspace/workspace-entites";
-import { saveUnvalidatedSubmission } from "./submission-to-workspace";
+import { workspaceRepository } from "./submission-repo";
 const L = loggerFor(__filename);
 
 export namespace operations {
@@ -158,56 +158,44 @@ export namespace operations {
    * upload donor
    * @param command SaveClinicalCommand
    */
-  export const uploadClinical = async (command: SaveClinicalCommand): Promise<any> => {
-    let programIdErrors: DeepReadonly<SubmissionValidationError[]> = [];
-    command.records.forEach((r, index) => {
-      const programIdError = dataValidator.usingInvalidProgramId(
-        command.clinicalType,
-        index,
-        r,
-        command.programId
-      );
-      programIdErrors = programIdErrors.concat(programIdError);
-    });
-    const schemaResult = schemaManager.instance().process(command.clinicalType, command.records);
-    if (schemaResult.validationErrors.length > 0) {
-      const unifiedSchemaErrors = unifySchemaErrors(
-        command.clinicalType,
-        schemaResult,
-        command.records
-      );
-      return unifiedSchemaErrors.concat(programIdErrors);
-    }
-    return [];
-  };
-
   export const uploadClinicalMultiple = async (
-    command: SaveClinicalCommand2
+    command: SubmissionMultipleCommand
   ): Promise<CreateSubmissionResult> => {
     const schemaErrors: { [k: string]: SubmissionValidationError[] } = {};
     for (const clinicalType in command.clinicalEntities) {
-      const schemaErrorsTemp = await uploadClinical({
+      const schemaErrorsTemp = await checkClinicalEntity({
         records: command.clinicalEntities[clinicalType].records,
         programId: command.programId,
         clinicalType: clinicalType
       });
+      // check if errors found for specific entity and add to schema error object
       if (schemaErrorsTemp.length > 0) {
         schemaErrors[clinicalType] = schemaErrorsTemp;
       }
     }
-    if (Object.keys(schemaErrors).length !== 0) {
-      return {
-        submission: undefined,
-        errors: schemaErrors,
-        successful: false
-      };
+    // check if any errors found
+    const success: boolean = Object.keys(schemaErrors).length === 0;
+    // keep enitites if no error otherwise clear
+    command.clinicalEntities = success ? command.clinicalEntities : {};
+    // create program if not exist
+    let activeSubmission = await workspaceRepository.findByProgramId(command.programId);
+    if (!activeSubmission) {
+      activeSubmission = await workspaceRepository.create({
+        programId: command.programId,
+        state: SUBMISSION_STATE.OPEN,
+        hashVersion: "42",
+        clinicalEntities: {}
+      });
     }
-
-    const activeSubmission = await saveUnvalidatedSubmission(command);
+    // replace clinical entities in active submission
+    const mergedSubmission = _.cloneDeep(activeSubmission) as ActiveSubmission;
+    mergedSubmission.clinicalEntities = command.clinicalEntities;
+    // insert into database
+    await workspaceRepository.update(mergedSubmission);
     return {
       submission: activeSubmission,
       errors: schemaErrors,
-      successful: true
+      successful: success
     };
   };
   /************* Private methods *************/
@@ -286,7 +274,8 @@ export namespace operations {
         });
       }
       case FileType.DONOR:
-      case FileType.SPECIMEN: {
+      case FileType.SPECIMEN:
+      case FileType.SAMPLE: {
         return F({
           ...schemaErr.info,
           value: record[schemaErr.fieldName],
@@ -390,4 +379,29 @@ export namespace operations {
       })
     );
   }
+
+  const checkClinicalEntity = async (
+    command: SaubmissionCommand
+  ): Promise<SubmissionValidationError[]> => {
+    let programIdErrors: DeepReadonly<SubmissionValidationError[]> = [];
+    command.records.forEach((r, index) => {
+      const programIdError = dataValidator.usingInvalidProgramId(
+        command.clinicalType,
+        index,
+        r,
+        command.programId
+      );
+      programIdErrors = programIdErrors.concat(programIdError);
+    });
+    const schemaResult = schemaManager.instance().process(command.clinicalType, command.records);
+    if (schemaResult.validationErrors.length > 0) {
+      const unifiedSchemaErrors = unifySchemaErrors(
+        command.clinicalType,
+        schemaResult,
+        command.records
+      );
+      return unifiedSchemaErrors.concat(programIdErrors);
+    }
+    return [];
+  };
 }

@@ -1,9 +1,9 @@
 import { loggerFor } from "../logger";
 import mongoose from "mongoose";
 import { DeepReadonly } from "deep-freeze";
-import { ActiveSubmission } from "./workspace-entites";
+import { ActiveSubmission } from "./submission-entities";
 import { MongooseUtils, F } from "../utils";
-import { InternalError } from "../submission/errors";
+import { InternalError } from "./errors";
 import _ from "lodash";
 const L = loggerFor(__filename);
 
@@ -89,10 +89,10 @@ const ActiveSubmissionSchema = new mongoose.Schema(
       default: "OPEN",
       required: true
     },
-    hasVersion: { type: String, default: "42" },
+    hashVersion: { type: String, default: "42" },
     clinicalEntities: { type: Object, required: false }
   },
-  { timestamps: true }
+  { timestamps: true, minimize: false }
 );
 
 export const ActiveSubmissionModel = mongoose.model<ActiveSubmissionDocument>(

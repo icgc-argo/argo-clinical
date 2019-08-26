@@ -11,12 +11,15 @@ import app from "../../../src/app";
 import * as bootstrap from "../../../src/bootstrap";
 import { cleanCollection, insertData, emptyDonorDocument, resetCounters } from "../testutils";
 import { TEST_PUB_KEY, JWT_ABCDEF, JWT_WXYZEF } from "./test.jwt";
-import { ActiveRegistration, FieldsEnum } from "../../../src/submission/submission-entities";
+import {
+  ActiveRegistration,
+  ActiveSubmission,
+  FieldsEnum
+} from "../../../src/submission/submission-entities";
 import { TsvUtils } from "../../../src/utils";
 import { donorDao } from "../../../src/clinical/donor-repo";
 import { Donor } from "../../../src/clinical/clinical-entities";
 import { ErrorCodes } from "../../../src/submission/submission-api";
-import { ActiveSubmission } from "../../../src/workspace/workspace-entites";
 export let mongoContainer: any;
 chai.use(require("chai-http"));
 chai.should();
@@ -607,10 +610,8 @@ describe("Submission Api", () => {
         .attach("clinicalFiles", file2, "sample.tsv")
         .end((err: any, res: any) => {
           res.should.have.status(422);
-          res.body.should.deep.eq({
-            errors: { donor: expectedDonorErrors },
-            successful: false
-          });
+          res.body.errors.should.deep.eq({ donor: expectedDonorErrors });
+          res.body.successful.should.deep.eq(false);
           done();
         });
     });
@@ -632,6 +633,7 @@ describe("Submission Api", () => {
         .attach("clinicalFiles", file2, "sample.tsv")
         .end(async (err: any, res: any) => {
           res.should.have.status(200);
+          res.body.successful.should.deep.eq(true);
           const conn = await mongo.connect(dburl);
           const savedSubmission: ActiveSubmission | null = await conn
             .db("clinical")
@@ -667,12 +669,12 @@ describe("Submission Api", () => {
           res.should.have.status(400);
           res.body.should.deep.eq([
             {
-              msg: "Found multiple files of same type - donor.tsv,donor.invalid.tsv",
+              msg: "Found multiple files of same type - [donor.tsv,donor.invalid.tsv]",
               code: "MULTIPLE_TYPED_FILES"
             },
             {
               msg:
-                "invalid file name thisissample.tsv, must start with entity and have .tsv extension (e.g. donor*.tsv)",
+                "Invalid files - [thisissample.tsv], must start with entity and have .tsv extension (e.g. donor*.tsv)",
               code: "INVALID_FILE_NAME"
             }
           ]);

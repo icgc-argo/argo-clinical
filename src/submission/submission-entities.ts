@@ -112,13 +112,13 @@ export interface ValidationResult {
 }
 
 // refactor (only need one)
-export interface SaveClinicalCommand {
+export interface SaubmissionCommand {
   records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
   readonly programId: string;
   readonly clinicalType: string;
 }
 
-export interface SaveClinicalCommand2 {
+export interface SubmissionMultipleCommand {
   clinicalEntities: Readonly<{ [key: string]: ClinicalEntity }>;
   readonly programId: string;
 }
@@ -140,4 +140,18 @@ export interface ClinicalEntity {
     updated: Number[];
     errorsFound: Number[];
   };
+}
+
+export enum SUBMISSION_STATE {
+  OPEN = "OPEN",
+  VALID = "VALID",
+  INVALID = "INVALID",
+  PENDING_APPROVAL = "PENDING_APPROVAL"
+}
+
+export interface ActiveSubmission {
+  programId: String;
+  state: SUBMISSION_STATE;
+  hashVersion: String;
+  clinicalEntities: Object;
 }

@@ -100,7 +100,8 @@ const getInfoObject = (type: string, record: DeepReadonly<DataRecord>, expectedP
       };
     }
     case FileType.DONOR:
-    case FileType.SPECIMEN: {
+    case FileType.SPECIMEN:
+    case FileType.SAMPLE: {
       return {
         value: record[FieldsEnum.program_id],
         donorSubmitterId: record[FieldsEnum.submitter_donor_id],
