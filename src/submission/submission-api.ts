@@ -14,7 +14,8 @@ const L = loggerFor(__filename);
 
 export enum ErrorCodes {
   TSV_PARSING_FAILED = "TSV_PARSING_FAILED",
-  INVALID_FILE_NAME = "INVALID_FILE_NAME"
+  INVALID_FILE_NAME = "INVALID_FILE_NAME",
+  MULTIPLE_TYPED_FILES = "MULTIPLE_TYPED_FILES"
 }
 export enum FileType {
   REGISTRATION = "registration",
@@ -23,10 +24,10 @@ export enum FileType {
   SAMPLE = "sample"
 }
 export const FileNameRegex = {
-  [FileType.REGISTRATION]: "registration.*.tsv",
-  [FileType.DONOR]: "(donor).*.tsv",
-  [FileType.SPECIMEN]: "(specimen).*.tsv",
-  [FileType.SAMPLE]: "(sample).*.tsv"
+  [FileType.REGISTRATION]: "^registration.*.tsv",
+  [FileType.DONOR]: "^(donor).*.tsv",
+  [FileType.SPECIMEN]: "^(specimen).*.tsv",
+  [FileType.SAMPLE]: "^(sample).*.tsv"
 };
 class SubmissionController {
   @HasSubmittionAccess((req: Request) => req.params.programId)
@@ -93,7 +94,9 @@ class SubmissionController {
 
   @HasSubmittionAccess((req: Request) => req.params.programId)
   async saveClinicalTsvFile(req: Request, res: Response) {
-    // checkFiles(req, res);
+    if (!checkFiles(req, res)) {
+      return;
+    }
     const creator = checkAuthReCreator(req);
     const files = req.files as Express.Multer.File[];
     const clinicalEntities: { [k: string]: ClinicalEntity } = {};
@@ -135,7 +138,9 @@ class SubmissionController {
       programId: req.params.programId
     };
     const result = await submission.operations.uploadClinicalMultiple(command);
-    if (result.successful) return res.status(200).send(result);
+    if (result.successful) {
+      return res.status(200).send(result);
+    }
     return res.status(422).send(result);
   }
 }
@@ -186,20 +191,32 @@ const checkAuthReCreator = (req: Request): string => {
 
 // todo Refactor, also check for duplicate entities
 const checkFiles = (req: Request, res: Response) => {
-  console.log("Files are: " + req.files);
   const files = req.files as Express.Multer.File[];
-
+  const fileNamesArray: Array<string> = [];
+  files.forEach(file => fileNamesArray.push(file.originalname));
   if (files == undefined) {
     L.debug(`File(s) missing`);
     ControllerUtils.badRequest(res, `Clinical file(s) upload required`);
     return false;
   }
   const errorList: Array<any> = [];
-  files.forEach(file => {
+  // check for double files
+  for (const exp of Object.values(FileNameRegex)) {
+    const temp = fileNamesArray.filter(name => name.match(exp));
+    if (temp.length > 1) {
+      errorList.push({
+        msg: `Found multiple files of same type - ${temp}`,
+        code: ErrorCodes.MULTIPLE_TYPED_FILES
+      });
+    }
+  }
+  // check file name structure
+  for (const file of files) {
     let found: boolean = false;
-    for (const exp in FileNameRegex) {
+    for (const exp of Object.values(FileNameRegex)) {
       if (isStringMatchRegex(exp, file.originalname)) {
         found = true;
+        break;
       }
     }
     if (!found) {
@@ -209,9 +226,10 @@ const checkFiles = (req: Request, res: Response) => {
         code: ErrorCodes.INVALID_FILE_NAME
       });
     }
-  });
+  }
   if (errorList.length > 0) {
     ControllerUtils.badRequest(res, errorList);
+    return false;
   }
   return true;
 };

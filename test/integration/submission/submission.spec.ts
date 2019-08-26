@@ -638,6 +638,41 @@ describe("Submission Api", () => {
           return done();
         });
     });
+    it("should return appropriate errors for clinical upload", done => {
+      const files: Buffer[] = [];
+      try {
+        files.push(fs.readFileSync(__dirname + "/donor.tsv"));
+        files.push(fs.readFileSync(__dirname + "/sample.tsv"));
+        files.push(fs.readFileSync(__dirname + "/donor.invalid.tsv"));
+        files.push(fs.readFileSync(__dirname + "/thisissample.tsv"));
+      } catch (err) {
+        return done(err);
+      }
+      chai
+        .request(app)
+        // data base is empty so ID shouldn't exist
+        .post("/submission/program/ABCD-EF/clinical/upload")
+        .auth(JWT_ABCDEF, { type: "bearer" })
+        .attach("clinicalFiles", files[0], "donor.tsv")
+        .attach("clinicalFiles", files[1], "sample.tsv")
+        .attach("clinicalFiles", files[2], "donor.invalid.tsv")
+        .attach("clinicalFiles", files[3], "thisissample.tsv")
+        .end((err: any, res: any) => {
+          res.should.have.status(400);
+          res.body.should.deep.eq([
+            {
+              msg: "Found multiple files of same type - donor.tsv,donor.invalid.tsv",
+              code: "MULTIPLE_TYPED_FILES"
+            },
+            {
+              msg:
+                "invalid file name thisissample.tsv, must start with entity and have .tsv extension (e.g. donor*.tsv)",
+              code: "INVALID_FILE_NAME"
+            }
+          ]);
+          done();
+        });
+    });
   });
 });
 
