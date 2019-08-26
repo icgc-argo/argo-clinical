@@ -123,17 +123,17 @@ export interface SaveClinicalCommand2 {
   readonly programId: string;
 }
 
-export interface CreateClinicalResult {
-  readonly clinicalData: Object | undefined;
+export interface CreateSubmissionResult {
+  readonly submission: Object | undefined;
   readonly successful: boolean;
-  errors: DeepReadonly<SubmissionValidationError[]>;
+  errors: DeepReadonly<{ [clinicalType: string]: SubmissionValidationError[] }>;
 }
 
 export interface ClinicalEntity {
   batchName: String;
   creator: String;
   records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
-  schemaErrors: [];
+  dataErrors: [];
   stats: {
     new: Number[];
     noUpdate: Number[];

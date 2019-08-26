@@ -1,7 +1,7 @@
 import * as submission from "./submission-service";
 import * as submission2Clinical from "./submission-to-clinical";
 import { Request, Response } from "express";
-import { TsvUtils, ControllerUtils, isStringMatchRegex } from "../utils";
+import { TsvUtils, ControllerUtils, isStringMatchRegex, Errors } from "../utils";
 import { loggerFor } from "../logger";
 import {
   CreateRegistrationCommand,
@@ -24,9 +24,9 @@ export enum FileType {
 }
 export const FileNameRegex = {
   [FileType.REGISTRATION]: "registration.*.tsv",
-  [FileType.DONOR]: "donor.*.tsv",
-  [FileType.SPECIMEN]: "specimen.*.tsv",
-  [FileType.SAMPLE]: "sample.*.tsv"
+  [FileType.DONOR]: "(donor).*.tsv",
+  [FileType.SPECIMEN]: "(specimen).*.tsv",
+  [FileType.SAMPLE]: "(sample).*.tsv"
 };
 class SubmissionController {
   @HasSubmittionAccess((req: Request) => req.params.programId)
@@ -95,16 +95,14 @@ class SubmissionController {
   async saveClinicalTsvFile(req: Request, res: Response) {
     // checkFiles(req, res);
     const creator = checkAuthReCreator(req);
-
     const files = req.files as Express.Multer.File[];
     const clinicalEntities: { [k: string]: ClinicalEntity } = {};
-    // files.forEach(async (file) => {
     for (const file of files) {
-      let type: string = "notype";
-      // todo refactor
+      let clinType: string = "";
       for (const exp in FileNameRegex) {
-        if (isStringMatchRegex(exp, file.originalname)) {
-          type = exp.split(".")[0]; // make more generic
+        const match = file.originalname.match(exp);
+        if (match) {
+          clinType = match[0];
           break;
         }
       }
@@ -118,11 +116,11 @@ class SubmissionController {
           code: ErrorCodes.TSV_PARSING_FAILED
         });
       }
-      clinicalEntities[type] = {
+      clinicalEntities[clinType] = {
         batchName: file.originalname,
         creator: creator,
         records: records,
-        schemaErrors: [],
+        dataErrors: [],
         stats: {
           new: [],
           noUpdate: [],
@@ -137,7 +135,8 @@ class SubmissionController {
       programId: req.params.programId
     };
     const result = await submission.operations.uploadClinicalMultiple(command);
-    return res.status(200).send(result);
+    if (result.successful) return res.status(200).send(result);
+    return res.status(422).send(result);
   }
 }
 

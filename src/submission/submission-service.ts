@@ -13,7 +13,8 @@ import {
   CreateRegistrationResult,
   FieldsEnum,
   SaveClinicalCommand,
-  SaveClinicalCommand2
+  SaveClinicalCommand2,
+  CreateSubmissionResult
 } from "./submission-entities";
 import * as schemaManager from "../lectern-client/schema-manager";
 import {
@@ -180,27 +181,34 @@ export namespace operations {
     return [];
   };
 
-  export const uploadClinicalMultiple = async (command: SaveClinicalCommand2): Promise<any> => {
+  export const uploadClinicalMultiple = async (
+    command: SaveClinicalCommand2
+  ): Promise<CreateSubmissionResult> => {
+    const schemaErrors: { [k: string]: SubmissionValidationError[] } = {};
     for (const clinicalType in command.clinicalEntities) {
-      command.clinicalEntities[clinicalType].schemaErrors = await uploadClinical({
+      const schemaErrorsTemp = await uploadClinical({
         records: command.clinicalEntities[clinicalType].records,
         programId: command.programId,
         clinicalType: clinicalType
       });
+      if (schemaErrorsTemp.length > 0) {
+        schemaErrors[clinicalType] = schemaErrorsTemp;
+      }
+    }
+    if (Object.keys(schemaErrors).length !== 0) {
+      return {
+        submission: undefined,
+        errors: schemaErrors,
+        successful: false
+      };
     }
 
-    // create program if not exist
-    let activeSubmission = await workspaceRepository.findByProgramId(command.programId);
-    if (!activeSubmission) {
-      activeSubmission = await workspaceRepository.create({
-        programId: command.programId,
-        state: SUBMISSION_STATE.OPEN,
-        hashVersion: "42",
-        clinicalEntities: {}
-      });
-    }
-    await saveUnvalidatedSubmission(command);
-    return command.clinicalEntities;
+    const activeSubmission = await saveUnvalidatedSubmission(command);
+    return {
+      submission: activeSubmission,
+      errors: schemaErrors,
+      successful: true
+    };
   };
   /************* Private methods *************/
 

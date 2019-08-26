@@ -16,6 +16,7 @@ import { TsvUtils } from "../../../src/utils";
 import { donorDao } from "../../../src/clinical/donor-repo";
 import { Donor } from "../../../src/clinical/clinical-entities";
 import { ErrorCodes } from "../../../src/submission/submission-api";
+import { ActiveSubmission } from "../../../src/workspace/workspace-entites";
 export let mongoContainer: any;
 chai.use(require("chai-http"));
 chai.should();
@@ -580,6 +581,61 @@ describe("Submission Api", () => {
           } catch (err) {
             return err;
           }
+        });
+    });
+    it.only("should return 422 if try to upload invalid tsv files", done => {
+      let file: Buffer;
+      let file2: Buffer;
+      try {
+        file = fs.readFileSync(__dirname + "/donor.invalid.tsv");
+        file2 = fs.readFileSync(__dirname + "/sample.tsv");
+      } catch (err) {
+        return done(err);
+      }
+      chai
+        .request(app)
+        // data base is empty so ID shouldn't exist
+        .post("/submission/program/ABCD-EF/clinical/upload")
+        .auth(JWT_ABCDEF, { type: "bearer" })
+        .attach("clinicalFiles", file, "donor.invalid.tsv")
+        .attach("clinicalFiles", file2, "sample.tsv")
+        .end((err: any, res: any) => {
+          res.should.have.status(422);
+          res.body.should.deep.eq({
+            errors: { donor: expectedDonorErrors },
+            successful: false
+          });
+          done();
+        });
+    });
+    it.only("should return 200 if try to upload valid tsv files", done => {
+      let file: Buffer;
+      let file2: Buffer;
+      try {
+        file = fs.readFileSync(__dirname + "/donor.tsv");
+        file2 = fs.readFileSync(__dirname + "/sample.tsv");
+      } catch (err) {
+        return done(err);
+      }
+      chai
+        .request(app)
+        // data base is empty so ID shouldn't exist
+        .post("/submission/program/ABCD-EF/clinical/upload")
+        .auth(JWT_ABCDEF, { type: "bearer" })
+        .attach("clinicalFiles", file, "donor.tsv")
+        .attach("clinicalFiles", file2, "sample.tsv")
+        .end(async (err: any, res: any) => {
+          res.should.have.status(200);
+          const conn = await mongo.connect(dburl);
+          const savedSubmission: ActiveSubmission | null = await conn
+            .db("clinical")
+            .collection("activesubmissions")
+            .findOne({});
+          await conn.close();
+          if (!savedSubmission) {
+            throw new Error("saved submission shouldn't be null");
+          }
+          return done();
         });
     });
   });

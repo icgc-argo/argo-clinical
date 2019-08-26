@@ -17,5 +17,7 @@ export const saveUnvalidatedSubmission = async (command: SaveClinicalCommand2) =
   // insert into database
   const mergedSubmission = _.cloneDeep(activeSubmission) as ActiveSubmission;
   mergedSubmission.clinicalEntities = command.clinicalEntities;
-  return await workspaceRepository.update(mergedSubmission);
+  await workspaceRepository.update(mergedSubmission);
+  // check if was successful?
+  return mergedSubmission;
 };

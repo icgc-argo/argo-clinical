@@ -169,9 +169,6 @@
           "name": "gender",
           "valueType": "string",
           "description": "The gender of the patient",
-          "meta": {
-            "default": "Other"
-          },
           "restrictions": {
             "required": true,
             "codeList": ["Male", "Female", "Other"]
@@ -210,6 +207,76 @@
           "description": "Survival time",
           "restrictions": {
             "required": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "sample",
+      "description": "TSV for donor",
+      "key": "submitter_donor_id",
+      "fields": [
+        {
+          "name": "program_id",
+          "valueType": "string",
+          "description": "Unique identifier for program",
+          "meta": {
+            "key": true
+          },
+          "restrictions": {
+            "required": true,
+            "regex": "^[A-Z1-9][-_A-Z1-9]{2,7}(-[A-Z][A-Z])$"
+          }
+        },
+        {
+          "name": "submitter_donor_id",
+          "valueType": "string",
+          "description": "Unique identifier for donor, assigned by the data provider.",
+          "meta": {
+            "key": true
+          },
+          "restrictions": {
+            "required": true,
+            "regex": "^(?!(DO|do)).+"
+          }
+        },
+        {
+          "name": "submitter_specimen_id",
+          "valueType": "string",
+          "description": "Submitter assigned specimen id",
+          "meta": {
+            "key": true
+          },
+          "restrictions": {
+            "required": true,
+            "regex": "^(?!(SP|sp)).+"
+          }
+        },
+        {
+          "name": "submitter_sample_id",
+          "valueType": "string",
+          "description": "Submitter assigned sample id",
+          "restrictions": {
+            "required": true,
+            "regex": "^(?!(SA|sa)).+"
+          }
+        },
+        {
+          "name": "sample_type",
+          "valueType": "string",
+          "description": "Specimen Type",
+          "restrictions": {
+            "required": true,
+            "codeList": [
+              "Total DNA",
+              "Amplified DNA",
+              "ctDNA",
+              "other DNA enrichments",
+              "Total RNA",
+              "Ribo-Zero RNA",
+              "polyA+ RNA",
+              "other RNA fractions"
+            ]
           }
         }
       ]
