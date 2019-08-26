@@ -263,7 +263,7 @@ const conflictingNewSample = (
       return;
     }
 
-    // different donor and/or different sample
+    // different donor and/or different specimen
     if (newDonor.sampleSubmitterId === rec.sampleSubmitterId) {
       conflictingSamplesIndices.push(index);
     }
@@ -381,7 +381,7 @@ const mutatingExistingData = (
     );
   }
 
-  // if sample does exist => true
+  // if sample does exist => check mutations
   const sample = existingSpecimen.samples.find(sa => sa.submitterId === newDonor.sampleSubmitterId);
   if (!sample) return errors;
 

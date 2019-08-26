@@ -211,6 +211,12 @@ describe("Submission Api", () => {
         mongoContainer = await new GenericContainer("mongo").withExposedPorts(27017).start();
         console.log("mongo test container started");
         await bootstrap.run({
+          mongoPassword() {
+            return "";
+          },
+          mongoUser() {
+            return "";
+          },
           mongoUrl: () => {
             dburl = `mongodb://${mongoContainer.getContainerIpAddress()}:${mongoContainer.getMappedPort(
               27017
