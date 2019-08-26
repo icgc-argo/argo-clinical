@@ -583,7 +583,7 @@ describe("Submission Api", () => {
           }
         });
     });
-    it.only("should return 422 if try to upload invalid tsv files", done => {
+    it("should return 422 if try to upload invalid tsv files", done => {
       let file: Buffer;
       let file2: Buffer;
       try {
@@ -608,7 +608,7 @@ describe("Submission Api", () => {
           done();
         });
     });
-    it.only("should return 200 if try to upload valid tsv files", done => {
+    it("should return 200 if try to upload valid tsv files", done => {
       let file: Buffer;
       let file2: Buffer;
       try {
