@@ -1,7 +1,7 @@
 import * as submission from "./submission-service";
 import * as submission2Clinical from "./submission-to-clinical";
 import { Request, Response } from "express";
-import { TsvUtils, ControllerUtils, isStringMatchRegex, Errors } from "../utils";
+import { TsvUtils, ControllerUtils, isStringMatchRegex } from "../utils";
 import { loggerFor } from "../logger";
 import {
   CreateRegistrationCommand,
@@ -205,22 +205,22 @@ const checkFilesReMapped = (req: Request, res: Response) => {
     if (type == FileType.REGISTRATION) {
       continue; // skip registratrion file type
     }
-    const temp = _.remove(files, file =>
+    const foundFiles = _.remove(files, file =>
       isStringMatchRegex(FileNameRegex[type as FileType], file.originalname)
     );
-    if (temp.length > 1) {
+    if (foundFiles.length > 1) {
       errorList.push({
-        msg: `Found multiple files of same type - [${getFileNames(temp)}]`,
+        msg: `Found multiple files of same type - [${getFileNames(foundFiles)}]`,
         code: ErrorCodes.MULTIPLE_TYPED_FILES
       });
-    } else if (temp.length == 1) {
-      fileMap[type] = temp[0];
+    } else if (foundFiles.length == 1) {
+      fileMap[type] = foundFiles[0];
     }
   }
   // remaning files have invalid filenames
   if (files.length > 0) {
     errorList.push({
-      msg: `Invalid files - [${getFileNames(
+      msg: `Invalid file(s) - [${getFileNames(
         files
       )}], must start with entity and have .tsv extension (e.g. donor*.tsv)`,
       code: ErrorCodes.INVALID_FILE_NAME

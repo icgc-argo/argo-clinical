@@ -29,7 +29,7 @@ import { loggerFor } from "../logger";
 import { Errors, F } from "../utils";
 import { DeepReadonly } from "deep-freeze";
 import { FileType } from "./submission-api";
-import { workspaceRepository } from "./submission-repo";
+import { submissionRepository } from "./submission-repo";
 const L = loggerFor(__filename);
 
 export namespace operations {
@@ -161,6 +161,21 @@ export namespace operations {
   export const uploadClinicalMultiple = async (
     command: SubmissionMultipleCommand
   ): Promise<CreateSubmissionResult> => {
+    // create program if not exist and soft lock it
+    let activeSubmission = await submissionRepository.findByProgramId(command.programId);
+    if (!activeSubmission) {
+      activeSubmission = await submissionRepository.create({
+        programId: command.programId,
+        state: SUBMISSION_STATE.PROCESSING,
+        hashVersion: "42",
+        clinicalEntities: {}
+      });
+    } else {
+      if (activeSubmission.state == SUBMISSION_STATE.PROCESSING) {
+        throw new Errors.NotFound("Unable to update submission. It is currently being processed.");
+      }
+      await submissionRepository.setProgramState(command.programId, SUBMISSION_STATE.PROCESSING);
+    }
     const schemaErrors: { [k: string]: SubmissionValidationError[] } = {};
     for (const clinicalType in command.clinicalEntities) {
       const schemaErrorsTemp = await checkClinicalEntity({
@@ -175,23 +190,13 @@ export namespace operations {
     }
     // check if any errors found
     const success: boolean = Object.keys(schemaErrors).length === 0;
-    // keep enitites if no error otherwise clear
-    command.clinicalEntities = success ? command.clinicalEntities : {};
-    // create program if not exist
-    let activeSubmission = await workspaceRepository.findByProgramId(command.programId);
-    if (!activeSubmission) {
-      activeSubmission = await workspaceRepository.create({
-        programId: command.programId,
-        state: SUBMISSION_STATE.OPEN,
-        hashVersion: "42",
-        clinicalEntities: {}
-      });
-    }
-    // replace clinical entities in active submission
-    const mergedSubmission = _.cloneDeep(activeSubmission) as ActiveSubmission;
-    mergedSubmission.clinicalEntities = command.clinicalEntities;
+    const newActiveSubmission = _.cloneDeep(activeSubmission) as ActiveSubmission;
+    // update enitites if no error otherwise clear
+    newActiveSubmission.clinicalEntities = success ? command.clinicalEntities : {};
     // insert into database
-    await workspaceRepository.update(mergedSubmission);
+    await submissionRepository.update(newActiveSubmission);
+    // Release soft lock
+    await submissionRepository.setProgramState(command.programId, SUBMISSION_STATE.OPEN);
     return {
       submission: activeSubmission,
       errors: schemaErrors,

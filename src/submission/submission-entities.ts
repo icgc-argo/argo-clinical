@@ -111,7 +111,6 @@ export interface ValidationResult {
   errors: DeepReadonly<SubmissionValidationError[]>;
 }
 
-// refactor (only need one)
 export interface SaubmissionCommand {
   records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
   readonly programId: string;
@@ -119,7 +118,7 @@ export interface SaubmissionCommand {
 }
 
 export interface SubmissionMultipleCommand {
-  clinicalEntities: Readonly<{ [key: string]: ClinicalEntity }>;
+  clinicalEntities: Readonly<{ [clinicalType: string]: ClinicalEntity }>;
   readonly programId: string;
 }
 
@@ -143,6 +142,7 @@ export interface ClinicalEntity {
 }
 
 export enum SUBMISSION_STATE {
+  PROCESSING = "PROCESSING",
   OPEN = "OPEN",
   VALID = "VALID",
   INVALID = "INVALID",

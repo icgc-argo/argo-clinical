@@ -1,23 +1,23 @@
 import { loggerFor } from "../logger";
 import mongoose from "mongoose";
 import { DeepReadonly } from "deep-freeze";
-import { ActiveSubmission } from "./submission-entities";
+import { ActiveSubmission, SUBMISSION_STATE } from "./submission-entities";
 import { MongooseUtils, F } from "../utils";
 import { InternalError } from "./errors";
 import _ from "lodash";
 const L = loggerFor(__filename);
 
-export interface WorkspaceRepository {
+export interface SubmissionRepository {
   delete(id: string): Promise<void>;
   create(command: DeepReadonly<ActiveSubmission>): Promise<DeepReadonly<ActiveSubmission>>;
   findByProgramId(programId: string): Promise<DeepReadonly<ActiveSubmission> | undefined>;
   findById(id: string): Promise<DeepReadonly<ActiveSubmission> | undefined>;
   update(command: DeepReadonly<ActiveSubmission>): Promise<void>;
-  // clear(id: string): Promise<ActiveSubmission> | undefined;
+  setProgramState(programId: string, state: SUBMISSION_STATE): Promise<void>;
 }
 
 // Mongoose implementation of the RegistrationRepository
-export const workspaceRepository: WorkspaceRepository = {
+export const submissionRepository: SubmissionRepository = {
   async findById(id: string) {
     const registration = await ActiveSubmissionModel.findById(id);
     if (registration === null) {
@@ -59,24 +59,11 @@ export const workspaceRepository: WorkspaceRepository = {
   async update(command: DeepReadonly<ActiveSubmission>): Promise<void> {
     const activeSubmissionModel = new ActiveSubmissionModel(command);
     await activeSubmissionModel.updateOne(activeSubmissionModel);
+  },
+  async setProgramState(programId: string, state: SUBMISSION_STATE) {
+    await ActiveSubmissionModel.findOneAndUpdate({ programId: programId }, { state: state });
   }
 };
-
-const clinicalEntity = new mongoose.Schema(
-  {
-    batchName: { type: String, required: true },
-    creator: { type: String, required: true },
-    records: [],
-    schemaErrors: [],
-    stats: {
-      new: [Number],
-      noUpdate: [Number],
-      Updated: [Number],
-      errorsFound: [Number]
-    }
-  },
-  { _id: false, minimize: false, timestamps: true }
-);
 
 type ActiveSubmissionDocument = mongoose.Document & ActiveSubmission;
 
@@ -85,7 +72,7 @@ const ActiveSubmissionSchema = new mongoose.Schema(
     programId: { type: String, required: true },
     state: {
       type: String,
-      enum: ["OPEN", "VALID", "INVALID", "PENDING_APPROVAL"],
+      enum: ["PROCESSING", "OPEN", "VALID", "INVALID", "PENDING_APPROVAL"],
       default: "OPEN",
       required: true
     },

@@ -674,7 +674,7 @@ describe("Submission Api", () => {
             },
             {
               msg:
-                "Invalid files - [thisissample.tsv], must start with entity and have .tsv extension (e.g. donor*.tsv)",
+                "Invalid file(s) - [thisissample.tsv], must start with entity and have .tsv extension (e.g. donor*.tsv)",
               code: "INVALID_FILE_NAME"
             }
           ]);
