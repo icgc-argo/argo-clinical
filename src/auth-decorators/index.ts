@@ -67,3 +67,26 @@ export function HasSubmitionAccess(programIdExtractor: Function) {
     return descriptor;
   };
 }
+
+export function HasFullReadAccess() {
+  return function(target: any, key: string, descriptor: PropertyDescriptor) {
+    const originalMethod = descriptor.value as RequestHandler;
+    descriptor.value = function() {
+      const request = arguments[0] as Request;
+      const response = arguments[1] as Response;
+      const next = arguments[2] as NextFunction;
+      L.debug(`HasFullReadAccess @ ${key} was called`);
+      const unauthorizedResponse = checkAuthorization(
+        ["CLINICALSERVICE.READ", "CLINICALSERVICE.WRITE"],
+        request,
+        response
+      );
+      if (unauthorizedResponse !== undefined) {
+        return unauthorizedResponse;
+      }
+      const result = originalMethod.apply(this, [request, response, next]);
+      return result;
+    };
+    return descriptor;
+  };
+}
