@@ -198,7 +198,7 @@ export namespace operations {
     // Release soft lock
     await submissionRepository.setProgramState(command.programId, SUBMISSION_STATE.OPEN);
     return {
-      submission: activeSubmission,
+      submission: newActiveSubmission,
       errors: schemaErrors,
       successful: success
     };
