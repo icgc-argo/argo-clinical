@@ -28,6 +28,12 @@ export interface DonorRepository {
   findByProgramAndSubmitterId(
     filters: DeepReadonly<FindByProgramAndSubmitterFilter[]>
   ): Promise<DeepReadonly<Donor[]> | undefined>;
+  findBySpecimenSubmitterIdAndProgramId(
+    filter: FindByProgramAndSubmitterFilter
+  ): Promise<DeepReadonly<Donor> | undefined>;
+  findBySampleSubmitterIdAndProgramId(
+    filter: FindByProgramAndSubmitterFilter
+  ): Promise<DeepReadonly<Donor> | undefined>;
   create(donor: DeepReadonly<Donor>): Promise<DeepReadonly<Donor>>;
   update(donor: DeepReadonly<Donor>): Promise<DeepReadonly<Donor>>;
   countBy(filter: any): Promise<number>;
@@ -61,7 +67,45 @@ export const donorDao: DonorRepository = {
       .filter(notEmpty);
     return F(mapped);
   },
+  async findBySpecimenSubmitterIdAndProgramId(
+    filter: FindByProgramAndSubmitterFilter
+  ): Promise<DeepReadonly<Donor> | undefined> {
+    const result = await DonorModel.find({
+      [DONOR_FIELDS.SPECIMEN_SUBMITTER_ID]: filter.submitterId,
+      [DONOR_FIELDS.PROGRAM_ID]: filter.programId
+    }).exec();
+    if (!result) {
+      return undefined;
+    }
+    // convert the id to string to avoid runtime error on freezing
+    const mapped = result.map((d: DonorDocument) => {
+      return MongooseUtils.toPojo(d) as Donor;
+    });
+    if (mapped.length == 0) {
+      return undefined;
+    }
+    return F(mapped[0]);
+  },
+  async findBySampleSubmitterIdAndProgramId(
+    filter: FindByProgramAndSubmitterFilter
+  ): Promise<DeepReadonly<Donor> | undefined> {
+    const result = await DonorModel.find({
+      [DONOR_FIELDS.SPECIMEN_SAMPLE_SUBMITTER_ID]: filter.submitterId,
+      [DONOR_FIELDS.PROGRAM_ID]: filter.programId
+    }).exec();
 
+    if (!result) {
+      return undefined;
+    }
+    // convert the id to string to avoid runtime error on freezing
+    const mapped = result.map((d: DonorDocument) => {
+      return MongooseUtils.toPojo(d) as Donor;
+    });
+    if (mapped.length == 0) {
+      return undefined;
+    }
+    return F(mapped[0]);
+  },
   async findByProgramAndSubmitterId(
     filter: { programId: string; submitterId: string }[]
   ): Promise<DeepReadonly<Donor[]> | undefined> {
