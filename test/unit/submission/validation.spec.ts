@@ -107,13 +107,25 @@ const sampleBelongsToOtherSpecimenAB1: RegistrationValidationError = {
 
 describe("data-validator", () => {
   let donorDaoCountByStub: sinon.SinonStub;
+  let donorDaoFindBySpecimenSubmitterIdAndProgramIdStub: sinon.SinonStub;
+  let donorDaoFindBySampleSubmitterIdAndProgramIdStub: sinon.SinonStub;
   beforeEach(done => {
     donorDaoCountByStub = sinon.stub(donorDao, "countBy");
+    donorDaoFindBySpecimenSubmitterIdAndProgramIdStub = sinon.stub(
+      donorDao,
+      "findBySpecimenSubmitterIdAndProgramId"
+    );
+    donorDaoFindBySampleSubmitterIdAndProgramIdStub = sinon.stub(
+      donorDao,
+      "findBySampleSubmitterIdAndProgramId"
+    );
     done();
   });
 
   afterEach(done => {
     donorDaoCountByStub.restore();
+    donorDaoFindBySpecimenSubmitterIdAndProgramIdStub.restore();
+    donorDaoFindBySampleSubmitterIdAndProgramIdStub.restore();
     done();
   });
   it("should detect invalid program id", async () => {
@@ -326,6 +338,81 @@ describe("data-validator", () => {
     // assertions
     chai.expect(result.errors.length).to.eq(1);
     chai.expect(result.errors[0]).to.deep.eq(specimenBelongsToOtherDonor);
+  });
+
+  // see issue https://github.com/icgc-argo/argo-clinical/issues/112
+  it("should detect specimen belongs to other donor and specimen type changed", async () => {
+    donorDaoFindBySampleSubmitterIdAndProgramIdStub.returns(
+      Promise.resolve(stubs.validation.existingDonor03())
+    );
+
+    donorDaoFindBySpecimenSubmitterIdAndProgramIdStub.returns(
+      Promise.resolve<Donor>(stubs.validation.existingDonor02())
+    );
+
+    donorDaoCountByStub
+      .onFirstCall()
+      .returns(Promise.resolve(1))
+      .onSecondCall()
+      .returns(Promise.resolve(0));
+
+    // test call
+    const result = await dv.validateRegistrationData(
+      "PEME-CA",
+      [
+        {
+          donorSubmitterId: "AB2",
+          gender: "Female",
+          programId: "PEME-CA",
+          sampleSubmitterId: "AM1",
+          specimenType: "XYZ",
+          sampleType: "ST11",
+          specimenSubmitterId: "SP1",
+          tumourNormalDesignation: "Normal"
+        },
+        {
+          donorSubmitterId: "AB3",
+          gender: "Female",
+          programId: "PEME-CA",
+          sampleSubmitterId: "AM1",
+          specimenType: "XYZ",
+          sampleType: "ST11",
+          specimenSubmitterId: "SPY",
+          tumourNormalDesignation: "Normal"
+        }
+      ],
+      {}
+    );
+
+    const specimenTypeMutatedErr: RegistrationValidationError = {
+      fieldName: "specimen_type",
+      index: 0,
+      info: {
+        donorSubmitterId: "AB2",
+        specimenSubmitterId: "SP1",
+        sampleSubmitterId: "AM1",
+        value: "XYZ"
+      },
+      type: DataValidationErrors.MUTATING_EXISTING_DATA
+    };
+
+    const sampleTypeMutatedErr: RegistrationValidationError = {
+      fieldName: "sample_type",
+      index: 1,
+      info: {
+        donorSubmitterId: "AB3",
+        specimenSubmitterId: "SPY",
+        sampleSubmitterId: "AM1",
+        value: "ST11"
+      },
+      type: DataValidationErrors.MUTATING_EXISTING_DATA
+    };
+
+    // assertions
+    chai.expect(result.errors.length).to.eq(3);
+    chai.expect(result.errors[0]).to.deep.eq(specimenTypeMutatedErr);
+    chai.expect(result.errors[1]).to.deep.eq(specimenBelongsToOtherDonor);
+    chai.expect(result.errors[2]).to.deep.eq(sampleTypeMutatedErr);
   });
 
   it("should detect sample belongs to other specimen, same donor", async () => {
