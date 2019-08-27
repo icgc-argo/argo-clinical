@@ -125,6 +125,7 @@ describe("data-validator", () => {
   afterEach(done => {
     donorDaoCountByStub.restore();
     donorDaoFindBySpecimenSubmitterIdAndProgramIdStub.restore();
+    donorDaoFindBySampleSubmitterIdAndProgramIdStub.restore();
     done();
   });
   it("should detect invalid program id", async () => {
@@ -340,7 +341,7 @@ describe("data-validator", () => {
   });
 
   // see issue https://github.com/icgc-argo/argo-clinical/issues/112
-  it.only("should detect specimen belongs to other donor and specimen type changed", async () => {
+  it("should detect specimen belongs to other donor and specimen type changed", async () => {
     donorDaoFindBySampleSubmitterIdAndProgramIdStub.returns(
       Promise.resolve(stubs.validation.existingDonor03())
     );
