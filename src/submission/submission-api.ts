@@ -105,7 +105,6 @@ class SubmissionController {
     const creator = checkAuthReCreator(req);
     const clinicalEntities: { [k: string]: ClinicalEntity } = {};
     for (const clinType in fileMapped) {
-      // common code move to function?
       let records: ReadonlyArray<Readonly<{ [key: string]: string }>> = [];
       try {
         records = await TsvUtils.tsvToJson(fileMapped[clinType].path);

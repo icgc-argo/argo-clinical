@@ -113,7 +113,7 @@ export interface ValidationResult {
   errors: DeepReadonly<SubmissionValidationError[]>;
 }
 
-export interface SaubmissionCommand {
+export interface SubmissionCommand {
   records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
   readonly programId: string;
   readonly clinicalType: string;

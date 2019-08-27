@@ -68,7 +68,7 @@ export const validateRegistrationData = async (
 };
 
 export const usingInvalidProgramId = (
-  type: string,
+  type: FileType,
   newDonorIndex: number,
   record: DataRecord,
   expectedProgram: string
@@ -88,7 +88,11 @@ export const usingInvalidProgramId = (
   }
   return [];
 };
-const getInfoObject = (type: string, record: DeepReadonly<DataRecord>, expectedProgram: string) => {
+const getInfoObject = (
+  type: FileType,
+  record: DeepReadonly<DataRecord>,
+  expectedProgram: string
+) => {
   switch (type) {
     case FileType.REGISTRATION: {
       return {

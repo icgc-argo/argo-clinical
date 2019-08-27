@@ -1,15 +1,14 @@
-import fs, { promises } from "fs";
+import fs from "fs";
 import { Request, Response } from "express";
 import deepFreeze from "deep-freeze";
 import mongoose from "mongoose";
-
-// const fsPromises = require('fs').promises;
+const fsPromises = fs.promises;
 
 export namespace TsvUtils {
   export const tsvToJson = async (
     file: string
   ): Promise<ReadonlyArray<{ [key: string]: string }>> => {
-    const contents = await promises.readFile(file, "utf-8");
+    const contents = await fsPromises.readFile(file, "utf-8");
     const arr = parseTsvToJson(contents);
     return arr;
   };

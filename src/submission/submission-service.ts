@@ -12,7 +12,7 @@ import {
   CreateRegistrationCommand,
   CreateRegistrationResult,
   FieldsEnum,
-  SaubmissionCommand,
+  SubmissionCommand,
   SubmissionMultipleCommand,
   CreateSubmissionResult,
   SUBMISSION_STATE,
@@ -248,7 +248,7 @@ export namespace operations {
   };
 
   const unifySchemaErrors = (
-    type: string,
+    type: FileType,
     result: SchemaProcessingResult,
     records: ReadonlyArray<DataRecord>
   ) => {
@@ -386,12 +386,12 @@ export namespace operations {
   }
 
   const checkClinicalEntity = async (
-    command: SaubmissionCommand
+    command: SubmissionCommand
   ): Promise<SubmissionValidationError[]> => {
     let programIdErrors: DeepReadonly<SubmissionValidationError[]> = [];
     command.records.forEach((r, index) => {
       const programIdError = dataValidator.usingInvalidProgramId(
-        command.clinicalType,
+        command.clinicalType as FileType,
         index,
         r,
         command.programId
@@ -401,7 +401,7 @@ export namespace operations {
     const schemaResult = schemaManager.instance().process(command.clinicalType, command.records);
     if (schemaResult.validationErrors.length > 0) {
       const unifiedSchemaErrors = unifySchemaErrors(
-        command.clinicalType,
+        command.clinicalType as FileType,
         schemaResult,
         command.records
       );
