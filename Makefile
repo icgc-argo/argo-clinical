@@ -1,6 +1,6 @@
 
 debug:
-	docker-compose up -d
+	docker-compose up --force-recreate -d
 	npm run debug
 
 verify:
