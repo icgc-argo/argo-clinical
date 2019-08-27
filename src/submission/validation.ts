@@ -1,4 +1,4 @@
-import { DonorMap, Specimen, Sample } from "../clinical/clinical-entities";
+import { DonorMap, Specimen, Sample, Donor } from "../clinical/clinical-entities";
 import {
   DataValidationErrors,
   RegistrationValidationError,
@@ -466,9 +466,7 @@ function checkSampleMutations(
 
 function checkDonorMutations(
   newDonor: CreateRegistrationRecord,
-  existingDonor: DeepReadonly<
-    import("/home/ballabadi/dev/repos/argo/argo-clinical/src/clinical/clinical-entities").Donor
-  >,
+  existingDonor: DeepReadonly<Donor>,
   errors: RegistrationValidationError[],
   index: number
 ) {
