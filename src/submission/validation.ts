@@ -157,7 +157,7 @@ const conflictingNewSpecimen = (
     errors.push(
       buildError(
         newDonor,
-        DataValidationErrors.NEW_SPECIMEN_CONFLICT,
+        DataValidationErrors.NEW_SPECIMEN_ID_CONFLICT,
         FieldsEnum.submitter_specimen_id,
         newDonorIndex,
         {
@@ -171,7 +171,7 @@ const conflictingNewSpecimen = (
     errors.push(
       buildError(
         newDonor,
-        DataValidationErrors.NEW_SPECIMEN_CONFLICT,
+        DataValidationErrors.NEW_SPECIMEN_ATTR_CONFLICT,
         FieldsEnum.specimen_type,
         newDonorIndex,
         {
@@ -185,7 +185,7 @@ const conflictingNewSpecimen = (
     errors.push(
       buildError(
         newDonor,
-        DataValidationErrors.NEW_SPECIMEN_CONFLICT,
+        DataValidationErrors.NEW_SPECIMEN_ATTR_CONFLICT,
         FieldsEnum.tumour_normal_designation,
         newDonorIndex,
         {
@@ -273,7 +273,7 @@ const conflictingNewSample = (
   if (conflictingSamplesIndices.length !== 0) {
     const err = buildError(
       newDonor,
-      DataValidationErrors.NEW_SAMPLE_CONFLICT,
+      DataValidationErrors.NEW_SAMPLE_ID_CONFLICT,
       FieldsEnum.submitter_sample_id,
       newDonorIndex,
       {
@@ -286,7 +286,7 @@ const conflictingNewSample = (
   if (conflictingSampleTypesIndices.length !== 0) {
     const err = buildError(
       newDonor,
-      DataValidationErrors.NEW_SAMPLE_CONFLICT,
+      DataValidationErrors.NEW_SAMPLE_ATTR_CONFLICT,
       FieldsEnum.sample_type,
       newDonorIndex,
       {
