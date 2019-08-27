@@ -322,101 +322,54 @@ const mutatingExistingData = async (
 
   if (existingDonor) {
     // we don't check program id here because we check it specifically in the program validation
-    if (newDonor.gender != existingDonor.gender) {
-      errors.push(
-        buildError(
-          newDonor,
-          DataValidationErrors.MUTATING_EXISTING_DATA,
-          RegistrationFieldsEnum.gender,
-          index,
-          {}
-        )
-      );
-    }
+    checkDonorMutations(newDonor, existingDonor, errors, index);
     existingSpecimen = existingDonor.specimens.find(
       s => s.submitterId === newDonor.specimenSubmitterId
     );
   }
 
   if (!existingSpecimen) {
-    const otherDonorWithSameSpecimenId = await donorDao.findBySpecimenSubmitterIdAndProgramId({
-      programId: newDonor.programId,
-      submitterId: newDonor.specimenSubmitterId
-    });
-
-    if (!otherDonorWithSameSpecimenId) {
-      return errors;
-    }
-
-    existingSpecimen = otherDonorWithSameSpecimenId.specimens.find(
-      s => s.submitterId === newDonor.specimenSubmitterId
-    );
+    existingSpecimen = await findExistingSpecimenFromDb(newDonor);
   }
 
   // is there an existing specimen registered with this submitter Id?
   if (existingSpecimen) {
-    if (newDonor.specimenType !== existingSpecimen.specimenType) {
-      errors.push(
-        buildError(
-          newDonor,
-          DataValidationErrors.MUTATING_EXISTING_DATA,
-          RegistrationFieldsEnum.specimen_type,
-          index,
-          {}
-        )
-      );
-    }
-
-    if (newDonor.tumourNormalDesignation !== existingSpecimen.tumourNormalDesignation) {
-      errors.push(
-        buildError(
-          newDonor,
-          DataValidationErrors.MUTATING_EXISTING_DATA,
-          RegistrationFieldsEnum.tumour_normal_designation,
-          index,
-          {}
-        )
-      );
-    }
+    checkSpecimenMutations(newDonor, existingSpecimen, errors, index);
     existingSample = existingSpecimen.samples.find(
       sa => sa.submitterId === newDonor.sampleSubmitterId
     );
   }
 
   if (!existingSample) {
-    const otherDonorWithSameSampleId = await donorDao.findBySampleSubmitterIdAndProgramId({
-      programId: newDonor.programId,
-      submitterId: newDonor.sampleSubmitterId
-    });
-
-    if (!otherDonorWithSameSampleId) {
-      return errors;
-    }
-
-    let found = false;
-    otherDonorWithSameSampleId.specimens.forEach(s => {
-      if (found) return;
-      existingSample = s.samples.find(sa => sa.submitterId === newDonor.sampleSubmitterId);
-      if (existingSample) {
-        found = true;
-      }
-    });
+    existingSample = await findExistingSampleFromDb(newDonor.programId, newDonor.sampleSubmitterId);
   }
 
   // if sample does not exist => no need to check mutations, return
   if (!existingSample) return errors;
-  if (newDonor.sampleType !== existingSample.sampleType) {
-    errors.push(
-      buildError(
-        newDonor,
-        DataValidationErrors.MUTATING_EXISTING_DATA,
-        RegistrationFieldsEnum.sample_type,
-        index,
-        {}
-      )
-    );
-  }
+  checkSampleMutations(newDonor, existingSample, errors, index);
   return errors;
+};
+
+const findExistingSampleFromDb = async (programId: string, submitterId: string) => {
+  let existingSample: undefined | Sample = undefined;
+  const otherDonorWithSameSampleId = await donorDao.findBySampleSubmitterIdAndProgramId({
+    programId,
+    submitterId
+  });
+
+  if (!otherDonorWithSameSampleId) {
+    return undefined;
+  }
+
+  let found = false;
+  otherDonorWithSameSampleId.specimens.forEach(s => {
+    if (found) return;
+    existingSample = s.samples.find(sa => sa.submitterId === submitterId);
+    if (existingSample) {
+      found = true;
+    }
+  });
+  return existingSample;
 };
 
 const specimenBelongsToOtherDonor = async (
@@ -491,3 +444,87 @@ const buildError = (
     }
   };
 };
+
+function checkSampleMutations(
+  newDonor: CreateRegistrationRecord,
+  existingSample: DeepReadonly<Sample>,
+  errors: RegistrationValidationError[],
+  index: number
+) {
+  if (newDonor.sampleType !== existingSample.sampleType) {
+    errors.push(
+      buildError(
+        newDonor,
+        DataValidationErrors.MUTATING_EXISTING_DATA,
+        RegistrationFieldsEnum.sample_type,
+        index,
+        {}
+      )
+    );
+  }
+}
+
+function checkDonorMutations(
+  newDonor: CreateRegistrationRecord,
+  existingDonor: DeepReadonly<
+    import("/home/ballabadi/dev/repos/argo/argo-clinical/src/clinical/clinical-entities").Donor
+  >,
+  errors: RegistrationValidationError[],
+  index: number
+) {
+  if (newDonor.gender != existingDonor.gender) {
+    errors.push(
+      buildError(
+        newDonor,
+        DataValidationErrors.MUTATING_EXISTING_DATA,
+        RegistrationFieldsEnum.gender,
+        index,
+        {}
+      )
+    );
+  }
+}
+
+async function findExistingSpecimenFromDb(newDonor: CreateRegistrationRecord) {
+  let existingSpecimen: DeepReadonly<Specimen> | undefined;
+  const otherDonorWithSameSpecimenId = await donorDao.findBySpecimenSubmitterIdAndProgramId({
+    programId: newDonor.programId,
+    submitterId: newDonor.specimenSubmitterId
+  });
+  if (otherDonorWithSameSpecimenId) {
+    existingSpecimen = otherDonorWithSameSpecimenId.specimens.find(
+      s => s.submitterId === newDonor.specimenSubmitterId
+    );
+  }
+  return existingSpecimen;
+}
+
+function checkSpecimenMutations(
+  newDonor: CreateRegistrationRecord,
+  existingSpecimen: DeepReadonly<Specimen>,
+  errors: RegistrationValidationError[],
+  index: number
+) {
+  if (newDonor.specimenType !== existingSpecimen.specimenType) {
+    errors.push(
+      buildError(
+        newDonor,
+        DataValidationErrors.MUTATING_EXISTING_DATA,
+        RegistrationFieldsEnum.specimen_type,
+        index,
+        {}
+      )
+    );
+  }
+  if (newDonor.tumourNormalDesignation !== existingSpecimen.tumourNormalDesignation) {
+    errors.push(
+      buildError(
+        newDonor,
+        DataValidationErrors.MUTATING_EXISTING_DATA,
+        RegistrationFieldsEnum.tumour_normal_designation,
+        index,
+        {}
+      )
+    );
+  }
+}
