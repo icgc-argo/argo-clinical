@@ -120,7 +120,7 @@ export interface SubmissionCommand {
 }
 
 export interface SubmissionMultipleCommand {
-  clinicalEntities: Readonly<{ [clinicalType: string]: ClinicalEntity }>;
+  newClinicalEntities: Readonly<{ [clinicalType: string]: NewClinicalEntity }>;
   readonly programId: string;
 }
 
@@ -130,10 +130,13 @@ export interface CreateSubmissionResult {
   errors: DeepReadonly<{ [clinicalType: string]: SubmissionValidationError[] }>;
 }
 
-export interface ClinicalEntity {
+export interface NewClinicalEntity {
   batchName: String;
   creator: String;
   records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
+}
+
+export interface SavedClinicalEntity extends NewClinicalEntity {
   dataErrors: [];
   stats: {
     new: Number[];
@@ -155,5 +158,5 @@ export interface ActiveSubmission {
   programId: String;
   state: SUBMISSION_STATE;
   hashVersion: String;
-  clinicalEntities: { [clinicalType: string]: ClinicalEntity };
+  clinicalEntities: { [clinicalType: string]: SavedClinicalEntity };
 }

@@ -178,9 +178,9 @@ export namespace operations {
     }
     const newActiveSubmission = _.cloneDeep(activeSubmission) as ActiveSubmission;
     const schemaErrors: { [k: string]: SubmissionValidationError[] } = {}; // object to store all errors for entity
-    for (const clinicalType in command.clinicalEntities) {
+    for (const clinicalType in command.newClinicalEntities) {
       const schemaErrorsTemp = await checkClinicalEntity({
-        records: command.clinicalEntities[clinicalType].records,
+        records: command.newClinicalEntities[clinicalType].records,
         programId: command.programId,
         clinicalType: clinicalType
       });
@@ -190,7 +190,16 @@ export namespace operations {
         delete newActiveSubmission.clinicalEntities[clinicalType];
       } else {
         // update entity in active submission
-        newActiveSubmission.clinicalEntities[clinicalType] = command.clinicalEntities[clinicalType];
+        newActiveSubmission.clinicalEntities[clinicalType] = {
+          ...command.newClinicalEntities[clinicalType],
+          dataErrors: [],
+          stats: {
+            new: [],
+            noUpdate: [],
+            updated: [],
+            errorsFound: []
+          }
+        };
       }
     }
     // insert into database

@@ -5,8 +5,9 @@ import { TsvUtils, ControllerUtils, isStringMatchRegex } from "../utils";
 import { loggerFor } from "../logger";
 import {
   CreateRegistrationCommand,
-  ClinicalEntity,
-  SubmissionMultipleCommand
+  SavedClinicalEntity,
+  SubmissionMultipleCommand,
+  NewClinicalEntity
 } from "./submission-entities";
 import { HasSubmitionAccess as HasSubmittionAccess } from "../auth-decorators";
 import jwt from "jsonwebtoken";
@@ -44,11 +45,11 @@ class SubmissionController {
 
   @HasSubmittionAccess((req: Request) => req.params.programId)
   async createRegistrationWithTsv(req: Request, res: Response) {
-    if (!isValidCreateBody(req, res) || !validFile(req, res, FileType.REGISTRATION)) {
+    if (!isValidCreateBody(req, res) || !validateFile(req, res, FileType.REGISTRATION)) {
       return;
     }
     const programId = req.params.programId;
-    const creator = checkAuthReCreator(req);
+    const creator = getCreatorFromToken(req);
     const file = req.file;
     let records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
     try {
@@ -98,39 +99,33 @@ class SubmissionController {
     if (!isValidCreateBody(req, res)) {
       return;
     }
-    const fileMapped = checkFilesReMapped(req, res);
-    if (!fileMapped) {
+    const filesByTypeMap = mapFilesByType(req, res);
+    if (!filesByTypeMap) {
       return;
     }
-    const creator = checkAuthReCreator(req);
-    const clinicalEntities: { [k: string]: ClinicalEntity } = {};
-    for (const clinType in fileMapped) {
+    const creator = getCreatorFromToken(req);
+    const newClinicalEntities: { [k: string]: NewClinicalEntity } = {};
+    for (const clinicalFileType in filesByTypeMap) {
+      const fileName = filesByTypeMap[clinicalFileType].originalname;
       let records: ReadonlyArray<Readonly<{ [key: string]: string }>> = [];
       try {
-        records = await TsvUtils.tsvToJson(fileMapped[clinType].path);
+        records = await TsvUtils.tsvToJson(filesByTypeMap[clinicalFileType].path);
       } catch (err) {
         return ControllerUtils.badRequest(res, {
-          msg: `failed to parse the tsv file: ${err}`,
+          msg: `failed to parse the tsv file ${fileName}: ${err}`,
           code: ErrorCodes.TSV_PARSING_FAILED
         });
       }
       // add clinical entity by mapping to clinical type
-      clinicalEntities[clinType] = {
-        batchName: fileMapped[clinType].originalname,
+      newClinicalEntities[clinicalFileType] = {
+        batchName: fileName,
         creator: creator,
-        records: records,
-        dataErrors: [],
-        stats: {
-          new: [],
-          noUpdate: [],
-          updated: [],
-          errorsFound: []
-        }
+        records: records
       };
     }
     res.set("Content-Type", "application/json");
     const command: SubmissionMultipleCommand = {
-      clinicalEntities: clinicalEntities,
+      newClinicalEntities: newClinicalEntities,
       programId: req.params.programId
     };
     const result = await submission.operations.uploadClinicalMultiple(command);
@@ -154,11 +149,7 @@ const isValidCreateBody = (req: Request, res: Response): boolean => {
   }
   return true;
 };
-const validFile = (req: Request, res: Response, type: FileType) => {
-  if (!Object.values(FileType).includes(type)) {
-    ControllerUtils.badRequest(res, `invalid clinical submission type ${type}`);
-    return false;
-  }
+const validateFile = (req: Request, res: Response, type: FileType) => {
   if (req.file == undefined) {
     L.debug(`${type}File missing`);
     ControllerUtils.badRequest(res, `${type}File file is required`);
@@ -175,13 +166,13 @@ const validFile = (req: Request, res: Response, type: FileType) => {
   return true;
 };
 // checks authHeader + decoded jwt and returns the creator
-const checkAuthReCreator = (req: Request): string => {
+const getCreatorFromToken = (req: Request): string => {
   const authHeader = req.headers.authorization;
   if (!authHeader) {
     throw new Error("can't get here without auth header");
   }
   const decoded = jwt.decode(authHeader.split(" ")[1]) as any;
-  if (!decoded) {
+  if (!decoded || !decoded.context || !decoded.context.user) {
     throw new Error("invalid token structure");
   }
   return decoded.context.user.firstName + " " + decoded.context.user.lastName;
@@ -189,15 +180,14 @@ const checkAuthReCreator = (req: Request): string => {
 
 // checks the files against the regex expressions and maps to a type (skips registration)
 // returns an object that maps a file to a clinical type
-const checkFilesReMapped = (req: Request, res: Response) => {
+const mapFilesByType = (req: Request, res: Response) => {
   if (req.files == undefined || req.files.length == 0) {
-    L.debug(`File(s) missing`);
     ControllerUtils.badRequest(res, `Clinical file(s) upload required`);
-    return false;
+    return;
   }
   const files = req.files as Express.Multer.File[];
   const errorList: Array<any> = [];
-  const fileMap: { [k: string]: any } = {};
+  const fileMap: { [k: string]: Express.Multer.File } = {};
 
   // check for double files and map files to clinical type
   for (const type of Object.values(FileType)) {
@@ -218,17 +208,16 @@ const checkFilesReMapped = (req: Request, res: Response) => {
   }
   // remaning files have invalid filenames
   if (files.length > 0) {
+    const filesNames = getFileNames(files);
     errorList.push({
-      msg: `Invalid file(s) - [${getFileNames(
-        files
-      )}], must start with entity and have .tsv extension (e.g. donor*.tsv)`,
+      msg: `Invalid file(s) - [${filesNames}], must start with entity and have .tsv extension (e.g. donor*.tsv)`,
       code: ErrorCodes.INVALID_FILE_NAME
     });
   }
   // check if errors found
   if (errorList.length > 0) {
     ControllerUtils.badRequest(res, errorList);
-    return false;
+    return;
   }
   return fileMap;
 };
