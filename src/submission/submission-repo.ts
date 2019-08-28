@@ -1,28 +1,30 @@
 import { loggerFor } from "../logger";
 import mongoose from "mongoose";
 import { DeepReadonly } from "deep-freeze";
-import { ActiveSubmission, SUBMISSION_STATE } from "./submission-entities";
+import { ActiveClinicalSubmission, SUBMISSION_STATE } from "./submission-entities";
 import { MongooseUtils, F } from "../utils";
 import { InternalError } from "./errors";
 import _ from "lodash";
 const L = loggerFor(__filename);
 
-export interface SubmissionRepository {
+export interface ClinicalSubmissionRepository {
   delete(id: string): Promise<void>;
-  create(command: DeepReadonly<ActiveSubmission>): Promise<DeepReadonly<ActiveSubmission>>;
-  findByProgramId(programId: string): Promise<DeepReadonly<ActiveSubmission> | undefined>;
-  findById(id: string): Promise<DeepReadonly<ActiveSubmission> | undefined>;
-  update(command: DeepReadonly<ActiveSubmission>): Promise<void>;
-  setProgramState(programId: string, state: SUBMISSION_STATE): Promise<void>;
-  updateProgramWithHash(
+  create(
+    command: DeepReadonly<ActiveClinicalSubmission>
+  ): Promise<DeepReadonly<ActiveClinicalSubmission>>;
+  findByProgramId(programId: string): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined>;
+  findById(id: string): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined>;
+  update(command: DeepReadonly<ActiveClinicalSubmission>): Promise<void>;
+  updateState(programId: string, state: SUBMISSION_STATE): Promise<void>;
+  updateProgramWithVersion(
     programId: string,
-    hashVersion: string,
-    updatedSubmission: DeepReadonly<ActiveSubmission>
-  ): Promise<DeepReadonly<ActiveSubmission> | undefined>;
+    version: string,
+    updatedSubmission: DeepReadonly<ActiveClinicalSubmission>
+  ): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined>;
 }
 
-// Mongoose implementation of the SubmissionRepository
-export const submissionRepository: SubmissionRepository = {
+// Mongoose implementation of the ClinicalSubmissionRepository
+export const submissionRepository: ClinicalSubmissionRepository = {
   async findById(id: string) {
     const registration = await ActiveSubmissionModel.findById(id);
     if (registration === null) {
@@ -47,7 +49,7 @@ export const submissionRepository: SubmissionRepository = {
     }
   },
   // forceCreate? singletonCreate?
-  async create(submission: DeepReadonly<ActiveSubmission>) {
+  async create(submission: DeepReadonly<ActiveClinicalSubmission>) {
     const newsubmission = new ActiveSubmissionModel(submission);
     await newsubmission.save();
     return F(MongooseUtils.toPojo(newsubmission));
@@ -61,24 +63,24 @@ export const submissionRepository: SubmissionRepository = {
       throw new InternalError(`failed to delete ActiveSubmission with Id: ${id}`, err);
     }
   },
-  async update(command: DeepReadonly<ActiveSubmission>): Promise<void> {
+  async update(command: DeepReadonly<ActiveClinicalSubmission>): Promise<void> {
     const activeSubmissionModel = new ActiveSubmissionModel(command);
     await activeSubmissionModel.updateOne(activeSubmissionModel);
   },
-  async setProgramState(programId: string, state: SUBMISSION_STATE) {
+  async updateState(programId: string, state: SUBMISSION_STATE) {
     await ActiveSubmissionModel.findOneAndUpdate(
       { programId: programId },
       { state: SUBMISSION_STATE.PROCESSING }
     );
   },
-  async updateProgramWithHash(
+  async updateProgramWithVersion(
     programId: string,
-    hashVersion: string,
-    updatedSubmission: DeepReadonly<ActiveSubmission>
-  ): Promise<DeepReadonly<ActiveSubmission> | undefined> {
+    version: string,
+    updatedSubmission: DeepReadonly<ActiveClinicalSubmission>
+  ): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined> {
     return (
       (await ActiveSubmissionModel.findOneAndUpdate(
-        { $and: [{ programId: programId }, { hashVersion: hashVersion }] },
+        { $and: [{ programId: programId }, { version: version }] },
         updatedSubmission,
         { new: true }
       )) || undefined
@@ -86,7 +88,7 @@ export const submissionRepository: SubmissionRepository = {
   }
 };
 
-type ActiveSubmissionDocument = mongoose.Document & ActiveSubmission;
+type ActiveClinicalSubmissionDocument = mongoose.Document & ActiveClinicalSubmission;
 
 const ActiveSubmissionSchema = new mongoose.Schema(
   {
@@ -97,13 +99,13 @@ const ActiveSubmissionSchema = new mongoose.Schema(
       default: "OPEN",
       required: true
     },
-    hashVersion: { type: String, default: "42", required: true },
+    version: { type: String, default: "42", required: true },
     clinicalEntities: { type: Object, required: false }
   },
   { timestamps: true, minimize: false }
 );
 
-export const ActiveSubmissionModel = mongoose.model<ActiveSubmissionDocument>(
+export const ActiveSubmissionModel = mongoose.model<ActiveClinicalSubmissionDocument>(
   "ActiveSubmission",
   ActiveSubmissionSchema
 );

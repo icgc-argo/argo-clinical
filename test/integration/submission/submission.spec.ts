@@ -13,7 +13,7 @@ import { cleanCollection, insertData, emptyDonorDocument, resetCounters } from "
 import { TEST_PUB_KEY, JWT_ABCDEF, JWT_WXYZEF } from "./test.jwt";
 import {
   ActiveRegistration,
-  ActiveSubmission,
+  ActiveClinicalSubmission,
   FieldsEnum
 } from "../../../src/submission/submission-entities";
 import { TsvUtils } from "../../../src/utils";
@@ -635,7 +635,7 @@ describe("Submission Api", () => {
           res.should.have.status(200);
           res.body.successful.should.deep.eq(true);
           const conn = await mongo.connect(dburl);
-          const savedSubmission: ActiveSubmission | null = await conn
+          const savedSubmission: ActiveClinicalSubmission | null = await conn
             .db("clinical")
             .collection("activesubmissions")
             .findOne({});

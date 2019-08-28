@@ -113,13 +113,13 @@ export interface ValidationResult {
   errors: DeepReadonly<SubmissionValidationError[]>;
 }
 
-export interface SubmissionCommand {
+export interface ClinicalSubmissionCommand {
   records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
   readonly programId: string;
   readonly clinicalType: string;
 }
 
-export interface SubmissionMultipleCommand {
+export interface MultiClinicalSubmissionCommand {
   newClinicalEntities: Readonly<{ [clinicalType: string]: NewClinicalEntity }>;
   readonly programId: string;
 }
@@ -154,10 +154,10 @@ export enum SUBMISSION_STATE {
   PENDING_APPROVAL = "PENDING_APPROVAL"
 }
 
-export interface ActiveSubmission {
+export interface ActiveClinicalSubmission {
   programId: string;
   state: SUBMISSION_STATE;
-  hashVersion: string;
+  version: string;
   clinicalEntities: { [clinicalType: string]: SavedClinicalEntity };
 }
 

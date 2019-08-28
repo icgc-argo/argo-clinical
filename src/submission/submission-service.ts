@@ -12,11 +12,11 @@ import {
   CreateRegistrationCommand,
   CreateRegistrationResult,
   FieldsEnum,
-  SubmissionCommand,
-  SubmissionMultipleCommand,
+  ClinicalSubmissionCommand,
+  MultiClinicalSubmissionCommand,
   CreateSubmissionResult,
   SUBMISSION_STATE,
-  ActiveSubmission
+  ActiveClinicalSubmission
 } from "./submission-entities";
 import * as schemaManager from "../lectern-client/schema-manager";
 import {
@@ -160,7 +160,7 @@ export namespace operations {
    * @param command SaveClinicalCommand
    */
   export const uploadMultipleClinical = async (
-    command: SubmissionMultipleCommand
+    command: MultiClinicalSubmissionCommand
   ): Promise<CreateSubmissionResult> => {
     // get program or create new one
     let exsistingActiveSubmission = await submissionRepository.findByProgramId(command.programId);
@@ -168,11 +168,11 @@ export namespace operations {
       exsistingActiveSubmission = await submissionRepository.create({
         programId: command.programId,
         state: SUBMISSION_STATE.OPEN,
-        hashVersion: uuid(),
+        version: uuid(),
         clinicalEntities: {}
       });
     }
-    const newActiveSubmission = _.cloneDeep(exsistingActiveSubmission) as ActiveSubmission;
+    const newActiveSubmission = _.cloneDeep(exsistingActiveSubmission) as ActiveClinicalSubmission;
     const schemaErrors: { [k: string]: SubmissionValidationError[] } = {}; // object to store all errors for entity
     for (const clinicalType in command.newClinicalEntities) {
       const schemaErrorsTemp = await checkClinicalEntity({
@@ -198,13 +198,13 @@ export namespace operations {
         };
       }
     }
-    // generate new hashVersion and make set to open
-    newActiveSubmission.hashVersion = uuid();
+    // generate new version and make submission state open
+    newActiveSubmission.version = uuid();
     newActiveSubmission.state = SUBMISSION_STATE.OPEN;
     // insert into database
-    const updated = await submissionRepository.updateProgramWithHash(
+    const updated = await submissionRepository.updateProgramWithVersion(
       command.programId,
-      exsistingActiveSubmission.hashVersion,
+      exsistingActiveSubmission.version,
       newActiveSubmission
     );
     if (!updated) {
@@ -399,7 +399,7 @@ export namespace operations {
   }
 
   const checkClinicalEntity = async (
-    command: SubmissionCommand
+    command: ClinicalSubmissionCommand
   ): Promise<SubmissionValidationError[]> => {
     let programIdErrors: DeepReadonly<SubmissionValidationError[]> = [];
     command.records.forEach((r, index) => {
