@@ -8,7 +8,7 @@ import { setStatus, Status } from "./app-health";
 
 const L = loggerFor(__filename);
 
-const setupDBConnection = (mongoUrl: string, userName: string, password: string) => {
+const setupDBConnection = async (mongoUrl: string, userName: string, password: string) => {
   mongoose.connection.on("connected", () => {
     L.debug("Connection Established");
     setStatus("db", { status: Status.OK });
@@ -28,50 +28,74 @@ const setupDBConnection = (mongoUrl: string, userName: string, password: string)
     L.debug("ERROR: " + error);
     setStatus("db", { status: Status.ERROR, info: { error } });
   });
-  const connectToDb = (delayMillis: number) => {
-    setTimeout(async () => {
-      L.debug("connecting to mongo");
-      try {
-        // https://mongoosejs.com/docs/connections.html
-        await mongoose.connect(mongoUrl, {
-          autoReconnect: true,
-          // http://mongodb.github.io/node-mongodb-native/3.1/reference/faq/
-          socketTimeoutMS: 10000,
-          connectTimeoutMS: 30000,
-          keepAlive: true,
-          reconnectTries: 10,
-          reconnectInterval: 3000,
-          bufferCommands: false,
-          bufferMaxEntries: 0,
-          user: userName,
-          pass: password,
-          // https://mongoosejs.com/docs/deprecations.html
-          useNewUrlParser: true,
-          useFindAndModify: false
-        });
-      } catch (err) {
-        L.error("failed to connect to mongo", err);
-        setStatus("db", { status: Status.ERROR });
-        // retry in 8 secs
-        connectToDb(8000);
-      }
-    }, delayMillis);
-  };
+
   // initialize connection attempts
-  return connectToDb(1);
+  await connectToDb(8000, mongoUrl, userName, password);
 };
+
+const connectToDb = async (
+  delayMillis: number,
+  mongoUrl: string,
+  username: string,
+  password: string
+) => {
+  L.debug("in connectToDb");
+  try {
+    await connect(
+      delayMillis,
+      mongoUrl,
+      username,
+      password
+    );
+  } catch (err) {
+    L.error("failed to connect", err);
+  }
+};
+
+async function connect(delayMillis: number, mongoUrl: string, username: string, password: string) {
+  try {
+    // https://mongoosejs.com/docs/connections.html
+    await mongoose.connect(mongoUrl, {
+      autoReconnect: true,
+      // http://mongodb.github.io/node-mongodb-native/3.1/reference/faq/
+      socketTimeoutMS: 10000,
+      connectTimeoutMS: 30000,
+      keepAlive: true,
+      reconnectTries: 10,
+      reconnectInterval: 3000,
+      bufferCommands: false,
+      bufferMaxEntries: 0,
+      user: username,
+      pass: password,
+      // https://mongoosejs.com/docs/deprecations.html
+      useNewUrlParser: true,
+      useFindAndModify: false
+    });
+    L.debug("mongoose connected");
+  } catch (err) {
+    L.error("failed to connect to mongo", err);
+    setStatus("db", { status: Status.ERROR });
+    setTimeout(() => {
+      L.debug("retrying to connect to mongo");
+      connect(
+        delayMillis,
+        mongoUrl,
+        username,
+        password
+      );
+    }, delayMillis);
+  }
+}
 
 const setJwtPublicKey = (keyUrl: string) => {
   const getKey = (delayMillis: number) => {
     setTimeout(async () => {
       try {
         const response = await fetch(keyUrl);
-
         const key = await response.text();
         if (response.status != 200 || key.indexOf("-----BEGIN PUBLIC KEY-----") === -1) {
           throw new Error(`failed to fetch valid JwtPublicKey, response:  ${key}`);
         }
-
         // make sure there is a new line before & after the begin/end marks
         const correctFormatKey = `-----BEGIN PUBLIC KEY-----\n${key
           .replace("-----BEGIN PUBLIC KEY-----", "")
@@ -98,18 +122,18 @@ const setJwtPublicKey = (keyUrl: string) => {
 
 export const run = async (config: AppConfig) => {
   initConfigs(config);
-  setupDBConnection(config.mongoUrl(), config.mongoUser(), config.mongoPassword());
+  await setupDBConnection(config.mongoUrl(), config.mongoUser(), config.mongoPassword());
   if (process.env.LOG_LEVEL === "debug") {
     mongoose.set("debug", true);
   }
+
   try {
     manager.create(config.schemaServiceUrl());
-    await manager.instance().loadSchema(config.schemaName(), config.initialSchemaVersion());
-    setStatus("schema", { status: Status.OK });
+    await loadSchema(config);
   } catch (err) {
-    L.error("failed to load the schema", err);
-    setStatus("schema", { status: Status.ERROR, info: { error: err } });
+    L.error("failed to load schema", err);
   }
+
   // close app connections on termination
   const gracefulExit = () => {
     mongoose.connection.close(function() {
@@ -129,3 +153,17 @@ export const run = async (config: AppConfig) => {
   // If the Node process ends, close the Mongoose connection
   process.on("SIGINT", gracefulExit).on("SIGTERM", gracefulExit);
 };
+
+async function loadSchema(config: AppConfig) {
+  try {
+    await manager.instance().loadSchema(config.schemaName(), config.initialSchemaVersion());
+    setStatus("schema", { status: Status.OK });
+  } catch (err) {
+    L.error("failed to load the schema", err);
+    setStatus("schema", { status: Status.ERROR, info: { error: err } });
+    setTimeout(() => {
+      L.debug("retrying to fetch schema");
+      loadSchema(config);
+    }, 5000);
+  }
+}

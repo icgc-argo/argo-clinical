@@ -5,46 +5,50 @@ import "mocha";
 import { GenericContainer } from "testcontainers";
 import app from "../../../src/app";
 import * as bootstrap from "../../../src/bootstrap";
-import { cleanCollection, insertData, resetCounters } from "../testutils";
+import { cleanCollection, insertData } from "../testutils";
 import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN } from "../test.jwt";
-export let mongoContainer: any;
+import mongoose from "mongoose";
+
 chai.use(require("chai-http"));
 chai.should();
-let dburl = ``;
-
-const donorDoc = {
-  followUps: [],
-  treatments: [],
-  chemotherapy: [],
-  HormoneTherapy: [],
-  donorId: 4001,
-  gender: "Male",
-  submitterId: "1234abcd",
-  programId: "PACA-AU",
-  specimens: [
-    {
-      samples: [
-        {
-          sampleType: "Amplified DNA",
-          submitterId: "sm200-1",
-          sampleId: 3002
-        }
-      ],
-      specimenType: "Blood derived",
-      tumourNormalDesignation: "Recurrent tumour",
-      submitterId: "ss200-1",
-      specimenId: 893
-    }
-  ]
-};
 
 describe("clinical Api", () => {
+  let mongoContainer: any;
+  let dburl = ``;
+  const donorDoc = {
+    followUps: [],
+    treatments: [],
+    chemotherapy: [],
+    HormoneTherapy: [],
+    donorId: 4001,
+    gender: "Male",
+    submitterId: "1234abcd",
+    programId: "PACA-AU",
+    specimens: [
+      {
+        samples: [
+          {
+            sampleType: "Amplified DNA",
+            submitterId: "sm200-1",
+            sampleId: 3002
+          }
+        ],
+        specimenType: "Blood derived",
+        tumourNormalDesignation: "Recurrent tumour",
+        submitterId: "ss200-1",
+        specimenId: 893
+      }
+    ]
+  };
   // will run when all tests are finished
   before(() => {
     return (async () => {
       try {
         mongoContainer = await new GenericContainer("mongo").withExposedPorts(27017).start();
-        console.log("mongo test container started");
+        dburl = `mongodb://${mongoContainer.getContainerIpAddress()}:${mongoContainer.getMappedPort(
+          27017
+        )}/clinical`;
+        console.log(`mongo test container started ${dburl}`);
         await bootstrap.run({
           mongoPassword() {
             return "";
@@ -53,9 +57,6 @@ describe("clinical Api", () => {
             return "";
           },
           mongoUrl: () => {
-            dburl = `mongodb://${mongoContainer.getContainerIpAddress()}:${mongoContainer.getMappedPort(
-              27017
-            )}/clinical`;
             return dburl;
           },
           initialSchemaVersion() {
@@ -81,6 +82,12 @@ describe("clinical Api", () => {
     })();
   });
 
+  after(async () => {
+    await mongoose.disconnect();
+    await mongoContainer.stop();
+    return;
+  });
+
   describe("donor endpoints", function() {
     this.beforeEach(async () => {
       try {
@@ -94,104 +101,76 @@ describe("clinical Api", () => {
 
     describe("id endpoints", function() {
       it("/clinical/donors/id should return donor id if it exists", async function() {
+        console.log("before /donor/id request");
         await insertData(dburl, "donors", donorDoc);
-        chai
+        return chai
           .request(app)
           .get("/clinical/donors/id?programId=PACA-AU&submitterId=1234abcd")
           .auth(JWT_CLINICALSVCADMIN, { type: "bearer" })
-          .end((err: any, res: any) => {
-            try {
-              res.should.have.status(200);
-              res.should.have.contentType("text/plain");
-              res.text.should.eq("DO4001");
-              return;
-            } catch (e) {
-              return e;
-            }
+          .then((res: any) => {
+            console.log("asserting /donor/id response");
+            res.should.have.status(200);
+            res.type.should.eq("text/plain");
+            res.text.should.eq("DO4001");
           });
       });
 
       it("/clinical/samples/id should return sample id if it exists", async function() {
         await insertData(dburl, "donors", donorDoc);
-        chai
+        return chai
           .request(app)
           .get("/clinical/samples/id?programId=PACA-AU&submitterId=sm200-1")
           .auth(JWT_CLINICALSVCADMIN, { type: "bearer" })
-          .end((err: any, res: any) => {
-            try {
-              res.should.have.status(200);
-              res.should.have.contentType("text/plain");
-              res.text.should.eq("SA3002");
-              return;
-            } catch (e) {
-              return e;
-            }
+          .then((res: any) => {
+            res.should.have.status(200);
+            res.type.should.eq("text/plain");
+            res.text.should.eq("SA3002");
           });
       });
 
-      it("/clinical/specimens/id should return donor id if it exists", async function() {
+      it("/clinical/specimens/id should return specimen id if it exists", async function() {
         await insertData(dburl, "donors", donorDoc);
-        chai
+        return chai
           .request(app)
           .get("/clinical/specimens/id?programId=PACA-AU&submitterId=ss200-1")
           .auth(JWT_CLINICALSVCADMIN, { type: "bearer" })
-          .end((err: any, res: any) => {
-            try {
-              res.should.have.status(200);
-              res.should.have.contentType("text/plain");
-              res.text.should.eq("SP893");
-              return;
-            } catch (e) {
-              return e;
-            }
+          .then((res: any) => {
+            res.should.have.status(200);
+            res.type.should.eq("text/plain");
+            res.text.should.eq("SP893");
           });
       });
 
       it("/clinical/donors/id should return 404 if no id found", async function() {
         await insertData(dburl, "donors", donorDoc);
-        chai
+        return chai
           .request(app)
           .get("/clinical/donors/id?programId=PACA-A&submitterId=1234abcd")
           .auth(JWT_CLINICALSVCADMIN, { type: "bearer" })
-          .end((err: any, res: any) => {
-            try {
-              res.should.have.status(404);
-              return;
-            } catch (e) {
-              return e;
-            }
+          .then((res: any) => {
+            res.should.have.status(404);
           });
       });
 
       it("/clinical/samples/id should return sample id if no id found", async function() {
         await insertData(dburl, "donors", donorDoc);
-        chai
+        return chai
           .request(app)
           .get("/clinical/samples/id?programId=PACA-AU&submitterId=sm20-1")
           .auth(JWT_CLINICALSVCADMIN, { type: "bearer" })
-          .end((err: any, res: any) => {
-            try {
-              res.should.have.status(404);
-              return;
-            } catch (e) {
-              return e;
-            }
+          .then((res: any) => {
+            res.should.have.status(404);
           });
       });
 
-      it("/clinical/specimens/id should return donor id if no id found", async function() {
+      it("/clinical/specimens/id should return specimen id if no id found", async function() {
         await insertData(dburl, "donors", donorDoc);
-        chai
+        return chai
           .request(app)
           .get("/clinical/specimens/id?programId=PACA-AU&submitterId=ss2001")
           .auth(JWT_CLINICALSVCADMIN, { type: "bearer" })
-          .end((err: any, res: any) => {
-            try {
-              res.should.have.status(404);
-              return;
-            } catch (e) {
-              return e;
-            }
+          .then((res: any) => {
+            res.should.have.status(404);
           });
       });
     }); // end of id endpoints
