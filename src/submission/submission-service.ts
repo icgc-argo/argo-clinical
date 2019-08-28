@@ -176,23 +176,23 @@ export namespace operations {
       }
       await submissionRepository.setProgramState(command.programId, SUBMISSION_STATE.PROCESSING);
     }
-    const schemaErrors: { [k: string]: SubmissionValidationError[] } = {};
+    const newActiveSubmission = _.cloneDeep(activeSubmission) as ActiveSubmission;
+    const schemaErrors: { [k: string]: SubmissionValidationError[] } = {}; // object to store all errors for entity
     for (const clinicalType in command.clinicalEntities) {
       const schemaErrorsTemp = await checkClinicalEntity({
         records: command.clinicalEntities[clinicalType].records,
         programId: command.programId,
         clinicalType: clinicalType
       });
-      // check if errors found for specific entity and add to schema error object
       if (schemaErrorsTemp.length > 0) {
+        // store errors found and clear in active submission
         schemaErrors[clinicalType] = schemaErrorsTemp;
+        delete newActiveSubmission.clinicalEntities[clinicalType];
+      } else {
+        // update entity in active submission
+        newActiveSubmission.clinicalEntities[clinicalType] = command.clinicalEntities[clinicalType];
       }
     }
-    // check if any errors found
-    const success: boolean = Object.keys(schemaErrors).length === 0;
-    const newActiveSubmission = _.cloneDeep(activeSubmission) as ActiveSubmission;
-    // update enitites if no error otherwise clear
-    newActiveSubmission.clinicalEntities = success ? command.clinicalEntities : {};
     // insert into database
     await submissionRepository.update(newActiveSubmission);
     // Release soft lock
@@ -200,7 +200,7 @@ export namespace operations {
     return {
       submission: newActiveSubmission,
       errors: schemaErrors,
-      successful: success
+      successful: Object.keys(schemaErrors).length === 0
     };
   };
   /************* Private methods *************/
@@ -264,7 +264,7 @@ export namespace operations {
     return F(errorsList);
   };
   const getInfoObject = (
-    type: string,
+    type: FileType,
     schemaErr: DeepReadonly<SchemaValidationError>,
     record: DeepReadonly<DataRecord>
   ) => {

@@ -190,7 +190,7 @@ const checkAuthReCreator = (req: Request): string => {
 // checks the files against the regex expressions and maps to a type (skips registration)
 // returns an object that maps a file to a clinical type
 const checkFilesReMapped = (req: Request, res: Response) => {
-  if (req.files == undefined) {
+  if (req.files == undefined || req.files.length == 0) {
     L.debug(`File(s) missing`);
     ControllerUtils.badRequest(res, `Clinical file(s) upload required`);
     return false;
