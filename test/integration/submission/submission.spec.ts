@@ -10,7 +10,7 @@ import { GenericContainer } from "testcontainers";
 import app from "../../../src/app";
 import * as bootstrap from "../../../src/bootstrap";
 import { cleanCollection, insertData, emptyDonorDocument, resetCounters } from "../testutils";
-import { TEST_PUB_KEY, JWT_ABCDEF, JWT_WXYZEF } from "./test.jwt";
+import { TEST_PUB_KEY, JWT_ABCDEF, JWT_WXYZEF } from "../test.jwt";
 import {
   ActiveRegistration,
   RegistrationFieldsEnum

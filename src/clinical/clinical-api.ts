@@ -14,19 +14,28 @@ class ClinicalController {
   @HasFullReadAccess()
   async findDonorId(req: Request, res: Response) {
     const id = await service.findDonorId(req.query.submitterId, req.query.programId);
-    return res.status(200).send(id);
+    return res
+      .contentType("text/plain")
+      .status(200)
+      .send(id);
   }
 
   @HasFullReadAccess()
   async findSpecimenId(req: Request, res: Response) {
     const id = await service.findSpecimenId(req.query.submitterId, req.query.programId);
-    return res.status(200).send(id);
+    return res
+      .contentType("text/plain")
+      .status(200)
+      .send(id);
   }
 
   @HasFullReadAccess()
   async findSampleId(req: Request, res: Response) {
     const id = await service.findSampleId(req.query.submitterId, req.query.programId);
-    return res.status(200).send(id);
+    return res
+      .contentType("text/plain")
+      .status(200)
+      .send(id);
   }
 }
 

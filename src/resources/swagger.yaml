@@ -193,6 +193,50 @@ paths:
                 items:
                   type: object
 
+  /clinical/donors/id:
+    get:
+      parameters:
+        - $ref: "#/components/parameters/QueryProgramId"
+        - $ref: "#/components/parameters/QuerySubmitterId"
+      responses:
+        "200":
+          description: the id of the donor
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: no matching donor found
+
+  /clinical/specimens/id:
+    get:
+      parameters:
+        - $ref: "#/components/parameters/QueryProgramId"
+        - $ref: "#/components/parameters/QuerySubmitterId"
+      responses:
+        "200":
+          description: the id of the specimen
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: no matching specimen found
+
+  /clinical/samples/id:
+    get:
+      parameters:
+        - $ref: "#/components/parameters/QueryProgramId"
+        - $ref: "#/components/parameters/QuerySubmitterId"
+      responses:
+        "200":
+          description: the id of the sample
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: no matching sample found
   /health:
     get:
       responses:
@@ -216,6 +260,7 @@ paths:
                 type: array
                 items:
                   type: object
+
   /submission/schema/hack/refresh:
     post:
       description: force reload the schema from the schema service and override the cache
@@ -226,6 +271,7 @@ paths:
             application/json:
               schema:
                 type: object
+
   /submission/schema/hack/replace:
     post:
       description: force replace the schema from the provided schema in body
@@ -244,6 +290,21 @@ paths:
 servers:
   - url: /
 components:
+  parameters:
+    QueryProgramId:
+      name: programId
+      description: the short name of the program
+      in: query
+      required: true
+      schema:
+        type: string
+    QuerySubmitterId:
+      name: submitterId
+      description: the submitter Id
+      in: query
+      required: true
+      schema:
+        type: string
   responses:
     UnauthorizedError:
       description: Access token is missing or invalid
