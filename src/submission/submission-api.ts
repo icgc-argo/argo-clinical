@@ -5,9 +5,9 @@ import { TsvUtils, ControllerUtils, isStringMatchRegex } from "../utils";
 import { loggerFor } from "../logger";
 import {
   CreateRegistrationCommand,
-  SavedClinicalEntity,
   SubmissionMultipleCommand,
-  NewClinicalEntity
+  NewClinicalEntity,
+  ControllerBadRequestError
 } from "./submission-entities";
 import { HasSubmitionAccess as HasSubmittionAccess } from "../auth-decorators";
 import jwt from "jsonwebtoken";
@@ -128,7 +128,7 @@ class SubmissionController {
       newClinicalEntities: newClinicalEntities,
       programId: req.params.programId
     };
-    const result = await submission.operations.uploadClinicalMultiple(command);
+    const result = await submission.operations.uploadMultipleClinical(command);
     if (result.successful) {
       return res.status(200).send(result);
     }
@@ -186,7 +186,7 @@ const mapFilesByType = (req: Request, res: Response) => {
     return;
   }
   const files = req.files as Express.Multer.File[];
-  const errorList: Array<any> = [];
+  const errorList: Array<ControllerBadRequestError> = [];
   const fileMap: { [k: string]: Express.Multer.File } = {};
 
   // check for double files and map files to clinical type

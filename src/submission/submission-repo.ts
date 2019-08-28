@@ -14,9 +14,14 @@ export interface SubmissionRepository {
   findById(id: string): Promise<DeepReadonly<ActiveSubmission> | undefined>;
   update(command: DeepReadonly<ActiveSubmission>): Promise<void>;
   setProgramState(programId: string, state: SUBMISSION_STATE): Promise<void>;
+  updateProgramWithHash(
+    programId: string,
+    hashVersion: string,
+    updatedSubmission: DeepReadonly<ActiveSubmission>
+  ): Promise<DeepReadonly<ActiveSubmission> | undefined>;
 }
 
-// Mongoose implementation of the RegistrationRepository
+// Mongoose implementation of the SubmissionRepository
 export const submissionRepository: SubmissionRepository = {
   async findById(id: string) {
     const registration = await ActiveSubmissionModel.findById(id);
@@ -61,7 +66,23 @@ export const submissionRepository: SubmissionRepository = {
     await activeSubmissionModel.updateOne(activeSubmissionModel);
   },
   async setProgramState(programId: string, state: SUBMISSION_STATE) {
-    await ActiveSubmissionModel.findOneAndUpdate({ programId: programId }, { state: state });
+    await ActiveSubmissionModel.findOneAndUpdate(
+      { programId: programId },
+      { state: SUBMISSION_STATE.PROCESSING }
+    );
+  },
+  async updateProgramWithHash(
+    programId: string,
+    hashVersion: string,
+    updatedSubmission: DeepReadonly<ActiveSubmission>
+  ): Promise<DeepReadonly<ActiveSubmission> | undefined> {
+    return (
+      (await ActiveSubmissionModel.findOneAndUpdate(
+        { $and: [{ programId: programId }, { hashVersion: hashVersion }] },
+        updatedSubmission,
+        { new: true }
+      )) || undefined
+    );
   }
 };
 
@@ -69,14 +90,14 @@ type ActiveSubmissionDocument = mongoose.Document & ActiveSubmission;
 
 const ActiveSubmissionSchema = new mongoose.Schema(
   {
-    programId: { type: String, required: true },
+    programId: { type: String, unique: true, required: true },
     state: {
       type: String,
-      enum: ["PROCESSING", "OPEN", "VALID", "INVALID", "PENDING_APPROVAL"],
+      enum: ["OPEN", "VALID", "INVALID", "PENDING_APPROVAL"],
       default: "OPEN",
       required: true
     },
-    hashVersion: { type: String, default: "42" },
+    hashVersion: { type: String, default: "42", required: true },
     clinicalEntities: { type: Object, required: false }
   },
   { timestamps: true, minimize: false }

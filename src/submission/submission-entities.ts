@@ -125,24 +125,24 @@ export interface SubmissionMultipleCommand {
 }
 
 export interface CreateSubmissionResult {
-  readonly submission: Object | undefined;
+  readonly submission: object | undefined;
   readonly successful: boolean;
   errors: DeepReadonly<{ [clinicalType: string]: SubmissionValidationError[] }>;
 }
 
 export interface NewClinicalEntity {
-  batchName: String;
-  creator: String;
+  batchName: string;
+  creator: string;
   records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
 }
 
 export interface SavedClinicalEntity extends NewClinicalEntity {
   dataErrors: [];
   stats: {
-    new: Number[];
-    noUpdate: Number[];
-    updated: Number[];
-    errorsFound: Number[];
+    new: number[];
+    noUpdate: number[];
+    updated: number[];
+    errorsFound: number[];
   };
 }
 
@@ -155,8 +155,13 @@ export enum SUBMISSION_STATE {
 }
 
 export interface ActiveSubmission {
-  programId: String;
+  programId: string;
   state: SUBMISSION_STATE;
-  hashVersion: String;
+  hashVersion: string;
   clinicalEntities: { [clinicalType: string]: SavedClinicalEntity };
+}
+
+export interface ControllerBadRequestError {
+  msg: string;
+  code: string;
 }

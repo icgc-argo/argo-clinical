@@ -2,6 +2,7 @@ import fs from "fs";
 import { Request, Response } from "express";
 import deepFreeze from "deep-freeze";
 import mongoose from "mongoose";
+import { ControllerBadRequestError } from "./submission/submission-entities";
 const fsPromises = fs.promises;
 
 export namespace TsvUtils {
@@ -39,7 +40,10 @@ export namespace ControllerUtils {
     res.status(404).send({ message: msg });
   };
 
-  export const badRequest = (res: Response, msg: string | object): any => {
+  export const badRequest = (
+    res: Response,
+    msg: string | ControllerBadRequestError | Array<ControllerBadRequestError>
+  ): any => {
     if (typeof msg === "string") {
       return res.status(400).send({ message: msg });
     }

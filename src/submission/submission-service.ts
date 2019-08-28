@@ -30,6 +30,7 @@ import { Errors, F } from "../utils";
 import { DeepReadonly } from "deep-freeze";
 import { FileType } from "./submission-api";
 import { submissionRepository } from "./submission-repo";
+import { v1 as uuid } from "uuid";
 const L = loggerFor(__filename);
 
 export namespace operations {
@@ -158,25 +159,20 @@ export namespace operations {
    * upload donor
    * @param command SaveClinicalCommand
    */
-  export const uploadClinicalMultiple = async (
+  export const uploadMultipleClinical = async (
     command: SubmissionMultipleCommand
   ): Promise<CreateSubmissionResult> => {
-    // create program if not exist and soft lock it
-    let activeSubmission = await submissionRepository.findByProgramId(command.programId);
-    if (!activeSubmission) {
-      activeSubmission = await submissionRepository.create({
+    // get program or create new one
+    let exsistingActiveSubmission = await submissionRepository.findByProgramId(command.programId);
+    if (!exsistingActiveSubmission) {
+      exsistingActiveSubmission = await submissionRepository.create({
         programId: command.programId,
-        state: SUBMISSION_STATE.PROCESSING,
-        hashVersion: "42",
+        state: SUBMISSION_STATE.OPEN,
+        hashVersion: uuid(),
         clinicalEntities: {}
       });
-    } else {
-      if (activeSubmission.state == SUBMISSION_STATE.PROCESSING) {
-        throw new Errors.NotFound("Unable to update submission. It is currently being processed.");
-      }
-      await submissionRepository.setProgramState(command.programId, SUBMISSION_STATE.PROCESSING);
     }
-    const newActiveSubmission = _.cloneDeep(activeSubmission) as ActiveSubmission;
+    const newActiveSubmission = _.cloneDeep(exsistingActiveSubmission) as ActiveSubmission;
     const schemaErrors: { [k: string]: SubmissionValidationError[] } = {}; // object to store all errors for entity
     for (const clinicalType in command.newClinicalEntities) {
       const schemaErrorsTemp = await checkClinicalEntity({
@@ -185,7 +181,7 @@ export namespace operations {
         clinicalType: clinicalType
       });
       if (schemaErrorsTemp.length > 0) {
-        // store errors found and clear in active submission
+        // store errors found and clear in new active submission
         schemaErrors[clinicalType] = schemaErrorsTemp;
         delete newActiveSubmission.clinicalEntities[clinicalType];
       } else {
@@ -202,10 +198,18 @@ export namespace operations {
         };
       }
     }
+    // generate new hashVersion and make set to open
+    newActiveSubmission.hashVersion = uuid();
+    newActiveSubmission.state = SUBMISSION_STATE.OPEN;
     // insert into database
-    await submissionRepository.update(newActiveSubmission);
-    // Release soft lock
-    await submissionRepository.setProgramState(command.programId, SUBMISSION_STATE.OPEN);
+    const updated = await submissionRepository.updateProgramWithHash(
+      command.programId,
+      exsistingActiveSubmission.hashVersion,
+      newActiveSubmission
+    );
+    if (!updated) {
+      throw new Error("Couldn't update program.");
+    }
     return {
       submission: newActiveSubmission,
       errors: schemaErrors,
