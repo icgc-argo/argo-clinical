@@ -6,7 +6,6 @@ services:
     volumes:
       - $PWD/logs/:/tmp/logs
       - ./vault:/scripts
-      - "vault_data:/mnt"
     cap_add:
       - IPC_LOCK
     # mounted from the ./vault folder
@@ -32,7 +31,6 @@ services:
 volumes:
   mongodb_data:
     driver: local
-  vault_data:
 # version: '2'
 
 # services:
