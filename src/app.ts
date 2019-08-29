@@ -57,7 +57,11 @@ app.delete(
   "/submission/program/:programId/registration/:id",
   middleware.wrapAsync(submissionAPI.deleteRegistration)
 );
-
+app.post(
+  "/submission/program/:programId/clinical/upload",
+  upload.array("clinicalFiles"),
+  middleware.wrapAsync(submissionAPI.saveClinicalTsvFiles)
+);
 /** Schema API */
 app.get("/submission/schema/", middleware.wrapAsync(schemaApi.get));
 

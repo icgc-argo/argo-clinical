@@ -45,27 +45,7 @@ paths:
         required: true
       responses:
         "400":
-          description: "the file structure is invalid, couldn't be parsed correctly"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  code:
-                    type: string
-                    enum: ["TSV_PARSING_FAILED", "INVALID_FILE_NAME"]
-              examples:
-                TSVParseError:
-                  value:
-                    msg: "string"
-                    code: "TSV_PARSING_FAILED"
-                InvalidFileNameError:
-                  value:
-                    msg: "string"
-                    code: "INVALID_FILE_NAME"
-
+          $ref: "#/components/responses/InvalidFileStructureError"
         "422":
           description: "invalid registration file"
           content:
@@ -151,6 +131,47 @@ paths:
                     type: array
                     items:
                       type: string
+  /submission/program/{programId}/clinical/upload:
+    post:
+      parameters:
+        - name: programId
+          description: the short name of the program
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                clinicalFiles:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+        description: the tsv clinical submission file
+        required: true
+      responses:
+        "200":
+          description: "Everything is OK"
+        "400":
+          $ref: "#/components/responses/InvalidFileStructureError"
+        "422":
+          description: "invalid clinical submission file"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  successful:
+                    type: boolean
+                    description: will be false in this case
+                  errors:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ValidationError"
   /clinical/donors:
     delete:
       parameters:
@@ -314,13 +335,34 @@ components:
       description: if the token has incorrect scopes
     NotFoundError:
       description: The requested resource was not found
+    InvalidFileStructureError:
+      description: "the file structure is invalid, couldn't be parsed correctly"
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+              code:
+                type: string
+                enum: ["TSV_PARSING_FAILED", "INVALID_FILE_NAME"]
+          examples:
+            TSVParseError:
+              value:
+                msg: "string"
+                code: "TSV_PARSING_FAILED"
+            InvalidFileNameError:
+              value:
+                msg: "string"
+                code: "INVALID_FILE_NAME"
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
   schemas:
-    RegistrationValidationError:
+    ValidationError:
       type: object
       required:
         - fieldName
@@ -339,18 +381,10 @@ components:
               type: string
               nullable: true
               description: the faulty value
-            sampleSubmitterId:
-              type: string
-              nullable: true
-              description: the sample Id in that row
             donorSubmitterId:
               type: string
               nullable: true
               description: the donor Id in that row
-            specimenSubmitterId:
-              type: string
-              nullable: true
-              description: the specimen Id in that row
           additionalProperties: true
         index:
           type: number
@@ -375,6 +409,20 @@ components:
             - INVALID_BY_REGEX
             - INVALID_BY_SCRIPT
             - INVALID_ENUM_VALUE
+    RegistrationValidationError: # "extends" ValidationError
+      allOf:
+        - $ref: "#/components/schemas/ValidationError"
+        - properties:
+            info:
+              properties:
+                sampleSubmitterId:
+                  type: string
+                  nullable: true
+                  description: the sample Id in that row
+                specimenSubmitterId:
+                  type: string
+                  nullable: true
+                  description: the specimen Id in that row
 
     Registration:
       type: object
