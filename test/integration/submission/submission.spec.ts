@@ -669,7 +669,7 @@ describe("Submission Api", () => {
           res.should.have.status(400);
           res.body.should.deep.eq([
             {
-              msg: "Found multiple files of same type - [donor.tsv,donor.invalid.tsv]",
+              msg: "Found multiple files of donor type - [donor.tsv,donor.invalid.tsv]",
               code: "MULTIPLE_TYPED_FILES"
             },
             {

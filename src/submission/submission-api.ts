@@ -196,7 +196,7 @@ const mapFilesByType = (req: Request, res: Response) => {
     );
     if (foundFiles.length > 1) {
       errorList.push({
-        msg: `Found multiple files of same type - [${getFileNames(foundFiles)}]`,
+        msg: `Found multiple files of ${type} type - [${getFileNames(foundFiles)}]`,
         code: ErrorCodes.MULTIPLE_TYPED_FILES
       });
     } else if (foundFiles.length == 1) {
