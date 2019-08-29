@@ -80,7 +80,7 @@ export const submissionRepository: ClinicalSubmissionRepository = {
   ): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined> {
     return (
       (await ActiveSubmissionModel.findOneAndUpdate(
-        { $and: [{ programId: programId }, { version: version }] },
+        { programId: programId, version: version },
         updatedSubmission,
         { new: true }
       )) || undefined
@@ -99,7 +99,7 @@ const ActiveSubmissionSchema = new mongoose.Schema(
       default: "OPEN",
       required: true
     },
-    version: { type: String, default: "42", required: true },
+    version: { type: String, required: true },
     clinicalEntities: { type: Object, required: false }
   },
   { timestamps: true, minimize: false }
