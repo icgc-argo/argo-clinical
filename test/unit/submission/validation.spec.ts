@@ -3,15 +3,16 @@ import sinon from "sinon";
 import { donorDao } from "../../../src/clinical/donor-repo";
 import * as dv from "../../../src/submission/validation";
 import {
-  RegistrationValidationError,
+  SubmissionValidationError,
   DataValidationErrors,
   CreateRegistrationRecord,
-  RegistrationFieldsEnum
+  FieldsEnum
 } from "../../../src/submission/submission-entities";
 import { Donor } from "../../../src/clinical/clinical-entities";
 import { stubs } from "./stubs";
+import { FileType } from "../../../src/submission/submission-api";
 
-const genderMutatedErr: RegistrationValidationError = {
+const genderMutatedErr: SubmissionValidationError = {
   fieldName: "gender",
   index: 0,
   info: {
@@ -22,7 +23,7 @@ const genderMutatedErr: RegistrationValidationError = {
   },
   type: DataValidationErrors.MUTATING_EXISTING_DATA
 };
-const programInvalidErr: RegistrationValidationError = {
+const programInvalidErr: SubmissionValidationError = {
   fieldName: "program_id",
   index: 0,
   info: {
@@ -34,7 +35,7 @@ const programInvalidErr: RegistrationValidationError = {
   },
   type: DataValidationErrors.INVALID_PROGRAM_ID
 };
-const specimenMutatedErr: RegistrationValidationError = {
+const specimenMutatedErr: SubmissionValidationError = {
   fieldName: "specimen_type",
   index: 0,
   info: {
@@ -45,7 +46,7 @@ const specimenMutatedErr: RegistrationValidationError = {
   },
   type: DataValidationErrors.MUTATING_EXISTING_DATA
 };
-const tndError: RegistrationValidationError = {
+const tndError: SubmissionValidationError = {
   fieldName: "tumour_normal_designation",
   index: 0,
   info: {
@@ -57,7 +58,7 @@ const tndError: RegistrationValidationError = {
   type: DataValidationErrors.MUTATING_EXISTING_DATA
 };
 
-const sampleTypeMutatedError: RegistrationValidationError = {
+const sampleTypeMutatedError: SubmissionValidationError = {
   fieldName: "sample_type",
   index: 0,
   info: {
@@ -69,8 +70,8 @@ const sampleTypeMutatedError: RegistrationValidationError = {
   type: DataValidationErrors.MUTATING_EXISTING_DATA
 };
 
-const specimenBelongsToOtherDonor: RegistrationValidationError = {
-  fieldName: RegistrationFieldsEnum.submitter_specimen_id,
+const specimenBelongsToOtherDonor: SubmissionValidationError = {
+  fieldName: FieldsEnum.submitter_specimen_id,
   index: 0,
   info: {
     donorSubmitterId: "AB2",
@@ -81,8 +82,8 @@ const specimenBelongsToOtherDonor: RegistrationValidationError = {
   type: DataValidationErrors.SPECIMEN_BELONGS_TO_OTHER_DONOR
 };
 
-const sampleBelongsToOtherSpecimenAB2: RegistrationValidationError = {
-  fieldName: RegistrationFieldsEnum.submitter_sample_id,
+const sampleBelongsToOtherSpecimenAB2: SubmissionValidationError = {
+  fieldName: FieldsEnum.submitter_sample_id,
   index: 0,
   info: {
     donorSubmitterId: "AB2",
@@ -93,8 +94,8 @@ const sampleBelongsToOtherSpecimenAB2: RegistrationValidationError = {
   type: DataValidationErrors.SAMPLE_BELONGS_TO_OTHER_SPECIMEN
 };
 
-const sampleBelongsToOtherSpecimenAB1: RegistrationValidationError = {
-  fieldName: RegistrationFieldsEnum.submitter_sample_id,
+const sampleBelongsToOtherSpecimenAB1: SubmissionValidationError = {
+  fieldName: FieldsEnum.submitter_sample_id,
   index: 0,
   info: {
     donorSubmitterId: "AB1",
@@ -132,6 +133,7 @@ describe("data-validator", () => {
     donorDaoCountByStub.returns(Promise.resolve(0));
     // test call
     const result = await dv.usingInvalidProgramId(
+      FileType.REGISTRATION,
       0,
       {
         submitter_donor_id: "AB1",
@@ -294,7 +296,7 @@ describe("data-validator", () => {
     // assertions
     chai.expect(result.errors.length).to.eq(4);
     chai.expect(result.errors).to.deep.include(sampleTypeMutatedError);
-    const specimenMutatedError: RegistrationValidationError = {
+    const specimenMutatedError: SubmissionValidationError = {
       fieldName: "specimen_type",
       index: 0,
       info: {
@@ -384,7 +386,7 @@ describe("data-validator", () => {
       {}
     );
 
-    const specimenTypeMutatedErr: RegistrationValidationError = {
+    const specimenTypeMutatedErr: SubmissionValidationError = {
       fieldName: "specimen_type",
       index: 0,
       info: {
@@ -396,7 +398,7 @@ describe("data-validator", () => {
       type: DataValidationErrors.MUTATING_EXISTING_DATA
     };
 
-    const sampleTypeMutatedErr: RegistrationValidationError = {
+    const sampleTypeMutatedErr: SubmissionValidationError = {
       fieldName: "sample_type",
       index: 1,
       info: {
@@ -507,7 +509,7 @@ describe("data-validator", () => {
 
     // assertions
     const row0Err = {
-      fieldName: RegistrationFieldsEnum.submitter_sample_id,
+      fieldName: FieldsEnum.submitter_sample_id,
       index: 0,
       info: {
         conflictingRows: [1],
@@ -520,7 +522,7 @@ describe("data-validator", () => {
     };
 
     const row1Err = {
-      fieldName: RegistrationFieldsEnum.submitter_sample_id,
+      fieldName: FieldsEnum.submitter_sample_id,
       index: 1,
       info: {
         conflictingRows: [0],
@@ -581,7 +583,7 @@ describe("data-validator", () => {
 
     // assertions
     const row0Err = {
-      fieldName: RegistrationFieldsEnum.submitter_specimen_id,
+      fieldName: FieldsEnum.submitter_specimen_id,
       index: 0,
       info: {
         conflictingRows: [2],
@@ -594,7 +596,7 @@ describe("data-validator", () => {
     };
 
     const row2Err = {
-      fieldName: RegistrationFieldsEnum.submitter_specimen_id,
+      fieldName: FieldsEnum.submitter_specimen_id,
       index: 2,
       info: {
         conflictingRows: [0],
@@ -654,7 +656,7 @@ describe("data-validator", () => {
     );
 
     // assertions
-    const row0Err: RegistrationValidationError = {
+    const row0Err: SubmissionValidationError = {
       fieldName: "specimen_type",
       index: 0,
       info: {
@@ -667,7 +669,7 @@ describe("data-validator", () => {
       type: DataValidationErrors.NEW_SPECIMEN_ATTR_CONFLICT
     };
 
-    const row2Err: RegistrationValidationError = {
+    const row2Err: SubmissionValidationError = {
       fieldName: "specimen_type",
       index: 2,
       info: {
@@ -728,7 +730,7 @@ describe("data-validator", () => {
     );
 
     // assertions
-    const row0Err: RegistrationValidationError = {
+    const row0Err: SubmissionValidationError = {
       fieldName: "sample_type",
       index: 0,
       info: {
@@ -741,7 +743,7 @@ describe("data-validator", () => {
       type: DataValidationErrors.NEW_SAMPLE_ATTR_CONFLICT
     };
 
-    const row2Err: RegistrationValidationError = {
+    const row2Err: SubmissionValidationError = {
       fieldName: "sample_type",
       index: 2,
       info: {
@@ -801,7 +803,7 @@ describe("data-validator", () => {
     );
 
     // assertions
-    const row0Err: RegistrationValidationError = {
+    const row0Err: SubmissionValidationError = {
       fieldName: "gender",
       index: 0,
       info: {
@@ -814,7 +816,7 @@ describe("data-validator", () => {
       type: DataValidationErrors.NEW_DONOR_CONFLICT
     };
 
-    const row2Err: RegistrationValidationError = {
+    const row2Err: SubmissionValidationError = {
       fieldName: "gender",
       index: 2,
       info: {
@@ -874,8 +876,8 @@ describe("data-validator", () => {
     );
 
     // assertions
-    const row0Err: RegistrationValidationError = {
-      fieldName: RegistrationFieldsEnum.submitter_sample_id,
+    const row0Err: SubmissionValidationError = {
+      fieldName: FieldsEnum.submitter_sample_id,
       index: 0,
       info: {
         donorSubmitterId: "AB1",
@@ -887,8 +889,8 @@ describe("data-validator", () => {
       type: DataValidationErrors.NEW_SAMPLE_ID_CONFLICT
     };
 
-    const row2Err: RegistrationValidationError = {
-      fieldName: RegistrationFieldsEnum.submitter_sample_id,
+    const row2Err: SubmissionValidationError = {
+      fieldName: FieldsEnum.submitter_sample_id,
       index: 2,
       info: {
         donorSubmitterId: "AB1",
@@ -947,7 +949,7 @@ describe("data-validator", () => {
     );
 
     // assertions
-    const row0Err: RegistrationValidationError = {
+    const row0Err: SubmissionValidationError = {
       fieldName: "sample_type",
       index: 0,
       info: {

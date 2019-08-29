@@ -152,4 +152,47 @@ describe("schema-functions", () => {
       info: { message: "invalid postal code for CANADA" }
     });
   });
+
+  it("should validate if non-required feilds are not provided", () => {
+    const result = schemaService.process(schema, "donor", [
+      {
+        program_id: "PACA-AU",
+        submitter_donor_id: "ICGC_0004",
+        gender: "Female",
+        ethnicity: "black or african american",
+        vital_status: "alive"
+      },
+      {
+        program_id: "PACA-AU",
+        submitter_donor_id: "ICGC_0002",
+        gender: "Male",
+        ethnicity: "asian",
+        vital_status: "deceased",
+        cause_of_death: "died of cancer",
+        survival_time: "124"
+      }
+    ]);
+    chai.expect(result.validationErrors.length).to.eq(0);
+  });
+
+  it("should not validate if integer feilds are not valid", () => {
+    const result = schemaService.process(schema, "donor", [
+      {
+        program_id: "PACA-AU",
+        submitter_donor_id: "ICGC_0002",
+        gender: "Other",
+        ethnicity: "asian",
+        vital_status: "deceased",
+        cause_of_death: "died of cancer",
+        survival_time: "0.5"
+      }
+    ]);
+    chai.expect(result.validationErrors.length).to.eq(1);
+    chai.expect(result.validationErrors).to.deep.include({
+      errorType: SchemaValidationErrorTypes.INVALID_FIELD_VALUE_TYPE,
+      fieldName: "survival_time",
+      index: 0,
+      info: {}
+    });
+  });
 });
