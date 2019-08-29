@@ -13,7 +13,8 @@ import { cleanCollection, insertData, emptyDonorDocument, resetCounters } from "
 import { TEST_PUB_KEY, JWT_ABCDEF, JWT_WXYZEF } from "./test.jwt";
 import {
   ActiveRegistration,
-  RegistrationFieldsEnum
+  ActiveClinicalSubmission,
+  FieldsEnum
 } from "../../../src/submission/submission-entities";
 import { TsvUtils } from "../../../src/utils";
 import { donorDao } from "../../../src/clinical/donor-repo";
@@ -36,7 +37,7 @@ const expectedErrors = [
     fieldName: "tumour_normal_designation"
   },
   {
-    fieldName: RegistrationFieldsEnum.submitter_specimen_id,
+    fieldName: FieldsEnum.submitter_specimen_id,
     index: 0,
     info: {
       donorSubmitterId: "abcd123",
@@ -47,7 +48,7 @@ const expectedErrors = [
     type: "INVALID_BY_REGEX"
   },
   {
-    fieldName: RegistrationFieldsEnum.submitter_sample_id,
+    fieldName: FieldsEnum.submitter_sample_id,
     index: 0,
     info: {
       donorSubmitterId: "abcd123",
@@ -155,6 +156,55 @@ const ABCD_REGISTRATION_DOC: ActiveRegistration = {
     }
   ]
 };
+const expectedDonorErrors = [
+  {
+    index: 0,
+    type: "INVALID_FIELD_VALUE_TYPE",
+    info: {
+      value: "acdc",
+      donorSubmitterId: "ICGC_0002"
+    },
+
+    fieldName: "survival_time"
+  },
+  {
+    index: 0,
+    type: "INVALID_ENUM_VALUE",
+    info: {
+      value: "mail",
+      donorSubmitterId: "ICGC_0002"
+    },
+    fieldName: "gender"
+  },
+  {
+    index: 0,
+    type: "INVALID_ENUM_VALUE",
+    info: {
+      value: "martian",
+      donorSubmitterId: "ICGC_0002"
+    },
+    fieldName: "ethnicity"
+  },
+  {
+    index: 0,
+    type: "INVALID_ENUM_VALUE",
+    info: {
+      value: "undecided",
+      donorSubmitterId: "ICGC_0002"
+    },
+    fieldName: "vital_status"
+  },
+  {
+    type: "INVALID_PROGRAM_ID",
+    fieldName: "program_id",
+    index: 0,
+    info: {
+      value: "PACA-AU",
+      donorSubmitterId: "ICGC_0002",
+      expectedProgram: "ABCD-EF"
+    }
+  }
+];
 
 describe("Submission Api", () => {
   // will run when all tests are finished
@@ -490,7 +540,6 @@ describe("Submission Api", () => {
       } catch (err) {
         return done(err);
       }
-      console.log(file);
       chai
         .request(app)
         .post("/submission/program/ABCD-EF/registration")
@@ -543,6 +592,95 @@ describe("Submission Api", () => {
           }
         });
     });
+    it("should return 422 if try to upload invalid tsv files", done => {
+      let file: Buffer;
+      let file2: Buffer;
+      try {
+        file = fs.readFileSync(__dirname + "/donor.invalid.tsv");
+        file2 = fs.readFileSync(__dirname + "/sample.tsv");
+      } catch (err) {
+        return done(err);
+      }
+      chai
+        .request(app)
+        // data base is empty so ID shouldn't exist
+        .post("/submission/program/ABCD-EF/clinical/upload")
+        .auth(JWT_ABCDEF, { type: "bearer" })
+        .attach("clinicalFiles", file, "donor.invalid.tsv")
+        .attach("clinicalFiles", file2, "sample.tsv")
+        .end((err: any, res: any) => {
+          res.should.have.status(422);
+          res.body.errors.should.deep.eq({ donor: expectedDonorErrors });
+          res.body.successful.should.deep.eq(false);
+          done();
+        });
+    });
+    it("should return 200 if try to upload valid tsv files", done => {
+      let file: Buffer;
+      let file2: Buffer;
+      try {
+        file = fs.readFileSync(__dirname + "/donor.tsv");
+        file2 = fs.readFileSync(__dirname + "/sample.tsv");
+      } catch (err) {
+        return done(err);
+      }
+      chai
+        .request(app)
+        // data base is empty so ID shouldn't exist
+        .post("/submission/program/ABCD-EF/clinical/upload")
+        .auth(JWT_ABCDEF, { type: "bearer" })
+        .attach("clinicalFiles", file, "donor.tsv")
+        .attach("clinicalFiles", file2, "sample.tsv")
+        .end(async (err: any, res: any) => {
+          res.should.have.status(200);
+          res.body.successful.should.deep.eq(true);
+          const conn = await mongo.connect(dburl);
+          const savedSubmission: ActiveClinicalSubmission | null = await conn
+            .db("clinical")
+            .collection("activesubmissions")
+            .findOne({});
+          await conn.close();
+          if (!savedSubmission) {
+            throw new Error("saved submission shouldn't be null");
+          }
+          return done();
+        });
+    });
+    it("should return appropriate errors for clinical upload", done => {
+      const files: Buffer[] = [];
+      try {
+        files.push(fs.readFileSync(__dirname + "/donor.tsv"));
+        files.push(fs.readFileSync(__dirname + "/sample.tsv"));
+        files.push(fs.readFileSync(__dirname + "/donor.invalid.tsv"));
+        files.push(fs.readFileSync(__dirname + "/thisissample.tsv"));
+      } catch (err) {
+        return done(err);
+      }
+      chai
+        .request(app)
+        // data base is empty so ID shouldn't exist
+        .post("/submission/program/ABCD-EF/clinical/upload")
+        .auth(JWT_ABCDEF, { type: "bearer" })
+        .attach("clinicalFiles", files[0], "donor.tsv")
+        .attach("clinicalFiles", files[1], "sample.tsv")
+        .attach("clinicalFiles", files[2], "donor.invalid.tsv")
+        .attach("clinicalFiles", files[3], "thisissample.tsv")
+        .end((err: any, res: any) => {
+          res.should.have.status(400);
+          res.body.should.deep.eq([
+            {
+              msg: "Found multiple files of donor type - [donor.tsv,donor.invalid.tsv]",
+              code: "MULTIPLE_TYPED_FILES"
+            },
+            {
+              msg:
+                "Invalid file(s) - [thisissample.tsv], must start with entity and have .tsv extension (e.g. donor*.tsv)",
+              code: "INVALID_FILE_NAME"
+            }
+          ]);
+          done();
+        });
+    });
   });
 });
 
@@ -572,20 +710,20 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[]) {
     donorRows.push(
       emptyDonorDocument({
         donorId: i,
-        gender: r[RegistrationFieldsEnum.gender],
-        submitterId: r[RegistrationFieldsEnum.submitter_donor_id],
-        programId: r[RegistrationFieldsEnum.program_id],
+        gender: r[FieldsEnum.gender],
+        submitterId: r[FieldsEnum.submitter_donor_id],
+        programId: r[FieldsEnum.program_id],
         specimens: [
           {
             specimenId: i,
-            submitterId: r[RegistrationFieldsEnum.submitter_specimen_id],
-            specimenType: r[RegistrationFieldsEnum.specimen_type],
-            tumourNormalDesignation: r[RegistrationFieldsEnum.tumour_normal_designation],
+            submitterId: r[FieldsEnum.submitter_specimen_id],
+            specimenType: r[FieldsEnum.specimen_type],
+            tumourNormalDesignation: r[FieldsEnum.tumour_normal_designation],
             samples: [
               {
                 sampleId: i,
-                sampleType: r[RegistrationFieldsEnum.sample_type],
-                submitterId: r[RegistrationFieldsEnum.submitter_sample_id]
+                sampleType: r[FieldsEnum.sample_type],
+                submitterId: r[FieldsEnum.submitter_sample_id]
               }
             ]
           }

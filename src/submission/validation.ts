@@ -1,22 +1,23 @@
 import { DonorMap, Specimen, Sample, Donor } from "../clinical/clinical-entities";
 import {
   DataValidationErrors,
-  RegistrationValidationError,
+  SubmissionValidationError,
   CreateRegistrationRecord,
   ValidationResult,
-  RegistrationFieldsEnum,
+  FieldsEnum,
   RegistrationToCreateRegistrationFieldsMap
 } from "./submission-entities";
 import { donorDao, DONOR_FIELDS } from "../clinical/donor-repo";
 import { DeepReadonly } from "deep-freeze";
 import { DataRecord } from "../lectern-client/schema-entities";
+import { FileType } from "./submission-api";
 
 export const validateRegistrationData = async (
   expectedProgram: string,
   newRecords: DeepReadonly<CreateRegistrationRecord[]>,
   existingDonors: DeepReadonly<DonorMap>
 ): Promise<ValidationResult> => {
-  let errors: RegistrationValidationError[] = [];
+  let errors: SubmissionValidationError[] = [];
 
   // caching in case we encounter same ids more than once
   const newSpecimens = new Set<string>();
@@ -67,30 +68,49 @@ export const validateRegistrationData = async (
 };
 
 export const usingInvalidProgramId = (
+  type: FileType,
   newDonorIndex: number,
-  registrationRecord: DataRecord,
+  record: DataRecord,
   expectedProgram: string
 ) => {
-  const errors: RegistrationValidationError[] = [];
-  const programId = registrationRecord[RegistrationFieldsEnum.program_id];
+  const errors: SubmissionValidationError[] = [];
+  const programId = record[FieldsEnum.program_id];
   if (programId) {
     if (expectedProgram !== programId) {
       errors.push({
         type: DataValidationErrors.INVALID_PROGRAM_ID,
-        fieldName: RegistrationFieldsEnum.program_id,
+        fieldName: FieldsEnum.program_id,
         index: newDonorIndex,
-        info: {
-          value: registrationRecord[RegistrationFieldsEnum.program_id],
-          sampleSubmitterId: registrationRecord[RegistrationFieldsEnum.submitter_sample_id],
-          specimenSubmitterId: registrationRecord[RegistrationFieldsEnum.submitter_specimen_id],
-          donorSubmitterId: registrationRecord[RegistrationFieldsEnum.submitter_donor_id],
-          expectedProgram
-        }
+        info: getInfoObject(type, record, expectedProgram)
       });
     }
     return errors;
   }
   return [];
+};
+const getInfoObject = (
+  type: FileType,
+  record: DeepReadonly<DataRecord>,
+  expectedProgram: string
+) => {
+  switch (type) {
+    case FileType.REGISTRATION: {
+      return {
+        value: record[FieldsEnum.program_id],
+        sampleSubmitterId: record[FieldsEnum.submitter_sample_id],
+        specimenSubmitterId: record[FieldsEnum.submitter_specimen_id],
+        donorSubmitterId: record[FieldsEnum.submitter_donor_id],
+        expectedProgram
+      };
+    }
+    default: {
+      return {
+        value: record[FieldsEnum.program_id],
+        donorSubmitterId: record[FieldsEnum.submitter_donor_id],
+        expectedProgram
+      };
+    }
+  }
 };
 
 const conflictingNewSpecimen = (
@@ -98,7 +118,7 @@ const conflictingNewSpecimen = (
   newDonor: CreateRegistrationRecord,
   newRecords: DeepReadonly<CreateRegistrationRecord[]>
 ) => {
-  const errors: RegistrationValidationError[] = [];
+  const errors: SubmissionValidationError[] = [];
 
   // these arrays to store the indices of rows that conflict with the current record we validate
   const conflictingSpecimensIndices: number[] = [];
@@ -139,7 +159,7 @@ const conflictingNewSpecimen = (
       buildError(
         newDonor,
         DataValidationErrors.NEW_SPECIMEN_ID_CONFLICT,
-        RegistrationFieldsEnum.submitter_specimen_id,
+        FieldsEnum.submitter_specimen_id,
         newDonorIndex,
         {
           conflictingRows: conflictingSpecimensIndices
@@ -153,7 +173,7 @@ const conflictingNewSpecimen = (
       buildError(
         newDonor,
         DataValidationErrors.NEW_SPECIMEN_ATTR_CONFLICT,
-        RegistrationFieldsEnum.specimen_type,
+        FieldsEnum.specimen_type,
         newDonorIndex,
         {
           conflictingRows: conflictingSpecimenTypesIndices
@@ -167,7 +187,7 @@ const conflictingNewSpecimen = (
       buildError(
         newDonor,
         DataValidationErrors.NEW_SPECIMEN_ATTR_CONFLICT,
-        RegistrationFieldsEnum.tumour_normal_designation,
+        FieldsEnum.tumour_normal_designation,
         newDonorIndex,
         {
           conflictingRows: conflictingSpecimenTumourDesignationIndices
@@ -184,7 +204,7 @@ const conflictingNewDonor = (
   newDonor: CreateRegistrationRecord,
   newRecords: DeepReadonly<CreateRegistrationRecord[]>
 ) => {
-  const errors: RegistrationValidationError[] = [];
+  const errors: SubmissionValidationError[] = [];
   const conflictingGendersIndexes: number[] = [];
 
   newRecords.forEach((rec, index) => {
@@ -206,7 +226,7 @@ const conflictingNewDonor = (
     const err = buildError(
       newDonor,
       DataValidationErrors.NEW_DONOR_CONFLICT,
-      RegistrationFieldsEnum.gender,
+      FieldsEnum.gender,
       newDonorIndex,
       {
         conflictingRows: conflictingGendersIndexes
@@ -222,7 +242,7 @@ const conflictingNewSample = (
   newDonor: CreateRegistrationRecord,
   newRecords: DeepReadonly<CreateRegistrationRecord[]>
 ) => {
-  const errors: RegistrationValidationError[] = [];
+  const errors: SubmissionValidationError[] = [];
   const conflictingSamplesIndices: number[] = [];
   const conflictingSampleTypesIndices: number[] = [];
 
@@ -255,7 +275,7 @@ const conflictingNewSample = (
     const err = buildError(
       newDonor,
       DataValidationErrors.NEW_SAMPLE_ID_CONFLICT,
-      RegistrationFieldsEnum.submitter_sample_id,
+      FieldsEnum.submitter_sample_id,
       newDonorIndex,
       {
         conflictingRows: conflictingSamplesIndices
@@ -268,7 +288,7 @@ const conflictingNewSample = (
     const err = buildError(
       newDonor,
       DataValidationErrors.NEW_SAMPLE_ATTR_CONFLICT,
-      RegistrationFieldsEnum.sample_type,
+      FieldsEnum.sample_type,
       newDonorIndex,
       {
         conflictingRows: conflictingSampleTypesIndices
@@ -315,7 +335,7 @@ const mutatingExistingData = async (
   existingDonors: DeepReadonly<DonorMap>
 ) => {
   // if the donor doesn't exist => return
-  const errors: RegistrationValidationError[] = [];
+  const errors: SubmissionValidationError[] = [];
   const existingDonor = existingDonors[newDonor.donorSubmitterId];
   let existingSpecimen: DeepReadonly<Specimen> | undefined = undefined;
   let existingSample: DeepReadonly<Sample> | undefined = undefined;
@@ -377,7 +397,7 @@ const specimenBelongsToOtherDonor = async (
   newDonor: CreateRegistrationRecord,
   programId: string
 ) => {
-  const errors: RegistrationValidationError[] = [];
+  const errors: SubmissionValidationError[] = [];
   const count = await donorDao.countBy({
     [DONOR_FIELDS.PROGRAM_ID]: { $eq: programId },
     [DONOR_FIELDS.SUBMITTER_ID]: { $ne: newDonor.donorSubmitterId },
@@ -388,7 +408,7 @@ const specimenBelongsToOtherDonor = async (
       buildError(
         newDonor,
         DataValidationErrors.SPECIMEN_BELONGS_TO_OTHER_DONOR,
-        RegistrationFieldsEnum.submitter_specimen_id,
+        FieldsEnum.submitter_specimen_id,
         index,
         {}
       )
@@ -402,7 +422,7 @@ const sampleBelongsToAnotherSpecimen = async (
   newDonor: CreateRegistrationRecord,
   programId: string
 ) => {
-  const errors: RegistrationValidationError[] = [];
+  const errors: SubmissionValidationError[] = [];
   const count = await donorDao.countBy({
     [DONOR_FIELDS.PROGRAM_ID]: { $eq: programId },
     [DONOR_FIELDS.SPECIMEN_SUBMITTER_ID]: { $ne: newDonor.specimenSubmitterId },
@@ -414,7 +434,7 @@ const sampleBelongsToAnotherSpecimen = async (
       buildError(
         newDonor,
         DataValidationErrors.SAMPLE_BELONGS_TO_OTHER_SPECIMEN,
-        RegistrationFieldsEnum.submitter_sample_id,
+        FieldsEnum.submitter_sample_id,
         index,
         {}
       )
@@ -427,10 +447,10 @@ const sampleBelongsToAnotherSpecimen = async (
 const buildError = (
   newDonor: CreateRegistrationRecord,
   type: DataValidationErrors,
-  fieldName: RegistrationFieldsEnum,
+  fieldName: FieldsEnum,
   index: number,
   info: object = {}
-): RegistrationValidationError => {
+): SubmissionValidationError => {
   return {
     type,
     fieldName,
@@ -448,7 +468,7 @@ const buildError = (
 function checkSampleMutations(
   newDonor: CreateRegistrationRecord,
   existingSample: DeepReadonly<Sample>,
-  errors: RegistrationValidationError[],
+  errors: SubmissionValidationError[],
   index: number
 ) {
   if (newDonor.sampleType !== existingSample.sampleType) {
@@ -456,7 +476,7 @@ function checkSampleMutations(
       buildError(
         newDonor,
         DataValidationErrors.MUTATING_EXISTING_DATA,
-        RegistrationFieldsEnum.sample_type,
+        FieldsEnum.sample_type,
         index,
         {}
       )
@@ -467,7 +487,7 @@ function checkSampleMutations(
 function checkDonorMutations(
   newDonor: CreateRegistrationRecord,
   existingDonor: DeepReadonly<Donor>,
-  errors: RegistrationValidationError[],
+  errors: SubmissionValidationError[],
   index: number
 ) {
   if (newDonor.gender != existingDonor.gender) {
@@ -475,7 +495,7 @@ function checkDonorMutations(
       buildError(
         newDonor,
         DataValidationErrors.MUTATING_EXISTING_DATA,
-        RegistrationFieldsEnum.gender,
+        FieldsEnum.gender,
         index,
         {}
       )
@@ -500,7 +520,7 @@ async function findExistingSpecimenFromDb(newDonor: CreateRegistrationRecord) {
 function checkSpecimenMutations(
   newDonor: CreateRegistrationRecord,
   existingSpecimen: DeepReadonly<Specimen>,
-  errors: RegistrationValidationError[],
+  errors: SubmissionValidationError[],
   index: number
 ) {
   if (newDonor.specimenType !== existingSpecimen.specimenType) {
@@ -508,7 +528,7 @@ function checkSpecimenMutations(
       buildError(
         newDonor,
         DataValidationErrors.MUTATING_EXISTING_DATA,
-        RegistrationFieldsEnum.specimen_type,
+        FieldsEnum.specimen_type,
         index,
         {}
       )
@@ -519,7 +539,7 @@ function checkSpecimenMutations(
       buildError(
         newDonor,
         DataValidationErrors.MUTATING_EXISTING_DATA,
-        RegistrationFieldsEnum.tumour_normal_designation,
+        FieldsEnum.tumour_normal_designation,
         index,
         {}
       )

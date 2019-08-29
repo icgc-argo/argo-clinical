@@ -24,8 +24,6 @@ export interface SubmittedRegistrationRecord {
   readonly sample_type: string;
 }
 
-export type RegistrationRecordFields = keyof SubmittedRegistrationRecord;
-
 type x = { [key in keyof SubmittedRegistrationRecord]: keyof CreateRegistrationRecord };
 
 export const RegistrationToCreateRegistrationFieldsMap: x = {
@@ -39,7 +37,7 @@ export const RegistrationToCreateRegistrationFieldsMap: x = {
   sample_type: "sampleType"
 };
 
-export enum RegistrationFieldsEnum {
+export enum FieldsEnum {
   program_id = "program_id",
   submitter_donor_id = "submitter_donor_id",
   gender = "gender",
@@ -50,9 +48,9 @@ export enum RegistrationFieldsEnum {
   sample_type = "sample_type"
 }
 
-export type RegistrationValidationError = {
+export type SubmissionValidationError = {
   type: DataValidationErrors | SchemaValidationErrorTypes;
-  fieldName: keyof SubmittedRegistrationRecord;
+  fieldName: string;
   info: object;
   index: number;
 };
@@ -106,9 +104,56 @@ export interface CreateRegistrationCommand {
 export interface CreateRegistrationResult {
   readonly registration: DeepReadonly<ActiveRegistration> | undefined;
   readonly successful: boolean;
-  errors: DeepReadonly<RegistrationValidationError[]>;
+  errors: DeepReadonly<SubmissionValidationError[]>;
 }
 
 export interface ValidationResult {
-  errors: DeepReadonly<RegistrationValidationError[]>;
+  errors: DeepReadonly<SubmissionValidationError[]>;
+}
+
+export interface ClinicalSubmissionCommand {
+  records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
+  readonly programId: string;
+  readonly clinicalType: string;
+}
+
+export interface MultiClinicalSubmissionCommand {
+  newClinicalEntities: Readonly<{ [clinicalType: string]: NewClinicalEntity }>;
+  readonly programId: string;
+}
+
+export interface CreateSubmissionResult {
+  readonly submission: ActiveClinicalSubmission | undefined;
+  readonly successful: boolean;
+  errors: DeepReadonly<{ [clinicalType: string]: SubmissionValidationError[] }>;
+}
+
+export interface NewClinicalEntity {
+  batchName: string;
+  creator: string;
+  records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
+}
+
+export interface SavedClinicalEntity extends NewClinicalEntity {
+  dataErrors: [];
+  stats: {
+    new: number[];
+    noUpdate: number[];
+    updated: number[];
+    errorsFound: number[];
+  };
+}
+
+export enum SUBMISSION_STATE {
+  OPEN = "OPEN",
+  VALID = "VALID",
+  INVALID = "INVALID",
+  PENDING_APPROVAL = "PENDING_APPROVAL"
+}
+
+export interface ActiveClinicalSubmission {
+  programId: string;
+  state: SUBMISSION_STATE;
+  version: string;
+  clinicalEntities: { [clinicalType: string]: SavedClinicalEntity };
 }

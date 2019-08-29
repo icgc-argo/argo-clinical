@@ -35,11 +35,19 @@ export namespace TsvUtils {
 }
 
 export namespace ControllerUtils {
+  export interface ControllerBadRequestError {
+    msg: string;
+    code: string;
+  }
+
   export const notFound = (res: Response, msg: string): any => {
     res.status(404).send({ message: msg });
   };
 
-  export const badRequest = (res: Response, msg: string | object): any => {
+  export const badRequest = (
+    res: Response,
+    msg: string | ControllerBadRequestError | Array<ControllerBadRequestError>
+  ): any => {
     if (typeof msg === "string") {
       return res.status(400).send({ message: msg });
     }
