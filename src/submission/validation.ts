@@ -103,9 +103,7 @@ const getInfoObject = (
         expectedProgram
       };
     }
-    case FileType.DONOR:
-    case FileType.SPECIMEN:
-    case FileType.SAMPLE: {
+    default: {
       return {
         value: record[FieldsEnum.program_id],
         donorSubmitterId: record[FieldsEnum.submitter_donor_id],
@@ -113,7 +111,6 @@ const getInfoObject = (
       };
     }
   }
-  return {};
 };
 
 const conflictingNewSpecimen = (

@@ -291,9 +291,7 @@ export namespace operations {
           sampleSubmitterId: record[FieldsEnum.submitter_sample_id]
         });
       }
-      case FileType.DONOR:
-      case FileType.SPECIMEN:
-      case FileType.SAMPLE: {
+      default: {
         return F({
           ...schemaErr.info,
           value: record[schemaErr.fieldName],
@@ -301,7 +299,6 @@ export namespace operations {
         });
       }
     }
-    return {};
   };
   const calculateUpdates = (
     records: DeepReadonly<CreateRegistrationRecord[]>,
