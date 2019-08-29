@@ -68,10 +68,7 @@ export const submissionRepository: ClinicalSubmissionRepository = {
     await activeSubmissionModel.updateOne(activeSubmissionModel);
   },
   async updateState(programId: string, state: SUBMISSION_STATE) {
-    await ActiveSubmissionModel.findOneAndUpdate(
-      { programId: programId },
-      { state: SUBMISSION_STATE.PROCESSING }
-    );
+    await ActiveSubmissionModel.findOneAndUpdate({ programId: programId }, { state: state });
   },
   async updateProgramWithVersion(
     programId: string,

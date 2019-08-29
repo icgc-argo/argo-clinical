@@ -6,8 +6,7 @@ import { loggerFor } from "../logger";
 import {
   CreateRegistrationCommand,
   MultiClinicalSubmissionCommand,
-  NewClinicalEntity,
-  ControllerBadRequestError
+  NewClinicalEntity
 } from "./submission-entities";
 import { HasSubmitionAccess as HasSubmittionAccess } from "../auth-decorators";
 import jwt from "jsonwebtoken";
@@ -184,7 +183,7 @@ const mapFilesByType = (req: Request, res: Response) => {
     return;
   }
   const files = req.files as Express.Multer.File[];
-  const errorList: Array<ControllerBadRequestError> = [];
+  const errorList: Array<ControllerUtils.ControllerBadRequestError> = [];
   const fileMap: { [k: string]: Express.Multer.File } = {};
 
   // check for double files and map files to clinical type

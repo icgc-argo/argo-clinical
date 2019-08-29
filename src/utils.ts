@@ -2,7 +2,6 @@ import fs from "fs";
 import { Request, Response } from "express";
 import deepFreeze from "deep-freeze";
 import mongoose from "mongoose";
-import { ControllerBadRequestError } from "./submission/submission-entities";
 const fsPromises = fs.promises;
 
 export namespace TsvUtils {
@@ -36,6 +35,11 @@ export namespace TsvUtils {
 }
 
 export namespace ControllerUtils {
+  export interface ControllerBadRequestError {
+    msg: string;
+    code: string;
+  }
+
   export const notFound = (res: Response, msg: string): any => {
     res.status(404).send({ message: msg });
   };

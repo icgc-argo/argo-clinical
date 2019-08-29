@@ -24,8 +24,6 @@ export interface SubmittedRegistrationRecord {
   readonly sample_type: string;
 }
 
-export type RegistrationRecordFields = keyof SubmittedRegistrationRecord;
-
 type x = { [key in keyof SubmittedRegistrationRecord]: keyof CreateRegistrationRecord };
 
 export const RegistrationToCreateRegistrationFieldsMap: x = {
@@ -125,7 +123,7 @@ export interface MultiClinicalSubmissionCommand {
 }
 
 export interface CreateSubmissionResult {
-  readonly submission: object | undefined;
+  readonly submission: ActiveClinicalSubmission | undefined;
   readonly successful: boolean;
   errors: DeepReadonly<{ [clinicalType: string]: SubmissionValidationError[] }>;
 }
@@ -147,7 +145,6 @@ export interface SavedClinicalEntity extends NewClinicalEntity {
 }
 
 export enum SUBMISSION_STATE {
-  PROCESSING = "PROCESSING",
   OPEN = "OPEN",
   VALID = "VALID",
   INVALID = "INVALID",
@@ -159,9 +156,4 @@ export interface ActiveClinicalSubmission {
   state: SUBMISSION_STATE;
   version: string;
   clinicalEntities: { [clinicalType: string]: SavedClinicalEntity };
-}
-
-export interface ControllerBadRequestError {
-  msg: string;
-  code: string;
 }
