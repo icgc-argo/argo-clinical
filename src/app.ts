@@ -4,7 +4,6 @@ import bodyParser from "body-parser";
 import path from "path";
 import submissionAPI from "./submission/submission-api";
 import * as schemaApi from "./submission/schema-api";
-import * as templateApi from "./submission/template-api";
 import * as middleware from "./middleware";
 import * as swaggerUi from "swagger-ui-express";
 import yaml from "yamljs";
@@ -62,7 +61,7 @@ app.delete(
 /** Schema API */
 app.get("/submission/schema/", middleware.wrapAsync(schemaApi.get));
 // get template for a given schema
-app.get("/submission/template/:schemaName", middleware.wrapAsync(templateApi.get));
+app.get("/submission/schema/template/:schemaName", middleware.wrapAsync(schemaApi.getTemplate));
 // temporary api
 app.post("/submission/schema/hack/refresh", middleware.wrapAsync(schemaApi.update));
 
