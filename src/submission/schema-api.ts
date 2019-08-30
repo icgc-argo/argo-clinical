@@ -1,8 +1,9 @@
 import * as manager from "../lectern-client/schema-manager";
 import { Request, Response } from "express";
 import { loggerFor } from "../logger";
-import { SchemasDictionary } from "../lectern-client/schema-entities";
+import { SchemasDictionary, SchemaDefinition } from "../lectern-client/schema-entities";
 import { setStatus, Status } from "../app-health";
+import { ControllerUtils } from "../utils";
 const L = loggerFor(__filename);
 
 export const get = async (req: Request, res: Response) => {
@@ -29,3 +30,29 @@ export const replace = async (req: Request, res: Response) => {
   setStatus("schema", { status: Status.OK });
   return res.status(200).send(manager.instance().getCurrent());
 };
+
+export const getTemplate = async (req: Request, res: Response) => {
+  const schemaName: string = req.params.schemaName;
+  const schemasDictionary = manager.instance().getCurrent();
+  const schema = schemasDictionary.schemas.find(schema => {
+    return schema.name == schemaName;
+  });
+  if (!schema) {
+    return ControllerUtils.notFound(res, "no schema named '" + schemaName + "' found");
+  }
+  const template = createTemplate(schema);
+  return res
+    .status(200)
+    .contentType("text/tab-separated-values")
+    .send(template);
+};
+
+function createTemplate(schema: SchemaDefinition): string {
+  const header =
+    schema.fields
+      .map((f): string => {
+        return f.name;
+      })
+      .join("\t") + "\n";
+  return header;
+}

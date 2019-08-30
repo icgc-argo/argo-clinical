@@ -1,4 +1,4 @@
-import express, { NextFunction, Request, Response, RequestHandler } from "express";
+import express, { NextFunction, Response, RequestHandler } from "express";
 import errorHandler from "errorhandler";
 import bodyParser from "body-parser";
 import path from "path";
@@ -64,7 +64,8 @@ app.post(
 );
 /** Schema API */
 app.get("/submission/schema/", middleware.wrapAsync(schemaApi.get));
-
+// get template for a given schema
+app.get("/submission/schema/template/:schemaName", middleware.wrapAsync(schemaApi.getTemplate));
 // temporary api
 app.post("/submission/schema/hack/refresh", middleware.wrapAsync(schemaApi.update));
 
