@@ -1,4 +1,4 @@
-import express, { NextFunction, Request, Response, RequestHandler } from "express";
+import express, { NextFunction, Response, RequestHandler } from "express";
 import errorHandler from "errorhandler";
 import bodyParser from "body-parser";
 import path from "path";

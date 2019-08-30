@@ -38,7 +38,7 @@ export const getTemplate = async (req: Request, res: Response) => {
     return schema.name == schemaName;
   });
   if (!schema) {
-    return ControllerUtils.notFound(res, "no schema named" + schemaName + " found");
+    return ControllerUtils.notFound(res, "no schema named '" + schemaName + "' found");
   }
   const template = createTemplate(schema);
   return res
