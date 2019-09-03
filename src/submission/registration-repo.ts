@@ -68,7 +68,7 @@ type ActiveRegistrationDocument = mongoose.Document & ActiveRegistration;
 
 const ActiveRegistrationItem = new mongoose.Schema(
   {
-    program_id: { type: String, required: true },
+    program_id: { type: String, unique: true, required: true },
     submitter_donor_id: { type: String, required: true },
     gender: { type: String, required: true },
     submitter_specimen_id: { type: String, required: true },

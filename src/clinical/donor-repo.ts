@@ -67,6 +67,7 @@ export const donorDao: DonorRepository = {
       .filter(notEmpty);
     return F(mapped);
   },
+
   async findBySpecimenSubmitterIdAndProgramId(
     filter: FindByProgramAndSubmitterFilter
   ): Promise<DeepReadonly<Donor> | undefined> {
@@ -150,7 +151,7 @@ const SampleSchema = new mongoose.Schema(
   {
     sampleId: { type: Number, index: true, unique: true, get: prefixSampleId },
     sampleType: { type: String },
-    submitterId: { type: String, index: true, required: true }
+    submitterId: { type: String, required: true }
   },
   { _id: false }
 );
@@ -163,7 +164,7 @@ const SpecimenSchema = new mongoose.Schema(
     specimenType: { type: String },
     clinicalInfo: {},
     tumourNormalDesignation: String,
-    submitterId: { type: String, index: true, required: true },
+    submitterId: { type: String, required: true },
     samples: [SampleSchema]
   },
   { _id: false }
@@ -174,7 +175,7 @@ const DonorSchema = new mongoose.Schema(
   {
     donorId: { type: Number, index: true, unique: true, get: prefixDonorId },
     gender: { type: String, required: true },
-    submitterId: { type: String, index: true, required: true },
+    submitterId: { type: String, required: true },
     programId: { type: String, required: true },
     specimens: [SpecimenSchema],
     clinicalInfo: {},
@@ -203,6 +204,9 @@ function prefixSampleId(id: any) {
 }
 
 DonorSchema.plugin(AutoIncrement, { inc_field: "donorId" });
+
 DonorSchema.index({ submitterId: 1, programId: 1 }, { unique: true });
+DonorSchema.index({ "specimens.submitterId": 1, programId: 1 }, { unique: true });
+DonorSchema.index({ "specimens.samples.submitterId": 1, programId: 1 }, { unique: true });
 
 export const DonorModel = mongoose.model<DonorDocument>("Donor", DonorSchema);

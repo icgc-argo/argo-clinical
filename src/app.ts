@@ -1,4 +1,4 @@
-import express, { NextFunction, Request, Response, RequestHandler } from "express";
+import express, { NextFunction, Response, RequestHandler } from "express";
 import errorHandler from "errorhandler";
 import bodyParser from "body-parser";
 import path from "path";
@@ -9,7 +9,7 @@ import * as swaggerUi from "swagger-ui-express";
 import yaml from "yamljs";
 import multer from "multer";
 import { loggerFor } from "./logger";
-import { findDonors, deleteDonors } from "./clinical/clinical-api";
+import clinicalApi from "./clinical/clinical-api";
 import { getHealth, Status } from "./app-health";
 
 const L = loggerFor(__filename);
@@ -64,15 +64,18 @@ app.post(
 );
 /** Schema API */
 app.get("/submission/schema/", middleware.wrapAsync(schemaApi.get));
-
+// get template for a given schema
+app.get("/submission/schema/template/:schemaName", middleware.wrapAsync(schemaApi.getTemplate));
 // temporary api
 app.post("/submission/schema/hack/refresh", middleware.wrapAsync(schemaApi.update));
-
 app.post("/submission/schema/hack/replace", middleware.wrapAsync(schemaApi.replace));
 
 /** clinical API */
-app.get("/clinical/donors", middleware.wrapAsync(findDonors));
-app.delete("/clinical/donors", middleware.wrapAsync(deleteDonors));
+app.get("/clinical/donors", middleware.wrapAsync(clinicalApi.findDonors));
+app.delete("/clinical/donors", middleware.wrapAsync(clinicalApi.deleteDonors));
+app.get("/clinical/donors/id", middleware.wrapAsync(clinicalApi.findDonorId));
+app.get("/clinical/specimens/id", middleware.wrapAsync(clinicalApi.findSpecimenId));
+app.get("/clinical/samples/id", middleware.wrapAsync(clinicalApi.findSampleId));
 
 // this has to be defined after all routes for it to work for these paths.
 app.use(middleware.errorHandler);
