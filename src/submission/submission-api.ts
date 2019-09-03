@@ -24,12 +24,14 @@ export enum FileType {
   SPECIMEN = "specimen",
   SAMPLE = "sample"
 }
+
 export const FileNameRegex = {
   [FileType.REGISTRATION]: "^registration.*.tsv",
   [FileType.DONOR]: "^(donor).*.tsv",
   [FileType.SPECIMEN]: "^(specimen).*.tsv",
   [FileType.SAMPLE]: "^(sample).*.tsv"
 };
+
 class SubmissionController {
   @HasSubmittionAccess((req: Request) => req.params.programId)
   async getRegistrationByProgramId(req: Request, res: Response) {

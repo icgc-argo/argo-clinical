@@ -6,11 +6,12 @@ import fs from "fs";
 // needed for types
 import "chai-http";
 import "mocha";
+import mongoose from "mongoose";
 import { GenericContainer } from "testcontainers";
 import app from "../../../src/app";
 import * as bootstrap from "../../../src/bootstrap";
 import { cleanCollection, insertData, emptyDonorDocument, resetCounters } from "../testutils";
-import { TEST_PUB_KEY, JWT_ABCDEF, JWT_WXYZEF } from "./test.jwt";
+import { TEST_PUB_KEY, JWT_ABCDEF, JWT_WXYZEF } from "../test.jwt";
 import {
   ActiveRegistration,
   ActiveClinicalSubmission,
@@ -21,10 +22,9 @@ import { donorDao } from "../../../src/clinical/donor-repo";
 import { Donor } from "../../../src/clinical/clinical-entities";
 import { ErrorCodes } from "../../../src/submission/submission-api";
 import * as manager from "../../../src/lectern-client/schema-manager";
-export let mongoContainer: any;
+
 chai.use(require("chai-http"));
 chai.should();
-let dburl = ``;
 
 const expectedErrors = [
   {
@@ -210,6 +210,8 @@ const expectedDonorErrors = [
 const schemaServiceUrl = "file://" + __dirname + "/stub-schema.json";
 
 describe("Submission Api", () => {
+  let mongoContainer: any;
+  let dburl = ``;
   // will run when all tests are finished
   before(() => {
     return (async () => {
@@ -254,10 +256,15 @@ describe("Submission Api", () => {
     })();
   });
 
+  after(async () => {
+    await mongoose.disconnect();
+    await mongoContainer.stop();
+  });
+
   describe("registration", function() {
     this.beforeEach(async () => {
       try {
-        console.log("registration beforeAll called");
+        console.log(`registration beforeEach called ${dburl}`);
         await cleanCollection(dburl, "donors");
         await cleanCollection(dburl, "activeregistrations");
         await resetCounters(dburl);
@@ -348,7 +355,7 @@ describe("Submission Api", () => {
         .attach("registrationFile", file, "registration.1.tsv")
         .end(async (err: any, res: any) => {
           try {
-            await assertUploadOKRegistrationCreated(res);
+            await assertUploadOKRegistrationCreated(res, dburl);
             const reg1Id = res.body.registration._id;
             chai
               .request(app)
@@ -356,7 +363,7 @@ describe("Submission Api", () => {
               .auth(JWT_ABCDEF, { type: "bearer" })
               .end(async (err: any, res: any) => {
                 try {
-                  await assertFirstCommitDonorsCreatedInDB(res, rows);
+                  await assertFirstCommitDonorsCreatedInDB(res, rows, dburl);
                   chai
                     .request(app)
                     .post("/submission/program/ABCD-EF/registration")
@@ -365,7 +372,7 @@ describe("Submission Api", () => {
                     .attach("registrationFile", file2, "registration.2.tsv")
                     .end(async (err: any, res: any) => {
                       try {
-                        await assertUploadOKRegistrationCreated(res);
+                        await assertUploadOKRegistrationCreated(res, dburl);
                         const regId = res.body.registration._id;
                         chai
                           .request(app)
@@ -412,7 +419,7 @@ describe("Submission Api", () => {
         .attach("registrationFile", file, "registration.1.tsv")
         .end(async (err: any, res: any) => {
           try {
-            await assertUploadOKRegistrationCreated(res);
+            await assertUploadOKRegistrationCreated(res, dburl);
             chai.expect(res.body.registration.stats.newSampleIds).to.deep.eq({
               "sm123-4": [0],
               "sm123-5": [1],
@@ -426,7 +433,7 @@ describe("Submission Api", () => {
               .auth(JWT_ABCDEF, { type: "bearer" })
               .end(async (err: any, res: any) => {
                 try {
-                  await assertFirstCommitDonorsCreatedInDB(res, rows);
+                  await assertFirstCommitDonorsCreatedInDB(res, rows, dburl);
                   chai
                     .request(app)
                     .post("/submission/program/ABCD-EF/registration")
@@ -435,7 +442,7 @@ describe("Submission Api", () => {
                     .attach("registrationFile", file, "registration.1.tsv")
                     .end(async (err: any, res: any) => {
                       try {
-                        await assertUploadOKRegistrationCreated(res);
+                        await assertUploadOKRegistrationCreated(res, dburl);
                         const reg2Id = res.body.registration._id;
                         chai.expect(reg2Id).to.not.eq(reg1Id);
                         chai.expect(res.body.registration.stats.newSampleIds).to.deep.eq({});
@@ -575,14 +582,15 @@ describe("Submission Api", () => {
           done();
         });
     });
+
     it("Registration should return 200 if deleted existing registration", async () => {
       const registrationId = await insertData(dburl, "activeregistrations", ABCD_REGISTRATION_DOC);
       console.log("Deleting registration " + registrationId);
-      chai
+      return chai
         .request(app)
         .delete("/submission/program/ABCD-EF/registration/" + registrationId)
         .auth(JWT_ABCDEF, { type: "bearer" })
-        .end(async (err: any, res: any) => {
+        .then(async (res: any) => {
           try {
             res.should.have.status(200);
             const conn = await mongo.connect(dburl);
@@ -593,7 +601,7 @@ describe("Submission Api", () => {
             await conn.close();
             chai.expect(count).to.eq(0);
           } catch (err) {
-            return err;
+            throw err;
           }
         });
     });
@@ -697,11 +705,12 @@ describe("Submission Api", () => {
         .auth(JWT_ABCDEF, { type: "bearer" })
         .end((err: any, res: any) => {
           res.should.have.status(200);
-          res.text.should.equal(  "program_id\tsubmitter_donor_id\tgender\t" +
-            "submitter_specimen_id\tspecimen_type\ttumour_normal_designation\t" +
-            "submitter_sample_id\tsample_type\n");
-          res.should.header("Content-type", "text/tab-separated-values;" +
-            " charset=utf-8");
+          res.text.should.equal(
+            "program_id\tsubmitter_donor_id\tgender\t" +
+              "submitter_specimen_id\tspecimen_type\ttumour_normal_designation\t" +
+              "submitter_sample_id\tsample_type\n"
+          );
+          res.should.header("Content-type", "text/tab-separated-values;" + " charset=utf-8");
           done();
         });
     });
@@ -714,12 +723,11 @@ describe("Submission Api", () => {
         .auth(JWT_ABCDEF, { type: "bearer" })
         .end((err: any, res: any) => {
           res.should.have.status(404);
-          res.body.message.should.equal(  "no schema named '" + name + "' found");
+          res.body.message.should.equal("no schema named '" + name + "' found");
           res.should.header("Content-type", "application/json; charset=utf-8");
           done();
         });
     });
-
   });
 });
 
@@ -741,7 +749,7 @@ async function asserCommitExistingSamplesOK(res: any) {
   chai.expect(donorsFromDB[0]).to.deep.include(comittedDonors2[0]);
 }
 
-async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[]) {
+async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dburl: string) {
   res.should.have.status(200);
   const donorRows: any[] = [];
   rows.forEach((r, idx) => {
@@ -789,7 +797,7 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[]) {
   }
 }
 
-async function assertUploadOKRegistrationCreated(res: any) {
+async function assertUploadOKRegistrationCreated(res: any, dburl: string) {
   res.should.have.status(201);
   const conn = await mongo.connect(dburl);
   const savedRegistration: ActiveRegistration | null = await conn

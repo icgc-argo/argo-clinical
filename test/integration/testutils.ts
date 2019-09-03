@@ -3,8 +3,16 @@ import _ from "lodash";
 
 export const cleanCollection = async (dburl: string, collection: string): Promise<any> => {
   const conn = await mongo.connect(dburl);
-  await conn.db("clinical").dropCollection(collection);
+  console.log("cleanCollection connected");
+  try {
+    await conn.db("clinical").dropCollection(collection);
+    console.log("cleanCollection dropped collection");
+  } catch (err) {
+    console.error("failed to drop collection", collection);
+  }
+
   await conn.db("clinical").createCollection(collection);
+  console.log("cleanCollection created collection");
   await conn.close();
 };
 
