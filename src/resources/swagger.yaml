@@ -282,6 +282,25 @@ paths:
                 items:
                   type: object
 
+  /submission/schema/template/{schemaName}:
+    parameters:
+      - name: schemaName
+        description: the name of the schema to generate the template for
+        in: path
+        required: true
+        schema:
+          example: "registration"
+          type: string
+    get:
+      responses:
+        "200":
+          description: "A tsv template file for the given schemaName"
+          content:
+            text/tab-separated-values:
+              schema:
+                example: 'program_id\tsubmitter_donor_id\tgender\tsubmitter_specimen_id\tspecimen_type\ttumour_normal_designation\tsubmitter_sample_id\tsample_type'
+                type: string
+
   /submission/schema/hack/refresh:
     post:
       description: force reload the schema from the schema service and override the cache

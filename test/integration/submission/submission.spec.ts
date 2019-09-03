@@ -21,6 +21,7 @@ import { TsvUtils } from "../../../src/utils";
 import { donorDao } from "../../../src/clinical/donor-repo";
 import { Donor } from "../../../src/clinical/clinical-entities";
 import { ErrorCodes } from "../../../src/submission/submission-api";
+import * as manager from "../../../src/lectern-client/schema-manager";
 
 chai.use(require("chai-http"));
 chai.should();
@@ -206,12 +207,16 @@ const expectedDonorErrors = [
   }
 ];
 
+const schemaServiceUrl = "file://" + __dirname + "/stub-schema.json";
+
 describe("Submission Api", () => {
   let mongoContainer: any;
   let dburl = ``;
   // will run when all tests are finished
   before(() => {
     return (async () => {
+      manager.create(schemaServiceUrl);
+      manager.instance().loadSchema("ARGO Clinical Submission", "1.0");
       try {
         mongoContainer = await new GenericContainer("mongo").withExposedPorts(27017).start();
         console.log("mongo test container started");
@@ -686,6 +691,40 @@ describe("Submission Api", () => {
               code: "INVALID_FILE_NAME"
             }
           ]);
+          done();
+        });
+    });
+  });
+  describe("schema", function() {
+    it("get template found", done => {
+      const name = "registration";
+      console.log("Getting template for '" + name + "'...");
+      chai
+        .request(app)
+        .get("/submission/schema/template/" + name)
+        .auth(JWT_ABCDEF, { type: "bearer" })
+        .end((err: any, res: any) => {
+          res.should.have.status(200);
+          res.text.should.equal(
+            "program_id\tsubmitter_donor_id\tgender\t" +
+              "submitter_specimen_id\tspecimen_type\ttumour_normal_designation\t" +
+              "submitter_sample_id\tsample_type\n"
+          );
+          res.should.header("Content-type", "text/tab-separated-values;" + " charset=utf-8");
+          done();
+        });
+    });
+    it("get template not found", done => {
+      const name = "invalid";
+      console.log("Getting template for '" + name + "'...");
+      chai
+        .request(app)
+        .get("/submission/schema/template/" + name)
+        .auth(JWT_ABCDEF, { type: "bearer" })
+        .end((err: any, res: any) => {
+          res.should.have.status(404);
+          res.body.message.should.equal("no schema named '" + name + "' found");
+          res.should.header("Content-type", "application/json; charset=utf-8");
           done();
         });
     });
