@@ -572,7 +572,7 @@ const checkIdsRegistered = (
   existingDonors: DeepReadonly<DonorMap>,
   index: number
 ) => {
-  // find donor with submitter_donor_id from record
+  // find a registered donor with submitter_donor_id from record
   const donor = existingDonors[record[FieldsEnum.submitter_donor_id]];
   if (!donor) {
     return buildSubmissionError(
@@ -582,10 +582,13 @@ const checkIdsRegistered = (
       index
     );
   }
-  // check if donor has submitter_specimen_id from record is registered
-  const specimen = donor.specimens.find(
-    spe => spe.submitterId == record[FieldsEnum.submitter_specimen_id]
-  );
+  // check if there is a submitter_specimen_id
+  const submitterSpecimenId = record[FieldsEnum.submitter_specimen_id];
+  if (!submitterSpecimenId) {
+    return;
+  }
+  // check if submitter_specimen_id from record is registered in donor
+  const specimen = donor.specimens.find(spe => spe.submitterId == submitterSpecimenId);
   if (!specimen) {
     return buildSubmissionError(
       record,
@@ -594,9 +597,10 @@ const checkIdsRegistered = (
       index
     );
   }
-  // check if donor has submitter_sample_id from record is registered
-  const sampleId = record[FieldsEnum.submitter_sample_id];
-  if (sampleId && !specimen.samples.find(sam => sam.submitterId == sampleId)) {
+
+  // check if submitter_sample_id from record is registered in donor
+  const submitterSampleId = record[FieldsEnum.submitter_sample_id];
+  if (submitterSpecimenId && !specimen.samples.find(sam => sam.submitterId == submitterSampleId)) {
     return buildSubmissionError(
       record,
       DataValidationErrors.ID_NOT_REGISTERED,

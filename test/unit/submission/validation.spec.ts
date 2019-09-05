@@ -984,7 +984,6 @@ describe("data-validator", () => {
     const existingDonorMock: Donor = stubs.validation.existingDonor01();
     const result = await dv.validateSpecimenData(
       [
-        // only adding fields that are needed for id checks (clinical submissions are not strongly typied)
         {
           submitter_donor_id: "AB1",
           program_id: "ABCD-EF",
