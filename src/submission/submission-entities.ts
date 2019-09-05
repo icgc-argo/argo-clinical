@@ -158,3 +158,10 @@ export interface ActiveClinicalSubmission {
   version: string;
   clinicalEntities: { [clinicalType: string]: SavedClinicalEntity };
 }
+
+// Generic submission record object
+export interface SubmissionRecord {
+  readonly program_id: string;
+  readonly submitter_donor_id: string;
+  [fieldName: string]: string;
+}

@@ -5,7 +5,8 @@ import {
   CreateRegistrationRecord,
   ValidationResult,
   FieldsEnum,
-  RegistrationToCreateRegistrationFieldsMap
+  RegistrationToCreateRegistrationFieldsMap,
+  SubmissionRecord
 } from "./submission-entities";
 import { donorDao, DONOR_FIELDS } from "../clinical/donor-repo";
 import { DeepReadonly } from "deep-freeze";
@@ -68,39 +69,20 @@ export const validateRegistrationData = async (
 };
 
 export const validateSpecimenData = async (
-  newRecords: DeepReadonly<{ [key: string]: string }[]>,
+  specimenRecords: DeepReadonly<SubmissionRecord[]>,
   existingDonors: DeepReadonly<DonorMap>
 ): Promise<ValidationResult> => {
   let errors: SubmissionValidationError[] = [];
   // for each specimen record
-  for (let index = 0; index < newRecords.length; index++) {
-    const specimenRecord = newRecords[index];
-    // see if donor is registered
-    const donor = existingDonors[specimenRecord[FieldsEnum.submitter_donor_id]];
-    if (!donor) {
-      errors = errors.concat(
-        buildSubmissionError(
-          specimenRecord,
-          DataValidationErrors.ID_NOT_REGISTERED,
-          FieldsEnum.submitter_donor_id,
-          index
-        )
-      );
-      continue; // can't check anything else for this record
+  for (let index = 0; index < specimenRecords.length; index++) {
+    const specimenRecord = specimenRecords[index];
+    // check ids are registered
+    const idError = checkIdsRegistered(specimenRecord, existingDonors, index);
+    if (idError) {
+      errors = errors.concat(idError);
+      continue; // no need to check anything else
     }
-    // check if donor has specimenId registered
-    if (
-      !donor.specimens.find(s => s.submitterId == specimenRecord[FieldsEnum.submitter_specimen_id])
-    ) {
-      errors = errors.concat(
-        buildSubmissionError(
-          specimenRecord,
-          DataValidationErrors.ID_NOT_REGISTERED,
-          FieldsEnum.submitter_specimen_id,
-          index
-        )
-      );
-    }
+    // other checks which would run if Ids are registered
   }
   return { errors };
 };
@@ -503,25 +485,6 @@ const buildError = (
   };
 };
 
-const buildSubmissionError = (
-  newRecord: { [key: string]: string },
-  type: DataValidationErrors,
-  fieldName: FieldsEnum,
-  index: number,
-  info: object = {}
-): SubmissionValidationError => {
-  return {
-    type,
-    fieldName,
-    index,
-    info: {
-      ...info,
-      donorSubmitterId: newRecord[FieldsEnum.submitter_donor_id],
-      value: newRecord[fieldName]
-    }
-  };
-};
-
 function checkSampleMutations(
   newDonor: CreateRegistrationRecord,
   existingSample: DeepReadonly<Sample>,
@@ -603,3 +566,61 @@ function checkSpecimenMutations(
     );
   }
 }
+
+const checkIdsRegistered = (
+  record: SubmissionRecord,
+  existingDonors: DeepReadonly<DonorMap>,
+  index: number
+) => {
+  // find donor with submitter_donor_id from record
+  const donor = existingDonors[record[FieldsEnum.submitter_donor_id]];
+  if (!donor) {
+    return buildSubmissionError(
+      record,
+      DataValidationErrors.ID_NOT_REGISTERED,
+      FieldsEnum.submitter_donor_id,
+      index
+    );
+  }
+  // check if donor has submitter_specimen_id from record is registered
+  const specimen = donor.specimens.find(
+    spe => spe.submitterId == record[FieldsEnum.submitter_specimen_id]
+  );
+  if (!specimen) {
+    return buildSubmissionError(
+      record,
+      DataValidationErrors.ID_NOT_REGISTERED,
+      FieldsEnum.submitter_specimen_id,
+      index
+    );
+  }
+  // check if donor has submitter_sample_id from record is registered
+  const sampleId = record[FieldsEnum.submitter_sample_id];
+  if (sampleId && !specimen.samples.find(sam => sam.submitterId == sampleId)) {
+    return buildSubmissionError(
+      record,
+      DataValidationErrors.ID_NOT_REGISTERED,
+      FieldsEnum.submitter_sample_id,
+      index
+    );
+  }
+};
+
+const buildSubmissionError = (
+  newRecord: SubmissionRecord,
+  type: DataValidationErrors,
+  fieldName: FieldsEnum,
+  index: number,
+  info: object = {}
+): SubmissionValidationError => {
+  return {
+    type,
+    fieldName,
+    index,
+    info: {
+      ...info,
+      donorSubmitterId: newRecord.submitter_donor_id,
+      value: newRecord[fieldName]
+    }
+  };
+};
