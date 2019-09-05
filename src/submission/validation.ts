@@ -67,6 +67,44 @@ export const validateRegistrationData = async (
   };
 };
 
+export const validateSpecimenData = async (
+  newRecords: DeepReadonly<{ [key: string]: string }[]>,
+  existingDonors: DeepReadonly<DonorMap>
+): Promise<ValidationResult> => {
+  let errors: SubmissionValidationError[] = [];
+  // for each specimen record
+  for (let index = 0; index < newRecords.length; index++) {
+    const specimenRecord = newRecords[index];
+    // see if donor is registered
+    const donor = existingDonors[specimenRecord[FieldsEnum.submitter_donor_id]];
+    if (!donor) {
+      errors = errors.concat(
+        buildSubmissionError(
+          specimenRecord,
+          DataValidationErrors.ID_NOT_REGISTERED,
+          FieldsEnum.submitter_donor_id,
+          index
+        )
+      );
+      continue; // can't check anything else for this record
+    }
+    // check if donor has specimenId registered
+    if (
+      !donor.specimens.find(s => s.submitterId == specimenRecord[FieldsEnum.submitter_specimen_id])
+    ) {
+      errors = errors.concat(
+        buildSubmissionError(
+          specimenRecord,
+          DataValidationErrors.ID_NOT_REGISTERED,
+          FieldsEnum.submitter_specimen_id,
+          index
+        )
+      );
+    }
+  }
+  return { errors };
+};
+
 export const usingInvalidProgramId = (
   type: FileType,
   newDonorIndex: number,
@@ -461,6 +499,25 @@ const buildError = (
       specimenSubmitterId: newDonor.specimenSubmitterId,
       sampleSubmitterId: newDonor.sampleSubmitterId,
       value: newDonor[RegistrationToCreateRegistrationFieldsMap[fieldName]]
+    }
+  };
+};
+
+const buildSubmissionError = (
+  newRecord: { [key: string]: string },
+  type: DataValidationErrors,
+  fieldName: FieldsEnum,
+  index: number,
+  info: object = {}
+): SubmissionValidationError => {
+  return {
+    type,
+    fieldName,
+    index,
+    info: {
+      ...info,
+      donorSubmitterId: newRecord[FieldsEnum.submitter_donor_id],
+      value: newRecord[fieldName]
     }
   };
 };

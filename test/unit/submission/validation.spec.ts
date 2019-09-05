@@ -979,4 +979,46 @@ describe("data-validator", () => {
     chai.expect(result.errors).to.deep.include(row0Err);
     chai.expect(result.errors).to.deep.include(row2Err);
   });
+
+  it("should validate donor and specimen ids for specimen submissions", async () => {
+    const existingDonorMock: Donor = stubs.validation.existingDonor01();
+    const result = await dv.validateSpecimenData(
+      [
+        // only adding fields that are needed for id checks (clinical submissions are not strongly typied)
+        {
+          submitter_donor_id: "AB1",
+          program_id: "ABCD-EF",
+          submitter_specimen_id: "SP2"
+        },
+        {
+          submitter_donor_id: "AB2",
+          program_id: "ABCD-EF",
+          submitter_specimen_id: "SP1"
+        }
+      ],
+      { AB1: existingDonorMock }
+    );
+    const specimenIdErr: SubmissionValidationError = {
+      fieldName: FieldsEnum.submitter_specimen_id,
+      type: DataValidationErrors.ID_NOT_REGISTERED,
+      index: 0,
+      info: {
+        donorSubmitterId: "AB1",
+        value: "SP2"
+      }
+    };
+    const donorIdErr: SubmissionValidationError = {
+      fieldName: FieldsEnum.submitter_donor_id,
+      type: DataValidationErrors.ID_NOT_REGISTERED,
+      index: 1,
+      info: {
+        donorSubmitterId: "AB2",
+        value: "AB2"
+      }
+    };
+
+    chai.expect(result.errors.length).to.eq(2);
+    chai.expect(result.errors[0]).to.deep.eq(specimenIdErr);
+    chai.expect(result.errors[1]).to.deep.eq(donorIdErr);
+  });
 });
