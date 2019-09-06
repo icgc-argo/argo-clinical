@@ -1,3 +1,7 @@
+export interface ClinicalChild {
+  submitterId: string;
+}
+
 export interface Donor {
   _id?: string;
   donorId?: number;
@@ -13,19 +17,17 @@ export interface Donor {
   HormoneTherapy?: Array<Object>;
 }
 
-export interface Specimen {
+export interface Specimen extends ClinicalChild {
   samples: Array<Sample>;
   specimenType: string;
-  submitterId: string;
   specimenId?: number;
   tumourNormalDesignation: string;
   clinicalInfo?: object;
 }
 
-export interface Sample {
+export interface Sample extends ClinicalChild {
   sampleId?: number;
   sampleType: string;
-  submitterId: string;
 }
 
 export type DonorMap = Readonly<{ [submitterId: string]: Donor }>;

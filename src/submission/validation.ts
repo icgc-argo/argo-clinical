@@ -1,4 +1,4 @@
-import { DonorMap, Specimen, Sample, Donor } from "../clinical/clinical-entities";
+import { DonorMap, Specimen, Sample, Donor, ClinicalChild } from "../clinical/clinical-entities";
 import {
   DataValidationErrors,
   SubmissionValidationError,
@@ -75,13 +75,20 @@ export const validateSpecimenData = async (
   const errors: SubmissionValidationError[] = [];
   // for each specimen record
   for (let index = 0; index < specimenRecords.length; index++) {
-    const specimenRecord = specimenRecords[index];
-    // check ids are registered
-    const donor = checkDonorIdRegistered(specimenRecord, existingDonors, index, errors);
-    if (!donor) continue;
-    if (!checkSpecimenIdRegistered(specimenRecord, donor, index, errors)) continue;
-
-    // other checks which would run if Ids are registered
+    try {
+      const specimenRecord = specimenRecords[index];
+      // check ids are registered
+      const donor = checkDonorIdRegistered(specimenRecord, existingDonors, index);
+      checkIdRegisteredInCollection(
+        FieldsEnum.submitter_specimen_id,
+        specimenRecord,
+        donor.specimens,
+        index
+      );
+      // other checks run here
+    } catch (e) {
+      errors.push(e);
+    }
   }
   return { errors };
 };
@@ -569,72 +576,38 @@ function checkSpecimenMutations(
 function checkDonorIdRegistered(
   record: DeepReadonly<SubmissionRecord>,
   existingDonors: DeepReadonly<DonorMap>,
-  index: number,
-  errors: SubmissionValidationError[]
+  index: number
 ) {
   const donor = existingDonors[record[FieldsEnum.submitter_donor_id]];
   if (donor) {
     return donor;
   }
-  // donor not found push an error into errors
-  errors.push(
-    buildSubmissionError(
-      record,
-      DataValidationErrors.ID_NOT_REGISTERED,
-      FieldsEnum.submitter_donor_id,
-      index
-    )
+  // donor not found throw an error
+  throw buildSubmissionError(
+    record,
+    DataValidationErrors.ID_NOT_REGISTERED,
+    FieldsEnum.submitter_donor_id,
+    index
   );
 }
 
-function checkSpecimenIdRegistered(
+function checkIdRegisteredInCollection(
+  submitterIdType: FieldsEnum.submitter_specimen_id | FieldsEnum.submitter_sample_id, // add other Ids as needed
   record: DeepReadonly<SubmissionRecord>,
-  donor: DeepReadonly<Donor>,
-  index: number,
-  errors: SubmissionValidationError[]
+  clinicalCollection: DeepReadonly<Array<ClinicalChild>>,
+  index: number
 ) {
-  // check if there is a submitter_specimen_id
-  const submitterSpecimenId = record[FieldsEnum.submitter_specimen_id];
-  if (!submitterSpecimenId) {
-    return;
-  }
-  // check if submitter_specimen_id from record is registered in donor
-  const specimen = donor.specimens.find(spe => spe.submitterId == submitterSpecimenId);
-  if (specimen) {
-    return specimen;
-  }
-  // specimen not found push an error into errors
-  errors.push(
-    buildSubmissionError(
-      record,
-      DataValidationErrors.ID_NOT_REGISTERED,
-      FieldsEnum.submitter_specimen_id,
-      index
-    )
+  const clinicalChild = clinicalCollection.find(
+    a_child => a_child.submitterId == record[submitterIdType]
   );
-}
-
-function checkSampleIdRegistered(
-  record: DeepReadonly<SubmissionRecord>,
-  specimen: DeepReadonly<Specimen>,
-  index: number,
-  errors: SubmissionValidationError[]
-) {
-  const submitterSampleId = record[FieldsEnum.submitter_sample_id];
-  if (!submitterSampleId) {
-    return;
+  if (clinicalChild) {
+    return clinicalChild;
   }
-  const sample = specimen.samples.find(sam => sam.submitterId == submitterSampleId);
-  if (sample) {
-    return sample;
-  }
-  errors.push(
-    buildSubmissionError(
-      record,
-      DataValidationErrors.ID_NOT_REGISTERED,
-      FieldsEnum.submitter_sample_id,
-      index
-    )
+  throw buildSubmissionError(
+    record,
+    DataValidationErrors.ID_NOT_REGISTERED,
+    submitterIdType,
+    index
   );
 }
 
