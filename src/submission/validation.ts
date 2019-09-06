@@ -72,16 +72,15 @@ export const validateSpecimenData = async (
   specimenRecords: DeepReadonly<SubmissionRecord[]>,
   existingDonors: DeepReadonly<DonorMap>
 ): Promise<ValidationResult> => {
-  let errors: SubmissionValidationError[] = [];
+  const errors: SubmissionValidationError[] = [];
   // for each specimen record
   for (let index = 0; index < specimenRecords.length; index++) {
     const specimenRecord = specimenRecords[index];
     // check ids are registered
-    const idError = checkIdsRegistered(specimenRecord, existingDonors, index);
-    if (idError) {
-      errors = errors.concat(idError);
-      continue; // no need to check anything else
-    }
+    const donor = checkDonorIdRegistered(specimenRecord, existingDonors, index, errors);
+    if (!donor) continue;
+    if (!checkSpecimenIdRegistered(specimenRecord, donor, index, errors)) continue;
+
     // other checks which would run if Ids are registered
   }
   return { errors };
@@ -567,21 +566,33 @@ function checkSpecimenMutations(
   }
 }
 
-const checkIdsRegistered = (
-  record: SubmissionRecord,
+function checkDonorIdRegistered(
+  record: DeepReadonly<SubmissionRecord>,
   existingDonors: DeepReadonly<DonorMap>,
-  index: number
-) => {
-  // find a registered donor with submitter_donor_id from record
+  index: number,
+  errors: SubmissionValidationError[]
+) {
   const donor = existingDonors[record[FieldsEnum.submitter_donor_id]];
-  if (!donor) {
-    return buildSubmissionError(
+  if (donor) {
+    return donor;
+  }
+  // donor not found push an error into errors
+  errors.push(
+    buildSubmissionError(
       record,
       DataValidationErrors.ID_NOT_REGISTERED,
       FieldsEnum.submitter_donor_id,
       index
-    );
-  }
+    )
+  );
+}
+
+function checkSpecimenIdRegistered(
+  record: DeepReadonly<SubmissionRecord>,
+  donor: DeepReadonly<Donor>,
+  index: number,
+  errors: SubmissionValidationError[]
+) {
   // check if there is a submitter_specimen_id
   const submitterSpecimenId = record[FieldsEnum.submitter_specimen_id];
   if (!submitterSpecimenId) {
@@ -589,26 +600,43 @@ const checkIdsRegistered = (
   }
   // check if submitter_specimen_id from record is registered in donor
   const specimen = donor.specimens.find(spe => spe.submitterId == submitterSpecimenId);
-  if (!specimen) {
-    return buildSubmissionError(
+  if (specimen) {
+    return specimen;
+  }
+  // specimen not found push an error into errors
+  errors.push(
+    buildSubmissionError(
       record,
       DataValidationErrors.ID_NOT_REGISTERED,
       FieldsEnum.submitter_specimen_id,
       index
-    );
-  }
+    )
+  );
+}
 
-  // check if submitter_sample_id from record is registered in donor
+function checkSampleIdRegistered(
+  record: DeepReadonly<SubmissionRecord>,
+  specimen: DeepReadonly<Specimen>,
+  index: number,
+  errors: SubmissionValidationError[]
+) {
   const submitterSampleId = record[FieldsEnum.submitter_sample_id];
-  if (submitterSpecimenId && !specimen.samples.find(sam => sam.submitterId == submitterSampleId)) {
-    return buildSubmissionError(
+  if (!submitterSampleId) {
+    return;
+  }
+  const sample = specimen.samples.find(sam => sam.submitterId == submitterSampleId);
+  if (sample) {
+    return sample;
+  }
+  errors.push(
+    buildSubmissionError(
       record,
       DataValidationErrors.ID_NOT_REGISTERED,
       FieldsEnum.submitter_sample_id,
       index
-    );
-  }
-};
+    )
+  );
+}
 
 const buildSubmissionError = (
   newRecord: SubmissionRecord,
