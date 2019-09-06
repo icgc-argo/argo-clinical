@@ -73,10 +73,8 @@ export const validateSpecimenData = async (
   existingDonors: DeepReadonly<DonorMap>
 ): Promise<ValidationResult> => {
   const errors: SubmissionValidationError[] = [];
-  // for each specimen record
-  for (let index = 0; index < specimenRecords.length; index++) {
+  specimenRecords.forEach((specimenRecord, index) => {
     try {
-      const specimenRecord = specimenRecords[index];
       // check ids are registered
       const donor = checkDonorIdRegistered(specimenRecord, existingDonors, index);
       checkIdRegisteredInCollection(
@@ -89,7 +87,7 @@ export const validateSpecimenData = async (
     } catch (e) {
       errors.push(e);
     }
-  }
+  });
   return { errors };
 };
 
@@ -582,7 +580,6 @@ function checkDonorIdRegistered(
   if (donor) {
     return donor;
   }
-  // donor not found throw an error
   throw buildSubmissionError(
     record,
     DataValidationErrors.ID_NOT_REGISTERED,

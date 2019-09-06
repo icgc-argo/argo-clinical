@@ -1,7 +1,3 @@
-export interface ClinicalChild {
-  submitterId: string;
-}
-
 export interface Donor {
   _id?: string;
   donorId?: number;
@@ -15,6 +11,10 @@ export interface Donor {
   treatments?: Array<object>;
   chemotherapy?: Array<Object>;
   HormoneTherapy?: Array<Object>;
+}
+
+export interface ClinicalChild {
+  submitterId: string;
 }
 
 export interface Specimen extends ClinicalChild {
