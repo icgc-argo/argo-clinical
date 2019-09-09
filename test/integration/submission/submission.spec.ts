@@ -512,12 +512,13 @@ describe("Submission Api", () => {
         });
     });
 
-    it("should not accept invalid registration tsv", done => {
+    it("should not accept invalid registration tsv and clear existing active registration", async () => {
+      await insertData(dburl, "activeregistrations", ABCD_REGISTRATION_DOC);
       let file: Buffer;
       try {
         file = fs.readFileSync(__dirname + "/registration.invalid.tsv");
       } catch (err) {
-        return done(err);
+        throw err;
       }
       chai
         .request(app)
@@ -532,17 +533,10 @@ describe("Submission Api", () => {
               errors: expectedErrors,
               successful: false
             });
-            const conn = await mongo.connect(dburl);
-            const count = await conn
-              .db("clinical")
-              .collection("activeregistrations")
-              .count({});
-            await conn.close();
-            chai.expect(count).to.eq(0);
+            await assertDbCollectionEmpty(dburl, "activeregistration");
           } catch (err) {
-            return done(err);
+            throw err;
           }
-          return done();
         });
     });
     it("should not accept invalid file names", done => {
@@ -585,7 +579,6 @@ describe("Submission Api", () => {
 
     it("Registration should return 200 if deleted existing registration", async () => {
       const registrationId = await insertData(dburl, "activeregistrations", ABCD_REGISTRATION_DOC);
-      console.log("Deleting registration " + registrationId);
       return chai
         .request(app)
         .delete("/submission/program/ABCD-EF/registration/" + registrationId)
@@ -593,13 +586,7 @@ describe("Submission Api", () => {
         .then(async (res: any) => {
           try {
             res.should.have.status(200);
-            const conn = await mongo.connect(dburl);
-            const count = await conn
-              .db("clinical")
-              .collection("activeregistrations")
-              .count({});
-            await conn.close();
-            chai.expect(count).to.eq(0);
+            await assertDbCollectionEmpty(dburl, "activeregistration");
           } catch (err) {
             throw err;
           }
@@ -809,6 +796,16 @@ async function assertUploadOKRegistrationCreated(res: any, dburl: string) {
   if (!savedRegistration) {
     throw new Error("saved registration shouldn't be null");
   }
+}
+
+async function assertDbCollectionEmpty(dburl: string, collection: string) {
+  const conn = await mongo.connect(dburl);
+  const count = await conn
+    .db("clinical")
+    .collection(collection)
+    .count({});
+  await conn.close();
+  chai.expect(count).to.eq(0);
 }
 
 const comittedDonors2: Donor[] = [
