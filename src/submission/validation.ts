@@ -11,6 +11,7 @@ import { donorDao, DONOR_FIELDS } from "../clinical/donor-repo";
 import { DeepReadonly } from "deep-freeze";
 import { DataRecord } from "../lectern-client/schema-entities";
 import { FileType } from "./submission-api";
+import { submissionValidator } from "./validation-clinical/index";
 
 export const validateRegistrationData = async (
   expectedProgram: string,
@@ -65,6 +66,10 @@ export const validateRegistrationData = async (
   return {
     errors
   };
+};
+
+export const validateSubmissionData = async (records: any, clinicalType: FileType): Promise<[]> => {
+  return await submissionValidator[clinicalType].validate(records);
 };
 
 export const usingInvalidProgramId = (

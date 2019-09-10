@@ -155,6 +155,7 @@ export namespace operations {
     }
     await registrationRepository.delete(registrationId);
   };
+
   /**
    * upload donor
    * @param command SaveClinicalCommand
@@ -216,6 +217,64 @@ export namespace operations {
       successful: Object.keys(schemaErrors).length === 0
     };
   };
+
+  /**
+   * validate active submission
+   * @param command SaveClinicalCommand
+   */
+  export const validateMultipleClinical = async (
+    programId: string,
+    versionId: string
+  ): Promise<CreateSubmissionResult> => {
+    const exsistingActiveSubmission = await submissionRepository.findByProgramId(programId);
+    if (!exsistingActiveSubmission || exsistingActiveSubmission.version != versionId) {
+      throw new Errors.NotFound(
+        `No active submission found with programId: ${programId} & id: ${versionId}`
+      );
+    }
+    const newActiveSubmission = _.cloneDeep(exsistingActiveSubmission) as ActiveClinicalSubmission;
+    if (
+      exsistingActiveSubmission.state == SUBMISSION_STATE.VALID ||
+      exsistingActiveSubmission.state == SUBMISSION_STATE.PENDING_APPROVAL
+    ) {
+      return {
+        submission: newActiveSubmission,
+        errors: {},
+        successful: true
+      };
+    }
+    let valid = true;
+    for (const clinicalType in exsistingActiveSubmission.clinicalEntities) {
+      const clinicalEnity = exsistingActiveSubmission.clinicalEntities[clinicalType];
+      const errors = await dataValidator.validateSubmissionData(
+        clinicalEnity.records,
+        clinicalType as FileType
+      );
+      if (errors.length > 0) {
+        newActiveSubmission.clinicalEntities[clinicalType].dataErrors = errors;
+        valid = false;
+      }
+    }
+
+    // generate new version and make submission VALID/INVALID
+    newActiveSubmission.version = uuid();
+    newActiveSubmission.state = valid ? SUBMISSION_STATE.VALID : SUBMISSION_STATE.INVALID;
+    // insert into database
+    const updated = await submissionRepository.updateProgramWithVersion(
+      programId,
+      exsistingActiveSubmission.version,
+      newActiveSubmission
+    );
+    if (!updated) {
+      throw new Error("Couldn't update program.");
+    }
+    return {
+      submission: newActiveSubmission,
+      errors: {},
+      successful: valid
+    };
+  };
+
   /************* Private methods *************/
 
   const addNewDonorToStats = (
