@@ -246,12 +246,17 @@ export namespace operations {
     let valid = true;
     for (const clinicalType in exsistingActiveSubmission.clinicalEntities) {
       const clinicalEnity = exsistingActiveSubmission.clinicalEntities[clinicalType];
+      const relevantDonorsMap = await getRelevntDonors(clinicalEnity.records);
       const errors = await dataValidator.validateSubmissionData(
+        clinicalType as FileType,
         clinicalEnity.records,
-        clinicalType as FileType
+        relevantDonorsMap
       );
       if (errors.length > 0) {
         newActiveSubmission.clinicalEntities[clinicalType].dataErrors = errors;
+        newActiveSubmission.clinicalEntities[clinicalType].stats.errorsFound = errors.map(r => {
+          return r.index;
+        });
         valid = false;
       }
     }
@@ -477,5 +482,31 @@ export namespace operations {
       return unifiedSchemaErrors.concat(programIdErrors);
     }
     return [];
+  };
+
+  // need to refactor records to not use FieldsEnum, need to map clincal submission records
+  const getRelevntDonors = async (
+    records: DeepReadonly<{ [key: string]: string }[]>
+  ): Promise<DeepReadonly<DonorMap>> => {
+    const filters: DeepReadonly<FindByProgramAndSubmitterFilter[]> = F(
+      records.map(rc => {
+        return {
+          programId: rc[FieldsEnum.program_id],
+          submitterId: rc[FieldsEnum.submitter_donor_id]
+        };
+      })
+    );
+    // fetch related donor docs from the db
+    let donorDocs = await donorDao.findByProgramAndSubmitterId(filters);
+    if (!donorDocs) {
+      donorDocs = [];
+    }
+    const donors = F(donorDocs);
+    // build a donor hash map for faster access to donors
+    const donorByIdMapTemp: { [id: string]: DeepReadonly<Donor> } = {};
+    donors.forEach(dc => {
+      donorByIdMapTemp[dc.submitterId] = _.cloneDeep(dc);
+    });
+    return F(donorByIdMapTemp);
   };
 }

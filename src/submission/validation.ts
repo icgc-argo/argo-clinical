@@ -68,8 +68,12 @@ export const validateRegistrationData = async (
   };
 };
 
-export const validateSubmissionData = async (records: any, clinicalType: FileType): Promise<[]> => {
-  return await submissionValidator[clinicalType].validate(records);
+export const validateSubmissionData = async (
+  clinicalType: FileType,
+  records: DeepReadonly<{ [key: string]: string }[]>,
+  existingDonors: DeepReadonly<DonorMap>
+): Promise<SubmissionValidationError[]> => {
+  return await submissionValidator[clinicalType].validate(records, existingDonors);
 };
 
 export const usingInvalidProgramId = (
