@@ -43,6 +43,16 @@ export namespace operations {
   export const createRegistration = async (
     command: CreateRegistrationCommand
   ): Promise<CreateRegistrationResult> => {
+    // delete any existing active registration to replace it with the new one
+    // we can only have 1 active registration per program
+    const existingActivRegistration = await registrationRepository.findByProgramId(
+      command.programId
+    );
+
+    if (existingActivRegistration != undefined && existingActivRegistration._id) {
+      await registrationRepository.delete(existingActivRegistration._id);
+    }
+
     const schemaResult = schemaManager.instance().process("registration", command.records);
     let unifiedSchemaErrors: DeepReadonly<SubmissionValidationError[]> = [];
     if (anyErrors(schemaResult.validationErrors)) {
@@ -114,16 +124,6 @@ export namespace operations {
     }
 
     const stats = calculateUpdates(registrationRecords, donorsBySubmitterIdMap);
-
-    // delete any existing active registration to replace it with the new one
-    // we can only have 1 active registration per program
-    const existingActivRegistration = await registrationRepository.findByProgramId(
-      command.programId
-    );
-
-    if (existingActivRegistration != undefined && existingActivRegistration._id) {
-      await registrationRepository.delete(existingActivRegistration._id);
-    }
 
     // save the new registration object
     const registration = toActiveRegistration(command, registrationRecords, stats);
