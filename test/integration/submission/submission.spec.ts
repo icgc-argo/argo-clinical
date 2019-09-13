@@ -700,7 +700,7 @@ describe("Submission Api", () => {
           done();
         });
     });
-    it.only("should return invalid and data errors for validation request of invalid submission", done => {
+    it("should return invalid and data errors for validation request of invalid submission", done => {
       let file: Buffer;
       try {
         file = fs.readFileSync(__dirname + "/donor.tsv");

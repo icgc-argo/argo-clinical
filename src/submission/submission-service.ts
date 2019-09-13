@@ -227,15 +227,15 @@ export namespace operations {
     versionId: string
   ): Promise<CreateSubmissionResult> => {
     const exsistingActiveSubmission = await submissionRepository.findByProgramId(programId);
-    if (!exsistingActiveSubmission || exsistingActiveSubmission.version != versionId) {
+    if (!exsistingActiveSubmission || exsistingActiveSubmission.version !== versionId) {
       throw new Errors.NotFound(
-        `No active submission found with programId: ${programId} & id: ${versionId}`
+        `No active submission found with programId: ${programId} & versionId: ${versionId}`
       );
     }
     const newActiveSubmission = _.cloneDeep(exsistingActiveSubmission) as ActiveClinicalSubmission;
     if (
-      exsistingActiveSubmission.state == SUBMISSION_STATE.VALID ||
-      exsistingActiveSubmission.state == SUBMISSION_STATE.PENDING_APPROVAL
+      exsistingActiveSubmission.state === SUBMISSION_STATE.VALID ||
+      exsistingActiveSubmission.state === SUBMISSION_STATE.PENDING_APPROVAL
     ) {
       return {
         submission: newActiveSubmission,
@@ -243,27 +243,25 @@ export namespace operations {
         successful: true
       };
     }
-    let valid = true;
+    let inValid: boolean = false;
     for (const clinicalType in exsistingActiveSubmission.clinicalEntities) {
       const clinicalEnity = exsistingActiveSubmission.clinicalEntities[clinicalType];
-      const relevantDonorsMap = await getRelevntDonors(clinicalEnity.records);
+      const relevantDonorsMap = await getRelevantDonors(clinicalEnity.records);
       const errors = await dataValidator.validateSubmissionData(
         clinicalType as FileType,
         clinicalEnity.records,
         relevantDonorsMap
       );
-      if (errors.length > 0) {
-        newActiveSubmission.clinicalEntities[clinicalType].dataErrors = errors;
-        newActiveSubmission.clinicalEntities[clinicalType].stats.errorsFound = errors.map(r => {
-          return r.index;
-        });
-        valid = false;
-      }
+      inValid = errors.length > 0 || inValid;
+      newActiveSubmission.clinicalEntities[clinicalType].dataErrors = errors;
+      newActiveSubmission.clinicalEntities[clinicalType].stats.errorsFound = errors.map(r => {
+        return r.index;
+      });
     }
 
     // generate new version and make submission VALID/INVALID
     newActiveSubmission.version = uuid();
-    newActiveSubmission.state = valid ? SUBMISSION_STATE.VALID : SUBMISSION_STATE.INVALID;
+    newActiveSubmission.state = inValid ? SUBMISSION_STATE.INVALID : SUBMISSION_STATE.VALID;
     // insert into database
     const updated = await submissionRepository.updateProgramWithVersion(
       programId,
@@ -276,7 +274,7 @@ export namespace operations {
     return {
       submission: newActiveSubmission,
       errors: {},
-      successful: valid
+      successful: inValid
     };
   };
 
@@ -485,7 +483,7 @@ export namespace operations {
   };
 
   // need to refactor records to not use FieldsEnum, need to map clincal submission records
-  const getRelevntDonors = async (
+  const getRelevantDonors = async (
     records: DeepReadonly<{ [key: string]: string }[]>
   ): Promise<DeepReadonly<DonorMap>> => {
     const filters: DeepReadonly<FindByProgramAndSubmitterFilter[]> = F(
