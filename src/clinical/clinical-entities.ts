@@ -13,11 +13,11 @@ export interface Donor {
   HormoneTherapy?: Array<Object>;
 }
 
-export interface ClinicalChild {
+export interface DonorSubEntity {
   submitterId: string;
 }
 
-export interface Specimen extends ClinicalChild {
+export interface Specimen extends DonorSubEntity {
   samples: Array<Sample>;
   specimenType: string;
   specimenId?: number;
@@ -25,7 +25,7 @@ export interface Specimen extends ClinicalChild {
   clinicalInfo?: object;
 }
 
-export interface Sample extends ClinicalChild {
+export interface Sample extends DonorSubEntity {
   sampleId?: number;
   sampleType: string;
 }

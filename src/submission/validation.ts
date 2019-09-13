@@ -1,4 +1,4 @@
-import { DonorMap, Specimen, Sample, Donor, ClinicalChild } from "../clinical/clinical-entities";
+import { DonorMap, Specimen, Sample, Donor, DonorSubEntity } from "../clinical/clinical-entities";
 import {
   DataValidationErrors,
   SubmissionValidationError,
@@ -85,7 +85,11 @@ export const validateSpecimenData = async (
       );
       // other checks run here
     } catch (e) {
-      errors.push(e);
+      if (e.type in DataValidationErrors) {
+        errors.push(e);
+      } else {
+        throw e;
+      }
     }
   });
   return { errors };
@@ -591,11 +595,11 @@ function checkDonorIdRegistered(
 function checkIdRegisteredInCollection(
   submitterIdType: FieldsEnum.submitter_specimen_id | FieldsEnum.submitter_sample_id, // add other Ids as needed
   record: DeepReadonly<SubmissionRecord>,
-  clinicalCollection: DeepReadonly<Array<ClinicalChild>>,
+  clinicalCollection: DeepReadonly<Array<DonorSubEntity>>,
   index: number
 ) {
   const clinicalChild = clinicalCollection.find(
-    a_child => a_child.submitterId == record[submitterIdType]
+    a_child => a_child.submitterId === record[submitterIdType]
   );
   if (clinicalChild) {
     return clinicalChild;
