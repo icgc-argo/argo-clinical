@@ -69,11 +69,27 @@ export const validateRegistrationData = async (
 };
 
 export const validateSubmissionData = async (
-  clinicalType: FileType,
-  records: DeepReadonly<{ [key: string]: string }[]>,
+  newDonorsRecords: DeepReadonly<{ [donoSubmitterId: string]: { [field: string]: any } }>,
   existingDonors: DeepReadonly<DonorMap>
-): Promise<SubmissionValidationError[]> => {
-  return await submissionValidator[clinicalType].validate(records, existingDonors);
+): Promise<{ [clinicalType: string]: SubmissionValidationError[] }> => {
+  const errors: { [clinicalType: string]: any } = {};
+  for (const donorSubmitterId in newDonorsRecords) {
+    const newDonorRecords = newDonorsRecords[donorSubmitterId];
+    const existentDonor = existingDonors[donorSubmitterId];
+
+    for (const clinicalType in newDonorRecords) {
+      const newErrors = await submissionValidator[clinicalType].validate(
+        newDonorRecords,
+        existentDonor
+      );
+      if (!errors[clinicalType]) {
+        errors[clinicalType] = newErrors;
+      } else {
+        errors[clinicalType] = errors[clinicalType].concat(newErrors);
+      }
+    }
+  }
+  return errors;
 };
 
 export const usingInvalidProgramId = (

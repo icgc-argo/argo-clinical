@@ -31,6 +31,7 @@ import { DeepReadonly } from "deep-freeze";
 import { FileType } from "./submission-api";
 import { submissionRepository } from "./submission-repo";
 import { v1 as uuid } from "uuid";
+import { validateSubmissionData } from "./validation";
 const L = loggerFor(__filename);
 
 export namespace operations {
@@ -84,19 +85,7 @@ export namespace operations {
     );
 
     // fetch related donor docs from the db
-    let donorDocs = await donorDao.findByProgramAndSubmitterId(filters);
-    if (!donorDocs) {
-      donorDocs = [];
-    }
-
-    const donors = F(donorDocs);
-    // build a donor hash map for faster access to donors
-    const donorByIdMapTemp: { [id: string]: DeepReadonly<Donor> } = {};
-    donors.forEach(dc => {
-      donorByIdMapTemp[dc.submitterId] = _.cloneDeep(dc);
-    });
-    const donorsBySubmitterIdMap: DeepReadonly<DonorMap> = F(donorByIdMapTemp);
-
+    const donorsBySubmitterIdMap: DeepReadonly<DonorMap> = await getDonorsInProgram(filters);
     const { errors } = await dataValidator.validateRegistrationData(
       command.programId,
       registrationRecords,
@@ -220,7 +209,8 @@ export namespace operations {
 
   /**
    * validate active submission
-   * @param command SaveClinicalCommand
+   * @param programId String
+   * @param versionId String
    */
   export const validateMultipleClinical = async (
     programId: string,
@@ -243,15 +233,30 @@ export namespace operations {
         successful: true
       };
     }
-    let inValid: boolean = false;
+    // map donors(via donorId) to their relevant records
+    const newDonorDataMap: { [donoSubmitterId: string]: { [field: string]: any } } = {};
+    const filters: FindByProgramAndSubmitterFilter[] = [];
     for (const clinicalType in exsistingActiveSubmission.clinicalEntities) {
       const clinicalEnity = exsistingActiveSubmission.clinicalEntities[clinicalType];
-      const relevantDonorsMap = await getRelevantDonors(clinicalEnity.records);
-      const errors = await dataValidator.validateSubmissionData(
-        clinicalType as FileType,
-        clinicalEnity.records,
-        relevantDonorsMap
-      );
+      clinicalEnity.records.forEach((rc, index) => {
+        const donorId = rc[FieldsEnum.submitter_donor_id];
+        filters.push({
+          programId: rc[FieldsEnum.program_id],
+          submitterId: donorId
+        });
+        if (!newDonorDataMap[donorId]) {
+          newDonorDataMap[donorId] = {};
+        }
+        newDonorDataMap[donorId][clinicalType] = { ...rc, recordIndex: index };
+      });
+    }
+    const relevantDonorsMap = await getDonorsInProgram(filters);
+    const clinicalTypeErrors = await validateSubmissionData(newDonorDataMap, relevantDonorsMap);
+
+    // collect and update data errors and stats
+    let inValid: boolean = false;
+    for (const clinicalType in clinicalTypeErrors) {
+      const errors = clinicalTypeErrors[clinicalType];
       inValid = errors.length > 0 || inValid;
       newActiveSubmission.clinicalEntities[clinicalType].dataErrors = errors;
       newActiveSubmission.clinicalEntities[clinicalType].stats.errorsFound = errors.map(r => {
@@ -483,17 +488,9 @@ export namespace operations {
   };
 
   // need to refactor records to not use FieldsEnum, need to map clincal submission records
-  const getRelevantDonors = async (
-    records: DeepReadonly<{ [key: string]: string }[]>
+  const getDonorsInProgram = async (
+    filters: DeepReadonly<FindByProgramAndSubmitterFilter[]>
   ): Promise<DeepReadonly<DonorMap>> => {
-    const filters: DeepReadonly<FindByProgramAndSubmitterFilter[]> = F(
-      records.map(rc => {
-        return {
-          programId: rc[FieldsEnum.program_id],
-          submitterId: rc[FieldsEnum.submitter_donor_id]
-        };
-      })
-    );
     // fetch related donor docs from the db
     let donorDocs = await donorDao.findByProgramAndSubmitterId(filters);
     if (!donorDocs) {

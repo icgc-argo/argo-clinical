@@ -4,26 +4,25 @@ import {
   DataValidationErrors
 } from "../submission-entities";
 import { DeepReadonly } from "deep-freeze";
-import { DonorMap } from "../../clinical/clinical-entities";
+import { Donor } from "../../clinical/clinical-entities";
+import { FileType } from "../submission-api";
 
 export const validate = async (
-  donorRecords: DeepReadonly<{ [key: string]: string }[]>,
-  exisitingDonors: DeepReadonly<DonorMap>
-): Promise<SubmissionValidationError[]> => {
-  const errors: SubmissionValidationError[] = [];
-  donorRecords.forEach((donorRecord, index) => {
-    const donorSubmitterId = donorRecord[FieldsEnum.submitter_donor_id];
-    if (!exisitingDonors[donorSubmitterId]) {
-      errors.push({
-        type: DataValidationErrors.ID_NOT_REGISTERED,
-        fieldName: FieldsEnum.submitter_donor_id,
-        info: {
-          donorSubmitterId: donorSubmitterId,
-          value: donorSubmitterId
-        },
-        index: index
-      });
-    }
-  });
+  newDonorRecords: DeepReadonly<{ [clinicalType: string]: any }>,
+  existentDonor: DeepReadonly<Donor>
+): Promise<any> => {
+  const errors = [];
+  const donorSubmitterId = newDonorRecords[FileType.DONOR][FieldsEnum.submitter_donor_id];
+  if (!existentDonor) {
+    errors.push({
+      type: DataValidationErrors.ID_NOT_REGISTERED,
+      fieldName: FieldsEnum.submitter_donor_id,
+      info: {
+        donorSubmitterId: donorSubmitterId,
+        value: donorSubmitterId
+      },
+      index: newDonorRecords[FileType.DONOR].recordIndex
+    });
+  }
   return errors;
 };
