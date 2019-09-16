@@ -234,7 +234,7 @@ export namespace operations {
       };
     }
     // map donors(via donorId) to their relevant records
-    const newDonorDataMap: { [donoSubmitterId: string]: { [field: string]: any } } = {};
+    const newDonorDataMap: { [donoSubmitterId: string]: { [clinicalType: string]: any } } = {};
     const filters: FindByProgramAndSubmitterFilter[] = [];
     for (const clinicalType in exsistingActiveSubmission.clinicalEntities) {
       const clinicalEnity = exsistingActiveSubmission.clinicalEntities[clinicalType];
@@ -487,7 +487,6 @@ export namespace operations {
     return [];
   };
 
-  // need to refactor records to not use FieldsEnum, need to map clincal submission records
   const getDonorsInProgram = async (
     filters: DeepReadonly<FindByProgramAndSubmitterFilter[]>
   ): Promise<DeepReadonly<DonorMap>> => {
