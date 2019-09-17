@@ -31,6 +31,7 @@ import { DeepReadonly } from "deep-freeze";
 import { FileType } from "./submission-api";
 import { submissionRepository } from "./submission-repo";
 import { v1 as uuid } from "uuid";
+import { validateSubmissionData } from "./validation";
 const L = loggerFor(__filename);
 
 export namespace operations {
@@ -94,19 +95,7 @@ export namespace operations {
     );
 
     // fetch related donor docs from the db
-    let donorDocs = await donorDao.findByProgramAndSubmitterId(filters);
-    if (!donorDocs) {
-      donorDocs = [];
-    }
-
-    const donors = F(donorDocs);
-    // build a donor hash map for faster access to donors
-    const donorByIdMapTemp: { [id: string]: DeepReadonly<Donor> } = {};
-    donors.forEach(dc => {
-      donorByIdMapTemp[dc.submitterId] = _.cloneDeep(dc);
-    });
-    const donorsBySubmitterIdMap: DeepReadonly<DonorMap> = F(donorByIdMapTemp);
-
+    const donorsBySubmitterIdMap: DeepReadonly<DonorMap> = await getDonorsInProgram(filters);
     const { errors } = await dataValidator.validateRegistrationData(
       command.programId,
       registrationRecords,
@@ -225,6 +214,83 @@ export namespace operations {
       successful: Object.keys(schemaErrors).length === 0
     };
   };
+
+  /**
+   * validate active submission
+   * @param programId String
+   * @param versionId String
+   */
+  export const validateMultipleClinical = async (
+    programId: string,
+    versionId: string
+  ): Promise<CreateSubmissionResult> => {
+    const exsistingActiveSubmission = await submissionRepository.findByProgramId(programId);
+    if (!exsistingActiveSubmission || exsistingActiveSubmission.version !== versionId) {
+      throw new Errors.NotFound(
+        `No active submission found with programId: ${programId} & versionId: ${versionId}`
+      );
+    }
+    const newActiveSubmission = _.cloneDeep(exsistingActiveSubmission) as ActiveClinicalSubmission;
+    if (
+      exsistingActiveSubmission.state === SUBMISSION_STATE.VALID ||
+      exsistingActiveSubmission.state === SUBMISSION_STATE.PENDING_APPROVAL
+    ) {
+      return {
+        submission: newActiveSubmission,
+        errors: {},
+        successful: true
+      };
+    }
+    // map donors(via donorId) to their relevant records
+    const newDonorDataMap: { [donoSubmitterId: string]: { [clinicalType: string]: any } } = {};
+    const filters: FindByProgramAndSubmitterFilter[] = [];
+    for (const clinicalType in exsistingActiveSubmission.clinicalEntities) {
+      const clinicalEnity = exsistingActiveSubmission.clinicalEntities[clinicalType];
+      clinicalEnity.records.forEach((rc, index) => {
+        const donorId = rc[FieldsEnum.submitter_donor_id];
+        filters.push({
+          programId: rc[FieldsEnum.program_id],
+          submitterId: donorId
+        });
+        if (!newDonorDataMap[donorId]) {
+          newDonorDataMap[donorId] = {};
+        }
+        newDonorDataMap[donorId][clinicalType] = { ...rc, recordIndex: index };
+      });
+    }
+    const relevantDonorsMap = await getDonorsInProgram(filters);
+    const clinicalTypeErrors = await validateSubmissionData(newDonorDataMap, relevantDonorsMap);
+
+    // collect and update data errors and stats
+    let inValid: boolean = false;
+    for (const clinicalType in clinicalTypeErrors) {
+      const errors = clinicalTypeErrors[clinicalType];
+      inValid = errors.length > 0 || inValid;
+      newActiveSubmission.clinicalEntities[clinicalType].dataErrors = errors;
+      newActiveSubmission.clinicalEntities[clinicalType].stats.errorsFound = errors.map(r => {
+        return r.index;
+      });
+    }
+
+    // generate new version and make submission VALID/INVALID
+    newActiveSubmission.version = uuid();
+    newActiveSubmission.state = inValid ? SUBMISSION_STATE.INVALID : SUBMISSION_STATE.VALID;
+    // insert into database
+    const updated = await submissionRepository.updateProgramWithVersion(
+      programId,
+      exsistingActiveSubmission.version,
+      newActiveSubmission
+    );
+    if (!updated) {
+      throw new Error("Couldn't update program.");
+    }
+    return {
+      submission: newActiveSubmission,
+      errors: {},
+      successful: inValid
+    };
+  };
+
   /************* Private methods *************/
 
   const addNewDonorToStats = (
@@ -427,5 +493,22 @@ export namespace operations {
       return unifiedSchemaErrors.concat(programIdErrors);
     }
     return [];
+  };
+
+  const getDonorsInProgram = async (
+    filters: DeepReadonly<FindByProgramAndSubmitterFilter[]>
+  ): Promise<DeepReadonly<DonorMap>> => {
+    // fetch related donor docs from the db
+    let donorDocs = await donorDao.findByProgramAndSubmitterId(filters);
+    if (!donorDocs) {
+      donorDocs = [];
+    }
+    const donors = F(donorDocs);
+    // build a donor hash map for faster access to donors
+    const donorByIdMapTemp: { [id: string]: DeepReadonly<Donor> } = {};
+    donors.forEach(dc => {
+      donorByIdMapTemp[dc.submitterId] = _.cloneDeep(dc);
+    });
+    return F(donorByIdMapTemp);
   };
 }

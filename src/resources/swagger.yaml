@@ -195,6 +195,38 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/ValidationError"
+  /submission/program/{programId}/clinical/validate/{versionId}:
+    post:
+      parameters:
+        - name: programId
+          description: the short name of the program
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: versionId
+          description: the short name of the program
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Everything is OK"
+        "422":
+          description: "invalid clinical submission, see error messages"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  successful:
+                    type: boolean
+                    description: will be false in this case
+                  errors:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ValidationError"
   /clinical/donors:
     delete:
       parameters:

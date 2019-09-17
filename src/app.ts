@@ -66,6 +66,10 @@ app.post(
   upload.array("clinicalFiles"),
   middleware.wrapAsync(submissionAPI.saveClinicalTsvFiles)
 );
+app.post(
+  "/submission/program/:programId/clinical/validate/:versionId",
+  middleware.wrapAsync(submissionAPI.validateActiveSubmission)
+);
 /** Schema API */
 app.get("/submission/schema/", middleware.wrapAsync(schemaApi.get));
 // get template for a given schema

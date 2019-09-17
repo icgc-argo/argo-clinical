@@ -143,6 +143,18 @@ class SubmissionController {
     }
     return res.status(422).send(result);
   }
+
+  @HasSubmittionAccess((req: Request) => req.params.programId)
+  async validateActiveSubmission(req: Request, res: Response) {
+    const result = await submission.operations.validateMultipleClinical(
+      req.params.programId,
+      req.params.versionId
+    );
+    if (result.successful) {
+      return res.status(200).send(result);
+    }
+    return res.status(422).send(result);
+  }
 }
 
 const isValidCreateBody = (req: Request, res: Response): boolean => {
