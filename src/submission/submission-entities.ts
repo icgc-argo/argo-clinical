@@ -64,7 +64,8 @@ export enum DataValidationErrors {
   NEW_DONOR_CONFLICT = "NEW_DONOR_CONFLICT",
   INVALID_PROGRAM_ID = "INVALID_PROGRAM_ID",
   NEW_SPECIMEN_ID_CONFLICT = "NEW_SPECIMEN_ID_CONFLICT",
-  NEW_SAMPLE_ID_CONFLICT = "NEW_SAMPLE_ID_CONFLICT"
+  NEW_SAMPLE_ID_CONFLICT = "NEW_SAMPLE_ID_CONFLICT",
+  ID_NOT_REGISTERED = "ID_NOT_REGISTERED"
 }
 
 export type RegistrationStat = { [submitterId: string]: number[] };
@@ -135,7 +136,7 @@ export interface NewClinicalEntity {
 }
 
 export interface SavedClinicalEntity extends NewClinicalEntity {
-  dataErrors: [];
+  dataErrors: SubmissionValidationError[];
   stats: {
     new: number[];
     noUpdate: number[];
