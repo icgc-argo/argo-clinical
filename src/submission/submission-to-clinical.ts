@@ -2,20 +2,20 @@
  * This module is to host the operations that moves submission data
  * to the clinical model, somehow as set of ETL operations.
  */
-import { DeepReadonly } from "deep-freeze";
-import { Donor, Specimen, Sample } from "../clinical/clinical-entities";
+import { DeepReadonly } from 'deep-freeze';
+import { Donor, Specimen, Sample } from '../clinical/clinical-entities';
 import {
   CommitRegistrationCommand,
   ActiveRegistration,
   SubmittedRegistrationRecord,
-  FieldsEnum
-} from "./submission-entities";
+  FieldsEnum,
+} from './submission-entities';
 
-import { Errors } from "../utils";
-import { donorDao } from "../clinical/donor-repo";
-import _ from "lodash";
-import { F } from "../utils";
-import { registrationRepository } from "./registration-repo";
+import { Errors } from '../utils';
+import { donorDao } from '../clinical/donor-repo';
+import _ from 'lodash';
+import { F } from '../utils';
+import { registrationRepository } from './registration-repo';
 
 /**
  * This method will move the registered donor document to donor collection
@@ -30,12 +30,12 @@ export const commitRegisteration = async (command: Readonly<CommitRegistrationCo
   }
 
   const donorSampleDtos: DeepReadonly<CreateDonorSampleDto[]> = mapToCreateDonorSampleDto(
-    registration
+    registration,
   );
 
   for (const dto of donorSampleDtos) {
     const existingDonor = await donorDao.findByProgramAndSubmitterId([
-      { programId: dto.programId, submitterId: dto.submitterId }
+      { programId: dto.programId, submitterId: dto.submitterId },
     ]);
     if (existingDonor && existingDonor.length > 0) {
       const mergedDonor = addSamplesToDonor(existingDonor[0], dto);
@@ -65,7 +65,7 @@ const fromCreateDonorDtoToDonor = (createDonorDto: DeepReadonly<CreateDonorSampl
     followUps: [],
     treatments: [],
     chemotherapy: [],
-    HormoneTherapy: []
+    HormoneTherapy: [],
   };
   return donor;
 };
@@ -76,7 +76,7 @@ const toSpecimen = (s: DeepReadonly<CreateSpecimenDto>) => {
     clinicalInfo: {},
     specimenType: s.specimenType,
     tumourNormalDesignation: s.tumourNormalDesignation,
-    submitterId: s.submitterId
+    submitterId: s.submitterId,
   };
   return spec;
 };
@@ -84,14 +84,14 @@ const toSpecimen = (s: DeepReadonly<CreateSpecimenDto>) => {
 const toSample = (sa: DeepReadonly<CreateSampleDto>) => {
   const sample: Sample = {
     sampleType: sa.sampleType,
-    submitterId: sa.submitterId
+    submitterId: sa.submitterId,
   };
   return sample;
 };
 
 const addSamplesToDonor = (
   existingDonor: DeepReadonly<Donor>,
-  donorSampleDto: DeepReadonly<CreateDonorSampleDto>
+  donorSampleDto: DeepReadonly<CreateDonorSampleDto>,
 ) => {
   const mergedDonor = _.cloneDeep(existingDonor) as Donor;
   donorSampleDto.specimens.forEach(sp => {
@@ -123,7 +123,7 @@ const mapToCreateDonorSampleDto = (registration: DeepReadonly<ActiveRegistration
         submitterId: rec[FieldsEnum.submitter_donor_id],
         gender: rec[FieldsEnum.gender],
         programId: registration.programId,
-        specimens: [firstSpecimen]
+        specimens: [firstSpecimen],
       };
       donors.push(donor);
       return;
@@ -131,7 +131,7 @@ const mapToCreateDonorSampleDto = (registration: DeepReadonly<ActiveRegistration
 
     // if the specimen doesn't exist add it
     let specimen = donor.specimens.find(
-      s => s.submitterId === rec[FieldsEnum.submitter_specimen_id]
+      s => s.submitterId === rec[FieldsEnum.submitter_specimen_id],
     );
     if (!specimen) {
       specimen = getDonorSpecimen(rec);
@@ -139,7 +139,7 @@ const mapToCreateDonorSampleDto = (registration: DeepReadonly<ActiveRegistration
     } else {
       specimen.samples.push({
         sampleType: rec[FieldsEnum.sample_type],
-        submitterId: rec[FieldsEnum.submitter_sample_id]
+        submitterId: rec[FieldsEnum.submitter_sample_id],
       });
     }
   });
@@ -154,9 +154,9 @@ const getDonorSpecimen = (record: SubmittedRegistrationRecord) => {
     samples: [
       {
         sampleType: record[FieldsEnum.sample_type],
-        submitterId: record[FieldsEnum.submitter_sample_id]
-      }
-    ]
+        submitterId: record[FieldsEnum.submitter_sample_id],
+      },
+    ],
   };
 };
 

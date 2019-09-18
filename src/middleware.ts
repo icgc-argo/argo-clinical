@@ -1,10 +1,10 @@
-import express, { NextFunction, Request, Response, RequestHandler } from "express";
-import multer from "multer";
-import { loggerFor } from "./logger";
-import { Errors } from "./utils";
+import express, { NextFunction, Request, Response, RequestHandler } from 'express';
+import multer from 'multer';
+import { loggerFor } from './logger';
+import { Errors } from './utils';
 const L = loggerFor(__filename);
 // multer file upload handler
-export const upload = multer({ dest: "/tmp" });
+export const upload = multer({ dest: '/tmp' });
 
 // wrapper to handle errors from async express route handlers
 export const wrapAsync = (fn: RequestHandler): RequestHandler => {
@@ -18,9 +18,9 @@ export const wrapAsync = (fn: RequestHandler): RequestHandler => {
 
 // general catch all error handler
 export const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction): any => {
-  L.error("error handler received error: ", err);
+  L.error('error handler received error: ', err);
   if (res.headersSent) {
-    L.debug("error handler skipped");
+    L.debug('error handler skipped');
     return next(err);
   }
   let status: number;

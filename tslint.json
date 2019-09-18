@@ -6,7 +6,7 @@
     "indent": [true, "spaces"],
     "one-line": [true, "check-open-brace", "check-whitespace"],
     "no-var-keyword": true,
-    "quotemark": [true, "double", "avoid-escape"],
+    "quotemark": [true, "single", "avoid-escape"],
     "semicolon": [true, "always", "ignore-bound-class-methods"],
     "whitespace": [
       true,

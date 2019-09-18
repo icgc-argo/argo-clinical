@@ -1,32 +1,32 @@
-import fs from "fs";
-import { Request, Response } from "express";
-import deepFreeze from "deep-freeze";
-import mongoose from "mongoose";
+import fs from 'fs';
+import { Request, Response } from 'express';
+import deepFreeze from 'deep-freeze';
+import mongoose from 'mongoose';
 const fsPromises = fs.promises;
 
 export namespace TsvUtils {
   export const tsvToJson = async (
-    file: string
+    file: string,
   ): Promise<ReadonlyArray<{ [key: string]: string }>> => {
-    const contents = await fsPromises.readFile(file, "utf-8");
+    const contents = await fsPromises.readFile(file, 'utf-8');
     const arr = parseTsvToJson(contents);
     return arr;
   };
 
   export const parseTsvToJson = (content: string): ReadonlyArray<{ [key: string]: string }> => {
-    const lines = content.split("\n");
+    const lines = content.split('\n');
     const headers = lines
       .slice(0, 1)[0]
       .trim()
-      .split("\t");
+      .split('\t');
     const rows = lines.slice(1, lines.length).map(line => {
       // check for any empty lines
-      if (!line || line.trim() === "") {
+      if (!line || line.trim() === '') {
         return undefined;
       }
-      const data = line.split("\t");
+      const data = line.split('\t');
       return headers.reduce<{ [k: string]: string }>((obj, nextKey, index) => {
-        obj[nextKey] = (data[index] && data[index].trim()) || "";
+        obj[nextKey] = (data[index] && data[index].trim()) || '';
         return obj;
       }, {});
     });
@@ -46,9 +46,9 @@ export namespace ControllerUtils {
 
   export const badRequest = (
     res: Response,
-    msg: string | ControllerBadRequestError | Array<ControllerBadRequestError>
+    msg: string | ControllerBadRequestError | Array<ControllerBadRequestError>,
   ): any => {
-    if (typeof msg === "string") {
+    if (typeof msg === 'string') {
       return res.status(400).send({ message: msg });
     }
     res.status(400).send(msg);
@@ -101,7 +101,7 @@ export const isStringMatchRegex = (expression: string, value: string) => {
 };
 
 export const isNotEmptyString = (value: string) => {
-  return isNotAbsent(value) && value.trim() !== "";
+  return isNotAbsent(value) && value.trim() !== '';
 };
 
 export const isEmptyString = (value: string) => {

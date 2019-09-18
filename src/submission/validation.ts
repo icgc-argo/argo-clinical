@@ -1,22 +1,22 @@
-import { DonorMap, Specimen, Sample, Donor } from "../clinical/clinical-entities";
+import { DonorMap, Specimen, Sample, Donor } from '../clinical/clinical-entities';
 import {
   DataValidationErrors,
   SubmissionValidationError,
   CreateRegistrationRecord,
   ValidationResult,
   FieldsEnum,
-  RegistrationToCreateRegistrationFieldsMap
-} from "./submission-entities";
-import { donorDao, DONOR_FIELDS } from "../clinical/donor-repo";
-import { DeepReadonly } from "deep-freeze";
-import { DataRecord } from "../lectern-client/schema-entities";
-import { FileType } from "./submission-api";
-import { submissionValidator } from "./validation-clinical/index";
+  RegistrationToCreateRegistrationFieldsMap,
+} from './submission-entities';
+import { donorDao, DONOR_FIELDS } from '../clinical/donor-repo';
+import { DeepReadonly } from 'deep-freeze';
+import { DataRecord } from '../lectern-client/schema-entities';
+import { FileType } from './submission-api';
+import { submissionValidator } from './validation-clinical/index';
 
 export const validateRegistrationData = async (
   expectedProgram: string,
   newRecords: DeepReadonly<CreateRegistrationRecord[]>,
-  existingDonors: DeepReadonly<DonorMap>
+  existingDonors: DeepReadonly<DonorMap>,
 ): Promise<ValidationResult> => {
   let errors: SubmissionValidationError[] = [];
 
@@ -31,10 +31,10 @@ export const validateRegistrationData = async (
     // checks against db
     errors = errors.concat(await mutatingExistingData(index, registrationRecord, existingDonors));
     errors = errors.concat(
-      await specimenBelongsToOtherDonor(index, registrationRecord, expectedProgram)
+      await specimenBelongsToOtherDonor(index, registrationRecord, expectedProgram),
     );
     errors = errors.concat(
-      await sampleBelongsToAnotherSpecimen(index, registrationRecord, expectedProgram)
+      await sampleBelongsToAnotherSpecimen(index, registrationRecord, expectedProgram),
     );
 
     // cross checking new records in file
@@ -64,13 +64,13 @@ export const validateRegistrationData = async (
   }
 
   return {
-    errors
+    errors,
   };
 };
 
 export const validateSubmissionData = async (
   newDonorsRecords: DeepReadonly<{ [donoSubmitterId: string]: { [field: string]: any } }>,
-  existingDonors: DeepReadonly<DonorMap>
+  existingDonors: DeepReadonly<DonorMap>,
 ): Promise<{ [clinicalType: string]: SubmissionValidationError[] }> => {
   const errors: { [clinicalType: string]: any } = {};
   for (const donorSubmitterId in newDonorsRecords) {
@@ -80,7 +80,7 @@ export const validateSubmissionData = async (
     for (const clinicalType in newDonorRecords) {
       const newErrors = await submissionValidator[clinicalType].validate(
         newDonorRecords,
-        existentDonor
+        existentDonor,
       );
       if (!errors[clinicalType]) {
         errors[clinicalType] = newErrors;
@@ -96,7 +96,7 @@ export const usingInvalidProgramId = (
   type: FileType,
   newDonorIndex: number,
   record: DataRecord,
-  expectedProgram: string
+  expectedProgram: string,
 ) => {
   const errors: SubmissionValidationError[] = [];
   const programId = record[FieldsEnum.program_id];
@@ -106,7 +106,7 @@ export const usingInvalidProgramId = (
         type: DataValidationErrors.INVALID_PROGRAM_ID,
         fieldName: FieldsEnum.program_id,
         index: newDonorIndex,
-        info: getInfoObject(type, record, expectedProgram)
+        info: getInfoObject(type, record, expectedProgram),
       });
     }
     return errors;
@@ -116,7 +116,7 @@ export const usingInvalidProgramId = (
 const getInfoObject = (
   type: FileType,
   record: DeepReadonly<DataRecord>,
-  expectedProgram: string
+  expectedProgram: string,
 ) => {
   switch (type) {
     case FileType.REGISTRATION: {
@@ -125,14 +125,14 @@ const getInfoObject = (
         sampleSubmitterId: record[FieldsEnum.submitter_sample_id],
         specimenSubmitterId: record[FieldsEnum.submitter_specimen_id],
         donorSubmitterId: record[FieldsEnum.submitter_donor_id],
-        expectedProgram
+        expectedProgram,
       };
     }
     default: {
       return {
         value: record[FieldsEnum.program_id],
         donorSubmitterId: record[FieldsEnum.submitter_donor_id],
-        expectedProgram
+        expectedProgram,
       };
     }
   }
@@ -141,7 +141,7 @@ const getInfoObject = (
 const conflictingNewSpecimen = (
   newDonorIndex: number,
   newDonor: CreateRegistrationRecord,
-  newRecords: DeepReadonly<CreateRegistrationRecord[]>
+  newRecords: DeepReadonly<CreateRegistrationRecord[]>,
 ) => {
   const errors: SubmissionValidationError[] = [];
 
@@ -187,9 +187,9 @@ const conflictingNewSpecimen = (
         FieldsEnum.submitter_specimen_id,
         newDonorIndex,
         {
-          conflictingRows: conflictingSpecimensIndices
-        }
-      )
+          conflictingRows: conflictingSpecimensIndices,
+        },
+      ),
     );
   }
 
@@ -201,9 +201,9 @@ const conflictingNewSpecimen = (
         FieldsEnum.specimen_type,
         newDonorIndex,
         {
-          conflictingRows: conflictingSpecimenTypesIndices
-        }
-      )
+          conflictingRows: conflictingSpecimenTypesIndices,
+        },
+      ),
     );
   }
 
@@ -215,9 +215,9 @@ const conflictingNewSpecimen = (
         FieldsEnum.tumour_normal_designation,
         newDonorIndex,
         {
-          conflictingRows: conflictingSpecimenTumourDesignationIndices
-        }
-      )
+          conflictingRows: conflictingSpecimenTumourDesignationIndices,
+        },
+      ),
     );
   }
 
@@ -227,7 +227,7 @@ const conflictingNewSpecimen = (
 const conflictingNewDonor = (
   newDonorIndex: number,
   newDonor: CreateRegistrationRecord,
-  newRecords: DeepReadonly<CreateRegistrationRecord[]>
+  newRecords: DeepReadonly<CreateRegistrationRecord[]>,
 ) => {
   const errors: SubmissionValidationError[] = [];
   const conflictingGendersIndexes: number[] = [];
@@ -254,8 +254,8 @@ const conflictingNewDonor = (
       FieldsEnum.gender,
       newDonorIndex,
       {
-        conflictingRows: conflictingGendersIndexes
-      }
+        conflictingRows: conflictingGendersIndexes,
+      },
     );
     errors.push(err);
   }
@@ -265,7 +265,7 @@ const conflictingNewDonor = (
 const conflictingNewSample = (
   newDonorIndex: number,
   newDonor: CreateRegistrationRecord,
-  newRecords: DeepReadonly<CreateRegistrationRecord[]>
+  newRecords: DeepReadonly<CreateRegistrationRecord[]>,
 ) => {
   const errors: SubmissionValidationError[] = [];
   const conflictingSamplesIndices: number[] = [];
@@ -303,8 +303,8 @@ const conflictingNewSample = (
       FieldsEnum.submitter_sample_id,
       newDonorIndex,
       {
-        conflictingRows: conflictingSamplesIndices
-      }
+        conflictingRows: conflictingSamplesIndices,
+      },
     );
     errors.push(err);
   }
@@ -316,8 +316,8 @@ const conflictingNewSample = (
       FieldsEnum.sample_type,
       newDonorIndex,
       {
-        conflictingRows: conflictingSampleTypesIndices
-      }
+        conflictingRows: conflictingSampleTypesIndices,
+      },
     );
     errors.push(err);
   }
@@ -326,11 +326,11 @@ const conflictingNewSample = (
 
 const isNewSpecimen = async (
   newDonor: DeepReadonly<CreateRegistrationRecord>,
-  programId: string
+  programId: string,
 ) => {
   const count = await donorDao.countBy({
     [DONOR_FIELDS.PROGRAM_ID]: { $eq: programId },
-    [DONOR_FIELDS.SPECIMEN_SUBMITTER_ID]: { $eq: newDonor.specimenSubmitterId }
+    [DONOR_FIELDS.SPECIMEN_SUBMITTER_ID]: { $eq: newDonor.specimenSubmitterId },
   });
 
   return count == 0;
@@ -339,7 +339,7 @@ const isNewSpecimen = async (
 const isNewDonor = async (newDonor: DeepReadonly<CreateRegistrationRecord>, programId: string) => {
   const count = await donorDao.countBy({
     [DONOR_FIELDS.PROGRAM_ID]: { $eq: programId },
-    [DONOR_FIELDS.SUBMITTER_ID]: { $eq: newDonor.donorSubmitterId }
+    [DONOR_FIELDS.SUBMITTER_ID]: { $eq: newDonor.donorSubmitterId },
   });
 
   return count == 0;
@@ -348,7 +348,7 @@ const isNewDonor = async (newDonor: DeepReadonly<CreateRegistrationRecord>, prog
 const isNewSample = async (newDonor: DeepReadonly<CreateRegistrationRecord>, programId: string) => {
   const count = await donorDao.countBy({
     [DONOR_FIELDS.PROGRAM_ID]: { $eq: programId },
-    [DONOR_FIELDS.SPECIMEN_SAMPLE_SUBMITTER_ID]: { $eq: newDonor.sampleSubmitterId }
+    [DONOR_FIELDS.SPECIMEN_SAMPLE_SUBMITTER_ID]: { $eq: newDonor.sampleSubmitterId },
   });
 
   return count == 0;
@@ -357,7 +357,7 @@ const isNewSample = async (newDonor: DeepReadonly<CreateRegistrationRecord>, pro
 const mutatingExistingData = async (
   index: number,
   newDonor: CreateRegistrationRecord,
-  existingDonors: DeepReadonly<DonorMap>
+  existingDonors: DeepReadonly<DonorMap>,
 ) => {
   // if the donor doesn't exist => return
   const errors: SubmissionValidationError[] = [];
@@ -369,7 +369,7 @@ const mutatingExistingData = async (
     // we don't check program id here because we check it specifically in the program validation
     checkDonorMutations(newDonor, existingDonor, errors, index);
     existingSpecimen = existingDonor.specimens.find(
-      s => s.submitterId === newDonor.specimenSubmitterId
+      s => s.submitterId === newDonor.specimenSubmitterId,
     );
   }
 
@@ -381,7 +381,7 @@ const mutatingExistingData = async (
   if (existingSpecimen) {
     checkSpecimenMutations(newDonor, existingSpecimen, errors, index);
     existingSample = existingSpecimen.samples.find(
-      sa => sa.submitterId === newDonor.sampleSubmitterId
+      sa => sa.submitterId === newDonor.sampleSubmitterId,
     );
   }
 
@@ -399,7 +399,7 @@ const findExistingSampleFromDb = async (programId: string, submitterId: string) 
   let existingSample: undefined | Sample = undefined;
   const otherDonorWithSameSampleId = await donorDao.findBySampleSubmitterIdAndProgramId({
     programId,
-    submitterId
+    submitterId,
   });
 
   if (!otherDonorWithSameSampleId) {
@@ -420,13 +420,13 @@ const findExistingSampleFromDb = async (programId: string, submitterId: string) 
 const specimenBelongsToOtherDonor = async (
   index: number,
   newDonor: CreateRegistrationRecord,
-  programId: string
+  programId: string,
 ) => {
   const errors: SubmissionValidationError[] = [];
   const count = await donorDao.countBy({
     [DONOR_FIELDS.PROGRAM_ID]: { $eq: programId },
     [DONOR_FIELDS.SUBMITTER_ID]: { $ne: newDonor.donorSubmitterId },
-    [DONOR_FIELDS.SPECIMEN_SUBMITTER_ID]: { $eq: newDonor.specimenSubmitterId }
+    [DONOR_FIELDS.SPECIMEN_SUBMITTER_ID]: { $eq: newDonor.specimenSubmitterId },
   });
   if (count > 0) {
     errors.push(
@@ -435,8 +435,8 @@ const specimenBelongsToOtherDonor = async (
         DataValidationErrors.SPECIMEN_BELONGS_TO_OTHER_DONOR,
         FieldsEnum.submitter_specimen_id,
         index,
-        {}
-      )
+        {},
+      ),
     );
   }
   return errors;
@@ -445,13 +445,13 @@ const specimenBelongsToOtherDonor = async (
 const sampleBelongsToAnotherSpecimen = async (
   index: number,
   newDonor: CreateRegistrationRecord,
-  programId: string
+  programId: string,
 ) => {
   const errors: SubmissionValidationError[] = [];
   const count = await donorDao.countBy({
     [DONOR_FIELDS.PROGRAM_ID]: { $eq: programId },
     [DONOR_FIELDS.SPECIMEN_SUBMITTER_ID]: { $ne: newDonor.specimenSubmitterId },
-    [DONOR_FIELDS.SPECIMEN_SAMPLE_SUBMITTER_ID]: { $eq: newDonor.sampleSubmitterId }
+    [DONOR_FIELDS.SPECIMEN_SAMPLE_SUBMITTER_ID]: { $eq: newDonor.sampleSubmitterId },
   });
 
   if (count > 0) {
@@ -461,8 +461,8 @@ const sampleBelongsToAnotherSpecimen = async (
         DataValidationErrors.SAMPLE_BELONGS_TO_OTHER_SPECIMEN,
         FieldsEnum.submitter_sample_id,
         index,
-        {}
-      )
+        {},
+      ),
     );
   }
 
@@ -474,7 +474,7 @@ const buildError = (
   type: DataValidationErrors,
   fieldName: FieldsEnum,
   index: number,
-  info: object = {}
+  info: object = {},
 ): SubmissionValidationError => {
   return {
     type,
@@ -485,8 +485,8 @@ const buildError = (
       donorSubmitterId: newDonor.donorSubmitterId,
       specimenSubmitterId: newDonor.specimenSubmitterId,
       sampleSubmitterId: newDonor.sampleSubmitterId,
-      value: newDonor[RegistrationToCreateRegistrationFieldsMap[fieldName]]
-    }
+      value: newDonor[RegistrationToCreateRegistrationFieldsMap[fieldName]],
+    },
   };
 };
 
@@ -494,7 +494,7 @@ function checkSampleMutations(
   newDonor: CreateRegistrationRecord,
   existingSample: DeepReadonly<Sample>,
   errors: SubmissionValidationError[],
-  index: number
+  index: number,
 ) {
   if (newDonor.sampleType !== existingSample.sampleType) {
     errors.push(
@@ -503,8 +503,8 @@ function checkSampleMutations(
         DataValidationErrors.MUTATING_EXISTING_DATA,
         FieldsEnum.sample_type,
         index,
-        {}
-      )
+        {},
+      ),
     );
   }
 }
@@ -513,7 +513,7 @@ function checkDonorMutations(
   newDonor: CreateRegistrationRecord,
   existingDonor: DeepReadonly<Donor>,
   errors: SubmissionValidationError[],
-  index: number
+  index: number,
 ) {
   if (newDonor.gender != existingDonor.gender) {
     errors.push(
@@ -522,8 +522,8 @@ function checkDonorMutations(
         DataValidationErrors.MUTATING_EXISTING_DATA,
         FieldsEnum.gender,
         index,
-        {}
-      )
+        {},
+      ),
     );
   }
 }
@@ -532,11 +532,11 @@ async function findExistingSpecimenFromDb(newDonor: CreateRegistrationRecord) {
   let existingSpecimen: DeepReadonly<Specimen> | undefined;
   const otherDonorWithSameSpecimenId = await donorDao.findBySpecimenSubmitterIdAndProgramId({
     programId: newDonor.programId,
-    submitterId: newDonor.specimenSubmitterId
+    submitterId: newDonor.specimenSubmitterId,
   });
   if (otherDonorWithSameSpecimenId) {
     existingSpecimen = otherDonorWithSameSpecimenId.specimens.find(
-      s => s.submitterId === newDonor.specimenSubmitterId
+      s => s.submitterId === newDonor.specimenSubmitterId,
     );
   }
   return existingSpecimen;
@@ -546,7 +546,7 @@ function checkSpecimenMutations(
   newDonor: CreateRegistrationRecord,
   existingSpecimen: DeepReadonly<Specimen>,
   errors: SubmissionValidationError[],
-  index: number
+  index: number,
 ) {
   if (newDonor.specimenType !== existingSpecimen.specimenType) {
     errors.push(
@@ -555,8 +555,8 @@ function checkSpecimenMutations(
         DataValidationErrors.MUTATING_EXISTING_DATA,
         FieldsEnum.specimen_type,
         index,
-        {}
-      )
+        {},
+      ),
     );
   }
   if (newDonor.tumourNormalDesignation !== existingSpecimen.tumourNormalDesignation) {
@@ -566,8 +566,8 @@ function checkSpecimenMutations(
         DataValidationErrors.MUTATING_EXISTING_DATA,
         FieldsEnum.tumour_normal_designation,
         index,
-        {}
-      )
+        {},
+      ),
     );
   }
 }
