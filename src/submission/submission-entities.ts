@@ -136,7 +136,7 @@ export interface NewClinicalEntity {
 }
 
 export interface SavedClinicalEntity extends NewClinicalEntity {
-  dataErrors: [];
+  dataErrors: SubmissionValidationError[];
   stats: {
     new: number[];
     noUpdate: number[];

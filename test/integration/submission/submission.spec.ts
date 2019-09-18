@@ -15,7 +15,8 @@ import { TEST_PUB_KEY, JWT_ABCDEF, JWT_WXYZEF } from "../test.jwt";
 import {
   ActiveRegistration,
   ActiveClinicalSubmission,
-  FieldsEnum
+  FieldsEnum,
+  SUBMISSION_STATE
 } from "../../../src/submission/submission-entities";
 import { TsvUtils } from "../../../src/utils";
 import { donorDao } from "../../../src/clinical/donor-repo";
@@ -512,12 +513,13 @@ describe("Submission Api", () => {
         });
     });
 
-    it("should not accept invalid registration tsv", done => {
+    it("should not accept invalid registration tsv and clear existing active registration", async () => {
+      await insertData(dburl, "activeregistrations", ABCD_REGISTRATION_DOC);
       let file: Buffer;
       try {
         file = fs.readFileSync(__dirname + "/registration.invalid.tsv");
       } catch (err) {
-        return done(err);
+        throw err;
       }
       chai
         .request(app)
@@ -532,19 +534,13 @@ describe("Submission Api", () => {
               errors: expectedErrors,
               successful: false
             });
-            const conn = await mongo.connect(dburl);
-            const count = await conn
-              .db("clinical")
-              .collection("activeregistrations")
-              .count({});
-            await conn.close();
-            chai.expect(count).to.eq(0);
+            await assertDbCollectionEmpty(dburl, "activeregistration");
           } catch (err) {
-            return done(err);
+            throw err;
           }
-          return done();
         });
     });
+
     it("should not accept invalid file names", done => {
       let file: Buffer;
       try {
@@ -571,6 +567,7 @@ describe("Submission Api", () => {
           return done();
         });
     });
+
     it("Registration should return 404 if try to delete non exsistent registration", done => {
       chai
         .request(app)
@@ -585,7 +582,6 @@ describe("Submission Api", () => {
 
     it("Registration should return 200 if deleted existing registration", async () => {
       const registrationId = await insertData(dburl, "activeregistrations", ABCD_REGISTRATION_DOC);
-      console.log("Deleting registration " + registrationId);
       return chai
         .request(app)
         .delete("/submission/program/ABCD-EF/registration/" + registrationId)
@@ -593,18 +589,15 @@ describe("Submission Api", () => {
         .then(async (res: any) => {
           try {
             res.should.have.status(200);
-            const conn = await mongo.connect(dburl);
-            const count = await conn
-              .db("clinical")
-              .collection("activeregistrations")
-              .count({});
-            await conn.close();
-            chai.expect(count).to.eq(0);
+            await assertDbCollectionEmpty(dburl, "activeregistration");
           } catch (err) {
             throw err;
           }
         });
     });
+  });
+
+  describe("clinical-submission", function() {
     it("should return 422 if try to upload invalid tsv files", done => {
       let file: Buffer;
       let file2: Buffer;
@@ -659,7 +652,7 @@ describe("Submission Api", () => {
           return done();
         });
     });
-    it("should return appropriate errors for clinical upload", done => {
+    it("should return appropriate schema errors for clinical upload", done => {
       const files: Buffer[] = [];
       try {
         files.push(fs.readFileSync(__dirname + "/donor.tsv"));
@@ -694,7 +687,98 @@ describe("Submission Api", () => {
           done();
         });
     });
+    it("should return invalid and data errors for validation request of invalid submission", done => {
+      let file: Buffer;
+      try {
+        file = fs.readFileSync(__dirname + "/donor.tsv");
+      } catch (err) {
+        return err;
+      }
+      chai
+        .request(app)
+        .post("/submission/program/ABCD-EF/clinical/upload")
+        .auth(JWT_ABCDEF, { type: "bearer" })
+        .attach("clinicalFiles", file, "donor.tsv")
+        .end((err: any, res: any) => {
+          try {
+            res.body.submission.state.should.eq(SUBMISSION_STATE.OPEN);
+            chai
+              .request(app)
+              .post("/submission/program/ABCD-EF/clinical/validate/" + res.body.submission.version)
+              .auth(JWT_ABCDEF, { type: "bearer" })
+              .end((err: any, res: any) => {
+                try {
+                  res.body.submission.state.should.eq(SUBMISSION_STATE.INVALID);
+                  res.body.submission.clinicalEntities.donor.stats.errorsFound.should.deep.eq([0]);
+                  res.body.submission.clinicalEntities.donor.dataErrors.should.deep.eq([
+                    {
+                      type: "ID_NOT_REGISTERED",
+                      fieldName: "submitter_donor_id",
+                      info: {
+                        donorSubmitterId: "ICGC_0001",
+                        value: "ICGC_0001"
+                      },
+                      index: 0
+                    }
+                  ]);
+                  return done();
+                } catch (err) {
+                  return done(err);
+                }
+              });
+          } catch (err) {
+            return done(err);
+          }
+        });
+    });
+    it("should return valid and no errors for validation request of valid submission", async () => {
+      let file: Buffer;
+      try {
+        file = fs.readFileSync(__dirname + "/donor.tsv");
+      } catch (err) {
+        return err;
+      }
+      // insert donor into db
+      await insertData(dburl, "donors", {
+        followUps: [],
+        treatments: [],
+        chemotherapy: [],
+        HormoneTherapy: [],
+        gender: "Male",
+        submitterId: "ICGC_0001",
+        programId: "ABCD-EF",
+        specimens: [],
+        donorId: 1
+      });
+      return chai
+        .request(app)
+        .post("/submission/program/ABCD-EF/clinical/upload")
+        .auth(JWT_ABCDEF, { type: "bearer" })
+        .attach("clinicalFiles", file, "donor.tsv")
+        .then(async (res: any) => {
+          try {
+            res.should.have.status(200);
+            res.body.submission.state.should.eq(SUBMISSION_STATE.OPEN);
+            const versionId = res.body.submission.version;
+            return chai
+              .request(app)
+              .post("/submission/program/ABCD-EF/clinical/validate/" + versionId)
+              .auth(JWT_ABCDEF, { type: "bearer" })
+              .then((res: any) => {
+                try {
+                  res.body.submission.state.should.eq(SUBMISSION_STATE.VALID);
+                  res.body.submission.clinicalEntities.donor.dataErrors.length.should.eq(0);
+                } catch (err) {
+                  throw err;
+                }
+              });
+          } catch (err) {
+            throw err;
+          }
+        });
+    });
   });
+
   describe("schema", function() {
     it("get template found", done => {
       const name = "registration";
@@ -809,6 +893,16 @@ async function assertUploadOKRegistrationCreated(res: any, dburl: string) {
   if (!savedRegistration) {
     throw new Error("saved registration shouldn't be null");
   }
+}
+
+async function assertDbCollectionEmpty(dburl: string, collection: string) {
+  const conn = await mongo.connect(dburl);
+  const count = await conn
+    .db("clinical")
+    .collection(collection)
+    .count({});
+  await conn.close();
+  chai.expect(count).to.eq(0);
 }
 
 const comittedDonors2: Donor[] = [
