@@ -112,7 +112,7 @@ paths:
         required: true
       responses:
         '400':
-          $ref: '#/components/responses/InvalidFileStructureError'
+          $ref: '#/components/responses/FileStructureError'
         '422':
           description: 'invalid registration file'
           content:
@@ -251,7 +251,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ClinicalSubmission'
         '400':
-          $ref: '#/components/responses/InvalidFileStructureError'
+          $ref: '#/components/responses/FileStructureError'
         '422':
           description: 'invalid clinical submission file'
           content:
@@ -393,14 +393,14 @@ components:
   parameters:
     QueryProgramId:
       name: programId
-      description: the short name of the program
+      description: Short Name of the program (ex. ABCD-EF)
       in: query
       required: true
       schema:
         type: string
     QuerySubmitterId:
       name: submitterId
-      description: the submitter Id
+      description: Submitter Id of the entity
       in: query
       required: true
       schema:
@@ -411,11 +411,11 @@ components:
     ServerError:
       description: Server error
     ForbiddenError:
-      description: if the token has incorrect scopes
+      description: Access token has incorrect scopes
     NotFoundError:
-      description: The requested resource was not found
-    InvalidFileStructureError:
-      description: "the file structure is invalid, couldn't be parsed correctly"
+      description: Requested resource was not found
+    FileStructureError:
+      description: File structure couldn't be parsed correctly, or has an invalid filename
       content:
         application/json:
           schema:
