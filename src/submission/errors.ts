@@ -1,7 +1,7 @@
 export class InternalError extends Error {
   constructor(message: string, private cause: Error) {
     super(message);
-    this.name = "InternalError";
+    this.name = 'InternalError';
   }
   public getCause() {
     return this.cause;

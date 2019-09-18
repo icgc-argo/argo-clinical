@@ -1,6 +1,6 @@
-import { donorDao } from "./donor-repo";
-import { Errors } from "../utils";
-import { Sample } from "./clinical-entities";
+import { donorDao } from './donor-repo';
+import { Errors } from '../utils';
+import { Sample } from './clinical-entities';
 
 export async function getDonors(programId: string) {
   return await donorDao.findByProgramId(programId);
@@ -9,7 +9,7 @@ export async function getDonors(programId: string) {
 export async function findDonorId(submitterId: string, programId: string) {
   const donor = await findDonor(submitterId, programId);
   if (!donor) {
-    throw new Errors.NotFound("Donor not found");
+    throw new Errors.NotFound('Donor not found');
   }
   return `DO${donor.donorId}`;
 }
@@ -17,11 +17,11 @@ export async function findDonorId(submitterId: string, programId: string) {
 export async function findSpecimenId(submitterId: string, programId: string) {
   const donor = await donorDao.findBySpecimenSubmitterIdAndProgramId({ submitterId, programId });
   if (!donor) {
-    throw new Errors.NotFound("Specimen not found");
+    throw new Errors.NotFound('Specimen not found');
   }
   const specimen = donor.specimens.find(sp => sp.submitterId == submitterId);
   if (!specimen) {
-    throw new Error("not possible, check your query");
+    throw new Error('not possible, check your query');
   }
   return `SP${specimen.specimenId}`;
 }
@@ -29,7 +29,7 @@ export async function findSpecimenId(submitterId: string, programId: string) {
 export async function findSampleId(submitterId: string, programId: string) {
   const donor = await donorDao.findBySampleSubmitterIdAndProgramId({ submitterId, programId });
   if (!donor) {
-    throw new Errors.NotFound("Sample not found");
+    throw new Errors.NotFound('Sample not found');
   }
 
   let sample: Sample | undefined = undefined;
@@ -46,7 +46,7 @@ export async function findSampleId(submitterId: string, programId: string) {
   }
 
   if (!sample) {
-    throw new Error("not possible, check your query");
+    throw new Error('not possible, check your query');
   }
   return `SA${sample.sampleId}`;
 }
@@ -55,8 +55,8 @@ export async function findDonor(submitterId: string, programId: string) {
   const donors = await donorDao.findByProgramAndSubmitterId([
     {
       programId: programId,
-      submitterId: submitterId
-    }
+      submitterId: submitterId,
+    },
   ]);
 
   if (!donors || donors.length == 0) {

@@ -2,18 +2,18 @@ import {
   SchemaValidationError,
   TypedDataRecord,
   SchemaTypes,
-  SchemaProcessingResult
-} from "./schema-entities";
-import vm from "vm";
+  SchemaProcessingResult,
+} from './schema-entities';
+import vm from 'vm';
 import {
   SchemasDictionary,
   SchemaDefinition,
   FieldDefinition,
   ValueType,
   DataRecord,
-  SchemaValidationErrorTypes
-} from "./schema-entities";
-import { loggerFor } from "../logger";
+  SchemaValidationErrorTypes,
+} from './schema-entities';
+import { loggerFor } from '../logger';
 import {
   Checks,
   notEmpty,
@@ -21,21 +21,21 @@ import {
   isNotEmptyString,
   isAbsent,
   F,
-  isNotAbsent
-} from "../utils";
+  isNotAbsent,
+} from '../utils';
 const L = loggerFor(__filename);
 
 export const process = (
   dataSchema: SchemasDictionary,
   definition: string,
-  records: ReadonlyArray<DataRecord>
+  records: ReadonlyArray<DataRecord>,
 ): SchemaProcessingResult => {
-  Checks.checkNotNull("records", records);
-  Checks.checkNotNull("dataSchema", dataSchema);
-  Checks.checkNotNull("definition", definition);
+  Checks.checkNotNull('records', records);
+  Checks.checkNotNull('dataSchema', dataSchema);
+  Checks.checkNotNull('definition', definition);
 
   const schemaDef: SchemaDefinition | undefined = dataSchema.schemas.find(
-    e => e.name === definition
+    e => e.name === definition,
   );
   if (!schemaDef) {
     throw new Error(`no schema found for : ${definition}`);
@@ -58,7 +58,7 @@ export const process = (
     const postTypeConversionValidationResult = validateAfterTypeConversion(
       schemaDef,
       convertedRecord,
-      index
+      index,
     );
     if (postTypeConversionValidationResult && postTypeConversionValidationResult.length > 0) {
       validationErrors = validationErrors.concat(postTypeConversionValidationResult);
@@ -67,11 +67,11 @@ export const process = (
     processedRecords.push(convertedRecord);
   });
   L.debug(
-    `done processing all rows, validationErrors: ${validationErrors.length}, validRecords: ${processedRecords.length}`
+    `done processing all rows, validationErrors: ${validationErrors.length}, validRecords: ${processedRecords.length}`,
   );
   return F({
     validationErrors,
-    processedRecords
+    processedRecords,
   });
 };
 
@@ -84,16 +84,16 @@ export const process = (
 const populateDefaults = (
   schemaDef: Readonly<SchemaDefinition>,
   record: DataRecord,
-  index: number
+  index: number,
 ): DataRecord => {
-  Checks.checkNotNull("records", record);
+  Checks.checkNotNull('records', record);
   L.debug(`in populateDefaults ${schemaDef.name}, ${record}`);
   const mutableRecord: RawMutableRecord = { ...record };
   const x: SchemaDefinition = schemaDef;
   schemaDef.fields.forEach(field => {
     if (
       isNotAbsent(record[field.name]) &&
-      record[field.name].trim() === "" &&
+      record[field.name].trim() === '' &&
       field.meta &&
       field.meta.default
     ) {
@@ -109,7 +109,7 @@ const convertFromRawStrings = (
   schemaDef: SchemaDefinition,
   record: DataRecord,
   index: number,
-  recordErrors: ReadonlyArray<SchemaValidationError>
+  recordErrors: ReadonlyArray<SchemaValidationError>,
 ): TypedDataRecord => {
   const mutableRecord: MutableRecord = { ...record };
   schemaDef.fields.forEach(field => {
@@ -119,7 +119,7 @@ const convertFromRawStrings = (
       recordErrors.find(
         er =>
           er.errorType == SchemaValidationErrorTypes.INVALID_FIELD_VALUE_TYPE &&
-          er.fieldName == field.name
+          er.fieldName == field.name,
       )
     ) {
       return undefined;
@@ -158,12 +158,12 @@ const convertFromRawStrings = (
 const validate = (
   schemaDef: SchemaDefinition,
   record: DataRecord,
-  index: number
+  index: number,
 ): ReadonlyArray<SchemaValidationError> => {
   const majorErrors = validation
     .runValidationPipeline(record, index, schemaDef.fields, [
       validation.validateRequiredFields,
-      validation.validateValueTypes
+      validation.validateValueTypes,
     ])
     .filter(notEmpty);
   return [...majorErrors];
@@ -172,13 +172,13 @@ const validate = (
 const validateAfterTypeConversion = (
   schemaDef: SchemaDefinition,
   record: TypedDataRecord,
-  index: number
+  index: number,
 ): ReadonlyArray<SchemaValidationError> => {
   const validationErrors = validation
     .runValidationPipeline(record, index, schemaDef.fields, [
       validation.validateRegex,
       validation.validateEnum,
-      validation.validateScript
+      validation.validateScript,
     ])
     .filter(notEmpty);
 
@@ -187,7 +187,7 @@ const validateAfterTypeConversion = (
 export type ProcessingFunction = (
   schema: SchemaDefinition,
   rec: Readonly<DataRecord>,
-  index: number
+  index: number,
 ) => any;
 
 type MutableRecord = { [key: string]: SchemaTypes };
@@ -198,21 +198,21 @@ namespace validation {
   export type TypedValidationFunction = (
     rec: TypedDataRecord,
     index: number,
-    fields: Array<FieldDefinition>
+    fields: Array<FieldDefinition>,
   ) => Array<SchemaValidationError>;
 
   // these validation functions run BEFORE the record has been converted to the correct types from raw strings
   export type ValidationFunction = (
     rec: DataRecord,
     index: number,
-    fields: Array<FieldDefinition>
+    fields: Array<FieldDefinition>,
   ) => Array<SchemaValidationError>;
 
   export const runValidationPipeline = (
     rec: DataRecord | TypedDataRecord,
     index: number,
     fields: ReadonlyArray<FieldDefinition>,
-    funs: Array<ValidationFunction | TypedValidationFunction>
+    funs: Array<ValidationFunction | TypedValidationFunction>,
   ) => {
     let result: Array<SchemaValidationError> = [];
     for (const fun of funs) {
@@ -222,7 +222,7 @@ namespace validation {
       } else {
         const typedFunc = fun as TypedValidationFunction;
         result = result.concat(
-          typedFunc(rec as TypedDataRecord, index, getValidFields(result, fields))
+          typedFunc(rec as TypedDataRecord, index, getValidFields(result, fields)),
         );
       }
     }
@@ -232,12 +232,12 @@ namespace validation {
   export const validateRegex: TypedValidationFunction = (
     rec: TypedDataRecord,
     index: number,
-    fields: ReadonlyArray<FieldDefinition>
+    fields: ReadonlyArray<FieldDefinition>,
   ) => {
     return fields
       .map(field => {
         const value = rec[field.name];
-        if (typeof value !== "string") {
+        if (typeof value !== 'string') {
           return undefined;
         }
 
@@ -256,7 +256,7 @@ namespace validation {
   export const validateScript: TypedValidationFunction = (
     rec: TypedDataRecord,
     index: number,
-    fields: Array<FieldDefinition>
+    fields: Array<FieldDefinition>,
   ) => {
     return fields
       .map(field => {
@@ -264,7 +264,7 @@ namespace validation {
           const scriptResult = validateWithScript(field, rec);
           if (!scriptResult.valid) {
             return buildError(SchemaValidationErrorTypes.INVALID_BY_SCRIPT, field.name, index, {
-              message: scriptResult.message
+              message: scriptResult.message,
             });
           }
         }
@@ -276,7 +276,7 @@ namespace validation {
   export const validateEnum: TypedValidationFunction = (
     rec: TypedDataRecord,
     index: number,
-    fields: Array<FieldDefinition>
+    fields: Array<FieldDefinition>,
   ) => {
     return fields
       .map(field => {
@@ -295,7 +295,7 @@ namespace validation {
   export const validateValueTypes: ValidationFunction = (
     rec: DataRecord,
     index: number,
-    fields: Array<FieldDefinition>
+    fields: Array<FieldDefinition>,
   ) => {
     return fields
       .map(field => {
@@ -310,7 +310,7 @@ namespace validation {
   export const validateRequiredFields = (
     rec: DataRecord,
     index: number,
-    fields: Array<FieldDefinition>
+    fields: Array<FieldDefinition>,
   ) => {
     return fields
       .map(field => {
@@ -324,7 +324,7 @@ namespace validation {
 
   export const getValidFields = (
     errs: ReadonlyArray<SchemaValidationError>,
-    fields: ReadonlyArray<FieldDefinition>
+    fields: ReadonlyArray<FieldDefinition>,
   ) => {
     return fields.filter(field => {
       return !errs.find(e => e.fieldName == field.name);
@@ -343,7 +343,7 @@ namespace validation {
       case ValueType.NUMBER:
         return Number(value) == NaN;
       case ValueType.BOOLEAN:
-        return !(value.toLowerCase() === "true" || value.toLowerCase() === "false");
+        return !(value.toLowerCase() === 'true' || value.toLowerCase() === 'false');
     }
   };
 
@@ -353,7 +353,7 @@ namespace validation {
 
   const isInvalidEnumValue = (
     codeList: Array<string | number>,
-    value: string | boolean | number
+    value: string | boolean | number,
   ) => {
     // optional field if the value is absent at this point
     if (isAbsent(value)) return false;
@@ -369,7 +369,7 @@ namespace validation {
 
   const validateWithScript = (
     field: FieldDefinition,
-    record: TypedDataRecord
+    record: TypedDataRecord,
   ): {
     valid: boolean;
     message: string;
@@ -377,11 +377,11 @@ namespace validation {
     try {
       const sandbox = {
         $row: record,
-        $field: record[field.name]
+        $field: record[field.name],
       };
 
       if (!field.restrictions || !field.restrictions.script) {
-        throw new Error("called validation by script without script provided");
+        throw new Error('called validation by script without script provided');
       }
 
       const script = new vm.Script(field.restrictions.script);
@@ -389,13 +389,13 @@ namespace validation {
       const result = script.runInContext(ctx);
       return {
         valid: result.valid,
-        message: result.message || ""
+        message: result.message || '',
       };
     } catch (err) {
       console.error(`failed running validation script ${field.name} for record: ${record}`);
       return {
         valid: false,
-        message: "failed to run script validation, check script and the input"
+        message: 'failed to run script validation, check script and the input',
       };
     }
   };
@@ -404,7 +404,7 @@ namespace validation {
     errorType: SchemaValidationErrorTypes,
     fieldName: string,
     index: number,
-    info: object = {}
+    info: object = {},
   ): SchemaValidationError => {
     return { errorType, fieldName, index, info };
   };

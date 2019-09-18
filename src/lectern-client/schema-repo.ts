@@ -1,7 +1,7 @@
-import mongoose from "mongoose";
-import { SchemasDictionary } from "./schema-entities";
-import { loggerFor } from "../logger";
-import { MongooseUtils } from "../utils";
+import mongoose from 'mongoose';
+import { SchemasDictionary } from './schema-entities';
+import { loggerFor } from '../logger';
+import { MongooseUtils } from '../utils';
 const L = loggerFor(__filename);
 
 export interface SchemaRepository {
@@ -13,23 +13,23 @@ export const schemaRepo: SchemaRepository = {
   createOrUpdate: async (schema: SchemasDictionary): Promise<SchemasDictionary | null> => {
     const result = await DataSchemaModel.findOneAndUpdate(
       {
-        name: schema.name
+        name: schema.name,
       },
       {
         name: schema.name,
         version: schema.version,
-        schemas: schema.schemas
+        schemas: schema.schemas,
       },
-      { upsert: true, new: true }
+      { upsert: true, new: true },
     ).exec();
 
     const resultObj = MongooseUtils.toPojo(result);
     return resultObj;
   },
   get: async (name: String): Promise<SchemasDictionary | null> => {
-    L.debug("in Schema repo get");
+    L.debug('in Schema repo get');
     return await DataSchemaModel.findOne({ name: name }).exec();
-  }
+  },
 };
 
 type DataSchemaDocument = mongoose.Document & SchemasDictionary;
@@ -38,12 +38,12 @@ const DataSchemaMongooseSchema = new mongoose.Schema(
   {
     name: { type: String, unique: true },
     version: { type: String, required: true },
-    schemas: []
+    schemas: [],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export const DataSchemaModel = mongoose.model<DataSchemaDocument>(
-  "dataschema",
-  DataSchemaMongooseSchema
+  'dataschema',
+  DataSchemaMongooseSchema,
 );

@@ -1,8 +1,8 @@
-import * as service from "./schema-functions";
-import { SchemasDictionary, DataRecord, SchemaProcessingResult } from "./schema-entities";
-import { schemaClient as schemaServiceAdapter } from "./schema-rest-client";
-import { schemaRepo } from "./schema-repo";
-import { loggerFor } from "../logger";
+import * as service from './schema-functions';
+import { SchemasDictionary, DataRecord, SchemaProcessingResult } from './schema-entities';
+import { schemaClient as schemaServiceAdapter } from './schema-rest-client';
+import { schemaRepo } from './schema-repo';
+import { loggerFor } from '../logger';
 const L = loggerFor(__filename);
 
 let manager: SchemaManager;
@@ -10,8 +10,8 @@ let manager: SchemaManager;
 class SchemaManager {
   private currentSchema: SchemasDictionary = {
     schemas: [],
-    name: "",
-    version: ""
+    name: '',
+    version: '',
   };
   constructor(private schemaServiceUrl: string) {}
 
@@ -31,7 +31,7 @@ class SchemaManager {
    */
   process = (definition: string, records: ReadonlyArray<DataRecord>): SchemaProcessingResult => {
     if (this.getCurrent() == undefined) {
-      throw new Error("schema manager not initialized correctly");
+      throw new Error('schema manager not initialized correctly');
     }
     return service.process(this.getCurrent(), definition, records);
   };
@@ -40,7 +40,7 @@ class SchemaManager {
     const newSchema = await schemaServiceAdapter.fetchSchema(
       this.schemaServiceUrl,
       name,
-      newVersion
+      newVersion,
     );
     const result = await schemaRepo.createOrUpdate(newSchema);
     if (!result) {
@@ -62,7 +62,7 @@ class SchemaManager {
   loadSchema = async (name: string, initialVersion: string): Promise<SchemasDictionary> => {
     L.debug(`in loadSchema ${initialVersion}`);
     if (!initialVersion) {
-      throw new Error("initial version cannot be empty.");
+      throw new Error('initial version cannot be empty.');
     }
     const storedSchema = await schemaRepo.get(name);
     if (storedSchema === null) {
@@ -70,7 +70,7 @@ class SchemaManager {
       this.currentSchema = {
         schemas: [],
         name: name,
-        version: initialVersion
+        version: initialVersion,
       };
     } else {
       this.currentSchema = storedSchema;
@@ -83,7 +83,7 @@ class SchemaManager {
       const result = await schemaServiceAdapter.fetchSchema(
         this.schemaServiceUrl,
         name,
-        this.currentSchema.version
+        this.currentSchema.version,
       );
       L.info(`fetched schema ${result.version}`);
       this.currentSchema.schemas = result.schemas;
@@ -99,7 +99,7 @@ class SchemaManager {
 
 export function instance() {
   if (manager == undefined) {
-    throw new Error("manager not initialized, you should call create first");
+    throw new Error('manager not initialized, you should call create first');
   }
   return manager;
 }

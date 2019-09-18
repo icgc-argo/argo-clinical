@@ -1,5 +1,5 @@
-import { DeepReadonly } from "deep-freeze";
-import { SchemaValidationErrorTypes } from "../lectern-client/schema-entities";
+import { DeepReadonly } from 'deep-freeze';
+import { SchemaValidationErrorTypes } from '../lectern-client/schema-entities';
 
 /**
  * Represents a valid registration that is not yet committed (in progress)
@@ -27,25 +27,25 @@ export interface SubmittedRegistrationRecord {
 type x = { [key in keyof SubmittedRegistrationRecord]: keyof CreateRegistrationRecord };
 
 export const RegistrationToCreateRegistrationFieldsMap: x = {
-  program_id: "programId",
-  submitter_donor_id: "donorSubmitterId",
-  gender: "gender",
-  submitter_specimen_id: "specimenSubmitterId",
-  specimen_type: "specimenType",
-  tumour_normal_designation: "tumourNormalDesignation",
-  submitter_sample_id: "sampleSubmitterId",
-  sample_type: "sampleType"
+  program_id: 'programId',
+  submitter_donor_id: 'donorSubmitterId',
+  gender: 'gender',
+  submitter_specimen_id: 'specimenSubmitterId',
+  specimen_type: 'specimenType',
+  tumour_normal_designation: 'tumourNormalDesignation',
+  submitter_sample_id: 'sampleSubmitterId',
+  sample_type: 'sampleType',
 };
 
 export enum FieldsEnum {
-  program_id = "program_id",
-  submitter_donor_id = "submitter_donor_id",
-  gender = "gender",
-  submitter_specimen_id = "submitter_specimen_id",
-  specimen_type = "specimen_type",
-  tumour_normal_designation = "tumour_normal_designation",
-  submitter_sample_id = "submitter_sample_id",
-  sample_type = "sample_type"
+  program_id = 'program_id',
+  submitter_donor_id = 'submitter_donor_id',
+  gender = 'gender',
+  submitter_specimen_id = 'submitter_specimen_id',
+  specimen_type = 'specimen_type',
+  tumour_normal_designation = 'tumour_normal_designation',
+  submitter_sample_id = 'submitter_sample_id',
+  sample_type = 'sample_type',
 }
 
 export type SubmissionValidationError = {
@@ -56,16 +56,16 @@ export type SubmissionValidationError = {
 };
 
 export enum DataValidationErrors {
-  MUTATING_EXISTING_DATA = "MUTATING_EXISTING_DATA",
-  SAMPLE_BELONGS_TO_OTHER_SPECIMEN = "SAMPLE_BELONGS_TO_OTHER_SPECIMEN",
-  SPECIMEN_BELONGS_TO_OTHER_DONOR = "SPECIMEN_BELONGS_TO_OTHER_DONOR",
-  NEW_SPECIMEN_ATTR_CONFLICT = "NEW_SPECIMEN_ATTR_CONFLICT",
-  NEW_SAMPLE_ATTR_CONFLICT = "NEW_SAMPLE_ATTR_CONFLICT",
-  NEW_DONOR_CONFLICT = "NEW_DONOR_CONFLICT",
-  INVALID_PROGRAM_ID = "INVALID_PROGRAM_ID",
-  NEW_SPECIMEN_ID_CONFLICT = "NEW_SPECIMEN_ID_CONFLICT",
-  NEW_SAMPLE_ID_CONFLICT = "NEW_SAMPLE_ID_CONFLICT",
-  ID_NOT_REGISTERED = "ID_NOT_REGISTERED"
+  MUTATING_EXISTING_DATA = 'MUTATING_EXISTING_DATA',
+  SAMPLE_BELONGS_TO_OTHER_SPECIMEN = 'SAMPLE_BELONGS_TO_OTHER_SPECIMEN',
+  SPECIMEN_BELONGS_TO_OTHER_DONOR = 'SPECIMEN_BELONGS_TO_OTHER_DONOR',
+  NEW_SPECIMEN_ATTR_CONFLICT = 'NEW_SPECIMEN_ATTR_CONFLICT',
+  NEW_SAMPLE_ATTR_CONFLICT = 'NEW_SAMPLE_ATTR_CONFLICT',
+  NEW_DONOR_CONFLICT = 'NEW_DONOR_CONFLICT',
+  INVALID_PROGRAM_ID = 'INVALID_PROGRAM_ID',
+  NEW_SPECIMEN_ID_CONFLICT = 'NEW_SPECIMEN_ID_CONFLICT',
+  NEW_SAMPLE_ID_CONFLICT = 'NEW_SAMPLE_ID_CONFLICT',
+  ID_NOT_REGISTERED = 'ID_NOT_REGISTERED',
 }
 
 export type RegistrationStat = { [submitterId: string]: number[] };
@@ -146,10 +146,10 @@ export interface SavedClinicalEntity extends NewClinicalEntity {
 }
 
 export enum SUBMISSION_STATE {
-  OPEN = "OPEN",
-  VALID = "VALID",
-  INVALID = "INVALID",
-  PENDING_APPROVAL = "PENDING_APPROVAL"
+  OPEN = 'OPEN',
+  VALID = 'VALID',
+  INVALID = 'INVALID',
+  PENDING_APPROVAL = 'PENDING_APPROVAL',
 }
 
 export interface ActiveClinicalSubmission {

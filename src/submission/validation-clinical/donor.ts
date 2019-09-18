@@ -1,15 +1,15 @@
 import {
   SubmissionValidationError,
   FieldsEnum,
-  DataValidationErrors
-} from "../submission-entities";
-import { DeepReadonly } from "deep-freeze";
-import { Donor } from "../../clinical/clinical-entities";
-import { FileType } from "../submission-api";
+  DataValidationErrors,
+} from '../submission-entities';
+import { DeepReadonly } from 'deep-freeze';
+import { Donor } from '../../clinical/clinical-entities';
+import { FileType } from '../submission-api';
 
 export const validate = async (
   newDonorRecords: DeepReadonly<{ [clinicalType: string]: any }>,
-  existentDonor: DeepReadonly<Donor>
+  existentDonor: DeepReadonly<Donor>,
 ): Promise<any> => {
   const errors = [];
   const donorSubmitterId = newDonorRecords[FileType.DONOR][FieldsEnum.submitter_donor_id];
@@ -19,9 +19,9 @@ export const validate = async (
       fieldName: FieldsEnum.submitter_donor_id,
       info: {
         donorSubmitterId: donorSubmitterId,
-        value: donorSubmitterId
+        value: donorSubmitterId,
       },
-      index: newDonorRecords[FileType.DONOR].recordIndex
+      index: newDonorRecords[FileType.DONOR].recordIndex,
     });
   }
   return errors;
