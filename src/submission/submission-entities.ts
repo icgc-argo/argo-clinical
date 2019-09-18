@@ -160,8 +160,9 @@ export interface ActiveClinicalSubmission {
 }
 
 // Generic submission record object
-export interface SubmissionRecord {
+export interface SubmittedClinicalRecord {
   readonly program_id: string;
   readonly submitter_donor_id: string;
-  [fieldName: string]: string;
+  readonly index: number;
+  [fieldName: string]: string | number;
 }

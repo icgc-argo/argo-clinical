@@ -6,7 +6,7 @@ import {
   ValidationResult,
   FieldsEnum,
   RegistrationToCreateRegistrationFieldsMap,
-  SubmissionRecord
+  SubmittedClinicalRecord
 } from "./submission-entities";
 import { donorDao, DONOR_FIELDS } from "../clinical/donor-repo";
 import { DeepReadonly } from "deep-freeze";
@@ -69,46 +69,19 @@ export const validateRegistrationData = async (
   };
 };
 
-export const validateSpecimenData = async (
-  specimenRecords: DeepReadonly<SubmissionRecord[]>,
-  existingDonors: DeepReadonly<DonorMap>
-): Promise<ValidationResult> => {
-  const errors: SubmissionValidationError[] = [];
-  specimenRecords.forEach((specimenRecord, index) => {
-    try {
-      // check ids are registered
-      const donor = checkDonorIdRegistered(specimenRecord, existingDonors, index);
-      checkIdRegisteredInCollection(
-        FieldsEnum.submitter_specimen_id,
-        specimenRecord,
-        donor.specimens,
-        index
-      );
-      // other checks run here
-    } catch (e) {
-      if (e.type in DataValidationErrors) {
-        errors.push(e);
-      } else {
-        throw e;
-      }
-    }
-  });
-  return { errors };
-};
 export const validateSubmissionData = async (
-  newDonorsRecords: DeepReadonly<{ [donoSubmitterId: string]: { [field: string]: any } }>,
+  newDonorsRecords: DeepReadonly<{
+    [donoSubmitterId: string]: { [clinicalType: string]: SubmittedClinicalRecord };
+  }>,
   existingDonors: DeepReadonly<DonorMap>
 ): Promise<{ [clinicalType: string]: SubmissionValidationError[] }> => {
   const errors: { [clinicalType: string]: any } = {};
   for (const donorSubmitterId in newDonorsRecords) {
-    const newDonorRecords = newDonorsRecords[donorSubmitterId];
+    const newRecords = newDonorsRecords[donorSubmitterId];
     const existentDonor = existingDonors[donorSubmitterId];
 
-    for (const clinicalType in newDonorRecords) {
-      const newErrors = await submissionValidator[clinicalType].validate(
-        newDonorRecords,
-        existentDonor
-      );
+    for (const clinicalType in newRecords) {
+      const newErrors = await submissionValidator[clinicalType].validate(newRecords, existentDonor);
       if (!errors[clinicalType]) {
         errors[clinicalType] = newErrors;
       } else {
@@ -598,59 +571,3 @@ function checkSpecimenMutations(
     );
   }
 }
-
-function checkDonorIdRegistered(
-  record: DeepReadonly<SubmissionRecord>,
-  existingDonors: DeepReadonly<DonorMap>,
-  index: number
-) {
-  const donor = existingDonors[record[FieldsEnum.submitter_donor_id]];
-  if (donor) {
-    return donor;
-  }
-  throw buildSubmissionError(
-    record,
-    DataValidationErrors.ID_NOT_REGISTERED,
-    FieldsEnum.submitter_donor_id,
-    index
-  );
-}
-
-function checkIdRegisteredInCollection(
-  submitterIdType: FieldsEnum.submitter_specimen_id | FieldsEnum.submitter_sample_id, // add other Ids as needed
-  record: DeepReadonly<SubmissionRecord>,
-  clinicalCollection: DeepReadonly<Array<DonorSubEntity>>,
-  index: number
-) {
-  const clinicalChild = clinicalCollection.find(
-    a_child => a_child.submitterId === record[submitterIdType]
-  );
-  if (clinicalChild) {
-    return clinicalChild;
-  }
-  throw buildSubmissionError(
-    record,
-    DataValidationErrors.ID_NOT_REGISTERED,
-    submitterIdType,
-    index
-  );
-}
-
-const buildSubmissionError = (
-  newRecord: SubmissionRecord,
-  type: DataValidationErrors,
-  fieldName: FieldsEnum,
-  index: number,
-  info: object = {}
-): SubmissionValidationError => {
-  return {
-    type,
-    fieldName,
-    index,
-    info: {
-      ...info,
-      donorSubmitterId: newRecord.submitter_donor_id,
-      value: newRecord[fieldName]
-    }
-  };
-};

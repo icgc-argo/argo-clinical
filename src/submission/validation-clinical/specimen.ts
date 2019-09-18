@@ -1,8 +1,8 @@
 import {
-  FieldsEnum,
+  SubmissionValidationError,
   DataValidationErrors,
-  SubmittedClinicalRecord,
-  SubmissionValidationError
+  FieldsEnum,
+  SubmittedClinicalRecord
 } from "../submission-entities";
 import { DeepReadonly } from "deep-freeze";
 import { Donor } from "../../clinical/clinical-entities";
@@ -14,11 +14,17 @@ export const validate = async (
   existentDonor: DeepReadonly<Donor>
 ): Promise<DeepReadonly<SubmissionValidationError[]>> => {
   const errors: SubmissionValidationError[] = [];
-  const donorRecord = newDonorRecords[FileType.DONOR];
+  const specimenRecord = newDonorRecords[FileType.SPECIMEN];
 
-  // if no existent donor, can't continue
+  // if any one of the validation in try catch failed, can't continue
+  let existentSpecimen;
   try {
-    utils.checkDonorExists(existentDonor, donorRecord);
+    utils.checkDonorExists(existentDonor, specimenRecord);
+    existentSpecimen = utils.getSubEntityInCollection(
+      FieldsEnum.submitter_specimen_id,
+      specimenRecord,
+      existentDonor.specimens
+    );
   } catch (e) {
     if (e.type in DataValidationErrors) {
       return [e];
@@ -27,7 +33,7 @@ export const validate = async (
     }
   }
 
-  // other donor record validation here...
+  // other sepecimen record validation here...
 
   return errors;
 };

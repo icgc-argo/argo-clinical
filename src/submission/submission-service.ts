@@ -16,7 +16,8 @@ import {
   MultiClinicalSubmissionCommand,
   CreateSubmissionResult,
   SUBMISSION_STATE,
-  ActiveClinicalSubmission
+  ActiveClinicalSubmission,
+  SubmittedClinicalRecord
 } from "./submission-entities";
 import * as schemaManager from "../lectern-client/schema-manager";
 import {
@@ -234,7 +235,9 @@ export namespace operations {
       };
     }
     // map donors(via donorId) to their relevant records
-    const newDonorDataMap: { [donoSubmitterId: string]: { [clinicalType: string]: any } } = {};
+    const newDonorDataMap: {
+      [donoSubmitterId: string]: { [clinicalType: string]: SubmittedClinicalRecord };
+    } = {};
     const filters: FindByProgramAndSubmitterFilter[] = [];
     for (const clinicalType in exsistingActiveSubmission.clinicalEntities) {
       const clinicalEnity = exsistingActiveSubmission.clinicalEntities[clinicalType];
@@ -247,7 +250,12 @@ export namespace operations {
         if (!newDonorDataMap[donorId]) {
           newDonorDataMap[donorId] = {};
         }
-        newDonorDataMap[donorId][clinicalType] = { ...rc, recordIndex: index };
+        newDonorDataMap[donorId][clinicalType] = {
+          ...rc,
+          submitter_donor_id: donorId,
+          program_id: rc[FieldsEnum.program_id],
+          index: index
+        };
       });
     }
     const relevantDonorsMap = await getDonorsInProgram(filters);
@@ -279,7 +287,7 @@ export namespace operations {
     return {
       submission: newActiveSubmission,
       errors: {},
-      successful: inValid
+      successful: !inValid
     };
   };
 
