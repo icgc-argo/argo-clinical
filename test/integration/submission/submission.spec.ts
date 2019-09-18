@@ -598,6 +598,29 @@ describe("Submission Api", () => {
   });
 
   describe("clinical-submission", function() {
+    this.beforeEach(async () => {
+      try {
+        console.log(`registration beforeEach called ${dburl}`);
+        await cleanCollection(dburl, "donors");
+        await cleanCollection(dburl, "activesubmissions");
+        await resetCounters(dburl);
+        return;
+      } catch (err) {
+        console.error(err);
+        return err;
+      }
+    });
+    it("should return 200 and empty json for no activesubmisison in program", done => {
+      chai
+        .request(app)
+        .get("/submission/program/ABCD-EF/clinical/upload")
+        .auth(JWT_ABCDEF, { type: "bearer" })
+        .end((err: any, res: any) => {
+          res.should.have.status(200);
+          res.body.should.deep.eq({});
+          done();
+        });
+    });
     it("should return 422 if try to upload invalid tsv files", done => {
       let file: Buffer;
       let file2: Buffer;

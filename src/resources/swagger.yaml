@@ -178,7 +178,11 @@ paths:
         required: true
       responses:
         "200":
-          description: "Everything is OK"
+          description: "the current in progress clinical submission or empty body if schema errors found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClinicalSubmission"
         "400":
           $ref: "#/components/responses/InvalidFileStructureError"
         "422":
@@ -205,14 +209,18 @@ paths:
           schema:
             type: string
         - name: versionId
-          description: the short name of the program
+          description: uuid used to ensure correct version of submission is being updated
           in: path
           required: true
           schema:
             type: string
       responses:
         "200":
-          description: "Everything is OK"
+          description: "The submission state is VALID or PENDING_APPROVAL"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClinicalSubmission"
         "422":
           description: "invalid clinical submission, see error messages"
           content:
