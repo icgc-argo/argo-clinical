@@ -178,7 +178,7 @@ paths:
         required: true
       responses:
         "200":
-          description: "the current in progress clinical submission or empty body if schema errors found"
+          description: "the current in progress clinical submission"
           content:
             application/json:
               schema:
@@ -216,7 +216,7 @@ paths:
             type: string
       responses:
         "200":
-          description: "The submission state is VALID or PENDING_APPROVAL"
+          description: "in progress submission with a VALID or PENDING_APPROVAL state"
           content:
             application/json:
               schema:
