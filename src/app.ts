@@ -57,6 +57,10 @@ app.delete(
   "/submission/program/:programId/registration/:id",
   middleware.wrapAsync(submissionAPI.deleteRegistration)
 );
+app.get(
+  "/submission/program/:programId/clinical/upload",
+  middleware.wrapAsync(submissionAPI.getActiveSubmissionByProgramId)
+);
 app.post(
   "/submission/program/:programId/clinical/upload",
   upload.array("clinicalFiles"),

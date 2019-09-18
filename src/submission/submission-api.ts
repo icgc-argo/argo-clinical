@@ -95,6 +95,16 @@ class SubmissionController {
   }
 
   @HasSubmittionAccess((req: Request) => req.params.programId)
+  async getActiveSubmissionByProgramId(req: Request, res: Response) {
+    const programId = req.params.programId;
+    const activeSubmission = await submission.operations.findSubmissionByProgramId(programId);
+    if (activeSubmission === undefined) {
+      return res.status(200).send({});
+    }
+    return res.status(200).send(activeSubmission);
+  }
+
+  @HasSubmittionAccess((req: Request) => req.params.programId)
   async saveClinicalTsvFiles(req: Request, res: Response) {
     if (!isValidCreateBody(req, res)) {
       return;

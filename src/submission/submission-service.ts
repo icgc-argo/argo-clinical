@@ -146,6 +146,14 @@ export namespace operations {
   };
 
   /**
+   * find an active clinical submission by program Id
+   * @param programId string
+   */
+  export const findSubmissionByProgramId = async (programId: string) => {
+    return await submissionRepository.findByProgramId(programId);
+  };
+
+  /**
    * upload donor
    * @param command SaveClinicalCommand
    */

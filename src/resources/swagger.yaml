@@ -132,6 +132,29 @@ paths:
                     items:
                       type: string
   /submission/program/{programId}/clinical/upload:
+    get:
+      parameters:
+        - name: programId
+          description: the short name of the program
+          in: path
+          required: true
+          schema:
+            type: string
+      summary: Get active submission for a program
+      description: returns the current in progress submission for a program if any
+      responses:
+        "200":
+          description: "the current in progress clinical submission or empty body if nothing found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClinicalSubmission"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+        "500":
+          $ref: "#/components/responses/ServerError"
     post:
       parameters:
         - name: programId
@@ -155,7 +178,11 @@ paths:
         required: true
       responses:
         "200":
-          description: "Everything is OK"
+          description: "the current in progress clinical submission"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClinicalSubmission"
         "400":
           $ref: "#/components/responses/InvalidFileStructureError"
         "422":
@@ -182,14 +209,18 @@ paths:
           schema:
             type: string
         - name: versionId
-          description: the short name of the program
+          description: uuid used to ensure correct version of submission is being updated
           in: path
           required: true
           schema:
             type: string
       responses:
         "200":
-          description: "Everything is OK"
+          description: "in progress submission with a VALID or PENDING_APPROVAL state"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClinicalSubmission"
         "422":
           description: "invalid clinical submission, see error messages"
           content:
@@ -480,7 +511,7 @@ components:
       required:
         - _id
         - programId
-        - creatorId
+        - creator
         - stats
         - records
       properties:
@@ -511,6 +542,55 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Record"
+    ClinicalSubmission:
+      type: object
+      required:
+        - _id
+        - programId
+        - version
+        - clinicalEntities
+        - state
+      properties:
+        _id:
+          type: string
+          description: the id of the registration
+        programId:
+          type: string
+          description: the program short name this registration is for
+        state:
+          type: string
+          description: the state of the submission
+          enum: ["OPEN", "VALID", "INVALID", "PENDING_APPROVAL"]
+        version:
+          type: string
+          description: uuid used to ensure that correct version of submission is being updated
+        clinicalEntities:
+          type: object
+          description: submitted clinical data mapped to a clinical type
+          properties:
+            clinicalType:
+              $ref: "#/components/schemas/ClinicalEntity"
+    ClinicalEntity:
+      required:
+        - batchName
+        - creator
+        - records
+        - dataErrors
+      properties:
+        batchName:
+          type: string
+          description: a file that must start with entity type (e.g. donor, sample) and have .tsv extension
+        creator:
+          type: string
+          description: first name and last name of the user who add this entity data
+        records:
+          type: array
+          items:
+            $ref: "#/components/schemas/Record"
+        dataErrors:
+          type: array
+          items:
+            $ref: "#/components/schemas/ValidationError"
 
     Record:
       required:
