@@ -6,7 +6,9 @@ import {
   SubmissionValidationError,
   DataValidationErrors,
   CreateRegistrationRecord,
-  FieldsEnum
+  FieldsEnum,
+  SpecimenInfoFieldsEnum,
+  DonorInfoFieldsEnum
 } from "../../../src/submission/submission-entities";
 import { Donor } from "../../../src/clinical/clinical-entities";
 import { stubs } from "./stubs";
@@ -1028,6 +1030,80 @@ describe("data-validator", () => {
       chai.expect(errors.specimen.length).to.eq(2);
       chai.expect(errors.specimen[0]).to.deep.eq(specimenIdErr);
       chai.expect(errors.specimen[1]).to.deep.eq(donorIdErr);
+    });
+    it("should validate time intervals between donor and specimen", async () => {
+      const existingDonorMock1: Donor = stubs.validation.existingDonor04();
+      const existingDonorMock2: Donor = stubs.validation.existingDonor03();
+
+      // AB2 is where only specimen is being uploaded and donor already has clinicalInfo
+      // AB3 is when donor and specimen are being updated
+      const errors = await dv.validateSubmissionData(
+        {
+          AB2: {
+            specimen: {
+              submitter_donor_id: "AB2",
+              program_id: "PEME-CA",
+              submitter_specimen_id: "SP13",
+              specimen_acquistion_interval: "5020",
+              index: 1
+            }
+          },
+          AB3: {
+            specimen: {
+              submitter_donor_id: "AB3",
+              program_id: "PEME-CA",
+              submitter_specimen_id: "SP12",
+              specimen_acquistion_interval: "2000",
+              index: 2
+            },
+            donor: {
+              submitter_donor_id: "AB3",
+              program_id: "PEME-CA",
+              vital_status: "deceased",
+              survival_time: "522",
+              index: 1
+            }
+          }
+        },
+        { AB2: existingDonorMock1, AB3: existingDonorMock2 }
+      );
+      const specimenIntervalErr: SubmissionValidationError = {
+        fieldName: SpecimenInfoFieldsEnum.specimen_acquistion_interval,
+        type: DataValidationErrors.CONFLICTING_TIME_INTERVAL,
+        index: 1,
+        info: {
+          msg: "specimen_acquistion_interval can't be greater than survival_time",
+          donorSubmitterId: "AB2",
+          value: "5020"
+        }
+      };
+      const specimenIntervalErr2: SubmissionValidationError = {
+        fieldName: SpecimenInfoFieldsEnum.specimen_acquistion_interval,
+        type: DataValidationErrors.CONFLICTING_TIME_INTERVAL,
+        index: 2,
+        info: {
+          msg: "specimen_acquistion_interval can't be greater than survival_time",
+          donorSubmitterId: "AB3",
+          value: "2000"
+        }
+      };
+      const donorSurvivalTimeErr: SubmissionValidationError = {
+        fieldName: DonorInfoFieldsEnum.survival_time,
+        type: DataValidationErrors.CONFLICTING_TIME_INTERVAL,
+        index: 1,
+        info: {
+          conflictingSpecimenSubmitterIds: ["SP12"],
+          msg: "survival_time can't be less than a specimen's acquistion time",
+          donorSubmitterId: "AB3",
+          value: "522"
+        }
+      };
+
+      chai.expect(errors.specimen.length).to.eq(2);
+      chai.expect(errors.specimen[0]).to.deep.eq(specimenIntervalErr);
+      chai.expect(errors.specimen[1]).to.deep.eq(specimenIntervalErr2);
+      chai.expect(errors.donor.length).to.eq(1);
+      chai.expect(errors.donor[0]).to.deep.eq(donorSurvivalTimeErr);
     });
   });
 });

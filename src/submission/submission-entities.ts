@@ -65,7 +65,9 @@ export enum DataValidationErrors {
   INVALID_PROGRAM_ID = "INVALID_PROGRAM_ID",
   NEW_SPECIMEN_ID_CONFLICT = "NEW_SPECIMEN_ID_CONFLICT",
   NEW_SAMPLE_ID_CONFLICT = "NEW_SAMPLE_ID_CONFLICT",
-  ID_NOT_REGISTERED = "ID_NOT_REGISTERED"
+  ID_NOT_REGISTERED = "ID_NOT_REGISTERED",
+  CONFLICTING_TIME_INTERVAL = "CONFLICTING_TIME_INTERVAL",
+  NOT_ENOUGH_INFO_TO_VALIDATE = "NOT_ENOUGH_INFO_TO_VALIDATE"
 }
 
 export type RegistrationStat = { [submitterId: string]: number[] };
@@ -165,4 +167,13 @@ export interface SubmittedClinicalRecord {
   readonly submitter_donor_id: string;
   readonly index: number;
   [fieldName: string]: string | number;
+}
+
+export enum SpecimenInfoFieldsEnum {
+  specimen_acquistion_interval = "specimen_acquistion_interval"
+}
+
+export enum DonorInfoFieldsEnum {
+  vital_status = "vital_status",
+  survival_time = "survival_time"
 }

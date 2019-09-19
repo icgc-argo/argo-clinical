@@ -2,12 +2,14 @@ import {
   FieldsEnum,
   SubmittedClinicalRecord,
   DataValidationErrors,
-  SubmissionValidationError
+  SubmissionValidationError,
+  SpecimenInfoFieldsEnum,
+  DonorInfoFieldsEnum
 } from "../submission-entities";
 import { DeepReadonly } from "deep-freeze";
 import { DonorSubEntity, Donor } from "../../clinical/clinical-entities";
 
-export const checkDonorExists = (
+export const checkDonorRegistered = (
   aDonor: DeepReadonly<Donor>,
   record: DeepReadonly<SubmittedClinicalRecord>
 ) => {
@@ -15,13 +17,12 @@ export const checkDonorExists = (
     throw buildSubmissionError(
       record,
       DataValidationErrors.ID_NOT_REGISTERED,
-      FieldsEnum.submitter_donor_id,
-      record.index
+      FieldsEnum.submitter_donor_id
     );
   }
 };
 
-export const getSubEntityInCollection = (
+export const getRegisteredSubEntityInCollection = (
   submitterIdType: FieldsEnum.submitter_specimen_id | FieldsEnum.submitter_sample_id, // add other Ids as needed
   record: DeepReadonly<SubmittedClinicalRecord>,
   clinicalCollection: DeepReadonly<Array<DonorSubEntity>>
@@ -30,12 +31,7 @@ export const getSubEntityInCollection = (
     entity => entity.submitterId === record[submitterIdType]
   );
   if (!subEntity) {
-    throw buildSubmissionError(
-      record,
-      DataValidationErrors.ID_NOT_REGISTERED,
-      submitterIdType,
-      record.index
-    );
+    throw buildSubmissionError(record, DataValidationErrors.ID_NOT_REGISTERED, submitterIdType);
   }
   return subEntity;
 };
@@ -43,17 +39,18 @@ export const getSubEntityInCollection = (
 export const buildSubmissionError = (
   newRecord: SubmittedClinicalRecord,
   type: DataValidationErrors,
-  fieldName: FieldsEnum,
-  index: number,
+  fieldName: FieldsEnum | SpecimenInfoFieldsEnum | DonorInfoFieldsEnum,
   info: object = {}
 ): SubmissionValidationError => {
+  // typescript refused to take this directly
+  const index: number = newRecord.index;
   return {
     type,
     fieldName,
     index,
     info: {
       ...info,
-      donorSubmitterId: newRecord.submitter_donor_id,
+      donorSubmitterId: newRecord[FieldsEnum.submitter_donor_id],
       value: newRecord[fieldName]
     }
   };

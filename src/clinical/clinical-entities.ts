@@ -5,7 +5,7 @@ export interface Donor {
   submitterId: string;
   programId: string;
   specimens: Array<Specimen>;
-  clinicalInfo?: object;
+  clinicalInfo?: { [feild: string]: string | number };
   primaryDiagnosis?: object;
   followUps?: Array<object>;
   treatments?: Array<object>;
@@ -22,7 +22,7 @@ export interface Specimen extends DonorSubEntity {
   specimenType: string;
   specimenId?: number;
   tumourNormalDesignation: string;
-  clinicalInfo?: object;
+  clinicalInfo?: { [feild: string]: string | number };
 }
 
 export interface Sample extends DonorSubEntity {

@@ -72,6 +72,32 @@ export const stubs = {
           ]
         }
       ]
+    }),
+
+    existingDonor04: (): Donor => ({
+      _id: "juadskasd122",
+      submitterId: "AB2",
+      programId: "PEME-CA",
+      donorId: 10,
+      clinicalInfo: {
+        vitalStatus: "deceased",
+        survivalTime: "522"
+      },
+      gender: "Female",
+      specimens: [
+        {
+          submitterId: "SP13",
+          specimenType: "Other",
+          clinicalInfo: {},
+          tumourNormalDesignation: "Normal",
+          samples: [
+            {
+              sampleType: "ST10",
+              submitterId: "AM1"
+            }
+          ]
+        }
+      ]
     })
   }
 };
