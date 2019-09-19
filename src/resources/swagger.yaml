@@ -329,7 +329,7 @@ paths:
         '500':
           $ref: '#/components/responses/ServerError'
         '200':
-          description: 'donors of program '
+          description: 'List of donors for the given program'
           content:
             application/json:
               schema:
