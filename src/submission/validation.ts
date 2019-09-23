@@ -13,6 +13,7 @@ import { DeepReadonly } from "deep-freeze";
 import { DataRecord } from "../lectern-client/schema-entities";
 import { FileType } from "./submission-api";
 import { submissionValidator } from "./validation-clinical/index";
+import { getUpdatedFields } from "./validation-clinical/utils";
 
 export const validateRegistrationData = async (
   expectedProgram: string,
@@ -74,22 +75,45 @@ export const validateSubmissionData = async (
     [donoSubmitterId: string]: { [clinicalType: string]: SubmittedClinicalRecord };
   }>,
   existingDonors: DeepReadonly<DonorMap>
-): Promise<{ [clinicalType: string]: SubmissionValidationError[] }> => {
-  const errors: { [clinicalType: string]: any } = {};
+): Promise<any> => {
+  const validationResults: { [clinicalType: string]: any } = {};
   for (const donorSubmitterId in newDonorsRecords) {
     const newRecords = newDonorsRecords[donorSubmitterId];
     const existentDonor = existingDonors[donorSubmitterId];
 
     for (const clinicalType in newRecords) {
-      const newErrors = await submissionValidator[clinicalType].validate(newRecords, existentDonor);
-      if (!errors[clinicalType]) {
-        errors[clinicalType] = newErrors;
+      if (!validationResults[clinicalType]) {
+        validationResults[clinicalType] = {
+          dataErrors: [],
+          dataUpdates: [],
+          stats: {
+            new: [],
+            noUpdate: [],
+            updated: [],
+            errorsFound: []
+          }
+        };
+      }
+
+      const result = await submissionValidator[clinicalType].validate(newRecords, existentDonor);
+      if ("new" in result) {
+        validationResults[clinicalType].stats.new.push(result.new);
+      } else if ("noUpdate" in result) {
+        validationResults[clinicalType].stats.noUpdate.push(result.noUpdate);
+      } else if ("updateFields" in result) {
+        validationResults[clinicalType].stats.updated.push(newRecords[clinicalType].index);
+        validationResults[clinicalType].dataUpdates = validationResults[
+          clinicalType
+        ].dataUpdates.concat(result.updateFields);
       } else {
-        errors[clinicalType] = errors[clinicalType].concat(newErrors);
+        validationResults[clinicalType].stats.errorsFound.push(newRecords[clinicalType].index);
+        validationResults[clinicalType].dataErrors = validationResults[
+          clinicalType
+        ].dataErrors.concat(result);
       }
     }
   }
-  return errors;
+  return validationResults;
 };
 
 export const usingInvalidProgramId = (

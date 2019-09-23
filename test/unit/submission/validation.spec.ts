@@ -987,7 +987,7 @@ describe("data-validator", () => {
   describe("submission-validations", () => {
     it("should validate donor and specimen ids for specimen submissions", async () => {
       const existingDonorMock: Donor = stubs.validation.existingDonor01();
-      const errors = await dv.validateSubmissionData(
+      const result = await dv.validateSubmissionData(
         {
           AB1: {
             specimen: {
@@ -1027,9 +1027,9 @@ describe("data-validator", () => {
         }
       };
 
-      chai.expect(errors.specimen.length).to.eq(2);
-      chai.expect(errors.specimen[0]).to.deep.eq(specimenIdErr);
-      chai.expect(errors.specimen[1]).to.deep.eq(donorIdErr);
+      chai.expect(result.specimen.dataErrors.length).to.eq(2);
+      chai.expect(result.specimen.dataErrors[0]).to.deep.eq(specimenIdErr);
+      chai.expect(result.specimen.dataErrors[1]).to.deep.eq(donorIdErr);
     });
     it("should validate time intervals between donor and specimen", async () => {
       const existingDonorMock1: Donor = stubs.validation.existingDonor04();
@@ -1099,11 +1099,11 @@ describe("data-validator", () => {
         }
       };
 
-      chai.expect(errors.specimen.length).to.eq(2);
-      chai.expect(errors.specimen[0]).to.deep.eq(specimenIntervalErr);
-      chai.expect(errors.specimen[1]).to.deep.eq(specimenIntervalErr2);
-      chai.expect(errors.donor.length).to.eq(1);
-      chai.expect(errors.donor[0]).to.deep.eq(donorSurvivalTimeErr);
+      chai.expect(errors.specimen.dataErrors.length).to.eq(2);
+      chai.expect(errors.specimen.dataErrors[0]).to.deep.eq(specimenIntervalErr);
+      chai.expect(errors.specimen.dataErrors[1]).to.deep.eq(specimenIntervalErr2);
+      chai.expect(errors.donor.dataErrors.length).to.eq(1);
+      chai.expect(errors.donor.dataErrors[0]).to.deep.eq(donorSurvivalTimeErr);
     });
   });
 });

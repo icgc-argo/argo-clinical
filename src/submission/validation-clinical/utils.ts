@@ -4,22 +4,24 @@ import {
   DataValidationErrors,
   SubmissionValidationError,
   SpecimenInfoFieldsEnum,
-  DonorInfoFieldsEnum
+  DonorInfoFieldsEnum,
+  RecordToDonorFieldsMap
 } from "../submission-entities";
 import { DeepReadonly } from "deep-freeze";
 import { DonorSubEntity, Donor } from "../../clinical/clinical-entities";
+
+export enum ValidationResult {
+  ERRORSFOUND,
+  NEW,
+  UPDATED,
+  NOUPDATE
+}
 
 export const checkDonorRegistered = (
   aDonor: DeepReadonly<Donor>,
   record: DeepReadonly<SubmittedClinicalRecord>
 ) => {
-  if (!aDonor) {
-    throw buildSubmissionError(
-      record,
-      DataValidationErrors.ID_NOT_REGISTERED,
-      FieldsEnum.submitter_donor_id
-    );
-  }
+  return aDonor && aDonor.submitterId === record[FieldsEnum.submitter_donor_id];
 };
 
 export const getRegisteredSubEntityInCollection = (
@@ -27,13 +29,7 @@ export const getRegisteredSubEntityInCollection = (
   record: DeepReadonly<SubmittedClinicalRecord>,
   clinicalCollection: DeepReadonly<Array<DonorSubEntity>>
 ) => {
-  const subEntity = clinicalCollection.find(
-    entity => entity.submitterId === record[submitterIdType]
-  );
-  if (!subEntity) {
-    throw buildSubmissionError(record, DataValidationErrors.ID_NOT_REGISTERED, submitterIdType);
-  }
-  return subEntity;
+  return clinicalCollection.find(entity => entity.submitterId === record[submitterIdType]);
 };
 
 export const buildSubmissionError = (
@@ -54,4 +50,23 @@ export const buildSubmissionError = (
       value: newRecord[fieldName]
     }
   };
+};
+
+export const getUpdatedFields = (clinicalInfo: any, record: SubmittedClinicalRecord) => {
+  const updateFields: any[] = [];
+  if (clinicalInfo) {
+    for (const field in clinicalInfo) {
+      if (clinicalInfo[field] !== record[RecordToDonorFieldsMap[field]]) {
+        updateFields.push({
+          fieldName: RecordToDonorFieldsMap[field],
+          index: record.index,
+          info: {
+            oldValue: clinicalInfo[field],
+            newValue: record[RecordToDonorFieldsMap[field]]
+          }
+        });
+      }
+    }
+  }
+  return updateFields;
 };

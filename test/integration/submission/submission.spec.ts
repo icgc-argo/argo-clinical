@@ -598,6 +598,18 @@ describe("Submission Api", () => {
   });
 
   describe("clinical-submission", function() {
+    this.beforeEach(async () => {
+      try {
+        console.log(`registration beforeEach called ${dburl}`);
+        await cleanCollection(dburl, "donors");
+        await cleanCollection(dburl, "activesubmissions");
+        await resetCounters(dburl);
+        return;
+      } catch (err) {
+        console.error(err);
+        return err;
+      }
+    });
     it("should return 422 if try to upload invalid tsv files", done => {
       let file: Buffer;
       let file2: Buffer;
@@ -766,8 +778,76 @@ describe("Submission Api", () => {
               .auth(JWT_ABCDEF, { type: "bearer" })
               .then((res: any) => {
                 try {
+                  res.should.have.status(200);
                   res.body.submission.state.should.eq(SUBMISSION_STATE.VALID);
                   res.body.submission.clinicalEntities.donor.dataErrors.length.should.eq(0);
+                } catch (err) {
+                  throw err;
+                }
+              });
+          } catch (err) {
+            throw err;
+          }
+        });
+    });
+    it("should return pending_approval with appropriate stats", async () => {
+      const files: Buffer[] = [];
+      try {
+        files.push(fs.readFileSync(__dirname + "/donor.tsv"));
+        files.push(fs.readFileSync(__dirname + "/specimen.tsv"));
+      } catch (err) {
+        return err;
+      }
+      // insert donor into db
+      await insertData(dburl, "donors", {
+        followUps: [],
+        treatments: [],
+        chemotherapy: [],
+        HormoneTherapy: [],
+        gender: "Male",
+        submitterId: "ICGC_0001",
+        programId: "ABCD-EF",
+        specimens: [
+          {
+            samples: [],
+            specimenType: "FFPE",
+            tumourNormalDesignation: "Normal",
+            submitterId: "8013861"
+          }
+        ],
+        donorId: 1
+      });
+      return chai
+        .request(app)
+        .post("/submission/program/ABCD-EF/clinical/upload")
+        .auth(JWT_ABCDEF, { type: "bearer" })
+        .attach("clinicalFiles", files[0], "donor.tsv")
+        .attach("clinicalFiles", files[1], "specimen.tsv")
+        .then(async (res: any) => {
+          try {
+            res.should.have.status(200);
+            res.body.submission.state.should.eq(SUBMISSION_STATE.OPEN);
+            const versionId = res.body.submission.version;
+            return chai
+              .request(app)
+              .post("/submission/program/ABCD-EF/clinical/validate/" + versionId)
+              .auth(JWT_ABCDEF, { type: "bearer" })
+              .then((res: any) => {
+                try {
+                  res.should.have.status(200);
+                  res.body.submission.state.should.eq(SUBMISSION_STATE.PENDING_APPROVAL);
+                  res.body.submission.clinicalEntities.donor.stats.new.should.deep.eq([0]);
+                  res.body.submission.clinicalEntities.specimen.stats.updated.should.deep.eq([0]);
+                  res.body.submission.clinicalEntities.specimen.dataUpdates.should.deep.eq([
+                    {
+                      fieldName: "specimen_type",
+                      index: 0,
+                      info: {
+                        newValue: "Other",
+                        oldValue: "FFPE"
+                      }
+                    }
+                  ]);
                 } catch (err) {
                   throw err;
                 }

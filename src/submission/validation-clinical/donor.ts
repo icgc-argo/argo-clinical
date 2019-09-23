@@ -3,8 +3,8 @@ import {
   DataValidationErrors,
   SubmittedClinicalRecord,
   SubmissionValidationError,
-  DonorInfoFieldsEnum,
-  SpecimenInfoFieldsEnum
+  ClinicalInfoFieldsEnum,
+  RecordToDonorFieldsMap
 } from "../submission-entities";
 import { DeepReadonly } from "deep-freeze";
 import { Donor } from "../../clinical/clinical-entities";
@@ -14,26 +14,59 @@ import * as utils from "./utils";
 export const validate = async (
   newRecords: DeepReadonly<{ [clinicalType: string]: SubmittedClinicalRecord }>,
   existentDonor: DeepReadonly<Donor>
-): Promise<DeepReadonly<SubmissionValidationError[]>> => {
+): Promise<any> => {
   const errors: SubmissionValidationError[] = [];
   const donorRecord = newRecords[FileType.DONOR];
 
-  // Preconditions: if any one of the validation in try catch failed, can't continue
-  try {
-    utils.checkDonorRegistered(existentDonor, donorRecord);
-  } catch (e) {
-    if (e.type in DataValidationErrors) {
-      return [e];
-    } else {
-      throw e;
-    }
+  // Preconditions: if any one of these validation failed, can't continue
+  if (!utils.checkDonorRegistered(existentDonor, donorRecord)) {
+    return [
+      utils.buildSubmissionError(
+        donorRecord,
+        DataValidationErrors.ID_NOT_REGISTERED,
+        FieldsEnum.submitter_donor_id
+      )
+    ];
   }
 
   // cross entity donor record validation
   checkTimeConflictWithSpecimen(existentDonor, donorRecord, newRecords[FileType.SPECIMEN], errors);
 
-  return errors;
+  if (errors.length > 0) {
+    return errors;
+  } else {
+    return calculateStats(donorRecord, existentDonor);
+  }
 };
+
+// cases
+// 1 not changing specimenType or tnd and new clinicalInfo <=> new
+// 2 changing specimenType or tnd or changing clinicalInfo <=> update
+// 3 not new or update <=> noUpdate
+function calculateStats(record: DeepReadonly<SubmittedClinicalRecord>, donor: DeepReadonly<Donor>) {
+  const clinicalInfo = donor.clinicalInfo;
+
+  // no updates to specimenType or tnd but there is now existent clinicalInfo, new
+  if (donor.gender === record[FieldsEnum.gender] && !clinicalInfo) {
+    return { new: record.index };
+  }
+
+  // check changing fields
+  const updateFields: any[] = utils.getUpdatedFields(clinicalInfo, record);
+
+  if (donor.gender !== record[FieldsEnum.gender]) {
+    updateFields.push({
+      fieldName: FieldsEnum.sample_type,
+      index: record.index,
+      info: {
+        oldValue: donor.gender,
+        newValue: record[FieldsEnum.gender]
+      }
+    });
+  }
+
+  return updateFields.length === 0 ? { noUpdate: record.index } : { updateFields };
+}
 
 function checkTimeConflictWithSpecimen(
   donor: DeepReadonly<Donor>,
@@ -41,11 +74,11 @@ function checkTimeConflictWithSpecimen(
   specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
   errors: SubmissionValidationError[]
 ) {
-  if (donorRecord[DonorInfoFieldsEnum.vital_status] !== "deceased") {
+  if (donorRecord[ClinicalInfoFieldsEnum.vital_status] !== "deceased") {
     return;
   }
   const specimenIdsWithTimeConflicts: string[] = [];
-  const donoSurvivalTime: number = Number(donorRecord[DonorInfoFieldsEnum.survival_time]);
+  const donoSurvivalTime: number = Number(donorRecord[ClinicalInfoFieldsEnum.survival_time]);
 
   donor.specimens.forEach(specimen => {
     let specimenAcqusitionInterval: number = 0;
@@ -55,7 +88,7 @@ function checkTimeConflictWithSpecimen(
       specimenRecord[FieldsEnum.submitter_specimen_id] === specimen.submitterId
     ) {
       specimenAcqusitionInterval = Number(
-        specimenRecord[SpecimenInfoFieldsEnum.specimen_acquistion_interval]
+        specimenRecord[ClinicalInfoFieldsEnum.specimen_acquistion_interval]
       );
     } else if (specimen.clinicalInfo) {
       specimenAcqusitionInterval = Number(specimen.clinicalInfo.specimenAcqusitionInterval);
@@ -74,9 +107,9 @@ function checkTimeConflictWithSpecimen(
       utils.buildSubmissionError(
         donorRecord,
         DataValidationErrors.CONFLICTING_TIME_INTERVAL,
-        DonorInfoFieldsEnum.survival_time,
+        ClinicalInfoFieldsEnum.survival_time,
         {
-          msg: `${DonorInfoFieldsEnum.survival_time} can't be less than a specimen's acquistion time`,
+          msg: `${ClinicalInfoFieldsEnum.survival_time} can't be less than a specimen's acquistion time`,
           conflictingSpecimenSubmitterIds: specimenIdsWithTimeConflicts
         }
       )

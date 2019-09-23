@@ -55,6 +55,12 @@ export type SubmissionValidationError = {
   index: number;
 };
 
+export type SubmissionValidationUpdate = {
+  fieldName: string;
+  info: object;
+  index: number;
+};
+
 export enum DataValidationErrors {
   MUTATING_EXISTING_DATA = "MUTATING_EXISTING_DATA",
   SAMPLE_BELONGS_TO_OTHER_SPECIMEN = "SAMPLE_BELONGS_TO_OTHER_SPECIMEN",
@@ -126,7 +132,7 @@ export interface MultiClinicalSubmissionCommand {
 }
 
 export interface CreateSubmissionResult {
-  readonly submission: ActiveClinicalSubmission | undefined;
+  readonly submission: DeepReadonly<ActiveClinicalSubmission> | undefined;
   readonly successful: boolean;
   errors: DeepReadonly<{ [clinicalType: string]: SubmissionValidationError[] }>;
 }
@@ -139,6 +145,7 @@ export interface NewClinicalEntity {
 
 export interface SavedClinicalEntity extends NewClinicalEntity {
   dataErrors: SubmissionValidationError[];
+  dataUpdates: SubmissionValidationUpdate[];
   stats: {
     new: number[];
     noUpdate: number[];
@@ -169,11 +176,15 @@ export interface SubmittedClinicalRecord {
   [fieldName: string]: string | number;
 }
 
-export enum SpecimenInfoFieldsEnum {
-  specimen_acquistion_interval = "specimen_acquistion_interval"
-}
-
-export enum DonorInfoFieldsEnum {
+export enum ClinicalInfoFieldsEnum {
+  specimen_acquistion_interval = "specimen_acquistion_interval",
   vital_status = "vital_status",
   survival_time = "survival_time"
 }
+
+export const RecordToDonorFieldsMap: { [field: string]: string } = {
+  ...FieldsEnum,
+  specimen_acquistion_interval: "specimenAcquistionInterval",
+  vital_status: "vitalStatus",
+  survival_time: "survivalTime"
+};

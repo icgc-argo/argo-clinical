@@ -3,63 +3,139 @@ import {
   DataValidationErrors,
   FieldsEnum,
   SubmittedClinicalRecord,
-  SpecimenInfoFieldsEnum,
-  DonorInfoFieldsEnum
+  ClinicalInfoFieldsEnum,
+  RecordToDonorFieldsMap
 } from "../submission-entities";
 import { DeepReadonly } from "deep-freeze";
-import { Donor } from "../../clinical/clinical-entities";
+import { Donor, Specimen } from "../../clinical/clinical-entities";
 import { FileType } from "../submission-api";
 import * as utils from "./utils";
 
 export const validate = async (
   newDonorRecords: DeepReadonly<{ [clinicalType: string]: SubmittedClinicalRecord }>,
   existentDonor: DeepReadonly<Donor>
-): Promise<DeepReadonly<SubmissionValidationError[]>> => {
+): Promise<any> => {
   const errors: SubmissionValidationError[] = [];
   const specimenRecord = newDonorRecords[FileType.SPECIMEN];
 
   // Preconditions: if any one of the validation in try catch failed, can't continue
-  let donorDataToValidateWith;
-  try {
-    utils.checkDonorRegistered(existentDonor, specimenRecord);
-    utils.getRegisteredSubEntityInCollection(
-      FieldsEnum.submitter_specimen_id,
-      specimenRecord,
-      existentDonor.specimens
-    );
-    donorDataToValidateWith = getDataFromRecordOrDonor(
-      specimenRecord,
-      newDonorRecords[FileType.DONOR],
-      existentDonor
-    );
-  } catch (e) {
-    if (e.type in DataValidationErrors) {
-      return [e];
-    } else {
-      throw e;
-    }
+  if (!utils.checkDonorRegistered(existentDonor, specimenRecord)) {
+    return [
+      utils.buildSubmissionError(
+        specimenRecord,
+        DataValidationErrors.ID_NOT_REGISTERED,
+        FieldsEnum.submitter_donor_id
+      )
+    ];
+  }
+
+  const specimen = utils.getRegisteredSubEntityInCollection(
+    FieldsEnum.submitter_specimen_id,
+    specimenRecord,
+    existentDonor.specimens
+  ) as Specimen;
+  if (!specimen) {
+    return [
+      utils.buildSubmissionError(
+        specimenRecord,
+        DataValidationErrors.ID_NOT_REGISTERED,
+        FieldsEnum.submitter_specimen_id
+      )
+    ];
+  }
+
+  const donorDataToValidateWith = getDataFromRecordOrDonor(
+    specimenRecord,
+    newDonorRecords[FileType.DONOR],
+    existentDonor
+  );
+  if (!donorDataToValidateWith) {
+    return [
+      utils.buildSubmissionError(
+        specimenRecord,
+        DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
+        ClinicalInfoFieldsEnum.specimen_acquistion_interval
+      )
+    ];
   }
 
   // cross entity sepecimen record validation
+  checkTimeConflictWithDonor(donorDataToValidateWith, specimenRecord, errors);
+
+  if (errors.length > 0) {
+    return errors;
+  } else {
+    return calculateStats(specimenRecord, specimen);
+  }
+};
+
+// cases
+// 1 not changing specimenType or tnd and new clinicalInfo <=> new
+// 2 changing specimenType or tnd or changing clinicalInfo <=> update
+// 3 not new or update <=> noUpdate
+function calculateStats(record: SubmittedClinicalRecord, specimen: Specimen) {
+  const clinicalInfo = specimen.clinicalInfo;
+
+  // no updates to specimenType or tnd but there is no existent clinicalInfo => new
+  if (
+    specimen.specimenType === record[FieldsEnum.specimen_type] &&
+    specimen.tumourNormalDesignation === record[FieldsEnum.tumour_normal_designation] &&
+    !clinicalInfo
+  ) {
+    return { new: record.index };
+  }
+
+  // check changing fields
+  const updateFields: any[] = utils.getUpdatedFields(clinicalInfo, record);
+
+  if (specimen.specimenType !== record[FieldsEnum.specimen_type]) {
+    updateFields.push({
+      fieldName: FieldsEnum.specimen_type,
+      index: record.index,
+      info: {
+        oldValue: specimen.specimenType,
+        newValue: record[FieldsEnum.specimen_type]
+      }
+    });
+  }
+
+  if (specimen.tumourNormalDesignation !== record[FieldsEnum.tumour_normal_designation]) {
+    updateFields.push({
+      fieldName: FieldsEnum.tumour_normal_designation,
+      index: record.index,
+      info: {
+        oldValue: specimen.tumourNormalDesignation,
+        newValue: record[FieldsEnum.tumour_normal_designation]
+      }
+    });
+  }
+
+  // if no updates and not new return noUpdate
+  return updateFields.length === 0 ? { noUpdate: record.index } : { updateFields };
+}
+
+function checkTimeConflictWithDonor(
+  donorDataToValidateWith: { [k: string]: any },
+  specimenRecord: SubmittedClinicalRecord,
+  errors: SubmissionValidationError[]
+) {
   if (
     donorDataToValidateWith.donorVitalStatus === "deceased" &&
     donorDataToValidateWith.donorSurvivalTime <
-      specimenRecord[SpecimenInfoFieldsEnum.specimen_acquistion_interval]
+      specimenRecord[ClinicalInfoFieldsEnum.specimen_acquistion_interval]
   ) {
     errors.push(
       utils.buildSubmissionError(
         specimenRecord,
         DataValidationErrors.CONFLICTING_TIME_INTERVAL,
-        SpecimenInfoFieldsEnum.specimen_acquistion_interval,
+        ClinicalInfoFieldsEnum.specimen_acquistion_interval,
         {
-          msg: `${SpecimenInfoFieldsEnum.specimen_acquistion_interval} can't be greater than ${DonorInfoFieldsEnum.survival_time}`
+          msg: `${ClinicalInfoFieldsEnum.specimen_acquistion_interval} can't be greater than ${ClinicalInfoFieldsEnum.survival_time}`
         }
       )
     );
   }
-
-  return errors;
-};
+}
 
 const getDataFromRecordOrDonor = (
   specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
@@ -70,20 +146,13 @@ const getDataFromRecordOrDonor = (
   let donorSurvivalTime: number;
 
   if (donorRecord) {
-    donorVitalStatus = String(donorRecord[DonorInfoFieldsEnum.vital_status]);
-    donorSurvivalTime = Number(donorRecord[DonorInfoFieldsEnum.survival_time]);
+    donorVitalStatus = String(donorRecord[ClinicalInfoFieldsEnum.vital_status]);
+    donorSurvivalTime = Number(donorRecord[ClinicalInfoFieldsEnum.survival_time]);
   } else if (donor.clinicalInfo) {
     donorVitalStatus = String(donor.clinicalInfo.vitalStatus);
     donorSurvivalTime = Number(donor.clinicalInfo.survivalTime);
-  }
-  // nowhere to get the data to validate against, so throw error
-  else {
-    // might need to throw an array of errrors instead for each specimen field that can't be validated
-    throw utils.buildSubmissionError(
-      specimenRecord,
-      DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
-      SpecimenInfoFieldsEnum.specimen_acquistion_interval
-    );
+  } else {
+    return undefined;
   }
 
   return { donorVitalStatus, donorSurvivalTime };
