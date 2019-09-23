@@ -1,10 +1,10 @@
-import winston from "winston";
+import winston from 'winston';
 const { createLogger, format, transports } = winston;
 const { combine, timestamp, label, prettyPrint, json } = format;
 
 // read the log level from the env directly since this is a very high priority value.
-const LOG_LEVEL = process.env.LOG_LEVEL || "debug";
-console.log("log level configured: ", LOG_LEVEL);
+const LOG_LEVEL = process.env.LOG_LEVEL || 'debug';
+console.log('log level configured: ', LOG_LEVEL);
 
 // Logger configuration
 const logConfiguration = {
@@ -13,9 +13,9 @@ const logConfiguration = {
     // format.colorize(),
     json(),
     timestamp(),
-    prettyPrint()
+    prettyPrint(),
   ),
-  transports: [new winston.transports.Console()]
+  transports: [new winston.transports.Console()],
 };
 
 export interface Logger {
@@ -25,11 +25,11 @@ export interface Logger {
 }
 
 const winstonLogger = winston.createLogger(logConfiguration);
-console.log("logger configured: ", winstonLogger);
+console.log('logger configured: ', winstonLogger);
 
 export const loggerFor = (fileName: string): Logger => {
-  console.debug("creating logger for", fileName);
-  const source = fileName.substring(fileName.indexOf("argo-clinical"));
+  console.debug('creating logger for', fileName);
+  const source = fileName.substring(fileName.indexOf('argo-clinical'));
   return {
     error: (msg: string, err: Error): void => {
       winstonLogger.error(msg, err, { source });
@@ -39,6 +39,6 @@ export const loggerFor = (fileName: string): Logger => {
     },
     info: (msg: string): void => {
       winstonLogger.info(msg, { source });
-    }
+    },
   };
 };

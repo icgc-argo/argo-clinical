@@ -1,12 +1,12 @@
-import { SubmittedClinicalRecord, FieldsEnum, DataValidationErrors } from "../submission-entities";
-import { DeepReadonly } from "deep-freeze";
-import { Donor, Sample, Specimen } from "../../clinical/clinical-entities";
-import { FileType } from "../submission-api";
-import * as utils from "./utils";
+import { SubmittedClinicalRecord, FieldsEnum, DataValidationErrors } from '../submission-entities';
+import { DeepReadonly } from 'deep-freeze';
+import { Donor, Sample, Specimen } from '../../clinical/clinical-entities';
+import { FileType } from '../submission-api';
+import * as utils from './utils';
 
 export const validate = async (
   newDonorRecords: DeepReadonly<{ [clinicalType: string]: SubmittedClinicalRecord }>,
-  existentDonor: DeepReadonly<Donor>
+  existentDonor: DeepReadonly<Donor>,
 ): Promise<any> => {
   // this is a dummy error
   const sampleRecord = newDonorRecords[FileType.SAMPLE];
@@ -18,29 +18,29 @@ export const validate = async (
   const specimen = utils.getRegisteredSubEntityInCollection(
     FieldsEnum.submitter_specimen_id,
     sampleRecord,
-    existentDonor.specimens
+    existentDonor.specimens,
   ) as Specimen;
   if (!specimen) {
     return [
       utils.buildSubmissionError(
         sampleRecord,
         DataValidationErrors.ID_NOT_REGISTERED,
-        FieldsEnum.submitter_specimen_id
-      )
+        FieldsEnum.submitter_specimen_id,
+      ),
     ];
   }
   sample = utils.getRegisteredSubEntityInCollection(
     FieldsEnum.submitter_sample_id,
     sampleRecord,
-    specimen.samples
+    specimen.samples,
   ) as Sample;
   if (!sample) {
     return [
       utils.buildSubmissionError(
         sampleRecord,
         DataValidationErrors.ID_NOT_REGISTERED,
-        FieldsEnum.submitter_specimen_id
-      )
+        FieldsEnum.submitter_specimen_id,
+      ),
     ];
   }
 
@@ -62,8 +62,8 @@ function calculateStats(record: SubmittedClinicalRecord, sample: Sample) {
       index: record.index,
       info: {
         oldValue: sample.sampleType,
-        newValue: record[FieldsEnum.sample_type]
-      }
+        newValue: record[FieldsEnum.sample_type],
+      },
     });
   }
 

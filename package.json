@@ -1,6 +1,6 @@
 {
   "name": "argo-clinical",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Clinical submission system and repo",
   "scripts": {
     "start": "npm run serve",
@@ -15,9 +15,11 @@
     "watch-ts": "tsc -w",
     "tslint": "tslint -c tslint.json -p tsconfig.json",
     "debug": "npm run build && sleep 3 && npm run watch-debug",
+    "local": "npm run build && sleep 3 && npm run watch-local",
     "resources": "copyfiles -u 1 src/resources/*.* dist/src",
     "serve-debug": "nodemon --inspect dist/src/server.js",
-    "watch-debug": "nodemon --watch 'src/**/*.ts' --ignore 'src/**/*.spec.ts' --exec node --inspect-brk -r ts-node/register ./src/server.ts"
+    "watch-debug": "nodemon --watch 'src/**/*.ts' --ignore 'src/**/*.spec.ts' --exec node --inspect-brk -r ts-node/register ./src/server.ts",
+    "watch-local": "nodemon --watch 'src/**/*.ts' --ignore 'src/**/*.spec.ts' --exec node -r ts-node/register ./src/server.ts"
   },
   "repository": {
     "type": "git",
@@ -111,6 +113,7 @@
   },
   "prettier": {
     "printWidth": 100,
-    "tabWidth": 2
+    "trailingComma": "all",
+    "singleQuote": true
   }
 }

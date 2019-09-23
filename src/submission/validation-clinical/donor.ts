@@ -3,16 +3,16 @@ import {
   DataValidationErrors,
   SubmittedClinicalRecord,
   SubmissionValidationError,
-  ClinicalInfoFieldsEnum
-} from "../submission-entities";
-import { DeepReadonly } from "deep-freeze";
-import { Donor } from "../../clinical/clinical-entities";
-import { FileType } from "../submission-api";
-import * as utils from "./utils";
+  ClinicalInfoFieldsEnum,
+} from '../submission-entities';
+import { DeepReadonly } from 'deep-freeze';
+import { Donor } from '../../clinical/clinical-entities';
+import { FileType } from '../submission-api';
+import * as utils from './utils';
 
 export const validate = async (
   newRecords: DeepReadonly<{ [clinicalType: string]: SubmittedClinicalRecord }>,
-  existentDonor: DeepReadonly<Donor>
+  existentDonor: DeepReadonly<Donor>,
 ): Promise<any> => {
   const errors: SubmissionValidationError[] = [];
   const donorRecord = newRecords[FileType.DONOR];
@@ -23,8 +23,8 @@ export const validate = async (
       utils.buildSubmissionError(
         donorRecord,
         DataValidationErrors.ID_NOT_REGISTERED,
-        FieldsEnum.submitter_donor_id
-      )
+        FieldsEnum.submitter_donor_id,
+      ),
     ];
   }
 
@@ -59,8 +59,8 @@ function calculateStats(record: DeepReadonly<SubmittedClinicalRecord>, donor: De
       index: record.index,
       info: {
         oldValue: donor.gender,
-        newValue: record[FieldsEnum.gender]
-      }
+        newValue: record[FieldsEnum.gender],
+      },
     });
   }
 
@@ -71,9 +71,9 @@ function checkTimeConflictWithSpecimen(
   donor: DeepReadonly<Donor>,
   donorRecord: DeepReadonly<SubmittedClinicalRecord>,
   specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
-  errors: SubmissionValidationError[]
+  errors: SubmissionValidationError[],
 ) {
-  if (donorRecord[ClinicalInfoFieldsEnum.vital_status] !== "deceased") {
+  if (donorRecord[ClinicalInfoFieldsEnum.vital_status] !== 'deceased') {
     return;
   }
   const specimenIdsWithTimeConflicts: string[] = [];
@@ -87,7 +87,7 @@ function checkTimeConflictWithSpecimen(
       specimenRecord[FieldsEnum.submitter_specimen_id] === specimen.submitterId
     ) {
       specimenAcqusitionInterval = Number(
-        specimenRecord[ClinicalInfoFieldsEnum.specimen_acquistion_interval]
+        specimenRecord[ClinicalInfoFieldsEnum.specimen_acquistion_interval],
       );
     } else if (specimen.clinicalInfo) {
       specimenAcqusitionInterval = Number(specimen.clinicalInfo.specimenAcqusitionInterval);
@@ -109,9 +109,9 @@ function checkTimeConflictWithSpecimen(
         ClinicalInfoFieldsEnum.survival_time,
         {
           msg: `${ClinicalInfoFieldsEnum.survival_time} can't be less than a specimen's acquistion time`,
-          conflictingSpecimenSubmitterIds: specimenIdsWithTimeConflicts
-        }
-      )
+          conflictingSpecimenSubmitterIds: specimenIdsWithTimeConflicts,
+        },
+      ),
     );
   }
 }

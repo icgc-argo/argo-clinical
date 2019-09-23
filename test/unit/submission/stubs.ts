@@ -1,4 +1,4 @@
-import { Donor } from "../../../src/clinical/clinical-entities";
+import { Donor } from '../../../src/clinical/clinical-entities';
 
 /**
  * strongly typed stubs file!!
@@ -6,98 +6,98 @@ import { Donor } from "../../../src/clinical/clinical-entities";
 export const stubs = {
   validation: {
     existingDonor01: (): Donor => ({
-      _id: "i8321321",
-      submitterId: "AB1",
-      programId: "PEME-CA",
+      _id: 'i8321321',
+      submitterId: 'AB1',
+      programId: 'PEME-CA',
       donorId: 10,
       clinicalInfo: {},
-      gender: "Female",
+      gender: 'Female',
       specimens: [
         {
-          submitterId: "SP1",
-          specimenType: "XYZ",
+          submitterId: 'SP1',
+          specimenType: 'XYZ',
           clinicalInfo: {},
-          tumourNormalDesignation: "Normal",
+          tumourNormalDesignation: 'Normal',
           samples: [
             {
-              sampleType: "ST1",
-              submitterId: "AM1"
-            }
-          ]
-        }
-      ]
+              sampleType: 'ST1',
+              submitterId: 'AM1',
+            },
+          ],
+        },
+      ],
     }),
 
     existingDonor02: (): Donor => ({
-      _id: "juadskasd23",
-      submitterId: "AB1",
-      programId: "PEME-CA",
+      _id: 'juadskasd23',
+      submitterId: 'AB1',
+      programId: 'PEME-CA',
       donorId: 10,
       clinicalInfo: {},
-      gender: "Female",
+      gender: 'Female',
       specimens: [
         {
-          submitterId: "SP1",
-          specimenType: "XYZZ",
+          submitterId: 'SP1',
+          specimenType: 'XYZZ',
           clinicalInfo: {},
-          tumourNormalDesignation: "Normal",
+          tumourNormalDesignation: 'Normal',
           samples: [
             {
-              sampleType: "ST11",
-              submitterId: "AM1"
-            }
-          ]
-        }
-      ]
+              sampleType: 'ST11',
+              submitterId: 'AM1',
+            },
+          ],
+        },
+      ],
     }),
 
     existingDonor03: (): Donor => ({
-      _id: "juadskasd122",
-      submitterId: "AB3",
-      programId: "PEME-CA",
+      _id: 'juadskasd122',
+      submitterId: 'AB3',
+      programId: 'PEME-CA',
       donorId: 10,
       clinicalInfo: {},
-      gender: "Female",
+      gender: 'Female',
       specimens: [
         {
-          submitterId: "SP12",
-          specimenType: "XYZZ",
+          submitterId: 'SP12',
+          specimenType: 'XYZZ',
           clinicalInfo: {},
-          tumourNormalDesignation: "Normal",
+          tumourNormalDesignation: 'Normal',
           samples: [
             {
-              sampleType: "ST10",
-              submitterId: "AM1"
-            }
-          ]
-        }
-      ]
+              sampleType: 'ST10',
+              submitterId: 'AM1',
+            },
+          ],
+        },
+      ],
     }),
 
     existingDonor04: (): Donor => ({
-      _id: "juadskasd122",
-      submitterId: "AB2",
-      programId: "PEME-CA",
+      _id: 'juadskasd122',
+      submitterId: 'AB2',
+      programId: 'PEME-CA',
       donorId: 10,
       clinicalInfo: {
-        vitalStatus: "deceased",
-        survivalTime: "522"
+        vitalStatus: 'deceased',
+        survivalTime: '522',
       },
-      gender: "Female",
+      gender: 'Female',
       specimens: [
         {
-          submitterId: "SP13",
-          specimenType: "Other",
+          submitterId: 'SP13',
+          specimenType: 'Other',
           clinicalInfo: {},
-          tumourNormalDesignation: "Normal",
+          tumourNormalDesignation: 'Normal',
           samples: [
             {
-              sampleType: "ST10",
-              submitterId: "AM1"
-            }
-          ]
-        }
-      ]
-    })
-  }
+              sampleType: 'ST10',
+              submitterId: 'AM1',
+            },
+          ],
+        },
+      ],
+    }),
+  },
 };
