@@ -19,6 +19,7 @@ import {
   ActiveClinicalSubmission,
   SubmittedClinicalRecord,
   SubmissionValidationUpdate,
+  ClinicalTypeValidateResult,
 } from './submission-entities';
 import * as schemaManager from '../lectern-client/schema-manager';
 import {
@@ -243,7 +244,6 @@ export namespace operations {
         successful: true,
       };
     }
-    const newActiveSubmission = _.cloneDeep(exsistingActiveSubmission) as ActiveClinicalSubmission;
     // map donors(via donorId) to their relevant records
     const newDonorDataMap: {
       [donoSubmitterId: string]: { [clinicalType: string]: SubmittedClinicalRecord };
@@ -269,11 +269,15 @@ export namespace operations {
       });
     }
     const relevantDonorsMap = await getDonorsInProgram(filters);
-    const validateResult = await validateSubmissionData(newDonorDataMap, relevantDonorsMap);
+    const validateResult: ClinicalTypeValidateResult = await validateSubmissionData(
+      newDonorDataMap,
+      relevantDonorsMap,
+    );
 
+    // update data errors/updates and stats
     let inValid: boolean = false;
     let pendingApproval: boolean = false;
-    // update data errors/updates and stats
+    const newActiveSubmission = _.cloneDeep(exsistingActiveSubmission) as ActiveClinicalSubmission;
     for (const clinicalType in validateResult) {
       newActiveSubmission.clinicalEntities[clinicalType].stats = validateResult[clinicalType].stats;
 
@@ -288,10 +292,10 @@ export namespace operations {
 
     // generate new version and make submission VALID/INVALID
     newActiveSubmission.version = uuid();
-    if (pendingApproval) {
-      newActiveSubmission.state = SUBMISSION_STATE.PENDING_APPROVAL;
-    } else if (inValid) {
+    if (inValid) {
       newActiveSubmission.state = SUBMISSION_STATE.INVALID;
+    } else if (pendingApproval) {
+      newActiveSubmission.state = SUBMISSION_STATE.PENDING_APPROVAL;
     } else {
       newActiveSubmission.state = SUBMISSION_STATE.VALID;
     }

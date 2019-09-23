@@ -1,4 +1,10 @@
-import { SubmittedClinicalRecord, FieldsEnum, DataValidationErrors } from '../submission-entities';
+import {
+  SubmittedClinicalRecord,
+  FieldsEnum,
+  DataValidationErrors,
+  ValidatorResult,
+  ModificationType,
+} from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, Sample, Specimen } from '../../clinical/clinical-entities';
 import { FileType } from '../submission-api';
@@ -7,13 +13,23 @@ import * as utils from './utils';
 export const validate = async (
   newDonorRecords: DeepReadonly<{ [clinicalType: string]: SubmittedClinicalRecord }>,
   existentDonor: DeepReadonly<Donor>,
-): Promise<any> => {
+): Promise<ValidatorResult> => {
   // this is a dummy error
   const sampleRecord = newDonorRecords[FileType.SAMPLE];
-  let sample: Sample;
-  // Preconditions
 
+  // Preconditions
   if (!utils.checkDonorRegistered(existentDonor, sampleRecord)) {
+    return {
+      type: ModificationType.ERRORSFOUND,
+      index: sampleRecord.index,
+      resultArray: [
+        utils.buildSubmissionError(
+          sampleRecord,
+          DataValidationErrors.ID_NOT_REGISTERED,
+          FieldsEnum.submitter_donor_id,
+        ),
+      ],
+    };
   }
   const specimen = utils.getRegisteredSubEntityInCollection(
     FieldsEnum.submitter_specimen_id,
@@ -21,39 +37,50 @@ export const validate = async (
     existentDonor.specimens,
   ) as Specimen;
   if (!specimen) {
-    return [
-      utils.buildSubmissionError(
-        sampleRecord,
-        DataValidationErrors.ID_NOT_REGISTERED,
-        FieldsEnum.submitter_specimen_id,
-      ),
-    ];
+    return {
+      type: ModificationType.ERRORSFOUND,
+      index: sampleRecord.index,
+      resultArray: [
+        utils.buildSubmissionError(
+          sampleRecord,
+          DataValidationErrors.ID_NOT_REGISTERED,
+          FieldsEnum.submitter_specimen_id,
+        ),
+      ],
+    };
   }
-  sample = utils.getRegisteredSubEntityInCollection(
+  const sample: Sample = utils.getRegisteredSubEntityInCollection(
     FieldsEnum.submitter_sample_id,
     sampleRecord,
     specimen.samples,
   ) as Sample;
   if (!sample) {
-    return [
-      utils.buildSubmissionError(
-        sampleRecord,
-        DataValidationErrors.ID_NOT_REGISTERED,
-        FieldsEnum.submitter_specimen_id,
-      ),
-    ];
+    return {
+      type: ModificationType.ERRORSFOUND,
+      index: sampleRecord.index,
+      resultArray: [
+        utils.buildSubmissionError(
+          sampleRecord,
+          DataValidationErrors.ID_NOT_REGISTERED,
+          FieldsEnum.submitter_sample_id,
+        ),
+      ],
+    };
   }
 
   // no error checks yet
 
-  return calculateStats(sampleRecord, sample);
+  return await calculateStats(sampleRecord, sample);
 };
 
 // cases
 // 1 not changing sampleType and new clinicalInfo <=> new
 // 2 changing sampleType or changing clinicalInfo <=> update
 // 3 not new or update <=> noUpdate
-function calculateStats(record: SubmittedClinicalRecord, sample: Sample) {
+async function calculateStats(
+  record: SubmittedClinicalRecord,
+  sample: Sample,
+): Promise<ValidatorResult> {
   const updateFields: any[] = [];
 
   if (sample.sampleType !== record[FieldsEnum.sample_type]) {
@@ -67,5 +94,7 @@ function calculateStats(record: SubmittedClinicalRecord, sample: Sample) {
     });
   }
 
-  return updateFields.length === 0 ? { noUpdate: record.index } : { updateFields };
+  return updateFields.length === 0
+    ? { type: ModificationType.NOUPDATE, index: record.index }
+    : { type: ModificationType.UPDATED, index: record.index, resultArray: updateFields };
 }

@@ -4,6 +4,8 @@ import {
   FieldsEnum,
   SubmittedClinicalRecord,
   ClinicalInfoFieldsEnum,
+  ValidatorResult,
+  ModificationType,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, Specimen } from '../../clinical/clinical-entities';
@@ -13,19 +15,23 @@ import * as utils from './utils';
 export const validate = async (
   newDonorRecords: DeepReadonly<{ [clinicalType: string]: SubmittedClinicalRecord }>,
   existentDonor: DeepReadonly<Donor>,
-): Promise<any> => {
+): Promise<ValidatorResult> => {
   const errors: SubmissionValidationError[] = [];
   const specimenRecord = newDonorRecords[FileType.SPECIMEN];
 
   // Preconditions: if any one of the validation in try catch failed, can't continue
   if (!utils.checkDonorRegistered(existentDonor, specimenRecord)) {
-    return [
-      utils.buildSubmissionError(
-        specimenRecord,
-        DataValidationErrors.ID_NOT_REGISTERED,
-        FieldsEnum.submitter_donor_id,
-      ),
-    ];
+    return {
+      type: ModificationType.ERRORSFOUND,
+      index: specimenRecord.index,
+      resultArray: [
+        utils.buildSubmissionError(
+          specimenRecord,
+          DataValidationErrors.ID_NOT_REGISTERED,
+          FieldsEnum.submitter_donor_id,
+        ),
+      ],
+    };
   }
 
   const specimen = utils.getRegisteredSubEntityInCollection(
@@ -34,13 +40,17 @@ export const validate = async (
     existentDonor.specimens,
   ) as Specimen;
   if (!specimen) {
-    return [
-      utils.buildSubmissionError(
-        specimenRecord,
-        DataValidationErrors.ID_NOT_REGISTERED,
-        FieldsEnum.submitter_specimen_id,
-      ),
-    ];
+    return {
+      type: ModificationType.ERRORSFOUND,
+      index: specimenRecord.index,
+      resultArray: [
+        utils.buildSubmissionError(
+          specimenRecord,
+          DataValidationErrors.ID_NOT_REGISTERED,
+          FieldsEnum.submitter_specimen_id,
+        ),
+      ],
+    };
   }
 
   const donorDataToValidateWith = getDataFromRecordOrDonor(
@@ -48,30 +58,35 @@ export const validate = async (
     existentDonor,
   );
   if (!donorDataToValidateWith) {
-    return [
-      utils.buildSubmissionError(
-        specimenRecord,
-        DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
-        ClinicalInfoFieldsEnum.specimen_acquistion_interval,
-      ),
-    ];
+    return {
+      type: ModificationType.ERRORSFOUND,
+      index: specimenRecord.index,
+      resultArray: [
+        utils.buildSubmissionError(
+          specimenRecord,
+          DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
+          ClinicalInfoFieldsEnum.specimen_acquistion_interval,
+        ),
+      ],
+    };
   }
 
   // cross entity sepecimen record validation
   checkTimeConflictWithDonor(donorDataToValidateWith, specimenRecord, errors);
 
-  if (errors.length > 0) {
-    return errors;
-  } else {
-    return calculateStats(specimenRecord, specimen);
-  }
+  return errors.length > 0
+    ? { type: ModificationType.ERRORSFOUND, index: specimenRecord.index, resultArray: errors }
+    : await calculateStats(specimenRecord, specimen);
 };
 
 // cases
 // 1 not changing specimenType or tnd and new clinicalInfo <=> new
 // 2 changing specimenType or tnd or changing clinicalInfo <=> update
 // 3 not new or update <=> noUpdate
-function calculateStats(record: SubmittedClinicalRecord, specimen: Specimen) {
+async function calculateStats(
+  record: SubmittedClinicalRecord,
+  specimen: Specimen,
+): Promise<ValidatorResult> {
   const clinicalInfo = specimen.clinicalInfo;
 
   // no updates to specimenType or tnd but there is no existent clinicalInfo => new
@@ -80,7 +95,7 @@ function calculateStats(record: SubmittedClinicalRecord, specimen: Specimen) {
     specimen.tumourNormalDesignation === record[FieldsEnum.tumour_normal_designation] &&
     !clinicalInfo
   ) {
-    return { new: record.index };
+    return { type: ModificationType.NEW, index: record.index };
   }
 
   // check changing fields
@@ -109,7 +124,9 @@ function calculateStats(record: SubmittedClinicalRecord, specimen: Specimen) {
   }
 
   // if no updates and not new return noUpdate
-  return updateFields.length === 0 ? { noUpdate: record.index } : { updateFields };
+  return updateFields.length === 0
+    ? { type: ModificationType.NOUPDATE, index: record.index }
+    : { type: ModificationType.UPDATED, index: record.index, resultArray: updateFields };
 }
 
 function checkTimeConflictWithDonor(

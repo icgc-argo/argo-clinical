@@ -188,3 +188,20 @@ export const RecordToDonorFieldsMap: { [field: string]: string } = {
   vital_status: 'vitalStatus',
   survival_time: 'survivalTime',
 };
+
+export interface ValidatorResult {
+  type: ModificationType;
+  index: number;
+  resultArray?: SubmissionValidationError[] | SubmissionValidationUpdate[];
+}
+
+export enum ModificationType {
+  ERRORSFOUND = 'errorsFound',
+  NEW = 'new',
+  UPDATED = 'updated',
+  NOUPDATE = 'noUpdate',
+}
+
+export type ClinicalTypeValidateResult = {
+  [clinicalType: string]: Pick<SavedClinicalEntity, 'dataErrors' | 'dataUpdates' | 'stats'>;
+};

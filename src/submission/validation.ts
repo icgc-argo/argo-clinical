@@ -7,6 +7,10 @@ import {
   FieldsEnum,
   RegistrationToCreateRegistrationFieldsMap,
   SubmittedClinicalRecord,
+  ValidatorResult,
+  ModificationType,
+  SubmissionValidationUpdate,
+  ClinicalTypeValidateResult,
 } from './submission-entities';
 import { donorDao, DONOR_FIELDS } from '../clinical/donor-repo';
 import { DeepReadonly } from 'deep-freeze';
@@ -74,8 +78,8 @@ export const validateSubmissionData = async (
     [donoSubmitterId: string]: { [clinicalType: string]: SubmittedClinicalRecord };
   }>,
   existingDonors: DeepReadonly<DonorMap>,
-): Promise<any> => {
-  const validationResults: { [clinicalType: string]: any } = {};
+): Promise<ClinicalTypeValidateResult> => {
+  const validationResults: ClinicalTypeValidateResult = {};
   for (const donorSubmitterId in newDonorsRecords) {
     const newRecords = newDonorsRecords[donorSubmitterId];
     const existentDonor = existingDonors[donorSubmitterId];
@@ -94,21 +98,19 @@ export const validateSubmissionData = async (
         };
       }
 
-      const result = await submissionValidator[clinicalType].validate(newRecords, existentDonor);
-      if ('new' in result) {
-        validationResults[clinicalType].stats.new.push(result.new);
-      } else if ('noUpdate' in result) {
-        validationResults[clinicalType].stats.noUpdate.push(result.noUpdate);
-      } else if ('updateFields' in result) {
-        validationResults[clinicalType].stats.updated.push(newRecords[clinicalType].index);
+      const result: ValidatorResult = await submissionValidator[clinicalType].validate(
+        newRecords,
+        existentDonor,
+      );
+      validationResults[clinicalType].stats[result.type].push(result.index);
+      if (result.type === ModificationType.UPDATED) {
         validationResults[clinicalType].dataUpdates = validationResults[
           clinicalType
-        ].dataUpdates.concat(result.updateFields);
-      } else {
-        validationResults[clinicalType].stats.errorsFound.push(newRecords[clinicalType].index);
+        ].dataUpdates.concat(result.resultArray as SubmissionValidationUpdate[]);
+      } else if (result.type === ModificationType.ERRORSFOUND) {
         validationResults[clinicalType].dataErrors = validationResults[
           clinicalType
-        ].dataErrors.concat(result);
+        ].dataErrors.concat(result.resultArray as SubmissionValidationError[]);
       }
     }
   }

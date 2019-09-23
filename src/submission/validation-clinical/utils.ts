@@ -9,13 +9,6 @@ import {
 import { DeepReadonly } from 'deep-freeze';
 import { DonorSubEntity, Donor } from '../../clinical/clinical-entities';
 
-export enum ValidationResult {
-  ERRORSFOUND,
-  NEW,
-  UPDATED,
-  NOUPDATE,
-}
-
 export const checkDonorRegistered = (
   aDonor: DeepReadonly<Donor>,
   record: DeepReadonly<SubmittedClinicalRecord>,
