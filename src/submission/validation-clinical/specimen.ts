@@ -3,16 +3,16 @@ import {
   DataValidationErrors,
   FieldsEnum,
   SubmittedClinicalRecord,
-  ClinicalInfoFieldsEnum
-} from "../submission-entities";
-import { DeepReadonly } from "deep-freeze";
-import { Donor, Specimen } from "../../clinical/clinical-entities";
-import { FileType } from "../submission-api";
-import * as utils from "./utils";
+  ClinicalInfoFieldsEnum,
+} from '../submission-entities';
+import { DeepReadonly } from 'deep-freeze';
+import { Donor, Specimen } from '../../clinical/clinical-entities';
+import { FileType } from '../submission-api';
+import * as utils from './utils';
 
 export const validate = async (
   newDonorRecords: DeepReadonly<{ [clinicalType: string]: SubmittedClinicalRecord }>,
-  existentDonor: DeepReadonly<Donor>
+  existentDonor: DeepReadonly<Donor>,
 ): Promise<any> => {
   const errors: SubmissionValidationError[] = [];
   const specimenRecord = newDonorRecords[FileType.SPECIMEN];
@@ -23,37 +23,37 @@ export const validate = async (
       utils.buildSubmissionError(
         specimenRecord,
         DataValidationErrors.ID_NOT_REGISTERED,
-        FieldsEnum.submitter_donor_id
-      )
+        FieldsEnum.submitter_donor_id,
+      ),
     ];
   }
 
   const specimen = utils.getRegisteredSubEntityInCollection(
     FieldsEnum.submitter_specimen_id,
     specimenRecord,
-    existentDonor.specimens
+    existentDonor.specimens,
   ) as Specimen;
   if (!specimen) {
     return [
       utils.buildSubmissionError(
         specimenRecord,
         DataValidationErrors.ID_NOT_REGISTERED,
-        FieldsEnum.submitter_specimen_id
-      )
+        FieldsEnum.submitter_specimen_id,
+      ),
     ];
   }
 
   const donorDataToValidateWith = getDataFromRecordOrDonor(
     newDonorRecords[FileType.DONOR],
-    existentDonor
+    existentDonor,
   );
   if (!donorDataToValidateWith) {
     return [
       utils.buildSubmissionError(
         specimenRecord,
         DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
-        ClinicalInfoFieldsEnum.specimen_acquistion_interval
-      )
+        ClinicalInfoFieldsEnum.specimen_acquistion_interval,
+      ),
     ];
   }
 
@@ -92,8 +92,8 @@ function calculateStats(record: SubmittedClinicalRecord, specimen: Specimen) {
       index: record.index,
       info: {
         oldValue: specimen.specimenType,
-        newValue: record[FieldsEnum.specimen_type]
-      }
+        newValue: record[FieldsEnum.specimen_type],
+      },
     });
   }
 
@@ -103,8 +103,8 @@ function calculateStats(record: SubmittedClinicalRecord, specimen: Specimen) {
       index: record.index,
       info: {
         oldValue: specimen.tumourNormalDesignation,
-        newValue: record[FieldsEnum.tumour_normal_designation]
-      }
+        newValue: record[FieldsEnum.tumour_normal_designation],
+      },
     });
   }
 
@@ -115,10 +115,10 @@ function calculateStats(record: SubmittedClinicalRecord, specimen: Specimen) {
 function checkTimeConflictWithDonor(
   donorDataToValidateWith: { [k: string]: any },
   specimenRecord: SubmittedClinicalRecord,
-  errors: SubmissionValidationError[]
+  errors: SubmissionValidationError[],
 ) {
   if (
-    donorDataToValidateWith.donorVitalStatus === "deceased" &&
+    donorDataToValidateWith.donorVitalStatus === 'deceased' &&
     donorDataToValidateWith.donorSurvivalTime <
       specimenRecord[ClinicalInfoFieldsEnum.specimen_acquistion_interval]
   ) {
@@ -128,16 +128,16 @@ function checkTimeConflictWithDonor(
         DataValidationErrors.CONFLICTING_TIME_INTERVAL,
         ClinicalInfoFieldsEnum.specimen_acquistion_interval,
         {
-          msg: `${ClinicalInfoFieldsEnum.specimen_acquistion_interval} can't be greater than ${ClinicalInfoFieldsEnum.survival_time}`
-        }
-      )
+          msg: `${ClinicalInfoFieldsEnum.specimen_acquistion_interval} can't be greater than ${ClinicalInfoFieldsEnum.survival_time}`,
+        },
+      ),
     );
   }
 }
 
 const getDataFromRecordOrDonor = (
   donorRecord: DeepReadonly<SubmittedClinicalRecord>,
-  donor: DeepReadonly<Donor>
+  donor: DeepReadonly<Donor>,
 ) => {
   let donorVitalStatus: string;
   let donorSurvivalTime: number;
