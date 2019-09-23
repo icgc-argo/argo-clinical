@@ -3,8 +3,7 @@ import {
   SubmittedClinicalRecord,
   DataValidationErrors,
   SubmissionValidationError,
-  SpecimenInfoFieldsEnum,
-  DonorInfoFieldsEnum,
+  ClinicalInfoFieldsEnum,
   RecordToDonorFieldsMap
 } from "../submission-entities";
 import { DeepReadonly } from "deep-freeze";
@@ -35,7 +34,7 @@ export const getRegisteredSubEntityInCollection = (
 export const buildSubmissionError = (
   newRecord: SubmittedClinicalRecord,
   type: DataValidationErrors,
-  fieldName: FieldsEnum | SpecimenInfoFieldsEnum | DonorInfoFieldsEnum,
+  fieldName: FieldsEnum | ClinicalInfoFieldsEnum,
   info: object = {}
 ): SubmissionValidationError => {
   // typescript refused to take this directly

@@ -3,8 +3,7 @@ import {
   DataValidationErrors,
   SubmittedClinicalRecord,
   SubmissionValidationError,
-  ClinicalInfoFieldsEnum,
-  RecordToDonorFieldsMap
+  ClinicalInfoFieldsEnum
 } from "../submission-entities";
 import { DeepReadonly } from "deep-freeze";
 import { Donor } from "../../clinical/clinical-entities";

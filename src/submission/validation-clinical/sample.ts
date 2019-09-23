@@ -1,18 +1,8 @@
-import {
-  SubmissionValidationError,
-  SubmittedClinicalRecord,
-  FieldsEnum,
-  RecordToDonorFieldsMap,
-  SubmissionValidationUpdate,
-  ClinicalInfoFieldsEnum,
-  DataValidationErrors
-} from "../submission-entities";
+import { SubmittedClinicalRecord, FieldsEnum, DataValidationErrors } from "../submission-entities";
 import { DeepReadonly } from "deep-freeze";
 import { Donor, Sample, Specimen } from "../../clinical/clinical-entities";
 import { FileType } from "../submission-api";
 import * as utils from "./utils";
-import _, { sample } from "lodash";
-import DeepDiff from "deep-diff";
 
 export const validate = async (
   newDonorRecords: DeepReadonly<{ [clinicalType: string]: SubmittedClinicalRecord }>,

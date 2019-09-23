@@ -3,8 +3,7 @@ import {
   DataValidationErrors,
   FieldsEnum,
   SubmittedClinicalRecord,
-  ClinicalInfoFieldsEnum,
-  RecordToDonorFieldsMap
+  ClinicalInfoFieldsEnum
 } from "../submission-entities";
 import { DeepReadonly } from "deep-freeze";
 import { Donor, Specimen } from "../../clinical/clinical-entities";
@@ -45,7 +44,6 @@ export const validate = async (
   }
 
   const donorDataToValidateWith = getDataFromRecordOrDonor(
-    specimenRecord,
     newDonorRecords[FileType.DONOR],
     existentDonor
   );
@@ -138,7 +136,6 @@ function checkTimeConflictWithDonor(
 }
 
 const getDataFromRecordOrDonor = (
-  specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
   donorRecord: DeepReadonly<SubmittedClinicalRecord>,
   donor: DeepReadonly<Donor>
 ) => {

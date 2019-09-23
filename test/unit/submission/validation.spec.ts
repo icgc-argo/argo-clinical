@@ -7,8 +7,7 @@ import {
   DataValidationErrors,
   CreateRegistrationRecord,
   FieldsEnum,
-  SpecimenInfoFieldsEnum,
-  DonorInfoFieldsEnum
+  ClinicalInfoFieldsEnum
 } from "../../../src/submission/submission-entities";
 import { Donor } from "../../../src/clinical/clinical-entities";
 import { stubs } from "./stubs";
@@ -1068,7 +1067,7 @@ describe("data-validator", () => {
         { AB2: existingDonorMock1, AB3: existingDonorMock2 }
       );
       const specimenIntervalErr: SubmissionValidationError = {
-        fieldName: SpecimenInfoFieldsEnum.specimen_acquistion_interval,
+        fieldName: ClinicalInfoFieldsEnum.specimen_acquistion_interval,
         type: DataValidationErrors.CONFLICTING_TIME_INTERVAL,
         index: 1,
         info: {
@@ -1078,7 +1077,7 @@ describe("data-validator", () => {
         }
       };
       const specimenIntervalErr2: SubmissionValidationError = {
-        fieldName: SpecimenInfoFieldsEnum.specimen_acquistion_interval,
+        fieldName: ClinicalInfoFieldsEnum.specimen_acquistion_interval,
         type: DataValidationErrors.CONFLICTING_TIME_INTERVAL,
         index: 2,
         info: {
@@ -1088,7 +1087,7 @@ describe("data-validator", () => {
         }
       };
       const donorSurvivalTimeErr: SubmissionValidationError = {
-        fieldName: DonorInfoFieldsEnum.survival_time,
+        fieldName: ClinicalInfoFieldsEnum.survival_time,
         type: DataValidationErrors.CONFLICTING_TIME_INTERVAL,
         index: 1,
         info: {
