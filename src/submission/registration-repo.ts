@@ -1,10 +1,10 @@
-import { ActiveRegistration } from "./submission-entities";
-import { InternalError } from "./errors";
-import { loggerFor } from "../logger";
-import { F, MongooseUtils } from "../utils";
-import _ from "lodash";
-import { DeepReadonly } from "deep-freeze";
-import mongoose from "mongoose";
+import { ActiveRegistration } from './submission-entities';
+import { InternalError } from './errors';
+import { loggerFor } from '../logger';
+import { F, MongooseUtils } from '../utils';
+import _ from 'lodash';
+import { DeepReadonly } from 'deep-freeze';
+import mongoose from 'mongoose';
 const L = loggerFor(__filename);
 
 export interface RegistrationRepository {
@@ -27,7 +27,7 @@ export const registrationRepository: RegistrationRepository = {
     L.debug(`in findByProgramId programId: ${programId}`);
     try {
       const activeRegistration = await ActiveRegistrationModel.findOne({
-        programId: programId
+        programId: programId,
       }).exec();
       if (activeRegistration == undefined) {
         return undefined;
@@ -35,8 +35,8 @@ export const registrationRepository: RegistrationRepository = {
       L.info(`found registration for program ${programId}: ${activeRegistration}`);
       return F(MongooseUtils.toPojo(activeRegistration));
     } catch (err) {
-      L.error("failed to fetch registration", err);
-      throw new InternalError("failed to fetch registration", err);
+      L.error('failed to fetch registration', err);
+      throw new InternalError('failed to fetch registration', err);
     }
   },
   async create(toSave: DeepReadonly<ActiveRegistration>) {
@@ -49,8 +49,8 @@ export const registrationRepository: RegistrationRepository = {
       L.info(`saved new registration: program: ${doc.programId} id: ${doc._id}`);
       return F(MongooseUtils.toPojo(doc));
     } catch (err) {
-      L.error("failed to save registration", err);
-      throw new InternalError("failed to save registration", err);
+      L.error('failed to save registration', err);
+      throw new InternalError('failed to save registration', err);
     }
   },
   async delete(id: string): Promise<void> {
@@ -61,7 +61,7 @@ export const registrationRepository: RegistrationRepository = {
     } catch (err) {
       throw new InternalError(`failed to delete registration with Id: ${id}`, err);
     }
-  }
+  },
 };
 
 type ActiveRegistrationDocument = mongoose.Document & ActiveRegistration;
@@ -75,9 +75,9 @@ const ActiveRegistrationItem = new mongoose.Schema(
     specimen_type: { type: String, required: true },
     tumour_normal_designation: { type: String, required: true },
     submitter_sample_id: { type: String, required: true },
-    sample_type: { type: String, required: true }
+    sample_type: { type: String, required: true },
   },
-  { _id: false, minimize: false }
+  { _id: false, minimize: false },
 );
 
 const ActiveRegistrationSchema = new mongoose.Schema(
@@ -87,12 +87,12 @@ const ActiveRegistrationSchema = new mongoose.Schema(
     batchName: { type: String },
     status: { type: String },
     stats: { type: Object },
-    records: [ActiveRegistrationItem]
+    records: [ActiveRegistrationItem],
   },
-  { timestamps: true, minimize: false }
+  { timestamps: true, minimize: false },
 );
 
 export const ActiveRegistrationModel = mongoose.model<ActiveRegistrationDocument>(
-  "ActiveRegistration",
-  ActiveRegistrationSchema
+  'ActiveRegistration',
+  ActiveRegistrationSchema,
 );

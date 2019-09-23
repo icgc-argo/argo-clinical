@@ -9,5 +9,9 @@
 
 ## How to:
 
+Make scripts are provided to run this application and the required MongoDB using docker. In order for these scripts to start the dev server, you must have a debugger application waiting to attach on port `9229`. This is easily accomplished by running these commands in the VSCode terminal, and updating the `Debugger Auto Attach` setting in VSCode settings to `yes`.
+
 - run: `make debug`
 - tests: `make verify`
+
+To run local without engaging the debugger, run `npm run local` . Since this will not run the docker-compose setup, this requires MongoDB to be running locally (connections configured in the .env file)

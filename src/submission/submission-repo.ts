@@ -1,16 +1,16 @@
-import { loggerFor } from "../logger";
-import mongoose from "mongoose";
-import { DeepReadonly } from "deep-freeze";
-import { ActiveClinicalSubmission, SUBMISSION_STATE } from "./submission-entities";
-import { MongooseUtils, F } from "../utils";
-import { InternalError } from "./errors";
-import _ from "lodash";
+import { loggerFor } from '../logger';
+import mongoose from 'mongoose';
+import { DeepReadonly } from 'deep-freeze';
+import { ActiveClinicalSubmission, SUBMISSION_STATE } from './submission-entities';
+import { MongooseUtils, F } from '../utils';
+import { InternalError } from './errors';
+import _ from 'lodash';
 const L = loggerFor(__filename);
 
 export interface ClinicalSubmissionRepository {
   delete(id: string): Promise<void>;
   create(
-    command: DeepReadonly<ActiveClinicalSubmission>
+    command: DeepReadonly<ActiveClinicalSubmission>,
   ): Promise<DeepReadonly<ActiveClinicalSubmission>>;
   findByProgramId(programId: string): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined>;
   findById(id: string): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined>;
@@ -19,7 +19,7 @@ export interface ClinicalSubmissionRepository {
   updateProgramWithVersion(
     programId: string,
     version: string,
-    updatedSubmission: DeepReadonly<ActiveClinicalSubmission>
+    updatedSubmission: DeepReadonly<ActiveClinicalSubmission>,
   ): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined>;
 }
 
@@ -36,7 +36,7 @@ export const submissionRepository: ClinicalSubmissionRepository = {
     L.debug(`in findByProgramId programId: ${programId}`);
     try {
       const activeRegistration = await ActiveSubmissionModel.findOne({
-        programId: programId
+        programId: programId,
       }).exec();
       if (activeRegistration == undefined) {
         return undefined;
@@ -44,8 +44,8 @@ export const submissionRepository: ClinicalSubmissionRepository = {
       L.info(`found registration for program ${programId}: ${activeRegistration}`);
       return F(MongooseUtils.toPojo(activeRegistration));
     } catch (err) {
-      L.error("failed to fetch registration", err);
-      throw new InternalError("failed to fetch registration", err);
+      L.error('failed to fetch registration', err);
+      throw new InternalError('failed to fetch registration', err);
     }
   },
   // forceCreate? singletonCreate?
@@ -73,16 +73,16 @@ export const submissionRepository: ClinicalSubmissionRepository = {
   async updateProgramWithVersion(
     programId: string,
     version: string,
-    updatedSubmission: DeepReadonly<ActiveClinicalSubmission>
+    updatedSubmission: DeepReadonly<ActiveClinicalSubmission>,
   ): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined> {
     return (
       (await ActiveSubmissionModel.findOneAndUpdate(
         { programId: programId, version: version },
         updatedSubmission,
-        { new: true }
+        { new: true },
       )) || undefined
     );
-  }
+  },
 };
 
 type ActiveClinicalSubmissionDocument = mongoose.Document & ActiveClinicalSubmission;
@@ -92,17 +92,17 @@ const ActiveSubmissionSchema = new mongoose.Schema(
     programId: { type: String, unique: true, required: true },
     state: {
       type: String,
-      enum: ["OPEN", "VALID", "INVALID", "PENDING_APPROVAL"],
-      default: "OPEN",
-      required: true
+      enum: ['OPEN', 'VALID', 'INVALID', 'PENDING_APPROVAL'],
+      default: 'OPEN',
+      required: true,
     },
     version: { type: String, required: true },
-    clinicalEntities: { type: Object, required: false }
+    clinicalEntities: { type: Object, required: false },
   },
-  { timestamps: true, minimize: false }
+  { timestamps: true, minimize: false },
 );
 
 export const ActiveSubmissionModel = mongoose.model<ActiveClinicalSubmissionDocument>(
-  "ActiveSubmission",
-  ActiveSubmissionSchema
+  'ActiveSubmission',
+  ActiveSubmissionSchema,
 );

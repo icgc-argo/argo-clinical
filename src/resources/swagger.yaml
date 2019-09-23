@@ -3,8 +3,75 @@ info:
   title: Clinical
   version: 1.0.0
 security:
-  - bearerAuth: ["PROGRAMDATA-${programId}.WRITE", "CLINICALSERVICE.WRITE"]
+  - bearerAuth: ['PROGRAMDATA-${programId}.WRITE', 'CLINICALSERVICE.WRITE']
 paths:
+  /health:
+    get:
+      responses:
+        '500':
+          description: 'app is not fully healthy'
+        '200':
+          description: 'all components reporting healthy status'
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /submission/schema:
+    get:
+      responses:
+        '200':
+          description: 'the current loaded schema by the clinical submission'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+  /submission/schema/template/{schemaName}:
+    parameters:
+      - name: schemaName
+        description: the name of the schema to generate the template for
+        in: path
+        required: true
+        schema:
+          example: 'registration'
+          type: string
+    get:
+      responses:
+        '200':
+          description: 'A tsv template file for the given schemaName'
+          content:
+            text/tab-separated-values:
+              schema:
+                example: 'program_id\tsubmitter_donor_id\tgender\tsubmitter_specimen_id\tspecimen_type\ttumour_normal_designation\tsubmitter_sample_id\tsample_type'
+                type: string
+  /submission/schema/hack/refresh:
+    post:
+      description: force reload the schema from the schema service and override the cache
+      responses:
+        '200':
+          description: 'the current loaded schema by the clinical submission'
+          content:
+            application/json:
+              schema:
+                type: object
+  /submission/schema/hack/replace:
+    post:
+      description: force replace the schema from the provided schema in body
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: 'the current loaded schema by the clinical submission'
+          content:
+            application/json:
+              schema:
+                type: object
+
   /submission/program/{programId}/registration:
     parameters:
       - name: programId
@@ -17,18 +84,18 @@ paths:
       summary: Get registration for a program
       description: returns the current in progress registration for a program if any
       responses:
-        "200":
-          description: "the current in progress registration or empty body if nothing found"
+        '200':
+          description: 'the current in progress registration or empty body if nothing found'
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Registration"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "403":
-          $ref: "#/components/responses/ForbiddenError"
-        "500":
-          $ref: "#/components/responses/ServerError"
+                $ref: '#/components/schemas/Registration'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/ServerError'
     post:
       summary: Upload a new registration file for a program
       description: This will validate and save the new registration file overwriting any existing registration
@@ -44,10 +111,10 @@ paths:
         description: the tsv registration file
         required: true
       responses:
-        "400":
-          $ref: "#/components/responses/InvalidFileStructureError"
-        "422":
-          description: "invalid registration file"
+        '400':
+          $ref: '#/components/responses/FileStructureError'
+        '422':
+          description: 'invalid registration file'
           content:
             application/json:
               schema:
@@ -59,19 +126,19 @@ paths:
                   errors:
                     type: array
                     items:
-                      $ref: "#/components/schemas/RegistrationValidationError"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "403":
-          $ref: "#/components/responses/ForbiddenError"
-        "500":
-          $ref: "#/components/responses/ServerError"
-        "201":
-          description: "the file is valid and registration was created"
+                      $ref: '#/components/schemas/RegistrationValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+        '201':
+          description: 'the file is valid and registration was created'
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CreateRegistration"
+                $ref: '#/components/schemas/CreateRegistration'
   /submission/program/{programId}/registration/{id}:
     delete:
       parameters:
@@ -88,16 +155,16 @@ paths:
           schema:
             type: string
       responses:
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "404":
-          $ref: "#/components/responses/NotFoundError"
-        "403":
-          $ref: "#/components/responses/ForbiddenError"
-        "500":
-          $ref: "#/components/responses/ServerError"
-        "200":
-          description: "the registration was deleted from db"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+        '200':
+          description: 'the registration was deleted from db'
   /submission/program/{programId}/registration/{id}/commit:
     post:
       parameters:
@@ -114,14 +181,14 @@ paths:
           schema:
             type: string
       responses:
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "403":
-          $ref: "#/components/responses/ForbiddenError"
-        "500":
-          $ref: "#/components/responses/ServerError"
-        "200":
-          description: "the registration was committed and the donors / specimens / samples added to the clinical db"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+        '200':
+          description: 'the registration was committed and the donors / specimens / samples added to the clinical db'
           content:
             application/json:
               schema:
@@ -132,6 +199,29 @@ paths:
                     items:
                       type: string
   /submission/program/{programId}/clinical/upload:
+    get:
+      parameters:
+        - name: programId
+          description: the short name of the program
+          in: path
+          required: true
+          schema:
+            type: string
+      summary: Get active submission for a program
+      description: returns the current in progress submission for a program if any
+      responses:
+        '200':
+          description: 'the current in progress clinical submission or empty body if nothing found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClinicalSubmission'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/ServerError'
     post:
       parameters:
         - name: programId
@@ -154,12 +244,16 @@ paths:
         description: the tsv clinical submission file
         required: true
       responses:
-        "200":
-          description: "Everything is OK"
-        "400":
-          $ref: "#/components/responses/InvalidFileStructureError"
-        "422":
-          description: "invalid clinical submission file"
+        '200':
+          description: 'the current in progress clinical submission'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClinicalSubmission'
+        '400':
+          $ref: '#/components/responses/FileStructureError'
+        '422':
+          description: 'invalid clinical submission file'
           content:
             application/json:
               schema:
@@ -171,8 +265,68 @@ paths:
                   errors:
                     type: array
                     items:
-                      $ref: "#/components/schemas/ValidationError"
+                      $ref: '#/components/schemas/ValidationError'
+  /submission/program/{programId}/clinical/validate/{versionId}:
+    post:
+      parameters:
+        - name: programId
+          description: the short name of the program
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: versionId
+          description: uuid used to ensure correct version of submission is being updated
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'in progress submission with a VALID or PENDING_APPROVAL state'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClinicalSubmission'
+        '422':
+          description: 'invalid clinical submission, see error messages'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  successful:
+                    type: boolean
+                    description: will be false in this case
+                  errors:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ValidationError'
+
   /clinical/donors:
+    get:
+      parameters:
+        - name: programId
+          description: the short name of the program
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+        '200':
+          description: 'donors of program '
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
     delete:
       parameters:
         - name: programId
@@ -182,165 +336,71 @@ paths:
           schema:
             type: string
       responses:
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "403":
-          $ref: "#/components/responses/ForbiddenError"
-        "500":
-          $ref: "#/components/responses/ServerError"
-        "200":
-          description: "all donors deleted"
-    get:
-      parameters:
-        - name: programId
-          description: the short name of the program
-          in: query
-          required: true
-          schema:
-            type: string
-      responses:
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "403":
-          $ref: "#/components/responses/ForbiddenError"
-        "500":
-          $ref: "#/components/responses/ServerError"
-        "200":
-          description: "donors of program "
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+        '200':
+          description: 'all donors deleted'
   /clinical/donors/id:
     get:
       parameters:
-        - $ref: "#/components/parameters/QueryProgramId"
-        - $ref: "#/components/parameters/QuerySubmitterId"
+        - $ref: '#/components/parameters/QueryProgramId'
+        - $ref: '#/components/parameters/QuerySubmitterId'
       responses:
-        "200":
+        '200':
           description: the id of the donor
           content:
             text/plain:
               schema:
                 type: string
-        "404":
+        '404':
           description: no matching donor found
-
   /clinical/specimens/id:
     get:
       parameters:
-        - $ref: "#/components/parameters/QueryProgramId"
-        - $ref: "#/components/parameters/QuerySubmitterId"
+        - $ref: '#/components/parameters/QueryProgramId'
+        - $ref: '#/components/parameters/QuerySubmitterId'
       responses:
-        "200":
+        '200':
           description: the id of the specimen
           content:
             text/plain:
               schema:
                 type: string
-        "404":
+        '404':
           description: no matching specimen found
-
   /clinical/samples/id:
     get:
       parameters:
-        - $ref: "#/components/parameters/QueryProgramId"
-        - $ref: "#/components/parameters/QuerySubmitterId"
+        - $ref: '#/components/parameters/QueryProgramId'
+        - $ref: '#/components/parameters/QuerySubmitterId'
       responses:
-        "200":
+        '200':
           description: the id of the sample
           content:
             text/plain:
               schema:
                 type: string
-        "404":
+        '404':
           description: no matching sample found
-  /health:
-    get:
-      responses:
-        "500":
-          description: "app is not fully healthy"
-        "200":
-          description: "all components reporting healthy status"
-          content:
-            application/json:
-              schema:
-                type: object
 
-  /submission/schema:
-    get:
-      responses:
-        "200":
-          description: "the current loaded schema by the clinical submission"
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-
-  /submission/schema/template/{schemaName}:
-    parameters:
-      - name: schemaName
-        description: the name of the schema to generate the template for
-        in: path
-        required: true
-        schema:
-          example: "registration"
-          type: string
-    get:
-      responses:
-        "200":
-          description: "A tsv template file for the given schemaName"
-          content:
-            text/tab-separated-values:
-              schema:
-                example: 'program_id\tsubmitter_donor_id\tgender\tsubmitter_specimen_id\tspecimen_type\ttumour_normal_designation\tsubmitter_sample_id\tsample_type'
-                type: string
-
-  /submission/schema/hack/refresh:
-    post:
-      description: force reload the schema from the schema service and override the cache
-      responses:
-        "200":
-          description: "the current loaded schema by the clinical submission"
-          content:
-            application/json:
-              schema:
-                type: object
-
-  /submission/schema/hack/replace:
-    post:
-      description: force replace the schema from the provided schema in body
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        "200":
-          description: "the current loaded schema by the clinical submission"
-          content:
-            application/json:
-              schema:
-                type: object
 servers:
   - url: /
 components:
   parameters:
     QueryProgramId:
       name: programId
-      description: the short name of the program
+      description: Short Name of the program (ex. ABCD-EF)
       in: query
       required: true
       schema:
         type: string
     QuerySubmitterId:
       name: submitterId
-      description: the submitter Id
+      description: Submitter Id of the entity
       in: query
       required: true
       schema:
@@ -351,11 +411,11 @@ components:
     ServerError:
       description: Server error
     ForbiddenError:
-      description: if the token has incorrect scopes
+      description: Access token has incorrect scopes
     NotFoundError:
-      description: The requested resource was not found
-    InvalidFileStructureError:
-      description: "the file structure is invalid, couldn't be parsed correctly"
+      description: Requested resource was not found
+    FileStructureError:
+      description: File structure couldn't be parsed correctly, or has an invalid filename
       content:
         application/json:
           schema:
@@ -365,16 +425,16 @@ components:
                 type: string
               code:
                 type: string
-                enum: ["TSV_PARSING_FAILED", "INVALID_FILE_NAME"]
+                enum: ['TSV_PARSING_FAILED', 'INVALID_FILE_NAME']
           examples:
             TSVParseError:
               value:
-                msg: "string"
-                code: "TSV_PARSING_FAILED"
+                msg: 'string'
+                code: 'TSV_PARSING_FAILED'
             InvalidFileNameError:
               value:
-                msg: "string"
-                code: "INVALID_FILE_NAME"
+                msg: 'string'
+                code: 'INVALID_FILE_NAME'
   securitySchemes:
     bearerAuth:
       type: http
@@ -430,7 +490,7 @@ components:
             - INVALID_ENUM_VALUE
     RegistrationValidationError: # "extends" ValidationError
       allOf:
-        - $ref: "#/components/schemas/ValidationError"
+        - $ref: '#/components/schemas/ValidationError'
         - properties:
             info:
               properties:
@@ -448,7 +508,7 @@ components:
       required:
         - _id
         - programId
-        - creatorId
+        - creator
         - stats
         - records
       properties:
@@ -468,17 +528,66 @@ components:
           type: object
           properties:
             newDonorIds:
-              $ref: "#/components/schemas/RegistrationStat"
+              $ref: '#/components/schemas/RegistrationStat'
             newSpecimenIds:
-              $ref: "#/components/schemas/RegistrationStat"
+              $ref: '#/components/schemas/RegistrationStat'
             newSampleIds:
-              $ref: "#/components/schemas/RegistrationStat"
+              $ref: '#/components/schemas/RegistrationStat'
             alreadyRegistered:
-              $ref: "#/components/schemas/RegistrationStat"
+              $ref: '#/components/schemas/RegistrationStat'
         records:
           type: array
           items:
-            $ref: "#/components/schemas/Record"
+            $ref: '#/components/schemas/Record'
+    ClinicalSubmission:
+      type: object
+      required:
+        - _id
+        - programId
+        - version
+        - clinicalEntities
+        - state
+      properties:
+        _id:
+          type: string
+          description: the id of the registration
+        programId:
+          type: string
+          description: the program short name this registration is for
+        state:
+          type: string
+          description: the state of the submission
+          enum: ['OPEN', 'VALID', 'INVALID', 'PENDING_APPROVAL']
+        version:
+          type: string
+          description: uuid used to ensure that correct version of submission is being updated
+        clinicalEntities:
+          type: object
+          description: submitted clinical data mapped to a clinical type
+          properties:
+            clinicalType:
+              $ref: '#/components/schemas/ClinicalEntity'
+    ClinicalEntity:
+      required:
+        - batchName
+        - creator
+        - records
+        - dataErrors
+      properties:
+        batchName:
+          type: string
+          description: a file that must start with entity type (e.g. donor, sample) and have .tsv extension
+        creator:
+          type: string
+          description: first name and last name of the user who add this entity data
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/Record'
+        dataErrors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
 
     Record:
       required:
@@ -517,7 +626,7 @@ components:
       type: object
       properties:
         registration:
-          $ref: "#/components/schemas/Registration"
+          $ref: '#/components/schemas/Registration'
         successful:
           type: boolean
           description: whether the file was valid or not
@@ -525,4 +634,4 @@ components:
           type: array
           description: list of all errors, should be empty on success
           items:
-            $ref: "#/components/schemas/RegistrationValidationError"
+            $ref: '#/components/schemas/RegistrationValidationError'

@@ -1,6 +1,6 @@
-import { Request, Response } from "express";
-import * as service from "./clinical-service";
-import { HasFullReadAccess } from "../auth-decorators";
+import { Request, Response } from 'express';
+import * as service from './clinical-service';
+import { HasFullReadAccess } from '../auth-decorators';
 
 class ClinicalController {
   async findDonors(req: Request, res: Response) {
@@ -15,7 +15,7 @@ class ClinicalController {
   async findDonorId(req: Request, res: Response) {
     const id = await service.findDonorId(req.query.submitterId, req.query.programId);
     return res
-      .contentType("text/plain")
+      .contentType('text/plain')
       .status(200)
       .send(id);
   }
@@ -24,7 +24,7 @@ class ClinicalController {
   async findSpecimenId(req: Request, res: Response) {
     const id = await service.findSpecimenId(req.query.submitterId, req.query.programId);
     return res
-      .contentType("text/plain")
+      .contentType('text/plain')
       .status(200)
       .send(id);
   }
@@ -33,7 +33,7 @@ class ClinicalController {
   async findSampleId(req: Request, res: Response) {
     const id = await service.findSampleId(req.query.submitterId, req.query.programId);
     return res
-      .contentType("text/plain")
+      .contentType('text/plain')
       .status(200)
       .send(id);
   }

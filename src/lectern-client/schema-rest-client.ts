@@ -1,7 +1,7 @@
-import { loggerFor } from "../logger";
-import fetch from "node-fetch";
-import { SchemasDictionary } from "./schema-entities";
-import promiseTools from "promise-tools";
+import { loggerFor } from '../logger';
+import fetch from 'node-fetch';
+import { SchemasDictionary } from './schema-entities';
+import promiseTools from 'promise-tools';
 const L = loggerFor(__filename);
 
 export interface SchemaServiceRestClient {
@@ -12,10 +12,10 @@ export const schemaClient: SchemaServiceRestClient = {
   fetchSchema: async (
     schemaSvcUrl: string,
     name: string,
-    version: string
+    version: string,
   ): Promise<SchemasDictionary> => {
     // for testing where we need to work against stub schema
-    if (schemaSvcUrl.startsWith("file://")) {
+    if (schemaSvcUrl.startsWith('file://')) {
       L.debug(`in fetch schema ${version}`);
       const result = delay(1000);
       const dictionary = await result(() => {
@@ -27,7 +27,7 @@ export const schemaClient: SchemaServiceRestClient = {
     }
 
     if (!schemaSvcUrl) {
-      throw new Error("please configure a valid url to get schema from");
+      throw new Error('please configure a valid url to get schema from');
     }
     const url = `${schemaSvcUrl}/dictionaries?name=${name}&version=${version}`;
     try {
@@ -37,7 +37,7 @@ export const schemaClient: SchemaServiceRestClient = {
         async () => {
           L.debug(`fetching schema attempt #${retryAttempt}`);
           return promiseTools.timeout(fetch(url), 5000);
-        }
+        },
       );
       const schemaDictionary = await schemasDictionaryRes.json();
 
@@ -45,9 +45,9 @@ export const schemaClient: SchemaServiceRestClient = {
       return schemaDictionary[0] as SchemasDictionary;
     } catch (err) {
       L.error(`failed to fetch schema using this url: ${url}`, err);
-      throw new Error("failed to get the schema");
+      throw new Error('failed to get the schema');
     }
-  }
+  },
 };
 
 function delay(milliseconds: number) {
