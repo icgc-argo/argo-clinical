@@ -610,7 +610,7 @@ describe('Submission Api', () => {
         return err;
       }
     });
-    it('should return 422 if try to upload invalid tsv files', done => {
+    it('should return 422 if try to upload schema invalid tsv files', done => {
       let file: Buffer;
       let file2: Buffer;
       try {
@@ -664,7 +664,7 @@ describe('Submission Api', () => {
           return done();
         });
     });
-    it('should return appropriate schema errors for clinical upload', done => {
+    it('should return appropriate file errors for clinical upload', done => {
       const files: Buffer[] = [];
       try {
         files.push(fs.readFileSync(__dirname + '/donor.tsv'));
@@ -684,8 +684,8 @@ describe('Submission Api', () => {
         .attach('clinicalFiles', files[2], 'donor.invalid.tsv')
         .attach('clinicalFiles', files[3], 'thisissample.tsv')
         .end((err: any, res: any) => {
-          res.should.have.status(400);
-          res.body.should.deep.eq([
+          res.should.have.status(422);
+          res.body.fileErrors.should.deep.eq([
             {
               msg: 'Found multiple files of donor type - [donor.tsv,donor.invalid.tsv]',
               code: 'MULTIPLE_TYPED_FILES',
