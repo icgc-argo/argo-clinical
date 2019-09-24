@@ -42,33 +42,6 @@ export const validate = async (
     : await calculateStats(donorRecord, existentDonor);
 };
 
-// cases
-// 1 not changing specimenType or tnd and new clinicalInfo <=> new
-// 2 changing specimenType or tnd or changing clinicalInfo <=> update
-// 3 not new or update <=> noUpdate
-async function calculateStats(
-  record: DeepReadonly<SubmittedClinicalRecord>,
-  donor: DeepReadonly<Donor>,
-): Promise<ValidatorResult> {
-  const clinicalInfo = donor.clinicalInfo;
-
-  // no updates to specimenType or tnd but there is now existent clinicalInfo, new
-  if (donor.gender === record[FieldsEnum.gender] && !clinicalInfo) {
-    return { type: ModificationType.NEW, index: record.index };
-  }
-
-  // check changing fields
-  const updateFields: any[] = utils.getUpdatedFields(clinicalInfo, record);
-
-  if (donor.gender !== record[FieldsEnum.gender]) {
-    updateFields.push(utils.buildSubmisisonUpdate(record, donor.gender, FieldsEnum.sample_type));
-  }
-
-  return updateFields.length === 0
-    ? { type: ModificationType.NOUPDATE, index: record.index }
-    : { type: ModificationType.UPDATED, index: record.index, resultArray: updateFields };
-}
-
 function checkTimeConflictWithSpecimen(
   donor: DeepReadonly<Donor>,
   donorRecord: DeepReadonly<SubmittedClinicalRecord>,
@@ -116,4 +89,31 @@ function checkTimeConflictWithSpecimen(
       ),
     );
   }
+}
+
+// cases (similar for other clinical types with minor difference in case 1)
+// 1 not changing gender and new clinicalInfo <=> new
+// 2 changing specimenType or tnd or changing clinicalInfo <=> update
+// 3 not new or update <=> noUpdate
+async function calculateStats(
+  record: DeepReadonly<SubmittedClinicalRecord>,
+  donor: DeepReadonly<Donor>,
+): Promise<ValidatorResult> {
+  const clinicalInfo = donor.clinicalInfo;
+
+  // no updates to specimenType or tnd but there is now existent clinicalInfo, new
+  if (donor.gender === record[FieldsEnum.gender] && !clinicalInfo) {
+    return { type: ModificationType.NEW, index: record.index };
+  }
+
+  // check changing fields
+  const updateFields: any[] = utils.getUpdatedFields(clinicalInfo, record);
+
+  if (donor.gender !== record[FieldsEnum.gender]) {
+    updateFields.push(utils.buildSubmisisonUpdate(record, donor.gender, FieldsEnum.sample_type));
+  }
+
+  return updateFields.length === 0
+    ? { type: ModificationType.NOUPDATE, index: record.index }
+    : { type: ModificationType.UPDATED, index: record.index, resultArray: updateFields };
 }

@@ -79,46 +79,6 @@ export const validate = async (
     : await calculateStats(specimenRecord, specimen);
 };
 
-async function calculateStats(
-  record: SubmittedClinicalRecord,
-  specimen: Specimen,
-): Promise<ValidatorResult> {
-  const clinicalInfo = specimen.clinicalInfo;
-
-  // no updates to specimenType or tnd but there is no existent clinicalInfo => new
-  if (
-    specimen.specimenType === record[FieldsEnum.specimen_type] &&
-    specimen.tumourNormalDesignation === record[FieldsEnum.tumour_normal_designation] &&
-    !clinicalInfo
-  ) {
-    return { type: ModificationType.NEW, index: record.index };
-  }
-
-  // check changing fields
-  const updateFields: any[] = utils.getUpdatedFields(clinicalInfo, record);
-
-  if (specimen.specimenType !== record[FieldsEnum.specimen_type]) {
-    updateFields.push(
-      utils.buildSubmisisonUpdate(record, specimen.specimenType, FieldsEnum.specimen_type),
-    );
-  }
-
-  if (specimen.tumourNormalDesignation !== record[FieldsEnum.tumour_normal_designation]) {
-    updateFields.push(
-      utils.buildSubmisisonUpdate(
-        record,
-        specimen.tumourNormalDesignation,
-        FieldsEnum.tumour_normal_designation,
-      ),
-    );
-  }
-
-  // if no updates and not new return noUpdate
-  return updateFields.length === 0
-    ? { type: ModificationType.NOUPDATE, index: record.index }
-    : { type: ModificationType.UPDATED, index: record.index, resultArray: updateFields };
-}
-
 function checkTimeConflictWithDonor(
   donorDataToValidateWith: { [k: string]: any },
   specimenRecord: SubmittedClinicalRecord,
@@ -161,3 +121,43 @@ const getDataFromRecordOrDonor = (
 
   return { donorVitalStatus, donorSurvivalTime };
 };
+
+async function calculateStats(
+  record: SubmittedClinicalRecord,
+  specimen: Specimen,
+): Promise<ValidatorResult> {
+  const clinicalInfo = specimen.clinicalInfo;
+
+  // no updates to specimenType or tnd but there is no existent clinicalInfo => new
+  if (
+    specimen.specimenType === record[FieldsEnum.specimen_type] &&
+    specimen.tumourNormalDesignation === record[FieldsEnum.tumour_normal_designation] &&
+    !clinicalInfo
+  ) {
+    return { type: ModificationType.NEW, index: record.index };
+  }
+
+  // check changing fields
+  const updateFields: any[] = utils.getUpdatedFields(clinicalInfo, record);
+
+  if (specimen.specimenType !== record[FieldsEnum.specimen_type]) {
+    updateFields.push(
+      utils.buildSubmisisonUpdate(record, specimen.specimenType, FieldsEnum.specimen_type),
+    );
+  }
+
+  if (specimen.tumourNormalDesignation !== record[FieldsEnum.tumour_normal_designation]) {
+    updateFields.push(
+      utils.buildSubmisisonUpdate(
+        record,
+        specimen.tumourNormalDesignation,
+        FieldsEnum.tumour_normal_designation,
+      ),
+    );
+  }
+
+  // if no updates and not new return noUpdate
+  return updateFields.length === 0
+    ? { type: ModificationType.NOUPDATE, index: record.index }
+    : { type: ModificationType.UPDATED, index: record.index, resultArray: updateFields };
+}
