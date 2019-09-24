@@ -24,10 +24,18 @@ export const errorHandler = (err: Error, req: Request, res: Response, next: Next
     return next(err);
   }
   let status: number;
-  if (err instanceof Errors.NotFound) {
-    status = 404;
-  } else {
-    status = 500;
+  switch (true) {
+    case err instanceof Errors.InvalidArgument:
+      status = 400;
+      break;
+    case err instanceof Errors.NotFound:
+      status = 404;
+      break;
+    case err instanceof Errors.StateConflict:
+      status = 409;
+      break;
+    default:
+      status = 500;
   }
   res.status(status).send({ error: err.name, message: err.message });
   // pass the error down (so other error handlers can also process the error)
