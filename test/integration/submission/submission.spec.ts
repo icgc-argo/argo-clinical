@@ -875,7 +875,7 @@ describe('Submission Api', () => {
         })
         .catch(err => err);
     });
-    it.only('should return 409 if an active submission is available but not in VALID state', async () => {
+    it('should return 409 if an active submission is available but not in VALID state', async () => {
       await uploadSubmission();
       return chai
         .request(app)
@@ -886,7 +886,7 @@ describe('Submission Api', () => {
         })
         .catch(err => err);
     });
-    it.only('should return 200 when commit is completed', async () => {
+    it('should return 200 when commit is completed', async () => {
       await uploadSubmission();
       await validateSubmission();
       return chai
