@@ -73,10 +73,6 @@ export const validate = async (
   return await calculateStats(sampleRecord, sample);
 };
 
-// cases
-// 1 not changing sampleType and new clinicalInfo <=> new
-// 2 changing sampleType or changing clinicalInfo <=> update
-// 3 not new or update <=> noUpdate
 async function calculateStats(
   record: SubmittedClinicalRecord,
   sample: Sample,
@@ -84,14 +80,9 @@ async function calculateStats(
   const updateFields: any[] = [];
 
   if (sample.sampleType !== record[FieldsEnum.sample_type]) {
-    updateFields.push({
-      fieldName: FieldsEnum.sample_type,
-      index: record.index,
-      info: {
-        oldValue: sample.sampleType,
-        newValue: record[FieldsEnum.sample_type],
-      },
-    });
+    updateFields.push(
+      utils.buildSubmisisonUpdate(record, sample.sampleType, FieldsEnum.sample_type),
+    );
   }
 
   return updateFields.length === 0

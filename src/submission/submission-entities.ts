@@ -182,11 +182,10 @@ export enum ClinicalInfoFieldsEnum {
   survival_time = 'survival_time',
 }
 
-export const RecordToDonorFieldsMap: { [field: string]: string } = {
-  ...FieldsEnum,
-  specimen_acquistion_interval: 'specimenAcquistionInterval',
-  vital_status: 'vitalStatus',
-  survival_time: 'survivalTime',
+export const ClinicalInfoToRecordFieldsMap: { [field: string]: string } = {
+  specimenAcquistionInterval: 'specimen_acquistion_interval',
+  vitalStatus: 'vital_status',
+  survivalTime: 'survival_time',
 };
 
 export interface ValidatorResult {

@@ -61,14 +61,7 @@ async function calculateStats(
   const updateFields: any[] = utils.getUpdatedFields(clinicalInfo, record);
 
   if (donor.gender !== record[FieldsEnum.gender]) {
-    updateFields.push({
-      fieldName: FieldsEnum.sample_type,
-      index: record.index,
-      info: {
-        oldValue: donor.gender,
-        newValue: record[FieldsEnum.gender],
-      },
-    });
+    updateFields.push(utils.buildSubmisisonUpdate(record, donor.gender, FieldsEnum.sample_type));
   }
 
   return updateFields.length === 0

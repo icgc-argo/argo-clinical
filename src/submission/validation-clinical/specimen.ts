@@ -79,10 +79,6 @@ export const validate = async (
     : await calculateStats(specimenRecord, specimen);
 };
 
-// cases
-// 1 not changing specimenType or tnd and new clinicalInfo <=> new
-// 2 changing specimenType or tnd or changing clinicalInfo <=> update
-// 3 not new or update <=> noUpdate
 async function calculateStats(
   record: SubmittedClinicalRecord,
   specimen: Specimen,
@@ -102,25 +98,19 @@ async function calculateStats(
   const updateFields: any[] = utils.getUpdatedFields(clinicalInfo, record);
 
   if (specimen.specimenType !== record[FieldsEnum.specimen_type]) {
-    updateFields.push({
-      fieldName: FieldsEnum.specimen_type,
-      index: record.index,
-      info: {
-        oldValue: specimen.specimenType,
-        newValue: record[FieldsEnum.specimen_type],
-      },
-    });
+    updateFields.push(
+      utils.buildSubmisisonUpdate(record, specimen.specimenType, FieldsEnum.specimen_type),
+    );
   }
 
   if (specimen.tumourNormalDesignation !== record[FieldsEnum.tumour_normal_designation]) {
-    updateFields.push({
-      fieldName: FieldsEnum.tumour_normal_designation,
-      index: record.index,
-      info: {
-        oldValue: specimen.tumourNormalDesignation,
-        newValue: record[FieldsEnum.tumour_normal_designation],
-      },
-    });
+    updateFields.push(
+      utils.buildSubmisisonUpdate(
+        record,
+        specimen.tumourNormalDesignation,
+        FieldsEnum.tumour_normal_designation,
+      ),
+    );
   }
 
   // if no updates and not new return noUpdate

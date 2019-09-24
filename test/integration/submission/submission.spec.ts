@@ -843,6 +843,7 @@ describe('Submission Api', () => {
                       fieldName: 'specimen_type',
                       index: 0,
                       info: {
+                        donorSubmitterId: 'ICGC_0001',
                         newValue: 'Other',
                         oldValue: 'FFPE',
                       },

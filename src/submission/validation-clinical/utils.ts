@@ -4,7 +4,7 @@ import {
   DataValidationErrors,
   SubmissionValidationError,
   ClinicalInfoFieldsEnum,
-  RecordToDonorFieldsMap,
+  ClinicalInfoToRecordFieldsMap,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { DonorSubEntity, Donor } from '../../clinical/clinical-entities';
@@ -44,19 +44,32 @@ export const buildSubmissionError = (
   };
 };
 
+export const buildSubmisisonUpdate = (
+  newRecord: SubmittedClinicalRecord,
+  oldValue: string,
+  fieldName: FieldsEnum | ClinicalInfoFieldsEnum | string,
+) => {
+  // typescript refused to take this directly
+  const index: number = newRecord.index;
+  return {
+    fieldName,
+    index,
+    info: {
+      donorSubmitterId: newRecord[FieldsEnum.submitter_donor_id],
+      newValue: newRecord[fieldName],
+      oldValue,
+    },
+  };
+};
+
 export const getUpdatedFields = (clinicalInfo: any, record: SubmittedClinicalRecord) => {
   const updateFields: any[] = [];
   if (clinicalInfo) {
     for (const field in clinicalInfo) {
-      if (clinicalInfo[field] !== record[RecordToDonorFieldsMap[field]]) {
-        updateFields.push({
-          fieldName: RecordToDonorFieldsMap[field],
-          index: record.index,
-          info: {
-            oldValue: clinicalInfo[field],
-            newValue: record[RecordToDonorFieldsMap[field]],
-          },
-        });
+      if (clinicalInfo[field] !== record[ClinicalInfoToRecordFieldsMap[field]]) {
+        updateFields.push(
+          buildSubmisisonUpdate(record, clinicalInfo[field], ClinicalInfoToRecordFieldsMap[field]),
+        );
       }
     }
   }
