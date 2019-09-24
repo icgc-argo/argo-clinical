@@ -156,7 +156,7 @@ class SubmissionController {
     return res.status(422).send(result);
   }
 
-  @HasFullWriteAccess()
+  @HasProgramWriteAccess((req: Request) => req.params.programId)
   async commitActiveSubmission(req: Request, res: Response) {
     const { versionId, programId } = req.params;
     await submission2Clinical.commitClinicalSubmission({
