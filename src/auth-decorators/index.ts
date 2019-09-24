@@ -40,7 +40,7 @@ const hasScope = (scopes: string[], token: any) => {
 const checkAuthorization = (scopes: string[], request: Request, response: Response) => {
   const token = getToken(request);
   if (!token) {
-    return response.status(401).send('this endpoint needs a valid authentication token');
+    return response.status(401).send('This endpoint needs a valid authentication token');
   }
   if (!hasScope(scopes, token)) {
     return response.status(403).send("Caller doesn't have the required permissions");

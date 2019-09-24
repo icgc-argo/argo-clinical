@@ -93,7 +93,7 @@ paths:
     get:
       tags:
         - Registration
-      summary: Get registration for a program
+      summary: Get active registration
       description: returns the current in progress registration for a program if any
       responses:
         '200':
@@ -111,7 +111,7 @@ paths:
     post:
       tags:
         - Registration
-      summary: Upload a new registration file for a program
+      summary: Upload registration file
       description: This will validate and save the new registration file overwriting any existing registration
       requestBody:
         content:
@@ -157,6 +157,8 @@ paths:
     delete:
       tags:
         - Registration
+      summary: Clear active registration
+      description: Removes all active registration data for this program
       parameters:
         - name: id
           description: the id of the registration
@@ -185,6 +187,8 @@ paths:
     post:
       tags:
         - Registration
+      summary: Commit registration
+      description: Save the active registration data for this program, registering IDs for all new Samples, Specimens, and Donors introduced
       parameters:
         - name: id
           description: the id of the registration
