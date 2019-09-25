@@ -120,7 +120,7 @@ class SubmissionController {
     if (!isValidCreateBody(req, res)) {
       return;
     }
-    if (req.files == undefined || req.files.length == 0) {
+    if (req.files === undefined || req.files.length === 0) {
       ControllerUtils.badRequest(res, `Clinical file(s) upload required`);
       return;
     }
