@@ -965,6 +965,7 @@ describe('Submission Api', () => {
         .then((res: any) => {
           res.should.have.status(200);
           // TODO: check that merge and save were successful
+          // TODO: ensure the active submission was removed
         })
         .catch(err => err);
     });
@@ -1100,6 +1101,7 @@ describe('Submission Api', () => {
         .then((res: any) => {
           res.should.have.status(200);
           // TODO: check that merge and save were successful
+          // TODO: ensure the active submission was removed
         })
         .catch(err => err);
     });
