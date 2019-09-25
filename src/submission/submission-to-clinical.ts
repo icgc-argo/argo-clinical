@@ -6,7 +6,7 @@ import { DeepReadonly } from 'deep-freeze';
 import { Donor, Specimen, Sample } from '../clinical/clinical-entities';
 import {
   ActiveClinicalSubmission,
-  CommitClinicalSubmissionCommand,
+  ActiveSubmissionIdentifier,
   CommitRegistrationCommand,
   ActiveRegistration,
   SubmittedRegistrationRecord,
@@ -28,9 +28,7 @@ import { mergeActiveSubmissionWithDonors } from './merge-submission';
  *
  * @param command CommitClinicalSubmissionCommand with the versionId of the registration to close
  */
-export const commitClinicalSubmission = async (
-  command: Readonly<CommitClinicalSubmissionCommand>,
-) => {
+export const commitClinicalSubmission = async (command: Readonly<ActiveSubmissionIdentifier>) => {
   // Get active submission
   const activeSubmission = await submissionRepository.findByProgramId(command.programId);
 
@@ -211,10 +209,11 @@ const getDonorDTOsForActiveSubmission = async (
   const donorIds = getDonorIdsInActiveSubmission(activeSubmission);
 
   // Get the donor records for each ID
-  const donors = await donorDao.findByProgramAndSubmitterIdList({
+  const daoFilters = Array.from(donorIds.values()).map(submitterId => ({
     programId: activeSubmission.programId,
-    submitterIds: Array.from(donorIds.values()),
-  });
+    submitterId,
+  }));
+  const donors = await donorDao.findByProgramAndSubmitterId(daoFilters);
 
   return donors;
 };

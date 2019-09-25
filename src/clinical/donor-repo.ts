@@ -22,18 +22,15 @@ export type FindByProgramAndSubmitterFilter = DeepReadonly<{
   programId: string;
   submitterId: string;
 }>;
-export type FindByProgramAndSubmitterListFilter = DeepReadonly<{
-  programId: string;
-  submitterIds: string[];
-}>;
 export interface DonorRepository {
   findByProgramId(programId: string): Promise<DeepReadonly<Donor[]>>;
   deleteByProgramId(programId: string): Promise<void>;
   findByProgramAndSubmitterId(
     filters: DeepReadonly<FindByProgramAndSubmitterFilter[]>,
   ): Promise<DeepReadonly<Donor[]> | undefined>;
-  findByProgramAndSubmitterIdList(
-    filters: DeepReadonly<FindByProgramAndSubmitterListFilter>,
+  findByProgramAndSubmitterIds(
+    programId: string,
+    submitterIds: string[],
   ): Promise<DeepReadonly<Donor[]> | undefined>;
   findBySpecimenSubmitterIdAndProgramId(
     filter: FindByProgramAndSubmitterFilter,
@@ -127,13 +124,13 @@ export const donorDao: DonorRepository = {
     });
     return F(mapped);
   },
-  async findByProgramAndSubmitterIdList(filter: {
-    programId: string;
-    submitterIds: string[];
-  }): Promise<DeepReadonly<Donor[]> | undefined> {
+  async findByProgramAndSubmitterIds(
+    programId: string,
+    submitterIds: string[],
+  ): Promise<DeepReadonly<Donor[]> | undefined> {
     const result = await DonorModel.find({
-      submitterId: { $in: filter.submitterIds },
-      programId: filter.programId,
+      submitterId: { $in: submitterIds },
+      programId: programId,
     });
     const mapped = result.map((d: DonorDocument) => {
       return MongooseUtils.toPojo(d);

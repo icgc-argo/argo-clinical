@@ -88,7 +88,7 @@ export interface CreateRegistrationRecord {
   readonly sampleType: string;
 }
 
-export interface CommitClinicalSubmissionCommand {
+export interface ActiveSubmissionIdentifier {
   readonly versionId: string;
   readonly programId: string;
 }
