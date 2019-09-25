@@ -45,7 +45,31 @@ export const commitClinicalSubmission = async (command: Readonly<ActiveSubmissio
     );
   } else {
     // We Did It! We have a valid active submission to commit! Everyone cheers!
-    performCommitSubmission(activeSubmission);
+
+    let pendingApproval: boolean = false;
+    for (const clinicalType in activeSubmission.clinicalEntities) {
+      if (activeSubmission.clinicalEntities[clinicalType].stats.updated.length > 0) {
+        pendingApproval = true;
+        break;
+      }
+    }
+    // check if there are updates, if so, change state to SUBMISSION_STATE.PENDING_APPROVAL and save
+    if (pendingApproval) {
+      const newActiveSubmission = _.cloneDeep(activeSubmission) as ActiveClinicalSubmission;
+      newActiveSubmission.state = SUBMISSION_STATE.PENDING_APPROVAL;
+
+      // insert into database
+      const updated = await submissionRepository.updateProgramWithVersion(
+        command.programId,
+        command.versionId,
+        newActiveSubmission,
+      );
+
+      return updated;
+    } else {
+      await performCommitSubmission(activeSubmission);
+      return {};
+    }
   }
 };
 

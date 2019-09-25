@@ -184,11 +184,14 @@ class SubmissionController {
   @HasFullWriteAccess()
   async approveActiveSubmission(req: Request, res: Response) {
     const { versionId, programId } = req.params;
-    await submission2Clinical.approveClinicalSubmission({
+    const activeSubmission = await submission2Clinical.approveClinicalSubmission({
       versionId,
       programId,
     });
-    return res.status(200).send();
+    if (activeSubmission === undefined) {
+      return res.status(200).send({});
+    }
+    return res.status(200).send(activeSubmission);
   }
 }
 

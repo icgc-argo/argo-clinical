@@ -799,7 +799,7 @@ describe('Submission Api', () => {
           }
         });
     });
-    it('should return pending_approval with appropriate stats', async () => {
+    it('should return with appropriate stats', async () => {
       const files: Buffer[] = [];
       try {
         files.push(fs.readFileSync(__dirname + '/donor.tsv'));
@@ -844,7 +844,7 @@ describe('Submission Api', () => {
               .then((res: any) => {
                 try {
                   res.should.have.status(200);
-                  res.body.submission.state.should.eq(SUBMISSION_STATE.PENDING_APPROVAL);
+                  res.body.submission.state.should.eq(SUBMISSION_STATE.VALID);
                   res.body.submission.clinicalEntities.donor.stats.new.should.deep.eq([0]);
                   res.body.submission.clinicalEntities.specimen.stats.updated.should.deep.eq([0]);
                   res.body.submission.clinicalEntities.specimen.dataUpdates.should.deep.eq([

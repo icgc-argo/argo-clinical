@@ -5,6 +5,7 @@ import { ActiveClinicalSubmission, SUBMISSION_STATE } from './submission-entitie
 import { MongooseUtils, F } from '../utils';
 import { InternalError } from './errors';
 import _ from 'lodash';
+import uuid from 'uuid';
 const L = loggerFor(__filename);
 
 export interface ClinicalSubmissionRepository {
@@ -75,13 +76,23 @@ export const submissionRepository: ClinicalSubmissionRepository = {
     version: string,
     updatedSubmission: DeepReadonly<ActiveClinicalSubmission>,
   ): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined> {
-    return (
-      (await ActiveSubmissionModel.findOneAndUpdate(
+    try {
+      const newVersion = uuid();
+      const updated = await ActiveSubmissionModel.findOneAndUpdate(
         { programId: programId, version: version },
-        updatedSubmission,
+        { ...updatedSubmission, version: newVersion },
         { new: true },
-      )) || undefined
-    );
+      );
+      if (!updated) {
+        throw new Error("Couldn't update program.");
+      }
+      return updated;
+    } catch (err) {
+      throw new InternalError(
+        `failed to delete ActiveSubmission with programId: ${programId}`,
+        err,
+      );
+    }
   },
 };
 
