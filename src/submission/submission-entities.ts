@@ -143,7 +143,7 @@ export interface MultiClinicalSubmissionCommand {
 export interface CreateSubmissionResult {
   readonly submission: DeepReadonly<ActiveClinicalSubmission> | undefined;
   readonly successful: boolean;
-  errors: DeepReadonly<{ [clinicalType: string]: SubmissionValidationError[] }>;
+  schemaErrors: DeepReadonly<{ [clinicalType: string]: SubmissionValidationError[] }>;
 }
 
 export interface NewClinicalEntity {

@@ -275,23 +275,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ClinicalSubmission'
-        '400':
-          $ref: '#/components/responses/FileStructureError'
-        '422':
-          description: 'invalid clinical submission file'
+                $ref: '#/components/schemas/CreateSubmission'
+        '207':
+          description: 'successful schema validation with some unprocessable files'
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  successful:
-                    type: boolean
-                    description: will be false in this case
-                  errors:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/ValidationError'
+                $ref: '#/components/schemas/CreateSubmission'
+        '422':
+          description: 'unsuccessful schema validation failed on files'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateSubmission'
   /submission/program/{programId}/clinical/validate/{versionId}:
     post:
       tags:
@@ -769,3 +765,28 @@ components:
           description: list of all errors, should be empty on success
           items:
             $ref: '#/components/schemas/RegistrationValidationError'
+
+    CreateSubmission:
+      required:
+        - successful
+        - submission
+      type: object
+      properties:
+        submission:
+          $ref: '#/components/schemas/ClinicalSubmission'
+        successful:
+          type: boolean
+          description: whether the file was valid or not
+        errors:
+          type: array
+          description: list of all errors, should be empty on success
+          items:
+            $ref: '#/components/schemas/ValidationError'
+        fileErrors:
+          type: object
+          properties:
+            message:
+              type: string
+            code:
+              type: string
+              enum: ['TSV_PARSING_FAILED', 'INVALID_FILE_NAME']

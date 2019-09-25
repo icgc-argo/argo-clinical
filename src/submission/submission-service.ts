@@ -215,7 +215,7 @@ export namespace operations {
     }
     return {
       submission: updated,
-      errors: schemaErrors,
+      schemaErrors: schemaErrors,
       successful: Object.keys(schemaErrors).length === 0,
     };
   };
@@ -238,7 +238,7 @@ export namespace operations {
     if (exsistingActiveSubmission.state !== SUBMISSION_STATE.OPEN) {
       return {
         submission: exsistingActiveSubmission,
-        errors: {},
+        schemaErrors: {},
         successful: true,
       };
     }
@@ -308,7 +308,7 @@ export namespace operations {
     }
     return {
       submission: updated,
-      errors: {},
+      schemaErrors: {},
       successful: !invalid,
     };
   };
