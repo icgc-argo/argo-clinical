@@ -844,11 +844,11 @@ describe('Submission Api', () => {
           done();
         });
     });
-    it('should return 403 if the user is not DCC Admin', done => {
+    it('should return 403 if the user is not an admin for that program', done => {
       chai
         .request(app)
         .post('/submission/program/ABCD-EF/clinical/commit/asdf')
-        .auth(JWT_ABCDEF, { type: 'bearer' })
+        .auth(JWT_WXYZEF, { type: 'bearer' })
         .end((err: any, res: any) => {
           res.should.have.status(403);
           done();
