@@ -7,6 +7,8 @@ security:
 paths:
   /health:
     get:
+      tags:
+        - Health
       responses:
         '500':
           description: 'app is not fully healthy'
@@ -19,6 +21,8 @@ paths:
 
   /submission/schema:
     get:
+      tags:
+        - Schemas
       responses:
         '200':
           description: 'the current loaded schema by the clinical submission'
@@ -38,6 +42,8 @@ paths:
           example: 'registration'
           type: string
     get:
+      tags:
+        - Schemas
       responses:
         '200':
           description: 'A tsv template file for the given schemaName'
@@ -48,6 +54,8 @@ paths:
                 type: string
   /submission/schema/hack/refresh:
     post:
+      tags:
+        - Schemas
       description: force reload the schema from the schema service and override the cache
       responses:
         '200':
@@ -58,6 +66,8 @@ paths:
                 type: object
   /submission/schema/hack/replace:
     post:
+      tags:
+        - Schemas
       description: force replace the schema from the provided schema in body
       requestBody:
         content:
@@ -81,7 +91,9 @@ paths:
         schema:
           type: string
     get:
-      summary: Get registration for a program
+      tags:
+        - Registration
+      summary: Get active registration
       description: returns the current in progress registration for a program if any
       responses:
         '200':
@@ -97,7 +109,9 @@ paths:
         '500':
           $ref: '#/components/responses/ServerError'
     post:
-      summary: Upload a new registration file for a program
+      tags:
+        - Registration
+      summary: Upload registration file
       description: This will validate and save the new registration file overwriting any existing registration
       requestBody:
         content:
@@ -141,6 +155,10 @@ paths:
                 $ref: '#/components/schemas/CreateRegistration'
   /submission/program/{programId}/registration/{id}:
     delete:
+      tags:
+        - Registration
+      summary: Clear active registration
+      description: Removes all active registration data for this program
       parameters:
         - name: id
           description: the id of the registration
@@ -157,16 +175,20 @@ paths:
       responses:
         '401':
           $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
         '403':
           $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
         '500':
           $ref: '#/components/responses/ServerError'
         '200':
           description: 'the registration was deleted from db'
   /submission/program/{programId}/registration/{id}/commit:
     post:
+      tags:
+        - Registration
+      summary: Commit registration
+      description: Save the active registration data for this program, registering IDs for all new Samples, Specimens, and Donors introduced
       parameters:
         - name: id
           description: the id of the registration
@@ -181,14 +203,8 @@ paths:
           schema:
             type: string
       responses:
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/ForbiddenError'
-        '500':
-          $ref: '#/components/responses/ServerError'
         '200':
-          description: 'the registration was committed and the donors / specimens / samples added to the clinical db'
+          description: 'The registration was committed and the donors / specimens / samples added to the clinical db'
           content:
             application/json:
               schema:
@@ -198,8 +214,16 @@ paths:
                     type: array
                     items:
                       type: string
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/ServerError'
   /submission/program/{programId}/clinical/upload:
     get:
+      tags:
+        - Submission
       parameters:
         - name: programId
           description: the short name of the program
@@ -223,6 +247,8 @@ paths:
         '500':
           $ref: '#/components/responses/ServerError'
     post:
+      tags:
+        - Submission
       parameters:
         - name: programId
           description: the short name of the program
@@ -268,19 +294,11 @@ paths:
                       $ref: '#/components/schemas/ValidationError'
   /submission/program/{programId}/clinical/validate/{versionId}:
     post:
+      tags:
+        - Submission
       parameters:
-        - name: programId
-          description: the short name of the program
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: versionId
-          description: uuid used to ensure correct version of submission is being updated
-          in: path
-          required: true
-          schema:
-            type: string
+        - $ref: '#/components/parameters/PathProgramId'
+        - $ref: '#/components/parameters/PathVersionId'
       responses:
         '200':
           description: 'in progress submission with a VALID or PENDING_APPROVAL state'
@@ -302,9 +320,34 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/ValidationError'
+  /submission/program/{programId}/clinical/commit/{versionId}:
+    post:
+      tags:
+        - Submission
+      description: Commit in progress clinical submission to the clinical DB
+      parameters:
+        - $ref: '#/components/parameters/PathProgramId'
+        - $ref: '#/components/parameters/PathVersionId'
+      responses:
+        '200':
+          description: The uploaded clinical submission data was committed to the clinical DB
+        '400':
+          description: Version ID does not match version of active submission
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: Active submission is not in VALID state and cannot be commited.
+        '500':
+          $ref: '#/components/responses/ServerError'
 
   /clinical/donors:
     get:
+      tags:
+        - Clinical Data
       parameters:
         - name: programId
           description: the short name of the program
@@ -320,7 +363,7 @@ paths:
         '500':
           $ref: '#/components/responses/ServerError'
         '200':
-          description: 'donors of program '
+          description: 'List of donors for the given program'
           content:
             application/json:
               schema:
@@ -328,6 +371,8 @@ paths:
                 items:
                   type: object
     delete:
+      tags:
+        - Clinical Data
       parameters:
         - name: programId
           description: the short name of the program
@@ -346,6 +391,8 @@ paths:
           description: 'all donors deleted'
   /clinical/donors/id:
     get:
+      tags:
+        - Clinical Data
       parameters:
         - $ref: '#/components/parameters/QueryProgramId'
         - $ref: '#/components/parameters/QuerySubmitterId'
@@ -360,6 +407,8 @@ paths:
           description: no matching donor found
   /clinical/specimens/id:
     get:
+      tags:
+        - Clinical Data
       parameters:
         - $ref: '#/components/parameters/QueryProgramId'
         - $ref: '#/components/parameters/QuerySubmitterId'
@@ -374,6 +423,8 @@ paths:
           description: no matching specimen found
   /clinical/samples/id:
     get:
+      tags:
+        - Clinical Data
       parameters:
         - $ref: '#/components/parameters/QueryProgramId'
         - $ref: '#/components/parameters/QuerySubmitterId'
@@ -389,6 +440,18 @@ paths:
 
 servers:
   - url: /
+tags:
+  - name: Health
+    description: Service status monitoring
+  - name: Schemas
+    description: View and manage the Data Schema used by Argo-Clinical
+  - name: Registration
+    description: Registering new Donors, Specimens, and Samples
+  - name: Submission
+    description: Uploading, Validating, and Committing clinical data
+  - name: Clinical Data
+    description:
+
 components:
   parameters:
     QueryProgramId:
@@ -402,6 +465,20 @@ components:
       name: submitterId
       description: Submitter Id of the entity
       in: query
+      required: true
+      schema:
+        type: string
+    PathProgramId:
+      name: programId
+      description: Short Name of the program (ex. ABCD-EF)
+      in: path
+      required: true
+      schema:
+        type: string
+    PathVersionId:
+      name: versionId
+      description: UUID used to confirm the registration/submission version
+      in: path
       required: true
       schema:
         type: string

@@ -40,7 +40,7 @@ const hasScope = (scopes: string[], token: any) => {
 const checkAuthorization = (scopes: string[], request: Request, response: Response) => {
   const token = getToken(request);
   if (!token) {
-    return response.status(401).send('this endpoint needs a valid authentication token');
+    return response.status(401).send('This endpoint needs a valid authentication token');
   }
   if (!hasScope(scopes, token)) {
     return response.status(403).send("Caller doesn't have the required permissions");
@@ -48,17 +48,21 @@ const checkAuthorization = (scopes: string[], request: Request, response: Respon
   return undefined;
 };
 
-export function HasSubmitionAccess(programIdExtractor: Function) {
+const scopeCheckGenerator = (
+  functionName: string,
+  scopesGenerator: (programId: string) => string[],
+  programIdExtractor?: Function,
+) => {
   return function(target: any, key: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value as RequestHandler;
     descriptor.value = function() {
       const request = arguments[0] as Request;
       const response = arguments[1] as Response;
       const next = arguments[2] as NextFunction;
-      const programId = programIdExtractor(request);
-      L.debug(`HasSubmitionAccess @ ${key} was called with: ${programId}`);
+      const programId = programIdExtractor ? programIdExtractor(request) : '';
+      programIdExtractor && L.debug(`${functionName} @ ${key} was called with: ${programId}`);
       const unauthorizedResponse = checkAuthorization(
-        [`PROGRAMDATA-${programId}.WRITE`, 'CLINICALSERVICE.WRITE'],
+        scopesGenerator(programId),
         request,
         response,
       );
@@ -70,27 +74,23 @@ export function HasSubmitionAccess(programIdExtractor: Function) {
     };
     return descriptor;
   };
+};
+
+export function HasProgramWriteAccess(programIdExtractor: Function) {
+  return scopeCheckGenerator(
+    'HasProgramWriteAccess',
+    programId => [`PROGRAMDATA-${programId}.WRITE`, 'CLINICALSERVICE.WRITE'],
+    programIdExtractor,
+  );
+}
+
+export function HasFullWriteAccess() {
+  return scopeCheckGenerator('HasFullWriteAccess', () => ['CLINICALSERVICE.WRITE']);
 }
 
 export function HasFullReadAccess() {
-  return function(target: any, key: string, descriptor: PropertyDescriptor) {
-    const originalMethod = descriptor.value as RequestHandler;
-    descriptor.value = function() {
-      const request = arguments[0] as Request;
-      const response = arguments[1] as Response;
-      const next = arguments[2] as NextFunction;
-      L.debug(`HasFullReadAccess @ ${key} was called`);
-      const unauthorizedResponse = checkAuthorization(
-        ['CLINICALSERVICE.READ', 'CLINICALSERVICE.WRITE'],
-        request,
-        response,
-      );
-      if (unauthorizedResponse !== undefined) {
-        return unauthorizedResponse;
-      }
-      const result = originalMethod.apply(this, [request, response, next]);
-      return result;
-    };
-    return descriptor;
-  };
+  return scopeCheckGenerator('HasFullReadAccess', () => [
+    'CLINICALSERVICE.READ',
+    'CLINICALSERVICE.WRITE',
+  ]);
 }

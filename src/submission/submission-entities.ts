@@ -88,6 +88,11 @@ export interface CreateRegistrationRecord {
   readonly sampleType: string;
 }
 
+export interface ActiveSubmissionIdentifier {
+  readonly versionId: string;
+  readonly programId: string;
+}
+
 export interface CommitRegistrationCommand {
   readonly registrationId: string;
   readonly programId: string;
