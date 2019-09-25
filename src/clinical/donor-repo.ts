@@ -28,6 +28,10 @@ export interface DonorRepository {
   findByProgramAndSubmitterId(
     filters: DeepReadonly<FindByProgramAndSubmitterFilter[]>,
   ): Promise<DeepReadonly<Donor[]> | undefined>;
+  findByProgramAndSubmitterIds(
+    programId: string,
+    submitterIds: string[],
+  ): Promise<DeepReadonly<Donor[]> | undefined>;
   findBySpecimenSubmitterIdAndProgramId(
     filter: FindByProgramAndSubmitterFilter,
   ): Promise<DeepReadonly<Donor> | undefined>;
@@ -36,6 +40,7 @@ export interface DonorRepository {
   ): Promise<DeepReadonly<Donor> | undefined>;
   create(donor: DeepReadonly<Donor>): Promise<DeepReadonly<Donor>>;
   update(donor: DeepReadonly<Donor>): Promise<DeepReadonly<Donor>>;
+  updateAll(donors: DeepReadonly<Donor>[]): Promise<DeepReadonly<Donor>[]>;
   countBy(filter: any): Promise<number>;
 }
 
@@ -119,6 +124,19 @@ export const donorDao: DonorRepository = {
     });
     return F(mapped);
   },
+  async findByProgramAndSubmitterIds(
+    programId: string,
+    submitterIds: string[],
+  ): Promise<DeepReadonly<Donor[]> | undefined> {
+    const result = await DonorModel.find({
+      submitterId: { $in: submitterIds },
+      programId: programId,
+    });
+    const mapped = result.map((d: DonorDocument) => {
+      return MongooseUtils.toPojo(d);
+    });
+    return F(mapped);
+  },
 
   async update(donor: DeepReadonly<Donor>) {
     const newDonor = new DonorModel(donor);
@@ -136,6 +154,27 @@ export const donorDao: DonorRepository = {
     });
     await newDonor.save();
     return F(MongooseUtils.toPojo(newDonor));
+  },
+  async updateAll(donors: DeepReadonly<Donor>[]) {
+    const newDonors = donors.map(donor => {
+      const newDonor = new DonorModel(donor);
+      newDonor.isNew = false;
+      newDonor.specimens.forEach(sp => {
+        if (sp.specimenId) {
+          (sp as any).isNew = false;
+        }
+
+        sp.samples.forEach(sa => {
+          if (sa.sampleId) {
+            (sa as any).isNew = false;
+          }
+        });
+      });
+      return newDonor;
+    });
+
+    const results = await Promise.all(newDonors.map(donor => donor.save()));
+    return newDonors.map(donor => F(MongooseUtils.toPojo(donor)));
   },
 
   async create(donor: DeepReadonly<Donor>) {

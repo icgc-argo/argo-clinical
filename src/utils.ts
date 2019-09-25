@@ -74,6 +74,12 @@ export namespace Errors {
       super(msg);
     }
   }
+
+  export class StateConflict extends Error {
+    constructor(msg: string) {
+      super(msg);
+    }
+  }
 }
 
 export namespace MongooseUtils {

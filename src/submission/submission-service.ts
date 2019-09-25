@@ -203,6 +203,7 @@ export namespace operations {
     // generate new version and make submission state open
     newActiveSubmission.version = uuid();
     newActiveSubmission.state = SUBMISSION_STATE.OPEN;
+
     // insert into database
     const updated = await submissionRepository.updateProgramWithVersion(
       command.programId,
