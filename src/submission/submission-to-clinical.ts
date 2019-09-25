@@ -88,7 +88,7 @@ const performCommitSubmission = async (
       await donorDao.updateAll(updatedDonorDTOs.map(dto => F(dto)));
 
       // If the save completed without error, we can delete the active registration
-      submissionRepository.delete(activeSubmission.programId);
+      submissionRepository.deleteByProgramId(activeSubmission.programId);
     } catch (err) {
       throw new Error(`Failure occured saving clinical data: ${err}`);
     }
