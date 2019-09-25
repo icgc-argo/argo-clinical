@@ -8,7 +8,7 @@ import {
   MultiClinicalSubmissionCommand,
   NewClinicalEntity,
 } from './submission-entities';
-import { HasFullWriteAccess, HasProgramWriteAccess } from '../auth-decorators';
+import { HasProgramWriteAccess } from '../auth-decorators';
 import jwt from 'jsonwebtoken';
 import _ from 'lodash';
 const L = loggerFor(__filename);
@@ -32,9 +32,15 @@ const FileNameRegex = {
   [FileType.SAMPLE]: '^sample.*\\.tsv',
 };
 
+type SubmissionFileErrors = {
+  msg: string;
+  fileList: string[];
+  code: ErrorCodes;
+};
+
 type ClinicalEnityFileMap = {
   filesByTypeMap: { [fileType: string]: Express.Multer.File };
-  errorList: Array<ControllerUtils.ControllerBadRequestError>;
+  errorList: Array<SubmissionFileErrors>;
 };
 
 class SubmissionController {
@@ -128,7 +134,8 @@ class SubmissionController {
         records = await TsvUtils.tsvToJson(filesByTypeMap[clinicalFileType].path);
       } catch (err) {
         errorList.push({
-          msg: `failed to parse the tsv file ${fileName}: ${err}`,
+          msg: `failed to parse the tsv file: ${err}`,
+          fileList: [fileName],
           code: ErrorCodes.TSV_PARSING_FAILED,
         });
       }
@@ -222,7 +229,7 @@ const getCreatorFromToken = (req: Request): string => {
 // returns an object that maps a file to a clinical type
 const mapFilesByType = (req: Request, res: Response): ClinicalEnityFileMap => {
   const files = req.files as Express.Multer.File[];
-  const errorList: Array<ControllerUtils.ControllerBadRequestError> = [];
+  const errorList: Array<SubmissionFileErrors> = [];
   const filesByTypeMap: { [fileType: string]: Express.Multer.File } = {};
 
   // check for double files and map files to clinical type
@@ -235,7 +242,8 @@ const mapFilesByType = (req: Request, res: Response): ClinicalEnityFileMap => {
     );
     if (foundFiles.length > 1) {
       errorList.push({
-        msg: `Found multiple files of ${type} type - [${getFileNames(foundFiles)}]`,
+        msg: `Found multiple files of ${type} type`,
+        fileList: getFileNames(foundFiles),
         code: ErrorCodes.MULTIPLE_TYPED_FILES,
       });
     } else if (foundFiles.length == 1) {
@@ -246,7 +254,8 @@ const mapFilesByType = (req: Request, res: Response): ClinicalEnityFileMap => {
   if (files.length > 0) {
     const filesNames = getFileNames(files);
     errorList.push({
-      msg: `Invalid file(s) - [${filesNames}], must start with entity and have .tsv extension (e.g. donor*.tsv)`,
+      msg: `Invalid file(s), must start with entity and have .tsv extension (e.g. donor*.tsv)`,
+      fileList: filesNames,
       code: ErrorCodes.INVALID_FILE_NAME,
     });
   }
