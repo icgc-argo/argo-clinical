@@ -163,8 +163,17 @@ class SubmissionController {
       versionId,
       programId,
     });
-    // Placeholder
-    return res.status(200).send({ programId, versionId });
+    return res.status(200).send();
+  }
+
+  @HasFullWriteAccess()
+  async approveActiveSubmission(req: Request, res: Response) {
+    const { versionId, programId } = req.params;
+    await submission2Clinical.approveClinicalSubmission({
+      versionId,
+      programId,
+    });
+    return res.status(200).send();
   }
 }
 
