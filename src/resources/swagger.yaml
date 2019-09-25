@@ -297,8 +297,8 @@ paths:
       tags:
         - Submission
       parameters:
-        - '#/components/parameters/PathProgramId'
-        - '#/components/parameters/PathVersionId'
+        - $ref: '#/components/parameters/PathProgramId'
+        - $ref: '#/components/parameters/PathVersionId'
       responses:
         '200':
           description: 'in progress submission with a VALID or PENDING_APPROVAL state'
@@ -326,8 +326,8 @@ paths:
         - Submission
       description: Commit in progress clinical submission to the clinical DB
       parameters:
-        - '#/components/parameters/PathProgramId'
-        - '#/components/parameters/PathVersionId'
+        - $ref: '#/components/parameters/PathProgramId'
+        - $ref: '#/components/parameters/PathVersionId'
       responses:
         '200':
           description: The uploaded clinical submission data was committed to the clinical DB
