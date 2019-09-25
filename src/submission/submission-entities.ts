@@ -57,7 +57,11 @@ export type SubmissionValidationError = {
 
 export type SubmissionValidationUpdate = {
   fieldName: string;
-  info: object;
+  info: {
+    donorSubmitterId: string;
+    newValue: string;
+    oldValue: string;
+  };
   index: number;
 };
 
@@ -186,12 +190,6 @@ export enum ClinicalInfoFieldsEnum {
   vital_status = 'vital_status',
   survival_time = 'survival_time',
 }
-
-export const ClinicalInfoToRecordFieldsMap: { [field: string]: string } = {
-  specimenAcquistionInterval: 'specimen_acquistion_interval',
-  vitalStatus: 'vital_status',
-  survivalTime: 'survival_time',
-};
 
 export interface ValidatorResult {
   type: ModificationType;

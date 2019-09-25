@@ -11,6 +11,7 @@ import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
 import { FileType } from '../submission-api';
 import * as utils from './utils';
+import _ from 'lodash';
 
 export const validate = async (
   newRecords: DeepReadonly<{ [clinicalType: string]: SubmittedClinicalRecord }>,
@@ -21,25 +22,21 @@ export const validate = async (
 
   // Preconditions: if any one of these validation failed, can't continue
   if (!utils.checkDonorRegistered(existentDonor, donorRecord)) {
-    return {
-      type: ModificationType.ERRORSFOUND,
-      index: donorRecord.index,
-      resultArray: [
-        utils.buildSubmissionError(
-          donorRecord,
-          DataValidationErrors.ID_NOT_REGISTERED,
-          FieldsEnum.submitter_donor_id,
-        ),
-      ],
-    };
+    return utils.buildValidatorResult(ModificationType.ERRORSFOUND, donorRecord.index, [
+      utils.buildSubmissionError(
+        donorRecord,
+        DataValidationErrors.ID_NOT_REGISTERED,
+        FieldsEnum.submitter_donor_id,
+      ),
+    ]);
   }
 
   // cross entity donor record validation
   checkTimeConflictWithSpecimen(existentDonor, donorRecord, newRecords[FileType.SPECIMEN], errors);
 
   return errors.length > 0
-    ? { type: ModificationType.ERRORSFOUND, index: donorRecord.index, resultArray: errors }
-    : await calculateStats(donorRecord, existentDonor);
+    ? utils.buildValidatorResult(ModificationType.ERRORSFOUND, donorRecord.index, errors)
+    : await checkForUpdates(donorRecord, existentDonor);
 };
 
 function checkTimeConflictWithSpecimen(
@@ -65,7 +62,9 @@ function checkTimeConflictWithSpecimen(
         specimenRecord[ClinicalInfoFieldsEnum.specimen_acquistion_interval],
       );
     } else if (specimen.clinicalInfo) {
-      specimenAcqusitionInterval = Number(specimen.clinicalInfo.specimenAcqusitionInterval);
+      specimenAcqusitionInterval = Number(
+        specimen.clinicalInfo[ClinicalInfoFieldsEnum.specimen_acquistion_interval],
+      );
     } else {
       return; // no specimenAcqusitionInterval so move on to next specimen
     }
@@ -95,25 +94,25 @@ function checkTimeConflictWithSpecimen(
 // 1 not changing gender and new clinicalInfo <=> new
 // 2 changing specimenType or tnd or changing clinicalInfo <=> update
 // 3 not new or update <=> noUpdate
-async function calculateStats(
+async function checkForUpdates(
   record: DeepReadonly<SubmittedClinicalRecord>,
   donor: DeepReadonly<Donor>,
 ): Promise<ValidatorResult> {
   const clinicalInfo = donor.clinicalInfo;
 
   // no updates to specimenType or tnd but there is now existent clinicalInfo, new
-  if (donor.gender === record[FieldsEnum.gender] && !clinicalInfo) {
-    return { type: ModificationType.NEW, index: record.index };
+  if (donor.gender === record[FieldsEnum.gender] && _.isEmpty(clinicalInfo)) {
+    return utils.buildValidatorResult(ModificationType.NEW, record.index);
   }
 
   // check changing fields
-  const updateFields: any[] = utils.getUpdatedFields(clinicalInfo, record);
+  const updatedFields: any[] = utils.getUpdatedFields(clinicalInfo, record);
 
   if (donor.gender !== record[FieldsEnum.gender]) {
-    updateFields.push(utils.buildSubmisisonUpdate(record, donor.gender, FieldsEnum.sample_type));
+    updatedFields.push(utils.buildSubmissionUpdate(record, donor.gender, FieldsEnum.sample_type));
   }
 
-  return updateFields.length === 0
-    ? { type: ModificationType.NOUPDATE, index: record.index }
-    : { type: ModificationType.UPDATED, index: record.index, resultArray: updateFields };
+  return updatedFields.length === 0
+    ? utils.buildValidatorResult(ModificationType.NOUPDATE, record.index)
+    : utils.buildValidatorResult(ModificationType.UPDATED, record.index, updatedFields);
 }
