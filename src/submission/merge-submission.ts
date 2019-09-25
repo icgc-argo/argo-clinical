@@ -5,6 +5,7 @@ import { FileType } from './submission-api';
 import _ from 'lodash';
 import { loggerFor } from '../logger';
 import { update } from './schema-api';
+import { Errors } from '../utils';
 const L = loggerFor(__filename);
 
 type ClinicalEnitityRecord = DeepReadonly<
@@ -40,6 +41,10 @@ export const mergeActiveSubmissionWithDonors = async (
             addOrUpdateClinicalRecord(donor, record, entityType);
             break;
         }
+      } else {
+        throw new Errors.StateConflict(
+          `Donor ${donorId} has not been registered but is part of the activeSubmission, merge cannot be completed.`,
+        );
       }
     });
   }
@@ -53,10 +58,7 @@ const updateDonorFromSubmissionRecord = (donor: Donor, record: ClinicalEnitityRe
 };
 const updateSpecimenRecord = (donor: Donor, record: ClinicalEnitityRecord) => {
   // Find specimen in donor
-  const specimen = _.find(donor.specimens, [
-    'submitterId',
-    record.submitter_specimen_id,
-  ]) as Specimen;
+  const specimen = findSpecimen(donor, record.submitter_specimen_id);
   specimen.specimenType = record.specimen_type;
   specimen.tumourNormalDesignation = record.tumour_normal_designation;
   specimen.clinicalInfo = _.omit(record, [
@@ -67,11 +69,7 @@ const updateSpecimenRecord = (donor: Donor, record: ClinicalEnitityRecord) => {
   ]);
 };
 const updateSampleRecord = (donor: Donor, record: ClinicalEnitityRecord) => {
-  const specimen = _.find(donor.specimens, [
-    'submitterId',
-    record.submitter_specimen_id,
-  ]) as Specimen;
-  const sample = _.find(specimen.samples, ['submitterId', record.submitter_sample_id]) as Sample;
+  const sample = findSample(donor, record.submitter_specimen_id, record.submitter_sample_id);
 
   // Samples only have the one update to make:
   sample.sampleType = record.sample_type;
@@ -86,7 +84,7 @@ const addOrUpdateClinicalRecord = (
   record: ClinicalEnitityRecord,
   entityType: string,
 ) => {
-  // TODO - This should work based on agreement of the IDs for all templates, but as of 2019-09-24 there are no templates to test with
+  // TODO - This **should** work, based on agreement of the ID format for all templates, but as of 2019-09-24 there are no templates to test with
 
   const submitterIdKey = `submitter_${_.snakeCase(entityType)}_id`;
   const submitterId = record[submitterIdKey];
@@ -102,4 +100,29 @@ const addOrUpdateClinicalRecord = (
       clinicalInfo: _.omit(record, ['program_id', submitterIdKey]),
     });
   }
+};
+
+/* ********************************* *
+ * Some repeated convenience methods *
+ * ********************************* */
+const findSpecimen = (donor: Donor, specimenId: string) => {
+  const specimen = _.find(donor.specimens, ['submitterId', specimenId]) as Specimen;
+  if (!specimen) {
+    throw new Errors.StateConflict(
+      `Specimen ${specimenId} has not been registeredbut is part of the activeSubmission, merge cannot be completed.`,
+    );
+  }
+
+  return specimen;
+};
+
+const findSample = (donor: Donor, specimenId: string, sampleId: string) => {
+  const specimen = findSpecimen(donor, specimenId);
+  const sample = _.find(specimen.samples, ['submitterId', sampleId]) as Sample;
+  if (!sample) {
+    throw new Errors.StateConflict(
+      `Sample ${sampleId} has not been registered but is part of the activeSubmission, merge cannot be completed.`,
+    );
+  }
+  return sample;
 };
