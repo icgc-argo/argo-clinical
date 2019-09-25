@@ -4,24 +4,18 @@ import {
   DataValidationErrors,
   SubmissionValidationError,
   ClinicalInfoFieldsEnum,
-  ClinicalInfoToRecordFieldsMap,
+  ModificationType,
+  SubmissionValidationUpdate,
+  ValidatorResult,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
-import { DonorSubEntity, Donor } from '../../clinical/clinical-entities';
+import { Donor } from '../../clinical/clinical-entities';
 
 export const checkDonorRegistered = (
   aDonor: DeepReadonly<Donor>,
   record: DeepReadonly<SubmittedClinicalRecord>,
 ) => {
   return aDonor && aDonor.submitterId === record[FieldsEnum.submitter_donor_id];
-};
-
-export const getRegisteredSubEntityInCollection = (
-  submitterIdType: FieldsEnum.submitter_specimen_id | FieldsEnum.submitter_sample_id, // add other Ids as needed
-  record: DeepReadonly<SubmittedClinicalRecord>,
-  clinicalCollection: DeepReadonly<Array<DonorSubEntity>>,
-) => {
-  return clinicalCollection.find(entity => entity.submitterId === record[submitterIdType]);
 };
 
 export const buildSubmissionError = (
@@ -44,7 +38,7 @@ export const buildSubmissionError = (
   };
 };
 
-export const buildSubmisisonUpdate = (
+export const buildSubmissionUpdate = (
   newRecord: SubmittedClinicalRecord,
   oldValue: string,
   fieldName: FieldsEnum | ClinicalInfoFieldsEnum | string,
@@ -62,14 +56,21 @@ export const buildSubmisisonUpdate = (
   };
 };
 
+export const buildValidatorResult = (
+  type: ModificationType,
+  index: number,
+  resultArray?: SubmissionValidationError[] | SubmissionValidationUpdate[],
+): ValidatorResult => {
+  return { type, index, resultArray };
+};
+
 export const getUpdatedFields = (clinicalInfo: any, record: SubmittedClinicalRecord) => {
   const updateFields: any[] = [];
   if (clinicalInfo) {
-    for (const field in clinicalInfo) {
-      if (clinicalInfo[field] !== record[ClinicalInfoToRecordFieldsMap[field]]) {
-        updateFields.push(
-          buildSubmisisonUpdate(record, clinicalInfo[field], ClinicalInfoToRecordFieldsMap[field]),
-        );
+    for (const fieldName in clinicalInfo) {
+      // this is assuming that the field name record and clinicalInfo both have snake casing
+      if (clinicalInfo[fieldName] !== record[fieldName]) {
+        updateFields.push(buildSubmissionUpdate(record, clinicalInfo[fieldName], fieldName));
       }
     }
   }

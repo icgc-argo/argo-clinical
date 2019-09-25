@@ -80,8 +80,8 @@ export const stubs = {
       programId: 'PEME-CA',
       donorId: 10,
       clinicalInfo: {
-        vitalStatus: 'deceased',
-        survivalTime: '522',
+        vital_status: 'deceased',
+        survival_time: '522',
       },
       gender: 'Female',
       specimens: [

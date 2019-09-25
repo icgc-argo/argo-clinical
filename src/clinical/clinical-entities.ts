@@ -5,7 +5,7 @@ export interface Donor {
   submitterId: string;
   programId: string;
   specimens: Array<Specimen>;
-  clinicalInfo?: { [feild: string]: string | number };
+  clinicalInfo?: { [field: string]: string | number };
   primaryDiagnosis?: object;
   followUps?: Array<object>;
   treatments?: Array<object>;
@@ -13,21 +13,19 @@ export interface Donor {
   HormoneTherapy?: Array<Object>;
 }
 
-export interface DonorSubEntity {
-  submitterId: string;
-}
-
-export interface Specimen extends DonorSubEntity {
+export interface Specimen {
   samples: Array<Sample>;
   specimenType: string;
+  submitterId: string;
   specimenId?: number;
   tumourNormalDesignation: string;
-  clinicalInfo?: { [feild: string]: string | number };
+  clinicalInfo?: { [field: string]: string | number };
 }
 
-export interface Sample extends DonorSubEntity {
+export interface Sample {
   sampleId?: number;
   sampleType: string;
+  submitterId: string;
 }
 
 export type DonorMap = Readonly<{ [submitterId: string]: Donor }>;

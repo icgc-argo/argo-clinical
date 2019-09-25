@@ -234,10 +234,7 @@ export namespace operations {
         `No active submission found with programId: ${programId} & versionId: ${versionId}`,
       );
     }
-    if (
-      exsistingActiveSubmission.state === SUBMISSION_STATE.VALID ||
-      exsistingActiveSubmission.state === SUBMISSION_STATE.PENDING_APPROVAL
-    ) {
+    if (exsistingActiveSubmission.state !== SUBMISSION_STATE.OPEN) {
       return {
         submission: exsistingActiveSubmission,
         errors: {},
@@ -275,7 +272,7 @@ export namespace operations {
     );
 
     // update data errors/updates and stats
-    let inValid: boolean = false;
+    let invalid: boolean = false;
     let pendingApproval: boolean = false;
     const newActiveSubmission = _.cloneDeep(exsistingActiveSubmission) as ActiveClinicalSubmission;
     for (const clinicalType in validateResult) {
@@ -286,13 +283,13 @@ export namespace operations {
       newActiveSubmission.clinicalEntities[clinicalType].dataUpdates = updates;
 
       const errors = validateResult[clinicalType].dataErrors as SubmissionValidationError[];
-      inValid = inValid || (errors && errors.length > 0);
+      invalid = invalid || (errors && errors.length > 0);
       newActiveSubmission.clinicalEntities[clinicalType].dataErrors = errors;
     }
 
     // generate new version and make submission VALID/INVALID
     newActiveSubmission.version = uuid();
-    if (inValid) {
+    if (invalid) {
       newActiveSubmission.state = SUBMISSION_STATE.INVALID;
     } else if (pendingApproval) {
       newActiveSubmission.state = SUBMISSION_STATE.PENDING_APPROVAL;
@@ -311,7 +308,7 @@ export namespace operations {
     return {
       submission: updated,
       errors: {},
-      successful: !inValid,
+      successful: !invalid,
     };
   };
 
