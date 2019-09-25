@@ -8,7 +8,7 @@ import {
   MultiClinicalSubmissionCommand,
   NewClinicalEntity,
 } from './submission-entities';
-import { HasProgramWriteAccess } from '../auth-decorators';
+import { HasProgramWriteAccess, HasFullWriteAccess } from '../auth-decorators';
 import jwt from 'jsonwebtoken';
 import _ from 'lodash';
 const L = loggerFor(__filename);
@@ -178,8 +178,17 @@ class SubmissionController {
       versionId,
       programId,
     });
-    // Placeholder
-    return res.status(200).send({ programId, versionId });
+    return res.status(200).send();
+  }
+
+  @HasFullWriteAccess()
+  async approveActiveSubmission(req: Request, res: Response) {
+    const { versionId, programId } = req.params;
+    await submission2Clinical.approveClinicalSubmission({
+      versionId,
+      programId,
+    });
+    return res.status(200).send();
   }
 }
 

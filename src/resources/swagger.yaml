@@ -320,7 +320,7 @@ paths:
     post:
       tags:
         - Submission
-      description: Commit in progress clinical submission to the clinical DB
+      description: Commit in progress clinical submission to the clinical DB. Requires Submission to be in VALID state.
       parameters:
         - $ref: '#/components/parameters/PathProgramId'
         - $ref: '#/components/parameters/PathVersionId'
@@ -336,7 +336,30 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
         '409':
-          description: Active submission is not in VALID state and cannot be commited.
+          description: Active submission is not in VALID state and cannot be commited, or another data issue was found that prevented successfully committing the data.
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /submission/program/{programId}/clinical/approve/{versionId}:
+    post:
+      tags:
+        - Submission
+      description: Approve and commit in progress clinical submission to the clinical DB. Requires Submission to be in PENDING_APPROVAL state, and can only be performed by a DCC Admin user.
+      parameters:
+        - $ref: '#/components/parameters/PathProgramId'
+        - $ref: '#/components/parameters/PathVersionId'
+      responses:
+        '200':
+          description: The uploaded clinical submission data was committed to the clinical DB
+        '400':
+          description: Version ID does not match version of active submission
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: Active submission is not in PENDING_APPROVAL state and cannot be commited, or another data issue was found that prevented successfully committing the data.
         '500':
           $ref: '#/components/responses/ServerError'
 
