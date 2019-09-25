@@ -144,8 +144,10 @@ class SubmissionController {
       programId: req.params.programId,
     };
     const result = await submission.operations.uploadMultipleClinical(command);
-    if (errorList.length > 0 || !result.successful) {
+    if (!result.successful) {
       return res.status(422).send({ ...result, fileErrors: errorList });
+    } else if (errorList.length > 0) {
+      return res.status(207).send({ ...result, fileErrors: errorList });
     }
     return res.status(200).send(result);
   }

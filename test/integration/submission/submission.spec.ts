@@ -636,7 +636,7 @@ describe('Submission Api', () => {
         .attach('clinicalFiles', file2, 'sample.tsv')
         .end((err: any, res: any) => {
           res.should.have.status(422);
-          res.body.errors.should.deep.eq({ donor: expectedDonorErrors });
+          res.body.schemaErrors.should.deep.eq({ donor: expectedDonorErrors });
           res.body.successful.should.deep.eq(false);
           done();
         });
@@ -688,11 +688,10 @@ describe('Submission Api', () => {
         .post('/submission/program/ABCD-EF/clinical/upload')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .attach('clinicalFiles', files[0], 'donor.tsv')
-        .attach('clinicalFiles', files[1], 'sample.tsv')
+        .attach('clinicalFiles', files[1], 'thisissample.tsv')
         .attach('clinicalFiles', files[2], 'donor.invalid.tsv')
-        .attach('clinicalFiles', files[3], 'thisissample.tsv')
         .end((err: any, res: any) => {
-          res.should.have.status(422);
+          res.should.have.status(207);
           res.body.fileErrors.should.deep.eq([
             {
               msg: 'Found multiple files of donor type - [donor.tsv,donor.invalid.tsv]',
