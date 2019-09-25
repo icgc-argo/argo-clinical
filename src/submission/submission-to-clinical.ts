@@ -45,19 +45,46 @@ export const commitClinicalSubmission = async (command: Readonly<ActiveSubmissio
     );
   } else {
     // We Did It! We have a valid active submission to commit! Everyone cheers!
-    // Get all the current donor documents
-    const donorDTOs = await getDonorDTOsForActiveSubmission(activeSubmission);
-    if (donorDTOs === undefined || _.isEmpty(donorDTOs)) {
-      throw new Errors.StateConflict(
-        'Donors for this submission cannot be found in the clinical database.',
-      );
-    } else {
-      // Update with all relevant records
-      const updatedDonorDTOs = await mergeActiveSubmissionWithDonors(activeSubmission, donorDTOs);
+    performCommitSubmission(activeSubmission);
+  }
+};
 
-      // write each updated donor to the db
-      donorDao.updateAll(updatedDonorDTOs.map(dto => F(dto)));
-    }
+export const approveClinicalSubmission = async (command: Readonly<ActiveSubmissionIdentifier>) => {
+  // Get active submission
+  const activeSubmission = await submissionRepository.findByProgramId(command.programId);
+
+  if (activeSubmission === undefined) {
+    throw new Errors.NotFound('No active submission data found for this program.');
+  } else if (activeSubmission.version !== command.versionId) {
+    throw new Errors.InvalidArgument(
+      'Version ID provided does not match the latest submission version for this program.',
+    );
+  } else if (activeSubmission.state !== SUBMISSION_STATE.PENDING_APPROVAL) {
+    // confirm that the state is VALID
+    throw new Errors.StateConflict(
+      'Active submission does not have state PENDING_APPROVAL and cannot be committed.',
+    );
+  } else {
+    // We Did It! We have a valid active submission to commit! Everyone cheers!
+    performCommitSubmission(activeSubmission);
+  }
+};
+
+const performCommitSubmission = async (
+  activeSubmission: DeepReadonly<ActiveClinicalSubmission>,
+) => {
+  // Get all the current donor documents
+  const donorDTOs = await getDonorDTOsForActiveSubmission(activeSubmission);
+  if (donorDTOs === undefined || _.isEmpty(donorDTOs)) {
+    throw new Errors.StateConflict(
+      'Donors for this submission cannot be found in the clinical database.',
+    );
+  } else {
+    // Update with all relevant records
+    const updatedDonorDTOs = await mergeActiveSubmissionWithDonors(activeSubmission, donorDTOs);
+
+    // write each updated donor to the db
+    donorDao.updateAll(updatedDonorDTOs.map(dto => F(dto)));
   }
 };
 
