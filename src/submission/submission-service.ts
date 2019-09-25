@@ -17,6 +17,9 @@ import {
   CreateSubmissionResult,
   SUBMISSION_STATE,
   ActiveClinicalSubmission,
+  SubmittedClinicalRecord,
+  SubmissionValidationUpdate,
+  ClinicalTypeValidateResult,
 } from './submission-entities';
 import * as schemaManager from '../lectern-client/schema-manager';
 import {
@@ -187,6 +190,7 @@ export namespace operations {
         newActiveSubmission.clinicalEntities[clinicalType] = {
           ...command.newClinicalEntities[clinicalType],
           dataErrors: [],
+          dataUpdates: [],
           stats: {
             new: [],
             noUpdate: [],
@@ -210,7 +214,7 @@ export namespace operations {
       throw new Error("Couldn't update program.");
     }
     return {
-      submission: newActiveSubmission,
+      submission: updated,
       errors: schemaErrors,
       successful: Object.keys(schemaErrors).length === 0,
     };
@@ -231,19 +235,17 @@ export namespace operations {
         `No active submission found with programId: ${programId} & versionId: ${versionId}`,
       );
     }
-    const newActiveSubmission = _.cloneDeep(exsistingActiveSubmission) as ActiveClinicalSubmission;
-    if (
-      exsistingActiveSubmission.state === SUBMISSION_STATE.VALID ||
-      exsistingActiveSubmission.state === SUBMISSION_STATE.PENDING_APPROVAL
-    ) {
+    if (exsistingActiveSubmission.state !== SUBMISSION_STATE.OPEN) {
       return {
-        submission: newActiveSubmission,
+        submission: exsistingActiveSubmission,
         errors: {},
         successful: true,
       };
     }
     // map donors(via donorId) to their relevant records
-    const newDonorDataMap: { [donoSubmitterId: string]: { [clinicalType: string]: any } } = {};
+    const newDonorDataMap: {
+      [donoSubmitterId: string]: { [clinicalType: string]: SubmittedClinicalRecord };
+    } = {};
     const filters: FindByProgramAndSubmitterFilter[] = [];
     for (const clinicalType in exsistingActiveSubmission.clinicalEntities) {
       const clinicalEnity = exsistingActiveSubmission.clinicalEntities[clinicalType];
@@ -256,26 +258,45 @@ export namespace operations {
         if (!newDonorDataMap[donorId]) {
           newDonorDataMap[donorId] = {};
         }
-        newDonorDataMap[donorId][clinicalType] = { ...rc, recordIndex: index };
+        newDonorDataMap[donorId][clinicalType] = {
+          ...rc,
+          submitter_donor_id: donorId,
+          program_id: rc[FieldsEnum.program_id],
+          index: index,
+        };
       });
     }
     const relevantDonorsMap = await getDonorsInProgram(filters);
-    const clinicalTypeErrors = await validateSubmissionData(newDonorDataMap, relevantDonorsMap);
+    const validateResult: ClinicalTypeValidateResult = await validateSubmissionData(
+      newDonorDataMap,
+      relevantDonorsMap,
+    );
 
-    // collect and update data errors and stats
-    let inValid: boolean = false;
-    for (const clinicalType in clinicalTypeErrors) {
-      const errors = clinicalTypeErrors[clinicalType];
-      inValid = errors.length > 0 || inValid;
+    // update data errors/updates and stats
+    let invalid: boolean = false;
+    let pendingApproval: boolean = false;
+    const newActiveSubmission = _.cloneDeep(exsistingActiveSubmission) as ActiveClinicalSubmission;
+    for (const clinicalType in validateResult) {
+      newActiveSubmission.clinicalEntities[clinicalType].stats = validateResult[clinicalType].stats;
+
+      const updates = validateResult[clinicalType].dataUpdates as SubmissionValidationUpdate[];
+      pendingApproval = pendingApproval || (updates && updates.length > 0);
+      newActiveSubmission.clinicalEntities[clinicalType].dataUpdates = updates;
+
+      const errors = validateResult[clinicalType].dataErrors as SubmissionValidationError[];
+      invalid = invalid || (errors && errors.length > 0);
       newActiveSubmission.clinicalEntities[clinicalType].dataErrors = errors;
-      newActiveSubmission.clinicalEntities[clinicalType].stats.errorsFound = errors.map(r => {
-        return r.index;
-      });
     }
 
     // generate new version and make submission VALID/INVALID
     newActiveSubmission.version = uuid();
-    newActiveSubmission.state = inValid ? SUBMISSION_STATE.INVALID : SUBMISSION_STATE.VALID;
+    if (invalid) {
+      newActiveSubmission.state = SUBMISSION_STATE.INVALID;
+    } else if (pendingApproval) {
+      newActiveSubmission.state = SUBMISSION_STATE.PENDING_APPROVAL;
+    } else {
+      newActiveSubmission.state = SUBMISSION_STATE.VALID;
+    }
     // insert into database
     const updated = await submissionRepository.updateProgramWithVersion(
       programId,
@@ -286,9 +307,9 @@ export namespace operations {
       throw new Error("Couldn't update program.");
     }
     return {
-      submission: newActiveSubmission,
+      submission: updated,
       errors: {},
-      successful: inValid,
+      successful: !invalid,
     };
   };
 

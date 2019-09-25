@@ -579,6 +579,36 @@ components:
                   type: string
                   nullable: true
                   description: the specimen Id in that row
+    ValidationUpdate:
+      type: object
+      required:
+        - fieldName
+        - info
+        - index
+      properties:
+        fieldName:
+          type: string
+          description: the field name that the error is related to
+        info:
+          type: object
+          description: contains context information related to the update
+          properties:
+            oldValue:
+              type: string
+              nullable: true
+              description: the old value in the field
+            newValue:
+              type: string
+              nullable: true
+              description: the new value in the field
+            donorSubmitterId:
+              type: string
+              nullable: true
+              description: the donor Id in that row
+        index:
+          type: number
+          format: integer
+          description: the 0 based index of the row for this error
 
     Registration:
       type: object
@@ -665,6 +695,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ValidationError'
+        dataUpdates:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationUpdate'
 
     Record:
       required:
