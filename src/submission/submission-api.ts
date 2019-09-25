@@ -8,7 +8,7 @@ import {
   MultiClinicalSubmissionCommand,
   NewClinicalEntity,
 } from './submission-entities';
-import { HasSubmitionAccess as HasSubmittionAccess } from '../auth-decorators';
+import { HasFullWriteAccess, HasProgramWriteAccess } from '../auth-decorators';
 import jwt from 'jsonwebtoken';
 import _ from 'lodash';
 const L = loggerFor(__filename);
@@ -33,7 +33,7 @@ export const FileNameRegex = {
 };
 
 class SubmissionController {
-  @HasSubmittionAccess((req: Request) => req.params.programId)
+  @HasProgramWriteAccess((req: Request) => req.params.programId)
   async getRegistrationByProgramId(req: Request, res: Response) {
     L.debug('in getRegistrationByProgramId');
     const programId = req.params.programId;
@@ -44,7 +44,7 @@ class SubmissionController {
     return res.status(200).send(registration);
   }
 
-  @HasSubmittionAccess((req: Request) => req.params.programId)
+  @HasProgramWriteAccess((req: Request) => req.params.programId)
   async createRegistrationWithTsv(req: Request, res: Response) {
     if (!isValidCreateBody(req, res) || !validateFile(req, res, FileType.REGISTRATION)) {
       return;
@@ -74,7 +74,7 @@ class SubmissionController {
     return res.status(201).send(result);
   }
 
-  @HasSubmittionAccess((req: Request) => req.params.programId)
+  @HasProgramWriteAccess((req: Request) => req.params.programId)
   async commitRegistration(req: Request, res: Response) {
     const programId = req.params.programId;
     const newSamples: string[] = await submission2Clinical.commitRegisteration({
@@ -86,7 +86,7 @@ class SubmissionController {
     });
   }
 
-  @HasSubmittionAccess((req: Request) => req.params.programId)
+  @HasProgramWriteAccess((req: Request) => req.params.programId)
   async deleteRegistration(req: Request, res: Response) {
     const programId = req.params.programId;
     const registrationId = req.params.id;
@@ -94,7 +94,7 @@ class SubmissionController {
     return res.status(200).send();
   }
 
-  @HasSubmittionAccess((req: Request) => req.params.programId)
+  @HasProgramWriteAccess((req: Request) => req.params.programId)
   async getActiveSubmissionByProgramId(req: Request, res: Response) {
     const programId = req.params.programId;
     const activeSubmission = await submission.operations.findSubmissionByProgramId(programId);
@@ -104,7 +104,7 @@ class SubmissionController {
     return res.status(200).send(activeSubmission);
   }
 
-  @HasSubmittionAccess((req: Request) => req.params.programId)
+  @HasProgramWriteAccess((req: Request) => req.params.programId)
   async saveClinicalTsvFiles(req: Request, res: Response) {
     if (!isValidCreateBody(req, res)) {
       return;
@@ -144,7 +144,7 @@ class SubmissionController {
     return res.status(422).send(result);
   }
 
-  @HasSubmittionAccess((req: Request) => req.params.programId)
+  @HasProgramWriteAccess((req: Request) => req.params.programId)
   async validateActiveSubmission(req: Request, res: Response) {
     const result = await submission.operations.validateMultipleClinical(
       req.params.programId,
@@ -154,6 +154,17 @@ class SubmissionController {
       return res.status(200).send(result);
     }
     return res.status(422).send(result);
+  }
+
+  @HasProgramWriteAccess((req: Request) => req.params.programId)
+  async commitActiveSubmission(req: Request, res: Response) {
+    const { versionId, programId } = req.params;
+    await submission2Clinical.commitClinicalSubmission({
+      versionId,
+      programId,
+    });
+    // Placeholder
+    return res.status(200).send({ programId, versionId });
   }
 }
 

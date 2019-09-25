@@ -16,4 +16,6 @@ router.post(
 );
 router.post('/validate/:versionId', wrapAsync(submissionAPI.validateActiveSubmission));
 
+router.post('/commit/:versionId', wrapAsync(submissionAPI.commitActiveSubmission));
+
 export default router;
