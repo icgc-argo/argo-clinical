@@ -695,13 +695,13 @@ describe('Submission Api', () => {
           res.body.fileErrors.should.deep.eq([
             {
               msg: 'Found multiple files of donor type',
-              fileList: ['donor.tsv', 'donor.invalid.tsv'],
+              fileNames: ['donor.tsv', 'donor.invalid.tsv'],
               code: 'MULTIPLE_TYPED_FILES',
             },
             {
               msg:
                 'Invalid file(s), must start with entity and have .tsv extension (e.g. donor*.tsv)',
-              fileList: ['thisissample.tsv'],
+              fileNames: ['thisissample.tsv'],
               code: 'INVALID_FILE_NAME',
             },
           ]);

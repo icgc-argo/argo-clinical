@@ -8,7 +8,7 @@ import {
   MultiClinicalSubmissionCommand,
   NewClinicalEntity,
 } from './submission-entities';
-import { HasProgramWriteAccess, HasFullWriteAccess } from '../auth-decorators';
+import { HasFullWriteAccess, HasProgramWriteAccess } from '../auth-decorators';
 import jwt from 'jsonwebtoken';
 import _ from 'lodash';
 const L = loggerFor(__filename);
@@ -34,7 +34,7 @@ const FileNameRegex = {
 
 type SubmissionFileErrors = {
   msg: string;
-  fileList: string[];
+  fileNames: string[];
   code: ErrorCodes;
 };
 
@@ -135,7 +135,7 @@ class SubmissionController {
       } catch (err) {
         errorList.push({
           msg: `failed to parse the tsv file: ${err}`,
-          fileList: [fileName],
+          fileNames: [fileName],
           code: ErrorCodes.TSV_PARSING_FAILED,
         });
       }
@@ -252,7 +252,7 @@ const mapFilesByType = (req: Request, res: Response): ClinicalEnityFileMap => {
     if (foundFiles.length > 1) {
       errorList.push({
         msg: `Found multiple files of ${type} type`,
-        fileList: getFileNames(foundFiles),
+        fileNames: getFileNames(foundFiles),
         code: ErrorCodes.MULTIPLE_TYPED_FILES,
       });
     } else if (foundFiles.length == 1) {
@@ -264,7 +264,7 @@ const mapFilesByType = (req: Request, res: Response): ClinicalEnityFileMap => {
     const filesNames = getFileNames(files);
     errorList.push({
       msg: `Invalid file(s), must start with entity and have .tsv extension (e.g. donor*.tsv)`,
-      fileList: filesNames,
+      fileNames: filesNames,
       code: ErrorCodes.INVALID_FILE_NAME,
     });
   }
