@@ -2,7 +2,7 @@ import { loggerFor } from '../logger';
 import mongoose from 'mongoose';
 import { DeepReadonly } from 'deep-freeze';
 import { ActiveClinicalSubmission, SUBMISSION_STATE } from './submission-entities';
-import { MongooseUtils, F } from '../utils';
+import { MongooseUtils, F, Errors } from '../utils';
 import { InternalError } from './errors';
 import _ from 'lodash';
 import uuid from 'uuid';
@@ -84,7 +84,7 @@ export const submissionRepository: ClinicalSubmissionRepository = {
         { new: true },
       );
       if (!updated) {
-        throw new Error("Couldn't update program.");
+        throw new Errors.StateConflict("Couldn't update program.");
       }
       return updated;
     } catch (err) {

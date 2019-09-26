@@ -65,6 +65,7 @@ const updateSpecimenRecord = (donor: Donor, record: ClinicalEnitityRecord) => {
     'submitter_donor_id',
     'submitter_specimen_id',
     'tumour_normal_designation',
+    'specimenType',
     'program_id',
   ]);
 };
