@@ -9,6 +9,7 @@ const L = loggerFor(__filename);
 
 export interface ClinicalSubmissionRepository {
   delete(id: string): Promise<void>;
+  deleteByProgramId(id: string): Promise<void>;
   create(
     command: DeepReadonly<ActiveClinicalSubmission>,
   ): Promise<DeepReadonly<ActiveClinicalSubmission>>;
@@ -61,6 +62,18 @@ export const submissionRepository: ClinicalSubmissionRepository = {
       return;
     } catch (err) {
       throw new InternalError(`failed to delete ActiveSubmission with Id: ${id}`, err);
+    }
+  },
+  async deleteByProgramId(programId: string): Promise<void> {
+    L.debug(`in deleteByProgramId for activeSubmission programId: ${programId}`);
+    try {
+      await ActiveSubmissionModel.deleteOne({ programId }).exec();
+      return;
+    } catch (err) {
+      throw new InternalError(
+        `failed to delete ActiveSubmission with programId: ${programId}`,
+        err,
+      );
     }
   },
   async update(command: DeepReadonly<ActiveClinicalSubmission>): Promise<void> {
