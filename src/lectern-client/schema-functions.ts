@@ -126,6 +126,16 @@ const convertFromRawStrings = (
     }
 
     if (isNotEmptyString(record[field.name])) {
+      // convert field to match corresponding enum from codelist
+      if (field.restrictions && field.restrictions.codeList) {
+        const fromatedField = field.restrictions.codeList.find(
+          e =>
+            e.toString().toLocaleLowerCase() === record[field.name].toString().toLocaleLowerCase(),
+        );
+        if (fromatedField) {
+          mutableRecord[field.name] = fromatedField;
+        }
+      }
       return undefined;
     }
 
