@@ -28,7 +28,7 @@ export interface ClinicalSubmissionRepository {
   updateSubmissionFieldsWithVersion(
     programId: string,
     version: string,
-    updatingFields: { [fieldName: string]: any },
+    updatingFields: object,
   ): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined>;
 }
 
