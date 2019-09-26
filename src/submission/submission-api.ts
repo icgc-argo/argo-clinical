@@ -188,6 +188,7 @@ class SubmissionController {
       versionId,
       programId,
     });
+    return res.status(200).send();
   }
 }
 
