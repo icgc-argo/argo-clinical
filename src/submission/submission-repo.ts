@@ -90,7 +90,7 @@ export const submissionRepository: ClinicalSubmissionRepository = {
   async updateSubmissionFieldsWithVersion(
     programId: string,
     version: string,
-    updatingFields: any,
+    updatingFields: object,
   ): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined> {
     try {
       const newVersion = uuid();
