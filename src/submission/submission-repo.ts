@@ -15,12 +15,20 @@ export interface ClinicalSubmissionRepository {
   ): Promise<DeepReadonly<ActiveClinicalSubmission>>;
   findByProgramId(programId: string): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined>;
   findById(id: string): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined>;
-  update(command: DeepReadonly<ActiveClinicalSubmission>): Promise<void>;
-  updateState(programId: string, state: SUBMISSION_STATE): Promise<void>;
-  updateProgramWithVersion(
+  updateSubmissionStateWithVersion(
+    programId: string,
+    version: string,
+    state: SUBMISSION_STATE,
+  ): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined>;
+  updateSubmissionWithVersion(
     programId: string,
     version: string,
     updatedSubmission: DeepReadonly<ActiveClinicalSubmission>,
+  ): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined>;
+  updateSubmissionFieldsWithVersion(
+    programId: string,
+    version: string,
+    updatingFields: { [fieldName: string]: any },
   ): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined>;
 }
 
@@ -64,23 +72,31 @@ export const submissionRepository: ClinicalSubmissionRepository = {
       throw new InternalError(`failed to delete ActiveSubmission with Id: ${id}`, err);
     }
   },
-  async update(command: DeepReadonly<ActiveClinicalSubmission>): Promise<void> {
-    const activeSubmissionModel = new ActiveSubmissionModel(command);
-    await activeSubmissionModel.updateOne(activeSubmissionModel);
+  async updateSubmissionStateWithVersion(
+    programId: string,
+    version: string,
+    state: SUBMISSION_STATE,
+  ): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined> {
+    return await this.updateSubmissionFieldsWithVersion(programId, version, { state });
   },
-  async updateState(programId: string, state: SUBMISSION_STATE) {
-    await ActiveSubmissionModel.findOneAndUpdate({ programId: programId }, { state: state });
-  },
-  async updateProgramWithVersion(
+  async updateSubmissionWithVersion(
     programId: string,
     version: string,
     updatedSubmission: DeepReadonly<ActiveClinicalSubmission>,
+  ): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined> {
+    return await this.updateSubmissionFieldsWithVersion(programId, version, updatedSubmission);
+  },
+  // this is bassically findOneAndUpdate but with new version everytime
+  async updateSubmissionFieldsWithVersion(
+    programId: string,
+    version: string,
+    updatingFields: any,
   ): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined> {
     try {
       const newVersion = uuid();
       const updated = await ActiveSubmissionModel.findOneAndUpdate(
         { programId: programId, version: version },
-        { ...updatedSubmission, version: newVersion },
+        { ...updatingFields, version: newVersion },
         { new: true },
       );
       if (!updated) {

@@ -204,7 +204,7 @@ export namespace operations {
     newActiveSubmission.state = SUBMISSION_STATE.OPEN;
 
     // insert into database
-    const updated = await submissionRepository.updateProgramWithVersion(
+    const updated = await submissionRepository.updateSubmissionWithVersion(
       command.programId,
       exsistingActiveSubmission.version,
       newActiveSubmission,
@@ -287,7 +287,7 @@ export namespace operations {
     newActiveSubmission.state = invalid ? SUBMISSION_STATE.INVALID : SUBMISSION_STATE.VALID;
 
     // insert into database
-    const updated = await submissionRepository.updateProgramWithVersion(
+    const updated = await submissionRepository.updateSubmissionWithVersion(
       programId,
       exsistingActiveSubmission.version,
       newActiveSubmission,
