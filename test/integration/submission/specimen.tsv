@@ -1,0 +1,2 @@
+program_id	submitter_donor_id	submitter_specimen_id	specimen_type	tumour_normal_designation	specimen_acquistion_interval	specimen_anaotmic_collection	tumour_grading_system	tumour_grade
+ABCD-EF	ICGC_0001	8013861	Other	Normal	200	pancreas	WHO	1 - Well differentiated

@@ -5,10 +5,13 @@
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, Specimen, Sample } from '../clinical/clinical-entities';
 import {
+  ActiveClinicalSubmission,
+  ActiveSubmissionIdentifier,
   CommitRegistrationCommand,
   ActiveRegistration,
   SubmittedRegistrationRecord,
   FieldsEnum,
+  SUBMISSION_STATE,
 } from './submission-entities';
 
 import { Errors } from '../utils';
@@ -16,6 +19,105 @@ import { donorDao } from '../clinical/donor-repo';
 import _ from 'lodash';
 import { F } from '../utils';
 import { registrationRepository } from './registration-repo';
+import { submissionRepository } from './submission-repo';
+import { mergeActiveSubmissionWithDonors } from './merge-submission';
+
+/**
+ * This method will move the current submitted clinical data to
+ * the clinical database
+ *
+ * @param command CommitClinicalSubmissionCommand with the versionId of the registration to close
+ */
+export const commitClinicalSubmission = async (command: Readonly<ActiveSubmissionIdentifier>) => {
+  // Get active submission
+  const activeSubmission = await submissionRepository.findByProgramId(command.programId);
+
+  if (activeSubmission === undefined) {
+    throw new Errors.NotFound('No active submission data found for this program.');
+  } else if (activeSubmission.version !== command.versionId) {
+    throw new Errors.InvalidArgument(
+      'Version ID provided does not match the latest submission version for this program.',
+    );
+  } else if (activeSubmission.state !== SUBMISSION_STATE.VALID) {
+    // confirm that the state is VALID
+    throw new Errors.StateConflict(
+      'Active submission does not have state VALID and cannot be committed.',
+    );
+  } else {
+    // We Did It! We have a valid active submission to commit! Everyone cheers!
+
+    // check if there are updates, if so, change state to SUBMISSION_STATE.PENDING_APPROVAL and save
+    if (isPendingApproval(activeSubmission)) {
+      // insert into database
+      const updated = await submissionRepository.updateSubmissionStateWithVersion(
+        command.programId,
+        command.versionId,
+        SUBMISSION_STATE.PENDING_APPROVAL,
+      );
+      return updated;
+    } else {
+      await performCommitSubmission(activeSubmission);
+      return {};
+    }
+  }
+};
+
+function isPendingApproval(activeSubmission: DeepReadonly<ActiveClinicalSubmission>): boolean {
+  for (const clinicalType in activeSubmission.clinicalEntities) {
+    if (activeSubmission.clinicalEntities[clinicalType].stats.updated.length > 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export const approveClinicalSubmission = async (command: Readonly<ActiveSubmissionIdentifier>) => {
+  // Get active submission
+  const activeSubmission = await submissionRepository.findByProgramId(command.programId);
+
+  if (activeSubmission === undefined) {
+    throw new Errors.NotFound('No active submission data found for this program.');
+  } else if (activeSubmission.version !== command.versionId) {
+    throw new Errors.InvalidArgument(
+      'Version ID provided does not match the latest submission version for this program.',
+    );
+  } else if (activeSubmission.state !== SUBMISSION_STATE.PENDING_APPROVAL) {
+    // confirm that the state is VALID
+    throw new Errors.StateConflict(
+      'Active submission does not have state PENDING_APPROVAL and cannot be committed.',
+    );
+  } else {
+    // We Did It! We have a valid active submission to commit! Everyone cheers!
+    performCommitSubmission(activeSubmission);
+  }
+};
+
+const performCommitSubmission = async (
+  activeSubmission: DeepReadonly<ActiveClinicalSubmission>,
+) => {
+  // Get all the current donor documents
+  const donorDTOs = await getDonorDTOsForActiveSubmission(activeSubmission);
+  if (donorDTOs === undefined || _.isEmpty(donorDTOs)) {
+    throw new Errors.StateConflict(
+      'Donors for this submission cannot be found in the clinical database.',
+    );
+  } else {
+    // Update with all relevant records
+    const updatedDonorDTOs = await mergeActiveSubmissionWithDonors(activeSubmission, donorDTOs);
+
+    try {
+      // write each updated donor to the db
+      await donorDao.updateAll(updatedDonorDTOs.map(dto => F(dto)));
+
+      // If the save completed without error, we can delete the active registration
+      submissionRepository.deleteByProgramId(activeSubmission.programId);
+    } catch (err) {
+      throw new Error(`Failure occured saving clinical data: ${err}`);
+    }
+
+    // Remove active submission
+  }
+};
 
 /**
  * This method will move the registered donor document to donor collection
@@ -144,6 +246,34 @@ const mapToCreateDonorSampleDto = (registration: DeepReadonly<ActiveRegistration
     }
   });
   return F(donors);
+};
+
+const getDonorIdsInActiveSubmission = (
+  activeSubmission: DeepReadonly<ActiveClinicalSubmission>,
+) => {
+  const donorIds: Set<string> = new Set();
+  for (const entityType in activeSubmission.clinicalEntities) {
+    const entities = activeSubmission.clinicalEntities[entityType];
+    entities.records.forEach(record => donorIds.add(record.submitter_donor_id));
+  }
+
+  return donorIds;
+};
+
+const getDonorDTOsForActiveSubmission = async (
+  activeSubmission: DeepReadonly<ActiveClinicalSubmission>,
+) => {
+  // Get the unique Donor IDs to update
+  const donorIds = getDonorIdsInActiveSubmission(activeSubmission);
+
+  // Get the donor records for each ID
+  const daoFilters = Array.from(donorIds.values()).map(submitterId => ({
+    programId: activeSubmission.programId,
+    submitterId,
+  }));
+  const donors = await donorDao.findByProgramAndSubmitterId(daoFilters);
+
+  return donors;
 };
 
 const getDonorSpecimen = (record: SubmittedRegistrationRecord) => {

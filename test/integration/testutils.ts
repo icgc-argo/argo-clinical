@@ -40,6 +40,7 @@ export const insertData = async (
   await conn.close();
   return document._id;
 };
+
 export const emptyDonorDocument = (overrides?: object) => {
   const donor = {
     donorId: '',
@@ -56,4 +57,22 @@ export const emptyDonorDocument = (overrides?: object) => {
     return donor;
   }
   return _.merge(donor, overrides);
+};
+
+export const generateDonor = async (
+  dburl: string,
+  programId: string,
+  submitterDonorId?: string,
+) => {
+  const submitterId = submitterDonorId || Date.now();
+  const gender = Math.random() > 0.5 ? 'Male' : 'Female';
+
+  const doc = emptyDonorDocument({
+    submitterId,
+    programId,
+    donorId: submitterId,
+    gender,
+  });
+  await insertData(dburl, 'donors', doc);
+  return doc;
 };

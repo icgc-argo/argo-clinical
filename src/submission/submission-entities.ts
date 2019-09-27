@@ -55,6 +55,16 @@ export type SubmissionValidationError = {
   index: number;
 };
 
+export type SubmissionValidationUpdate = {
+  fieldName: string;
+  info: {
+    donorSubmitterId: string;
+    newValue: string;
+    oldValue: string;
+  };
+  index: number;
+};
+
 export enum DataValidationErrors {
   MUTATING_EXISTING_DATA = 'MUTATING_EXISTING_DATA',
   SAMPLE_BELONGS_TO_OTHER_SPECIMEN = 'SAMPLE_BELONGS_TO_OTHER_SPECIMEN',
@@ -66,6 +76,8 @@ export enum DataValidationErrors {
   NEW_SPECIMEN_ID_CONFLICT = 'NEW_SPECIMEN_ID_CONFLICT',
   NEW_SAMPLE_ID_CONFLICT = 'NEW_SAMPLE_ID_CONFLICT',
   ID_NOT_REGISTERED = 'ID_NOT_REGISTERED',
+  CONFLICTING_TIME_INTERVAL = 'CONFLICTING_TIME_INTERVAL',
+  NOT_ENOUGH_INFO_TO_VALIDATE = 'NOT_ENOUGH_INFO_TO_VALIDATE',
 }
 
 export type RegistrationStat = { [submitterId: string]: number[] };
@@ -86,6 +98,11 @@ export interface CreateRegistrationRecord {
   readonly tumourNormalDesignation: string;
   readonly sampleSubmitterId: string;
   readonly sampleType: string;
+}
+
+export interface ActiveSubmissionIdentifier {
+  readonly versionId: string;
+  readonly programId: string;
 }
 
 export interface CommitRegistrationCommand {
@@ -124,9 +141,9 @@ export interface MultiClinicalSubmissionCommand {
 }
 
 export interface CreateSubmissionResult {
-  readonly submission: ActiveClinicalSubmission | undefined;
+  readonly submission: DeepReadonly<ActiveClinicalSubmission> | undefined;
   readonly successful: boolean;
-  errors: DeepReadonly<{ [clinicalType: string]: SubmissionValidationError[] }>;
+  schemaErrors: DeepReadonly<{ [clinicalType: string]: SubmissionValidationError[] }>;
 }
 
 export interface NewClinicalEntity {
@@ -137,6 +154,7 @@ export interface NewClinicalEntity {
 
 export interface SavedClinicalEntity extends NewClinicalEntity {
   dataErrors: SubmissionValidationError[];
+  dataUpdates: SubmissionValidationUpdate[];
   stats: {
     new: number[];
     noUpdate: number[];
@@ -158,3 +176,34 @@ export interface ActiveClinicalSubmission {
   version: string;
   clinicalEntities: { [clinicalType: string]: SavedClinicalEntity };
 }
+
+// Generic submission record object
+export interface SubmittedClinicalRecord {
+  readonly program_id: string;
+  readonly submitter_donor_id: string;
+  readonly index: number;
+  [fieldName: string]: string | number;
+}
+
+export enum ClinicalInfoFieldsEnum {
+  specimen_acquistion_interval = 'specimen_acquistion_interval',
+  vital_status = 'vital_status',
+  survival_time = 'survival_time',
+}
+
+export interface ValidatorResult {
+  type: ModificationType;
+  index: number;
+  resultArray?: SubmissionValidationError[] | SubmissionValidationUpdate[];
+}
+
+export enum ModificationType {
+  ERRORSFOUND = 'errorsFound',
+  NEW = 'new',
+  UPDATED = 'updated',
+  NOUPDATE = 'noUpdate',
+}
+
+export type ClinicalTypeValidateResult = {
+  [clinicalType: string]: Pick<SavedClinicalEntity, 'dataErrors' | 'dataUpdates' | 'stats'>;
+};
