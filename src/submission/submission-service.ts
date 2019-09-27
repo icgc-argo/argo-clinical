@@ -176,8 +176,9 @@ export namespace operations {
     const newActiveSubmission = _.cloneDeep(exsistingActiveSubmission) as ActiveClinicalSubmission;
     const schemaErrors: { [k: string]: SubmissionValidationError[] } = {}; // object to store all errors for entity
     for (const clinicalType in command.newClinicalEntities) {
+      const newClinicalEnity = command.newClinicalEntities[clinicalType];
       const { schemaErrorsTemp, processedRecords } = await checkClinicalEntity({
-        records: command.newClinicalEntities[clinicalType].records,
+        records: newClinicalEnity.records,
         programId: command.programId,
         clinicalType: clinicalType,
       });
@@ -188,7 +189,8 @@ export namespace operations {
       } else {
         // update entity in active submission
         newActiveSubmission.clinicalEntities[clinicalType] = {
-          ...command.newClinicalEntities[clinicalType],
+          batchName: newClinicalEnity.batchName,
+          creator: newClinicalEnity.creator,
           records: processedRecords,
           dataErrors: [],
           dataUpdates: [],
@@ -505,13 +507,13 @@ export namespace operations {
       errors = errors.concat(unifiedSchemaErrors);
     }
     command.records.forEach((r, index) => {
-      const programIdError = dataValidator.usingInvalidProgramId(
+      const programIdErrors = dataValidator.usingInvalidProgramId(
         command.clinicalType as FileType,
         index,
         r,
         command.programId,
       );
-      errors = errors.concat(programIdError);
+      errors = errors.concat(programIdErrors);
     });
     return {
       schemaErrorsTemp: errors,
