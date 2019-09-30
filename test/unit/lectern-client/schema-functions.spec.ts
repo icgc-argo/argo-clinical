@@ -195,4 +195,30 @@ describe('schema-functions', () => {
       info: {},
     });
   });
+
+  it('should validate case insensitive enums, return proper format', () => {
+    const result = schemaService.process(schema, 'registration', [
+      {
+        program_id: 'PACA-AU',
+        submitter_donor_id: 'OD1234',
+        gender: 'feMale',
+        submitter_specimen_id: '87813',
+        specimen_type: 'sKiN',
+        tumour_normal_designation: 'Normal',
+        submitter_sample_id: 'MAS123',
+        sample_type: 'CTdna',
+      },
+    ]);
+    chai.expect(result.validationErrors.length).to.eq(0);
+    chai.expect(result.processedRecords[0]).to.deep.eq({
+      program_id: 'PACA-AU',
+      submitter_donor_id: 'OD1234',
+      gender: 'Female',
+      submitter_specimen_id: '87813',
+      specimen_type: 'Skin',
+      tumour_normal_designation: 'Normal',
+      submitter_sample_id: 'MAS123',
+      sample_type: 'ctDNA',
+    });
+  });
 });
