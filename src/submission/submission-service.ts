@@ -20,6 +20,7 @@ import {
   SubmittedClinicalRecord,
   SubmissionValidationUpdate,
   ClinicalTypeValidateResult,
+  ClinicalEntities,
 } from './submission-entities';
 import * as schemaManager from '../lectern-client/schema-manager';
 import {
@@ -37,6 +38,16 @@ import { v1 as uuid } from 'uuid';
 import { validateSubmissionData } from './validation';
 const L = loggerFor(__filename);
 
+const emptyStats = {
+  dataErrors: [],
+  dataUpdates: [],
+  stats: {
+    new: [],
+    noUpdate: [],
+    updated: [],
+    errorsFound: [],
+  },
+};
 export namespace operations {
   /**
    * This method creates an in progress registration after validating but doesn't create the donors in the donor collection
@@ -157,7 +168,7 @@ export namespace operations {
   };
 
   /**
-   * upload donor
+   * upload multiple clinical submissions
    * @param command SaveClinicalCommand
    */
   export const uploadMultipleClinical = async (
@@ -173,7 +184,15 @@ export namespace operations {
         clinicalEntities: {},
       });
     }
-    const newActiveSubmission = _.cloneDeep(exsistingActiveSubmission) as ActiveClinicalSubmission;
+    const updatedClinicalEntites: ClinicalEntities = {};
+    // extract clinicalEntities from existing submission and clear stats & dataErrors/Updates
+    for (const clinicalType in exsistingActiveSubmission.clinicalEntities) {
+      updatedClinicalEntites[clinicalType] = {
+        ...exsistingActiveSubmission.clinicalEntities[clinicalType],
+        ...emptyStats,
+      };
+    }
+
     const schemaErrors: { [k: string]: SubmissionValidationError[] } = {}; // object to store all errors for entity
     for (const clinicalType in command.newClinicalEntities) {
       const newClinicalEnity = command.newClinicalEntities[clinicalType];
@@ -183,29 +202,23 @@ export namespace operations {
         clinicalType: clinicalType,
       });
       if (schemaErrorsTemp.length > 0) {
-        // store errors found and clear in new active submission
+        // store errors found and remove clinical type from clinical entities
         schemaErrors[clinicalType] = schemaErrorsTemp;
-        delete newActiveSubmission.clinicalEntities[clinicalType];
+        delete updatedClinicalEntites[clinicalType];
       } else {
-        // update entity in active submission
-        newActiveSubmission.clinicalEntities[clinicalType] = {
-          batchName: newClinicalEnity.batchName,
-          creator: newClinicalEnity.creator,
-          records: processedRecords,
-          dataErrors: [],
-          dataUpdates: [],
-          stats: {
-            new: [],
-            noUpdate: [],
-            updated: [],
-            errorsFound: [],
-          },
+        // update or add entity
+        updatedClinicalEntites[clinicalType] = {
+          ...command.newClinicalEntities[clinicalType],
+          ...emptyStats,
         };
       }
     }
-    // make submission state open
-    newActiveSubmission.state = SUBMISSION_STATE.OPEN;
-
+    const newActiveSubmission: ActiveClinicalSubmission = {
+      programId: command.programId,
+      state: SUBMISSION_STATE.OPEN,
+      version: '', // version is irrelevant here, repo will set it
+      clinicalEntities: updatedClinicalEntites,
+    };
     // insert into database
     const updated = await submissionRepository.updateSubmissionWithVersion(
       command.programId,
@@ -274,20 +287,26 @@ export namespace operations {
 
     // update data errors/updates and stats
     let invalid: boolean = false;
-    const newActiveSubmission = _.cloneDeep(exsistingActiveSubmission) as ActiveClinicalSubmission;
+    const validatedClinicalEntities = _.cloneDeep(
+      exsistingActiveSubmission.clinicalEntities,
+    ) as ClinicalEntities;
     for (const clinicalType in validateResult) {
-      newActiveSubmission.clinicalEntities[clinicalType].stats = validateResult[clinicalType].stats;
+      validatedClinicalEntities[clinicalType].stats = validateResult[clinicalType].stats;
 
       const updates = validateResult[clinicalType].dataUpdates as SubmissionValidationUpdate[];
-      newActiveSubmission.clinicalEntities[clinicalType].dataUpdates = updates;
+      validatedClinicalEntities[clinicalType].dataUpdates = updates;
 
       const errors = validateResult[clinicalType].dataErrors as SubmissionValidationError[];
       invalid = invalid || (errors && errors.length > 0);
-      newActiveSubmission.clinicalEntities[clinicalType].dataErrors = errors;
+      validatedClinicalEntities[clinicalType].dataErrors = errors;
     }
 
-    // make submission VALID/INVALID
-    newActiveSubmission.state = invalid ? SUBMISSION_STATE.INVALID : SUBMISSION_STATE.VALID;
+    const newActiveSubmission: ActiveClinicalSubmission = {
+      programId: exsistingActiveSubmission.programId,
+      state: invalid ? SUBMISSION_STATE.INVALID : SUBMISSION_STATE.VALID,
+      version: '', // version is irrelevant here, repo will set it
+      clinicalEntities: validatedClinicalEntities,
+    };
 
     // insert into database
     const updated = await submissionRepository.updateSubmissionWithVersion(
