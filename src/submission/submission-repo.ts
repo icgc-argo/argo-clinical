@@ -45,17 +45,17 @@ export const submissionRepository: ClinicalSubmissionRepository = {
   async findByProgramId(programId: string) {
     L.debug(`in findByProgramId programId: ${programId}`);
     try {
-      const activeRegistration = await ActiveSubmissionModel.findOne({
+      const activeSubmission = await ActiveSubmissionModel.findOne({
         programId: programId,
       }).exec();
-      if (activeRegistration == undefined) {
+      if (activeSubmission == undefined) {
         return undefined;
       }
-      L.info(`found registration for program ${programId}: ${activeRegistration}`);
-      return F(MongooseUtils.toPojo(activeRegistration));
+      L.info(`found submission for program ${programId}: ${activeSubmission}`);
+      return F(MongooseUtils.toPojo(activeSubmission));
     } catch (err) {
-      L.error('failed to fetch registration', err);
-      throw new InternalError('failed to fetch registration', err);
+      L.error('failed to fetch submission', err);
+      throw new InternalError('failed to fetch submission', err);
     }
   },
   // forceCreate? singletonCreate?
@@ -141,6 +141,16 @@ const ActiveSubmissionSchema = new mongoose.Schema(
   },
   { timestamps: true, minimize: false },
 );
+
+// If a findOneAndUpdate query object has updatedAt being set to something,
+// this pre hook will ensure it is actually set to the current time
+ActiveSubmissionSchema.pre('findOneAndUpdate', function(next) {
+  const newsubmission = this.getUpdate();
+  if (newsubmission.updatedAt) {
+    newsubmission.updatedAt = Date.now();
+  }
+  next();
+});
 
 export const ActiveSubmissionModel = mongoose.model<ActiveClinicalSubmissionDocument>(
   'ActiveSubmission',

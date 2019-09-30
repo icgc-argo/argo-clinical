@@ -174,7 +174,11 @@ export interface ActiveClinicalSubmission {
   programId: string;
   state: SUBMISSION_STATE;
   version: string;
-  clinicalEntities: { [clinicalType: string]: SavedClinicalEntity };
+  clinicalEntities: ClinicalEntities;
+}
+
+export interface ClinicalEntities {
+  [clinicalType: string]: SavedClinicalEntity;
 }
 
 // Generic submission record object
