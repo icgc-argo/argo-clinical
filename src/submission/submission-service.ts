@@ -184,10 +184,10 @@ export namespace operations {
         clinicalEntities: {},
       });
     }
-    const clinicalEntites: ClinicalEntities = {};
+    const updatedClinicalEntites: ClinicalEntities = {};
     // extract clinicalEntities from existing submission and clear stats & dataErrors/Updates
     for (const clinicalType in exsistingActiveSubmission.clinicalEntities) {
-      clinicalEntites[clinicalType] = {
+      updatedClinicalEntites[clinicalType] = {
         ...exsistingActiveSubmission.clinicalEntities[clinicalType],
         ...emptyStats,
       };
@@ -203,10 +203,10 @@ export namespace operations {
       if (schemaErrorsTemp.length > 0) {
         // store errors found and remove clinical type from clinical entities
         schemaErrors[clinicalType] = schemaErrorsTemp;
-        delete clinicalEntites[clinicalType];
+        delete updatedClinicalEntites[clinicalType];
       } else {
         // update or add entity
-        clinicalEntites[clinicalType] = {
+        updatedClinicalEntites[clinicalType] = {
           ...command.newClinicalEntities[clinicalType],
           ...emptyStats,
         };
@@ -216,7 +216,7 @@ export namespace operations {
       programId: command.programId,
       state: SUBMISSION_STATE.OPEN,
       version: '', // version is irrelevant here, repo will set it
-      clinicalEntities: clinicalEntites,
+      clinicalEntities: updatedClinicalEntites,
     };
     // insert into database
     const updated = await submissionRepository.updateSubmissionWithVersion(
@@ -286,25 +286,25 @@ export namespace operations {
 
     // update data errors/updates and stats
     let invalid: boolean = false;
-    const clinicalEntities = _.cloneDeep(
+    const validatedClinicalEntities = _.cloneDeep(
       exsistingActiveSubmission.clinicalEntities,
     ) as ClinicalEntities;
     for (const clinicalType in validateResult) {
-      clinicalEntities[clinicalType].stats = validateResult[clinicalType].stats;
+      validatedClinicalEntities[clinicalType].stats = validateResult[clinicalType].stats;
 
       const updates = validateResult[clinicalType].dataUpdates as SubmissionValidationUpdate[];
-      clinicalEntities[clinicalType].dataUpdates = updates;
+      validatedClinicalEntities[clinicalType].dataUpdates = updates;
 
       const errors = validateResult[clinicalType].dataErrors as SubmissionValidationError[];
       invalid = invalid || (errors && errors.length > 0);
-      clinicalEntities[clinicalType].dataErrors = errors;
+      validatedClinicalEntities[clinicalType].dataErrors = errors;
     }
 
     const newActiveSubmission: ActiveClinicalSubmission = {
       programId: exsistingActiveSubmission.programId,
       state: invalid ? SUBMISSION_STATE.INVALID : SUBMISSION_STATE.VALID,
       version: '', // version is irrelevant here, repo will set it
-      clinicalEntities: clinicalEntities,
+      clinicalEntities: validatedClinicalEntities,
     };
 
     // insert into database
