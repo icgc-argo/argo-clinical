@@ -138,6 +138,7 @@ class SubmissionController {
           fileNames: [fileName],
           code: ErrorCodes.TSV_PARSING_FAILED,
         });
+        continue;
       }
       // add clinical entity by mapping to clinical type
       newClinicalEntities[clinicalFileType] = {

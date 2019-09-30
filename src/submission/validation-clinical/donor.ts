@@ -109,7 +109,7 @@ async function checkForUpdates(
   const updatedFields: any[] = utils.getUpdatedFields(clinicalInfo, record);
 
   if (donor.gender !== record[FieldsEnum.gender]) {
-    updatedFields.push(utils.buildSubmissionUpdate(record, donor.gender, FieldsEnum.sample_type));
+    updatedFields.push(utils.buildSubmissionUpdate(record, donor.gender, FieldsEnum.gender));
   }
 
   return updatedFields.length === 0

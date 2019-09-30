@@ -176,8 +176,9 @@ export namespace operations {
     const newActiveSubmission = _.cloneDeep(exsistingActiveSubmission) as ActiveClinicalSubmission;
     const schemaErrors: { [k: string]: SubmissionValidationError[] } = {}; // object to store all errors for entity
     for (const clinicalType in command.newClinicalEntities) {
-      const schemaErrorsTemp = await checkClinicalEntity({
-        records: command.newClinicalEntities[clinicalType].records,
+      const newClinicalEnity = command.newClinicalEntities[clinicalType];
+      const { schemaErrorsTemp, processedRecords } = await checkClinicalEntity({
+        records: newClinicalEnity.records,
         programId: command.programId,
         clinicalType: clinicalType,
       });
@@ -188,7 +189,9 @@ export namespace operations {
       } else {
         // update entity in active submission
         newActiveSubmission.clinicalEntities[clinicalType] = {
-          ...command.newClinicalEntities[clinicalType],
+          batchName: newClinicalEnity.batchName,
+          creator: newClinicalEnity.creator,
+          records: processedRecords,
           dataErrors: [],
           dataUpdates: [],
           stats: {
@@ -479,19 +482,8 @@ export namespace operations {
     );
   }
 
-  const checkClinicalEntity = async (
-    command: ClinicalSubmissionCommand,
-  ): Promise<SubmissionValidationError[]> => {
-    let programIdErrors: DeepReadonly<SubmissionValidationError[]> = [];
-    command.records.forEach((r, index) => {
-      const programIdError = dataValidator.usingInvalidProgramId(
-        command.clinicalType as FileType,
-        index,
-        r,
-        command.programId,
-      );
-      programIdErrors = programIdErrors.concat(programIdError);
-    });
+  const checkClinicalEntity = async (command: ClinicalSubmissionCommand): Promise<any> => {
+    let errors: SubmissionValidationError[] = [];
     const schemaResult = schemaManager.instance().process(command.clinicalType, command.records);
     if (schemaResult.validationErrors.length > 0) {
       const unifiedSchemaErrors = unifySchemaErrors(
@@ -499,9 +491,21 @@ export namespace operations {
         schemaResult,
         command.records,
       );
-      return unifiedSchemaErrors.concat(programIdErrors);
+      errors = errors.concat(unifiedSchemaErrors);
     }
-    return [];
+    command.records.forEach((r, index) => {
+      const programIdErrors = dataValidator.usingInvalidProgramId(
+        command.clinicalType as FileType,
+        index,
+        r,
+        command.programId,
+      );
+      errors = errors.concat(programIdErrors);
+    });
+    return {
+      schemaErrorsTemp: errors,
+      processedRecords: schemaResult.processedRecords,
+    };
   };
 
   const getDonorsInProgram = async (
