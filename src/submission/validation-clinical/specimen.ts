@@ -116,9 +116,9 @@ async function checkForUpdates(
 ): Promise<ValidatorResult> {
   const clinicalInfo = specimen.clinicalInfo;
 
-  // no updates to specimenType or tnd but there is no existent clinicalInfo => new
+  // no updates to specimenTissueSource or tnd but there is no existent clinicalInfo => new
   if (
-    specimen.specimenType === record[FieldsEnum.specimen_type] &&
+    specimen.specimenTissueSource === record[FieldsEnum.specimen_tissue_source] &&
     specimen.tumourNormalDesignation === record[FieldsEnum.tumour_normal_designation] &&
     _.isEmpty(clinicalInfo)
   ) {
@@ -128,9 +128,13 @@ async function checkForUpdates(
   // check changing fields
   const updatedFields: any[] = utils.getUpdatedFields(clinicalInfo, record);
 
-  if (specimen.specimenType !== record[FieldsEnum.specimen_type]) {
+  if (specimen.specimenTissueSource !== record[FieldsEnum.specimen_tissue_source]) {
     updatedFields.push(
-      utils.buildSubmissionUpdate(record, specimen.specimenType, FieldsEnum.specimen_type),
+      utils.buildSubmissionUpdate(
+        record,
+        specimen.specimenTissueSource,
+        FieldsEnum.specimen_tissue_source,
+      ),
     );
   }
 

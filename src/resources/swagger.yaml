@@ -725,7 +725,7 @@ components:
         - submitter_donor_id
         - gender
         - submitter_specimen_id
-        - specimen_type
+        - specimen_tissue_source
         - tumour_normal_designation
         - submitter_sample_id
         - sample_type
@@ -738,7 +738,7 @@ components:
           type: string
         submitter_specimen_id:
           type: string
-        specimen_type:
+        specimen_tissue_source:
           type: string
         tumour_normal_designation:
           type: string

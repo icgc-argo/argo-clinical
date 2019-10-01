@@ -68,7 +68,7 @@ export namespace operations {
       await registrationRepository.delete(existingActivRegistration._id);
     }
 
-    const schemaResult = schemaManager.instance().process('registration', command.records);
+    const schemaResult = schemaManager.instance().process(FileType.REGISTRATION, command.records);
     let unifiedSchemaErrors: DeepReadonly<SubmissionValidationError[]> = [];
     if (anyErrors(schemaResult.validationErrors)) {
       unifiedSchemaErrors = unifySchemaErrors(FileType.REGISTRATION, schemaResult, command.records);
@@ -469,7 +469,7 @@ export namespace operations {
           submitter_donor_id: r.donorSubmitterId,
           gender: r.gender,
           submitter_specimen_id: r.specimenSubmitterId,
-          specimen_type: r.specimenType,
+          specimen_tissue_source: r.specimenTissueSource,
           tumour_normal_designation: r.tumourNormalDesignation,
           submitter_sample_id: r.sampleSubmitterId,
           sample_type: r.sampleType,
@@ -491,7 +491,7 @@ export namespace operations {
           donorSubmitterId: r[FieldsEnum.submitter_donor_id] as string,
           gender: r[FieldsEnum.gender] as string,
           specimenSubmitterId: r[FieldsEnum.submitter_specimen_id] as string,
-          specimenType: r[FieldsEnum.specimen_type] as string,
+          specimenTissueSource: r[FieldsEnum.specimen_tissue_source] as string,
           tumourNormalDesignation: r[FieldsEnum.tumour_normal_designation] as string,
           sampleSubmitterId: r[FieldsEnum.submitter_sample_id] as string,
           sampleType: r[FieldsEnum.sample_type] as string,

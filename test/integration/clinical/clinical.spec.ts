@@ -33,7 +33,7 @@ describe('clinical Api', () => {
             sampleId: 3002,
           },
         ],
-        specimenType: 'Blood derived',
+        specimenTissueSource: 'Blood derived',
         tumourNormalDesignation: 'Recurrent tumour',
         submitterId: 'ss200-1',
         specimenId: 893,

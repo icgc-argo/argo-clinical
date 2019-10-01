@@ -15,7 +15,7 @@ export interface Donor {
 
 export interface Specimen {
   samples: Array<Sample>;
-  specimenType: string;
+  specimenTissueSource: string;
   submitterId: string;
   specimenId?: number;
   tumourNormalDesignation: string;

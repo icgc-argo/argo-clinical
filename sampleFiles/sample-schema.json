@@ -1,38 +1,30 @@
 {
   "schemas": [
     {
-      "name": "registration",
-      "description": "TSV for Registration of Donor-Specimen-Sample",
-      "key": "submitter_donor_id",
+      "name": "sample_registration",
+      "description": "Collection of elements required to register the required Donor-Specimen-Sample data to the ARGO Platform. Registration of samples is required before genomic and clinical data submission can proceed.",
       "fields": [
         {
           "name": "program_id",
           "valueType": "string",
-          "description": "Unique identifier for program",
-          "meta": {
-            "key": true
-          },
+          "description": "Unique identifier of the ARGO program.",
           "restrictions": {
-            "required": true,
-            "regex": "^[A-Z1-9][-_A-Z1-9]{2,7}(-[A-Z][A-Z])$"
+            "required": true
           }
         },
         {
           "name": "submitter_donor_id",
           "valueType": "string",
-          "description": "Unique identifier for donor, assigned by the data provider.",
-          "meta": {
-            "key": true
-          },
+          "description": "Unique identifier of the donor, assigned by the data provider.",
           "restrictions": {
             "required": true,
-            "regex": "^(?!(DO|do)).+"
+            "regex": "[A-Za-z0-9\\-\\._]{1,64}"
           }
         },
         {
           "name": "gender",
           "valueType": "string",
-          "description": "The gender of the patient",
+          "description": "Description of the donor self-reported gender. Gender is described as the assemblage of properties that distinguish people on the basis of their societal roles.",
           "restrictions": {
             "required": true,
             "codeList": ["Male", "Female", "Other"]
@@ -41,22 +33,16 @@
         {
           "name": "submitter_specimen_id",
           "valueType": "string",
-          "description": "Submitter assigned specimen id",
-          "meta": {
-            "key": true
-          },
+          "description": "Unique identifier of the specimen, assigned by the data provider.",
           "restrictions": {
             "required": true,
-            "regex": "^(?!(SP|sp)).+"
+            "regex": "[A-Za-z0-9\\-\\._]{1,64}"
           }
         },
         {
-          "name": "specimen_type",
+          "name": "specimen_tissue_source",
           "valueType": "string",
-          "description": "Indicate the tissue source of the biospecimen",
-          "meta": {
-            "default": "Other"
-          },
+          "description": "Tissue source of the biospecimen.",
           "restrictions": {
             "required": true,
             "codeList": [
@@ -72,9 +58,7 @@
               "Urine",
               "Cerebrospinal fluid",
               "Sputum",
-              "NOS (Not otherwise specified)",
               "Other",
-              "FFPE",
               "Pleural effusion",
               "Mononuclear cells from bone marrow",
               "Saliva",
@@ -85,7 +69,7 @@
         {
           "name": "tumour_normal_designation",
           "valueType": "string",
-          "description": "Indicate whether specimen is tumour or normal type",
+          "description": "Description of the kind of specimen that was collected with respect to tumour/normal tissue origin.",
           "restrictions": {
             "required": true,
             "codeList": [
@@ -101,7 +85,7 @@
               "Metastatic tumour - additional metastatic",
               "Xenograft - derived from primary tumour",
               "Xenograft - derived from tumour cell line",
-              "Cell line - derived from xenograft tissue",
+              "Cell line - derived from xenograft tumour",
               "Cell line - derived from tumour",
               "Cell line - derived from normal"
             ]
@@ -110,27 +94,27 @@
         {
           "name": "submitter_sample_id",
           "valueType": "string",
-          "description": "Submitter assigned sample id",
+          "description": "Unique identifier of the sample, assigned by the data provider.",
           "restrictions": {
             "required": true,
-            "regex": "^(?!(SA|sa)).+"
+            "regex": "[A-Za-z0-9\\-\\._]{1,64}"
           }
         },
         {
           "name": "sample_type",
           "valueType": "string",
-          "description": "Specimen Type",
+          "description": "Description of the type of molecular sample used for testing.",
           "restrictions": {
             "required": true,
             "codeList": [
               "Total DNA",
               "Amplified DNA",
               "ctDNA",
-              "other DNA enrichments",
+              "Other DNA enrichments",
               "Total RNA",
               "Ribo-Zero RNA",
               "polyA+ RNA",
-              "other RNA fractions"
+              "Other RNA fractions"
             ]
           }
         }
@@ -253,7 +237,7 @@
           }
         },
         {
-          "name": "specimen_type",
+          "name": "specimen_tissue_source",
           "valueType": "string",
           "description": "Indicate the tissue source of the biospecimen",
           "meta": {
@@ -276,7 +260,6 @@
               "Sputum",
               "NOS (Not otherwise specified)",
               "Other",
-              "FFPE",
               "Pleural effusion",
               "Mononuclear cells from bone marrow",
               "Saliva",

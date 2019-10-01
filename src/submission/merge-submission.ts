@@ -59,13 +59,13 @@ const updateDonorFromSubmissionRecord = (donor: Donor, record: ClinicalEnitityRe
 const updateSpecimenRecord = (donor: Donor, record: ClinicalEnitityRecord) => {
   // Find specimen in donor
   const specimen = findSpecimen(donor, record.submitter_specimen_id);
-  specimen.specimenType = record.specimen_type;
+  specimen.specimenTissueSource = record.specimen_tissue_source;
   specimen.tumourNormalDesignation = record.tumour_normal_designation;
   specimen.clinicalInfo = _.omit(record, [
     'submitter_donor_id',
     'submitter_specimen_id',
     'tumour_normal_designation',
-    'specimenType',
+    'specimenTissueSource',
     'program_id',
   ]);
 };

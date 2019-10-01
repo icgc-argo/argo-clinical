@@ -186,7 +186,7 @@ const conflictingNewSpecimen = (
       newDonor.donorSubmitterId === rec.donorSubmitterId &&
       newDonor.specimenSubmitterId === rec.specimenSubmitterId
     ) {
-      if (newDonor.specimenType !== rec.specimenType) {
+      if (newDonor.specimenTissueSource !== rec.specimenTissueSource) {
         conflictingSpecimenTypesIndices.push(index);
       }
 
@@ -223,7 +223,7 @@ const conflictingNewSpecimen = (
       buildError(
         newDonor,
         DataValidationErrors.NEW_SPECIMEN_ATTR_CONFLICT,
-        FieldsEnum.specimen_type,
+        FieldsEnum.specimen_tissue_source,
         newDonorIndex,
         {
           conflictingRows: conflictingSpecimenTypesIndices,
@@ -573,12 +573,12 @@ function checkSpecimenMutations(
   errors: SubmissionValidationError[],
   index: number,
 ) {
-  if (newDonor.specimenType !== existingSpecimen.specimenType) {
+  if (newDonor.specimenTissueSource !== existingSpecimen.specimenTissueSource) {
     errors.push(
       buildError(
         newDonor,
         DataValidationErrors.MUTATING_EXISTING_DATA,
-        FieldsEnum.specimen_type,
+        FieldsEnum.specimen_tissue_source,
         index,
         {},
       ),

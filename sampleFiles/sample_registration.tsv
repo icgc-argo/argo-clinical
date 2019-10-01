@@ -1,0 +1,8 @@
+program_id	submitter_donor_id	gender	submitter_specimen_id	specimen_tissue_source	tumour_normal_designation	submitter_sample_id	sample_type
+PACA-AU	abcd-123	Male	ss123-adsasd-dads	Other	Normal	sm123-1	Total DNA	
+PACA-AU	abcd-124	Female	ss123-sira	Saliva	Primary tumour	sm123-2	Total RNA	
+PACA-AU	abcd-124	Female	ss123-sira	Saliva	Primary tumour	sm123-3	Amplified DNA
+PACA-AU	abcd-125	Male	ss123-jdjr-ak	Bone marrow	Xenograft - derived from primary tumour	sm123-4	polyA+ RNA	
+PACA-AU	abcd-126	Female	ss123-sjdm	Serum	Xenograft - derived from primary tumour	sm123-5	Ribo-Zero RNA	
+PACA-AU	abcd-127	Male	ss123-1123	Pleural effusion	Primary tumour - adjacent to normal	sm123-6	polyA+ RNA	
+PACA-AU	abcd-128	Female	ss123-abnc	Other	Metastatic tumour	sm123-7	ctDNA

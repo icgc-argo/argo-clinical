@@ -92,7 +92,7 @@ function checkTimeConflictWithSpecimen(
 
 // cases (similar for other clinical types with minor difference in case 1)
 // 1 not changing gender and new clinicalInfo <=> new
-// 2 changing specimenType or tnd or changing clinicalInfo <=> update
+// 2 changing gender or changing clinicalInfo <=> update
 // 3 not new or update <=> noUpdate
 async function checkForUpdates(
   record: DeepReadonly<SubmittedClinicalRecord>,
@@ -100,7 +100,7 @@ async function checkForUpdates(
 ): Promise<ValidatorResult> {
   const clinicalInfo = donor.clinicalInfo;
 
-  // no updates to specimenType or tnd but there is now existent clinicalInfo, new
+  // no updates to gender but there is now existent clinicalInfo, new
   if (donor.gender === record[FieldsEnum.gender] && _.isEmpty(clinicalInfo)) {
     return utils.buildValidatorResult(ModificationType.NEW, record.index);
   }

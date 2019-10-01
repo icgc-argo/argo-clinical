@@ -15,7 +15,7 @@ export const stubs = {
       specimens: [
         {
           submitterId: 'SP1',
-          specimenType: 'XYZ',
+          specimenTissueSource: 'XYZ',
           clinicalInfo: {},
           tumourNormalDesignation: 'Normal',
           samples: [
@@ -38,7 +38,7 @@ export const stubs = {
       specimens: [
         {
           submitterId: 'SP1',
-          specimenType: 'XYZZ',
+          specimenTissueSource: 'XYZZ',
           clinicalInfo: {},
           tumourNormalDesignation: 'Normal',
           samples: [
@@ -61,7 +61,7 @@ export const stubs = {
       specimens: [
         {
           submitterId: 'SP12',
-          specimenType: 'XYZZ',
+          specimenTissueSource: 'XYZZ',
           clinicalInfo: {},
           tumourNormalDesignation: 'Normal',
           samples: [
@@ -87,7 +87,7 @@ export const stubs = {
       specimens: [
         {
           submitterId: 'SP13',
-          specimenType: 'Other',
+          specimenTissueSource: 'Other',
           clinicalInfo: {},
           tumourNormalDesignation: 'Normal',
           samples: [
