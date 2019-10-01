@@ -209,6 +209,7 @@ export namespace operations {
         // update or add entity
         updatedClinicalEntites[clinicalType] = {
           ...command.newClinicalEntities[clinicalType],
+          records: processedRecords,
           ...emptyStats,
         };
       }
@@ -265,7 +266,7 @@ export namespace operations {
       clinicalEnity.records.forEach((rc, index) => {
         const donorId = rc[FieldsEnum.submitter_donor_id];
         filters.push({
-          programId: rc[FieldsEnum.program_id],
+          programId: programId,
           submitterId: donorId,
         });
         if (!newDonorDataMap[donorId]) {
@@ -274,7 +275,7 @@ export namespace operations {
         newDonorDataMap[donorId][clinicalType] = {
           ...rc,
           submitter_donor_id: donorId,
-          program_id: rc[FieldsEnum.program_id],
+          program_id: programId,
           index: index,
         };
       });
@@ -512,15 +513,6 @@ export namespace operations {
       );
       errors = errors.concat(unifiedSchemaErrors);
     }
-    command.records.forEach((r, index) => {
-      const programIdErrors = dataValidator.usingInvalidProgramId(
-        command.clinicalType as FileType,
-        index,
-        r,
-        command.programId,
-      );
-      errors = errors.concat(programIdErrors);
-    });
     return {
       schemaErrorsTemp: errors,
       processedRecords: schemaResult.processedRecords,

@@ -179,38 +179,10 @@ const expectedDonorErrors = [
     index: 0,
     type: 'INVALID_ENUM_VALUE',
     info: {
-      value: 'mail',
-      donorSubmitterId: 'ICGC_0002',
-    },
-    fieldName: 'gender',
-  },
-  {
-    index: 0,
-    type: 'INVALID_ENUM_VALUE',
-    info: {
-      value: 'martian',
-      donorSubmitterId: 'ICGC_0002',
-    },
-    fieldName: 'ethnicity',
-  },
-  {
-    index: 0,
-    type: 'INVALID_ENUM_VALUE',
-    info: {
       value: 'undecided',
       donorSubmitterId: 'ICGC_0002',
     },
     fieldName: 'vital_status',
-  },
-  {
-    type: 'INVALID_PROGRAM_ID',
-    fieldName: 'program_id',
-    index: 0,
-    info: {
-      value: 'PACA-AU',
-      donorSubmitterId: 'ICGC_0002',
-      expectedProgram: 'ABCD-EF',
-    },
   },
 ];
 
@@ -786,6 +758,7 @@ describe('Submission Api', () => {
                 try {
                   res.should.have.status(200);
                   res.body.submission.state.should.eq(SUBMISSION_STATE.VALID);
+                  res.body.submission.clinicalEntities.donor.records.length.should.eq(1);
                   res.body.submission.clinicalEntities.donor.dataErrors.length.should.eq(0);
                 } catch (err) {
                   throw err;
