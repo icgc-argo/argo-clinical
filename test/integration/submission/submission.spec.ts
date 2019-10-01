@@ -624,10 +624,8 @@ describe('Submission Api', () => {
     });
     it('should return 422 if try to upload invalid tsv files', done => {
       let file: Buffer;
-      let file2: Buffer;
       try {
         file = fs.readFileSync(__dirname + '/donor.invalid.tsv');
-        file2 = fs.readFileSync(__dirname + '/sample.tsv');
       } catch (err) {
         return done(err);
       }
@@ -637,7 +635,6 @@ describe('Submission Api', () => {
         .post('/submission/program/ABCD-EF/clinical/upload')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .attach('clinicalFiles', file, 'donor.invalid.tsv')
-        .attach('clinicalFiles', file2, 'sample.tsv')
         .end((err: any, res: any) => {
           res.should.have.status(422);
           res.body.schemaErrors.should.deep.eq({ donor: expectedDonorErrors });
@@ -647,10 +644,8 @@ describe('Submission Api', () => {
     });
     it('should return 200 if try to upload valid tsv files', done => {
       let file: Buffer;
-      let file2: Buffer;
       try {
         file = fs.readFileSync(__dirname + '/donor.tsv');
-        file2 = fs.readFileSync(__dirname + '/sample.tsv');
       } catch (err) {
         return done(err);
       }
@@ -660,7 +655,6 @@ describe('Submission Api', () => {
         .post('/submission/program/ABCD-EF/clinical/upload')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .attach('clinicalFiles', file, 'donor.tsv')
-        .attach('clinicalFiles', file2, 'sample.tsv')
         .end(async (err: any, res: any) => {
           res.should.have.status(200);
           res.body.successful.should.deep.eq(true);
@@ -680,7 +674,6 @@ describe('Submission Api', () => {
       const files: Buffer[] = [];
       try {
         files.push(fs.readFileSync(__dirname + '/donor.tsv'));
-        files.push(fs.readFileSync(__dirname + '/sample.tsv'));
         files.push(fs.readFileSync(__dirname + '/donor.invalid.tsv'));
         files.push(fs.readFileSync(__dirname + '/thisissample.tsv'));
       } catch (err) {

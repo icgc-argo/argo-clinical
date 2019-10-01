@@ -34,9 +34,6 @@ export const mergeActiveSubmissionWithDonors = async (
           case FileType.SPECIMEN:
             updateSpecimenRecord(donor, record);
             break;
-          case FileType.SAMPLE:
-            updateSampleRecord(donor, record);
-            break;
           default:
             addOrUpdateClinicalRecord(donor, record, entityType);
             break;
@@ -68,12 +65,6 @@ const updateSpecimenRecord = (donor: Donor, record: ClinicalEnitityRecord) => {
     'specimenTissueSource',
     'program_id',
   ]);
-};
-const updateSampleRecord = (donor: Donor, record: ClinicalEnitityRecord) => {
-  const sample = findSample(donor, record.submitter_specimen_id, record.submitter_sample_id);
-
-  // Samples only have the one update to make:
-  sample.sampleType = record.sample_type;
 };
 
 /*
