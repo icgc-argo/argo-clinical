@@ -64,7 +64,7 @@ export const validate = async (
 
   return errors.length > 0
     ? utils.buildValidatorResult(ModificationType.ERRORSFOUND, specimenRecord.index, errors)
-    : await checkForUpdates(specimenRecord, specimen);
+    : await utils.checkForUpdates(specimenRecord, specimen.clinicalInfo);
 };
 
 function checkTimeConflictWithDonor(
@@ -109,47 +109,3 @@ const getDataFromRecordOrDonor = (
 
   return { donorVitalStatus, donorSurvivalTime };
 };
-
-async function checkForUpdates(
-  record: DeepReadonly<SubmittedClinicalRecord>,
-  specimen: DeepReadonly<Specimen>,
-): Promise<ValidatorResult> {
-  const clinicalInfo = specimen.clinicalInfo;
-
-  // no updates to specimenTissueSource or tnd but there is no existent clinicalInfo => new
-  if (
-    specimen.specimenTissueSource === record[FieldsEnum.specimen_tissue_source] &&
-    specimen.tumourNormalDesignation === record[FieldsEnum.tumour_normal_designation] &&
-    _.isEmpty(clinicalInfo)
-  ) {
-    return utils.buildValidatorResult(ModificationType.NEW, record.index);
-  }
-
-  // check changing fields
-  const updatedFields: any[] = utils.getUpdatedFields(clinicalInfo, record);
-
-  if (specimen.specimenTissueSource !== record[FieldsEnum.specimen_tissue_source]) {
-    updatedFields.push(
-      utils.buildSubmissionUpdate(
-        record,
-        specimen.specimenTissueSource,
-        FieldsEnum.specimen_tissue_source,
-      ),
-    );
-  }
-
-  if (specimen.tumourNormalDesignation !== record[FieldsEnum.tumour_normal_designation]) {
-    updatedFields.push(
-      utils.buildSubmissionUpdate(
-        record,
-        specimen.tumourNormalDesignation,
-        FieldsEnum.tumour_normal_designation,
-      ),
-    );
-  }
-
-  // if no updates and not new return noUpdate
-  return updatedFields.length === 0
-    ? utils.buildValidatorResult(ModificationType.NOUPDATE, record.index)
-    : utils.buildValidatorResult(ModificationType.UPDATED, record.index, updatedFields);
-}

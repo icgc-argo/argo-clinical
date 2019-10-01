@@ -36,7 +36,7 @@ export const validate = async (
 
   return errors.length > 0
     ? utils.buildValidatorResult(ModificationType.ERRORSFOUND, donorRecord.index, errors)
-    : await checkForUpdates(donorRecord, existentDonor);
+    : await utils.checkForUpdates(donorRecord, existentDonor.clinicalInfo);
 };
 
 function checkTimeConflictWithSpecimen(
@@ -88,31 +88,4 @@ function checkTimeConflictWithSpecimen(
       ),
     );
   }
-}
-
-// cases (similar for other clinical types with minor difference in case 1)
-// 1 not changing gender and new clinicalInfo <=> new
-// 2 changing gender or changing clinicalInfo <=> update
-// 3 not new or update <=> noUpdate
-async function checkForUpdates(
-  record: DeepReadonly<SubmittedClinicalRecord>,
-  donor: DeepReadonly<Donor>,
-): Promise<ValidatorResult> {
-  const clinicalInfo = donor.clinicalInfo;
-
-  // no updates to gender but there is now existent clinicalInfo, new
-  if (donor.gender === record[FieldsEnum.gender] && _.isEmpty(clinicalInfo)) {
-    return utils.buildValidatorResult(ModificationType.NEW, record.index);
-  }
-
-  // check changing fields
-  const updatedFields: any[] = utils.getUpdatedFields(clinicalInfo, record);
-
-  if (donor.gender !== record[FieldsEnum.gender]) {
-    updatedFields.push(utils.buildSubmissionUpdate(record, donor.gender, FieldsEnum.gender));
-  }
-
-  return updatedFields.length === 0
-    ? utils.buildValidatorResult(ModificationType.NOUPDATE, record.index)
-    : utils.buildValidatorResult(ModificationType.UPDATED, record.index, updatedFields);
 }

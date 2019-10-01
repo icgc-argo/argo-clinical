@@ -792,6 +792,7 @@ describe('Submission Api', () => {
             specimenTissueSource: 'Other',
             tumourNormalDesignation: 'Normal',
             submitterId: '8013861',
+            clinicalInfo: { percent_tumour_cells: '0.5' },
           },
         ],
         donorId: 1,
@@ -819,12 +820,12 @@ describe('Submission Api', () => {
                   res.body.submission.clinicalEntities.specimen.stats.updated.should.deep.eq([0]);
                   res.body.submission.clinicalEntities.specimen.dataUpdates.should.deep.eq([
                     {
-                      fieldName: 'specimen_tissue_source',
+                      fieldName: 'percent_tumour_cells',
                       index: 0,
                       info: {
                         donorSubmitterId: 'ICGC_0001',
-                        newValue: 'Plasma',
-                        oldValue: 'Other',
+                        newValue: '0.35',
+                        oldValue: '0.5',
                       },
                     },
                   ]);

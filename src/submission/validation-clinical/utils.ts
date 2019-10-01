@@ -9,7 +9,8 @@ import {
   ValidatorResult,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
-import { Donor } from '../../clinical/clinical-entities';
+import { Donor, Specimen } from '../../clinical/clinical-entities';
+import _ from 'lodash';
 
 export const checkDonorRegistered = (
   aDonor: DeepReadonly<Donor>,
@@ -75,4 +76,26 @@ export const getUpdatedFields = (clinicalInfo: any, record: SubmittedClinicalRec
     }
   }
   return updateFields;
+};
+
+// cases
+// 1 new clinicalInfo <=> new
+// 2 changing clinicalInfo <=> update
+// 3 not new or update <=> noUpdate
+export const checkForUpdates = async (
+  record: DeepReadonly<SubmittedClinicalRecord>,
+  clinicalInfo: DeepReadonly<{ [field: string]: string | number }> | undefined,
+) => {
+  // no updates to specimenTissueSource or tnd but there is no existent clinicalInfo => new
+  if (_.isEmpty(clinicalInfo)) {
+    return buildValidatorResult(ModificationType.NEW, record.index);
+  }
+
+  // check changing fields
+  const updatedFields: any[] = getUpdatedFields(clinicalInfo, record);
+
+  // if no updates and not new return noUpdate
+  return updatedFields.length === 0
+    ? buildValidatorResult(ModificationType.NOUPDATE, record.index)
+    : buildValidatorResult(ModificationType.UPDATED, record.index, updatedFields);
 };
