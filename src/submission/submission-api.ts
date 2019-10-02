@@ -22,12 +22,14 @@ export enum FileType {
   REGISTRATION = 'sample_registration',
   DONOR = 'donor',
   SPECIMEN = 'specimen',
+  PRIMARY_DIAGNOSES = 'primary_diagnosis',
 }
 
 const FileNameRegex = {
   [FileType.REGISTRATION]: '^sample_registration.*\\.tsv',
   [FileType.DONOR]: '^donor.*\\.tsv',
   [FileType.SPECIMEN]: '^specimen.*\\.tsv',
+  [FileType.PRIMARY_DIAGNOSES]: '^primary_diagnosis.*\\.tsv',
 };
 
 type SubmissionFileErrors = {

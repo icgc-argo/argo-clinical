@@ -25,7 +25,7 @@ const genderMutatedErr: SubmissionValidationError = {
   type: DataValidationErrors.MUTATING_EXISTING_DATA,
 };
 const programInvalidErr: SubmissionValidationError = {
-  fieldName: 'program_id',
+  fieldName: FieldsEnum.program_id,
   index: 0,
   info: {
     expectedProgram: 'PEME-CA',
@@ -37,7 +37,7 @@ const programInvalidErr: SubmissionValidationError = {
   type: DataValidationErrors.INVALID_PROGRAM_ID,
 };
 const specimenMutatedErr: SubmissionValidationError = {
-  fieldName: 'specimen_tissue_source',
+  fieldName: FieldsEnum.specimen_tissue_source,
   index: 0,
   info: {
     donorSubmitterId: 'AB1',
@@ -48,7 +48,7 @@ const specimenMutatedErr: SubmissionValidationError = {
   type: DataValidationErrors.MUTATING_EXISTING_DATA,
 };
 const tndError: SubmissionValidationError = {
-  fieldName: 'tumour_normal_designation',
+  fieldName: FieldsEnum.tumour_normal_designation,
   index: 0,
   info: {
     donorSubmitterId: 'AB1',
@@ -60,7 +60,7 @@ const tndError: SubmissionValidationError = {
 };
 
 const sampleTypeMutatedError: SubmissionValidationError = {
-  fieldName: 'sample_type',
+  fieldName: FieldsEnum.sample_type,
   index: 0,
   info: {
     donorSubmitterId: 'AB1',
@@ -138,14 +138,14 @@ describe('data-validator', () => {
         FileType.REGISTRATION,
         0,
         {
-          submitter_donor_id: 'AB1',
-          gender: 'Male',
-          program_id: 'PEM-CA',
-          submitter_sample_id: 'AM1',
-          specimen_tissue_source: 'XYZ',
-          sample_type: 'ST1',
-          submitter_specimen_id: 'SP1',
-          tumour_normal_designation: 'Normal',
+          [FieldsEnum.submitter_donor_id]: 'AB1',
+          [FieldsEnum.gender]: 'Male',
+          [FieldsEnum.program_id]: 'PEM-CA',
+          [FieldsEnum.submitter_sample_id]: 'AM1',
+          [FieldsEnum.specimen_tissue_source]: 'XYZ',
+          [FieldsEnum.sample_type]: 'ST1',
+          [FieldsEnum.submitter_specimen_id]: 'SP1',
+          [FieldsEnum.tumour_normal_designation]: 'Normal',
         },
         'PEME-CA',
       );
@@ -299,7 +299,7 @@ describe('data-validator', () => {
       chai.expect(result.errors.length).to.eq(4);
       chai.expect(result.errors).to.deep.include(sampleTypeMutatedError);
       const specimenMutatedError: SubmissionValidationError = {
-        fieldName: 'specimen_tissue_source',
+        fieldName: FieldsEnum.specimen_tissue_source,
         index: 0,
         info: {
           donorSubmitterId: 'AB1',
@@ -389,7 +389,7 @@ describe('data-validator', () => {
       );
 
       const specimenTypeMutatedErr: SubmissionValidationError = {
-        fieldName: 'specimen_tissue_source',
+        fieldName: FieldsEnum.specimen_tissue_source,
         index: 0,
         info: {
           donorSubmitterId: 'AB2',
@@ -401,7 +401,7 @@ describe('data-validator', () => {
       };
 
       const sampleTypeMutatedErr: SubmissionValidationError = {
-        fieldName: 'sample_type',
+        fieldName: FieldsEnum.sample_type,
         index: 1,
         info: {
           donorSubmitterId: 'AB3',
@@ -659,7 +659,7 @@ describe('data-validator', () => {
 
       // assertions
       const row0Err: SubmissionValidationError = {
-        fieldName: 'specimen_tissue_source',
+        fieldName: FieldsEnum.specimen_tissue_source,
         index: 0,
         info: {
           donorSubmitterId: 'AB1',
@@ -672,7 +672,7 @@ describe('data-validator', () => {
       };
 
       const row2Err: SubmissionValidationError = {
-        fieldName: 'specimen_tissue_source',
+        fieldName: FieldsEnum.specimen_tissue_source,
         index: 2,
         info: {
           donorSubmitterId: 'AB1',
@@ -733,7 +733,7 @@ describe('data-validator', () => {
 
       // assertions
       const row0Err: SubmissionValidationError = {
-        fieldName: 'sample_type',
+        fieldName: FieldsEnum.sample_type,
         index: 0,
         info: {
           donorSubmitterId: 'AB1',
@@ -746,7 +746,7 @@ describe('data-validator', () => {
       };
 
       const row2Err: SubmissionValidationError = {
-        fieldName: 'sample_type',
+        fieldName: FieldsEnum.sample_type,
         index: 2,
         info: {
           donorSubmitterId: 'AB1',
@@ -806,7 +806,7 @@ describe('data-validator', () => {
 
       // assertions
       const row0Err: SubmissionValidationError = {
-        fieldName: 'gender',
+        fieldName: FieldsEnum.gender,
         index: 0,
         info: {
           donorSubmitterId: 'AB1',
@@ -819,7 +819,7 @@ describe('data-validator', () => {
       };
 
       const row2Err: SubmissionValidationError = {
-        fieldName: 'gender',
+        fieldName: FieldsEnum.gender,
         index: 2,
         info: {
           donorSubmitterId: 'AB1',
@@ -952,7 +952,7 @@ describe('data-validator', () => {
 
       // assertions
       const row0Err: SubmissionValidationError = {
-        fieldName: 'sample_type',
+        fieldName: FieldsEnum.sample_type,
         index: 0,
         info: {
           donorSubmitterId: 'AB1',
@@ -965,7 +965,7 @@ describe('data-validator', () => {
       };
 
       const row2Err = {
-        fieldName: 'sample_type',
+        fieldName: FieldsEnum.sample_type,
         index: 2,
         info: {
           donorSubmitterId: 'AB1',
@@ -990,17 +990,17 @@ describe('data-validator', () => {
         {
           AB1: {
             specimen: {
-              submitter_donor_id: 'AB1',
-              program_id: 'ABCD-EF',
-              submitter_specimen_id: 'SP2',
+              [FieldsEnum.submitter_donor_id]: 'AB1',
+              [FieldsEnum.program_id]: 'ABCD-EF',
+              [FieldsEnum.submitter_specimen_id]: 'SP2',
               index: 0,
             },
           },
           AB2: {
             specimen: {
-              submitter_donor_id: 'AB2',
-              program_id: 'ABCD-EF',
-              submitter_specimen_id: 'SP1',
+              [FieldsEnum.submitter_donor_id]: 'AB2',
+              [FieldsEnum.program_id]: 'ABCD-EF',
+              [FieldsEnum.submitter_specimen_id]: 'SP1',
               index: 1,
             },
           },
@@ -1040,26 +1040,26 @@ describe('data-validator', () => {
         {
           AB2: {
             specimen: {
-              submitter_donor_id: 'AB2',
-              program_id: 'PEME-CA',
-              submitter_specimen_id: 'SP13',
-              specimen_acquistion_interval: '5020',
+              [FieldsEnum.submitter_donor_id]: 'AB2',
+              [FieldsEnum.program_id]: 'PEME-CA',
+              [FieldsEnum.submitter_specimen_id]: 'SP13',
+              [ClinicalInfoFieldsEnum.acquisition_interval]: '5020',
               index: 1,
             },
           },
           AB3: {
             specimen: {
-              submitter_donor_id: 'AB3',
-              program_id: 'PEME-CA',
-              submitter_specimen_id: 'SP12',
-              specimen_acquistion_interval: '2000',
+              [FieldsEnum.submitter_donor_id]: 'AB3',
+              [FieldsEnum.program_id]: 'PEME-CA',
+              [FieldsEnum.submitter_specimen_id]: 'SP12',
+              [ClinicalInfoFieldsEnum.acquisition_interval]: '2000',
               index: 2,
             },
             donor: {
-              submitter_donor_id: 'AB3',
-              program_id: 'PEME-CA',
-              vital_status: 'deceased',
-              survival_time: '522',
+              [FieldsEnum.submitter_donor_id]: 'AB3',
+              [FieldsEnum.program_id]: 'PEME-CA',
+              [ClinicalInfoFieldsEnum.vital_status]: 'deceased',
+              [ClinicalInfoFieldsEnum.survival_time]: '522',
               index: 1,
             },
           },
@@ -1067,21 +1067,21 @@ describe('data-validator', () => {
         { AB2: existingDonorMock1, AB3: existingDonorMock2 },
       );
       const specimenIntervalErr: SubmissionValidationError = {
-        fieldName: ClinicalInfoFieldsEnum.specimen_acquistion_interval,
+        fieldName: ClinicalInfoFieldsEnum.acquisition_interval,
         type: DataValidationErrors.CONFLICTING_TIME_INTERVAL,
         index: 1,
         info: {
-          msg: "specimen_acquistion_interval can't be greater than survival_time",
+          msg: `${ClinicalInfoFieldsEnum.acquisition_interval} can't be greater than ${ClinicalInfoFieldsEnum.survival_time}`,
           donorSubmitterId: 'AB2',
           value: '5020',
         },
       };
       const specimenIntervalErr2: SubmissionValidationError = {
-        fieldName: ClinicalInfoFieldsEnum.specimen_acquistion_interval,
+        fieldName: ClinicalInfoFieldsEnum.acquisition_interval,
         type: DataValidationErrors.CONFLICTING_TIME_INTERVAL,
         index: 2,
         info: {
-          msg: "specimen_acquistion_interval can't be greater than survival_time",
+          msg: `${ClinicalInfoFieldsEnum.acquisition_interval} can't be greater than ${ClinicalInfoFieldsEnum.survival_time}`,
           donorSubmitterId: 'AB3',
           value: '2000',
         },
@@ -1092,7 +1092,7 @@ describe('data-validator', () => {
         index: 1,
         info: {
           conflictingSpecimenSubmitterIds: ['SP12'],
-          msg: "survival_time can't be less than a specimen's acquistion time",
+          msg: `${ClinicalInfoFieldsEnum.survival_time} can't be less than a specimen's acquistion time`,
           donorSubmitterId: 'AB3',
           value: '522',
         },

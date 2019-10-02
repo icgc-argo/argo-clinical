@@ -249,7 +249,10 @@ export namespace operations {
         `No active submission found with programId: ${programId} & versionId: ${versionId}`,
       );
     }
-    if (exsistingActiveSubmission.state !== SUBMISSION_STATE.OPEN) {
+    if (
+      exsistingActiveSubmission.state !== SUBMISSION_STATE.OPEN ||
+      _.isEmpty(exsistingActiveSubmission.clinicalEntities)
+    ) {
       return {
         submission: exsistingActiveSubmission,
         schemaErrors: {},
@@ -275,7 +278,6 @@ export namespace operations {
         newDonorDataMap[donorId][clinicalType] = {
           ...rc,
           submitter_donor_id: donorId,
-          program_id: programId,
           index: index,
         };
       });
@@ -466,14 +468,14 @@ export namespace operations {
       stats: stats,
       records: registrationRecords.map(r => {
         const record: Readonly<SubmittedRegistrationRecord> = {
-          program_id: command.programId,
-          submitter_donor_id: r.donorSubmitterId,
-          gender: r.gender,
-          submitter_specimen_id: r.specimenSubmitterId,
-          specimen_tissue_source: r.specimenTissueSource,
-          tumour_normal_designation: r.tumourNormalDesignation,
-          submitter_sample_id: r.sampleSubmitterId,
-          sample_type: r.sampleType,
+          [FieldsEnum.program_id]: command.programId,
+          [FieldsEnum.submitter_donor_id]: r.donorSubmitterId,
+          [FieldsEnum.gender]: r.gender,
+          [FieldsEnum.submitter_specimen_id]: r.specimenSubmitterId,
+          [FieldsEnum.specimen_tissue_source]: r.specimenTissueSource,
+          [FieldsEnum.tumour_normal_designation]: r.tumourNormalDesignation,
+          [FieldsEnum.submitter_sample_id]: r.sampleSubmitterId,
+          [FieldsEnum.sample_type]: r.sampleType,
         };
         return record;
       }),
@@ -522,6 +524,9 @@ export namespace operations {
   const getDonorsInProgram = async (
     filters: DeepReadonly<FindByProgramAndSubmitterFilter[]>,
   ): Promise<DeepReadonly<DonorMap>> => {
+    if (filters.length === 0) {
+      return {};
+    }
     // fetch related donor docs from the db
     let donorDocs = await donorDao.findByProgramAndSubmitterId(filters);
     if (!donorDocs) {

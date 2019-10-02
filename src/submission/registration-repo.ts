@@ -1,4 +1,4 @@
-import { ActiveRegistration } from './submission-entities';
+import { ActiveRegistration, FieldsEnum } from './submission-entities';
 import { InternalError } from './errors';
 import { loggerFor } from '../logger';
 import { F, MongooseUtils } from '../utils';
@@ -68,14 +68,14 @@ type ActiveRegistrationDocument = mongoose.Document & ActiveRegistration;
 
 const ActiveRegistrationItem = new mongoose.Schema(
   {
-    program_id: { type: String, unique: true, required: true },
-    submitter_donor_id: { type: String, required: true },
-    gender: { type: String, required: true },
-    submitter_specimen_id: { type: String, required: true },
-    specimen_tissue_source: { type: String, required: true },
-    tumour_normal_designation: { type: String, required: true },
-    submitter_sample_id: { type: String, required: true },
-    sample_type: { type: String, required: true },
+    [FieldsEnum.program_id]: { type: String, unique: true, required: true },
+    [FieldsEnum.submitter_donor_id]: { type: String, required: true },
+    [FieldsEnum.gender]: { type: String, required: true },
+    [FieldsEnum.submitter_specimen_id]: { type: String, required: true },
+    [FieldsEnum.specimen_tissue_source]: { type: String, required: true },
+    [FieldsEnum.tumour_normal_designation]: { type: String, required: true },
+    [FieldsEnum.submitter_sample_id]: { type: String, required: true },
+    [FieldsEnum.sample_type]: { type: String, required: true },
   },
   { _id: false, minimize: false },
 );

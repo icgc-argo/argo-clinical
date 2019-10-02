@@ -183,14 +183,13 @@ export interface ClinicalEntities {
 
 // Generic submission record object
 export interface SubmittedClinicalRecord {
-  readonly program_id: string;
   readonly submitter_donor_id: string;
   readonly index: number;
   [fieldName: string]: string | number;
 }
 
 export enum ClinicalInfoFieldsEnum {
-  specimen_acquistion_interval = 'specimen_acquistion_interval',
+  acquisition_interval = 'acquisition_interval',
   vital_status = 'vital_status',
   survival_time = 'survival_time',
 }

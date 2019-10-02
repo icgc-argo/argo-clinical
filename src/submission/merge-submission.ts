@@ -1,6 +1,6 @@
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, Specimen, Sample } from '../clinical/clinical-entities';
-import { ActiveClinicalSubmission } from './submission-entities';
+import { ActiveClinicalSubmission, FieldsEnum } from './submission-entities';
 import { FileType } from './submission-api';
 import _ from 'lodash';
 import { loggerFor } from '../logger';
@@ -24,7 +24,7 @@ export const mergeActiveSubmissionWithDonors = async (
 
     // Find the donor that matches each record, and update the entity within that donor
     entityData.records.forEach(record => {
-      const donorId = record.submitter_donor_id;
+      const donorId = record[FieldsEnum.submitter_donor_id];
       const donor = _.find(updatedDonors, ['submitterId', donorId]);
       if (donor) {
         switch (entityType) {
@@ -33,6 +33,9 @@ export const mergeActiveSubmissionWithDonors = async (
             break;
           case FileType.SPECIMEN:
             updateSpecimenRecord(donor, record);
+            break;
+          case FileType.PRIMARY_DIAGNOSES:
+            updatePrimaryDiagnosesRecord(donor, record);
             break;
           default:
             addOrUpdateClinicalRecord(donor, record, entityType);
@@ -50,21 +53,19 @@ export const mergeActiveSubmissionWithDonors = async (
 };
 
 const updateDonorFromSubmissionRecord = (donor: Donor, record: ClinicalEnitityRecord) => {
-  donor.gender = record.gender;
-  donor.clinicalInfo = _.omit(record, ['program_id', 'submitter_donor_id', 'gender']);
+  donor.clinicalInfo = _.omit(record, [FieldsEnum.submitter_donor_id]);
 };
 const updateSpecimenRecord = (donor: Donor, record: ClinicalEnitityRecord) => {
   // Find specimen in donor
-  const specimen = findSpecimen(donor, record.submitter_specimen_id);
-  specimen.specimenTissueSource = record.specimen_tissue_source;
-  specimen.tumourNormalDesignation = record.tumour_normal_designation;
+  const specimen = findSpecimen(donor, record[FieldsEnum.submitter_specimen_id]);
   specimen.clinicalInfo = _.omit(record, [
-    'submitter_donor_id',
-    'submitter_specimen_id',
-    'tumour_normal_designation',
-    'specimenTissueSource',
-    'program_id',
+    FieldsEnum.submitter_donor_id,
+    FieldsEnum.submitter_specimen_id,
   ]);
+};
+
+const updatePrimaryDiagnosesRecord = (donor: Donor, record: ClinicalEnitityRecord) => {
+  donor.primaryDiagnosis = _.omit(record, [FieldsEnum.submitter_donor_id]);
 };
 
 /*
@@ -81,15 +82,16 @@ const addOrUpdateClinicalRecord = (
   const submitterIdKey = `submitter_${_.snakeCase(entityType)}_id`;
   const submitterId = record[submitterIdKey];
 
-  const entityList = _.get(donor, entityType, []);
+  // enforce camel case for entity types like primaryDiagnosis, followUps, etc.
+  const entityList = _.get(donor, _.camelCase(entityType), []);
   const existingEntity = _.find(entityList, ['submitterId', submitterId]);
   if (existingEntity) {
-    existingEntity.clinicalInfo = _.omit(record, ['program_id', submitterIdKey]);
+    existingEntity.clinicalInfo = _.omit(record, [FieldsEnum.program_id, submitterIdKey]);
     console.log(existingEntity);
   } else {
     entityList.push({
       submitterId,
-      clinicalInfo: _.omit(record, ['program_id', submitterIdKey]),
+      clinicalInfo: _.omit(record, [FieldsEnum.program_id, submitterIdKey]),
     });
   }
 };
@@ -106,15 +108,4 @@ const findSpecimen = (donor: Donor, specimenId: string) => {
   }
 
   return specimen;
-};
-
-const findSample = (donor: Donor, specimenId: string, sampleId: string) => {
-  const specimen = findSpecimen(donor, specimenId);
-  const sample = _.find(specimen.samples, ['submitterId', sampleId]) as Sample;
-  if (!sample) {
-    throw new Errors.StateConflict(
-      `Sample ${sampleId} has not been registered but is part of the activeSubmission, merge cannot be completed.`,
-    );
-  }
-  return sample;
 };

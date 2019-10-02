@@ -23,6 +23,8 @@ import {
   ActiveClinicalSubmission,
   FieldsEnum,
   SUBMISSION_STATE,
+  ClinicalInfoFieldsEnum,
+  DataValidationErrors,
 } from '../../../src/submission/submission-entities';
 import { TsvUtils } from '../../../src/utils';
 import { donorDao } from '../../../src/clinical/donor-repo';
@@ -42,7 +44,7 @@ const expectedErrors = [
       sampleSubmitterId: 'sam123',
       specimenSubmitterId: 'sp123',
     },
-    fieldName: 'tumour_normal_designation',
+    fieldName: FieldsEnum.tumour_normal_designation,
   },
   {
     fieldName: FieldsEnum.submitter_specimen_id,
@@ -67,7 +69,7 @@ const expectedErrors = [
     type: 'INVALID_BY_REGEX',
   },
   {
-    fieldName: 'gender',
+    fieldName: FieldsEnum.gender,
     index: 0,
     info: {
       donorSubmitterId: 'abcd123',
@@ -78,7 +80,7 @@ const expectedErrors = [
     type: 'INVALID_ENUM_VALUE',
   },
   {
-    fieldName: 'sample_type',
+    fieldName: FieldsEnum.sample_type,
     index: 0,
     info: {
       donorSubmitterId: 'abcd123',
@@ -98,7 +100,7 @@ const expectedErrors = [
       specimenSubmitterId: 'sp123',
       value: 'PEXA-MX',
     },
-    type: 'INVALID_PROGRAM_ID',
+    type: DataValidationErrors.INVALID_PROGRAM_ID,
   },
 ];
 
@@ -120,14 +122,14 @@ const expectedResponse1 = {
     },
     records: [
       {
-        program_id: 'ABCD-EF',
-        submitter_donor_id: 'abcd123',
-        gender: 'Male',
-        submitter_specimen_id: 'ss123',
-        specimen_tissue_source: 'Other',
-        tumour_normal_designation: 'Normal',
-        submitter_sample_id: 'sm123',
-        sample_type: 'ctDNA',
+        [FieldsEnum.program_id]: 'ABCD-EF',
+        [FieldsEnum.submitter_donor_id]: 'abcd123',
+        [FieldsEnum.gender]: 'Male',
+        [FieldsEnum.submitter_specimen_id]: 'ss123',
+        [FieldsEnum.specimen_tissue_source]: 'Other',
+        [FieldsEnum.tumour_normal_designation]: 'Normal',
+        [FieldsEnum.submitter_sample_id]: 'sm123',
+        [FieldsEnum.sample_type]: 'ctDNA',
       },
     ],
     __v: 0,
@@ -153,14 +155,14 @@ const ABCD_REGISTRATION_DOC: ActiveRegistration = {
   },
   records: [
     {
-      program_id: 'ABCD-EF',
-      submitter_donor_id: 'abcd123',
-      gender: 'Male',
-      submitter_specimen_id: 'ss123',
-      specimen_tissue_source: 'Other',
-      tumour_normal_designation: 'Normal',
-      submitter_sample_id: 'sm123',
-      sample_type: 'ctDNA',
+      [FieldsEnum.program_id]: 'ABCD-EF',
+      [FieldsEnum.submitter_donor_id]: 'abcd123',
+      [FieldsEnum.gender]: 'Male',
+      [FieldsEnum.submitter_specimen_id]: 'ss123',
+      [FieldsEnum.specimen_tissue_source]: 'Other',
+      [FieldsEnum.tumour_normal_designation]: 'Normal',
+      [FieldsEnum.submitter_sample_id]: 'sm123',
+      [FieldsEnum.sample_type]: 'ctDNA',
     },
   ],
 };
@@ -173,7 +175,7 @@ const expectedDonorErrors = [
       donorSubmitterId: 'ICGC_0002',
     },
 
-    fieldName: 'survival_time',
+    fieldName: ClinicalInfoFieldsEnum.survival_time,
   },
   {
     index: 0,
@@ -182,7 +184,7 @@ const expectedDonorErrors = [
       value: 'undecided',
       donorSubmitterId: 'ICGC_0002',
     },
-    fieldName: 'vital_status',
+    fieldName: ClinicalInfoFieldsEnum.vital_status,
   },
 ];
 
@@ -702,8 +704,8 @@ describe('Submission Api', () => {
                   res.body.submission.clinicalEntities.donor.stats.errorsFound.should.deep.eq([0]);
                   res.body.submission.clinicalEntities.donor.dataErrors.should.deep.eq([
                     {
-                      type: 'ID_NOT_REGISTERED',
-                      fieldName: 'submitter_donor_id',
+                      type: DataValidationErrors.ID_NOT_REGISTERED,
+                      fieldName: FieldsEnum.submitter_donor_id,
                       info: {
                         donorSubmitterId: 'ICGC_0001',
                         value: 'ICGC_0001',

@@ -54,7 +54,7 @@ export const validate = async (
       utils.buildSubmissionError(
         specimenRecord,
         DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
-        ClinicalInfoFieldsEnum.specimen_acquistion_interval,
+        ClinicalInfoFieldsEnum.acquisition_interval,
       ),
     ]);
   }
@@ -75,15 +75,15 @@ function checkTimeConflictWithDonor(
   if (
     donorDataToValidateWith.donorVitalStatus === 'deceased' &&
     donorDataToValidateWith.donorSurvivalTime <
-      specimenRecord[ClinicalInfoFieldsEnum.specimen_acquistion_interval]
+      specimenRecord[ClinicalInfoFieldsEnum.acquisition_interval]
   ) {
     errors.push(
       utils.buildSubmissionError(
         specimenRecord,
         DataValidationErrors.CONFLICTING_TIME_INTERVAL,
-        ClinicalInfoFieldsEnum.specimen_acquistion_interval,
+        ClinicalInfoFieldsEnum.acquisition_interval,
         {
-          msg: `${ClinicalInfoFieldsEnum.specimen_acquistion_interval} can't be greater than ${ClinicalInfoFieldsEnum.survival_time}`,
+          msg: `${ClinicalInfoFieldsEnum.acquisition_interval} can't be greater than ${ClinicalInfoFieldsEnum.survival_time}`,
         },
       ),
     );

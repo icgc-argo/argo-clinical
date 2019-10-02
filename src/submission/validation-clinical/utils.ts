@@ -65,13 +65,13 @@ export const buildValidatorResult = (
   return { type, index, resultArray };
 };
 
-export const getUpdatedFields = (clinicalInfo: any, record: SubmittedClinicalRecord) => {
+export const getUpdatedFields = (clinicalObject: any, record: SubmittedClinicalRecord) => {
   const updateFields: any[] = [];
-  if (clinicalInfo) {
-    for (const fieldName in clinicalInfo) {
+  if (clinicalObject) {
+    for (const fieldName in clinicalObject) {
       // this is assuming that the field name record and clinicalInfo both have snake casing
-      if (clinicalInfo[fieldName] !== record[fieldName]) {
-        updateFields.push(buildSubmissionUpdate(record, clinicalInfo[fieldName], fieldName));
+      if (clinicalObject[fieldName] !== record[fieldName]) {
+        updateFields.push(buildSubmissionUpdate(record, clinicalObject[fieldName], fieldName));
       }
     }
   }
@@ -84,15 +84,15 @@ export const getUpdatedFields = (clinicalInfo: any, record: SubmittedClinicalRec
 // 3 not new or update <=> noUpdate
 export const checkForUpdates = async (
   record: DeepReadonly<SubmittedClinicalRecord>,
-  clinicalInfo: DeepReadonly<{ [field: string]: string | number }> | undefined,
+  clinicalObject: DeepReadonly<{ [field: string]: string | number } | object> | undefined,
 ) => {
   // no updates to specimenTissueSource or tnd but there is no existent clinicalInfo => new
-  if (_.isEmpty(clinicalInfo)) {
+  if (_.isEmpty(clinicalObject)) {
     return buildValidatorResult(ModificationType.NEW, record.index);
   }
 
   // check changing fields
-  const updatedFields: any[] = getUpdatedFields(clinicalInfo, record);
+  const updatedFields: any[] = getUpdatedFields(clinicalObject, record);
 
   // if no updates and not new return noUpdate
   return updatedFields.length === 0
