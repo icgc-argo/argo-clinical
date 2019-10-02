@@ -6,6 +6,7 @@ import * as schemaApi from '../submission/schema-api';
 const router = express.Router();
 
 router.get('/', wrapAsync(schemaApi.get));
+router.get('/all', wrapAsync(schemaApi.getAllSchema));
 // get template for a given schema
 router.get('/template/:schemaName', wrapAsync(schemaApi.getTemplate));
 // temporary api
