@@ -23,11 +23,13 @@ import {
   ActiveClinicalSubmission,
   FieldsEnum,
   SUBMISSION_STATE,
+  ClinicalInfoFieldsEnum,
+  DataValidationErrors,
 } from '../../../src/submission/submission-entities';
 import { TsvUtils } from '../../../src/utils';
 import { donorDao } from '../../../src/clinical/donor-repo';
 import { Donor } from '../../../src/clinical/clinical-entities';
-import { ErrorCodes } from '../../../src/submission/submission-api';
+import { ErrorCodes, FileType } from '../../../src/submission/submission-api';
 import * as manager from '../../../src/lectern-client/schema-manager';
 
 chai.use(require('chai-http'));
@@ -42,7 +44,7 @@ const expectedErrors = [
       sampleSubmitterId: 'sam123',
       specimenSubmitterId: 'sp123',
     },
-    fieldName: 'tumour_normal_designation',
+    fieldName: FieldsEnum.tumour_normal_designation,
   },
   {
     fieldName: FieldsEnum.submitter_specimen_id,
@@ -67,7 +69,7 @@ const expectedErrors = [
     type: 'INVALID_BY_REGEX',
   },
   {
-    fieldName: 'gender',
+    fieldName: FieldsEnum.gender,
     index: 0,
     info: {
       donorSubmitterId: 'abcd123',
@@ -78,7 +80,7 @@ const expectedErrors = [
     type: 'INVALID_ENUM_VALUE',
   },
   {
-    fieldName: 'sample_type',
+    fieldName: FieldsEnum.sample_type,
     index: 0,
     info: {
       donorSubmitterId: 'abcd123',
@@ -98,7 +100,7 @@ const expectedErrors = [
       specimenSubmitterId: 'sp123',
       value: 'PEXA-MX',
     },
-    type: 'INVALID_PROGRAM_ID',
+    type: DataValidationErrors.INVALID_PROGRAM_ID,
   },
 ];
 
@@ -120,14 +122,14 @@ const expectedResponse1 = {
     },
     records: [
       {
-        program_id: 'ABCD-EF',
-        submitter_donor_id: 'abcd123',
-        gender: 'Male',
-        submitter_specimen_id: 'ss123',
-        specimen_type: 'FFPE',
-        tumour_normal_designation: 'Normal',
-        submitter_sample_id: 'sm123',
-        sample_type: 'ctDNA',
+        [FieldsEnum.program_id]: 'ABCD-EF',
+        [FieldsEnum.submitter_donor_id]: 'abcd123',
+        [FieldsEnum.gender]: 'Male',
+        [FieldsEnum.submitter_specimen_id]: 'ss123',
+        [FieldsEnum.specimen_tissue_source]: 'Other',
+        [FieldsEnum.tumour_normal_designation]: 'Normal',
+        [FieldsEnum.submitter_sample_id]: 'sm123',
+        [FieldsEnum.sample_type]: 'ctDNA',
       },
     ],
     __v: 0,
@@ -138,7 +140,7 @@ const expectedResponse1 = {
 const ABCD_REGISTRATION_DOC: ActiveRegistration = {
   programId: 'ABCD-EF',
   creator: 'Test User',
-  batchName: 'registration.tsv',
+  batchName: `${FileType.REGISTRATION}.tsv`,
   stats: {
     newDonorIds: {
       abcd123: [0],
@@ -153,14 +155,14 @@ const ABCD_REGISTRATION_DOC: ActiveRegistration = {
   },
   records: [
     {
-      program_id: 'ABCD-EF',
-      submitter_donor_id: 'abcd123',
-      gender: 'Male',
-      submitter_specimen_id: 'ss123',
-      specimen_type: 'FFPE',
-      tumour_normal_designation: 'Normal',
-      submitter_sample_id: 'sm123',
-      sample_type: 'ctDNA',
+      [FieldsEnum.program_id]: 'ABCD-EF',
+      [FieldsEnum.submitter_donor_id]: 'abcd123',
+      [FieldsEnum.gender]: 'Male',
+      [FieldsEnum.submitter_specimen_id]: 'ss123',
+      [FieldsEnum.specimen_tissue_source]: 'Other',
+      [FieldsEnum.tumour_normal_designation]: 'Normal',
+      [FieldsEnum.submitter_sample_id]: 'sm123',
+      [FieldsEnum.sample_type]: 'ctDNA',
     },
   ],
 };
@@ -173,25 +175,7 @@ const expectedDonorErrors = [
       donorSubmitterId: 'ICGC_0002',
     },
 
-    fieldName: 'survival_time',
-  },
-  {
-    index: 0,
-    type: 'INVALID_ENUM_VALUE',
-    info: {
-      value: 'mail',
-      donorSubmitterId: 'ICGC_0002',
-    },
-    fieldName: 'gender',
-  },
-  {
-    index: 0,
-    type: 'INVALID_ENUM_VALUE',
-    info: {
-      value: 'martian',
-      donorSubmitterId: 'ICGC_0002',
-    },
-    fieldName: 'ethnicity',
+    fieldName: ClinicalInfoFieldsEnum.survival_time,
   },
   {
     index: 0,
@@ -200,17 +184,7 @@ const expectedDonorErrors = [
       value: 'undecided',
       donorSubmitterId: 'ICGC_0002',
     },
-    fieldName: 'vital_status',
-  },
-  {
-    type: 'INVALID_PROGRAM_ID',
-    fieldName: 'program_id',
-    index: 0,
-    info: {
-      value: 'PACA-AU',
-      donorSubmitterId: 'ICGC_0002',
-      expectedProgram: 'ABCD-EF',
-    },
+    fieldName: ClinicalInfoFieldsEnum.vital_status,
   },
 ];
 
@@ -320,7 +294,7 @@ describe('Submission Api', () => {
     it("should return 403 requested program doesn't match authorized in token scopes", done => {
       let file: Buffer;
       try {
-        file = fs.readFileSync(__dirname + '/registration.tsv');
+        file = fs.readFileSync(__dirname + `/${FileType.REGISTRATION}.tsv`);
       } catch (err) {
         return done(err);
       }
@@ -330,7 +304,7 @@ describe('Submission Api', () => {
         // passing token with different program
         .auth(JWT_WXYZEF, { type: 'bearer' })
         .type('form')
-        .attach('registrationFile', file, 'registration.tsv')
+        .attach('registrationFile', file, `${FileType.REGISTRATION}.tsv`)
         .end((err: any, res: any) => {
           res.should.have.status(403);
           done();
@@ -343,15 +317,17 @@ describe('Submission Api', () => {
       let rows: any[];
 
       try {
-        file = fs.readFileSync(__dirname + '/registration.1.tsv');
+        file = fs.readFileSync(__dirname + `/${FileType.REGISTRATION}.1.tsv`);
         (async () =>
-          (rows = (await TsvUtils.tsvToJson(__dirname + '/registration.1.tsv')) as any[]))();
+          (rows = (await TsvUtils.tsvToJson(
+            __dirname + `/${FileType.REGISTRATION}.1.tsv`,
+          )) as any[]))();
       } catch (err) {
         return done(err);
       }
 
       try {
-        file2 = fs.readFileSync(__dirname + '/registration.2.tsv');
+        file2 = fs.readFileSync(__dirname + `/${FileType.REGISTRATION}.2.tsv`);
       } catch (err) {
         return done(err);
       }
@@ -361,7 +337,7 @@ describe('Submission Api', () => {
         .post('/submission/program/ABCD-EF/registration')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .type('form')
-        .attach('registrationFile', file, 'registration.1.tsv')
+        .attach('registrationFile', file, `${FileType.REGISTRATION}.1.tsv`)
         .end(async (err: any, res: any) => {
           try {
             await assertUploadOKRegistrationCreated(res, dburl);
@@ -378,7 +354,7 @@ describe('Submission Api', () => {
                     .post('/submission/program/ABCD-EF/registration')
                     .auth(JWT_ABCDEF, { type: 'bearer' })
                     .type('form')
-                    .attach('registrationFile', file2, 'registration.2.tsv')
+                    .attach('registrationFile', file2, `${FileType.REGISTRATION}.2.tsv`)
                     .end(async (err: any, res: any) => {
                       try {
                         await assertUploadOKRegistrationCreated(res, dburl);
@@ -413,9 +389,11 @@ describe('Submission Api', () => {
       let file: Buffer;
       let rows: any[];
       try {
-        file = fs.readFileSync(__dirname + '/registration.1.tsv');
+        file = fs.readFileSync(__dirname + `/${FileType.REGISTRATION}.1.tsv`);
         (async () =>
-          (rows = (await TsvUtils.tsvToJson(__dirname + '/registration.1.tsv')) as any[]))();
+          (rows = (await TsvUtils.tsvToJson(
+            __dirname + `/${FileType.REGISTRATION}.1.tsv`,
+          )) as any[]))();
       } catch (err) {
         return done(err);
       }
@@ -425,7 +403,7 @@ describe('Submission Api', () => {
         .post('/submission/program/ABCD-EF/registration')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .type('form')
-        .attach('registrationFile', file, 'registration.1.tsv')
+        .attach('registrationFile', file, `${FileType.REGISTRATION}.1.tsv`)
         .end(async (err: any, res: any) => {
           try {
             await assertUploadOKRegistrationCreated(res, dburl);
@@ -448,7 +426,7 @@ describe('Submission Api', () => {
                     .post('/submission/program/ABCD-EF/registration')
                     .auth(JWT_ABCDEF, { type: 'bearer' })
                     .type('form')
-                    .attach('registrationFile', file, 'registration.1.tsv')
+                    .attach('registrationFile', file, `${FileType.REGISTRATION}.1.tsv`)
                     .end(async (err: any, res: any) => {
                       try {
                         await assertUploadOKRegistrationCreated(res, dburl);
@@ -484,7 +462,7 @@ describe('Submission Api', () => {
     it('should accept valid registration tsv', done => {
       let file: Buffer;
       try {
-        file = fs.readFileSync(__dirname + '/registration.tsv');
+        file = fs.readFileSync(__dirname + `/${FileType.REGISTRATION}.tsv`);
       } catch (err) {
         return done(err);
       }
@@ -493,7 +471,7 @@ describe('Submission Api', () => {
         .post('/submission/program/ABCD-EF/registration')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .type('form')
-        .attach('registrationFile', file, 'registration.tsv')
+        .attach('registrationFile', file, `${FileType.REGISTRATION}.tsv`)
         .end(async (err: any, res: any) => {
           try {
             res.should.have.status(201);
@@ -525,7 +503,7 @@ describe('Submission Api', () => {
       await insertData(dburl, 'activeregistrations', ABCD_REGISTRATION_DOC);
       let file: Buffer;
       try {
-        file = fs.readFileSync(__dirname + '/registration.invalid.tsv');
+        file = fs.readFileSync(__dirname + `/${FileType.REGISTRATION}.invalid.tsv`);
       } catch (err) {
         throw err;
       }
@@ -533,7 +511,7 @@ describe('Submission Api', () => {
         .request(app)
         .post('/submission/program/ABCD-EF/registration')
         .type('form')
-        .attach('registrationFile', file, 'registration.invalid.tsv')
+        .attach('registrationFile', file, `${FileType.REGISTRATION}.invalid.tsv`)
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .end(async (err: any, res: any) => {
           try {
@@ -566,7 +544,7 @@ describe('Submission Api', () => {
           try {
             res.should.have.status(400);
             res.body.should.deep.eq({
-              msg: 'invalid file name, must start with registration and have .tsv extension',
+              msg: `invalid file name, must start with ${FileType.REGISTRATION} and have .tsv extension`,
               code: ErrorCodes.INVALID_FILE_NAME,
             });
           } catch (err) {
@@ -620,10 +598,8 @@ describe('Submission Api', () => {
     });
     it('should return 422 if try to upload invalid tsv files', done => {
       let file: Buffer;
-      let file2: Buffer;
       try {
         file = fs.readFileSync(__dirname + '/donor.invalid.tsv');
-        file2 = fs.readFileSync(__dirname + '/sample.tsv');
       } catch (err) {
         return done(err);
       }
@@ -633,7 +609,6 @@ describe('Submission Api', () => {
         .post('/submission/program/ABCD-EF/clinical/upload')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .attach('clinicalFiles', file, 'donor.invalid.tsv')
-        .attach('clinicalFiles', file2, 'sample.tsv')
         .end((err: any, res: any) => {
           res.should.have.status(422);
           res.body.schemaErrors.should.deep.eq({ donor: expectedDonorErrors });
@@ -643,10 +618,8 @@ describe('Submission Api', () => {
     });
     it('should return 200 if try to upload valid tsv files', done => {
       let file: Buffer;
-      let file2: Buffer;
       try {
         file = fs.readFileSync(__dirname + '/donor.tsv');
-        file2 = fs.readFileSync(__dirname + '/sample.tsv');
       } catch (err) {
         return done(err);
       }
@@ -656,7 +629,6 @@ describe('Submission Api', () => {
         .post('/submission/program/ABCD-EF/clinical/upload')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .attach('clinicalFiles', file, 'donor.tsv')
-        .attach('clinicalFiles', file2, 'sample.tsv')
         .end(async (err: any, res: any) => {
           res.should.have.status(200);
           res.body.successful.should.deep.eq(true);
@@ -676,7 +648,6 @@ describe('Submission Api', () => {
       const files: Buffer[] = [];
       try {
         files.push(fs.readFileSync(__dirname + '/donor.tsv'));
-        files.push(fs.readFileSync(__dirname + '/sample.tsv'));
         files.push(fs.readFileSync(__dirname + '/donor.invalid.tsv'));
         files.push(fs.readFileSync(__dirname + '/thisissample.tsv'));
       } catch (err) {
@@ -733,8 +704,8 @@ describe('Submission Api', () => {
                   res.body.submission.clinicalEntities.donor.stats.errorsFound.should.deep.eq([0]);
                   res.body.submission.clinicalEntities.donor.dataErrors.should.deep.eq([
                     {
-                      type: 'ID_NOT_REGISTERED',
-                      fieldName: 'submitter_donor_id',
+                      type: DataValidationErrors.ID_NOT_REGISTERED,
+                      fieldName: FieldsEnum.submitter_donor_id,
                       info: {
                         donorSubmitterId: 'ICGC_0001',
                         value: 'ICGC_0001',
@@ -789,6 +760,7 @@ describe('Submission Api', () => {
                 try {
                   res.should.have.status(200);
                   res.body.submission.state.should.eq(SUBMISSION_STATE.VALID);
+                  res.body.submission.clinicalEntities.donor.records.length.should.eq(1);
                   res.body.submission.clinicalEntities.donor.dataErrors.length.should.eq(0);
                 } catch (err) {
                   throw err;
@@ -819,9 +791,10 @@ describe('Submission Api', () => {
         specimens: [
           {
             samples: [],
-            specimenType: 'FFPE',
+            specimenTissueSource: 'Other',
             tumourNormalDesignation: 'Normal',
             submitterId: '8013861',
+            clinicalInfo: { percent_tumour_cells: '0.5' },
           },
         ],
         donorId: 1,
@@ -849,12 +822,12 @@ describe('Submission Api', () => {
                   res.body.submission.clinicalEntities.specimen.stats.updated.should.deep.eq([0]);
                   res.body.submission.clinicalEntities.specimen.dataUpdates.should.deep.eq([
                     {
-                      fieldName: 'specimen_type',
+                      fieldName: 'percent_tumour_cells',
                       index: 0,
                       info: {
                         donorSubmitterId: 'ICGC_0001',
-                        newValue: 'Other',
-                        oldValue: 'FFPE',
+                        newValue: '0.35',
+                        oldValue: '0.5',
                       },
                     },
                   ]);
@@ -1110,7 +1083,7 @@ describe('Submission Api', () => {
 
   describe('schema', function() {
     it('get template found', done => {
-      const name = 'registration';
+      const name = FileType.REGISTRATION;
       console.log("Getting template for '" + name + "'...");
       chai
         .request(app)
@@ -1119,9 +1092,9 @@ describe('Submission Api', () => {
         .end((err: any, res: any) => {
           res.should.have.status(200);
           res.text.should.equal(
-            'program_id\tsubmitter_donor_id\tgender\t' +
-              'submitter_specimen_id\tspecimen_type\ttumour_normal_designation\t' +
-              'submitter_sample_id\tsample_type\n',
+            `${FieldsEnum.program_id}\t${FieldsEnum.submitter_donor_id}\t${FieldsEnum.gender}\t` +
+              `${FieldsEnum.submitter_specimen_id}\t${FieldsEnum.specimen_tissue_source}\t${FieldsEnum.tumour_normal_designation}\t` +
+              `${FieldsEnum.submitter_sample_id}\t${FieldsEnum.sample_type}\n`,
           );
           res.should.header('Content-type', 'text/tab-separated-values;' + ' charset=utf-8');
           done();
@@ -1177,7 +1150,7 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dburl: 
           {
             specimenId: i,
             submitterId: r[FieldsEnum.submitter_specimen_id],
-            specimenType: r[FieldsEnum.specimen_type],
+            specimenTissueSource: r[FieldsEnum.specimen_tissue_source],
             tumourNormalDesignation: r[FieldsEnum.tumour_normal_designation],
             samples: [
               {
@@ -1252,7 +1225,7 @@ const comittedDonors2: Donor[] = [
             sampleId: 1,
           },
         ],
-        specimenType: 'Bone marrow',
+        specimenTissueSource: 'Bone marrow',
         tumourNormalDesignation: 'Xenograft - derived from primary tumour',
         submitterId: 'ss123-jdjr-ak',
         specimenId: 1,
@@ -1277,8 +1250,8 @@ const comittedDonors2: Donor[] = [
             sampleId: 2,
           },
         ],
-        specimenType: 'Serum',
-        tumourNormalDesignation: 'Cell line - derived from xenograft tissue',
+        specimenTissueSource: 'Serum',
+        tumourNormalDesignation: 'Xenograft - derived from primary tumour',
         submitterId: 'ss123-sjdm',
         specimenId: 2,
       },
@@ -1290,7 +1263,7 @@ const comittedDonors2: Donor[] = [
             sampleId: 5,
           },
         ],
-        specimenType: 'FFPE',
+        specimenTissueSource: 'Other',
         tumourNormalDesignation: 'Normal',
         submitterId: 'ss123-sjdm-2',
         specimenId: 5,
@@ -1315,7 +1288,7 @@ const comittedDonors2: Donor[] = [
             sampleId: 3,
           },
         ],
-        specimenType: 'Pleural effusion',
+        specimenTissueSource: 'Pleural effusion',
         tumourNormalDesignation: 'Primary tumour - adjacent to normal',
         submitterId: 'ss123-1123',
         specimenId: 3,
@@ -1340,9 +1313,9 @@ const comittedDonors2: Donor[] = [
             sampleId: 4,
           },
         ],
-        specimenType: 'FFPE',
+        specimenTissueSource: 'Other',
         tumourNormalDesignation: 'Metastatic tumour',
-        submitterId: 'ss123=@@abnc',
+        submitterId: 'ss123-abnc',
         specimenId: 4,
       },
       {
@@ -1353,9 +1326,9 @@ const comittedDonors2: Donor[] = [
             sampleId: 7,
           },
         ],
-        specimenType: 'FFPE',
+        specimenTissueSource: 'Other',
         tumourNormalDesignation: 'Metastatic tumour',
-        submitterId: 'ss123=@@abnc0',
+        submitterId: 'ss123-abnc0',
         specimenId: 7,
       },
     ],
@@ -1379,7 +1352,7 @@ const comittedDonors2: Donor[] = [
             sampleId: 6,
           },
         ],
-        specimenType: 'Pleural effusion',
+        specimenTissueSource: 'Pleural effusion',
         tumourNormalDesignation: 'Metastatic tumour',
         submitterId: 'ss123-129',
         specimenId: 6,
@@ -1404,7 +1377,7 @@ const comittedDonors2: Donor[] = [
             sampleId: 8,
           },
         ],
-        specimenType: 'Blood derived',
+        specimenTissueSource: 'Blood derived',
         tumourNormalDesignation: 'Recurrent tumour',
         submitterId: 'ss200-1',
         specimenId: 8,

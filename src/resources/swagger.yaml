@@ -92,7 +92,7 @@ paths:
           type: string
     get:
       tags:
-        - Registration
+        - Sample Registration
       summary: Get active registration
       description: returns the current in progress registration for a program if any
       responses:
@@ -110,7 +110,7 @@ paths:
           $ref: '#/components/responses/ServerError'
     post:
       tags:
-        - Registration
+        - Sample Registration
       summary: Upload registration file
       description: This will validate and save the new registration file overwriting any existing registration
       requestBody:
@@ -156,7 +156,7 @@ paths:
   /submission/program/{programId}/registration/{id}:
     delete:
       tags:
-        - Registration
+        - Sample Registration
       summary: Clear active registration
       description: Removes all active registration data for this program
       parameters:
@@ -186,7 +186,7 @@ paths:
   /submission/program/{programId}/registration/{id}/commit:
     post:
       tags:
-        - Registration
+        - Sample Registration
       summary: Commit registration
       description: Save the active registration data for this program, registering IDs for all new Samples, Specimens, and Donors introduced
       parameters:
@@ -464,7 +464,7 @@ tags:
     description: Service status monitoring
   - name: Schemas
     description: View and manage the Data Schema used by Argo-Clinical
-  - name: Registration
+  - name: Sample Registration
     description: Registering new Donors, Specimens, and Samples
   - name: Submission
     description: Uploading, Validating, and Committing clinical data
@@ -725,7 +725,7 @@ components:
         - submitter_donor_id
         - gender
         - submitter_specimen_id
-        - specimen_type
+        - specimen_tissue_source
         - tumour_normal_designation
         - submitter_sample_id
         - sample_type
@@ -738,7 +738,7 @@ components:
           type: string
         submitter_specimen_id:
           type: string
-        specimen_type:
+        specimen_tissue_source:
           type: string
         tumour_normal_designation:
           type: string

@@ -1,4 +1,5 @@
 import { Donor } from '../../../src/clinical/clinical-entities';
+import { ClinicalInfoFieldsEnum } from '../../../src/submission/submission-entities';
 
 /**
  * strongly typed stubs file!!
@@ -15,7 +16,7 @@ export const stubs = {
       specimens: [
         {
           submitterId: 'SP1',
-          specimenType: 'XYZ',
+          specimenTissueSource: 'XYZ',
           clinicalInfo: {},
           tumourNormalDesignation: 'Normal',
           samples: [
@@ -38,7 +39,7 @@ export const stubs = {
       specimens: [
         {
           submitterId: 'SP1',
-          specimenType: 'XYZZ',
+          specimenTissueSource: 'XYZZ',
           clinicalInfo: {},
           tumourNormalDesignation: 'Normal',
           samples: [
@@ -61,7 +62,7 @@ export const stubs = {
       specimens: [
         {
           submitterId: 'SP12',
-          specimenType: 'XYZZ',
+          specimenTissueSource: 'XYZZ',
           clinicalInfo: {},
           tumourNormalDesignation: 'Normal',
           samples: [
@@ -80,14 +81,14 @@ export const stubs = {
       programId: 'PEME-CA',
       donorId: 10,
       clinicalInfo: {
-        vital_status: 'deceased',
-        survival_time: '522',
+        [ClinicalInfoFieldsEnum.vital_status]: 'deceased',
+        [ClinicalInfoFieldsEnum.survival_time]: '522',
       },
       gender: 'Female',
       specimens: [
         {
           submitterId: 'SP13',
-          specimenType: 'Other',
+          specimenTissueSource: 'Other',
           clinicalInfo: {},
           tumourNormalDesignation: 'Normal',
           samples: [

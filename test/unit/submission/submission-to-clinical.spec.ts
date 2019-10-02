@@ -32,7 +32,7 @@ const reg1: ActiveRegistration = {
       submitter_donor_id: 'abcd123',
       gender: 'Male',
       submitter_specimen_id: 'ss123',
-      specimen_type: 'FFPE',
+      specimen_tissue_source: 'Other',
       tumour_normal_designation: 'Normal',
       submitter_sample_id: 'sm123',
       sample_type: 'ctDNA',
@@ -61,7 +61,7 @@ const reg2: ActiveRegistration = {
       submitter_donor_id: 'abcd123',
       gender: 'Male',
       submitter_specimen_id: 'ss123',
-      specimen_type: 'FFPE',
+      specimen_tissue_source: 'Other',
       tumour_normal_designation: 'Normal',
       submitter_sample_id: 'sm123',
       sample_type: 'ctDNA',
@@ -114,7 +114,7 @@ describe('submission-to-clinical', () => {
               },
             ],
             clinicalInfo: {},
-            specimenType: 'FFPE',
+            specimenTissueSource: 'Other',
             tumourNormalDesignation: 'Normal',
             submitterId: 'ss123',
           },
@@ -152,7 +152,7 @@ describe('submission-to-clinical', () => {
         specimens: [
           {
             specimenId: 320,
-            specimenType: 'FFPE',
+            specimenTissueSource: 'Other',
             submitterId: 'ss330',
             tumourNormalDesignation: 'Normal',
             samples: [
@@ -175,7 +175,7 @@ describe('submission-to-clinical', () => {
         specimens: [
           {
             specimenId: 320,
-            specimenType: 'FFPE',
+            specimenTissueSource: 'Other',
             submitterId: 'ss330',
             tumourNormalDesignation: 'Normal',
             samples: [
@@ -194,7 +194,7 @@ describe('submission-to-clinical', () => {
               },
             ],
             clinicalInfo: {},
-            specimenType: 'FFPE',
+            specimenTissueSource: 'Other',
             tumourNormalDesignation: 'Normal',
             submitterId: 'ss123',
           },

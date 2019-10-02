@@ -1,2 +1,2 @@
-program_id	submitter_donor_id	submitter_specimen_id	specimen_type	tumour_normal_designation	specimen_acquistion_interval	specimen_anaotmic_collection	tumour_grading_system	tumour_grade
-ABCD-EF	ICGC_0001	8013861	Other	Normal	200	pancreas	WHO	1 - Well differentiated
+submitter_donor_id	submitter_specimen_id	acquisition_interval	anatomic_location_of_specimen_collection	central_pathology_confirmed	tumour_histological_type	tumor_grading_system	tumour_grading_system	tumour_grade	tumour_staging_system	pathological_stage_group	percent_tumour_cells	percent_proliferating_cells	percent_inflammatory_tissue	percent_stromal_cells	percent_necrosis
+ICGC_0001	8013861	200	Other	No	M-1111/22	Default	Default	aStringValue	Murphy	aStringValue	0.35	0.5	0.6	0.65	0.65

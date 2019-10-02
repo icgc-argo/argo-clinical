@@ -36,7 +36,7 @@ export const validate = async (
 
   return errors.length > 0
     ? utils.buildValidatorResult(ModificationType.ERRORSFOUND, donorRecord.index, errors)
-    : await checkForUpdates(donorRecord, existentDonor);
+    : await utils.checkForUpdates(donorRecord, existentDonor.clinicalInfo);
 };
 
 function checkTimeConflictWithSpecimen(
@@ -59,11 +59,11 @@ function checkTimeConflictWithSpecimen(
       specimenRecord[FieldsEnum.submitter_specimen_id] === specimen.submitterId
     ) {
       specimenAcqusitionInterval = Number(
-        specimenRecord[ClinicalInfoFieldsEnum.specimen_acquistion_interval],
+        specimenRecord[ClinicalInfoFieldsEnum.acquisition_interval],
       );
     } else if (specimen.clinicalInfo) {
       specimenAcqusitionInterval = Number(
-        specimen.clinicalInfo[ClinicalInfoFieldsEnum.specimen_acquistion_interval],
+        specimen.clinicalInfo[ClinicalInfoFieldsEnum.acquisition_interval],
       );
     } else {
       return; // no specimenAcqusitionInterval so move on to next specimen
@@ -88,31 +88,4 @@ function checkTimeConflictWithSpecimen(
       ),
     );
   }
-}
-
-// cases (similar for other clinical types with minor difference in case 1)
-// 1 not changing gender and new clinicalInfo <=> new
-// 2 changing specimenType or tnd or changing clinicalInfo <=> update
-// 3 not new or update <=> noUpdate
-async function checkForUpdates(
-  record: DeepReadonly<SubmittedClinicalRecord>,
-  donor: DeepReadonly<Donor>,
-): Promise<ValidatorResult> {
-  const clinicalInfo = donor.clinicalInfo;
-
-  // no updates to specimenType or tnd but there is now existent clinicalInfo, new
-  if (donor.gender === record[FieldsEnum.gender] && _.isEmpty(clinicalInfo)) {
-    return utils.buildValidatorResult(ModificationType.NEW, record.index);
-  }
-
-  // check changing fields
-  const updatedFields: any[] = utils.getUpdatedFields(clinicalInfo, record);
-
-  if (donor.gender !== record[FieldsEnum.gender]) {
-    updatedFields.push(utils.buildSubmissionUpdate(record, donor.gender, FieldsEnum.gender));
-  }
-
-  return updatedFields.length === 0
-    ? utils.buildValidatorResult(ModificationType.NOUPDATE, record.index)
-    : utils.buildValidatorResult(ModificationType.UPDATED, record.index, updatedFields);
 }

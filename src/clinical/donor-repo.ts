@@ -200,7 +200,7 @@ SampleSchema.plugin(AutoIncrement, { inc_field: 'sampleId' });
 const SpecimenSchema = new mongoose.Schema(
   {
     specimenId: { type: Number, index: true, unique: true, get: prefixSpecimenId },
-    specimenType: { type: String },
+    specimenTissueSource: { type: String },
     clinicalInfo: {},
     tumourNormalDesignation: String,
     submitterId: { type: String, required: true },
