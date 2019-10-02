@@ -55,7 +55,7 @@
             }
           },
           {
-            "name": "specimen_tissue_source",
+            "name": "specimen_type",
             "valueType": "string",
             "description": "Indicate the tissue source of the biospecimen",
             "meta": {
@@ -78,6 +78,7 @@
                 "Sputum",
                 "NOS (Not otherwise specified)",
                 "Other",
+                "FFPE",
                 "Pleural effusion",
                 "Mononuclear cells from bone marrow",
                 "Saliva",
@@ -104,6 +105,8 @@
                 "Metastatic tumour - additional metastatic",
                 "Xenograft - derived from primary tumour",
                 "Xenograft - derived from tumour cell line",
+                "Cell line - derived from xenograft tissue",
+                "Cell line - derived from xenograft tissue",
                 "Cell line - derived from tumour",
                 "Cell line - derived from normal"
               ]
