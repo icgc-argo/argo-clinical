@@ -192,7 +192,7 @@ export namespace operations {
         ...emptyStats,
       };
     }
-
+    const createdAt: DeepReadonly<Date> = new Date();
     const schemaErrors: { [k: string]: SubmissionValidationError[] } = {}; // object to store all errors for entity
     for (const clinicalType in command.newClinicalEntities) {
       const newClinicalEnity = command.newClinicalEntities[clinicalType];
@@ -208,7 +208,9 @@ export namespace operations {
       } else {
         // update or add entity
         updatedClinicalEntites[clinicalType] = {
-          ...command.newClinicalEntities[clinicalType],
+          batchName: command.newClinicalEntities[clinicalType].batchName,
+          creator: command.newClinicalEntities[clinicalType].creator,
+          createdAt: createdAt,
           records: processedRecords,
           ...emptyStats,
         };

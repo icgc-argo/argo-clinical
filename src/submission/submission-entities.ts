@@ -153,6 +153,7 @@ export interface NewClinicalEntity {
 }
 
 export interface SavedClinicalEntity extends NewClinicalEntity {
+  createdAt: DeepReadonly<Date>;
   dataErrors: SubmissionValidationError[];
   dataUpdates: SubmissionValidationUpdate[];
   stats: {

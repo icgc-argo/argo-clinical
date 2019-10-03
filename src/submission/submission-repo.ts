@@ -118,7 +118,7 @@ export const submissionRepository: ClinicalSubmissionRepository = {
       return updated;
     } catch (err) {
       throw new InternalError(
-        `failed to delete ActiveSubmission with programId: ${programId}`,
+        `failed to update ActiveSubmission with programId: ${programId} & version: ${version}`,
         err,
       );
     }
@@ -147,7 +147,7 @@ const ActiveSubmissionSchema = new mongoose.Schema(
 ActiveSubmissionSchema.pre('findOneAndUpdate', function(next) {
   const newsubmission = this.getUpdate();
   if (newsubmission.updatedAt) {
-    newsubmission.updatedAt = Date.now();
+    newsubmission.updatedAt = new Date();
   }
   next();
 });
