@@ -4,6 +4,8 @@ import { loggerFor } from '../logger';
 import { SchemasDictionary, SchemaDefinition } from '../lectern-client/schema-entities';
 import { setStatus, Status } from '../app-health';
 import { ControllerUtils } from '../utils';
+import Archiver from 'archiver';
+import { FileType } from './submission-api';
 const L = loggerFor(__filename);
 
 export const get = async (req: Request, res: Response) => {
@@ -44,14 +46,36 @@ export const getTemplate = async (req: Request, res: Response) => {
   if (!schema) {
     return ControllerUtils.notFound(res, "no schema named '" + schemaName + "' found");
   }
-  const template = createTemplate(schema);
+  const template = await createTemplate(schema);
   return res
     .status(200)
     .contentType('text/tab-separated-values')
     .send(template);
 };
 
-function createTemplate(schema: SchemaDefinition): string {
+export const getAllTemplates = async (req: Request, res: Response) => {
+  const schemasDictionary = manager.instance().getCurrent();
+  const zip = Archiver('zip');
+
+  res
+    .status(200)
+    .contentType('application/zip')
+    .attachment('templates.zip');
+
+  zip.pipe(res); // pipes everything appended to zip into the attactment in res
+  for (const schema of schemasDictionary.schemas) {
+    const schemaName = schema.name;
+    if (schemaName === FileType.REGISTRATION) {
+      continue;
+    }
+    zip.append(await createTemplate(schema), { name: schemaName + '.tsv' });
+  }
+  zip.finalize();
+
+  return res;
+};
+
+async function createTemplate(schema: SchemaDefinition): Promise<string> {
   const header =
     schema.fields
       .map((f): string => {

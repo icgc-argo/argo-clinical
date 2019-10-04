@@ -7,6 +7,8 @@ const router = express.Router();
 
 router.get('/', wrapAsync(schemaApi.get));
 router.get('/all', wrapAsync(schemaApi.getAllSchema));
+// this takes precedence over /:schemaName
+router.get('/template/all', wrapAsync(schemaApi.getAllTemplates));
 // get template for a given schema
 router.get('/template/:schemaName', wrapAsync(schemaApi.getTemplate));
 // temporary api
