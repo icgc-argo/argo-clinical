@@ -41,18 +41,18 @@ paths:
           description: 'a list of all current loaded schema for clinical submission'
           content:
             application/json:
-              schemasList:
+              schema:
                 type: array
                 items:
-                  type: object
+                  type: string
   /submission/schema/template/{schemaName}:
     parameters:
       - name: schemaName
-        description: the name of the schema to generate the template for
+        description: the name of the schema to generate the template for ('all' will return a zip file of all templates)
         in: path
         required: true
         schema:
-          example: 'registration'
+          example: 'sample_registration'
           type: string
     get:
       tags:
@@ -65,6 +65,10 @@ paths:
               schema:
                 example: 'program_id\tsubmitter_donor_id\tgender\tsubmitter_specimen_id\tspecimen_type\ttumour_normal_designation\tsubmitter_sample_id\tsample_type'
                 type: string
+            application/zip:
+              schema:
+                type: string
+                format: binary
   /submission/schema/hack/refresh:
     post:
       tags:
