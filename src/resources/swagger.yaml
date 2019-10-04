@@ -41,10 +41,10 @@ paths:
           description: 'a list of all current loaded schema for clinical submission'
           content:
             application/json:
-              schemasList:
+              schemas:
                 type: array
                 items:
-                  type: object
+                  type: string
   /submission/schema/template/{schemaName}:
     parameters:
       - name: schemaName
