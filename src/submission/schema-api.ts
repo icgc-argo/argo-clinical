@@ -50,6 +50,7 @@ export const getTemplate = async (req: Request, res: Response) => {
   return res
     .status(200)
     .contentType('text/tab-separated-values')
+    .attachment(`${schemaName}.tsv`)
     .send(template);
 };
 
