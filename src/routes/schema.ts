@@ -6,7 +6,8 @@ import * as schemaApi from '../submission/schema-api';
 const router = express.Router();
 
 router.get('/', wrapAsync(schemaApi.get));
-router.get('/all', wrapAsync(schemaApi.getAllSchema));
+// returns a list of all sub-schemas except sample_registration
+router.get('/list', wrapAsync(schemaApi.getAllSchemas));
 // this takes precedence over /:schemaName
 router.get('/template/all', wrapAsync(schemaApi.getAllTemplates));
 // get template for a given schema

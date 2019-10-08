@@ -21,13 +21,9 @@ class SchemaManager {
   };
 
   getSubSchemasList = (): string[] => {
-    const subSchemasList: string[] = [];
-    this.currentSchema.schemas.forEach(subSchema => {
-      if (subSchema.name !== FileType.REGISTRATION) {
-        subSchemasList.push(subSchema.name);
-      }
-    });
-    return subSchemasList;
+    return this.currentSchema.schemas
+      .filter(s => s.name !== FileType.REGISTRATION)
+      .map(s => s.name);
   };
   /**
    * This method does three things:

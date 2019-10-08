@@ -32,13 +32,13 @@ paths:
                 type: array
                 items:
                   type: object
-  /submission/schema/all:
+  /submission/schema/list:
     get:
       tags:
         - Schemas
       responses:
         '200':
-          description: 'a list of all current loaded schema for clinical submission'
+          description: 'a list of all current loaded schema for clinical submission (without sample_registration'
           content:
             application/json:
               schema:
