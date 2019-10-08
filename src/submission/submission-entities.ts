@@ -18,7 +18,7 @@ export interface SubmittedRegistrationRecord {
   readonly submitter_donor_id: string;
   readonly gender: string;
   readonly submitter_specimen_id: string;
-  readonly specimen_type: string;
+  readonly specimen_tissue_source: string;
   readonly tumour_normal_designation: string;
   readonly submitter_sample_id: string;
   readonly sample_type: string;
@@ -31,7 +31,7 @@ export const RegistrationToCreateRegistrationFieldsMap: x = {
   submitter_donor_id: 'donorSubmitterId',
   gender: 'gender',
   submitter_specimen_id: 'specimenSubmitterId',
-  specimen_type: 'specimenType',
+  specimen_tissue_source: 'specimenTissueSource',
   tumour_normal_designation: 'tumourNormalDesignation',
   submitter_sample_id: 'sampleSubmitterId',
   sample_type: 'sampleType',
@@ -42,7 +42,7 @@ export enum FieldsEnum {
   submitter_donor_id = 'submitter_donor_id',
   gender = 'gender',
   submitter_specimen_id = 'submitter_specimen_id',
-  specimen_type = 'specimen_type',
+  specimen_tissue_source = 'specimen_tissue_source',
   tumour_normal_designation = 'tumour_normal_designation',
   submitter_sample_id = 'submitter_sample_id',
   sample_type = 'sample_type',
@@ -94,7 +94,7 @@ export interface CreateRegistrationRecord {
   readonly donorSubmitterId: string;
   readonly gender: string;
   readonly specimenSubmitterId: string;
-  readonly specimenType: string;
+  readonly specimenTissueSource: string;
   readonly tumourNormalDesignation: string;
   readonly sampleSubmitterId: string;
   readonly sampleType: string;
@@ -153,6 +153,7 @@ export interface NewClinicalEntity {
 }
 
 export interface SavedClinicalEntity extends NewClinicalEntity {
+  createdAt: DeepReadonly<Date>;
   dataErrors: SubmissionValidationError[];
   dataUpdates: SubmissionValidationUpdate[];
   stats: {
@@ -183,14 +184,13 @@ export interface ClinicalEntities {
 
 // Generic submission record object
 export interface SubmittedClinicalRecord {
-  readonly program_id: string;
   readonly submitter_donor_id: string;
   readonly index: number;
   [fieldName: string]: string | number;
 }
 
 export enum ClinicalInfoFieldsEnum {
-  specimen_acquistion_interval = 'specimen_acquistion_interval',
+  acquisition_interval = 'acquisition_interval',
   vital_status = 'vital_status',
   survival_time = 'survival_time',
 }

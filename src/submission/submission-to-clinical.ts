@@ -176,7 +176,7 @@ const toSpecimen = (s: DeepReadonly<CreateSpecimenDto>) => {
   const spec: Specimen = {
     samples: s.samples.map(toSample),
     clinicalInfo: {},
-    specimenType: s.specimenType,
+    specimenTissueSource: s.specimenTissueSource,
     tumourNormalDesignation: s.tumourNormalDesignation,
     submitterId: s.submitterId,
   };
@@ -278,7 +278,7 @@ const getDonorDTOsForActiveSubmission = async (
 
 const getDonorSpecimen = (record: SubmittedRegistrationRecord) => {
   return {
-    specimenType: record[FieldsEnum.specimen_type],
+    specimenTissueSource: record[FieldsEnum.specimen_tissue_source],
     tumourNormalDesignation: record[FieldsEnum.tumour_normal_designation],
     submitterId: record[FieldsEnum.submitter_specimen_id],
     samples: [
@@ -299,7 +299,7 @@ export interface CreateDonorSampleDto {
 
 export interface CreateSpecimenDto {
   samples: Array<CreateSampleDto>;
-  specimenType: string;
+  specimenTissueSource: string;
   tumourNormalDesignation: string;
   submitterId: string;
 }

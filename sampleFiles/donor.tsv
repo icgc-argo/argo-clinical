@@ -1,4 +1,4 @@
-program_id	submitter_donor_id	gender	ethnicity	vital_status	cause_of_death	survival_time
-ABCD-EF	ICGC_0001	Male	black or african american	deceased	died of cancer	522
-ABCD-EF	ICGC_0002	Male	black or african american	deceased	died of cancer	522
-ABCD-EF	ICGC_0003	Male	black or african american	deceased	died of cancer	522
+submitter_donor_id	gender	ethnicity	vital_status	cause_of_death	survival_time
+ICGC_0001	Male	black or african american	deceased	died of cancer	522
+ICGC_0002	Male	black or african american	deceased	died of cancer	522
+ICGC_0003	Male	black or african american	deceased	died of cancer	522

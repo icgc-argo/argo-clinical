@@ -3,6 +3,7 @@ import { SchemasDictionary, DataRecord, SchemaProcessingResult } from './schema-
 import { schemaClient as schemaServiceAdapter } from './schema-rest-client';
 import { schemaRepo } from './schema-repo';
 import { loggerFor } from '../logger';
+import { FileType } from '../submission/submission-api';
 const L = loggerFor(__filename);
 
 let manager: SchemaManager;
@@ -18,6 +19,12 @@ class SchemaManager {
   getCurrent = (): SchemasDictionary => {
     return this.currentSchema;
   };
+
+  getSubSchemasList = (): string[] => {
+    return this.currentSchema.schemas
+      .filter(s => s.name !== FileType.REGISTRATION)
+      .map(s => s.name);
+  };
   /**
    * This method does three things:
    * 1- populate default values for missing fields
@@ -30,7 +37,7 @@ class SchemaManager {
    * @returns object contains the validation errors and the valid processed records.
    */
   process = (definition: string, records: ReadonlyArray<DataRecord>): SchemaProcessingResult => {
-    if (this.getCurrent() == undefined) {
+    if (this.getCurrent() === undefined) {
       throw new Error('schema manager not initialized correctly');
     }
     return service.process(this.getCurrent(), definition, records);
@@ -78,7 +85,7 @@ class SchemaManager {
 
     // if the schema is not complete we need to load it from the
     // schema service (lectern)
-    if (!this.currentSchema.schemas || this.currentSchema.schemas.length == 0) {
+    if (!this.currentSchema.schemas || this.currentSchema.schemas.length === 0) {
       L.debug(`fetching schema from schema service.`);
       const result = await schemaServiceAdapter.fetchSchema(
         this.schemaServiceUrl,
@@ -98,7 +105,7 @@ class SchemaManager {
 }
 
 export function instance() {
-  if (manager == undefined) {
+  if (manager === undefined) {
     throw new Error('manager not initialized, you should call create first');
   }
   return manager;

@@ -19,17 +19,17 @@ export enum ErrorCodes {
   MULTIPLE_TYPED_FILES = 'MULTIPLE_TYPED_FILES',
 }
 export enum FileType {
-  REGISTRATION = 'registration',
+  REGISTRATION = 'sample_registration',
   DONOR = 'donor',
   SPECIMEN = 'specimen',
-  SAMPLE = 'sample',
+  PRIMARY_DIAGNOSES = 'primary_diagnosis',
 }
 
 const FileNameRegex = {
-  [FileType.REGISTRATION]: '^registration.*\\.tsv',
+  [FileType.REGISTRATION]: '^sample_registration.*\\.tsv',
   [FileType.DONOR]: '^donor.*\\.tsv',
   [FileType.SPECIMEN]: '^specimen.*\\.tsv',
-  [FileType.SAMPLE]: '^sample.*\\.tsv',
+  [FileType.PRIMARY_DIAGNOSES]: '^primary_diagnosis.*\\.tsv',
 };
 
 type SubmissionFileErrors = {

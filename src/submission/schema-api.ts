@@ -15,6 +15,10 @@ export const get = async (req: Request, res: Response) => {
   return res.status(200).send(schema);
 };
 
+export const getAllSchemas = async (req: Request, res: Response) => {
+  return res.status(200).send(manager.instance().getSubSchemasList());
+};
+
 export const update = async (req: Request, res: Response) => {
   // currently we only use 1 version
   await manager

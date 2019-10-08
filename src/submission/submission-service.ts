@@ -68,7 +68,7 @@ export namespace operations {
       await registrationRepository.delete(existingActivRegistration._id);
     }
 
-    const schemaResult = schemaManager.instance().process('registration', command.records);
+    const schemaResult = schemaManager.instance().process(FileType.REGISTRATION, command.records);
     let unifiedSchemaErrors: DeepReadonly<SubmissionValidationError[]> = [];
     if (anyErrors(schemaResult.validationErrors)) {
       unifiedSchemaErrors = unifySchemaErrors(FileType.REGISTRATION, schemaResult, command.records);
@@ -192,7 +192,7 @@ export namespace operations {
         ...emptyStats,
       };
     }
-
+    const createdAt: DeepReadonly<Date> = new Date();
     const schemaErrors: { [k: string]: SubmissionValidationError[] } = {}; // object to store all errors for entity
     for (const clinicalType in command.newClinicalEntities) {
       const newClinicalEnity = command.newClinicalEntities[clinicalType];
@@ -208,7 +208,10 @@ export namespace operations {
       } else {
         // update or add entity
         updatedClinicalEntites[clinicalType] = {
-          ...command.newClinicalEntities[clinicalType],
+          batchName: command.newClinicalEntities[clinicalType].batchName,
+          creator: command.newClinicalEntities[clinicalType].creator,
+          createdAt: createdAt,
+          records: processedRecords,
           ...emptyStats,
         };
       }
@@ -248,7 +251,10 @@ export namespace operations {
         `No active submission found with programId: ${programId} & versionId: ${versionId}`,
       );
     }
-    if (exsistingActiveSubmission.state !== SUBMISSION_STATE.OPEN) {
+    if (
+      exsistingActiveSubmission.state !== SUBMISSION_STATE.OPEN ||
+      _.isEmpty(exsistingActiveSubmission.clinicalEntities)
+    ) {
       return {
         submission: exsistingActiveSubmission,
         schemaErrors: {},
@@ -265,7 +271,7 @@ export namespace operations {
       clinicalEnity.records.forEach((rc, index) => {
         const donorId = rc[FieldsEnum.submitter_donor_id];
         filters.push({
-          programId: rc[FieldsEnum.program_id],
+          programId: programId,
           submitterId: donorId,
         });
         if (!newDonorDataMap[donorId]) {
@@ -274,7 +280,6 @@ export namespace operations {
         newDonorDataMap[donorId][clinicalType] = {
           ...rc,
           submitter_donor_id: donorId,
-          program_id: rc[FieldsEnum.program_id],
           index: index,
         };
       });
@@ -465,14 +470,14 @@ export namespace operations {
       stats: stats,
       records: registrationRecords.map(r => {
         const record: Readonly<SubmittedRegistrationRecord> = {
-          program_id: command.programId,
-          submitter_donor_id: r.donorSubmitterId,
-          gender: r.gender,
-          submitter_specimen_id: r.specimenSubmitterId,
-          specimen_type: r.specimenType,
-          tumour_normal_designation: r.tumourNormalDesignation,
-          submitter_sample_id: r.sampleSubmitterId,
-          sample_type: r.sampleType,
+          [FieldsEnum.program_id]: command.programId,
+          [FieldsEnum.submitter_donor_id]: r.donorSubmitterId,
+          [FieldsEnum.gender]: r.gender,
+          [FieldsEnum.submitter_specimen_id]: r.specimenSubmitterId,
+          [FieldsEnum.specimen_tissue_source]: r.specimenTissueSource,
+          [FieldsEnum.tumour_normal_designation]: r.tumourNormalDesignation,
+          [FieldsEnum.submitter_sample_id]: r.sampleSubmitterId,
+          [FieldsEnum.sample_type]: r.sampleType,
         };
         return record;
       }),
@@ -491,7 +496,7 @@ export namespace operations {
           donorSubmitterId: r[FieldsEnum.submitter_donor_id] as string,
           gender: r[FieldsEnum.gender] as string,
           specimenSubmitterId: r[FieldsEnum.submitter_specimen_id] as string,
-          specimenType: r[FieldsEnum.specimen_type] as string,
+          specimenTissueSource: r[FieldsEnum.specimen_tissue_source] as string,
           tumourNormalDesignation: r[FieldsEnum.tumour_normal_designation] as string,
           sampleSubmitterId: r[FieldsEnum.submitter_sample_id] as string,
           sampleType: r[FieldsEnum.sample_type] as string,
@@ -512,15 +517,6 @@ export namespace operations {
       );
       errors = errors.concat(unifiedSchemaErrors);
     }
-    command.records.forEach((r, index) => {
-      const programIdErrors = dataValidator.usingInvalidProgramId(
-        command.clinicalType as FileType,
-        index,
-        r,
-        command.programId,
-      );
-      errors = errors.concat(programIdErrors);
-    });
     return {
       schemaErrorsTemp: errors,
       processedRecords: schemaResult.processedRecords,
@@ -530,6 +526,9 @@ export namespace operations {
   const getDonorsInProgram = async (
     filters: DeepReadonly<FindByProgramAndSubmitterFilter[]>,
   ): Promise<DeepReadonly<DonorMap>> => {
+    if (filters.length === 0) {
+      return {};
+    }
     // fetch related donor docs from the db
     let donorDocs = await donorDao.findByProgramAndSubmitterId(filters);
     if (!donorDocs) {

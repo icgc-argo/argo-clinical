@@ -54,7 +54,7 @@ export const validate = async (
       utils.buildSubmissionError(
         specimenRecord,
         DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
-        ClinicalInfoFieldsEnum.specimen_acquistion_interval,
+        ClinicalInfoFieldsEnum.acquisition_interval,
       ),
     ]);
   }
@@ -64,7 +64,7 @@ export const validate = async (
 
   return errors.length > 0
     ? utils.buildValidatorResult(ModificationType.ERRORSFOUND, specimenRecord.index, errors)
-    : await checkForUpdates(specimenRecord, specimen);
+    : await utils.checkForUpdates(specimenRecord, specimen.clinicalInfo);
 };
 
 function checkTimeConflictWithDonor(
@@ -75,15 +75,15 @@ function checkTimeConflictWithDonor(
   if (
     donorDataToValidateWith.donorVitalStatus === 'deceased' &&
     donorDataToValidateWith.donorSurvivalTime <
-      specimenRecord[ClinicalInfoFieldsEnum.specimen_acquistion_interval]
+      specimenRecord[ClinicalInfoFieldsEnum.acquisition_interval]
   ) {
     errors.push(
       utils.buildSubmissionError(
         specimenRecord,
         DataValidationErrors.CONFLICTING_TIME_INTERVAL,
-        ClinicalInfoFieldsEnum.specimen_acquistion_interval,
+        ClinicalInfoFieldsEnum.acquisition_interval,
         {
-          msg: `${ClinicalInfoFieldsEnum.specimen_acquistion_interval} can't be greater than ${ClinicalInfoFieldsEnum.survival_time}`,
+          msg: `${ClinicalInfoFieldsEnum.acquisition_interval} can't be greater than ${ClinicalInfoFieldsEnum.survival_time}`,
         },
       ),
     );
@@ -109,43 +109,3 @@ const getDataFromRecordOrDonor = (
 
   return { donorVitalStatus, donorSurvivalTime };
 };
-
-async function checkForUpdates(
-  record: DeepReadonly<SubmittedClinicalRecord>,
-  specimen: DeepReadonly<Specimen>,
-): Promise<ValidatorResult> {
-  const clinicalInfo = specimen.clinicalInfo;
-
-  // no updates to specimenType or tnd but there is no existent clinicalInfo => new
-  if (
-    specimen.specimenType === record[FieldsEnum.specimen_type] &&
-    specimen.tumourNormalDesignation === record[FieldsEnum.tumour_normal_designation] &&
-    _.isEmpty(clinicalInfo)
-  ) {
-    return utils.buildValidatorResult(ModificationType.NEW, record.index);
-  }
-
-  // check changing fields
-  const updatedFields: any[] = utils.getUpdatedFields(clinicalInfo, record);
-
-  if (specimen.specimenType !== record[FieldsEnum.specimen_type]) {
-    updatedFields.push(
-      utils.buildSubmissionUpdate(record, specimen.specimenType, FieldsEnum.specimen_type),
-    );
-  }
-
-  if (specimen.tumourNormalDesignation !== record[FieldsEnum.tumour_normal_designation]) {
-    updatedFields.push(
-      utils.buildSubmissionUpdate(
-        record,
-        specimen.tumourNormalDesignation,
-        FieldsEnum.tumour_normal_designation,
-      ),
-    );
-  }
-
-  // if no updates and not new return noUpdate
-  return updatedFields.length === 0
-    ? utils.buildValidatorResult(ModificationType.NOUPDATE, record.index)
-    : utils.buildValidatorResult(ModificationType.UPDATED, record.index, updatedFields);
-}
