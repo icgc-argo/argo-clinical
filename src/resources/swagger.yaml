@@ -32,6 +32,19 @@ paths:
                 type: array
                 items:
                   type: object
+  /submission/schema/list:
+    get:
+      tags:
+        - Schemas
+      responses:
+        '200':
+          description: 'a list of all current loaded schema for clinical submission (without sample_registration'
+          content:
+            application/json:
+              schemas:
+                type: array
+                items:
+                  type: string
   /submission/schema/template/{schemaName}:
     parameters:
       - name: schemaName
