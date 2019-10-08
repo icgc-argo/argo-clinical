@@ -46,7 +46,7 @@ export const getTemplate = async (req: Request, res: Response) => {
   if (!schema) {
     return ControllerUtils.notFound(res, "no schema named '" + schemaName + "' found");
   }
-  const template = await createTemplate(schema);
+  const template = createTemplate(schema);
   return res
     .status(200)
     .contentType('text/tab-separated-values')
@@ -61,22 +61,18 @@ export const getAllTemplates = async (req: Request, res: Response) => {
   res
     .status(200)
     .contentType('application/zip')
-    .attachment('templates.zip');
+    .attachment('all.zip');
 
   zip.pipe(res); // pipes everything appended to zip into the attactment in res
-  for (const schema of schemasDictionary.schemas) {
-    const schemaName = schema.name;
-    if (schemaName === FileType.REGISTRATION) {
-      continue;
-    }
-    zip.append(await createTemplate(schema), { name: schemaName + '.tsv' });
-  }
+  schemasDictionary.schemas
+    .filter(s => s.name !== FileType.REGISTRATION)
+    .forEach(schema => zip.append(createTemplate(schema), { name: `${schema.name}.tsv` }));
   zip.finalize();
 
   return res;
 };
 
-async function createTemplate(schema: SchemaDefinition): Promise<string> {
+function createTemplate(schema: SchemaDefinition): string {
   const header =
     schema.fields
       .map((f): string => {
