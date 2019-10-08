@@ -35,6 +35,18 @@ import * as manager from '../../../src/lectern-client/schema-manager';
 chai.use(require('chai-http'));
 chai.should();
 
+// used to parse the data in a response into binary
+const binaryParser = (res: any, callBack: any) => {
+  res.setEncoding('binary');
+  res.data = '';
+  res.on('data', (chunk: any) => {
+    res.data += chunk;
+  });
+  res.on('end', () => {
+    callBack(undefined, Buffer.from(res.data, 'binary'));
+  });
+};
+
 const expectedErrors = [
   {
     index: 0,
@@ -1098,6 +1110,33 @@ describe('Submission Api', () => {
           );
           res.should.header('Content-type', 'text/tab-separated-values;' + ' charset=utf-8');
           done();
+        });
+    });
+    it('get all templates zip', done => {
+      let file: Buffer;
+      try {
+        file = fs.readFileSync(__dirname + '/all.zip');
+      } catch (err) {
+        return done(err);
+      }
+      chai
+        .request(app)
+        .get('/submission/schema/template/all')
+        .buffer()
+        .parse(binaryParser)
+        .end((err: any, res: any) => {
+          if (err) {
+            return done(err);
+          }
+          try {
+            res.should.have.status(200);
+            res.should.have.header('Content-type', 'application/zip');
+            // checking length (# of bytes) only because zip files with same content can vary at the binary level
+            res.body.length.should.eq(file.length);
+            return done();
+          } catch (err) {
+            return done(err);
+          }
         });
     });
     it('get template not found', done => {
