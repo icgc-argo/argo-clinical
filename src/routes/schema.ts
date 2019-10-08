@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.get('/', wrapAsync(schemaApi.get));
 // returns a list of all sub-schemas except sample_registration
-router.get('/list', wrapAsync(schemaApi.getAllSchema));
+router.get('/list', wrapAsync(schemaApi.getAllSchemas));
 // get template for a given schema
 router.get('/template/:schemaName', wrapAsync(schemaApi.getTemplate));
 // temporary api
