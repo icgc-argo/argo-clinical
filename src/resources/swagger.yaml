@@ -41,10 +41,22 @@ paths:
           description: 'a list of all current loaded schema for clinical submission (without sample_registration'
           content:
             application/json:
-              schemas:
+              schema:
                 type: array
                 items:
                   type: string
+  /submission/schema/template/all:
+    get:
+      tags:
+        - Schemas
+      responses:
+        '200':
+          description: 'A zip file with all schemas'
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
   /submission/schema/template/{schemaName}:
     parameters:
       - name: schemaName
@@ -52,7 +64,7 @@ paths:
         in: path
         required: true
         schema:
-          example: 'registration'
+          example: 'sample_registration'
           type: string
     get:
       tags:
