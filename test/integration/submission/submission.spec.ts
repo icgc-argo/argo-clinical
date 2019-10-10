@@ -31,21 +31,10 @@ import { donorDao } from '../../../src/clinical/donor-repo';
 import { Donor } from '../../../src/clinical/clinical-entities';
 import { ErrorCodes, FileType } from '../../../src/submission/submission-api';
 import * as manager from '../../../src/lectern-client/schema-manager';
+import AdmZip from 'adm-zip';
 
 chai.use(require('chai-http'));
 chai.should();
-
-// used to parse the data in a response into binary
-const binaryParser = (res: any, callBack: any) => {
-  res.setEncoding('binary');
-  res.data = '';
-  res.on('data', (chunk: any) => {
-    res.data += chunk;
-  });
-  res.on('end', () => {
-    callBack(undefined, Buffer.from(res.data, 'binary'));
-  });
-};
 
 const expectedErrors = [
   {
@@ -1113,9 +1102,9 @@ describe('Submission Api', () => {
         });
     });
     it('get all templates zip', done => {
-      let file: Buffer;
+      let refZip: AdmZip;
       try {
-        file = fs.readFileSync(__dirname + '/all.zip');
+        refZip = new AdmZip(__dirname + '/all.zip');
       } catch (err) {
         return done(err);
       }
@@ -1123,16 +1112,30 @@ describe('Submission Api', () => {
         .request(app)
         .get('/submission/schema/template/all')
         .buffer()
-        .parse(binaryParser)
+        // parse: collects data and creates AdmZip object (made wth buffered data) in res.body
+        .parse((res: any, callBack: any) => {
+          const data: any[] = [];
+          res.on('data', (chunk: any) => {
+            data.push(chunk);
+          });
+          res.on('end', () => {
+            callBack(undefined, new AdmZip(Buffer.concat(data)));
+          });
+        })
         .end((err: any, res: any) => {
-          if (err) {
-            return done(err);
-          }
           try {
-            res.should.have.status(200);
-            res.should.have.header('Content-type', 'application/zip');
-            // checking length (# of bytes) only because zip files with same content can vary at the binary level
-            res.body.length.should.eq(file.length);
+            // array of file content (which are just the field headers for each clinical type)
+            const downloadedFiles: string[] = res.body
+              .getEntries()
+              .map((fileEntry: any) => res.body.readAsText(fileEntry));
+            const refFiles: string[] = refZip
+              .getEntries()
+              .map((fileEntry: any) => refZip.readAsText(fileEntry));
+
+            console.log(`Ref data is: [${refFiles}]`);
+            console.log(`Downloaded data is: [${downloadedFiles}]`);
+
+            chai.expect(refFiles).to.eql(downloadedFiles);
             return done();
           } catch (err) {
             return done(err);

@@ -4,9 +4,9 @@ import { loggerFor } from '../logger';
 import { SchemasDictionary, SchemaDefinition } from '../lectern-client/schema-entities';
 import { setStatus, Status } from '../app-health';
 import { ControllerUtils } from '../utils';
-import Archiver from 'archiver';
 import { FileType } from './submission-api';
 const L = loggerFor(__filename);
+import AdmZip from 'adm-zip';
 
 export const get = async (req: Request, res: Response) => {
   const schema = manager.instance().getCurrent();
@@ -56,20 +56,20 @@ export const getTemplate = async (req: Request, res: Response) => {
 
 export const getAllTemplates = async (req: Request, res: Response) => {
   const schemasDictionary = manager.instance().getCurrent();
-  const zip = Archiver('zip');
-
+  const zip = new AdmZip();
   res
     .status(200)
     .contentType('application/zip')
     .attachment('all.zip');
 
-  zip.pipe(res); // pipes everything appended to zip into the attactment in res
   schemasDictionary.schemas
     .filter(s => s.name !== FileType.REGISTRATION)
-    .forEach(schema => zip.append(createTemplate(schema), { name: `${schema.name}.tsv` }));
-  zip.finalize();
+    .forEach(schema => {
+      const template = createTemplate(schema);
+      zip.addFile(`${schema.name}.tsv`, Buffer.alloc(template.length, template));
+    });
 
-  return res;
+  return res.send(zip.toBuffer());
 };
 
 function createTemplate(schema: SchemaDefinition): string {
