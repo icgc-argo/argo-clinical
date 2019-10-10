@@ -45,10 +45,22 @@ paths:
                 type: array
                 items:
                   type: string
+  /submission/schema/template/all:
+    get:
+      tags:
+        - Schemas
+      responses:
+        '200':
+          description: 'A zip file with all schemas'
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
   /submission/schema/template/{schemaName}:
     parameters:
       - name: schemaName
-        description: the name of the schema to generate the template for ('all' will return a zip file of all templates)
+        description: the name of the schema to generate the template for
         in: path
         required: true
         schema:
@@ -65,10 +77,6 @@ paths:
               schema:
                 example: 'program_id\tsubmitter_donor_id\tgender\tsubmitter_specimen_id\tspecimen_type\ttumour_normal_designation\tsubmitter_sample_id\tsample_type'
                 type: string
-            application/zip:
-              schema:
-                type: string
-                format: binary
   /submission/schema/hack/refresh:
     post:
       tags:
