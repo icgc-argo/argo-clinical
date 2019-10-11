@@ -155,6 +155,7 @@ describe('schema-functions', () => {
 
   it('should validate if non-required feilds are not provided', () => {
     const result = schemaService.process(schema, 'donor', [
+      // optional enum field not provided
       {
         program_id: 'PACA-AU',
         submitter_donor_id: 'ICGC_0004',
@@ -162,6 +163,7 @@ describe('schema-functions', () => {
         ethnicity: 'black or african american',
         vital_status: 'alive',
       },
+      // optional enum field provided with proper value
       {
         program_id: 'PACA-AU',
         submitter_donor_id: 'ICGC_0002',
@@ -169,6 +171,16 @@ describe('schema-functions', () => {
         ethnicity: 'asian',
         vital_status: 'deceased',
         cause_of_death: 'died of cancer',
+        survival_time: '124',
+      },
+      // optional enum field provided with no value
+      {
+        program_id: 'PACA-AU',
+        submitter_donor_id: 'ICGC_0002',
+        gender: 'Male',
+        ethnicity: 'asian',
+        vital_status: 'deceased',
+        cause_of_death: '',
         survival_time: '124',
       },
     ]);

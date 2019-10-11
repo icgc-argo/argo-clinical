@@ -365,7 +365,7 @@ namespace validation {
     value: string | boolean | number,
   ) => {
     // optional field if the value is absent at this point
-    if (isAbsent(value)) return false;
+    if (isAbsent(value) || isEmptyString(value as string)) return false;
     return !codeList.find(e => e == value);
   };
 
