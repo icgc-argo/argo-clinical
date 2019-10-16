@@ -191,6 +191,22 @@ class SubmissionController {
     });
     return res.status(200).send();
   }
+
+  @HasFullWriteAccess()
+  async reopenActiveSubmission(req: Request, res: Response) {
+    const { versionId, programId } = req.params;
+    const result = await submission.operations.reopenClinicalSubmission({
+      versionId,
+      programId,
+    });
+    if (result) {
+      return res.status(200).send(result);
+    }
+    return ControllerUtils.notFound(
+      res,
+      `No active submission found with programId: ${programId} & versionId: ${versionId}`,
+    );
+  }
 }
 
 const isValidCreateBody = (req: Request, res: Response): boolean => {

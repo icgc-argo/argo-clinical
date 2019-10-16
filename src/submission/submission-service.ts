@@ -21,6 +21,7 @@ import {
   SubmissionValidationUpdate,
   ClinicalTypeValidateResult,
   ClinicalEntities,
+  ActiveSubmissionIdentifier,
 } from './submission-entities';
 import * as schemaManager from '../lectern-client/schema-manager';
 import {
@@ -325,6 +326,43 @@ export namespace operations {
       schemaErrors: {},
       successful: !invalid,
     };
+  };
+
+  export const reopenClinicalSubmission = async (id: ActiveSubmissionIdentifier) => {
+    const exsistingActiveSubmission = await submissionRepository.findByProgramId(id.programId);
+    if (!exsistingActiveSubmission || exsistingActiveSubmission.version !== id.versionId) {
+      throw new Errors.NotFound(
+        `No active submission found with programId: ${id.programId} & versionId: ${id.versionId}`,
+      );
+    }
+    if (exsistingActiveSubmission.state !== SUBMISSION_STATE.PENDING_APPROVAL) {
+      throw new Errors.StateConflict(
+        'Active submission does not have state PENDING_APPROVAL and cannot be reopened.',
+      );
+    }
+    // remove stats from clinical entities
+    const updatedClinicalEntites: ClinicalEntities = {};
+    Object.entries(exsistingActiveSubmission.clinicalEntities).forEach(
+      ([clinicalType, clinicalEntity]) => {
+        updatedClinicalEntites[clinicalType] = {
+          ...clinicalEntity,
+          ...emptyStats,
+        };
+      },
+    );
+
+    const reopenedActiveSubmission: ActiveClinicalSubmission = {
+      programId: id.programId,
+      state: SUBMISSION_STATE.OPEN,
+      version: id.versionId, // version is irrelevant here, repo will set it
+      clinicalEntities: updatedClinicalEntites,
+    };
+
+    return await submissionRepository.updateSubmissionWithVersion(
+      id.programId,
+      id.versionId,
+      reopenedActiveSubmission,
+    );
   };
 
   /************* Private methods *************/
