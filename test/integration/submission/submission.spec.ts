@@ -16,6 +16,7 @@ import {
   emptyDonorDocument,
   resetCounters,
   generateDonor,
+  assertDbCollectionEmpty,
 } from '../testutils';
 import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN, JWT_ABCDEF, JWT_WXYZEF } from '../test.jwt';
 import {
@@ -1237,16 +1238,6 @@ async function assertUploadOKRegistrationCreated(res: any, dburl: string) {
   if (!savedRegistration) {
     throw new Error("saved registration shouldn't be null");
   }
-}
-
-async function assertDbCollectionEmpty(dburl: string, collection: string) {
-  const conn = await mongo.connect(dburl);
-  const count = await conn
-    .db('clinical')
-    .collection(collection)
-    .count({});
-  await conn.close();
-  chai.expect(count).to.eq(0);
 }
 
 const comittedDonors2: Donor[] = [

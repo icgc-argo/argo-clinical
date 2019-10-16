@@ -1,5 +1,6 @@
 import mongo from 'mongodb';
 import _ from 'lodash';
+import chai from 'chai';
 
 export const cleanCollection = async (dburl: string, collection: string): Promise<any> => {
   const conn = await mongo.connect(dburl);
@@ -76,3 +77,13 @@ export const generateDonor = async (
   await insertData(dburl, 'donors', doc);
   return doc;
 };
+
+export async function assertDbCollectionEmpty(dburl: string, collection: string) {
+  const conn = await mongo.connect(dburl);
+  const count = await conn
+    .db('clinical')
+    .collection(collection)
+    .count({});
+  await conn.close();
+  chai.expect(count).to.eq(0);
+}
