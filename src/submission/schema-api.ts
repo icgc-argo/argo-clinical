@@ -4,7 +4,9 @@ import { loggerFor } from '../logger';
 import { SchemasDictionary, SchemaDefinition } from '../lectern-client/schema-entities';
 import { setStatus, Status } from '../app-health';
 import { ControllerUtils } from '../utils';
+import { FileType } from './submission-api';
 const L = loggerFor(__filename);
+import AdmZip from 'adm-zip';
 
 export const get = async (req: Request, res: Response) => {
   const schema = manager.instance().getCurrent();
@@ -48,7 +50,26 @@ export const getTemplate = async (req: Request, res: Response) => {
   return res
     .status(200)
     .contentType('text/tab-separated-values')
+    .attachment(`${schemaName}.tsv`)
     .send(template);
+};
+
+export const getAllTemplates = async (req: Request, res: Response) => {
+  const schemasDictionary = manager.instance().getCurrent();
+  const zip = new AdmZip();
+  res
+    .status(200)
+    .contentType('application/zip')
+    .attachment('all.zip');
+
+  schemasDictionary.schemas
+    .filter(s => s.name !== FileType.REGISTRATION)
+    .forEach(schema => {
+      const template = createTemplate(schema);
+      zip.addFile(`${schema.name}.tsv`, Buffer.alloc(template.length, template));
+    });
+
+  return res.send(zip.toBuffer());
 };
 
 function createTemplate(schema: SchemaDefinition): string {

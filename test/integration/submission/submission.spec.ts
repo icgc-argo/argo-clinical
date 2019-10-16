@@ -16,6 +16,7 @@ import {
   emptyDonorDocument,
   resetCounters,
   generateDonor,
+  assertDbCollectionEmpty,
 } from '../testutils';
 import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN, JWT_ABCDEF, JWT_WXYZEF } from '../test.jwt';
 import {
@@ -31,6 +32,7 @@ import { donorDao } from '../../../src/clinical/donor-repo';
 import { Donor } from '../../../src/clinical/clinical-entities';
 import { ErrorCodes, FileType } from '../../../src/submission/submission-api';
 import * as manager from '../../../src/lectern-client/schema-manager';
+import AdmZip from 'adm-zip';
 
 chai.use(require('chai-http'));
 chai.should();
@@ -1100,6 +1102,47 @@ describe('Submission Api', () => {
           done();
         });
     });
+    it('get all templates zip', done => {
+      let refZip: AdmZip;
+      try {
+        refZip = new AdmZip(__dirname + '/all.zip');
+      } catch (err) {
+        return done(err);
+      }
+      chai
+        .request(app)
+        .get('/submission/schema/template/all')
+        .buffer()
+        // parse: collects data and creates AdmZip object (made wth buffered data) in res.body
+        .parse((res: any, callBack: any) => {
+          const data: any[] = [];
+          res.on('data', (chunk: any) => {
+            data.push(chunk);
+          });
+          res.on('end', () => {
+            callBack(undefined, new AdmZip(Buffer.concat(data)));
+          });
+        })
+        .end((err: any, res: any) => {
+          try {
+            // array of file content (which are just the field headers for each clinical type)
+            const downloadedFiles: string[] = res.body
+              .getEntries()
+              .map((fileEntry: any) => res.body.readAsText(fileEntry));
+            const refFiles: string[] = refZip
+              .getEntries()
+              .map((fileEntry: any) => refZip.readAsText(fileEntry));
+
+            console.log(`Ref data is: [${refFiles}]`);
+            console.log(`Downloaded data is: [${downloadedFiles}]`);
+
+            chai.expect(refFiles).to.eql(downloadedFiles);
+            return done();
+          } catch (err) {
+            return done(err);
+          }
+        });
+    });
     it('get template not found', done => {
       const name = 'invalid';
       console.log("Getting template for '" + name + "'...");
@@ -1195,16 +1238,6 @@ async function assertUploadOKRegistrationCreated(res: any, dburl: string) {
   if (!savedRegistration) {
     throw new Error("saved registration shouldn't be null");
   }
-}
-
-async function assertDbCollectionEmpty(dburl: string, collection: string) {
-  const conn = await mongo.connect(dburl);
-  const count = await conn
-    .db('clinical')
-    .collection(collection)
-    .count({});
-  await conn.close();
-  chai.expect(count).to.eq(0);
 }
 
 const comittedDonors2: Donor[] = [
