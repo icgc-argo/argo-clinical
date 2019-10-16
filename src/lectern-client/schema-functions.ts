@@ -366,7 +366,7 @@ namespace validation {
   ) => {
     // optional field if the value is absent at this point
     if (isAbsent(value) || isEmptyString(value as string)) return false;
-    return !codeList.find(e => e == value);
+    return !codeList.find(e => e === value);
   };
 
   const isInvalidRegexValue = (regex: string, value: string) => {
