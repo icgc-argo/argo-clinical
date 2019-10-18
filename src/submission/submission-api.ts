@@ -203,6 +203,16 @@ class SubmissionController {
     });
     return res.status(200).send();
   }
+
+  @HasFullWriteAccess()
+  async reopenActiveSubmission(req: Request, res: Response) {
+    const { versionId, programId } = req.params;
+    const result = await submission.operations.reopenClinicalSubmission({
+      versionId,
+      programId,
+    });
+    return res.status(200).send(result);
+  }
 }
 
 const isValidCreateBody = (req: Request, res: Response): boolean => {
