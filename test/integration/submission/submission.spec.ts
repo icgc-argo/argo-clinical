@@ -773,7 +773,7 @@ describe('Submission Api', () => {
           }
         });
     });
-    it.only('should return with appropriate stats', async () => {
+    it('should return with appropriate stats', async () => {
       const files: Buffer[] = [];
       try {
         files.push(fs.readFileSync(__dirname + '/donor.tsv'));
