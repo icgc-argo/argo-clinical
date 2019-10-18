@@ -114,8 +114,6 @@ const performCommitSubmission = async (
     } catch (err) {
       throw new Error(`Failure occured saving clinical data: ${err}`);
     }
-
-    // Remove active submission
   }
 };
 

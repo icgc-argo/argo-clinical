@@ -14,9 +14,12 @@ router.post(
   upload.array('clinicalFiles'),
   wrapAsync(submissionAPI.saveClinicalTsvFiles),
 );
+
 router.post('/validate/:versionId', wrapAsync(submissionAPI.validateActiveSubmission));
 
 router.post('/commit/:versionId', wrapAsync(submissionAPI.commitActiveSubmission));
 router.post('/approve/:versionId', wrapAsync(submissionAPI.approveActiveSubmission));
+
+router.delete('/:versionId/:fileType', wrapAsync(submissionAPI.clearFileFromActiveSubmission));
 
 export default router;
