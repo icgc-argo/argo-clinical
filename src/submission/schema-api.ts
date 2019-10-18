@@ -60,7 +60,7 @@ export const getAllTemplates = async (req: Request, res: Response) => {
   res
     .status(200)
     .contentType('application/zip')
-    .attachment('all.zip');
+    .attachment('argo_submission_templates.zip');
 
   schemasDictionary.schemas
     .filter(s => s.name !== FileType.REGISTRATION)
