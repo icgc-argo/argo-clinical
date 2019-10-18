@@ -17,6 +17,7 @@ import {
   resetCounters,
   generateDonor,
   assertDbCollectionEmpty,
+  findInDb,
 } from '../testutils';
 import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN, JWT_ABCDEF, JWT_WXYZEF } from '../test.jwt';
 import {
@@ -33,6 +34,8 @@ import { Donor } from '../../../src/clinical/clinical-entities';
 import { ErrorCodes, FileType } from '../../../src/submission/submission-api';
 import * as manager from '../../../src/lectern-client/schema-manager';
 import AdmZip from 'adm-zip';
+
+import * as _ from 'lodash';
 
 chai.use(require('chai-http'));
 chai.should();
@@ -844,6 +847,158 @@ describe('Submission Api', () => {
     });
   });
 
+  describe('clinical-submission: clear', function() {
+    const programId = 'ABCD-EF';
+    let donor: any;
+    let submissionVersion: string;
+
+    const uploadSubmission = async () => {
+      let donorFile: Buffer;
+      let specimenFile: Buffer;
+      try {
+        donorFile = fs.readFileSync(__dirname + '/donor.tsv');
+        specimenFile = fs.readFileSync(__dirname + '/specimen.tsv');
+      } catch (err) {
+        return err;
+      }
+
+      await chai
+        .request(app)
+        .post(`/submission/program/${programId}/clinical/upload`)
+        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+        .attach('clinicalFiles', donorFile, 'donor.tsv')
+        .attach('clinicalFiles', specimenFile, 'specimen.tsv')
+        .then((res: any) => {
+          submissionVersion = res.body.submission.version;
+        })
+        .catch(err => chai.assert.fail(err));
+    };
+
+    this.beforeEach(async () => {
+      await clearCollections(dburl, ['donors', 'activesubmissions']);
+      donor = await generateDonor(dburl, programId, 'ICGC_0001');
+    });
+    it('should return 401 if no auth is provided', done => {
+      chai
+        .request(app)
+        .delete('/submission/program/ABCD-EF/clinical/asdf/asdf')
+        .end((err: any, res: any) => {
+          res.should.have.status(401);
+          done();
+        });
+    });
+    it('should return 403 if the user is not an admin for that program', done => {
+      chai
+        .request(app)
+        .delete('/submission/program/ABCD-EF/clinical/asdf/asdf')
+        .auth(JWT_WXYZEF, { type: 'bearer' })
+        .end((err: any, res: any) => {
+          res.should.have.status(403);
+          done();
+        });
+    });
+    it('should return 404 if no active submission is available', done => {
+      chai
+        .request(app)
+        .delete('/submission/program/WRONG-ID/clinical/asdf/asdf')
+        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+        .end((err: any, res: any) => {
+          res.should.have.status(404);
+          done();
+        });
+    });
+    it('should return 400 if an active submission is available with a different version ID', async () => {
+      await uploadSubmission();
+      return chai
+        .request(app)
+        .delete(`/submission/program/${programId}/clinical/wrong-version-id/asdf`)
+        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+        .then((res: any) => {
+          res.should.have.status(400);
+        });
+    });
+    it('should return 409 if an active submission is available but in PENDING_APPROVAL state', async () => {
+      const SUBMISSION_PENDING_APPROVAL = {
+        state: SUBMISSION_STATE.PENDING_APPROVAL,
+        programId: 'ABCD-EF',
+        version: 'asdf',
+        clinicalEntities: { donor: [{ submitterId: 123 }] },
+      };
+
+      await insertData(dburl, 'activesubmissions', SUBMISSION_PENDING_APPROVAL);
+      return chai
+        .request(app)
+        .delete(`/submission/program/ABCD-EF/clinical/asdf/donor`)
+        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+        .then((res: any) => {
+          res.should.have.status(409);
+        });
+    });
+    it('should return 200 when clear all is completed, and have no clinicalEntities in DB', async () => {
+      await uploadSubmission();
+      return chai
+        .request(app)
+        .delete(`/submission/program/${programId}/clinical/${submissionVersion}/all`)
+        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+        .then(async (res: any) => {
+          res.should.have.status(200);
+          chai.expect(
+            res.body.clinicalEntities,
+            'Response should have empty clinicalEntities object',
+          ).to.be.empty;
+
+          const dbRead = await findInDb(dburl, 'activesubmissions', {
+            programId: 'ABCD-EF',
+          });
+          chai.expect(
+            dbRead[0].clinicalEntities,
+            'DB Record for Active Submission should hae empty clincialEntities',
+          ).to.be.empty;
+        });
+    });
+    it('should return 200 when clear donor is completed, have specimen in clinicalEntities but no donor', async () => {
+      await uploadSubmission();
+      return chai
+        .request(app)
+        .delete(`/submission/program/${programId}/clinical/${submissionVersion}/donor`)
+        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+        .then(async (res: any) => {
+          res.should.have.status(200);
+          chai.expect(res.body.clinicalEntities.donor).to.be.undefined;
+          chai.expect(res.body.clinicalEntities.specimen).to.exist;
+
+          const dbRead = await findInDb(dburl, 'activesubmissions', {
+            programId: 'ABCD-EF',
+          });
+          chai.expect(dbRead[0].clinicalEntities.donor).to.be.undefined;
+          chai.expect(dbRead[0].clinicalEntities.specimen).to.exist;
+        });
+    });
+    it('should set the active submission state to OPEN', async () => {
+      const SUBMISSION = {
+        state: SUBMISSION_STATE.VALID,
+        programId: 'ABCD-EF',
+        version: 'asdf',
+        clinicalEntities: { donor: [{ submitterId: 123 }] },
+      };
+
+      await insertData(dburl, 'activesubmissions', SUBMISSION);
+      return chai
+        .request(app)
+        .delete(`/submission/program/ABCD-EF/clinical/asdf/all`)
+        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+        .then(async (res: any) => {
+          res.should.have.status(200);
+          res.body.state.should.equal(SUBMISSION_STATE.OPEN);
+
+          const dbRead = await findInDb(dburl, 'activesubmissions', {
+            programId: 'ABCD-EF',
+          });
+          chai.expect(dbRead[0].state).to.be.equal(SUBMISSION_STATE.OPEN);
+        });
+    });
+  });
+
   describe('clinical-submission: commit', function() {
     const programId = 'ABCD-EF';
     let donor: any;
@@ -863,17 +1018,19 @@ describe('Submission Api', () => {
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
         .attach('clinicalFiles', file, 'donor.tsv')
         .then((res: any) => {
-          submissionVersion = res.submission.version;
+          submissionVersion = res.body.submission.version;
         })
-        .catch(err => err);
+        .catch(err => chai.assert.fail(err));
     };
     const validateSubmission = async () => {
       return chai
         .request(app)
         .post(`/submission/program/${programId}/clinical/validate/${submissionVersion}`)
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-        .then((res: any) => {})
-        .catch(err => err);
+        .then((res: any) => {
+          submissionVersion = res.body.submission.version;
+        })
+        .catch(err => chai.assert.fail(err));
     };
 
     this.beforeEach(async () => {
@@ -917,8 +1074,7 @@ describe('Submission Api', () => {
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
         .then((res: any) => {
           res.should.have.status(400);
-        })
-        .catch(err => err);
+        });
     });
     it('should return 409 if an active submission is available but not in VALID state', async () => {
       await uploadSubmission();
@@ -928,8 +1084,7 @@ describe('Submission Api', () => {
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
         .then((res: any) => {
           res.should.have.status(409);
-        })
-        .catch(err => err);
+        });
     });
     it('should return 200 when commit is completed', async () => {
       await uploadSubmission();
@@ -942,8 +1097,7 @@ describe('Submission Api', () => {
           res.should.have.status(200);
           // TODO: check that merge and save were successful
           // TODO: ensure the active submission was removed
-        })
-        .catch(err => err);
+        });
     });
   });
 
@@ -966,9 +1120,8 @@ describe('Submission Api', () => {
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
         .attach('clinicalFiles', file, 'donor.tsv')
         .then((res: any) => {
-          submissionVersion = res.submission.version;
-        })
-        .catch(err => err);
+          submissionVersion = res.body.submission.version;
+        });
     };
     const uploadSubmissionWithUpdates = async () => {
       let file: Buffer;
@@ -984,25 +1137,26 @@ describe('Submission Api', () => {
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
         .attach('clinicalFiles', file, 'donor.tsv')
         .then((res: any) => {
-          submissionVersion = res.submission.version;
-        })
-        .catch(err => err);
+          submissionVersion = res.body.submission.version;
+        });
     };
     const validateSubmission = async () => {
       return chai
         .request(app)
         .post(`/submission/program/${programId}/clinical/validate/${submissionVersion}`)
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-        .then((res: any) => {})
-        .catch(err => err);
+        .then((res: any) => {
+          submissionVersion = res.body.submission.version;
+        });
     };
     const commitActiveSubmission = async () => {
       return chai
         .request(app)
         .post(`/submission/program/${programId}/clinical/commit/${submissionVersion}`)
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-        .then((res: any) => {})
-        .catch(err => err);
+        .then((res: any) => {
+          submissionVersion = res.body.version;
+        });
     };
 
     this.beforeEach(async () => {
@@ -1046,8 +1200,7 @@ describe('Submission Api', () => {
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
         .then((res: any) => {
           res.should.have.status(400);
-        })
-        .catch(err => err);
+        });
     });
     it('should return 409 if an active submission is available but not in PENDING_APPROVAL state', async () => {
       await uploadSubmission();
@@ -1059,8 +1212,7 @@ describe('Submission Api', () => {
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
         .then((res: any) => {
           res.should.have.status(409);
-        })
-        .catch(err => err);
+        });
     });
     it('should return 200 when commit is completed', async () => {
       // To get submission into correct state (pending approval) we need to already have a completed submission...
@@ -1078,8 +1230,7 @@ describe('Submission Api', () => {
           res.should.have.status(200);
           // TODO: check that merge and save were successful
           // TODO: ensure the active submission was removed
-        })
-        .catch(err => err);
+        });
     });
   });
 
@@ -1196,23 +1347,19 @@ describe('Submission Api', () => {
           });
         })
         .end((err: any, res: any) => {
-          try {
-            // array of file content (which are just the field headers for each clinical type)
-            const downloadedFiles: string[] = res.body
-              .getEntries()
-              .map((fileEntry: any) => res.body.readAsText(fileEntry));
-            const refFiles: string[] = refZip
-              .getEntries()
-              .map((fileEntry: any) => refZip.readAsText(fileEntry));
+          // array of file content (which are just the field headers for each clinical type)
+          const downloadedFiles: string[] = res.body
+            .getEntries()
+            .map((fileEntry: any) => res.body.readAsText(fileEntry));
+          const refFiles: string[] = refZip
+            .getEntries()
+            .map((fileEntry: any) => refZip.readAsText(fileEntry));
 
-            console.log(`Ref data is: [${refFiles}]`);
-            console.log(`Downloaded data is: [${downloadedFiles}]`);
+          console.log(`Ref data is: [${refFiles}]`);
+          console.log(`Downloaded data is: [${downloadedFiles}]`);
 
-            chai.expect(refFiles).to.eql(downloadedFiles);
-            return done();
-          } catch (err) {
-            return done(err);
-          }
+          chai.expect(refFiles).to.eql(downloadedFiles);
+          return done();
         });
     });
     it('get template not found', done => {

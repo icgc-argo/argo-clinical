@@ -11,6 +11,7 @@ import {
   CreateRegistrationRecord,
   CreateRegistrationCommand,
   CreateRegistrationResult,
+  ClearSubmissionCommand,
   FieldsEnum,
   ClinicalSubmissionCommand,
   MultiClinicalSubmissionCommand,
@@ -166,6 +167,50 @@ export namespace operations {
    */
   export const findSubmissionByProgramId = async (programId: string) => {
     return await submissionRepository.findByProgramId(programId);
+  };
+
+  export const clearSubmissionData = async (command: ClearSubmissionCommand) => {
+    // Get active submission
+    const activeSubmission = await submissionRepository.findByProgramId(command.programId);
+
+    if (activeSubmission === undefined) {
+      throw new Errors.NotFound('No active submission data found for this program.');
+    } else if (activeSubmission.version !== command.versionId) {
+      throw new Errors.InvalidArgument(
+        'Version ID provided does not match the latest submission version for this program.',
+      );
+    } else if (activeSubmission.state === SUBMISSION_STATE.PENDING_APPROVAL) {
+      // confirm that the state is VALID
+      throw new Errors.StateConflict(
+        'Active submission is in PENDING_APPROVAL state and cannot be modified.',
+      );
+    } else {
+      // Update clinical entities from the active submission
+      const updatedClinicalEntites: ClinicalEntities = {};
+      if (command.fileType !== 'all') {
+        for (const clinicalType in activeSubmission.clinicalEntities) {
+          if (clinicalType !== command.fileType) {
+            updatedClinicalEntites[clinicalType] = {
+              ...activeSubmission.clinicalEntities[clinicalType],
+              ...emptyStats,
+            };
+          }
+        }
+      }
+      const newActiveSubmission: ActiveClinicalSubmission = {
+        programId: command.programId,
+        state: SUBMISSION_STATE.OPEN,
+        version: '', // version is irrelevant here, repo will set it
+        clinicalEntities: updatedClinicalEntites,
+      };
+      // insert into database
+      const updated = await submissionRepository.updateSubmissionWithVersion(
+        command.programId,
+        activeSubmission.version,
+        newActiveSubmission,
+      );
+      return updated;
+    }
   };
 
   /**
@@ -365,7 +410,9 @@ export namespace operations {
     );
   };
 
-  /************* Private methods *************/
+  /* *************** *
+   * Private Methods
+   * *************** */
 
   const addNewDonorToStats = (
     stats: RegistrationStats,
