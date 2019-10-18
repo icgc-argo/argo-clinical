@@ -915,8 +915,7 @@ describe('Submission Api', () => {
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
         .then((res: any) => {
           res.should.have.status(400);
-        })
-        .catch(err => chai.assert.fail(err));
+        });
     });
     it('should return 409 if an active submission is available but in PENDING_APPROVAL state', async () => {
       const SUBMISSION_PENDING_APPROVAL = {
@@ -933,8 +932,7 @@ describe('Submission Api', () => {
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
         .then((res: any) => {
           res.should.have.status(409);
-        })
-        .catch(err => chai.assert.fail(err));
+        });
     });
     it('should return 200 when clear all is completed, and have no clinicalEntities in DB', async () => {
       await uploadSubmission();
@@ -956,8 +954,7 @@ describe('Submission Api', () => {
             dbRead[0].clinicalEntities,
             'DB Record for Active Submission should hae empty clincialEntities',
           ).to.be.empty;
-        })
-        .catch(err => chai.assert.fail(err));
+        });
     });
     it('should return 200 when clear donor is completed, have specimen in clinicalEntities but no donor', async () => {
       await uploadSubmission();
@@ -975,6 +972,29 @@ describe('Submission Api', () => {
           });
           chai.expect(dbRead[0].clinicalEntities.donor).to.be.undefined;
           chai.expect(dbRead[0].clinicalEntities.specimen).to.exist;
+        });
+    });
+    it('should set the active submission state to OPEN', async () => {
+      const SUBMISSION = {
+        state: SUBMISSION_STATE.VALID,
+        programId: 'ABCD-EF',
+        version: 'asdf',
+        clinicalEntities: { donor: [{ submitterId: 123 }] },
+      };
+
+      await insertData(dburl, 'activesubmissions', SUBMISSION);
+      return chai
+        .request(app)
+        .delete(`/submission/program/ABCD-EF/clinical/asdf/all`)
+        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+        .then(async (res: any) => {
+          res.should.have.status(200);
+          res.body.state.should.equal(SUBMISSION_STATE.OPEN);
+
+          const dbRead = await findInDb(dburl, 'activesubmissions', {
+            programId: 'ABCD-EF',
+          });
+          chai.expect(dbRead[0].state).to.be.equal(SUBMISSION_STATE.OPEN);
         });
     });
   });
@@ -1101,8 +1121,7 @@ describe('Submission Api', () => {
         .attach('clinicalFiles', file, 'donor.tsv')
         .then((res: any) => {
           submissionVersion = res.body.submission.version;
-        })
-        .catch(err => chai.assert.fail(err));
+        });
     };
     const uploadSubmissionWithUpdates = async () => {
       let file: Buffer;
