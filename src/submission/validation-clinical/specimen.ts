@@ -73,7 +73,7 @@ function checkTimeConflictWithDonor(
   errors: SubmissionValidationError[],
 ) {
   if (
-    donorDataToValidateWith.donorVitalStatus === 'deceased' &&
+    donorDataToValidateWith.donorVitalStatus.toString().toLowerCase() === 'deceased' &&
     donorDataToValidateWith.donorSurvivalTime <
       specimenRecord[ClinicalInfoFieldsEnum.acquisition_interval]
   ) {

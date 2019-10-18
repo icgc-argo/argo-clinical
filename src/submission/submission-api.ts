@@ -211,13 +211,7 @@ class SubmissionController {
       versionId,
       programId,
     });
-    if (result) {
-      return res.status(200).send(result);
-    }
-    return ControllerUtils.notFound(
-      res,
-      `No active submission found with programId: ${programId} & versionId: ${versionId}`,
-    );
+    return res.status(200).send(result);
   }
 }
 
