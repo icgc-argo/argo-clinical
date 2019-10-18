@@ -854,9 +854,11 @@ describe('Submission Api', () => {
     let submissionVersion: string;
 
     const uploadSubmission = async () => {
-      let file: Buffer;
+      let donorFile: Buffer;
+      let specimenFile: Buffer;
       try {
-        file = fs.readFileSync(__dirname + '/donor.tsv');
+        donorFile = fs.readFileSync(__dirname + '/donor.tsv');
+        specimenFile = fs.readFileSync(__dirname + '/specimen.tsv');
       } catch (err) {
         return err;
       }
@@ -865,23 +867,8 @@ describe('Submission Api', () => {
         .request(app)
         .post(`/submission/program/${programId}/clinical/upload`)
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-        .attach('clinicalFiles', file, 'donor.tsv')
-        .then((res: any) => {
-          submissionVersion = res.body.submission.version;
-        })
-        .catch(err => chai.assert.fail(err));
-
-      try {
-        file = fs.readFileSync(__dirname + '/specimen.tsv');
-      } catch (err) {
-        return err;
-      }
-
-      await chai
-        .request(app)
-        .post(`/submission/program/${programId}/clinical/upload`)
-        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-        .attach('clinicalFiles', file, 'specimen.tsv')
+        .attach('clinicalFiles', donorFile, 'donor.tsv')
+        .attach('clinicalFiles', specimenFile, 'specimen.tsv')
         .then((res: any) => {
           submissionVersion = res.body.submission.version;
         })
