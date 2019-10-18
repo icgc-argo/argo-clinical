@@ -1240,6 +1240,16 @@ describe('Submission Api', () => {
     this.beforeEach(async () => {
       await clearCollections(dburl, ['donors', 'activesubmissions']);
     });
+    it('should return 403 if the user is not DCC Admin', done => {
+      chai
+        .request(app)
+        .post('/submission/program/ABCD-EF/clinical/reopen/asdf')
+        .auth(JWT_ABCDEF, { type: 'bearer' })
+        .end((err: any, res: any) => {
+          res.should.have.status(403);
+          done();
+        });
+    });
     it('should error for non existing submissions', done => {
       chai
         .request(app)
