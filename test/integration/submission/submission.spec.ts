@@ -1083,6 +1083,78 @@ describe('Submission Api', () => {
     });
   });
 
+  describe('clinical-submission: reopen', function() {
+    const progarmId: string = 'ABCD-EF';
+    const subVersion: string = 'a-ver-sion';
+    this.beforeEach(async () => {
+      await clearCollections(dburl, ['donors', 'activesubmissions']);
+    });
+    it('should error for non existing submissions', done => {
+      chai
+        .request(app)
+        .post(`/submission/program/${progarmId}/clinical/reopen/${subVersion}`)
+        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+        .then((res: any) => {
+          res.should.have.status(404);
+          done();
+        });
+    });
+    it('should not allow reopening if not PENDING_APPROVAL', async () => {
+      await insertData(dburl, 'activesubmissions', {
+        state: 'OPEN',
+        programId: progarmId,
+        version: subVersion,
+        clinicalEntities: {},
+      });
+      return chai
+        .request(app)
+        .post(`/submission/program/${progarmId}/clinical/reopen/${subVersion}`)
+        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+        .then((res: any) => {
+          res.should.have.status(409);
+        });
+    });
+    it('should allow reopening submission that is PENDING_APPROVAL', async () => {
+      await insertData(dburl, 'activesubmissions', {
+        state: 'PENDING_APPROVAL',
+        programId: progarmId,
+        version: subVersion,
+        clinicalEntities: {
+          donor: {
+            batchName: 'donor.tsv',
+            creator: 'Test User',
+            createdAt: new Date(),
+            records: [
+              {
+                submitter_donor_id: 'ICGC_0001',
+                ethnicity: 'black or african american',
+                vital_status: 'Deceased',
+              },
+            ],
+            dataErrors: [],
+            dataUpdates: [{}],
+            stats: {
+              new: [],
+              noUpdate: [],
+              updated: [0],
+              errorsFound: [],
+            },
+          },
+        },
+      });
+      return chai
+        .request(app)
+        .post(`/submission/program/${progarmId}/clinical/reopen/${subVersion}`)
+        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+        .then((res: any) => {
+          chai.expect(res.status).to.eql(200);
+          chai.expect(res.body.state).to.eql(SUBMISSION_STATE.OPEN);
+          chai.expect(res.body.clinicalEntities.donor.stats.updated).to.eql([]);
+          chai.expect(res.body.clinicalEntities.donor.dataUpdates).to.eql([]);
+        });
+    });
+  });
+
   describe('schema', function() {
     it('get template found', done => {
       const name = FileType.REGISTRATION;
