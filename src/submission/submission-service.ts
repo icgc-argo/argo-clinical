@@ -11,6 +11,7 @@ import {
   CreateRegistrationRecord,
   CreateRegistrationCommand,
   CreateRegistrationResult,
+  ClearSubmissionCommand,
   FieldsEnum,
   ClinicalSubmissionCommand,
   MultiClinicalSubmissionCommand,
@@ -21,6 +22,7 @@ import {
   SubmissionValidationUpdate,
   ClinicalTypeValidateResult,
   ClinicalEntities,
+  ActiveSubmissionIdentifier,
 } from './submission-entities';
 import * as schemaManager from '../lectern-client/schema-manager';
 import {
@@ -165,6 +167,50 @@ export namespace operations {
    */
   export const findSubmissionByProgramId = async (programId: string) => {
     return await submissionRepository.findByProgramId(programId);
+  };
+
+  export const clearSubmissionData = async (command: ClearSubmissionCommand) => {
+    // Get active submission
+    const activeSubmission = await submissionRepository.findByProgramId(command.programId);
+
+    if (activeSubmission === undefined) {
+      throw new Errors.NotFound('No active submission data found for this program.');
+    } else if (activeSubmission.version !== command.versionId) {
+      throw new Errors.InvalidArgument(
+        'Version ID provided does not match the latest submission version for this program.',
+      );
+    } else if (activeSubmission.state === SUBMISSION_STATE.PENDING_APPROVAL) {
+      // confirm that the state is VALID
+      throw new Errors.StateConflict(
+        'Active submission is in PENDING_APPROVAL state and cannot be modified.',
+      );
+    } else {
+      // Update clinical entities from the active submission
+      const updatedClinicalEntites: ClinicalEntities = {};
+      if (command.fileType !== 'all') {
+        for (const clinicalType in activeSubmission.clinicalEntities) {
+          if (clinicalType !== command.fileType) {
+            updatedClinicalEntites[clinicalType] = {
+              ...activeSubmission.clinicalEntities[clinicalType],
+              ...emptyStats,
+            };
+          }
+        }
+      }
+      const newActiveSubmission: ActiveClinicalSubmission = {
+        programId: command.programId,
+        state: SUBMISSION_STATE.OPEN,
+        version: '', // version is irrelevant here, repo will set it
+        clinicalEntities: updatedClinicalEntites,
+      };
+      // insert into database
+      const updated = await submissionRepository.updateSubmissionWithVersion(
+        command.programId,
+        activeSubmission.version,
+        newActiveSubmission,
+      );
+      return updated;
+    }
   };
 
   /**
@@ -327,7 +373,46 @@ export namespace operations {
     };
   };
 
-  /************* Private methods *************/
+  export const reopenClinicalSubmission = async (id: ActiveSubmissionIdentifier) => {
+    const exsistingActiveSubmission = await submissionRepository.findByProgramId(id.programId);
+    if (!exsistingActiveSubmission || exsistingActiveSubmission.version !== id.versionId) {
+      throw new Errors.NotFound(
+        `No active submission found with programId: ${id.programId} & versionId: ${id.versionId}`,
+      );
+    }
+    if (exsistingActiveSubmission.state !== SUBMISSION_STATE.PENDING_APPROVAL) {
+      throw new Errors.StateConflict(
+        'Active submission does not have state PENDING_APPROVAL and cannot be reopened.',
+      );
+    }
+    // remove stats from clinical entities
+    const updatedClinicalEntites: ClinicalEntities = {};
+    Object.entries(exsistingActiveSubmission.clinicalEntities).forEach(
+      ([clinicalType, clinicalEntity]) => {
+        updatedClinicalEntites[clinicalType] = {
+          ...clinicalEntity,
+          ...emptyStats,
+        };
+      },
+    );
+
+    const reopenedActiveSubmission: ActiveClinicalSubmission = {
+      programId: id.programId,
+      state: SUBMISSION_STATE.OPEN,
+      version: id.versionId, // version is irrelevant here, repo will set it
+      clinicalEntities: updatedClinicalEntites,
+    };
+
+    return await submissionRepository.updateSubmissionWithVersion(
+      id.programId,
+      id.versionId,
+      reopenedActiveSubmission,
+    );
+  };
+
+  /* *************** *
+   * Private Methods
+   * *************** */
 
   const addNewDonorToStats = (
     stats: RegistrationStats,

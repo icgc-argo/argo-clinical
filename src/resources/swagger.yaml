@@ -275,12 +275,7 @@ paths:
       tags:
         - Submission
       parameters:
-        - name: programId
-          description: the short name of the program
-          in: path
-          required: true
-          schema:
-            type: string
+        - $ref: '#/components/parameters/PathProgramId'
       requestBody:
         content:
           multipart/form-data:
@@ -313,6 +308,68 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CreateSubmission'
+  /submission/program/{programId}/clinical/{versionId}/{fileType}:
+    delete:
+      tags:
+        - Submission
+      parameters:
+        - $ref: '#/components/parameters/PathProgramId'
+        - $ref: '#/components/parameters/PathVersionId'
+        - name: fileType
+          description: the type name of the file that should be cleared, ex. 'specimen'
+          in: path
+          required: true
+          schema:
+            type: string
+      summary: Remove file from the active submission
+      description: Clears data for the specified file type from the active submission, removes all validation and resets the submission status to OPEN. Cannot be performed if the submission is in PENDING_APPROVAL state.
+      responses:
+        '200':
+          description: 'Data cleared succesfully. Returns the current active clinical submission or empty body if no submission data is available.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClinicalSubmission'
+        '400':
+          description: Version ID does not match version of active submission.
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: Active submission is not in a state that can be cleared (ex. PENDING_APPROVAL)
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /submission/program/{programId}/clinical/{versionId}/all:
+    delete:
+      tags:
+        - Submission
+      parameters:
+        - $ref: '#/components/parameters/PathProgramId'
+        - $ref: '#/components/parameters/PathVersionId'
+      summary: Remove all data from the active clinical submission
+      description: Clears all data from the active submission. Removes all validation and resets the submission status to OPEN. Cannot be performed if the submission is in PENDING_APPROVAL state.
+      responses:
+        '200':
+          description: 'Data cleared succesfully. Returns the current active clinical submission or empty body if no submission data is available.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClinicalSubmission'
+        '400':
+          description: Version ID does not match version of active submission.
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: Active submission is not in a state that can be cleared (ex. PENDING_APPROVAL)
+        '500':
+          $ref: '#/components/responses/ServerError'
   /submission/program/{programId}/clinical/validate/{versionId}:
     post:
       tags:
@@ -385,6 +442,33 @@ paths:
           $ref: '#/components/responses/NotFoundError'
         '409':
           description: Active submission is not in PENDING_APPROVAL state and cannot be commited, or another data issue was found that prevented successfully committing the data.
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /submission/program/{programId}/clinical/reopen/{versionId}:
+    post:
+      tags:
+        - Submission
+      description: Reopen in progress clinical submission (clears all stats). Requires Submission to be in PENDING_APPROVAL state, and can only be performed by a DCC Admin user.
+      parameters:
+        - $ref: '#/components/parameters/PathProgramId'
+        - $ref: '#/components/parameters/PathVersionId'
+      responses:
+        '200':
+          description: The uploaded clinical submission data was reopened
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClinicalSubmission'
+        '400':
+          description: Version ID does not match version of active submission
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: Active submission is not in PENDING_APPROVAL state and cannot be reopned
         '500':
           $ref: '#/components/responses/ServerError'
 

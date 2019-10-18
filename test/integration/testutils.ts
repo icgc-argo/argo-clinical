@@ -87,3 +87,14 @@ export async function assertDbCollectionEmpty(dburl: string, collection: string)
   await conn.close();
   chai.expect(count).to.eq(0);
 }
+
+export async function findInDb(dburl: string, collection: string, filter: any) {
+  const conn = await mongo.connect(dburl);
+  const result = await conn
+    .db('clinical')
+    .collection(collection)
+    .find(filter)
+    .toArray();
+  await conn.close();
+  return result;
+}

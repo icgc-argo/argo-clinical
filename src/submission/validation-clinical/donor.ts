@@ -45,7 +45,7 @@ function checkTimeConflictWithSpecimen(
   specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
   errors: SubmissionValidationError[],
 ) {
-  if (donorRecord[ClinicalInfoFieldsEnum.vital_status] !== 'deceased') {
+  if (donorRecord[ClinicalInfoFieldsEnum.vital_status].toString().toLowerCase() !== 'deceased') {
     return;
   }
   const specimenIdsWithTimeConflicts: string[] = [];

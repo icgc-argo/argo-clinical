@@ -135,6 +135,12 @@ export interface ClinicalSubmissionCommand {
   readonly clinicalType: string;
 }
 
+export interface ClearSubmissionCommand {
+  readonly programId: string;
+  readonly versionId: string;
+  readonly fileType: string;
+}
+
 export interface MultiClinicalSubmissionCommand {
   newClinicalEntities: Readonly<{ [clinicalType: string]: NewClinicalEntity }>;
   readonly programId: string;
