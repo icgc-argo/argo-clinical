@@ -799,7 +799,7 @@ describe('Submission Api', () => {
             specimenTissueSource: 'Other',
             tumourNormalDesignation: 'Normal',
             submitterId: '8013861',
-            clinicalInfo: { percent_tumour_cells: '0.5' },
+            clinicalInfo: { percent_tumour_cells: 0.5 },
           },
         ],
         donorId: 1,
@@ -1004,6 +1004,11 @@ describe('Submission Api', () => {
     let donor: any;
     let submissionVersion: string;
 
+    this.beforeEach(async () => {
+      await clearCollections(dburl, ['donors', 'activesubmissions']);
+      donor = await generateDonor(dburl, programId, 'ICGC_0001');
+    });
+
     const uploadSubmission = async () => {
       let file: Buffer;
       try {
@@ -1033,10 +1038,6 @@ describe('Submission Api', () => {
         .catch(err => chai.assert.fail(err));
     };
 
-    this.beforeEach(async () => {
-      await clearCollections(dburl, ['donors', 'activesubmissions']);
-      donor = await generateDonor(dburl, programId, 'ICGC_0001');
-    });
     it('should return 401 if no auth is provided', done => {
       chai
         .request(app)

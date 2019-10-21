@@ -125,25 +125,28 @@ const convertFromRawStrings = (
       return undefined;
     }
 
-    if (isNotEmptyString(record[field.name])) {
-      // convert field to match corresponding enum from codelist, if possible
-      if (field.restrictions && field.restrictions.codeList) {
-        const formattedField = field.restrictions.codeList.find(
-          e => e.toString().toLowerCase() === record[field.name].toString().toLowerCase(),
-        );
-        if (formattedField) {
-          mutableRecord[field.name] = formattedField;
-        }
-      }
+    if (isEmptyString(record[field.name])) {
       return undefined;
     }
 
     const valueType = field.valueType;
-    const rawValue = record[field.name];
+    let formattedFieldValue = record[field.name];
+    const rawValue = formattedFieldValue;
+
+    // convert field to match corresponding enum from codelist, if possible
+    if (field.restrictions && field.restrictions.codeList && valueType === ValueType.STRING) {
+      const formattedField = field.restrictions.codeList.find(
+        e => e.toString().toLowerCase() === record[field.name].toString().toLowerCase(),
+      );
+      if (formattedField) {
+        formattedFieldValue = formattedField as string;
+      }
+    }
+
     let typedValue: SchemaTypes = record[field.name];
     switch (valueType) {
       case ValueType.STRING:
-        typedValue = record[field.name];
+        typedValue = formattedFieldValue;
         break;
       case ValueType.INTEGER:
         typedValue = Number(rawValue);
@@ -152,7 +155,8 @@ const convertFromRawStrings = (
         typedValue = Number(rawValue);
         break;
       case ValueType.BOOLEAN:
-        typedValue = Boolean(rawValue);
+        // we have to lower case in case of inconsistent letters (boolean requires all small letters).
+        typedValue = Boolean(rawValue.toLowerCase());
         break;
     }
     mutableRecord[field.name] = typedValue;

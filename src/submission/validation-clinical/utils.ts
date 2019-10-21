@@ -51,8 +51,8 @@ export const buildSubmissionUpdate = (
     index,
     info: {
       donorSubmitterId: newRecord[FieldsEnum.submitter_donor_id],
-      newValue: newRecord[fieldName],
-      oldValue,
+      newValue: `${newRecord[fieldName]}`, // we convert the value to string since lectern may converted it to non string (integer, boolean)
+      oldValue: `${oldValue}`,
     },
   };
 };
