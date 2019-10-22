@@ -148,7 +148,7 @@ export interface MultiClinicalSubmissionCommand {
   readonly updater: string;
 }
 
-export interface ValidateSubmissionCommand {
+export interface ClinicalSubmissionModifierCommand {
   readonly programId: string;
   readonly versionId: string;
   readonly updater: string;

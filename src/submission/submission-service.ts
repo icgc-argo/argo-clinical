@@ -22,7 +22,7 @@ import {
   SubmissionValidationUpdate,
   ClinicalTypeValidateResult,
   ClinicalEntities,
-  ActiveSubmissionIdentifier,
+  ClinicalSubmissionModifierCommand,
 } from './submission-entities';
 import * as schemaManager from '../lectern-client/schema-manager';
 import {
@@ -291,14 +291,12 @@ export namespace operations {
    * @param versionId String
    */
   export const validateMultipleClinical = async (
-    programId: string,
-    versionId: string,
-    updater: string,
+    command: Readonly<ClinicalSubmissionModifierCommand>,
   ): Promise<CreateSubmissionResult> => {
-    const exsistingActiveSubmission = await submissionRepository.findByProgramId(programId);
-    if (!exsistingActiveSubmission || exsistingActiveSubmission.version !== versionId) {
+    const exsistingActiveSubmission = await submissionRepository.findByProgramId(command.programId);
+    if (!exsistingActiveSubmission || exsistingActiveSubmission.version !== command.versionId) {
       throw new Errors.NotFound(
-        `No active submission found with programId: ${programId} & versionId: ${versionId}`,
+        `No active submission found with programId: ${command.programId} & versionId: ${command.versionId}`,
       );
     }
     if (
@@ -321,7 +319,7 @@ export namespace operations {
       clinicalEnity.records.forEach((rc, index) => {
         const donorId = rc[FieldsEnum.submitter_donor_id];
         filters.push({
-          programId: programId,
+          programId: command.programId,
           submitterId: donorId,
         });
         if (!newDonorDataMap[donorId]) {
@@ -361,12 +359,12 @@ export namespace operations {
       state: invalid ? SUBMISSION_STATE.INVALID : SUBMISSION_STATE.VALID,
       version: '', // version is irrelevant here, repo will set it
       clinicalEntities: validatedClinicalEntities,
-      updatedBy: updater,
+      updatedBy: command.updater,
     };
 
     // insert into database
     const updated = await submissionRepository.updateSubmissionWithVersion(
-      programId,
+      command.programId,
       exsistingActiveSubmission.version,
       newActiveSubmission,
     );
@@ -378,14 +376,11 @@ export namespace operations {
     };
   };
 
-  export const reopenClinicalSubmission = async (
-    id: ActiveSubmissionIdentifier,
-    updater: string,
-  ) => {
-    const exsistingActiveSubmission = await submissionRepository.findByProgramId(id.programId);
-    if (!exsistingActiveSubmission || exsistingActiveSubmission.version !== id.versionId) {
+  export const reopenClinicalSubmission = async (command: ClinicalSubmissionModifierCommand) => {
+    const exsistingActiveSubmission = await submissionRepository.findByProgramId(command.programId);
+    if (!exsistingActiveSubmission || exsistingActiveSubmission.version !== command.versionId) {
       throw new Errors.NotFound(
-        `No active submission found with programId: ${id.programId} & versionId: ${id.versionId}`,
+        `No active submission found with programId: ${command.programId} & versionId: ${command.versionId}`,
       );
     }
     if (exsistingActiveSubmission.state !== SUBMISSION_STATE.PENDING_APPROVAL) {
@@ -405,16 +400,16 @@ export namespace operations {
     );
 
     const reopenedActiveSubmission: ActiveClinicalSubmission = {
-      programId: id.programId,
+      programId: command.programId,
       state: SUBMISSION_STATE.OPEN,
-      version: id.versionId, // version is irrelevant here, repo will set it
+      version: command.versionId, // version is irrelevant here, repo will set it
       clinicalEntities: updatedClinicalEntites,
-      updatedBy: updater,
+      updatedBy: command.updater,
     };
 
     return await submissionRepository.updateSubmissionWithVersion(
-      id.programId,
-      id.versionId,
+      command.programId,
+      command.versionId,
       reopenedActiveSubmission,
     );
   };

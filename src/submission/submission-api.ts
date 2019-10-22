@@ -177,12 +177,13 @@ class SubmissionController {
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async validateActiveSubmission(req: Request, res: Response) {
+    const { versionId, programId } = req.params;
     const updater = getCreatorFromToken(req);
-    const result = await submission.operations.validateMultipleClinical(
-      req.params.programId,
-      req.params.versionId,
+    const result = await submission.operations.validateMultipleClinical({
+      versionId,
+      programId,
       updater,
-    );
+    });
     if (result.successful) {
       return res.status(200).send(result);
     }
@@ -192,9 +193,11 @@ class SubmissionController {
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async commitActiveSubmission(req: Request, res: Response) {
     const { versionId, programId } = req.params;
+    const updater = getCreatorFromToken(req);
     const activeSubmission = await submission2Clinical.commitClinicalSubmission({
       versionId,
       programId,
+      updater,
     });
     return res.status(200).send(activeSubmission);
   }
@@ -213,14 +216,12 @@ class SubmissionController {
   async reopenActiveSubmission(req: Request, res: Response) {
     const { versionId, programId } = req.params;
     const updater = getCreatorFromToken(req);
-    const result = await submission.operations.reopenClinicalSubmission(
-      {
-        versionId,
-        programId,
-      },
+    const activeSubmission = await submission.operations.reopenClinicalSubmission({
+      versionId,
+      programId,
       updater,
-    );
-    return res.status(200).send(result);
+    });
+    return res.status(200).send(activeSubmission);
   }
 }
 

@@ -16,9 +16,10 @@ export interface ClinicalSubmissionRepository {
   ): Promise<DeepReadonly<ActiveClinicalSubmission>>;
   findByProgramId(programId: string): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined>;
   findById(id: string): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined>;
-  updateSubmissionStateWithVersion(
+  updateSubmissionUpdaterAndStateWithVersion(
     programId: string,
     version: string,
+    updatedBy: string,
     state: SUBMISSION_STATE,
   ): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined>;
   updateSubmissionWithVersion(
@@ -85,12 +86,13 @@ export const submissionRepository: ClinicalSubmissionRepository = {
       );
     }
   },
-  async updateSubmissionStateWithVersion(
+  async updateSubmissionUpdaterAndStateWithVersion(
     programId: string,
     version: string,
+    updatedBy: string,
     state: SUBMISSION_STATE,
   ): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined> {
-    return await this.updateSubmissionFieldsWithVersion(programId, version, { state });
+    return await this.updateSubmissionFieldsWithVersion(programId, version, { state, updatedBy });
   },
   async updateSubmissionWithVersion(
     programId: string,
