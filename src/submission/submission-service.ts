@@ -232,18 +232,13 @@ export namespace operations {
         updatedBy: command.updater,
       });
     }
-    const updatedClinicalEntites: ClinicalEntities = {};
-    // extract clinicalEntities from existing submission and clear stats & dataErrors/Updates
-    for (const clinicalType in exsistingActiveSubmission.clinicalEntities) {
-      updatedClinicalEntites[clinicalType] = {
-        ...exsistingActiveSubmission.clinicalEntities[clinicalType],
-        ...emptyStats,
-      };
-    }
+
+    const updatedClinicalEntites: ClinicalEntities = clearClinicalEnitytStats(
+      exsistingActiveSubmission.clinicalEntities,
+    );
     const createdAt: DeepReadonly<Date> = new Date();
     const schemaErrors: { [k: string]: SubmissionValidationError[] } = {}; // object to store all errors for entity
-    for (const clinicalType in command.newClinicalEntities) {
-      const newClinicalEnity = command.newClinicalEntities[clinicalType];
+    for (const [clinicalType, newClinicalEnity] of Object.entries(command.newClinicalEntities)) {
       const { schemaErrorsTemp, processedRecords } = await checkClinicalEntity({
         records: newClinicalEnity.records,
         programId: command.programId,
@@ -256,8 +251,8 @@ export namespace operations {
       } else {
         // update or add entity
         updatedClinicalEntites[clinicalType] = {
-          batchName: command.newClinicalEntities[clinicalType].batchName,
-          creator: command.newClinicalEntities[clinicalType].creator,
+          batchName: newClinicalEnity.batchName,
+          creator: newClinicalEnity.creator,
           createdAt: createdAt,
           records: processedRecords,
           ...emptyStats,
@@ -389,14 +384,8 @@ export namespace operations {
       );
     }
     // remove stats from clinical entities
-    const updatedClinicalEntites: ClinicalEntities = {};
-    Object.entries(exsistingActiveSubmission.clinicalEntities).forEach(
-      ([clinicalType, clinicalEntity]) => {
-        updatedClinicalEntites[clinicalType] = {
-          ...clinicalEntity,
-          ...emptyStats,
-        };
-      },
+    const updatedClinicalEntites: ClinicalEntities = clearClinicalEnitytStats(
+      exsistingActiveSubmission.clinicalEntities,
     );
 
     const reopenedActiveSubmission: ActiveClinicalSubmission = {
@@ -417,6 +406,19 @@ export namespace operations {
   /* *************** *
    * Private Methods
    * *************** */
+
+  const clearClinicalEnitytStats = (
+    clinicalEntities: DeepReadonly<ClinicalEntities>,
+  ): ClinicalEntities => {
+    const statClearedClinicalEntites: ClinicalEntities = {};
+    Object.entries(clinicalEntities).forEach(([clinicalType, clinicalEntity]) => {
+      statClearedClinicalEntites[clinicalType] = {
+        ...clinicalEntity,
+        ...emptyStats,
+      };
+    });
+    return statClearedClinicalEntites;
+  };
 
   const addNewDonorToStats = (
     stats: RegistrationStats,

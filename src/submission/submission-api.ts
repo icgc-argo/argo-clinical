@@ -45,20 +45,6 @@ type ClinicalEnityFileMap = {
 
 class SubmissionController {
   @HasProgramWriteAccess((req: Request) => req.params.programId)
-  async clearFileFromActiveSubmission(req: Request, res: Response) {
-    const { programId, versionId, fileType } = req.params;
-    const updater = getCreatorFromToken(req);
-    L.debug(`Entering clearFileFromActiveSubmission: ${{ programId, versionId, fileType }}`);
-    const updatedRegistration = await submission.operations.clearSubmissionData({
-      programId,
-      versionId,
-      fileType,
-      updater,
-    });
-    return res.status(200).send(updatedRegistration);
-  }
-
-  @HasProgramWriteAccess((req: Request) => req.params.programId)
   async getRegistrationByProgramId(req: Request, res: Response) {
     L.debug('in getRegistrationByProgramId');
     const programId = req.params.programId;
@@ -188,6 +174,20 @@ class SubmissionController {
       return res.status(200).send(result);
     }
     return res.status(422).send(result);
+  }
+
+  @HasProgramWriteAccess((req: Request) => req.params.programId)
+  async clearFileFromActiveSubmission(req: Request, res: Response) {
+    const { programId, versionId, fileType } = req.params;
+    const updater = getCreatorFromToken(req);
+    L.debug(`Entering clearFileFromActiveSubmission: ${{ programId, versionId, fileType }}`);
+    const updatedSubmission = await submission.operations.clearSubmissionData({
+      programId,
+      versionId,
+      fileType,
+      updater,
+    });
+    return res.status(200).send(updatedSubmission);
   }
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
