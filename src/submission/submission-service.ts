@@ -202,6 +202,7 @@ export namespace operations {
         state: SUBMISSION_STATE.OPEN,
         version: '', // version is irrelevant here, repo will set it
         clinicalEntities: updatedClinicalEntites,
+        updatedBy: command.updater,
       };
       // insert into database
       const updated = await submissionRepository.updateSubmissionWithVersion(
@@ -228,6 +229,7 @@ export namespace operations {
         state: SUBMISSION_STATE.OPEN,
         version: uuid(),
         clinicalEntities: {},
+        updatedBy: command.updater,
       });
     }
     const updatedClinicalEntites: ClinicalEntities = {};
@@ -267,6 +269,7 @@ export namespace operations {
       state: SUBMISSION_STATE.OPEN,
       version: '', // version is irrelevant here, repo will set it
       clinicalEntities: updatedClinicalEntites,
+      updatedBy: command.updater,
     };
     // insert into database
     const updated = await submissionRepository.updateSubmissionWithVersion(
@@ -290,6 +293,7 @@ export namespace operations {
   export const validateMultipleClinical = async (
     programId: string,
     versionId: string,
+    updater: string,
   ): Promise<CreateSubmissionResult> => {
     const exsistingActiveSubmission = await submissionRepository.findByProgramId(programId);
     if (!exsistingActiveSubmission || exsistingActiveSubmission.version !== versionId) {
@@ -357,6 +361,7 @@ export namespace operations {
       state: invalid ? SUBMISSION_STATE.INVALID : SUBMISSION_STATE.VALID,
       version: '', // version is irrelevant here, repo will set it
       clinicalEntities: validatedClinicalEntities,
+      updatedBy: updater,
     };
 
     // insert into database
@@ -373,7 +378,10 @@ export namespace operations {
     };
   };
 
-  export const reopenClinicalSubmission = async (id: ActiveSubmissionIdentifier) => {
+  export const reopenClinicalSubmission = async (
+    id: ActiveSubmissionIdentifier,
+    updater: string,
+  ) => {
     const exsistingActiveSubmission = await submissionRepository.findByProgramId(id.programId);
     if (!exsistingActiveSubmission || exsistingActiveSubmission.version !== id.versionId) {
       throw new Errors.NotFound(
@@ -401,6 +409,7 @@ export namespace operations {
       state: SUBMISSION_STATE.OPEN,
       version: id.versionId, // version is irrelevant here, repo will set it
       clinicalEntities: updatedClinicalEntites,
+      updatedBy: updater,
     };
 
     return await submissionRepository.updateSubmissionWithVersion(

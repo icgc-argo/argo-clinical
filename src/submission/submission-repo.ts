@@ -138,6 +138,7 @@ const ActiveSubmissionSchema = new mongoose.Schema(
     },
     version: { type: String, required: true },
     clinicalEntities: { type: Object, required: false },
+    updatedBy: { type: String, required: true },
   },
   { timestamps: true, minimize: false },
 );

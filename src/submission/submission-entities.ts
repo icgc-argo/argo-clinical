@@ -139,11 +139,19 @@ export interface ClearSubmissionCommand {
   readonly programId: string;
   readonly versionId: string;
   readonly fileType: string;
+  readonly updater: string;
 }
 
 export interface MultiClinicalSubmissionCommand {
   newClinicalEntities: Readonly<{ [clinicalType: string]: NewClinicalEntity }>;
   readonly programId: string;
+  readonly updater: string;
+}
+
+export interface ValidateSubmissionCommand {
+  readonly programId: string;
+  readonly versionId: string;
+  readonly updater: string;
 }
 
 export interface CreateSubmissionResult {
@@ -182,6 +190,8 @@ export interface ActiveClinicalSubmission {
   state: SUBMISSION_STATE;
   version: string;
   clinicalEntities: ClinicalEntities;
+  updatedBy: string;
+  updatedAt?: Date; // this is currently set by db
 }
 
 export interface ClinicalEntities {

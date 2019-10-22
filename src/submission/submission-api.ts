@@ -47,11 +47,13 @@ class SubmissionController {
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async clearFileFromActiveSubmission(req: Request, res: Response) {
     const { programId, versionId, fileType } = req.params;
+    const updater = getCreatorFromToken(req);
     L.debug(`Entering clearFileFromActiveSubmission: ${{ programId, versionId, fileType }}`);
     const updatedRegistration = await submission.operations.clearSubmissionData({
       programId,
       versionId,
       fileType,
+      updater,
     });
     return res.status(200).send(updatedRegistration);
   }
@@ -162,6 +164,7 @@ class SubmissionController {
     const command: MultiClinicalSubmissionCommand = {
       newClinicalEntities: newClinicalEntities,
       programId: req.params.programId,
+      updater: creator,
     };
     const result = await submission.operations.uploadMultipleClinical(command);
     if (!result.successful) {
@@ -174,9 +177,11 @@ class SubmissionController {
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async validateActiveSubmission(req: Request, res: Response) {
+    const updater = getCreatorFromToken(req);
     const result = await submission.operations.validateMultipleClinical(
       req.params.programId,
       req.params.versionId,
+      updater,
     );
     if (result.successful) {
       return res.status(200).send(result);
@@ -207,10 +212,14 @@ class SubmissionController {
   @HasFullWriteAccess()
   async reopenActiveSubmission(req: Request, res: Response) {
     const { versionId, programId } = req.params;
-    const result = await submission.operations.reopenClinicalSubmission({
-      versionId,
-      programId,
-    });
+    const updater = getCreatorFromToken(req);
+    const result = await submission.operations.reopenClinicalSubmission(
+      {
+        versionId,
+        programId,
+      },
+      updater,
+    );
     return res.status(200).send(result);
   }
 }
