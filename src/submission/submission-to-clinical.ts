@@ -52,7 +52,7 @@ export const commitClinicalSubmission = async (
     // check if there are updates, if so, change state to SUBMISSION_STATE.PENDING_APPROVAL and save
     if (isPendingApproval(activeSubmission)) {
       // insert into database
-      const updated = await submissionRepository.updateSubmissionUpdaterAndStateWithVersion(
+      const updated = await submissionRepository.updateSubmissionUpdatedByAndStateWithVersion(
         command.programId,
         command.versionId,
         command.updater,

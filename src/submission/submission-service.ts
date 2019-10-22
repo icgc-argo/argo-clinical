@@ -169,6 +169,10 @@ export namespace operations {
     return await submissionRepository.findByProgramId(programId);
   };
 
+  /**
+   * clear clinical entities in submission
+   * @param command ClearSubmissionCommand
+   */
   export const clearSubmissionData = async (command: ClearSubmissionCommand) => {
     // Get active submission
     const activeSubmission = await submissionRepository.findByProgramId(command.programId);
@@ -216,7 +220,7 @@ export namespace operations {
 
   /**
    * upload multiple clinical submissions
-   * @param command SaveClinicalCommand
+   * @param command MultiClinicalSubmissionCommand
    */
   export const uploadMultipleClinical = async (
     command: MultiClinicalSubmissionCommand,
@@ -282,8 +286,7 @@ export namespace operations {
 
   /**
    * validate active submission
-   * @param programId String
-   * @param versionId String
+   * @param command ClinicalSubmissionModifierCommand
    */
   export const validateMultipleClinical = async (
     command: Readonly<ClinicalSubmissionModifierCommand>,
@@ -371,6 +374,10 @@ export namespace operations {
     };
   };
 
+  /**
+   * reopen active submission and clear stats for entities
+   * @param command ClinicalSubmissionModifierCommand
+   */
   export const reopenClinicalSubmission = async (command: ClinicalSubmissionModifierCommand) => {
     const exsistingActiveSubmission = await submissionRepository.findByProgramId(command.programId);
     if (!exsistingActiveSubmission || exsistingActiveSubmission.version !== command.versionId) {

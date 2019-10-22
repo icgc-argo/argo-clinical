@@ -16,7 +16,7 @@ export interface ClinicalSubmissionRepository {
   ): Promise<DeepReadonly<ActiveClinicalSubmission>>;
   findByProgramId(programId: string): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined>;
   findById(id: string): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined>;
-  updateSubmissionUpdaterAndStateWithVersion(
+  updateSubmissionUpdatedByAndStateWithVersion(
     programId: string,
     version: string,
     updatedBy: string,
@@ -86,7 +86,7 @@ export const submissionRepository: ClinicalSubmissionRepository = {
       );
     }
   },
-  async updateSubmissionUpdaterAndStateWithVersion(
+  async updateSubmissionUpdatedByAndStateWithVersion(
     programId: string,
     version: string,
     updatedBy: string,
