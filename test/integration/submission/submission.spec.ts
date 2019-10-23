@@ -1097,10 +1097,24 @@ describe('Submission Api', () => {
         .request(app)
         .post(`/submission/program/${programId}/clinical/commit/${submissionVersion}`)
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-        .then((res: any) => {
+        .then(async (res: any) => {
           res.should.have.status(200);
-          // TODO: check that merge and save were successful
-          // TODO: ensure the active submission was removed
+          res.body.should.eql({});
+          // check activesubmission removed
+          assertDbCollectionEmpty(dburl, 'activesubmissions');
+
+          // check donor merge
+          const [updatedDonor] = await findInDb(dburl, 'donors', {
+            programId: programId,
+            submitterId: 'ICGC_0001',
+          });
+          // merge shouldn't have mutated donor except for donor.clinicalInfo
+          chai.expect(updatedDonor).to.deep.include(donor);
+          chai.expect(updatedDonor.clinicalInfo).to.exist;
+          chai.expect(updatedDonor.clinicalInfo).to.deep.include({
+            [ClinicalInfoFieldsEnum.vital_status]: 'Deceased',
+            [ClinicalInfoFieldsEnum.survival_time]: 522,
+          });
         });
     });
   });
@@ -1244,15 +1258,31 @@ describe('Submission Api', () => {
       await uploadSubmissionWithUpdates();
       await validateSubmission();
       await commitActiveSubmission();
+      const [donorBeforeApproveCommit] = await findInDb(dburl, 'donors', {
+        programId: programId,
+        submitterId: 'ICGC_0001',
+      });
       return chai
         .request(app)
         .post(`/submission/program/${programId}/clinical/approve/${submissionVersion}`)
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-        .then((res: any) => {
+        .then(async (res: any) => {
           res.should.have.status(200);
           res.body.should.eql({});
           assertDbCollectionEmpty(dburl, 'activesubmissions');
-          // TODO: check that merge and save were successful
+          const [updatedDonor] = await findInDb(dburl, 'donors', {
+            programId: programId,
+            submitterId: 'ICGC_0001',
+          });
+          // merge shouldn't have mutated donor except for donor.clinicalInfo
+          chai
+            .expect(updatedDonor)
+            .to.deep.include(
+              _.omit(donorBeforeApproveCommit, ['__v', 'updatedAt', 'clinicalInfo']),
+            );
+          chai
+            .expect(updatedDonor.clinicalInfo)
+            .to.deep.include({ [ClinicalInfoFieldsEnum.vital_status]: 'Alive' });
         });
     });
   });
