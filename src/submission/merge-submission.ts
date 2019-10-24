@@ -4,7 +4,6 @@ import { ActiveClinicalSubmission, FieldsEnum } from './submission-entities';
 import { FileType } from './submission-api';
 import _ from 'lodash';
 import { loggerFor } from '../logger';
-import { update } from './schema-api';
 import { Errors } from '../utils';
 const L = loggerFor(__filename);
 

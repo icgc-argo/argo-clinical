@@ -10,7 +10,7 @@ export class TypedDataRecord {
   readonly [k: string]: SchemaTypes;
 }
 
-export type SchemaTypes = string | boolean | number;
+export type SchemaTypes = string | boolean | number | undefined;
 
 export interface SchemasDictionary {
   version: string;
