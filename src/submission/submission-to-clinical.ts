@@ -7,6 +7,7 @@ import { Donor, Specimen, Sample } from '../clinical/clinical-entities';
 import {
   ActiveClinicalSubmission,
   ActiveSubmissionIdentifier,
+  ClinicalSubmissionModifierCommand,
   CommitRegistrationCommand,
   ActiveRegistration,
   SubmittedRegistrationRecord,
@@ -28,7 +29,9 @@ import { mergeActiveSubmissionWithDonors } from './merge-submission';
  *
  * @param command CommitClinicalSubmissionCommand with the versionId of the registration to close
  */
-export const commitClinicalSubmission = async (command: Readonly<ActiveSubmissionIdentifier>) => {
+export const commitClinicalSubmission = async (
+  command: Readonly<ClinicalSubmissionModifierCommand>,
+) => {
   // Get active submission
   const activeSubmission = await submissionRepository.findByProgramId(command.programId);
 
@@ -52,6 +55,7 @@ export const commitClinicalSubmission = async (command: Readonly<ActiveSubmissio
       const updated = await submissionRepository.updateSubmissionStateWithVersion(
         command.programId,
         command.versionId,
+        command.updater,
         SUBMISSION_STATE.PENDING_APPROVAL,
       );
       return updated;

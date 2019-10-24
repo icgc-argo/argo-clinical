@@ -19,6 +19,7 @@ export interface ClinicalSubmissionRepository {
   updateSubmissionStateWithVersion(
     programId: string,
     version: string,
+    updatedBy: string,
     state: SUBMISSION_STATE,
   ): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined>;
   updateSubmissionWithVersion(
@@ -88,9 +89,10 @@ export const submissionRepository: ClinicalSubmissionRepository = {
   async updateSubmissionStateWithVersion(
     programId: string,
     version: string,
+    updatedBy: string,
     state: SUBMISSION_STATE,
   ): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined> {
-    return await this.updateSubmissionFieldsWithVersion(programId, version, { state });
+    return await this.updateSubmissionFieldsWithVersion(programId, version, { state, updatedBy });
   },
   async updateSubmissionWithVersion(
     programId: string,
@@ -138,6 +140,7 @@ const ActiveSubmissionSchema = new mongoose.Schema(
     },
     version: { type: String, required: true },
     clinicalEntities: { type: Object, required: false },
+    updatedBy: { type: String, required: true },
   },
   { timestamps: true, minimize: false },
 );
