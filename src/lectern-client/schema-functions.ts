@@ -126,7 +126,8 @@ const convertFromRawStrings = (
     }
 
     if (isEmptyString(record[field.name])) {
-      return undefined;
+      mutableRecord[field.name] = undefined;
+      return;
     }
 
     const valueType = field.valueType;
@@ -347,7 +348,7 @@ namespace validation {
   // return false if the record value is a valid type
   export const isInvalidFieldType = (valueType: ValueType, value: string) => {
     // optional field if the value is absent at this point
-    if (isEmptyString(value)) return false;
+    if (isAbsent(value) || isEmptyString(value)) return false;
     switch (valueType) {
       case ValueType.STRING:
         return false;
@@ -366,7 +367,7 @@ namespace validation {
 
   const isInvalidEnumValue = (
     codeList: Array<string | number>,
-    value: string | boolean | number,
+    value: string | boolean | number | undefined,
   ) => {
     // optional field if the value is absent at this point
     if (isAbsent(value) || isEmptyString(value as string)) return false;
@@ -375,7 +376,7 @@ namespace validation {
 
   const isInvalidRegexValue = (regex: string, value: string) => {
     // optional field if the value is absent at this point
-    if (isEmptyString(value)) return false;
+    if (isAbsent(value) || isEmptyString(value)) return false;
     const regexPattern = new RegExp(regex);
     return !regexPattern.test(value);
   };
