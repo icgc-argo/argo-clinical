@@ -22,7 +22,7 @@ import {
   SubmissionValidationUpdate,
   ClinicalTypeValidateResult,
   ClinicalEntities,
-  ActiveSubmissionIdentifier,
+  ClinicalSubmissionModifierCommand,
 } from './submission-entities';
 import * as schemaManager from '../lectern-client/schema-manager';
 import {
@@ -169,6 +169,10 @@ export namespace operations {
     return await submissionRepository.findByProgramId(programId);
   };
 
+  /**
+   * clear clinical entities in submission
+   * @param command ClearSubmissionCommand
+   */
   export const clearSubmissionData = async (command: ClearSubmissionCommand) => {
     // Get active submission
     const activeSubmission = await submissionRepository.findByProgramId(command.programId);
@@ -202,6 +206,7 @@ export namespace operations {
         state: SUBMISSION_STATE.OPEN,
         version: '', // version is irrelevant here, repo will set it
         clinicalEntities: updatedClinicalEntites,
+        updatedBy: command.updater,
       };
       // insert into database
       const updated = await submissionRepository.updateSubmissionWithVersion(
@@ -215,7 +220,7 @@ export namespace operations {
 
   /**
    * upload multiple clinical submissions
-   * @param command SaveClinicalCommand
+   * @param command MultiClinicalSubmissionCommand
    */
   export const uploadMultipleClinical = async (
     command: MultiClinicalSubmissionCommand,
@@ -228,20 +233,16 @@ export namespace operations {
         state: SUBMISSION_STATE.OPEN,
         version: uuid(),
         clinicalEntities: {},
+        updatedBy: command.updater,
       });
     }
-    const updatedClinicalEntites: ClinicalEntities = {};
-    // extract clinicalEntities from existing submission and clear stats & dataErrors/Updates
-    for (const clinicalType in exsistingActiveSubmission.clinicalEntities) {
-      updatedClinicalEntites[clinicalType] = {
-        ...exsistingActiveSubmission.clinicalEntities[clinicalType],
-        ...emptyStats,
-      };
-    }
+
+    const updatedClinicalEntites: ClinicalEntities = clearClinicalEnitytStats(
+      exsistingActiveSubmission.clinicalEntities,
+    );
     const createdAt: DeepReadonly<Date> = new Date();
     const schemaErrors: { [k: string]: SubmissionValidationError[] } = {}; // object to store all errors for entity
-    for (const clinicalType in command.newClinicalEntities) {
-      const newClinicalEnity = command.newClinicalEntities[clinicalType];
+    for (const [clinicalType, newClinicalEnity] of Object.entries(command.newClinicalEntities)) {
       const { schemaErrorsTemp, processedRecords } = await checkClinicalEntity({
         records: newClinicalEnity.records,
         programId: command.programId,
@@ -254,8 +255,8 @@ export namespace operations {
       } else {
         // update or add entity
         updatedClinicalEntites[clinicalType] = {
-          batchName: command.newClinicalEntities[clinicalType].batchName,
-          creator: command.newClinicalEntities[clinicalType].creator,
+          batchName: newClinicalEnity.batchName,
+          creator: newClinicalEnity.creator,
           createdAt: createdAt,
           records: processedRecords,
           ...emptyStats,
@@ -267,6 +268,7 @@ export namespace operations {
       state: SUBMISSION_STATE.OPEN,
       version: '', // version is irrelevant here, repo will set it
       clinicalEntities: updatedClinicalEntites,
+      updatedBy: command.updater,
     };
     // insert into database
     const updated = await submissionRepository.updateSubmissionWithVersion(
@@ -284,17 +286,15 @@ export namespace operations {
 
   /**
    * validate active submission
-   * @param programId String
-   * @param versionId String
+   * @param command ClinicalSubmissionModifierCommand
    */
   export const validateMultipleClinical = async (
-    programId: string,
-    versionId: string,
+    command: Readonly<ClinicalSubmissionModifierCommand>,
   ): Promise<CreateSubmissionResult> => {
-    const exsistingActiveSubmission = await submissionRepository.findByProgramId(programId);
-    if (!exsistingActiveSubmission || exsistingActiveSubmission.version !== versionId) {
+    const exsistingActiveSubmission = await submissionRepository.findByProgramId(command.programId);
+    if (!exsistingActiveSubmission || exsistingActiveSubmission.version !== command.versionId) {
       throw new Errors.NotFound(
-        `No active submission found with programId: ${programId} & versionId: ${versionId}`,
+        `No active submission found with programId: ${command.programId} & versionId: ${command.versionId}`,
       );
     }
     if (
@@ -317,7 +317,7 @@ export namespace operations {
       clinicalEnity.records.forEach((rc, index) => {
         const donorId = rc[FieldsEnum.submitter_donor_id];
         filters.push({
-          programId: programId,
+          programId: command.programId,
           submitterId: donorId,
         });
         if (!newDonorDataMap[donorId]) {
@@ -357,11 +357,12 @@ export namespace operations {
       state: invalid ? SUBMISSION_STATE.INVALID : SUBMISSION_STATE.VALID,
       version: '', // version is irrelevant here, repo will set it
       clinicalEntities: validatedClinicalEntities,
+      updatedBy: command.updater,
     };
 
     // insert into database
     const updated = await submissionRepository.updateSubmissionWithVersion(
-      programId,
+      command.programId,
       exsistingActiveSubmission.version,
       newActiveSubmission,
     );
@@ -373,11 +374,15 @@ export namespace operations {
     };
   };
 
-  export const reopenClinicalSubmission = async (id: ActiveSubmissionIdentifier) => {
-    const exsistingActiveSubmission = await submissionRepository.findByProgramId(id.programId);
-    if (!exsistingActiveSubmission || exsistingActiveSubmission.version !== id.versionId) {
+  /**
+   * reopen active submission and clear stats for entities
+   * @param command ClinicalSubmissionModifierCommand
+   */
+  export const reopenClinicalSubmission = async (command: ClinicalSubmissionModifierCommand) => {
+    const exsistingActiveSubmission = await submissionRepository.findByProgramId(command.programId);
+    if (!exsistingActiveSubmission || exsistingActiveSubmission.version !== command.versionId) {
       throw new Errors.NotFound(
-        `No active submission found with programId: ${id.programId} & versionId: ${id.versionId}`,
+        `No active submission found with programId: ${command.programId} & versionId: ${command.versionId}`,
       );
     }
     if (exsistingActiveSubmission.state !== SUBMISSION_STATE.PENDING_APPROVAL) {
@@ -386,26 +391,21 @@ export namespace operations {
       );
     }
     // remove stats from clinical entities
-    const updatedClinicalEntites: ClinicalEntities = {};
-    Object.entries(exsistingActiveSubmission.clinicalEntities).forEach(
-      ([clinicalType, clinicalEntity]) => {
-        updatedClinicalEntites[clinicalType] = {
-          ...clinicalEntity,
-          ...emptyStats,
-        };
-      },
+    const updatedClinicalEntites: ClinicalEntities = clearClinicalEnitytStats(
+      exsistingActiveSubmission.clinicalEntities,
     );
 
     const reopenedActiveSubmission: ActiveClinicalSubmission = {
-      programId: id.programId,
+      programId: command.programId,
       state: SUBMISSION_STATE.OPEN,
-      version: id.versionId, // version is irrelevant here, repo will set it
+      version: command.versionId, // version is irrelevant here, repo will set it
       clinicalEntities: updatedClinicalEntites,
+      updatedBy: command.updater,
     };
 
     return await submissionRepository.updateSubmissionWithVersion(
-      id.programId,
-      id.versionId,
+      command.programId,
+      command.versionId,
       reopenedActiveSubmission,
     );
   };
@@ -413,6 +413,19 @@ export namespace operations {
   /* *************** *
    * Private Methods
    * *************** */
+
+  const clearClinicalEnitytStats = (
+    clinicalEntities: DeepReadonly<ClinicalEntities>,
+  ): ClinicalEntities => {
+    const statClearedClinicalEntites: ClinicalEntities = {};
+    Object.entries(clinicalEntities).forEach(([clinicalType, clinicalEntity]) => {
+      statClearedClinicalEntites[clinicalType] = {
+        ...clinicalEntity,
+        ...emptyStats,
+      };
+    });
+    return statClearedClinicalEntites;
+  };
 
   const addNewDonorToStats = (
     stats: RegistrationStats,

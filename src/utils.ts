@@ -114,11 +114,11 @@ export const isEmptyString = (value: string) => {
   return !isNotEmptyString(value);
 };
 
-export const isAbsent = (value: string | number | boolean) => {
+export const isAbsent = (value: string | number | boolean | undefined) => {
   return !isNotAbsent(value);
 };
 
-export const isNotAbsent = (value: string | number | boolean) => {
+export const isNotAbsent = (value: string | number | boolean | undefined) => {
   return value !== null && value !== undefined;
 };
 

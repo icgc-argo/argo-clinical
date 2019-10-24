@@ -578,7 +578,7 @@ tags:
   - name: Submission
     description: Uploading, Validating, and Committing clinical data
   - name: Clinical Data
-    description:
+    description: ''
 
 components:
   parameters:
@@ -782,6 +782,8 @@ components:
         - version
         - clinicalEntities
         - state
+        - updatedBy
+        - updatedAt
       properties:
         _id:
           type: string
@@ -796,6 +798,12 @@ components:
         version:
           type: string
           description: uuid used to ensure that correct version of submission is being updated
+        updatedBy:
+          type: string
+          description: the lastest user to update the submission
+        updatedAt:
+          type: string
+          description: the date/time of the last update
         clinicalEntities:
           type: object
           description: submitted clinical data mapped to a clinical type

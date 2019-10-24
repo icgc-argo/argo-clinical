@@ -102,6 +102,21 @@ describe('schema-functions', () => {
     });
   });
 
+  it('should convert string to integer after processing', () => {
+    const result = schemaService.process(schema, 'address', [
+      {
+        country: 'US',
+        unit_number: '123',
+        postal_code: '12345',
+      },
+    ]);
+    chai.expect(result.processedRecords).to.deep.include({
+      country: 'US',
+      unit_number: 123,
+      postal_code: '12345',
+    });
+  });
+
   it('should validate regex', () => {
     const result = schemaService.process(schema, 'registration', [
       {
@@ -187,7 +202,7 @@ describe('schema-functions', () => {
     chai.expect(result.validationErrors.length).to.eq(0);
   });
 
-  it('should not validate if integer feilds are not valid', () => {
+  it('should error if integer fields are not valid', () => {
     const result = schemaService.process(schema, 'donor', [
       {
         program_id: 'PACA-AU',

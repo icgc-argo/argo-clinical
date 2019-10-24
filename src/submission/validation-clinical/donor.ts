@@ -45,7 +45,10 @@ function checkTimeConflictWithSpecimen(
   specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
   errors: SubmissionValidationError[],
 ) {
-  if (donorRecord[ClinicalInfoFieldsEnum.vital_status].toString().toLowerCase() !== 'deceased') {
+  if (
+    donorRecord[ClinicalInfoFieldsEnum.vital_status].toString().toLowerCase() !== 'deceased' ||
+    !donorRecord[ClinicalInfoFieldsEnum.survival_time]
+  ) {
     return;
   }
   const specimenIdsWithTimeConflicts: string[] = [];
@@ -70,7 +73,7 @@ function checkTimeConflictWithSpecimen(
     }
 
     if (donoSurvivalTime < specimenAcqusitionInterval) {
-      specimenIdsWithTimeConflicts.push(specimenRecord[FieldsEnum.submitter_specimen_id] as string);
+      specimenIdsWithTimeConflicts.push(specimen.submitterId);
     }
   });
 

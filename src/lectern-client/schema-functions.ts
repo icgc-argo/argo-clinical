@@ -125,25 +125,29 @@ const convertFromRawStrings = (
       return undefined;
     }
 
-    if (isNotEmptyString(record[field.name])) {
-      // convert field to match corresponding enum from codelist, if possible
-      if (field.restrictions && field.restrictions.codeList) {
-        const formattedField = field.restrictions.codeList.find(
-          e => e.toString().toLowerCase() === record[field.name].toString().toLowerCase(),
-        );
-        if (formattedField) {
-          mutableRecord[field.name] = formattedField;
-        }
-      }
-      return undefined;
+    if (isEmptyString(record[field.name])) {
+      mutableRecord[field.name] = undefined;
+      return;
     }
 
     const valueType = field.valueType;
-    const rawValue = record[field.name];
+    let formattedFieldValue = record[field.name];
+    const rawValue = formattedFieldValue;
+
+    // convert field to match corresponding enum from codelist, if possible
+    if (field.restrictions && field.restrictions.codeList && valueType === ValueType.STRING) {
+      const formattedField = field.restrictions.codeList.find(
+        e => e.toString().toLowerCase() === record[field.name].toString().toLowerCase(),
+      );
+      if (formattedField) {
+        formattedFieldValue = formattedField as string;
+      }
+    }
+
     let typedValue: SchemaTypes = record[field.name];
     switch (valueType) {
       case ValueType.STRING:
-        typedValue = record[field.name];
+        typedValue = formattedFieldValue;
         break;
       case ValueType.INTEGER:
         typedValue = Number(rawValue);
@@ -152,7 +156,8 @@ const convertFromRawStrings = (
         typedValue = Number(rawValue);
         break;
       case ValueType.BOOLEAN:
-        typedValue = Boolean(rawValue);
+        // we have to lower case in case of inconsistent letters (boolean requires all small letters).
+        typedValue = Boolean(rawValue.toLowerCase());
         break;
     }
     mutableRecord[field.name] = typedValue;
@@ -343,7 +348,7 @@ namespace validation {
   // return false if the record value is a valid type
   export const isInvalidFieldType = (valueType: ValueType, value: string) => {
     // optional field if the value is absent at this point
-    if (isEmptyString(value)) return false;
+    if (isAbsent(value) || isEmptyString(value)) return false;
     switch (valueType) {
       case ValueType.STRING:
         return false;
@@ -362,7 +367,7 @@ namespace validation {
 
   const isInvalidEnumValue = (
     codeList: Array<string | number>,
-    value: string | boolean | number,
+    value: string | boolean | number | undefined,
   ) => {
     // optional field if the value is absent at this point
     if (isAbsent(value) || isEmptyString(value as string)) return false;
@@ -371,7 +376,7 @@ namespace validation {
 
   const isInvalidRegexValue = (regex: string, value: string) => {
     // optional field if the value is absent at this point
-    if (isEmptyString(value)) return false;
+    if (isAbsent(value) || isEmptyString(value)) return false;
     const regexPattern = new RegExp(regex);
     return !regexPattern.test(value);
   };
