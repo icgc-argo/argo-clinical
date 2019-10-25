@@ -97,7 +97,7 @@
     "express-validator": "^6.0.1",
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.14",
-    "mongoose": "^5.7.0",
+    "mongoose": "5.7.7",
     "mongoose-sequence": "^5.1.0",
     "multer": "^1.4.1",
     "node-fetch": "^2.6.0",
