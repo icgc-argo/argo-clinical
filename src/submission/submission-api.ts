@@ -212,7 +212,7 @@ class SubmissionController {
     return res.status(200).send();
   }
 
-  @HasFullWriteAccess()
+  @HasProgramWriteAccess((req: Request) => req.params.programId)
   async reopenActiveSubmission(req: Request, res: Response) {
     const { versionId, programId } = req.params;
     const updater = getUserFromToken(req);

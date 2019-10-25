@@ -1293,10 +1293,10 @@ describe('Submission Api', () => {
     this.beforeEach(async () => {
       await clearCollections(dburl, ['donors', 'activesubmissions']);
     });
-    it('should return 403 if the user is not DCC Admin', done => {
+    it('should return 403 if the user is not DCC Admin or in correct program', done => {
       chai
         .request(app)
-        .post('/submission/program/ABCD-EF/clinical/reopen/asdf')
+        .post('/submission/program/XYZ/clinical/reopen/asdf')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .end((err: any, res: any) => {
           res.should.have.status(403);
