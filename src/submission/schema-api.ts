@@ -32,7 +32,12 @@ export const get = async (req: Request, res: Response) => {
 };
 
 export const getAllSchemas = async (req: Request, res: Response) => {
-  return res.status(200).send(manager.instance().getSubSchemasList());
+  return res.status(200).send(
+    manager
+      .instance()
+      .getSubSchemasList()
+      .filter(s => s !== FileType.REGISTRATION),
+  );
 };
 
 export const replace = async (req: Request, res: Response) => {

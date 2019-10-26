@@ -193,8 +193,6 @@ const expectedDonorErrors = [
   },
 ];
 
-const schemaServiceUrl = 'file://' + __dirname + '/stub-schema.json';
-
 const clearCollections = async (dburl: string, collections: string[]) => {
   try {
     console.log(`Clearing collections pre-test:`, collections.join(', '));
