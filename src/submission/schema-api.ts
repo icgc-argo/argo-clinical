@@ -5,8 +5,22 @@ import { SchemasDictionary, SchemaDefinition } from '../lectern-client/schema-en
 import { setStatus, Status } from '../app-health';
 import { ControllerUtils } from '../utils';
 import { FileType } from './submission-api';
-const L = loggerFor(__filename);
 import AdmZip from 'adm-zip';
+import { HasFullWriteAccess } from '../auth-decorators';
+
+const L = loggerFor(__filename);
+
+class SchemaController {
+  @HasFullWriteAccess()
+  async update(req: Request, res: Response) {
+    const version: string = req.body.version;
+    await manager.instance().updateVersion(manager.instance().getCurrent().name, version);
+    setStatus('schema', { status: Status.OK });
+    return res.status(200).send(manager.instance().getCurrent());
+  }
+}
+
+export const schemaController = new SchemaController();
 
 export const get = async (req: Request, res: Response) => {
   const schema = manager.instance().getCurrent();
@@ -19,15 +33,6 @@ export const get = async (req: Request, res: Response) => {
 
 export const getAllSchemas = async (req: Request, res: Response) => {
   return res.status(200).send(manager.instance().getSubSchemasList());
-};
-
-export const update = async (req: Request, res: Response) => {
-  // currently we only use 1 version
-  await manager
-    .instance()
-    .updateVersion(manager.instance().getCurrent().name, manager.instance().getCurrent().version);
-  setStatus('schema', { status: Status.OK });
-  return res.status(200).send(manager.instance().getCurrent());
 };
 
 export const replace = async (req: Request, res: Response) => {

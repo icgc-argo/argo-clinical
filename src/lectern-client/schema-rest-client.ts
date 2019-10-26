@@ -19,9 +19,19 @@ export const schemaClient: SchemaServiceRestClient = {
       L.debug(`in fetch schema ${version}`);
       const result = delay(1000);
       const dictionary = await result(() => {
-        const dictionaryJson = require(schemaSvcUrl.substring(7, schemaSvcUrl.length));
-        return dictionaryJson;
+        const dictionaries: SchemasDictionary[] = require(schemaSvcUrl.substring(
+          7,
+          schemaSvcUrl.length,
+        )) as SchemasDictionary[];
+        const dic = dictionaries.find((d: any) => d.version == version);
+        if (!dic) {
+          return undefined;
+        }
+        return dic;
       });
+      if (dictionary == undefined) {
+        throw new Error("couldn't load stub dictionary with the criteria specified");
+      }
       L.debug(`schema found ${dictionary.version}`);
       return dictionary;
     }
@@ -51,7 +61,7 @@ export const schemaClient: SchemaServiceRestClient = {
 };
 
 function delay(milliseconds: number) {
-  return async (result: () => SchemasDictionary) => {
+  return async (result: () => SchemasDictionary | undefined) => {
     return new Promise<SchemasDictionary>((resolve, reject) => {
       setTimeout(() => resolve(result()), milliseconds);
     });

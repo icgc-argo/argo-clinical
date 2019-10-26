@@ -9,7 +9,7 @@
     "serve": "node dist/src/server.js",
     "watch-node": "nodemon dist/src/server.js",
     "test": "npm run build && mocha --exit --timeout 60000 -r ts-node/register test/**/**/*.ts",
-    "int-test": "npm run build && mocha --exit --timeout 30000 -r ts-node/register test/integration/**/*.ts",
+    "int-test": "npm run build && mocha --exit --timeout 60000 -r ts-node/register test/integration/**/*.ts",
     "unit-test": "npm run build && mocha --exit --timeout 5000 -r ts-node/register src/**/unit/*.spec.ts",
     "build-ts": "tsc",
     "watch-ts": "tsc -w",
@@ -78,7 +78,7 @@
     "testcontainers": "^1.1.19",
     "ts-node": "^8.3.0",
     "tslint": "^5.18.0",
-    "typescript": "^3.5.2"
+    "typescript": "^3.6.4"
   },
   "dependencies": {
     "adm-zip": "^0.4.13",

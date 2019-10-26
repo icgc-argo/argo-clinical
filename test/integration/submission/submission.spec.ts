@@ -214,8 +214,6 @@ describe('Submission Api', () => {
   // will run when all tests are finished
   before(() => {
     return (async () => {
-      manager.create(schemaServiceUrl);
-      manager.instance().loadSchema('ARGO Clinical Submission', '1.0');
       try {
         mongoContainer = await new GenericContainer('mongo').withExposedPorts(27017).start();
         console.log('mongo test container started');
@@ -236,7 +234,7 @@ describe('Submission Api', () => {
             return '1.0';
           },
           schemaName() {
-            return 'ARGO Dictionary';
+            return 'ARGO Clinical Submission';
           },
           jwtPubKey() {
             return TEST_PUB_KEY;

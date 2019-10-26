@@ -63,7 +63,7 @@ describe('clinical Api', () => {
             return '1.0';
           },
           schemaName() {
-            return 'ARGO Dictionary';
+            return 'ARGO Clinical Submission';
           },
           jwtPubKey() {
             return TEST_PUB_KEY;

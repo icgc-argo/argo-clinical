@@ -52,7 +52,7 @@ let server: Server;
     },
   };
 
-  bootstrap.run(defaultAppConfigImpl);
+  await bootstrap.run(defaultAppConfigImpl);
   /**
    * Start Express server.
    */
