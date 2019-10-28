@@ -56,6 +56,7 @@ export enum SchemaValidationErrorTypes {
   INVALID_BY_REGEX = 'INVALID_BY_REGEX',
   INVALID_BY_SCRIPT = 'INVALID_BY_SCRIPT',
   INVALID_ENUM_VALUE = 'INVALID_ENUM_VALUE',
+  UNRECOGNIZED_FIELD = 'UNRECOGNIZED_FIELD',
 }
 
 export interface SchemaValidationError {
