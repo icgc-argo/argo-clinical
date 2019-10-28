@@ -442,7 +442,7 @@
             "description": "Description of the donor self-reported gender. Gender is described as the assemblage of properties that distinguish people on the basis of their societal roles.",
             "restrictions": {
               "required": true,
-              "codeList": ["Male", "Female", "Other"]
+              "codeList": ["Male", "Female", "Other", "Don't Bother"]
             }
           },
           {
