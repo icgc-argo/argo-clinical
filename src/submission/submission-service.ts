@@ -23,6 +23,7 @@ import {
   ClinicalTypeValidateResult,
   ClinicalEntities,
   ClinicalSubmissionModifierCommand,
+  RegistrationStat,
 } from './submission-entities';
 import * as schemaManager from '../lectern-client/schema-manager';
 import {
@@ -432,14 +433,7 @@ export namespace operations {
     newDonor: CreateRegistrationRecord,
     index: number,
   ) => {
-    // if we didn't encounter this donor id in a previous row then
-    // the sample and specimen ids are new
-    if (!stats.newDonorIds[newDonor.donorSubmitterId]) {
-      stats.newDonorIds[newDonor.donorSubmitterId] = [index];
-      return;
-    }
-    // otherwise we encountered the same donor but different specimen or sample
-    stats.newDonorIds[newDonor.donorSubmitterId].push(index);
+    addRowNumberToStats(stats.newDonorIds, newDonor.donorSubmitterId, index);
   };
 
   const addNewSpecimenToStats = (
@@ -447,13 +441,7 @@ export namespace operations {
     newDonor: CreateRegistrationRecord,
     index: number,
   ) => {
-    // if the specimen id is not encountered we add it along with the sampleId
-    if (!stats.newSpecimenIds[newDonor.specimenSubmitterId]) {
-      stats.newSpecimenIds[newDonor.specimenSubmitterId] = [index];
-      return;
-    }
-    // otherwise just add the new row number (same donor, same specimen, different row)
-    stats.newSpecimenIds[newDonor.specimenSubmitterId].push(index);
+    addRowNumberToStats(stats.newSpecimenIds, newDonor.specimenSubmitterId, index);
   };
 
   const addNewSampleToStats = (
@@ -461,12 +449,7 @@ export namespace operations {
     newDonor: CreateRegistrationRecord,
     index: number,
   ) => {
-    if (!stats.newSampleIds[newDonor.sampleSubmitterId]) {
-      stats.newSampleIds[newDonor.sampleSubmitterId] = [index];
-      return;
-    }
-    stats.newSampleIds[newDonor.sampleSubmitterId].push(index);
-    return;
+    addRowNumberToStats(stats.newSampleIds, newDonor.sampleSubmitterId, index);
   };
 
   const unifySchemaErrors = (
@@ -509,15 +492,33 @@ export namespace operations {
       }
     }
   };
+
+  const addRowNumberToStats = (
+    statsArray: RegistrationStat,
+    submitterId: string,
+    rowNum: number,
+  ) => {
+    for (const s of statsArray) {
+      if (s.submitterId == submitterId) {
+        s.rowNumbers.push(rowNum);
+        return;
+      }
+    }
+    statsArray.push({
+      submitterId,
+      rowNumbers: [rowNum],
+    });
+  };
+
   const calculateUpdates = (
     records: DeepReadonly<CreateRegistrationRecord[]>,
     donorsBySubmitterIdMap: DeepReadonly<DonorMap>,
   ) => {
     const stats: RegistrationStats = {
-      newDonorIds: {},
-      newSpecimenIds: {},
-      newSampleIds: {},
-      alreadyRegistered: {},
+      newDonorIds: [],
+      newSpecimenIds: [],
+      newSampleIds: [],
+      alreadyRegistered: [],
     };
 
     records.forEach((nd, index) => {
@@ -544,12 +545,7 @@ export namespace operations {
       if (!existingSample) return addNewSampleToStats(stats, nd, index);
 
       // otherwise it's already registered record
-      if (!stats.alreadyRegistered[nd.donorSubmitterId]) {
-        stats.alreadyRegistered[nd.donorSubmitterId] = [index];
-        return;
-      }
-
-      stats.alreadyRegistered[nd.donorSubmitterId].push(index);
+      addRowNumberToStats(stats.alreadyRegistered, nd.donorSubmitterId, index);
       return;
     });
 
