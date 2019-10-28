@@ -248,4 +248,26 @@ describe('schema-functions', () => {
       sample_type: 'ctDNA',
     });
   });
+
+  it('should not validate if unrecognized fields are provided', () => {
+    const result = schemaService.process(schema, 'donor', [
+      {
+        program_id: 'PACA-AU',
+        submitter_donor_id: 'ICGC_0002',
+        gender: 'Other',
+        ethnicity: 'asian',
+        vital_status: 'deceased',
+        cause_of_death: 'died of cancer',
+        survival_time: '5',
+        hackField: 'muchHack',
+      },
+    ]);
+    chai.expect(result.validationErrors.length).to.eq(1);
+    chai.expect(result.validationErrors).to.deep.include({
+      errorType: SchemaValidationErrorTypes.UNRECOGNIZED_FIELD,
+      fieldName: 'hackField',
+      index: 0,
+      info: {},
+    });
+  });
 });

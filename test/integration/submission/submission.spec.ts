@@ -191,6 +191,15 @@ const ABCD_REGISTRATION_DOC: ActiveRegistration = {
 };
 const expectedDonorErrors = [
   {
+    fieldName: 'cause_of_dead',
+    index: 0,
+    info: {
+      donorSubmitterId: 'ICGC_0002',
+      value: 'died of other reasons',
+    },
+    type: 'UNRECOGNIZED_FIELD',
+  },
+  {
     index: 0,
     type: 'INVALID_FIELD_VALUE_TYPE',
     info: {
