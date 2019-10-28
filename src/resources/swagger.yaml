@@ -261,7 +261,7 @@ paths:
           $ref: '#/components/responses/ForbiddenError'
         '500':
           $ref: '#/components/responses/ServerError'
-  /submission/program/{programId}/clinical/upload:
+  /submission/program/{programId}/clinical/:
     get:
       tags:
         - Submission
@@ -287,6 +287,7 @@ paths:
           $ref: '#/components/responses/ForbiddenError'
         '500':
           $ref: '#/components/responses/ServerError'
+  /submission/program/{programId}/clinical/upload:
     post:
       tags:
         - Submission
