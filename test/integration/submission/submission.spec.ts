@@ -193,8 +193,6 @@ const expectedDonorErrors = [
   },
 ];
 
-const schemaServiceUrl = 'file://' + __dirname + '/stub-schema.json';
-
 const clearCollections = async (dburl: string, collections: string[]) => {
   try {
     console.log(`Clearing collections pre-test:`, collections.join(', '));
@@ -214,8 +212,6 @@ describe('Submission Api', () => {
   // will run when all tests are finished
   before(() => {
     return (async () => {
-      manager.create(schemaServiceUrl);
-      manager.instance().loadSchema('ARGO Clinical Submission', '1.0');
       try {
         mongoContainer = await new GenericContainer('mongo').withExposedPorts(27017).start();
         console.log('mongo test container started');
@@ -236,7 +232,7 @@ describe('Submission Api', () => {
             return '1.0';
           },
           schemaName() {
-            return 'ARGO Dictionary';
+            return 'ARGO Clinical Submission';
           },
           jwtPubKey() {
             return TEST_PUB_KEY;
@@ -1293,10 +1289,10 @@ describe('Submission Api', () => {
     this.beforeEach(async () => {
       await clearCollections(dburl, ['donors', 'activesubmissions']);
     });
-    it('should return 403 if the user is not DCC Admin', done => {
+    it('should return 403 if the user is not DCC Admin or in correct program', done => {
       chai
         .request(app)
-        .post('/submission/program/ABCD-EF/clinical/reopen/asdf')
+        .post('/submission/program/XYZ/clinical/reopen/asdf')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .end((err: any, res: any) => {
           res.should.have.status(403);

@@ -1,6 +1,6 @@
 {
   "name": "argo-clinical",
-  "version": "0.9.7",
+  "version": "0.10.0",
   "description": "Clinical submission system and repo",
   "scripts": {
     "start": "npm run serve",
@@ -78,7 +78,7 @@
     "testcontainers": "^1.1.19",
     "ts-node": "^8.3.0",
     "tslint": "^5.18.0",
-    "typescript": "^3.5.2"
+    "typescript": "^3.6.4"
   },
   "dependencies": {
     "adm-zip": "^0.4.13",
@@ -97,7 +97,8 @@
     "express-validator": "^6.0.1",
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.14",
-    "mongoose": "^5.6.0",
+    "mock-http-server": "^1.4.1",
+    "mongoose": "5.7.7",
     "mongoose-sequence": "^5.1.0",
     "multer": "^1.4.1",
     "node-fetch": "^2.6.0",

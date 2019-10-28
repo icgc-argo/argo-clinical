@@ -1,126 +1,128 @@
-{
-  "schemas": [
-    {
-      "name": "sample_registration",
-      "description": "Collection of elements required to register the required Donor-Specimen-Sample data to the ARGO Platform. Registration of samples is required before genomic and clinical data submission can proceed.",
-      "fields": [
-        {
-          "name": "program_id",
-          "valueType": "string",
-          "description": "Unique identifier of the ARGO program.",
-          "restrictions": {
-            "required": true
+[
+  {
+    "schemas": [
+      {
+        "name": "sample_registration",
+        "description": "Collection of elements required to register the required Donor-Specimen-Sample data to the ARGO Platform. Registration of samples is required before genomic and clinical data submission can proceed.",
+        "fields": [
+          {
+            "name": "program_id",
+            "valueType": "string",
+            "description": "Unique identifier of the ARGO program.",
+            "restrictions": {
+              "required": true
+            }
+          },
+          {
+            "name": "submitter_donor_id",
+            "valueType": "string",
+            "description": "Unique identifier of the donor, assigned by the data provider.",
+            "restrictions": {
+              "required": true,
+              "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+            }
+          },
+          {
+            "name": "gender",
+            "valueType": "string",
+            "description": "Description of the donor self-reported gender. Gender is described as the assemblage of properties that distinguish people on the basis of their societal roles.",
+            "restrictions": {
+              "required": true,
+              "codeList": ["Male", "Female", "Other"]
+            }
+          },
+          {
+            "name": "submitter_specimen_id",
+            "valueType": "string",
+            "description": "Unique identifier of the specimen, assigned by the data provider.",
+            "restrictions": {
+              "required": true,
+              "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+            }
+          },
+          {
+            "name": "specimen_tissue_source",
+            "valueType": "string",
+            "description": "Tissue source of the biospecimen.",
+            "restrictions": {
+              "required": true,
+              "codeList": [
+                "Blood derived",
+                "Blood derived - bone marrow",
+                "Blood derived - peripheral blood",
+                "Bone marrow",
+                "Buccal cell",
+                "Lymph node",
+                "Solid tissue",
+                "Plasma",
+                "Serum",
+                "Urine",
+                "Cerebrospinal fluid",
+                "Sputum",
+                "Other",
+                "Pleural effusion",
+                "Mononuclear cells from bone marrow",
+                "Saliva",
+                "Skin"
+              ]
+            }
+          },
+          {
+            "name": "tumour_normal_designation",
+            "valueType": "string",
+            "description": "Description of the kind of specimen that was collected with respect to tumour/normal tissue origin.",
+            "restrictions": {
+              "required": true,
+              "codeList": [
+                "Normal",
+                "Normal - tissue adjacent to primary tumour",
+                "Primary tumour",
+                "Primary tumour - adjacent to normal",
+                "Primary tumour - additional new primary",
+                "Recurrent tumour",
+                "Metastatic tumour",
+                "Metastatic tumour - metastasis local to lymph node",
+                "Metastatic tumour - metastasis to distant location",
+                "Metastatic tumour - additional metastatic",
+                "Xenograft - derived from primary tumour",
+                "Xenograft - derived from tumour cell line",
+                "Cell line - derived from xenograft tumour",
+                "Cell line - derived from tumour",
+                "Cell line - derived from normal"
+              ]
+            }
+          },
+          {
+            "name": "submitter_sample_id",
+            "valueType": "string",
+            "description": "Unique identifier of the sample, assigned by the data provider.",
+            "restrictions": {
+              "required": true,
+              "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+            }
+          },
+          {
+            "name": "sample_type",
+            "valueType": "string",
+            "description": "Description of the type of molecular sample used for testing.",
+            "restrictions": {
+              "required": true,
+              "codeList": [
+                "Total DNA",
+                "Amplified DNA",
+                "ctDNA",
+                "Other DNA enrichments",
+                "Total RNA",
+                "Ribo-Zero RNA",
+                "polyA+ RNA",
+                "Other RNA fractions"
+              ]
+            }
           }
-        },
-        {
-          "name": "submitter_donor_id",
-          "valueType": "string",
-          "description": "Unique identifier of the donor, assigned by the data provider.",
-          "restrictions": {
-            "required": true,
-            "regex": "[A-Za-z0-9\\-\\._]{1,64}"
-          }
-        },
-        {
-          "name": "gender",
-          "valueType": "string",
-          "description": "Description of the donor self-reported gender. Gender is described as the assemblage of properties that distinguish people on the basis of their societal roles.",
-          "restrictions": {
-            "required": true,
-            "codeList": ["Male", "Female", "Other"]
-          }
-        },
-        {
-          "name": "submitter_specimen_id",
-          "valueType": "string",
-          "description": "Unique identifier of the specimen, assigned by the data provider.",
-          "restrictions": {
-            "required": true,
-            "regex": "[A-Za-z0-9\\-\\._]{1,64}"
-          }
-        },
-        {
-          "name": "specimen_tissue_source",
-          "valueType": "string",
-          "description": "Tissue source of the biospecimen.",
-          "restrictions": {
-            "required": true,
-            "codeList": [
-              "Blood derived",
-              "Blood derived - bone marrow",
-              "Blood derived - peripheral blood",
-              "Bone marrow",
-              "Buccal cell",
-              "Lymph node",
-              "Solid tissue",
-              "Plasma",
-              "Serum",
-              "Urine",
-              "Cerebrospinal fluid",
-              "Sputum",
-              "Other",
-              "Pleural effusion",
-              "Mononuclear cells from bone marrow",
-              "Saliva",
-              "Skin"
-            ]
-          }
-        },
-        {
-          "name": "tumour_normal_designation",
-          "valueType": "string",
-          "description": "Description of the kind of specimen that was collected with respect to tumour/normal tissue origin.",
-          "restrictions": {
-            "required": true,
-            "codeList": [
-              "Normal",
-              "Normal - tissue adjacent to primary tumour",
-              "Primary tumour",
-              "Primary tumour - adjacent to normal",
-              "Primary tumour - additional new primary",
-              "Recurrent tumour",
-              "Metastatic tumour",
-              "Metastatic tumour - metastasis local to lymph node",
-              "Metastatic tumour - metastasis to distant location",
-              "Metastatic tumour - additional metastatic",
-              "Xenograft - derived from primary tumour",
-              "Xenograft - derived from tumour cell line",
-              "Cell line - derived from xenograft tumour",
-              "Cell line - derived from tumour",
-              "Cell line - derived from normal"
-            ]
-          }
-        },
-        {
-          "name": "submitter_sample_id",
-          "valueType": "string",
-          "description": "Unique identifier of the sample, assigned by the data provider.",
-          "restrictions": {
-            "required": true,
-            "regex": "[A-Za-z0-9\\-\\._]{1,64}"
-          }
-        },
-        {
-          "name": "sample_type",
-          "valueType": "string",
-          "description": "Description of the type of molecular sample used for testing.",
-          "restrictions": {
-            "required": true,
-            "codeList": [
-              "Total DNA",
-              "Amplified DNA",
-              "ctDNA",
-              "Other DNA enrichments",
-              "Total RNA",
-              "Ribo-Zero RNA",
-              "polyA+ RNA",
-              "Other RNA fractions"
-            ]
-          }
-        }
-      ]
-    }
-  ],
-  "name": "ARGO Clinical Submission",
-  "version": "1.0"
-}
+        ]
+      }
+    ],
+    "name": "ARGO Clinical Submission",
+    "version": "1.0"
+  }
+]

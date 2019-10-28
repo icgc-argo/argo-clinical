@@ -32,6 +32,22 @@ paths:
                 type: array
                 items:
                   type: object
+    patch:
+      tags:
+        - Schemas
+      description: 'update and load a new schema version from lectern to be used.'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                version:
+                  description: the new schema version to update to.
+                  type: string
+      responses:
+        '200':
+          description: 'schema updated to new version'
   /submission/schema/list:
     get:
       tags:
