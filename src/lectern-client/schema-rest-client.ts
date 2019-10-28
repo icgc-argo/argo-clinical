@@ -23,7 +23,7 @@ export const schemaClient: SchemaServiceRestClient = {
           7,
           schemaSvcUrl.length,
         )) as SchemasDictionary[];
-        const dic = dictionaries.find((d: any) => d.version == version);
+        const dic = dictionaries.find((d: any) => d.version == version && d.name == name);
         if (!dic) {
           return undefined;
         }
