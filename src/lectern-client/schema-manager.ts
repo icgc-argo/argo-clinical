@@ -3,7 +3,6 @@ import { SchemasDictionary, DataRecord, SchemaProcessingResult } from './schema-
 import { schemaClient as schemaServiceAdapter } from './schema-rest-client';
 import { schemaRepo } from './schema-repo';
 import { loggerFor } from '../logger';
-import { FileType } from '../submission/submission-api';
 const L = loggerFor(__filename);
 
 let manager: SchemaManager;
@@ -21,9 +20,7 @@ class SchemaManager {
   };
 
   getSubSchemasList = (): string[] => {
-    return this.currentSchema.schemas
-      .filter(s => s.name !== FileType.REGISTRATION)
-      .map(s => s.name);
+    return this.currentSchema.schemas.map(s => s.name);
   };
   /**
    * This method does three things:
