@@ -609,7 +609,7 @@ describe('Submission Api', () => {
     it('should return 200 and empty json for no activesubmisison in program', done => {
       chai
         .request(app)
-        .get('/submission/program/ABCD-EF/clinical/upload')
+        .get('/submission/program/ABCD-EF/clinical/')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .end((err: any, res: any) => {
           res.should.have.status(200);
