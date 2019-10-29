@@ -3,7 +3,7 @@ import {
   SchemasDictionary,
   DataRecord,
   SchemaProcessingResult,
-  FieldNamesByPriority,
+  FieldNamesByPriorityMap,
   SchemaDefinition,
 } from './schema-entities';
 import { schemaClient as schemaServiceAdapter } from './schema-rest-client';
@@ -29,14 +29,14 @@ class SchemaManager {
     return this.currentSchema.schemas.map(s => s.name);
   };
 
-  getSubSchemaFieldNames = (definition: string): FieldNamesByPriority => {
+  getSubSchemaFieldNamesWithPriority = (definition: string): FieldNamesByPriorityMap => {
     const schemaDef: SchemaDefinition | undefined = this.currentSchema.schemas.find(
       schema => schema.name === definition,
     );
     if (!schemaDef) {
       throw new Error(`no schema found for : ${definition}`);
     }
-    const fieldNamesMapped: FieldNamesByPriority = { required: [], optional: [] };
+    const fieldNamesMapped: FieldNamesByPriorityMap = { required: [], optional: [] };
     schemaDef.fields.forEach(field => {
       if (field.restrictions && field.restrictions.required) {
         fieldNamesMapped.required.push(field.name);

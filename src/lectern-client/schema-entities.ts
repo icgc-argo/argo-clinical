@@ -66,7 +66,7 @@ export interface SchemaValidationError {
   readonly info: object;
 }
 
-export interface FieldNamesByPriority {
+export interface FieldNamesByPriorityMap {
   required: string[];
   optional: string[];
 }

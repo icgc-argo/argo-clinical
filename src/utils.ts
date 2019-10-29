@@ -2,33 +2,30 @@ import fs from 'fs';
 import { Response } from 'express';
 import deepFreeze from 'deep-freeze';
 import mongoose from 'mongoose';
-import { FieldNamesByPriority } from './lectern-client/schema-entities';
+import { FieldNamesByPriorityMap } from './lectern-client/schema-entities';
 const fsPromises = fs.promises;
 
 export namespace TsvUtils {
   export const tsvToJson = async (
     file: string,
-    expectedHeader?: FieldNamesByPriority,
+    expectedHeader?: FieldNamesByPriorityMap,
   ): Promise<ReadonlyArray<{ [key: string]: string }>> => {
     const contents = await fsPromises.readFile(file, 'utf-8');
-    checkHeaders(
-      contents
-        .split(/\r?\n/)[0] // take first row in tsv
-        .split(/\t/) // split field names into array
-        .filter(fieldName => fieldName !== ''),
-      expectedHeader,
-    );
+    if (expectedHeader) {
+      const fileHeader = contents
+        .split(/\n/)[0]
+        .split(/\t/)
+        .filter(fieldName => fieldName !== '');
+      checkHeaders(fileHeader, expectedHeader);
+    }
     const arr = parseTsvToJson(contents);
     return arr;
   };
 
-  const checkHeaders = (fileFieldNames: string[], expectedHeader?: FieldNamesByPriority) => {
-    if (!expectedHeader) {
-      return;
-    }
+  const checkHeaders = (fileFieldNames: string[], expectedFieldNames: FieldNamesByPriorityMap) => {
     const fileFieldNamesSet = new Set<string>(fileFieldNames);
     const missingFields: string[] = [];
-    expectedHeader.required.forEach(requriedField => {
+    expectedFieldNames.required.forEach(requriedField => {
       if (!fileFieldNamesSet.has(requriedField)) {
         missingFields.push(requriedField);
       } else {
@@ -36,13 +33,13 @@ export namespace TsvUtils {
       }
     });
 
-    expectedHeader.optional.forEach(optionalField => fileFieldNamesSet.delete(optionalField));
+    expectedFieldNames.optional.forEach(optionalField => fileFieldNamesSet.delete(optionalField));
     const unknownFields = Array.from(fileFieldNamesSet); // remaing are unknown
 
     if (missingFields.length === 0 && unknownFields.length === 0) {
       return;
     }
-    throw new TsvHeadersError(missingFields, unknownFields);
+    throw new TsvHeaderError(missingFields, unknownFields);
   };
 
   export const parseTsvToJson = (content: string): ReadonlyArray<{ [key: string]: string }> => {
@@ -65,7 +62,7 @@ export namespace TsvUtils {
     return rows.filter(notEmpty);
   };
 
-  export class TsvHeadersError extends Error {
+  export class TsvHeaderError extends Error {
     missingFields: string[];
     unknownFields: string[];
     constructor(missingFields: string[], unknownFields: string[]) {

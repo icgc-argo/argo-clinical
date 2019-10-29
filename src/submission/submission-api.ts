@@ -133,15 +133,15 @@ class SubmissionController {
       const fileName = filesByTypeMap[clinicalFileType].originalname;
       let records: ReadonlyArray<Readonly<{ [key: string]: string }>> = [];
       try {
-        const clinicalFieldsNamesByPriority = schemaManager
+        const clinicalFieldNamesByPriorityMap = schemaManager
           .instance()
-          .getSubSchemaFieldNames(clinicalFileType);
+          .getSubSchemaFieldNamesWithPriority(clinicalFileType);
         records = await TsvUtils.tsvToJson(
           filesByTypeMap[clinicalFileType].path,
-          clinicalFieldsNamesByPriority,
+          clinicalFieldNamesByPriorityMap,
         );
       } catch (err) {
-        if (err instanceof TsvUtils.TsvHeadersError) {
+        if (err instanceof TsvUtils.TsvHeaderError) {
           if (err.missingFields.length > 0)
             errorList.push({
               msg: `Missing requried headers: [${err.missingFields}]`,
