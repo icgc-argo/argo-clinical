@@ -8,34 +8,39 @@ const fsPromises = fs.promises;
 export namespace TsvUtils {
   export const tsvToJson = async (
     file: string,
-    expectedHeader?: FieldNamesByPriorityMap,
+    expectedHeaderFields?: FieldNamesByPriorityMap,
   ): Promise<ReadonlyArray<{ [key: string]: string }>> => {
     const contents = await fsPromises.readFile(file, 'utf-8');
-    if (expectedHeader) {
-      const fileHeader = contents
+    if (expectedHeaderFields) {
+      const fileHeaderFields: string[] = contents
         .split(/\n/)[0]
         .split(/\t/)
         .filter(fieldName => fieldName !== '');
-      checkHeaders(fileHeader, expectedHeader);
+      checkHeaders(fileHeaderFields, expectedHeaderFields);
     }
     const arr = parseTsvToJson(contents);
     return arr;
   };
 
-  const checkHeaders = (fileFieldNames: string[], expectedFieldNames: FieldNamesByPriorityMap) => {
-    const fileFieldNamesSet = new Set<string>(fileFieldNames);
+  const checkHeaders = (
+    fileHeaderFields: string[],
+    expectedHeaderFields: FieldNamesByPriorityMap,
+  ) => {
+    const fileHeaderFieldsSet = new Set<string>(fileHeaderFields);
     const missingFields: string[] = [];
 
-    expectedFieldNames.required.forEach(requriedField => {
-      if (!fileFieldNamesSet.has(requriedField)) {
+    expectedHeaderFields.required.forEach(requriedField => {
+      if (!fileHeaderFieldsSet.has(requriedField)) {
         missingFields.push(requriedField);
       } else {
-        fileFieldNamesSet.delete(requriedField);
+        fileHeaderFieldsSet.delete(requriedField);
       }
     });
-    expectedFieldNames.optional.forEach(optionalField => fileFieldNamesSet.delete(optionalField));
+    expectedHeaderFields.optional.forEach(optionalField =>
+      fileHeaderFieldsSet.delete(optionalField),
+    );
 
-    const unknownFields = Array.from(fileFieldNamesSet); // remaining are unknown
+    const unknownFields = Array.from(fileHeaderFieldsSet); // remaining are unknown
 
     if (missingFields.length === 0 && unknownFields.length === 0) {
       return;
