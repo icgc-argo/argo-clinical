@@ -25,6 +25,7 @@ export namespace TsvUtils {
   const checkHeaders = (fileFieldNames: string[], expectedFieldNames: FieldNamesByPriorityMap) => {
     const fileFieldNamesSet = new Set<string>(fileFieldNames);
     const missingFields: string[] = [];
+
     expectedFieldNames.required.forEach(requriedField => {
       if (!fileFieldNamesSet.has(requriedField)) {
         missingFields.push(requriedField);
@@ -32,9 +33,9 @@ export namespace TsvUtils {
         fileFieldNamesSet.delete(requriedField);
       }
     });
-
     expectedFieldNames.optional.forEach(optionalField => fileFieldNamesSet.delete(optionalField));
-    const unknownFields = Array.from(fileFieldNamesSet); // remaing are unknown
+
+    const unknownFields = Array.from(fileFieldNamesSet); // remaining are unknown
 
     if (missingFields.length === 0 && unknownFields.length === 0) {
       return;
