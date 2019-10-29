@@ -11,6 +11,8 @@ import {
 import { HasFullWriteAccess, HasProgramWriteAccess } from '../auth-decorators';
 import jwt from 'jsonwebtoken';
 import _ from 'lodash';
+import { SchemaValidationErrorTypes } from '../lectern-client/schema-entities';
+import * as schemaManager from '../lectern-client/schema-manager';
 const L = loggerFor(__filename);
 
 export enum ErrorCodes {
@@ -35,7 +37,7 @@ const FileNameRegex = {
 type SubmissionFileErrors = {
   msg: string;
   fileNames: string[];
-  code: ErrorCodes;
+  code: ErrorCodes | SchemaValidationErrorTypes;
 };
 
 type ClinicalEnityFileMap = {
@@ -131,13 +133,34 @@ class SubmissionController {
       const fileName = filesByTypeMap[clinicalFileType].originalname;
       let records: ReadonlyArray<Readonly<{ [key: string]: string }>> = [];
       try {
-        records = await TsvUtils.tsvToJson(filesByTypeMap[clinicalFileType].path);
+        const clinicalFieldsNamesByPriority = schemaManager
+          .instance()
+          .getSubSchemaFieldNames(clinicalFileType);
+        records = await TsvUtils.tsvToJson(
+          filesByTypeMap[clinicalFileType].path,
+          clinicalFieldsNamesByPriority,
+        );
       } catch (err) {
-        errorList.push({
-          msg: `failed to parse the tsv file: ${err}`,
-          fileNames: [fileName],
-          code: ErrorCodes.TSV_PARSING_FAILED,
-        });
+        if (err instanceof TsvUtils.TsvHeadersError) {
+          if (err.missingFields.length > 0)
+            errorList.push({
+              msg: `Missing requried headers: [${err.missingFields}]`,
+              fileNames: [fileName],
+              code: SchemaValidationErrorTypes.MISSING_REQUIRED_FIELD,
+            });
+          if (err.unknownFields.length > 0)
+            errorList.push({
+              msg: `Found unknown headers: [${err.unknownFields}]`,
+              fileNames: [fileName],
+              code: SchemaValidationErrorTypes.UNRECOGNIZED_FIELD,
+            });
+        } else {
+          errorList.push({
+            msg: `failed to parse the tsv file: ${err}`,
+            fileNames: [fileName],
+            code: ErrorCodes.TSV_PARSING_FAILED,
+          });
+        }
         continue;
       }
       // add clinical entity by mapping to clinical type

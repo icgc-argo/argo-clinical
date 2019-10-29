@@ -191,15 +191,6 @@ const ABCD_REGISTRATION_DOC: ActiveRegistration = {
 };
 const expectedDonorErrors = [
   {
-    fieldName: 'cause_of_dead',
-    index: 0,
-    info: {
-      donorSubmitterId: 'ICGC_0002',
-      value: 'died of other reasons',
-    },
-    type: 'UNRECOGNIZED_FIELD',
-  },
-  {
     index: 0,
     type: 'INVALID_FIELD_VALUE_TYPE',
     info: {
@@ -680,6 +671,7 @@ describe('Submission Api', () => {
         files.push(fs.readFileSync(__dirname + '/donor.tsv'));
         files.push(fs.readFileSync(__dirname + '/donor.invalid.tsv'));
         files.push(fs.readFileSync(__dirname + '/thisissample.tsv'));
+        files.push(fs.readFileSync(__dirname + '/specimen-invalid-headers.tsv'));
       } catch (err) {
         return done(err);
       }
@@ -691,6 +683,7 @@ describe('Submission Api', () => {
         .attach('clinicalFiles', files[0], 'donor.tsv')
         .attach('clinicalFiles', files[1], 'thisissample.tsv')
         .attach('clinicalFiles', files[2], 'donor.invalid.tsv')
+        .attach('clinicalFiles', files[3], 'specimen-invalid-headers.tsv')
         .end((err: any, res: any) => {
           res.should.have.status(207);
           res.body.fileErrors.should.deep.eq([
@@ -704,6 +697,16 @@ describe('Submission Api', () => {
                 'Invalid file(s), must start with entity and have .tsv extension (e.g. donor*.tsv)',
               fileNames: ['thisissample.tsv'],
               code: 'INVALID_FILE_NAME',
+            },
+            {
+              msg: `Missing requried headers: [${FieldsEnum.submitter_donor_id}]`,
+              fileNames: ['specimen-invalid-headers.tsv'],
+              code: 'MISSING_REQUIRED_FIELD',
+            },
+            {
+              msg: 'Found unknown headers: [submitter_id]',
+              fileNames: ['specimen-invalid-headers.tsv'],
+              code: 'UNRECOGNIZED_FIELD',
             },
           ]);
           done();

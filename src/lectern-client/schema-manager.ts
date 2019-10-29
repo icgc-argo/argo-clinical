@@ -1,5 +1,11 @@
 import * as service from './schema-functions';
-import { SchemasDictionary, DataRecord, SchemaProcessingResult } from './schema-entities';
+import {
+  SchemasDictionary,
+  DataRecord,
+  SchemaProcessingResult,
+  FieldNamesByPriority,
+  SchemaDefinition,
+} from './schema-entities';
 import { schemaClient as schemaServiceAdapter } from './schema-rest-client';
 import { schemaRepo } from './schema-repo';
 import { loggerFor } from '../logger';
@@ -21,6 +27,24 @@ class SchemaManager {
 
   getSubSchemasList = (): string[] => {
     return this.currentSchema.schemas.map(s => s.name);
+  };
+
+  getSubSchemaFieldNames = (definition: string): FieldNamesByPriority => {
+    const schemaDef: SchemaDefinition | undefined = this.currentSchema.schemas.find(
+      schema => schema.name === definition,
+    );
+    if (!schemaDef) {
+      throw new Error(`no schema found for : ${definition}`);
+    }
+    const fieldNamesMapped: FieldNamesByPriority = { required: [], optional: [] };
+    schemaDef.fields.forEach(field => {
+      if (field.restrictions && field.restrictions.required) {
+        fieldNamesMapped.required.push(field.name);
+      } else {
+        fieldNamesMapped.optional.push(field.name);
+      }
+    });
+    return fieldNamesMapped;
   };
   /**
    * This method does three things:
