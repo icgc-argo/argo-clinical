@@ -1,4 +1,4 @@
-submitter_donr_id	vital_status	cause_of_death	survival_tie
+submitter_donor_id	vital_status	cause_of_death	survival_time
 ICGC_0001.1	deceased	died of cancer	540
 ICGC_0002	deceased	died of cancer	
 ICGC_0003	deceased	died of cancer	522
