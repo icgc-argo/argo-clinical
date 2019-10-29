@@ -80,7 +80,10 @@ export enum DataValidationErrors {
   NOT_ENOUGH_INFO_TO_VALIDATE = 'NOT_ENOUGH_INFO_TO_VALIDATE',
 }
 
-export type RegistrationStat = { [submitterId: string]: number[] };
+export type RegistrationStat = Array<{
+  submitterId: string;
+  rowNumbers: number[];
+}>;
 
 export interface RegistrationStats {
   newDonorIds: RegistrationStat;

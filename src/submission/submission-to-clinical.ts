@@ -153,7 +153,7 @@ export const commitRegisteration = async (command: Readonly<CommitRegistrationCo
   return (
     (registration.stats &&
       registration.stats.newSampleIds &&
-      Object.keys(registration.stats.newSampleIds)) ||
+      registration.stats.newSampleIds.map(s => s.submitterId)) ||
     []
   );
 };

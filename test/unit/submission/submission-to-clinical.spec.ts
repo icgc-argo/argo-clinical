@@ -15,16 +15,25 @@ const reg1: ActiveRegistration = {
   programId: 'ABCD-EF',
   batchName: 'registration1.tsv',
   stats: {
-    alreadyRegistered: {},
-    newDonorIds: {
-      abcd123: [0],
-    },
-    newSpecimenIds: {
-      ss123: [0],
-    },
-    newSampleIds: {
-      sm123: [0],
-    },
+    alreadyRegistered: [],
+    newDonorIds: [
+      {
+        submitterId: 'abcd123',
+        rowNumbers: [0],
+      },
+    ],
+    newSpecimenIds: [
+      {
+        submitterId: 'ss123',
+        rowNumbers: [0],
+      },
+    ],
+    newSampleIds: [
+      {
+        submitterId: 'sm123',
+        rowNumbers: [0],
+      },
+    ],
   },
   records: [
     {
@@ -46,14 +55,20 @@ const reg2: ActiveRegistration = {
   programId: 'ABCD-EF',
   batchName: 'registration2.tsv',
   stats: {
-    alreadyRegistered: {},
-    newDonorIds: {},
-    newSpecimenIds: {
-      ss123: [0],
-    },
-    newSampleIds: {
-      sm123: [0],
-    },
+    alreadyRegistered: [],
+    newDonorIds: [],
+    newSpecimenIds: [
+      {
+        submitterId: 'ss123',
+        rowNumbers: [0],
+      },
+    ],
+    newSampleIds: [
+      {
+        submitterId: 'sm123',
+        rowNumbers: [0],
+      },
+    ],
   },
   records: [
     {

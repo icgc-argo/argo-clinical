@@ -114,16 +114,25 @@ const expectedResponse1 = {
     programId: 'ABCD-EF',
     creator: 'Test User',
     stats: {
-      alreadyRegistered: {},
-      newDonorIds: {
-        abcd123: [0],
-      },
-      newSpecimenIds: {
-        ss123: [0],
-      },
-      newSampleIds: {
-        sm123: [0],
-      },
+      alreadyRegistered: [],
+      newDonorIds: [
+        {
+          submitterId: 'abcd123',
+          rowNumbers: [0],
+        },
+      ],
+      newSpecimenIds: [
+        {
+          submitterId: 'ss123',
+          rowNumbers: [0],
+        },
+      ],
+      newSampleIds: [
+        {
+          submitterId: 'sm123',
+          rowNumbers: [0],
+        },
+      ],
     },
     records: [
       {
@@ -147,16 +156,25 @@ const ABCD_REGISTRATION_DOC: ActiveRegistration = {
   creator: 'Test User',
   batchName: `${FileType.REGISTRATION}.tsv`,
   stats: {
-    newDonorIds: {
-      abcd123: [0],
-    },
-    newSpecimenIds: {
-      ss123: [0],
-    },
-    newSampleIds: {
-      sm123: [0],
-    },
-    alreadyRegistered: {},
+    newDonorIds: [
+      {
+        submitterId: 'abcd123',
+        rowNumbers: [0],
+      },
+    ],
+    newSpecimenIds: [
+      {
+        submitterId: 'ss123',
+        rowNumbers: [0],
+      },
+    ],
+    newSampleIds: [
+      {
+        submitterId: 'sm123',
+        rowNumbers: [0],
+      },
+    ],
+    alreadyRegistered: [],
   },
   records: [
     {
@@ -172,6 +190,15 @@ const ABCD_REGISTRATION_DOC: ActiveRegistration = {
   ],
 };
 const expectedDonorErrors = [
+  {
+    fieldName: 'cause_of_dead',
+    index: 0,
+    info: {
+      donorSubmitterId: 'ICGC_0002',
+      value: 'died of other reasons',
+    },
+    type: 'UNRECOGNIZED_FIELD',
+  },
   {
     index: 0,
     type: 'INVALID_FIELD_VALUE_TYPE',
@@ -408,12 +435,14 @@ describe('Submission Api', () => {
         .end(async (err: any, res: any) => {
           try {
             await assertUploadOKRegistrationCreated(res, dburl);
-            chai.expect(res.body.registration.stats.newSampleIds).to.deep.eq({
-              'sm123-4': [0],
-              'sm123-5': [1],
-              'sm123-6': [2],
-              'sm123-7': [3],
-            });
+            chai
+              .expect(res.body.registration.stats.newSampleIds)
+              .to.deep.eq([
+                { submitterId: 'sm123-4', rowNumbers: [0] },
+                { submitterId: 'sm123-5', rowNumbers: [1] },
+                { submitterId: 'sm123-6', rowNumbers: [2] },
+                { submitterId: 'sm123-7', rowNumbers: [3] },
+              ]);
             const reg1Id = res.body.registration._id;
             chai
               .request(app)
@@ -433,7 +462,7 @@ describe('Submission Api', () => {
                         await assertUploadOKRegistrationCreated(res, dburl);
                         const reg2Id = res.body.registration._id;
                         chai.expect(reg2Id).to.not.eq(reg1Id);
-                        chai.expect(res.body.registration.stats.newSampleIds).to.deep.eq({});
+                        chai.expect(res.body.registration.stats.newSampleIds).to.deep.eq([]);
                         chai
                           .request(app)
                           .post(`/submission/program/ABCD-EF/registration/${reg2Id}/commit`)
@@ -589,7 +618,7 @@ describe('Submission Api', () => {
     it('should return 200 and empty json for no activesubmisison in program', done => {
       chai
         .request(app)
-        .get('/submission/program/ABCD-EF/clinical/upload')
+        .get('/submission/program/ABCD-EF/clinical/')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .end((err: any, res: any) => {
           res.should.have.status(200);

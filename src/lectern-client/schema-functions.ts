@@ -176,6 +176,7 @@ const validate = (
 ): ReadonlyArray<SchemaValidationError> => {
   const majorErrors = validation
     .runValidationPipeline(record, index, schemaDef.fields, [
+      validation.validateFieldNames,
       validation.validateRequiredFields,
       validation.validateValueTypes,
     ])
@@ -330,6 +331,22 @@ namespace validation {
       .map(field => {
         if (isRequiredMissing(field, rec)) {
           return buildError(SchemaValidationErrorTypes.MISSING_REQUIRED_FIELD, field.name, index);
+        }
+        return undefined;
+      })
+      .filter(notEmpty);
+  };
+
+  export const validateFieldNames: ValidationFunction = (
+    record: Readonly<DataRecord>,
+    index: number,
+    fields: Array<FieldDefinition>,
+  ) => {
+    const expectedFields = new Set(fields.map(field => field.name));
+    return Object.keys(record)
+      .map(recFieldName => {
+        if (!expectedFields.has(recFieldName)) {
+          return buildError(SchemaValidationErrorTypes.UNRECOGNIZED_FIELD, recFieldName, index);
         }
         return undefined;
       })
