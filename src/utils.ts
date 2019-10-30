@@ -32,16 +32,6 @@ export namespace TsvUtils {
     });
     return rows.filter(notEmpty);
   };
-
-  export class TsvHeaderError extends Error {
-    missingFields: string[];
-    unknownFields: string[];
-    constructor(missingFields: string[], unknownFields: string[]) {
-      super();
-      this.missingFields = missingFields;
-      this.unknownFields = unknownFields;
-    }
-  }
 }
 
 export namespace ControllerUtils {
