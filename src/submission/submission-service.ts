@@ -21,9 +21,14 @@ import {
   SubmittedClinicalRecord,
   SubmissionValidationUpdate,
   ClinicalTypeValidateResult,
-  ClinicalEntities,
+  ClinicalEntitiesMap,
   ClinicalSubmissionModifierCommand,
   RegistrationStat,
+  NewClinicalEntity,
+  SubmissionBatchError,
+  SubmissionBatchErrorTypes,
+  ValidateSubmissionResult,
+  NewClinicalEntitiesMap,
 } from './submission-entities';
 import * as schemaManager from '../lectern-client/schema-manager';
 import {
@@ -31,11 +36,12 @@ import {
   TypedDataRecord,
   DataRecord,
   SchemaProcessingResult,
+  SchemaValidationErrorTypes,
 } from '../lectern-client/schema-entities';
 import { loggerFor } from '../logger';
-import { Errors, F } from '../utils';
+import { Errors, F, isStringMatchRegex, TsvUtils } from '../utils';
 import { DeepReadonly } from 'deep-freeze';
-import { FileType } from './submission-api';
+import { FileType, FileNameRegex } from './submission-api';
 import { submissionRepository } from './submission-repo';
 import { v1 as uuid } from 'uuid';
 import { validateSubmissionData } from './validation';
@@ -191,7 +197,7 @@ export namespace operations {
       );
     } else {
       // Update clinical entities from the active submission
-      const updatedClinicalEntites: ClinicalEntities = {};
+      const updatedClinicalEntites: ClinicalEntitiesMap = {};
       if (command.fileType !== 'all') {
         for (const clinicalType in activeSubmission.clinicalEntities) {
           if (clinicalType !== command.fileType) {
@@ -221,6 +227,10 @@ export namespace operations {
 
   /**
    * upload multiple clinical submissions
+   * Three validation steps before upload is done:
+   * 1. mapping batchName to clinicalType => can find batchError
+   * 2. check headers (if provided) => can find batchError
+   * 3. schemaValidation, done by lectern-client => can return schemaError
    * @param command MultiClinicalSubmissionCommand
    */
   export const uploadMultipleClinical = async (
@@ -238,12 +248,22 @@ export namespace operations {
       });
     }
 
-    const updatedClinicalEntites: ClinicalEntities = clearClinicalEnitytStats(
+    // Step 1 map dataArray to entitesMap
+    const { newClinicalEntitesMap, dataToEntityMapErrors } = mapClinicalDataToEntity(
+      command.newClinicalData,
+      Object.values(FileType).filter(type => type !== FileType.REGISTRATION),
+    );
+    // Step 2 filter entites with invalid fieldNames
+    const { filteredClinicalEntites, fieldNameErrors } = ckeckEntityFieldNames(
+      newClinicalEntitesMap,
+    );
+
+    const updatedClinicalEntites: ClinicalEntitiesMap = clearClinicalEnitytStats(
       exsistingActiveSubmission.clinicalEntities,
     );
     const createdAt: DeepReadonly<Date> = new Date();
     const schemaErrors: { [k: string]: SubmissionValidationError[] } = {}; // object to store all errors for entity
-    for (const [clinicalType, newClinicalEnity] of Object.entries(command.newClinicalEntities)) {
+    for (const [clinicalType, newClinicalEnity] of Object.entries(filteredClinicalEntites)) {
       const { schemaErrorsTemp, processedRecords } = await checkClinicalEntity({
         records: newClinicalEnity.records,
         programId: command.programId,
@@ -282,6 +302,7 @@ export namespace operations {
       submission: updated,
       schemaErrors: schemaErrors,
       successful: Object.keys(schemaErrors).length === 0,
+      fileErrors: [...dataToEntityMapErrors, ...fieldNameErrors],
     };
   };
 
@@ -291,7 +312,7 @@ export namespace operations {
    */
   export const validateMultipleClinical = async (
     command: Readonly<ClinicalSubmissionModifierCommand>,
-  ): Promise<CreateSubmissionResult> => {
+  ): Promise<ValidateSubmissionResult> => {
     const exsistingActiveSubmission = await submissionRepository.findByProgramId(command.programId);
     if (!exsistingActiveSubmission || exsistingActiveSubmission.version !== command.versionId) {
       throw new Errors.NotFound(
@@ -304,7 +325,6 @@ export namespace operations {
     ) {
       return {
         submission: exsistingActiveSubmission,
-        schemaErrors: {},
         successful: true,
       };
     }
@@ -341,7 +361,7 @@ export namespace operations {
     let invalid: boolean = false;
     const validatedClinicalEntities = _.cloneDeep(
       exsistingActiveSubmission.clinicalEntities,
-    ) as ClinicalEntities;
+    ) as ClinicalEntitiesMap;
     for (const clinicalType in validateResult) {
       validatedClinicalEntities[clinicalType].stats = validateResult[clinicalType].stats;
 
@@ -370,7 +390,6 @@ export namespace operations {
 
     return {
       submission: updated,
-      schemaErrors: {},
       successful: !invalid,
     };
   };
@@ -392,7 +411,7 @@ export namespace operations {
       );
     }
     // remove stats from clinical entities
-    const updatedClinicalEntites: ClinicalEntities = clearClinicalEnitytStats(
+    const updatedClinicalEntites: ClinicalEntitiesMap = clearClinicalEnitytStats(
       exsistingActiveSubmission.clinicalEntities,
     );
 
@@ -416,9 +435,9 @@ export namespace operations {
    * *************** */
 
   const clearClinicalEnitytStats = (
-    clinicalEntities: DeepReadonly<ClinicalEntities>,
-  ): ClinicalEntities => {
-    const statClearedClinicalEntites: ClinicalEntities = {};
+    clinicalEntities: DeepReadonly<ClinicalEntitiesMap>,
+  ): ClinicalEntitiesMap => {
+    const statClearedClinicalEntites: ClinicalEntitiesMap = {};
     Object.entries(clinicalEntities).forEach(([clinicalType, clinicalEntity]) => {
       statClearedClinicalEntites[clinicalType] = {
         ...clinicalEntity,
@@ -635,5 +654,91 @@ export namespace operations {
       donorByIdMapTemp[dc.submitterId] = _.cloneDeep(dc);
     });
     return F(donorByIdMapTemp);
+  };
+
+  const mapClinicalDataToEntity = (
+    clinicalData: ReadonlyArray<NewClinicalEntity>,
+    expectedClinicalEntites: ReadonlyArray<FileType>,
+  ): DeepReadonly<{
+    newClinicalEntitesMap: NewClinicalEntitiesMap;
+    dataToEntityMapErrors: Array<SubmissionBatchError>;
+  }> => {
+    const mutableClinicalData = [...clinicalData];
+    const dataToEntityMapErrors: Array<SubmissionBatchError> = [];
+    const newClinicalEntitesMap: { [clinicalType: string]: NewClinicalEntity } = {};
+
+    // check for double files and map files to clinical type
+    expectedClinicalEntites.forEach(clinicalType => {
+      const dataMatchToType = _.remove(mutableClinicalData, clinicalData =>
+        isStringMatchRegex(FileNameRegex[clinicalType], clinicalData.batchName),
+      );
+
+      if (dataMatchToType.length > 1) {
+        dataToEntityMapErrors.push({
+          msg: `Found multiple files of ${clinicalType} type`,
+          fileNames: dataMatchToType.map(data => data.batchName),
+          code: SubmissionBatchErrorTypes.MULTIPLE_TYPED_FILES,
+        });
+      } else if (dataMatchToType.length == 1) {
+        newClinicalEntitesMap[clinicalType] = dataMatchToType[0];
+      }
+    });
+
+    if (mutableClinicalData.length > 0) {
+      dataToEntityMapErrors.push({
+        msg: `Invalid file(s), must start with entity and have .tsv extension (e.g. donor*.tsv)`,
+        fileNames: mutableClinicalData.map(data => data.batchName),
+        code: SubmissionBatchErrorTypes.INVALID_FILE_NAME,
+      });
+    }
+
+    return F({ newClinicalEntitesMap, dataToEntityMapErrors });
+  };
+
+  const ckeckEntityFieldNames = (newClinicalEntitesMap: DeepReadonly<NewClinicalEntitiesMap>) => {
+    const fieldNameErrors: SubmissionBatchError[] = [];
+    const filteredClinicalEntites: NewClinicalEntitiesMap = {};
+    for (const [clinicalType, newClinicalEnity] of Object.entries(newClinicalEntitesMap)) {
+      if (!newClinicalEnity.fieldNames) {
+        continue;
+      }
+      const commonFieldNamesSet = new Set(newClinicalEnity.fieldNames);
+      const clinicalFieldNamesByPriorityMap = schemaManager
+        .instance()
+        .getSubSchemaFieldNamesWithPriority(clinicalType);
+      const missingFields: string[] = [];
+
+      clinicalFieldNamesByPriorityMap.required.forEach(requriedField => {
+        if (!commonFieldNamesSet.has(requriedField)) {
+          missingFields.push(requriedField);
+        } else {
+          commonFieldNamesSet.delete(requriedField);
+        }
+      });
+      clinicalFieldNamesByPriorityMap.optional.forEach(optionalField =>
+        commonFieldNamesSet.delete(optionalField),
+      );
+
+      const unknownFields = Array.from(commonFieldNamesSet); // remaining are unknown
+
+      if (missingFields.length === 0 && unknownFields.length === 0) {
+        filteredClinicalEntites[clinicalType] = { ...newClinicalEnity };
+        continue;
+      }
+
+      if (missingFields.length > 0)
+        fieldNameErrors.push({
+          msg: `Missing requried headers: [${missingFields}]`,
+          fileNames: [newClinicalEnity.batchName],
+          code: SchemaValidationErrorTypes.MISSING_REQUIRED_FIELD,
+        });
+      if (unknownFields.length > 0)
+        fieldNameErrors.push({
+          msg: `Found unknown headers: [${unknownFields}]`,
+          fileNames: [newClinicalEnity.batchName],
+          code: SchemaValidationErrorTypes.UNRECOGNIZED_FIELD,
+        });
+    }
+    return { filteredClinicalEntites, fieldNameErrors };
   };
 }

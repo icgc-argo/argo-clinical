@@ -65,6 +65,18 @@ export type SubmissionValidationUpdate = {
   index: number;
 };
 
+export type SubmissionBatchError = {
+  msg: string;
+  fileNames: string[];
+  code: SubmissionBatchErrorTypes | SchemaValidationErrorTypes;
+};
+
+export enum SubmissionBatchErrorTypes {
+  TSV_PARSING_FAILED = 'TSV_PARSING_FAILED',
+  INVALID_FILE_NAME = 'INVALID_FILE_NAME',
+  MULTIPLE_TYPED_FILES = 'MULTIPLE_TYPED_FILES',
+}
+
 export enum DataValidationErrors {
   MUTATING_EXISTING_DATA = 'MUTATING_EXISTING_DATA',
   SAMPLE_BELONGS_TO_OTHER_SPECIMEN = 'SAMPLE_BELONGS_TO_OTHER_SPECIMEN',
@@ -146,7 +158,7 @@ export interface ClearSubmissionCommand {
 }
 
 export interface MultiClinicalSubmissionCommand {
-  newClinicalEntities: Readonly<{ [clinicalType: string]: NewClinicalEntity }>;
+  newClinicalData: ReadonlyArray<NewClinicalEntity>;
   readonly programId: string;
   readonly updater: string;
 }
@@ -161,15 +173,33 @@ export interface CreateSubmissionResult {
   readonly submission: DeepReadonly<ActiveClinicalSubmission> | undefined;
   readonly successful: boolean;
   schemaErrors: DeepReadonly<{ [clinicalType: string]: SubmissionValidationError[] }>;
+  fileErrors: DeepReadonly<SubmissionBatchError[]>;
+}
+
+export interface ValidateSubmissionResult {
+  readonly submission: DeepReadonly<ActiveClinicalSubmission> | undefined;
+  readonly successful: boolean;
+}
+
+export interface NewClinicalEntitiesMap {
+  [clinicalType: string]: NewClinicalEntity;
 }
 
 export interface NewClinicalEntity {
   batchName: string;
   creator: string;
   records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
+  fieldNames?: ReadonlyArray<string>; // used if all records have common field names
 }
 
-export interface SavedClinicalEntity extends NewClinicalEntity {
+export interface ClinicalEntitiesMap {
+  [clinicalType: string]: SavedClinicalEntity;
+}
+
+export interface SavedClinicalEntity {
+  batchName: string;
+  creator: string;
+  records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
   createdAt: DeepReadonly<Date>;
   dataErrors: SubmissionValidationError[];
   dataUpdates: SubmissionValidationUpdate[];
@@ -192,13 +222,9 @@ export interface ActiveClinicalSubmission {
   programId: string;
   state: SUBMISSION_STATE;
   version: string;
-  clinicalEntities: ClinicalEntities;
+  clinicalEntities: ClinicalEntitiesMap;
   updatedBy: string;
   updatedAt?: Date; // this is currently set by db
-}
-
-export interface ClinicalEntities {
-  [clinicalType: string]: SavedClinicalEntity;
 }
 
 // Generic submission record object

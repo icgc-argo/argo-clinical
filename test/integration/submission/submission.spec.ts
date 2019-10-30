@@ -27,12 +27,12 @@ import {
   SUBMISSION_STATE,
   ClinicalInfoFieldsEnum,
   DataValidationErrors,
+  SubmissionBatchErrorTypes,
 } from '../../../src/submission/submission-entities';
 import { TsvUtils } from '../../../src/utils';
 import { donorDao } from '../../../src/clinical/donor-repo';
 import { Donor } from '../../../src/clinical/clinical-entities';
-import { ErrorCodes, FileType } from '../../../src/submission/submission-api';
-import * as manager from '../../../src/lectern-client/schema-manager';
+import { FileType } from '../../../src/submission/submission-api';
 import AdmZip from 'adm-zip';
 
 import * as _ from 'lodash';
@@ -566,7 +566,7 @@ describe('Submission Api', () => {
             res.should.have.status(400);
             res.body.should.deep.eq({
               msg: `invalid file name, must start with ${FileType.REGISTRATION} and have .tsv extension`,
-              code: ErrorCodes.INVALID_FILE_NAME,
+              code: SubmissionBatchErrorTypes.INVALID_FILE_NAME,
             });
           } catch (err) {
             return done(err);
@@ -669,8 +669,8 @@ describe('Submission Api', () => {
       const files: Buffer[] = [];
       try {
         files.push(fs.readFileSync(__dirname + '/donor.tsv'));
-        files.push(fs.readFileSync(__dirname + '/donor.invalid.tsv'));
         files.push(fs.readFileSync(__dirname + '/thisissample.tsv'));
+        files.push(fs.readFileSync(__dirname + '/donor.invalid.tsv'));
         files.push(fs.readFileSync(__dirname + '/specimen-invalid-headers.tsv'));
       } catch (err) {
         return done(err);

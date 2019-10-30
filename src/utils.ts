@@ -2,50 +2,15 @@ import fs from 'fs';
 import { Response } from 'express';
 import deepFreeze from 'deep-freeze';
 import mongoose from 'mongoose';
-import { FieldNamesByPriorityMap } from './lectern-client/schema-entities';
 const fsPromises = fs.promises;
 
 export namespace TsvUtils {
   export const tsvToJson = async (
     file: string,
-    expectedHeaderFields?: FieldNamesByPriorityMap,
   ): Promise<ReadonlyArray<{ [key: string]: string }>> => {
     const contents = await fsPromises.readFile(file, 'utf-8');
-    if (expectedHeaderFields) {
-      const fileHeaderFields: string[] = contents
-        .split(/\n/)[0]
-        .split(/\t/)
-        .filter(fieldName => fieldName !== '');
-      checkHeaders(fileHeaderFields, expectedHeaderFields);
-    }
     const arr = parseTsvToJson(contents);
     return arr;
-  };
-
-  const checkHeaders = (
-    fileHeaderFields: string[],
-    expectedHeaderFields: FieldNamesByPriorityMap,
-  ) => {
-    const fileHeaderFieldsSet = new Set<string>(fileHeaderFields);
-    const missingFields: string[] = [];
-
-    expectedHeaderFields.required.forEach(requriedField => {
-      if (!fileHeaderFieldsSet.has(requriedField)) {
-        missingFields.push(requriedField);
-      } else {
-        fileHeaderFieldsSet.delete(requriedField);
-      }
-    });
-    expectedHeaderFields.optional.forEach(optionalField =>
-      fileHeaderFieldsSet.delete(optionalField),
-    );
-
-    const unknownFields = Array.from(fileHeaderFieldsSet); // remaining are unknown
-
-    if (missingFields.length === 0 && unknownFields.length === 0) {
-      return;
-    }
-    throw new TsvHeaderError(missingFields, unknownFields);
   };
 
   export const parseTsvToJson = (content: string): ReadonlyArray<{ [key: string]: string }> => {
