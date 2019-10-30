@@ -13,9 +13,6 @@ import {
 import { HasFullWriteAccess, HasProgramWriteAccess } from '../auth-decorators';
 import jwt from 'jsonwebtoken';
 import _ from 'lodash';
-import { SchemaValidationErrorTypes } from '../lectern-client/schema-entities';
-import { stat } from 'fs';
-
 const L = loggerFor(__filename);
 
 export enum FileType {
@@ -30,11 +27,6 @@ export const FileNameRegex = {
   [FileType.DONOR]: '^donor.*\\.tsv',
   [FileType.SPECIMEN]: '^specimen.*\\.tsv',
   [FileType.PRIMARY_DIAGNOSES]: '^primary_diagnosis.*\\.tsv',
-};
-
-type ClinicalEnityFileMap = {
-  filesByTypeMap: { [fileType: string]: Express.Multer.File };
-  errorList: Array<SubmissionBatchError>;
 };
 
 class SubmissionController {

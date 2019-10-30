@@ -181,7 +181,7 @@ export interface ValidateSubmissionResult {
   readonly successful: boolean;
 }
 
-export interface NewClinicalEntitiesMap {
+export interface NewClinicalEntities {
   [clinicalType: string]: NewClinicalEntity;
 }
 
@@ -190,10 +190,6 @@ export interface NewClinicalEntity {
   creator: string;
   records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
   fieldNames?: ReadonlyArray<string>; // used if all records have common field names
-}
-
-export interface ClinicalEntitiesMap {
-  [clinicalType: string]: SavedClinicalEntity;
 }
 
 export interface SavedClinicalEntity {
@@ -222,9 +218,13 @@ export interface ActiveClinicalSubmission {
   programId: string;
   state: SUBMISSION_STATE;
   version: string;
-  clinicalEntities: ClinicalEntitiesMap;
+  clinicalEntities: ClinicalEntities;
   updatedBy: string;
   updatedAt?: Date; // this is currently set by db
+}
+
+export interface ClinicalEntities {
+  [clinicalType: string]: SavedClinicalEntity;
 }
 
 // Generic submission record object

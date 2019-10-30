@@ -21,14 +21,14 @@ import {
   SubmittedClinicalRecord,
   SubmissionValidationUpdate,
   ClinicalTypeValidateResult,
-  ClinicalEntitiesMap,
+  ClinicalEntities,
   ClinicalSubmissionModifierCommand,
   RegistrationStat,
   NewClinicalEntity,
   SubmissionBatchError,
   SubmissionBatchErrorTypes,
   ValidateSubmissionResult,
-  NewClinicalEntitiesMap,
+  NewClinicalEntities,
 } from './submission-entities';
 import * as schemaManager from '../lectern-client/schema-manager';
 import {
@@ -197,7 +197,7 @@ export namespace operations {
       );
     } else {
       // Update clinical entities from the active submission
-      const updatedClinicalEntites: ClinicalEntitiesMap = {};
+      const updatedClinicalEntites: ClinicalEntities = {};
       if (command.fileType !== 'all') {
         for (const clinicalType in activeSubmission.clinicalEntities) {
           if (clinicalType !== command.fileType) {
@@ -258,7 +258,7 @@ export namespace operations {
       newClinicalEntitesMap,
     );
 
-    const updatedClinicalEntites: ClinicalEntitiesMap = clearClinicalEnitytStats(
+    const updatedClinicalEntites: ClinicalEntities = clearClinicalEnitytStats(
       exsistingActiveSubmission.clinicalEntities,
     );
     const createdAt: DeepReadonly<Date> = new Date();
@@ -361,7 +361,7 @@ export namespace operations {
     let invalid: boolean = false;
     const validatedClinicalEntities = _.cloneDeep(
       exsistingActiveSubmission.clinicalEntities,
-    ) as ClinicalEntitiesMap;
+    ) as ClinicalEntities;
     for (const clinicalType in validateResult) {
       validatedClinicalEntities[clinicalType].stats = validateResult[clinicalType].stats;
 
@@ -411,7 +411,7 @@ export namespace operations {
       );
     }
     // remove stats from clinical entities
-    const updatedClinicalEntites: ClinicalEntitiesMap = clearClinicalEnitytStats(
+    const updatedClinicalEntites: ClinicalEntities = clearClinicalEnitytStats(
       exsistingActiveSubmission.clinicalEntities,
     );
 
@@ -435,9 +435,9 @@ export namespace operations {
    * *************** */
 
   const clearClinicalEnitytStats = (
-    clinicalEntities: DeepReadonly<ClinicalEntitiesMap>,
-  ): ClinicalEntitiesMap => {
-    const statClearedClinicalEntites: ClinicalEntitiesMap = {};
+    clinicalEntities: DeepReadonly<ClinicalEntities>,
+  ): ClinicalEntities => {
+    const statClearedClinicalEntites: ClinicalEntities = {};
     Object.entries(clinicalEntities).forEach(([clinicalType, clinicalEntity]) => {
       statClearedClinicalEntites[clinicalType] = {
         ...clinicalEntity,
@@ -660,7 +660,7 @@ export namespace operations {
     clinicalData: ReadonlyArray<NewClinicalEntity>,
     expectedClinicalEntites: ReadonlyArray<FileType>,
   ): DeepReadonly<{
-    newClinicalEntitesMap: NewClinicalEntitiesMap;
+    newClinicalEntitesMap: NewClinicalEntities;
     dataToEntityMapErrors: Array<SubmissionBatchError>;
   }> => {
     const mutableClinicalData = [...clinicalData];
@@ -695,9 +695,9 @@ export namespace operations {
     return F({ newClinicalEntitesMap, dataToEntityMapErrors });
   };
 
-  const ckeckEntityFieldNames = (newClinicalEntitesMap: DeepReadonly<NewClinicalEntitiesMap>) => {
+  const ckeckEntityFieldNames = (newClinicalEntitesMap: DeepReadonly<NewClinicalEntities>) => {
     const fieldNameErrors: SubmissionBatchError[] = [];
-    const filteredClinicalEntites: NewClinicalEntitiesMap = {};
+    const filteredClinicalEntites: NewClinicalEntities = {};
     for (const [clinicalType, newClinicalEnity] of Object.entries(newClinicalEntitesMap)) {
       if (!newClinicalEnity.fieldNames) {
         continue;
