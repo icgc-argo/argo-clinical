@@ -689,23 +689,23 @@ describe('Submission Api', () => {
           res.body.fileErrors.should.deep.eq([
             {
               msg: 'Found multiple files of donor type',
-              fileNames: ['donor.tsv', 'donor.invalid.tsv'],
+              batchNames: ['donor.tsv', 'donor.invalid.tsv'],
               code: 'MULTIPLE_TYPED_FILES',
             },
             {
               msg:
                 'Invalid file(s), must start with entity and have .tsv extension (e.g. donor*.tsv)',
-              fileNames: ['thisissample.tsv'],
+              batchNames: ['thisissample.tsv'],
               code: 'INVALID_FILE_NAME',
             },
             {
               msg: `Missing requried headers: [${FieldsEnum.submitter_donor_id}]`,
-              fileNames: ['specimen-invalid-headers.tsv'],
+              batchNames: ['specimen-invalid-headers.tsv'],
               code: 'MISSING_REQUIRED_FIELD',
             },
             {
               msg: 'Found unknown headers: [submitter_id]',
-              fileNames: ['specimen-invalid-headers.tsv'],
+              batchNames: ['specimen-invalid-headers.tsv'],
               code: 'UNRECOGNIZED_FIELD',
             },
           ]);

@@ -67,7 +67,7 @@ export type SubmissionValidationUpdate = {
 
 export type SubmissionBatchError = {
   msg: string;
-  fileNames: string[];
+  batchNames: string[];
   code: SubmissionBatchErrorTypes | SchemaValidationErrorTypes;
 };
 
@@ -173,7 +173,7 @@ export interface CreateSubmissionResult {
   readonly submission: DeepReadonly<ActiveClinicalSubmission> | undefined;
   readonly successful: boolean;
   schemaErrors: DeepReadonly<{ [clinicalType: string]: SubmissionValidationError[] }>;
-  fileErrors: DeepReadonly<SubmissionBatchError[]>;
+  batchErrors: DeepReadonly<SubmissionBatchError[]>;
 }
 
 export interface ValidateSubmissionResult {

@@ -302,7 +302,7 @@ export namespace operations {
       submission: updated,
       schemaErrors: schemaErrors,
       successful: Object.keys(schemaErrors).length === 0,
-      fileErrors: [...dataToEntityMapErrors, ...fieldNameErrors],
+      batchErrors: [...dataToEntityMapErrors, ...fieldNameErrors],
     };
   };
 
@@ -676,7 +676,7 @@ export namespace operations {
       if (dataMatchToType.length > 1) {
         dataToEntityMapErrors.push({
           msg: `Found multiple files of ${clinicalType} type`,
-          fileNames: dataMatchToType.map(data => data.batchName),
+          batchNames: dataMatchToType.map(data => data.batchName),
           code: SubmissionBatchErrorTypes.MULTIPLE_TYPED_FILES,
         });
       } else if (dataMatchToType.length == 1) {
@@ -687,7 +687,7 @@ export namespace operations {
     if (mutableClinicalData.length > 0) {
       dataToEntityMapErrors.push({
         msg: `Invalid file(s), must start with entity and have .tsv extension (e.g. donor*.tsv)`,
-        fileNames: mutableClinicalData.map(data => data.batchName),
+        batchNames: mutableClinicalData.map(data => data.batchName),
         code: SubmissionBatchErrorTypes.INVALID_FILE_NAME,
       });
     }
@@ -729,13 +729,13 @@ export namespace operations {
       if (missingFields.length > 0)
         fieldNameErrors.push({
           msg: `Missing requried headers: [${missingFields}]`,
-          fileNames: [newClinicalEnity.batchName],
+          batchNames: [newClinicalEnity.batchName],
           code: SchemaValidationErrorTypes.MISSING_REQUIRED_FIELD,
         });
       if (unknownFields.length > 0)
         fieldNameErrors.push({
           msg: `Found unknown headers: [${unknownFields}]`,
-          fileNames: [newClinicalEnity.batchName],
+          batchNames: [newClinicalEnity.batchName],
           code: SchemaValidationErrorTypes.UNRECOGNIZED_FIELD,
         });
     }

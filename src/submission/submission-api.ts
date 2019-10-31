@@ -128,7 +128,7 @@ class SubmissionController {
       } catch (err) {
         tsvParseErrors.push({
           msg: `failed to parse the tsv file: ${err}`,
-          fileNames: [file.originalname],
+          batchNames: [file.originalname],
           code: SubmissionBatchErrorTypes.TSV_PARSING_FAILED,
         });
       }
@@ -142,12 +142,12 @@ class SubmissionController {
     let status = 200;
     if (!result.successful) {
       status = 422;
-    } else if (tsvParseErrors.length > 0 || result.fileErrors.length > 0) {
+    } else if (tsvParseErrors.length > 0 || result.batchErrors.length > 0) {
       status = 207;
     }
     return res
       .status(status)
-      .send({ ...result, fileErrors: [...result.fileErrors, ...tsvParseErrors] });
+      .send({ ...result, fileErrors: [...result.batchErrors, ...tsvParseErrors] });
   }
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
