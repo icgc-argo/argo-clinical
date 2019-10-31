@@ -64,4 +64,5 @@ export interface SchemaValidationError {
   readonly index: number;
   readonly fieldName: string;
   readonly info: object;
+  readonly message: string;
 }
