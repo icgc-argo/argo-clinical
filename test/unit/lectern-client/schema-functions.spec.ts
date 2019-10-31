@@ -63,6 +63,7 @@ describe('schema-functions', () => {
       fieldName: 'gender',
       index: 0,
       info: {},
+      message: 'gender is a required field.',
     });
   });
 
@@ -83,6 +84,7 @@ describe('schema-functions', () => {
       fieldName: 'program_id',
       index: 0,
       info: {},
+      message: 'program_id is a required field.',
     });
   });
 
@@ -99,6 +101,7 @@ describe('schema-functions', () => {
       fieldName: 'unit_number',
       index: 0,
       info: {},
+      message: 'The value is not permissible for this field.',
     });
   });
 
@@ -135,6 +138,7 @@ describe('schema-functions', () => {
       fieldName: 'program_id',
       index: 0,
       info: {},
+      message: 'The value is not permissible for this field.',
     });
   });
 
@@ -159,12 +163,14 @@ describe('schema-functions', () => {
       fieldName: 'postal_code',
       index: 0,
       info: { message: 'invalid postal code for US' },
+      message: 'The value is not permissible for this field.',
     });
     chai.expect(result.validationErrors).to.deep.include({
       errorType: SchemaValidationErrorTypes.INVALID_BY_SCRIPT,
       fieldName: 'postal_code',
       index: 1,
       info: { message: 'invalid postal code for CANADA' },
+      message: 'The value is not permissible for this field.',
     });
   });
 
@@ -220,6 +226,7 @@ describe('schema-functions', () => {
       fieldName: 'survival_time',
       index: 0,
       info: {},
+      message: 'The value is not permissible for this field.',
     });
   });
 
