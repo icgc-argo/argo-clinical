@@ -9,25 +9,13 @@ import {
   NewClinicalEntity,
   SubmissionBatchError,
   SubmissionBatchErrorTypes,
+  ClinicalEntityType,
+  BatchNameRegex,
 } from './submission-entities';
 import { HasFullWriteAccess, HasProgramWriteAccess } from '../auth-decorators';
 import jwt from 'jsonwebtoken';
 import _ from 'lodash';
 const L = loggerFor(__filename);
-
-export enum FileType {
-  REGISTRATION = 'sample_registration',
-  DONOR = 'donor',
-  SPECIMEN = 'specimen',
-  PRIMARY_DIAGNOSES = 'primary_diagnosis',
-}
-
-export const FileNameRegex = {
-  [FileType.REGISTRATION]: '^sample_registration.*\\.tsv',
-  [FileType.DONOR]: '^donor.*\\.tsv',
-  [FileType.SPECIMEN]: '^specimen.*\\.tsv',
-  [FileType.PRIMARY_DIAGNOSES]: '^primary_diagnosis.*\\.tsv',
-};
 
 class SubmissionController {
   @HasProgramWriteAccess((req: Request) => req.params.programId)
@@ -43,7 +31,7 @@ class SubmissionController {
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async createRegistrationWithTsv(req: Request, res: Response) {
-    if (!isValidCreateBody(req, res) || !validateFile(req, res, FileType.REGISTRATION)) {
+    if (!isValidCreateBody(req, res) || !validateFile(req, res, ClinicalEntityType.REGISTRATION)) {
       return;
     }
     const programId = req.params.programId;
@@ -116,8 +104,12 @@ class SubmissionController {
     const tsvParseErrors: SubmissionBatchError[] = [];
     const clinicalFiles = req.files as Express.Multer.File[];
     for (const file of clinicalFiles) {
-      let records: ReadonlyArray<Readonly<{ [fieldName: string]: string }>> = [];
       try {
+        // check if has .tsv extension to prevent irregular file names from reaching service level
+        if (!file.originalname.match(/.*\.tsv$/)) {
+          throw new Error('invalid extension');
+        }
+        let records: ReadonlyArray<Readonly<{ [fieldName: string]: string }>> = [];
         records = await TsvUtils.tsvToJson(file.path);
         newClinicalData.push({
           batchName: file.originalname,
@@ -227,13 +219,13 @@ const isValidCreateBody = (req: Request, res: Response): boolean => {
   }
   return true;
 };
-const validateFile = (req: Request, res: Response, type: FileType) => {
+const validateFile = (req: Request, res: Response, type: ClinicalEntityType) => {
   if (req.file == undefined) {
     L.debug(`${type}File missing`);
     ControllerUtils.badRequest(res, `${type}File file is required`);
     return false;
   }
-  if (!isStringMatchRegex(FileNameRegex[type], req.file.originalname)) {
+  if (!isStringMatchRegex(BatchNameRegex[type], req.file.originalname)) {
     L.debug(`${type}File name is invalid`);
     ControllerUtils.badRequest(res, {
       msg: `invalid file name, must start with ${type} and have .tsv extension`,

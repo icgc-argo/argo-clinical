@@ -11,11 +11,11 @@ import {
   ModificationType,
   SubmissionValidationUpdate,
   ClinicalTypeValidateResult,
+  ClinicalEntityType,
 } from './submission-entities';
 import { donorDao, DONOR_FIELDS } from '../clinical/donor-repo';
 import { DeepReadonly } from 'deep-freeze';
 import { DataRecord } from '../lectern-client/schema-entities';
-import { FileType } from './submission-api';
 import { submissionValidator } from './validation-clinical/index';
 
 export const validateRegistrationData = async (
@@ -118,7 +118,7 @@ export const validateSubmissionData = async (
 };
 
 export const usingInvalidProgramId = (
-  type: FileType,
+  type: ClinicalEntityType,
   newDonorIndex: number,
   record: DataRecord,
   expectedProgram: string,
@@ -139,12 +139,12 @@ export const usingInvalidProgramId = (
   return [];
 };
 const getInfoObject = (
-  type: FileType,
+  type: ClinicalEntityType,
   record: DeepReadonly<DataRecord>,
   expectedProgram: string,
 ) => {
   switch (type) {
-    case FileType.REGISTRATION: {
+    case ClinicalEntityType.REGISTRATION: {
       return {
         value: record[FieldsEnum.program_id],
         sampleSubmitterId: record[FieldsEnum.submitter_sample_id],

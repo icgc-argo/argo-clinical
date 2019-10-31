@@ -29,6 +29,8 @@ import {
   SubmissionBatchErrorTypes,
   ValidateSubmissionResult,
   NewClinicalEntities,
+  ClinicalEntityType,
+  BatchNameRegex,
 } from './submission-entities';
 import * as schemaManager from '../lectern-client/schema-manager';
 import {
@@ -39,9 +41,8 @@ import {
   SchemaValidationErrorTypes,
 } from '../lectern-client/schema-entities';
 import { loggerFor } from '../logger';
-import { Errors, F, isStringMatchRegex, TsvUtils } from '../utils';
+import { Errors, F, isStringMatchRegex } from '../utils';
 import { DeepReadonly } from 'deep-freeze';
-import { FileType, FileNameRegex } from './submission-api';
 import { submissionRepository } from './submission-repo';
 import { v1 as uuid } from 'uuid';
 import { validateSubmissionData } from './validation';
@@ -77,10 +78,16 @@ export namespace operations {
       await registrationRepository.delete(existingActivRegistration._id);
     }
 
-    const schemaResult = schemaManager.instance().process(FileType.REGISTRATION, command.records);
+    const schemaResult = schemaManager
+      .instance()
+      .process(ClinicalEntityType.REGISTRATION, command.records);
     let unifiedSchemaErrors: DeepReadonly<SubmissionValidationError[]> = [];
     if (anyErrors(schemaResult.validationErrors)) {
-      unifiedSchemaErrors = unifySchemaErrors(FileType.REGISTRATION, schemaResult, command.records);
+      unifiedSchemaErrors = unifySchemaErrors(
+        ClinicalEntityType.REGISTRATION,
+        schemaResult,
+        command.records,
+      );
       L.info(`found ${schemaResult.validationErrors.length} schema errors in registration attempt`);
     }
 
@@ -90,7 +97,7 @@ export namespace operations {
     let programIdErrors: DeepReadonly<SubmissionValidationError[]> = [];
     command.records.forEach((r, index) => {
       const programIdError = dataValidator.usingInvalidProgramId(
-        FileType.REGISTRATION,
+        ClinicalEntityType.REGISTRATION,
         index,
         r,
         command.programId,
@@ -251,7 +258,7 @@ export namespace operations {
     // Step 1 map dataArray to entitesMap
     const { newClinicalEntitesMap, dataToEntityMapErrors } = mapClinicalDataToEntity(
       command.newClinicalData,
-      Object.values(FileType).filter(type => type !== FileType.REGISTRATION),
+      Object.values(ClinicalEntityType).filter(type => type !== ClinicalEntityType.REGISTRATION),
     );
     // Step 2 filter entites with invalid fieldNames
     const { filteredClinicalEntites, fieldNameErrors } = ckeckEntityFieldNames(
@@ -472,7 +479,7 @@ export namespace operations {
   };
 
   const unifySchemaErrors = (
-    type: FileType,
+    type: ClinicalEntityType,
     result: SchemaProcessingResult,
     records: ReadonlyArray<DataRecord>,
   ) => {
@@ -488,12 +495,12 @@ export namespace operations {
     return F(errorsList);
   };
   const getInfoObject = (
-    type: FileType,
+    type: ClinicalEntityType,
     schemaErr: DeepReadonly<SchemaValidationError>,
     record: DeepReadonly<DataRecord>,
   ) => {
     switch (type) {
-      case FileType.REGISTRATION: {
+      case ClinicalEntityType.REGISTRATION: {
         return F({
           ...schemaErr.info,
           value: record[schemaErr.fieldName],
@@ -624,7 +631,7 @@ export namespace operations {
     const schemaResult = schemaManager.instance().process(command.clinicalType, command.records);
     if (schemaResult.validationErrors.length > 0) {
       const unifiedSchemaErrors = unifySchemaErrors(
-        command.clinicalType as FileType,
+        command.clinicalType as ClinicalEntityType,
         schemaResult,
         command.records,
       );
@@ -658,7 +665,7 @@ export namespace operations {
 
   const mapClinicalDataToEntity = (
     clinicalData: ReadonlyArray<NewClinicalEntity>,
-    expectedClinicalEntites: ReadonlyArray<FileType>,
+    expectedClinicalEntites: ReadonlyArray<ClinicalEntityType>,
   ): DeepReadonly<{
     newClinicalEntitesMap: NewClinicalEntities;
     dataToEntityMapErrors: Array<SubmissionBatchError>;
@@ -670,7 +677,7 @@ export namespace operations {
     // check for double files and map files to clinical type
     expectedClinicalEntites.forEach(clinicalType => {
       const dataMatchToType = _.remove(mutableClinicalData, clinicalData =>
-        isStringMatchRegex(FileNameRegex[clinicalType], clinicalData.batchName),
+        isStringMatchRegex(BatchNameRegex[clinicalType], clinicalData.batchName),
       );
 
       if (dataMatchToType.length > 1) {

@@ -256,3 +256,19 @@ export enum ModificationType {
 export type ClinicalTypeValidateResult = {
   [clinicalType: string]: Pick<SavedClinicalEntity, 'dataErrors' | 'dataUpdates' | 'stats'>;
 };
+
+export enum ClinicalEntityType {
+  REGISTRATION = 'sample_registration',
+  DONOR = 'donor',
+  SPECIMEN = 'specimen',
+  PRIMARY_DIAGNOSES = 'primary_diagnosis',
+}
+
+// batchNameRegex are arrays, so we can just add new file name regex when needed
+// also we should check file extensions at api level for each file type upload function
+export const BatchNameRegex = {
+  [ClinicalEntityType.REGISTRATION]: [/^sample_registration.*\.tsv$/],
+  [ClinicalEntityType.DONOR]: [/^donor.*\.tsv$/],
+  [ClinicalEntityType.SPECIMEN]: [/^specimen.*\.tsv$/],
+  [ClinicalEntityType.PRIMARY_DIAGNOSES]: [/^primary_diagnosis.*\.tsv/],
+};
