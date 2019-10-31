@@ -39,6 +39,7 @@ import { FileType } from './submission-api';
 import { submissionRepository } from './submission-repo';
 import { v1 as uuid } from 'uuid';
 import { validateSubmissionData } from './validation';
+import validationErrorMessage from './submission-error-messages';
 const L = loggerFor(__filename);
 
 const emptyStats = {
@@ -464,6 +465,7 @@ export namespace operations {
         type: schemaErr.errorType,
         info: getInfoObject(type, schemaErr, records[schemaErr.index]),
         fieldName: schemaErr.fieldName,
+        message: schemaErr.message,
       });
     });
     return F(errorsList);

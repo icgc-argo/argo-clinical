@@ -23,6 +23,7 @@ import {
   F,
   isNotAbsent,
 } from '../utils';
+import schemaErrorMessage from './schema-error-messages';
 const L = loggerFor(__filename);
 
 export const process = (
@@ -437,6 +438,7 @@ namespace validation {
     index: number,
     info: object = {},
   ): SchemaValidationError => {
-    return { errorType, fieldName, index, info };
+    const errorData = { errorType, fieldName, index, info };
+    return { ...errorData, message: schemaErrorMessage(errorType, errorData) };
   };
 }
