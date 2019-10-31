@@ -4,7 +4,7 @@ import { loggerFor } from '../logger';
 import { SchemasDictionary, SchemaDefinition } from '../lectern-client/schema-entities';
 import { setStatus, Status } from '../app-health';
 import { ControllerUtils } from '../utils';
-import { FileType } from './submission-api';
+import { ClinicalEntityType } from './submission-entities';
 import AdmZip from 'adm-zip';
 import { HasFullWriteAccess } from '../auth-decorators';
 
@@ -36,7 +36,7 @@ export const getAllSchemas = async (req: Request, res: Response) => {
     manager
       .instance()
       .getSubSchemasList()
-      .filter(s => s !== FileType.REGISTRATION),
+      .filter(s => s !== ClinicalEntityType.REGISTRATION),
   );
 };
 
@@ -73,7 +73,7 @@ export const getAllTemplates = async (req: Request, res: Response) => {
     .attachment('argo_submission_templates.zip');
 
   schemasDictionary.schemas
-    .filter(s => s.name !== FileType.REGISTRATION)
+    .filter(s => s.name !== ClinicalEntityType.REGISTRATION)
     .forEach(schema => {
       const template = createTemplate(schema);
       zip.addFile(`${schema.name}.tsv`, Buffer.alloc(template.length, template));

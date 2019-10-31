@@ -1,0 +1,2 @@
+submitter_id	submitter_specimen_id	acquisition_interval	anatomic_location_of_specimen_collection	central_pathology_confirmed	tumour_histological_type	tumour_grading_system	tumour_grading_system	tumour_grade	tumour_staging_system	pathological_stage_group	percent_tumour_cells	percent_proliferating_cells	percent_inflammatory_tissue	percent_stromal_cells	percent_necrosis
+ICGC_0001	8013861	200	Other	No	M-1111/22	Default	Default	aStringValue	Murphy	aStringValue	0.35	0.5	0.6	0.65	0.65
