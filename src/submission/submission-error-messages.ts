@@ -21,7 +21,7 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
   NEW_SAMPLE_ID_CONFLICT: () =>
     'You are trying to register the same sample either with multiple donors, specimens or rows. Samples can only be registered once to a single donor and specimen.',
   ID_NOT_REGISTERED: errorData =>
-    `${errorData.info.value} has not yet been registered. Please register here before submitting clinical data for this identifier.`,
+    `${errorData.info.value} has not yet been registered. Please register samples before submitting clinical data for this identifier.`,
   CONFLICTING_TIME_INTERVAL: () =>
     'survival_time cannot be less than Specimen acquisition_interval.',
   NOT_ENOUGH_INFO_TO_VALIDATE: errorData =>
