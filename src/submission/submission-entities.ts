@@ -65,6 +65,18 @@ export type SubmissionValidationUpdate = {
   index: number;
 };
 
+export type SubmissionBatchError = {
+  msg: string;
+  batchNames: string[];
+  code: SubmissionBatchErrorTypes | SchemaValidationErrorTypes;
+};
+
+export enum SubmissionBatchErrorTypes {
+  TSV_PARSING_FAILED = 'TSV_PARSING_FAILED',
+  INVALID_FILE_NAME = 'INVALID_FILE_NAME',
+  MULTIPLE_TYPED_FILES = 'MULTIPLE_TYPED_FILES',
+}
+
 export enum DataValidationErrors {
   MUTATING_EXISTING_DATA = 'MUTATING_EXISTING_DATA',
   SAMPLE_BELONGS_TO_OTHER_SPECIMEN = 'SAMPLE_BELONGS_TO_OTHER_SPECIMEN',
@@ -146,7 +158,7 @@ export interface ClearSubmissionCommand {
 }
 
 export interface MultiClinicalSubmissionCommand {
-  newClinicalEntities: Readonly<{ [clinicalType: string]: NewClinicalEntity }>;
+  newClinicalData: ReadonlyArray<NewClinicalEntity>;
   readonly programId: string;
   readonly updater: string;
 }
@@ -161,15 +173,29 @@ export interface CreateSubmissionResult {
   readonly submission: DeepReadonly<ActiveClinicalSubmission> | undefined;
   readonly successful: boolean;
   schemaErrors: DeepReadonly<{ [clinicalType: string]: SubmissionValidationError[] }>;
+  batchErrors: DeepReadonly<SubmissionBatchError[]>;
+}
+
+export interface ValidateSubmissionResult {
+  readonly submission: DeepReadonly<ActiveClinicalSubmission> | undefined;
+  readonly successful: boolean;
+}
+
+export interface NewClinicalEntities {
+  [clinicalType: string]: NewClinicalEntity;
 }
 
 export interface NewClinicalEntity {
   batchName: string;
   creator: string;
   records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
+  fieldNames?: ReadonlyArray<string>; // used if all records have common field names
 }
 
-export interface SavedClinicalEntity extends NewClinicalEntity {
+export interface SavedClinicalEntity {
+  batchName: string;
+  creator: string;
+  records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
   createdAt: DeepReadonly<Date>;
   dataErrors: SubmissionValidationError[];
   dataUpdates: SubmissionValidationUpdate[];
@@ -229,4 +255,20 @@ export enum ModificationType {
 
 export type ClinicalTypeValidateResult = {
   [clinicalType: string]: Pick<SavedClinicalEntity, 'dataErrors' | 'dataUpdates' | 'stats'>;
+};
+
+export enum ClinicalEntityType {
+  REGISTRATION = 'sample_registration',
+  DONOR = 'donor',
+  SPECIMEN = 'specimen',
+  PRIMARY_DIAGNOSES = 'primary_diagnosis',
+}
+
+// batchNameRegex are arrays, so we can just add new file name regex when needed
+// also we should check file extensions at api level for each file type upload function
+export const BatchNameRegex = {
+  [ClinicalEntityType.REGISTRATION]: [/^sample_registration.*\.tsv$/],
+  [ClinicalEntityType.DONOR]: [/^donor.*\.tsv$/],
+  [ClinicalEntityType.SPECIMEN]: [/^specimen.*\.tsv$/],
+  [ClinicalEntityType.PRIMARY_DIAGNOSES]: [/^primary_diagnosis.*\.tsv/],
 };

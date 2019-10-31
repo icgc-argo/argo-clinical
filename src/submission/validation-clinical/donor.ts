@@ -6,10 +6,10 @@ import {
   ClinicalInfoFieldsEnum,
   ValidatorResult,
   ModificationType,
+  ClinicalEntityType,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
-import { FileType } from '../submission-api';
 import * as utils from './utils';
 import _ from 'lodash';
 
@@ -18,7 +18,7 @@ export const validate = async (
   existentDonor: DeepReadonly<Donor>,
 ): Promise<ValidatorResult> => {
   const errors: SubmissionValidationError[] = [];
-  const donorRecord = newRecords[FileType.DONOR];
+  const donorRecord = newRecords[ClinicalEntityType.DONOR];
 
   // Preconditions: if any one of these validation failed, can't continue
   if (!utils.checkDonorRegistered(existentDonor, donorRecord)) {
@@ -32,7 +32,12 @@ export const validate = async (
   }
 
   // cross entity donor record validation
-  checkTimeConflictWithSpecimen(existentDonor, donorRecord, newRecords[FileType.SPECIMEN], errors);
+  checkTimeConflictWithSpecimen(
+    existentDonor,
+    donorRecord,
+    newRecords[ClinicalEntityType.SPECIMEN],
+    errors,
+  );
 
   return errors.length > 0
     ? utils.buildValidatorResult(ModificationType.ERRORSFOUND, donorRecord.index, errors)
