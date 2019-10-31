@@ -25,6 +25,27 @@ export interface SchemaDefinition {
   readonly fields: ReadonlyArray<FieldDefinition>;
 }
 
+export interface SchemasDictionaryDiffs {
+  [fieldName: string]: FieldDiff;
+}
+
+export interface FieldDiff {
+  before?: FieldDefinition;
+  after?: FieldDefinition;
+  diff: FieldChanges;
+}
+
+// changes can be nested
+// in case of created/delete field we get Change
+// in case of simple field change we get {"fieldName": {"data":.., "type": ..}}
+// in case of nested fields: {"fieldName1": {"fieldName2": {"data":.., "type": ..}}}
+export type FieldChanges = { [field: string]: FieldChanges } | Change;
+
+export interface Change {
+  type: 'created' | 'deleted' | 'updated';
+  data: any;
+}
+
 export interface FieldDefinition {
   name: string;
   valueType: ValueType;

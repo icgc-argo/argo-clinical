@@ -1,11 +1,22 @@
 import { loggerFor } from '../logger';
 import fetch from 'node-fetch';
-import { SchemasDictionary } from './schema-entities';
+import {
+  SchemasDictionary,
+  SchemasDictionaryDiffs,
+  FieldChanges,
+  FieldDiff,
+} from './schema-entities';
 import promiseTools from 'promise-tools';
 const L = loggerFor(__filename);
 
 export interface SchemaServiceRestClient {
   fetchSchema(schemaSvcUrl: string, name: string, version: string): Promise<SchemasDictionary>;
+  fetchDiff(
+    schemaSvcUrl: string,
+    name: string,
+    fromVersion: string,
+    toVersion: string,
+  ): Promise<SchemasDictionaryDiffs>;
 }
 
 export const schemaClient: SchemaServiceRestClient = {
@@ -41,16 +52,7 @@ export const schemaClient: SchemaServiceRestClient = {
     }
     const url = `${schemaSvcUrl}/dictionaries?name=${name}&version=${version}`;
     try {
-      const retryAttempt = 1;
-      const schemasDictionaryRes = await promiseTools.retry(
-        { times: 5, interval: 1000 },
-        async () => {
-          L.debug(`fetching schema attempt #${retryAttempt}`);
-          return promiseTools.timeout(fetch(url), 5000);
-        },
-      );
-      const schemaDictionary = await schemasDictionaryRes.json();
-
+      const schemaDictionary = await doRequest(url);
       // todo validate response and map it to a schema
       return schemaDictionary[0] as SchemasDictionary;
     } catch (err) {
@@ -58,6 +60,42 @@ export const schemaClient: SchemaServiceRestClient = {
       throw new Error('failed to get the schema');
     }
   },
+  fetchDiff: async (
+    schemaSvcBaseUrl: string,
+    name: string,
+    fromVersion: string,
+    toVersion: string,
+  ): Promise<SchemasDictionaryDiffs> => {
+    const url = `${schemaSvcBaseUrl}/diff?name=${name}&left=${fromVersion}&right=${toVersion}`;
+    const diffResponse = (await doRequest(url)) as any[];
+    const result: SchemasDictionaryDiffs = {};
+    for (const entry of diffResponse) {
+      const fieldName = entry[0] as string;
+      if (entry[1]) {
+        const fieldDiff: FieldDiff = {
+          before: entry[1].left,
+          after: entry[1].right,
+          diff: entry[1].diff,
+        };
+        result[fieldName] = fieldDiff;
+      }
+    }
+    return result;
+  },
+};
+
+const doRequest = async (url: string) => {
+  try {
+    const retryAttempt = 1;
+    const response = await promiseTools.retry({ times: 5, interval: 1000 }, async () => {
+      L.debug(`fetching schema attempt #${retryAttempt}`);
+      return promiseTools.timeout(fetch(url), 5000);
+    });
+    return await response.json();
+  } catch (err) {
+    L.error(`failed to fetch schema using this url: ${url}`, err);
+    throw new Error('failed to get the schema');
+  }
 };
 
 function delay(milliseconds: number) {

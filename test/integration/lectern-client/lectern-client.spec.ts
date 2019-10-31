@@ -10,8 +10,12 @@ import { cleanCollection, findInDb } from '../testutils';
 import _ from 'lodash';
 import * as manager from '../../../src/lectern-client/schema-manager';
 import { promisify } from 'bluebird';
-import { SchemasDictionary } from '../../../src/lectern-client/schema-entities';
-
+import {
+  SchemasDictionary,
+  SchemasDictionaryDiffs,
+} from '../../../src/lectern-client/schema-entities';
+import * as analyzer from '../../../src/lectern-client/change-analyzer';
+import { schemaClient } from '../../../src/lectern-client/schema-rest-client';
 const ServerMock: any = require('mock-http-server') as any;
 
 chai.use(require('chai-http'));
@@ -53,6 +57,31 @@ describe('Lectern Client', () => {
     await mongoose.disconnect();
     await promisify(server.stop)();
     await mongoContainer.stop();
+  });
+
+  describe('rest client', () => {
+    it('should fetch schema diff', async function() {
+      const diffResponse: any[] = require('./schema-diff.1.json') as SchemasDictionary[];
+      server.on({
+        method: 'GET',
+        path: '/lectern/diff',
+        reply: {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+          body: () => {
+            console.log('in mock server reply');
+            return JSON.stringify(diffResponse);
+          },
+        },
+      });
+      const response = await schemaClient.fetchDiff(
+        'http://localhost:54321/lectern',
+        'abc',
+        '1.0',
+        '2.0',
+      );
+      chai.expect(response).to.not.be.undefined;
+    });
   });
 
   describe('manager', function() {
