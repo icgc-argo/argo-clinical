@@ -53,6 +53,7 @@ export type SubmissionValidationError = {
   fieldName: string;
   info: object;
   index: number;
+  message: string;
 };
 
 export type SubmissionValidationUpdate = {

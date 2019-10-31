@@ -666,10 +666,11 @@ components:
     ValidationError:
       type: object
       required:
-        - fieldName
-        - info
         - index
         - type
+        - fieldName
+        - message
+        - info
       properties:
         fieldName:
           type: string
@@ -695,15 +696,18 @@ components:
           type: string
           description: The name of the parameter
           enum:
-            # data validation errors
-            - SPECIMEN_BELONGS_TO_OTHER_DONOR
-            - MUTATING_EXISTING_DATA
-            - SAMPLE_BELONGS_TO_OTHER_SPECIMEN
-            - NEW_SPECIMEN_ID_CONFLICT
-            - NEW_SPECIMEN_ATTR_CONFLICT
-            - NEW_SAMPLE_ID_CONFLICT
-            - NEW_SAMPLE_ATTR_CONFLICT
+            - CONFLICTING_TIME_INTERVAL
+            - ID_NOT_REGISTERED
             - INVALID_PROGRAM_ID
+            - MUTATING_EXISTING_DATA
+            - NEW_DONOR_CONFLICT
+            - NEW_SAMPLE_ATTR_CONFLICT
+            - NEW_SAMPLE_ID_CONFLICT
+            - NEW_SPECIMEN_ATTR_CONFLICT
+            - NEW_SPECIMEN_ID_CONFLICT
+            - NOT_ENOUGH_INFO_TO_VALIDATE
+            - SAMPLE_BELONGS_TO_OTHER_SPECIMEN
+            - SPECIMEN_BELONGS_TO_OTHER_DONOR
             # dictionary schema errors
             - MISSING_REQUIRED_FIELD
             - INVALID_FIELD_VALUE_TYPE

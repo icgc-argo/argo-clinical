@@ -82,9 +82,7 @@ function checkTimeConflictWithDonor(
         specimenRecord,
         DataValidationErrors.CONFLICTING_TIME_INTERVAL,
         ClinicalInfoFieldsEnum.acquisition_interval,
-        {
-          msg: `${ClinicalInfoFieldsEnum.acquisition_interval} can't be greater than ${ClinicalInfoFieldsEnum.survival_time}`,
-        },
+        {},
       ),
     );
   }

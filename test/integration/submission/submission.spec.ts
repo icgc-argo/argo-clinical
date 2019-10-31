@@ -197,7 +197,7 @@ const expectedDonorErrors = [
       value: 'acdc',
       donorSubmitterId: 'ICGC_0002',
     },
-
+    message: 'The value is not permissible for this field.',
     fieldName: ClinicalInfoFieldsEnum.survival_time,
   },
   {
@@ -207,6 +207,7 @@ const expectedDonorErrors = [
       value: 'undecided',
       donorSubmitterId: 'ICGC_0002',
     },
+    message: 'The value is not permissible for this field.',
     fieldName: ClinicalInfoFieldsEnum.vital_status,
   },
 ];
@@ -746,6 +747,8 @@ describe('Submission Api', () => {
                         donorSubmitterId: 'ICGC_0001',
                         value: 'ICGC_0001',
                       },
+                      message:
+                        'ICGC_0001 has not yet been registered. Please register here before submitting clinical data for this identifier.',
                       index: 0,
                     },
                   ]);

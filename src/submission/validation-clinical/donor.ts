@@ -90,7 +90,6 @@ function checkTimeConflictWithSpecimen(
         DataValidationErrors.CONFLICTING_TIME_INTERVAL,
         ClinicalInfoFieldsEnum.survival_time,
         {
-          msg: `${ClinicalInfoFieldsEnum.survival_time} can't be less than a specimen's acquistion time`,
           conflictingSpecimenSubmitterIds: specimenIdsWithTimeConflicts,
         },
       ),

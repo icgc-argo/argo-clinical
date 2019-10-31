@@ -10,6 +10,7 @@ import {
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, Specimen } from '../../clinical/clinical-entities';
+import validationErrorMessage from '../submission-error-messages';
 import _ from 'lodash';
 
 export const checkDonorRegistered = (
@@ -27,7 +28,7 @@ export const buildSubmissionError = (
 ): SubmissionValidationError => {
   // typescript refused to take this directly
   const index: number = newRecord.index;
-  return {
+  const errorData = {
     type,
     fieldName,
     index,
@@ -36,6 +37,10 @@ export const buildSubmissionError = (
       donorSubmitterId: newRecord[FieldsEnum.submitter_donor_id],
       value: newRecord[fieldName],
     },
+  };
+  return {
+    ...errorData,
+    message: validationErrorMessage(type, errorData),
   };
 };
 
