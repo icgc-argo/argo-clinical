@@ -272,6 +272,7 @@ describe('schema-functions', () => {
     chai.expect(result.validationErrors.length).to.eq(1);
     chai.expect(result.validationErrors).to.deep.include({
       errorType: SchemaValidationErrorTypes.UNRECOGNIZED_FIELD,
+      message: SchemaValidationErrorTypes.UNRECOGNIZED_FIELD,
       fieldName: 'hackField',
       index: 0,
       info: {},

@@ -198,6 +198,7 @@ const expectedDonorErrors = [
       value: 'died of other reasons',
     },
     type: 'UNRECOGNIZED_FIELD',
+    message: 'UNRECOGNIZED_FIELD',
   },
   {
     index: 0,
