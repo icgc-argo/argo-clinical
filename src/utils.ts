@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import deepFreeze from 'deep-freeze';
 import mongoose from 'mongoose';
 const fsPromises = fs.promises;
@@ -102,8 +102,9 @@ export function isString(value: any): value is string {
   return value instanceof String;
 }
 
-export const isStringMatchRegex = (expression: string, value: string) => {
-  return RegExp(expression).test(value);
+// returns true if value matches at least one of the expressions
+export const isStringMatchRegex = (expressions: RegExp[], value: string) => {
+  return expressions.filter(exp => RegExp(exp).test(value)).length >= 1;
 };
 
 export const isNotEmptyString = (value: string) => {

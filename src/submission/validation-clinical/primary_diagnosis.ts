@@ -5,10 +5,10 @@ import {
   SubmissionValidationError,
   ValidatorResult,
   ModificationType,
+  ClinicalEntityType,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
-import { FileType } from '../submission-api';
 import * as utils from './utils';
 import _ from 'lodash';
 
@@ -17,7 +17,7 @@ export const validate = async (
   existentDonor: DeepReadonly<Donor>,
 ): Promise<ValidatorResult> => {
   const errors: SubmissionValidationError[] = [];
-  const pdRecord = newRecords[FileType.PRIMARY_DIAGNOSES];
+  const pdRecord = newRecords[ClinicalEntityType.PRIMARY_DIAGNOSES];
 
   // Preconditions: if any one of these validation failed, can't continue
   if (!utils.checkDonorRegistered(existentDonor, pdRecord)) {
