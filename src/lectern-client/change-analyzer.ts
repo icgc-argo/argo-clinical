@@ -6,6 +6,7 @@ import {
   FieldDefinition,
   Change,
 } from './schema-entities';
+import { SchemaType } from 'mongoose';
 
 const isFieldChange = (obj: any): obj is Change => {
   return obj.type !== undefined;
@@ -19,6 +20,27 @@ const isRestrictionChange = (obj: any): obj is { [field: string]: FieldChanges }
   return obj.type === undefined;
 };
 
+interface ChangeAnalysis {
+  fields: {
+    addedFields: string[];
+    renamedFields: string[];
+    deletedFields: string[];
+  };
+  restrictionsChanges: {
+    codeLists: {
+      created: CodeListChange[];
+      deleted: CodeListChange[];
+      updated: CodeListChange[];
+    };
+  };
+}
+
+interface CodeListChange {
+  field: string;
+  addition: SchemaType[];
+  deletion: SchemaType[];
+}
+
 export const analyzeChanges = async (
   serviceUrl: string,
   name: string,
@@ -26,16 +48,18 @@ export const analyzeChanges = async (
   toVersion: string,
 ): Promise<ChangeAnalysis> => {
   const changes = await schemaClient.fetchDiff(serviceUrl, name, fromVersion, toVersion);
-  const analysis = {
+
+  const analysis: ChangeAnalysis = {
     fields: {
-      addedFields: new Array<string>(),
-      renamedFields: new Array<string>(),
-      deletedFields: new Array<string>(),
+      addedFields: [],
+      renamedFields: [],
+      deletedFields: [],
     },
     restrictionsChanges: {
       codeLists: {
-        addition: new Array<string>(),
-        deletion: new Array<string>(),
+        created: [],
+        deleted: [],
+        updated: [],
       },
     },
   };
@@ -43,6 +67,7 @@ export const analyzeChanges = async (
   for (const field of Object.keys(changes)) {
     const fieldChange: FieldDiff = changes[field];
     if (fieldChange) {
+      console.log(`field : ${field} has changes`);
       const changes = fieldChange.diff;
       // if we have type at first level then it's a field add/delete
       if (isFieldChange(changes)) {
@@ -51,22 +76,57 @@ export const analyzeChanges = async (
 
       if (isNestedChange(changes)) {
         if (changes.meta) {
+          console.log('meta change found');
         }
+
         if (changes.restrictions) {
+          console.log('restrictions change found');
+          categorizeRestrictionChanges(analysis, field, changes.restrictions as {
+            [field: string]: FieldChanges;
+          });
         }
       }
     }
   }
+
+  return analysis;
 };
 
-const categorizeRestrictionChanges = (restrictions: { [field: string]: FieldChanges }) => {
+const categorizeRestrictionChanges = (
+  analysis: ChangeAnalysis,
+  field: string,
+  restrictions: { [field: string]: FieldChanges },
+) => {
   if (restrictions.codeLists) {
+    console.log('codeLists change found');
     const codeListChange = restrictions.codeLists as Change;
     if (codeListChange.type === 'updated') {
+      analysis.restrictionsChanges.codeLists.updated.push({
+        field: field,
+        addition: codeListChange.data.added,
+        deletion: codeListChange.data.deleted,
+      });
+    }
+
+    if (codeListChange.type === 'created') {
+      analysis.restrictionsChanges.codeLists.created.push({
+        field: field,
+        addition: codeListChange.data,
+        deletion: [],
+      });
+    }
+
+    if (codeListChange.type === 'deleted') {
+      analysis.restrictionsChanges.codeLists.deleted.push({
+        field: field,
+        addition: [],
+        deletion: [],
+      });
     }
   }
 };
-const categorizeFieldChanges = (analysis: any, field: string, changes: FieldChanges) => {
+
+const categorizeFieldChanges = (analysis: ChangeAnalysis, field: string, changes: FieldChanges) => {
   const changeType = changes.type;
   if (changeType == 'created') {
     analysis.fields.addedFields.push(field);

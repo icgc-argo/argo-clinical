@@ -1,5 +1,4 @@
 // using import fails when running the test
-// import * as chai from "chai";
 import chai from 'chai';
 // needed for types
 import 'chai-http';
@@ -21,12 +20,16 @@ const ServerMock: any = require('mock-http-server') as any;
 chai.use(require('chai-http'));
 chai.should();
 mongoose.set('debug', true);
+
 describe('Lectern Client', () => {
   let mongoContainer: any;
   let dburl = ``;
   const schemaName = 'ARGO Clinical Submission';
   const server = new ServerMock({ host: 'localhost', port: 54321 });
   const startServerPromise = promisify(server.start);
+
+  // we don't do a full bootstrap here like other integration tests, this test is meant to be
+  // lectern client specific and agnostic of clinical so it can be isolated without dependencies on argo
   const prep = async (mongoUrl: string) => {
     await mongoose.connect(mongoUrl, {
       // https://mongoosejs.com/docs/deprecations.html
@@ -86,8 +89,10 @@ describe('Lectern Client', () => {
 
   describe('manager', function() {
     this.beforeEach(async () => await cleanCollection(dburl, 'dataschemas'));
+    manager.create('http://localhost:54321/lectern');
+
     it('should load schema in db', async function() {
-      const dictionaries: SchemasDictionary[] = require('./stub-schema.1.json') as SchemasDictionary[];
+      const dictionaries: SchemasDictionary[] = require('./dictionary.response.1.json') as SchemasDictionary[];
       server.on({
         method: 'GET',
         path: '/lectern/dictionaries',
@@ -100,7 +105,7 @@ describe('Lectern Client', () => {
           },
         },
       });
-      manager.create('http://localhost:54321/lectern');
+
       let result: SchemasDictionary | undefined = undefined;
       try {
         result = await manager.instance().loadSchema(schemaName, '1.0');
@@ -120,8 +125,8 @@ describe('Lectern Client', () => {
     });
 
     it('should update schema version', async function() {
-      const dictionaryV1: SchemasDictionary[] = require('./stub-schema.1.json') as SchemasDictionary[];
-      const dictionaryV2: SchemasDictionary[] = require('./stub-schema.2.json') as SchemasDictionary[];
+      const dictionaryV1: SchemasDictionary[] = require('./dictionary.response.1.json') as SchemasDictionary[];
+      const dictionaryV2: SchemasDictionary[] = require('./dictionary.response.2.json') as SchemasDictionary[];
       server.on({
         method: 'GET',
         path: '/lectern/dictionaries',
@@ -137,7 +142,6 @@ describe('Lectern Client', () => {
           },
         },
       });
-      manager.create('http://localhost:54321/lectern');
       let resultV1: SchemasDictionary | undefined = undefined;
       let resultV2: SchemasDictionary | undefined = undefined;
       try {

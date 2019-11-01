@@ -6,6 +6,7 @@ import {
   FieldNamesByPriorityMap,
   SchemaDefinition,
 } from './schema-entities';
+import * as changeAnalyzer from './change-analyzer';
 import { schemaClient as schemaServiceAdapter } from './schema-rest-client';
 import { schemaRepo } from './schema-repo';
 import { loggerFor } from '../logger';
@@ -62,6 +63,16 @@ class SchemaManager {
       throw new Error('schema manager not initialized correctly');
     }
     return service.process(this.getCurrent(), definition, records);
+  };
+
+  analyzeChanges = async (newVersion: string) => {
+    const result = await changeAnalyzer.analyzeChanges(
+      this.schemaServiceUrl,
+      this.currentSchema.name,
+      this.currentSchema.version,
+      newVersion,
+    );
+    return result;
   };
 
   updateVersion = async (name: string, newVersion: string): Promise<SchemasDictionary> => {
