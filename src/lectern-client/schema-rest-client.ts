@@ -33,7 +33,12 @@ export const schemaClient: SchemaServiceRestClient = {
         const dictionaries: SchemasDictionary[] = require(schemaSvcUrl.substring(
           7,
           schemaSvcUrl.length,
-        )) as SchemasDictionary[];
+        )).dictionaries as SchemasDictionary[];
+        if (!dictionaries) {
+          throw new Error(
+            'your mock json is not structured correctly, see sampleFiles/sample-schema.json',
+          );
+        }
         const dic = dictionaries.find((d: any) => d.version == version && d.name == name);
         if (!dic) {
           return undefined;

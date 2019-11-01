@@ -32,7 +32,6 @@ import { TsvUtils } from '../../../src/utils';
 import { donorDao } from '../../../src/clinical/donor-repo';
 import { Donor } from '../../../src/clinical/clinical-entities';
 import { ErrorCodes, FileType } from '../../../src/submission/submission-api';
-import * as manager from '../../../src/lectern-client/schema-manager';
 import AdmZip from 'adm-zip';
 
 import * as _ from 'lodash';
