@@ -6,10 +6,10 @@ import {
   ClinicalInfoFieldsEnum,
   ValidatorResult,
   ModificationType,
+  ClinicalEntityType,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
-import { Donor, Specimen } from '../../clinical/clinical-entities';
-import { FileType } from '../submission-api';
+import { Donor } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
 
@@ -18,7 +18,7 @@ export const validate = async (
   existentDonor: DeepReadonly<Donor>,
 ): Promise<ValidatorResult> => {
   const errors: SubmissionValidationError[] = [];
-  const specimenRecord = newDonorRecords[FileType.SPECIMEN];
+  const specimenRecord = newDonorRecords[ClinicalEntityType.SPECIMEN];
 
   // Preconditions: if any one of the validation in try catch failed, can't continue
   if (!utils.checkDonorRegistered(existentDonor, specimenRecord)) {
@@ -46,7 +46,7 @@ export const validate = async (
   }
 
   const donorDataToValidateWith = getDataFromRecordOrDonor(
-    newDonorRecords[FileType.DONOR],
+    newDonorRecords[ClinicalEntityType.DONOR],
     existentDonor,
   );
   if (!donorDataToValidateWith) {
@@ -82,9 +82,7 @@ function checkTimeConflictWithDonor(
         specimenRecord,
         DataValidationErrors.CONFLICTING_TIME_INTERVAL,
         ClinicalInfoFieldsEnum.acquisition_interval,
-        {
-          msg: `${ClinicalInfoFieldsEnum.acquisition_interval} can't be greater than ${ClinicalInfoFieldsEnum.survival_time}`,
-        },
+        {},
       ),
     );
   }

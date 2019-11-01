@@ -1,7 +1,6 @@
 import { DeepReadonly } from 'deep-freeze';
-import { Donor, Specimen, Sample } from '../clinical/clinical-entities';
-import { ActiveClinicalSubmission, FieldsEnum } from './submission-entities';
-import { FileType } from './submission-api';
+import { Donor, Specimen } from '../clinical/clinical-entities';
+import { ActiveClinicalSubmission, FieldsEnum, ClinicalEntityType } from './submission-entities';
 import _ from 'lodash';
 import { loggerFor } from '../logger';
 import { Errors } from '../utils';
@@ -27,13 +26,13 @@ export const mergeActiveSubmissionWithDonors = async (
       const donor = _.find(updatedDonors, ['submitterId', donorId]);
       if (donor) {
         switch (entityType) {
-          case FileType.DONOR:
+          case ClinicalEntityType.DONOR:
             updateDonorFromSubmissionRecord(donor, record);
             break;
-          case FileType.SPECIMEN:
+          case ClinicalEntityType.SPECIMEN:
             updateSpecimenRecord(donor, record);
             break;
-          case FileType.PRIMARY_DIAGNOSES:
+          case ClinicalEntityType.PRIMARY_DIAGNOSES:
             updatePrimaryDiagnosesRecord(donor, record);
             break;
           default:

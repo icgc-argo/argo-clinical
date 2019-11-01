@@ -8,10 +8,10 @@ import {
   CreateRegistrationRecord,
   FieldsEnum,
   ClinicalInfoFieldsEnum,
+  ClinicalEntityType,
 } from '../../../src/submission/submission-entities';
 import { Donor } from '../../../src/clinical/clinical-entities';
 import { stubs } from './stubs';
-import { FileType } from '../../../src/submission/submission-api';
 
 const genderMutatedErr: SubmissionValidationError = {
   fieldName: 'gender',
@@ -21,7 +21,10 @@ const genderMutatedErr: SubmissionValidationError = {
     sampleSubmitterId: 'AM1',
     specimenSubmitterId: 'SP1',
     value: 'Male',
+    originalValue: 'Female',
   },
+  message:
+    'The value does not match the previously registered value of Female. Please correct your file or contact DCC to update the registered data.',
   type: DataValidationErrors.MUTATING_EXISTING_DATA,
 };
 const programInvalidErr: SubmissionValidationError = {
@@ -34,17 +37,22 @@ const programInvalidErr: SubmissionValidationError = {
     sampleSubmitterId: 'AM1',
     value: 'PEM-CA',
   },
+  message:
+    'Program ID does not match the program you are uploading to. Please include the correct Program ID.',
   type: DataValidationErrors.INVALID_PROGRAM_ID,
 };
 const specimenMutatedErr: SubmissionValidationError = {
   fieldName: FieldsEnum.specimen_tissue_source,
   index: 0,
   info: {
+    originalValue: 'XYZ',
     donorSubmitterId: 'AB1',
     specimenSubmitterId: 'SP1',
     sampleSubmitterId: 'AM1',
     value: 'XYZ1',
   },
+  message:
+    'The value does not match the previously registered value of XYZ. Please correct your file or contact DCC to update the registered data.',
   type: DataValidationErrors.MUTATING_EXISTING_DATA,
 };
 const tndError: SubmissionValidationError = {
@@ -55,7 +63,10 @@ const tndError: SubmissionValidationError = {
     specimenSubmitterId: 'SP1',
     sampleSubmitterId: 'AM1',
     value: 'Normal2',
+    originalValue: 'Normal',
   },
+  message:
+    'The value does not match the previously registered value of Normal. Please correct your file or contact DCC to update the registered data.',
   type: DataValidationErrors.MUTATING_EXISTING_DATA,
 };
 
@@ -67,7 +78,10 @@ const sampleTypeMutatedError: SubmissionValidationError = {
     specimenSubmitterId: 'SP1',
     sampleSubmitterId: 'AM1',
     value: 'ST11',
+    originalValue: 'ST1',
   },
+  message:
+    'The value does not match the previously registered value of ST1. Please correct your file or contact DCC to update the registered data.',
   type: DataValidationErrors.MUTATING_EXISTING_DATA,
 };
 
@@ -79,7 +93,10 @@ const specimenBelongsToOtherDonor: SubmissionValidationError = {
     specimenSubmitterId: 'SP1',
     sampleSubmitterId: 'AM1',
     value: 'SP1',
+    otherDonorSubmitterId: 'AB1',
   },
+  message:
+    'Specimen can only be registered to a single donor. This specimen has already been registered to donor AB1. Please correct your file or contact DCC to update the registered data.',
   type: DataValidationErrors.SPECIMEN_BELONGS_TO_OTHER_DONOR,
 };
 
@@ -91,7 +108,10 @@ const sampleBelongsToOtherSpecimenAB2: SubmissionValidationError = {
     specimenSubmitterId: 'SP2',
     sampleSubmitterId: 'AM1',
     value: 'AM1',
+    otherSpecimenSubmitterId: 'SP1',
   },
+  message:
+    'Samples can only be registered to a single specimen. This sample has already been registered to specimen SP1. Please correct your file or contact DCC to update the registered data.',
   type: DataValidationErrors.SAMPLE_BELONGS_TO_OTHER_SPECIMEN,
 };
 
@@ -103,7 +123,10 @@ const sampleBelongsToOtherSpecimenAB1: SubmissionValidationError = {
     specimenSubmitterId: 'SP2',
     sampleSubmitterId: 'AM1',
     value: 'AM1',
+    otherSpecimenSubmitterId: 'SP1',
   },
+  message:
+    'Samples can only be registered to a single specimen. This sample has already been registered to specimen SP1. Please correct your file or contact DCC to update the registered data.',
   type: DataValidationErrors.SAMPLE_BELONGS_TO_OTHER_SPECIMEN,
 };
 
@@ -135,7 +158,7 @@ describe('data-validator', () => {
       donorDaoCountByStub.returns(Promise.resolve(0));
       // test call
       const result = await dv.usingInvalidProgramId(
-        FileType.REGISTRATION,
+        ClinicalEntityType.REGISTRATION,
         0,
         {
           [FieldsEnum.submitter_donor_id]: 'AB1',
@@ -306,7 +329,10 @@ describe('data-validator', () => {
           specimenSubmitterId: 'SP1',
           sampleSubmitterId: 'AM1',
           value: 'XYZQ',
+          originalValue: 'XYZ',
         },
+        message:
+          'The value does not match the previously registered value of XYZ. Please correct your file or contact DCC to update the registered data.',
         type: DataValidationErrors.MUTATING_EXISTING_DATA,
       };
       chai.expect(result.errors).to.deep.include(specimenMutatedError);
@@ -315,11 +341,12 @@ describe('data-validator', () => {
     });
 
     it('should detect specimen belongs to other donor', async () => {
-      donorDaoCountByStub
-        .onFirstCall()
-        .returns(Promise.resolve(1))
-        .onSecondCall()
-        .returns(Promise.resolve(0));
+      donorDaoFindBySpecimenSubmitterIdAndProgramIdStub.returns(
+        Promise.resolve<Donor>(stubs.validation.existingDonor02()),
+      );
+      donorDaoFindBySampleSubmitterIdAndProgramIdStub.returns(
+        Promise.resolve<Donor>(stubs.validation.existingDonor02()),
+      );
 
       // test call
       const result = await dv.validateRegistrationData(
@@ -340,25 +367,19 @@ describe('data-validator', () => {
       );
 
       // assertions
-      chai.expect(result.errors.length).to.eq(1);
-      chai.expect(result.errors[0]).to.deep.eq(specimenBelongsToOtherDonor);
+      chai.expect(result.errors.length).to.eq(2);
+      chai.expect(result.errors).to.deep.include(specimenBelongsToOtherDonor);
     });
 
     // see issue https://github.com/icgc-argo/argo-clinical/issues/112
     it('should detect specimen belongs to other donor and specimen type changed', async () => {
       donorDaoFindBySampleSubmitterIdAndProgramIdStub.returns(
-        Promise.resolve(stubs.validation.existingDonor03()),
+        Promise.resolve(stubs.validation.existingDonor02()),
       );
 
       donorDaoFindBySpecimenSubmitterIdAndProgramIdStub.returns(
         Promise.resolve<Donor>(stubs.validation.existingDonor02()),
       );
-
-      donorDaoCountByStub
-        .onFirstCall()
-        .returns(Promise.resolve(1))
-        .onSecondCall()
-        .returns(Promise.resolve(0));
 
       // test call
       const result = await dv.validateRegistrationData(
@@ -372,16 +393,6 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST11',
             specimenSubmitterId: 'SP1',
-            tumourNormalDesignation: 'Normal',
-          },
-          {
-            donorSubmitterId: 'AB3',
-            gender: 'Female',
-            programId: 'PEME-CA',
-            sampleSubmitterId: 'AM1',
-            specimenTissueSource: 'XYZ',
-            sampleType: 'ST11',
-            specimenSubmitterId: 'SPY',
             tumourNormalDesignation: 'Normal',
           },
         ],
@@ -396,35 +407,26 @@ describe('data-validator', () => {
           specimenSubmitterId: 'SP1',
           sampleSubmitterId: 'AM1',
           value: 'XYZ',
+          originalValue: 'XYZZ',
         },
-        type: DataValidationErrors.MUTATING_EXISTING_DATA,
-      };
-
-      const sampleTypeMutatedErr: SubmissionValidationError = {
-        fieldName: FieldsEnum.sample_type,
-        index: 1,
-        info: {
-          donorSubmitterId: 'AB3',
-          specimenSubmitterId: 'SPY',
-          sampleSubmitterId: 'AM1',
-          value: 'ST11',
-        },
+        message:
+          'The value does not match the previously registered value of XYZZ. Please correct your file or contact DCC to update the registered data.',
         type: DataValidationErrors.MUTATING_EXISTING_DATA,
       };
 
       // assertions
-      chai.expect(result.errors.length).to.eq(3);
-      chai.expect(result.errors[0]).to.deep.eq(specimenTypeMutatedErr);
-      chai.expect(result.errors[1]).to.deep.eq(specimenBelongsToOtherDonor);
-      chai.expect(result.errors[2]).to.deep.eq(sampleTypeMutatedErr);
+      chai.expect(result.errors.length).to.eq(2);
+      chai.expect(result.errors[0]).to.deep.include(specimenTypeMutatedErr);
+      chai.expect(result.errors[1]).to.deep.include(specimenBelongsToOtherDonor);
     });
 
     it('should detect sample belongs to other specimen, same donor', async () => {
-      donorDaoCountByStub
-        .onFirstCall()
-        .returns(Promise.resolve(0))
-        .onSecondCall()
-        .returns(Promise.resolve(1));
+      donorDaoFindBySpecimenSubmitterIdAndProgramIdStub.returns(
+        Promise.resolve<Donor>(stubs.validation.existingDonor02()),
+      );
+      donorDaoFindBySampleSubmitterIdAndProgramIdStub.returns(
+        Promise.resolve<Donor>(stubs.validation.existingDonor02()),
+      );
       const existingDonorMock: Donor = stubs.validation.existingDonor01();
       // test call
       const result = await dv.validateRegistrationData(
@@ -450,11 +452,12 @@ describe('data-validator', () => {
     });
 
     it('should detect sample belongs to other specimen, different donor', async () => {
-      donorDaoCountByStub
-        .onFirstCall()
-        .returns(Promise.resolve(0))
-        .onSecondCall()
-        .returns(Promise.resolve(1));
+      donorDaoFindBySpecimenSubmitterIdAndProgramIdStub.returns(
+        Promise.resolve<Donor>(stubs.validation.existingDonor02()),
+      );
+      donorDaoFindBySampleSubmitterIdAndProgramIdStub.returns(
+        Promise.resolve<Donor>(stubs.validation.existingDonor02()),
+      );
       // test call
       const result = await dv.validateRegistrationData(
         'PEME-CA',
@@ -474,8 +477,8 @@ describe('data-validator', () => {
       );
 
       // assertions
-      chai.expect(result.errors.length).to.eq(1);
-      chai.expect(result.errors[0]).to.deep.eq(sampleBelongsToOtherSpecimenAB2);
+      chai.expect(result.errors.length).to.eq(2);
+      chai.expect(result.errors).to.deep.include(sampleBelongsToOtherSpecimenAB2);
     });
 
     // different donor different specimen same sample id
@@ -521,6 +524,8 @@ describe('data-validator', () => {
           value: 'AM1',
         },
         type: DataValidationErrors.NEW_SAMPLE_ID_CONFLICT,
+        message:
+          'You are trying to register the same sample with multiple donors or specimens. Samples can only be registered to a single donor and specimen.',
       };
 
       const row1Err = {
@@ -533,6 +538,8 @@ describe('data-validator', () => {
           specimenSubmitterId: 'SP1',
           value: 'AM1',
         },
+        message:
+          'You are trying to register the same sample with multiple donors or specimens. Samples can only be registered to a single donor and specimen.',
         type: DataValidationErrors.NEW_SAMPLE_ID_CONFLICT,
       };
 
@@ -594,6 +601,8 @@ describe('data-validator', () => {
           specimenSubmitterId: 'SP1',
           value: 'SP1',
         },
+        message:
+          'You are trying to register the same sample to multiple donors. Specimens can only be registered to a single donor.',
         type: DataValidationErrors.NEW_SPECIMEN_ID_CONFLICT,
       };
 
@@ -607,6 +616,8 @@ describe('data-validator', () => {
           specimenSubmitterId: 'SP1',
           value: 'SP1',
         },
+        message:
+          'You are trying to register the same sample to multiple donors. Specimens can only be registered to a single donor.',
         type: DataValidationErrors.NEW_SPECIMEN_ID_CONFLICT,
       };
 
@@ -668,6 +679,7 @@ describe('data-validator', () => {
           value: 'XYX',
           conflictingRows: [2],
         },
+        message: 'You are trying to register the same specimen with different values.',
         type: DataValidationErrors.NEW_SPECIMEN_ATTR_CONFLICT,
       };
 
@@ -681,6 +693,7 @@ describe('data-validator', () => {
           value: 'XYz',
           conflictingRows: [0],
         },
+        message: 'You are trying to register the same specimen with different values.',
         type: DataValidationErrors.NEW_SPECIMEN_ATTR_CONFLICT,
       };
 
@@ -742,6 +755,7 @@ describe('data-validator', () => {
           value: 'ST-2',
           conflictingRows: [2],
         },
+        message: 'You are trying to register the same sample with different sample types.',
         type: DataValidationErrors.NEW_SAMPLE_ATTR_CONFLICT,
       };
 
@@ -755,6 +769,7 @@ describe('data-validator', () => {
           value: 'ST2',
           conflictingRows: [0],
         },
+        message: 'You are trying to register the same sample with different sample types.',
         type: DataValidationErrors.NEW_SAMPLE_ATTR_CONFLICT,
       };
 
@@ -815,6 +830,7 @@ describe('data-validator', () => {
           value: 'Male',
           conflictingRows: [2],
         },
+        message: 'You are trying to register the same donor twice with different genders.',
         type: DataValidationErrors.NEW_DONOR_CONFLICT,
       };
 
@@ -828,6 +844,7 @@ describe('data-validator', () => {
           value: 'Female',
           conflictingRows: [0],
         },
+        message: 'You are trying to register the same donor twice with different genders.',
         type: DataValidationErrors.NEW_DONOR_CONFLICT,
       };
 
@@ -888,6 +905,8 @@ describe('data-validator', () => {
           value: 'AM1',
           conflictingRows: [2],
         },
+        message:
+          'You are trying to register the same sample with multiple donors or specimens. Samples can only be registered to a single donor and specimen.',
         type: DataValidationErrors.NEW_SAMPLE_ID_CONFLICT,
       };
 
@@ -901,6 +920,8 @@ describe('data-validator', () => {
           value: 'AM1',
           conflictingRows: [0],
         },
+        message:
+          'You are trying to register the same sample with multiple donors or specimens. Samples can only be registered to a single donor and specimen.',
         type: DataValidationErrors.NEW_SAMPLE_ID_CONFLICT,
       };
 
@@ -961,6 +982,7 @@ describe('data-validator', () => {
           value: 'ST-2',
           conflictingRows: [2],
         },
+        message: 'You are trying to register the same sample with different sample types.',
         type: DataValidationErrors.NEW_SAMPLE_ATTR_CONFLICT,
       };
 
@@ -974,6 +996,7 @@ describe('data-validator', () => {
           value: 'ST2',
           conflictingRows: [0],
         },
+        message: 'You are trying to register the same sample with different sample types.',
         type: DataValidationErrors.NEW_SAMPLE_ATTR_CONFLICT,
       };
 
@@ -1009,6 +1032,7 @@ describe('data-validator', () => {
       );
       const specimenIdErr: SubmissionValidationError = {
         fieldName: FieldsEnum.submitter_specimen_id,
+        message: `SP2 has not yet been registered. Please register here before submitting clinical data for this identifier.`,
         type: DataValidationErrors.ID_NOT_REGISTERED,
         index: 0,
         info: {
@@ -1018,6 +1042,8 @@ describe('data-validator', () => {
       };
       const donorIdErr: SubmissionValidationError = {
         fieldName: FieldsEnum.submitter_donor_id,
+        message:
+          'AB2 has not yet been registered. Please register here before submitting clinical data for this identifier.',
         type: DataValidationErrors.ID_NOT_REGISTERED,
         index: 1,
         info: {
@@ -1068,31 +1094,31 @@ describe('data-validator', () => {
       );
       const specimenIntervalErr: SubmissionValidationError = {
         fieldName: ClinicalInfoFieldsEnum.acquisition_interval,
+        message: 'survival_time cannot be less than Specimen acquisition_interval.',
         type: DataValidationErrors.CONFLICTING_TIME_INTERVAL,
         index: 1,
         info: {
-          msg: `${ClinicalInfoFieldsEnum.acquisition_interval} can't be greater than ${ClinicalInfoFieldsEnum.survival_time}`,
           donorSubmitterId: 'AB2',
           value: '5020',
         },
       };
       const specimenIntervalErr2: SubmissionValidationError = {
         fieldName: ClinicalInfoFieldsEnum.acquisition_interval,
+        message: 'survival_time cannot be less than Specimen acquisition_interval.',
         type: DataValidationErrors.CONFLICTING_TIME_INTERVAL,
         index: 2,
         info: {
-          msg: `${ClinicalInfoFieldsEnum.acquisition_interval} can't be greater than ${ClinicalInfoFieldsEnum.survival_time}`,
           donorSubmitterId: 'AB3',
           value: '2000',
         },
       };
       const donorSurvivalTimeErr: SubmissionValidationError = {
         fieldName: ClinicalInfoFieldsEnum.survival_time,
+        message: 'survival_time cannot be less than Specimen acquisition_interval.',
         type: DataValidationErrors.CONFLICTING_TIME_INTERVAL,
         index: 1,
         info: {
           conflictingSpecimenSubmitterIds: ['SP12'],
-          msg: `${ClinicalInfoFieldsEnum.survival_time} can't be less than a specimen's acquistion time`,
           donorSubmitterId: 'AB3',
           value: '522',
         },

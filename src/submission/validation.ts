@@ -11,12 +11,13 @@ import {
   ModificationType,
   SubmissionValidationUpdate,
   ClinicalTypeValidateResult,
+  ClinicalEntityType,
 } from './submission-entities';
 import { donorDao, DONOR_FIELDS } from '../clinical/donor-repo';
 import { DeepReadonly } from 'deep-freeze';
 import { DataRecord } from '../lectern-client/schema-entities';
-import { FileType } from './submission-api';
 import { submissionValidator } from './validation-clinical/index';
+import validationErrorMessage from './submission-error-messages';
 
 export const validateRegistrationData = async (
   expectedProgram: string,
@@ -118,7 +119,7 @@ export const validateSubmissionData = async (
 };
 
 export const usingInvalidProgramId = (
-  type: FileType,
+  type: ClinicalEntityType,
   newDonorIndex: number,
   record: DataRecord,
   expectedProgram: string,
@@ -132,6 +133,7 @@ export const usingInvalidProgramId = (
         fieldName: FieldsEnum.program_id,
         index: newDonorIndex,
         info: getInfoObject(type, record, expectedProgram),
+        message: validationErrorMessage(DataValidationErrors.INVALID_PROGRAM_ID),
       });
     }
     return errors;
@@ -139,12 +141,12 @@ export const usingInvalidProgramId = (
   return [];
 };
 const getInfoObject = (
-  type: FileType,
+  type: ClinicalEntityType,
   record: DeepReadonly<DataRecord>,
   expectedProgram: string,
 ) => {
   switch (type) {
-    case FileType.REGISTRATION: {
+    case ClinicalEntityType.REGISTRATION: {
       return {
         value: record[FieldsEnum.program_id],
         sampleSubmitterId: record[FieldsEnum.submitter_sample_id],
@@ -448,19 +450,19 @@ const specimenBelongsToOtherDonor = async (
   programId: string,
 ) => {
   const errors: SubmissionValidationError[] = [];
-  const count = await donorDao.countBy({
-    [DONOR_FIELDS.PROGRAM_ID]: { $eq: programId },
-    [DONOR_FIELDS.SUBMITTER_ID]: { $ne: newDonor.donorSubmitterId },
-    [DONOR_FIELDS.SPECIMEN_SUBMITTER_ID]: { $eq: newDonor.specimenSubmitterId },
+  const existingDonor = await donorDao.findBySpecimenSubmitterIdAndProgramId({
+    programId,
+    submitterId: newDonor.specimenSubmitterId,
   });
-  if (count > 0) {
+  if (existingDonor !== undefined && existingDonor.submitterId !== newDonor.donorSubmitterId) {
     errors.push(
       buildError(
         newDonor,
         DataValidationErrors.SPECIMEN_BELONGS_TO_OTHER_DONOR,
         FieldsEnum.submitter_specimen_id,
         index,
-        {},
+        // Value check is to deal with undefined case, which should never occur due to
+        { otherDonorSubmitterId: existingDonor ? existingDonor.submitterId : '' },
       ),
     );
   }
@@ -473,22 +475,25 @@ const sampleBelongsToAnotherSpecimen = async (
   programId: string,
 ) => {
   const errors: SubmissionValidationError[] = [];
-  const count = await donorDao.countBy({
-    [DONOR_FIELDS.PROGRAM_ID]: { $eq: programId },
-    [DONOR_FIELDS.SPECIMEN_SUBMITTER_ID]: { $ne: newDonor.specimenSubmitterId },
-    [DONOR_FIELDS.SPECIMEN_SAMPLE_SUBMITTER_ID]: { $eq: newDonor.sampleSubmitterId },
+  const existingDonor = await donorDao.findBySampleSubmitterIdAndProgramId({
+    programId,
+    submitterId: newDonor.sampleSubmitterId,
   });
-
-  if (count > 0) {
-    errors.push(
-      buildError(
-        newDonor,
-        DataValidationErrors.SAMPLE_BELONGS_TO_OTHER_SPECIMEN,
-        FieldsEnum.submitter_sample_id,
-        index,
-        {},
-      ),
+  if (existingDonor !== undefined) {
+    const existingSpecimen = existingDonor.specimens.find(specimen =>
+      specimen.samples.some(sample => sample.submitterId === newDonor.sampleSubmitterId),
     );
+    if (existingSpecimen && existingSpecimen.submitterId !== newDonor.specimenSubmitterId) {
+      errors.push(
+        buildError(
+          newDonor,
+          DataValidationErrors.SAMPLE_BELONGS_TO_OTHER_SPECIMEN,
+          FieldsEnum.submitter_sample_id,
+          index,
+          { otherSpecimenSubmitterId: existingSpecimen.submitterId },
+        ),
+      );
+    }
   }
 
   return errors;
@@ -501,7 +506,7 @@ const buildError = (
   index: number,
   info: object = {},
 ): SubmissionValidationError => {
-  return {
+  const errorData = {
     type,
     fieldName,
     index,
@@ -512,6 +517,11 @@ const buildError = (
       sampleSubmitterId: newDonor.sampleSubmitterId,
       value: newDonor[RegistrationToCreateRegistrationFieldsMap[fieldName]],
     },
+  };
+
+  return {
+    message: validationErrorMessage(type, errorData),
+    ...errorData,
   };
 };
 
@@ -528,7 +538,7 @@ function checkSampleMutations(
         DataValidationErrors.MUTATING_EXISTING_DATA,
         FieldsEnum.sample_type,
         index,
-        {},
+        { originalValue: existingSample.sampleType },
       ),
     );
   }
@@ -542,13 +552,9 @@ function checkDonorMutations(
 ) {
   if (newDonor.gender != existingDonor.gender) {
     errors.push(
-      buildError(
-        newDonor,
-        DataValidationErrors.MUTATING_EXISTING_DATA,
-        FieldsEnum.gender,
-        index,
-        {},
-      ),
+      buildError(newDonor, DataValidationErrors.MUTATING_EXISTING_DATA, FieldsEnum.gender, index, {
+        originalValue: existingDonor.gender,
+      }),
     );
   }
 }
@@ -580,7 +586,7 @@ function checkSpecimenMutations(
         DataValidationErrors.MUTATING_EXISTING_DATA,
         FieldsEnum.specimen_tissue_source,
         index,
-        {},
+        { originalValue: existingSpecimen.specimenTissueSource },
       ),
     );
   }
@@ -591,7 +597,7 @@ function checkSpecimenMutations(
         DataValidationErrors.MUTATING_EXISTING_DATA,
         FieldsEnum.tumour_normal_designation,
         index,
-        {},
+        { originalValue: existingSpecimen.tumourNormalDesignation },
       ),
     );
   }
