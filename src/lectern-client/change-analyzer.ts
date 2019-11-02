@@ -103,8 +103,8 @@ const categorizeRestrictionChanges = (
     if (codeListChange.type === 'updated') {
       analysis.restrictionsChanges.codeLists.updated.push({
         field: field,
-        addition: codeListChange.data.added,
-        deletion: codeListChange.data.deleted,
+        addition: codeListChange.data.added || [],
+        deletion: codeListChange.data.deleted || [],
       });
     }
 

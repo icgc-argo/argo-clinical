@@ -1,7 +1,11 @@
 import { donorDao } from './donor-repo';
 import { Errors } from '../utils';
-import { Sample } from './clinical-entities';
+import { Sample, Donor } from './clinical-entities';
+import { DeepReadonly } from 'deep-freeze';
 
+export async function updateDonorSchemaMetadata(donor: DeepReadonly<Donor>) {
+  return await donorDao.update(donor);
+}
 export async function getDonors(programId: string) {
   return await donorDao.findByProgramId(programId);
 }

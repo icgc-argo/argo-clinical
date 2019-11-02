@@ -10,7 +10,7 @@ export interface Donor {
   followUps?: Array<object>;
   treatments?: Array<object>;
   chemotherapy?: Array<Object>;
-  HormoneTherapy?: Array<Object>;
+  hormoneTherapy?: Array<Object>;
 }
 
 export interface Specimen {
