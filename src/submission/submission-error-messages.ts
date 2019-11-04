@@ -26,6 +26,8 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
     'survival_time cannot be less than Specimen acquisition_interval.',
   NOT_ENOUGH_INFO_TO_VALIDATE: errorData =>
     `${errorData.info.field1} requires ${errorData.info.field2} in order to complete validation.  Please upload data for both fields in this clinical data submission.`,
+  DUPLICATE_REGISTRATION_RECORD: () =>
+    `You are trying to register the same sample in multiple rows. Samples can only be registered once.`,
 };
 
 // Returns the formatted message for the given error key, taking any required properties from the info object

@@ -91,11 +91,6 @@ export namespace operations {
       L.info(`found ${schemaResult.validationErrors.length} schema errors in registration attempt`);
     }
 
-    // check for duplicate records
-    unifiedSchemaErrors = unifiedSchemaErrors.concat(
-      checkDuplicateRecords(ClinicalEntityType.REGISTRATION, command.records),
-    );
-
     // check the program id if it matches the authorized one
     // This check is used to validate the program Id along with the schema validations
     // to save extra round trips

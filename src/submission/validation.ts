@@ -19,6 +19,7 @@ import { DeepReadonly } from 'deep-freeze';
 import { DataRecord } from '../lectern-client/schema-entities';
 import { submissionValidator } from './validation-clinical/index';
 import validationErrorMessage from './submission-error-messages';
+import _ from 'lodash';
 
 export const validateRegistrationData = async (
   expectedProgram: string,
@@ -69,6 +70,9 @@ export const validateRegistrationData = async (
       errors = errors.concat(conflictingNewSample(index, registrationRecord, newRecords));
     }
   }
+
+  // catch any rows that are exactly the same
+  errors = errors.concat(checkDuplicateRegistrationRecords(newRecords));
 
   return {
     errors,
@@ -140,6 +144,42 @@ export const usingInvalidProgramId = (
     return errors;
   }
   return [];
+};
+
+const checkDuplicateRegistrationRecords = (
+  newRecords: DeepReadonly<CreateRegistrationRecord[]>,
+): SubmissionValidationError[] => {
+  // clone registration records and add the originalIndex(makes it easier to find it later)
+  const mutableRecords = newRecords.map((record, index) => {
+    return { ...record, originalIndex: index };
+  });
+  let errors: SubmissionValidationError[] = [];
+  newRecords.forEach(record => {
+    // extract duplicate records
+    const duplicateRecords = _.remove(mutableRecords, (mutableRecord, index) =>
+      _.isEqual(mutableRecord, { ...record, originalIndex: index }),
+    );
+    // found no duplicate records
+    if (duplicateRecords.length == 1) {
+      return;
+    }
+    const duplicateRecordIndecies = duplicateRecords.map(r => r.originalIndex);
+    const duplicateRecordsErrors = duplicateRecords.map(duplicateRecord => {
+      return buildError(
+        duplicateRecord,
+        DataValidationErrors.DUPLICATE_REGISTRATION_RECORD,
+        FieldsEnum.submitter_sample_id,
+        duplicateRecord.originalIndex,
+        {
+          conflictingRows: duplicateRecordIndecies.filter(
+            index => index !== duplicateRecord.originalIndex,
+          ),
+        },
+      );
+    });
+    errors = errors.concat(duplicateRecordsErrors);
+  });
+  return errors;
 };
 
 export const checkDuplicateRecords = (

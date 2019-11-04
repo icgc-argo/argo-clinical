@@ -92,6 +92,7 @@ export enum DataValidationErrors {
   CONFLICTING_TIME_INTERVAL = 'CONFLICTING_TIME_INTERVAL',
   NOT_ENOUGH_INFO_TO_VALIDATE = 'NOT_ENOUGH_INFO_TO_VALIDATE',
   FOUND_IDENTICAL_IDS = 'FOUND_IDENTICAL_IDS',
+  DUPLICATE_REGISTRATION_RECORD = 'DUPLICATE_REGISTRATION_RECORD',
 }
 
 export type RegistrationStat = Array<{
@@ -276,8 +277,7 @@ export const BatchNameRegex: Record<ClinicalEntityType, RegExp[]> = {
 };
 
 // assumption: one field uniquely identifies a clinical type record in a batch of records
-export const ClinicalUniqueIndentifier: Record<ClinicalEntityType, FieldsEnum> = {
-  [ClinicalEntityType.REGISTRATION]: FieldsEnum.submitter_sample_id,
+export const ClinicalUniqueIndentifier = {
   [ClinicalEntityType.DONOR]: FieldsEnum.submitter_donor_id,
   [ClinicalEntityType.SPECIMEN]: FieldsEnum.submitter_specimen_id,
   [ClinicalEntityType.PRIMARY_DIAGNOSES]: FieldsEnum.submitter_donor_id,
