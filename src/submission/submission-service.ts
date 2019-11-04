@@ -45,8 +45,7 @@ import { Errors, F, isStringMatchRegex } from '../utils';
 import { DeepReadonly } from 'deep-freeze';
 import { submissionRepository } from './submission-repo';
 import { v1 as uuid } from 'uuid';
-import { validateSubmissionData } from './validation';
-import validationErrorMessage from './submission-error-messages';
+import { validateSubmissionData, checkDuplicateRecords } from './validation';
 const L = loggerFor(__filename);
 
 const emptyStats = {
@@ -91,6 +90,11 @@ export namespace operations {
       );
       L.info(`found ${schemaResult.validationErrors.length} schema errors in registration attempt`);
     }
+
+    // check for duplicate records
+    unifiedSchemaErrors = unifiedSchemaErrors.concat(
+      checkDuplicateRecords(ClinicalEntityType.REGISTRATION, command.records),
+    );
 
     // check the program id if it matches the authorized one
     // This check is used to validate the program Id along with the schema validations
@@ -629,7 +633,12 @@ export namespace operations {
   }
 
   const checkClinicalEntity = async (command: ClinicalSubmissionCommand): Promise<any> => {
-    let errors: SubmissionValidationError[] = [];
+    // first check for duplicates
+    let errors: SubmissionValidationError[] = checkDuplicateRecords(
+      command.clinicalType as ClinicalEntityType,
+      command.records,
+    );
+
     const schemaResult = schemaManager.instance().process(command.clinicalType, command.records);
     if (schemaResult.validationErrors.length > 0) {
       const unifiedSchemaErrors = unifySchemaErrors(

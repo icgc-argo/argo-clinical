@@ -191,6 +191,28 @@ const ABCD_REGISTRATION_DOC: ActiveRegistration = {
 };
 const expectedDonorErrors = [
   {
+    index: 1,
+    type: 'FOUND_IDENTICAL_IDS',
+    info: {
+      value: 'ICGC_0001',
+      donorSubmitterId: 'ICGC_0001',
+      duplicateWith: [2],
+    },
+    message: 'FOUND_IDENTICAL_IDS',
+    fieldName: FieldsEnum.submitter_donor_id,
+  },
+  {
+    index: 2,
+    type: 'FOUND_IDENTICAL_IDS',
+    info: {
+      value: 'ICGC_0001',
+      donorSubmitterId: 'ICGC_0001',
+      duplicateWith: [1],
+    },
+    message: 'FOUND_IDENTICAL_IDS',
+    fieldName: FieldsEnum.submitter_donor_id,
+  },
+  {
     index: 0,
     type: 'INVALID_FIELD_VALUE_TYPE',
     info: {

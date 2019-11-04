@@ -12,6 +12,7 @@ import {
   SubmissionValidationUpdate,
   ClinicalTypeValidateResult,
   ClinicalEntityType,
+  ClinicalUniqueIndentifier,
 } from './submission-entities';
 import { donorDao, DONOR_FIELDS } from '../clinical/donor-repo';
 import { DeepReadonly } from 'deep-freeze';
@@ -140,6 +141,47 @@ export const usingInvalidProgramId = (
   }
   return [];
 };
+
+export const checkDuplicateRecords = (
+  clinicalType: ClinicalEntityType,
+  newRecords: DeepReadonly<DataRecord[]>,
+): SubmissionValidationError[] => {
+  let errors: SubmissionValidationError[] = [];
+  const identifierToIndexMap: { [k: string]: number[] } = {};
+  const uniqueIdName = ClinicalUniqueIndentifier[clinicalType];
+
+  newRecords.forEach((record, index) => {
+    const uniqueIdentiferValue = record[uniqueIdName];
+    if (!identifierToIndexMap[uniqueIdentiferValue]) {
+      identifierToIndexMap[uniqueIdentiferValue] = [];
+    }
+    identifierToIndexMap[uniqueIdentiferValue].push(index);
+  });
+  Object.entries(identifierToIndexMap).forEach(([identifierValue, indecies]) => {
+    if (indecies.length === 1) {
+      return;
+    }
+    // found multiple indecies mapped to an identifierValue
+    const indexSpecificErrors = indecies.map(
+      (originalIndex): SubmissionValidationError => {
+        return {
+          index: originalIndex,
+          type: DataValidationErrors.FOUND_IDENTICAL_IDS,
+          fieldName: uniqueIdName,
+          info: {
+            value: identifierValue,
+            duplicateWith: indecies.filter(i => i !== originalIndex),
+            donorSubmitterId: newRecords[originalIndex][FieldsEnum.submitter_donor_id],
+          },
+          message: validationErrorMessage(DataValidationErrors.FOUND_IDENTICAL_IDS, uniqueIdName),
+        };
+      },
+    );
+    errors = errors.concat(indexSpecificErrors);
+  });
+  return errors;
+};
+
 const getInfoObject = (
   type: ClinicalEntityType,
   record: DeepReadonly<DataRecord>,
