@@ -186,6 +186,9 @@ export const checkDuplicateRecords = (
   clinicalType: ClinicalEntityType,
   newRecords: DeepReadonly<DataRecord[]>,
 ): SubmissionValidationError[] => {
+  if (clinicalType === ClinicalEntityType.REGISTRATION) {
+    throw new Error(`Cannot check sample_registration duplicate records here.`);
+  }
   let errors: SubmissionValidationError[] = [];
   const identifierToIndexMap: { [k: string]: number[] } = {};
   const uniqueIdName = ClinicalUniqueIndentifier[clinicalType];

@@ -198,7 +198,8 @@ const expectedDonorErrors = [
       donorSubmitterId: 'ICGC_0001',
       duplicateWith: [2],
     },
-    message: 'FOUND_IDENTICAL_IDS',
+    message:
+      'You are trying to submit the same [submitter_donor_id] in multiple rows. [submitter_donor_id] can only be submitted once per file.',
     fieldName: FieldsEnum.submitter_donor_id,
   },
   {
@@ -209,7 +210,8 @@ const expectedDonorErrors = [
       donorSubmitterId: 'ICGC_0001',
       duplicateWith: [1],
     },
-    message: 'FOUND_IDENTICAL_IDS',
+    message:
+      'You are trying to submit the same [submitter_donor_id] in multiple rows. [submitter_donor_id] can only be submitted once per file.',
     fieldName: FieldsEnum.submitter_donor_id,
   },
   {
