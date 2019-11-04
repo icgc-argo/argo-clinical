@@ -18,4 +18,7 @@ router.get('/template/:schemaName', wrapAsync(schemaApi.getTemplate));
 // temporary api
 router.post('/hack/replace', wrapAsync(schemaApi.replace));
 
+// temporary api
+router.post('/hack/probe', wrapAsync(schemaApi.probe));
+
 export default router;

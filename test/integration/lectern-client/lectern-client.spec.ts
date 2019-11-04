@@ -151,7 +151,7 @@ describe('Lectern Client', () => {
       }
       chai.expect(resultV1).to.not.be.undefined;
       try {
-        resultV2 = await manager.instance().updateVersion(schemaName, '2.0');
+        resultV2 = await manager.instance().loadNewVersion(schemaName, '2.0');
       } catch (er) {
         return er;
       }

@@ -7,6 +7,7 @@ const L = loggerFor(__filename);
 export interface DictionaryMigrationRepository {
   create(migration: DictionaryMigration): Promise<DictionaryMigration | undefined>;
   getByState(state: MigrationState): Promise<DictionaryMigration | undefined>;
+  update(migration: DictionaryMigration): Promise<void>;
 }
 
 export const migrationRepo: DictionaryMigrationRepository = {
@@ -22,6 +23,11 @@ export const migrationRepo: DictionaryMigrationRepository = {
       return undefined;
     }
     return F(MongooseUtils.toPojo(migration));
+  },
+  update: async (migration: DictionaryMigration): Promise<void> => {
+    const doc = new DictionaryMigrationModel(migration);
+    await doc.save();
+    return;
   },
 };
 
@@ -42,6 +48,8 @@ const DictionaryMigrationSchema = new mongoose.Schema(
       required: true,
     },
     analysis: {},
+    dryRun: { type: Boolean, required: false },
+    stats: {},
     createdBy: { type: String, required: true },
   },
   { timestamps: true, minimize: false },

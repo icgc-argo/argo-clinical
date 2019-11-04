@@ -97,9 +97,9 @@ const categorizeRestrictionChanges = (
   field: string,
   restrictions: { [field: string]: FieldChanges },
 ) => {
-  if (restrictions.codeLists) {
+  if (restrictions.codeList) {
     console.log('codeLists change found');
-    const codeListChange = restrictions.codeLists as Change;
+    const codeListChange = restrictions.codeList as Change;
     if (codeListChange.type === 'updated') {
       analysis.restrictionsChanges.codeLists.updated.push({
         field: field,

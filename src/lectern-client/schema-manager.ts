@@ -65,17 +65,17 @@ class SchemaManager {
     return service.process(this.getCurrent(), definition, records);
   };
 
-  analyzeChanges = async (newVersion: string) => {
+  analyzeChanges = async (oldVersion: string, newVersion: string) => {
     const result = await changeAnalyzer.analyzeChanges(
       this.schemaServiceUrl,
       this.currentSchema.name,
-      this.currentSchema.version,
+      oldVersion,
       newVersion,
     );
     return result;
   };
 
-  updateVersion = async (name: string, newVersion: string): Promise<SchemasDictionary> => {
+  loadNewVersion = async (name: string, newVersion: string): Promise<SchemasDictionary> => {
     const newSchema = await schemaServiceAdapter.fetchSchema(
       this.schemaServiceUrl,
       name,
@@ -112,6 +112,7 @@ class SchemaManager {
         version: initialVersion,
       };
     } else {
+      L.info(`schema found in db`);
       this.currentSchema = storedSchema;
     }
 
@@ -130,6 +131,7 @@ class SchemaManager {
       if (!saved) {
         throw new Error("couldn't save/update new schema");
       }
+      L.info(`schema saved in db`);
       return saved;
     }
     return this.currentSchema;

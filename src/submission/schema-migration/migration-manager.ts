@@ -7,7 +7,24 @@ import * as clinicalService from '../../clinical/clinical-service';
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 
-const submitMigration = async (fromVersion: string, toVersion: string) => {
+// TODO: this should kick any active submission/registration
+export const updateSchemaVersion = async (toVersion: string) => {
+  // submit the migration request
+  await submitMigration(manager.instance().getCurrent().version, toVersion);
+
+  // update the existing schema
+  await manager.instance().loadNewVersion(manager.instance().getCurrent().name, toVersion);
+};
+
+export const probeSchemaUpgrade = async (from: string, to: string) => {
+  return await manager.instance().analyzeChanges(from, to);
+};
+
+export const dryRunSchemaUpgrade = async (from: string, to: string) => {
+  return await submitMigration(from, to, true);
+};
+
+const submitMigration = async (fromVersion: string, toVersion: string, dryRun?: boolean) => {
   // can't submit if a migration already open
   const openMigration = migrationRepo.getByState('OPEN');
   if (openMigration) {
@@ -20,19 +37,35 @@ const submitMigration = async (fromVersion: string, toVersion: string) => {
     stage: 'SUBMITTED',
     state: 'OPEN',
     analysis: undefined,
+    dryRun: dryRun || false,
+    stats: {
+      invalidDocumentsCount: 0,
+      totalProcessed: 0,
+      validDocumentsCount: 0,
+    },
   });
 
   if (!savedMigration) {
     throw new Error('failed to submit migration');
   }
+
   // start but don't wait on the migration process.
   startMigration(savedMigration);
   return savedMigration;
 };
 
 const startMigration = async (migration: DictionaryMigration) => {
+  if (!migration._id) {
+    throw new Error('Migration should have an id');
+  }
+  const migrationId = migration._id;
+  const newSchemaVersion = migration.toVersion;
+  const dryRun = migration.dryRun;
+
   // analyze changes
-  const changeAnalysis = await manager.instance().analyzeChanges(migration.toVersion);
+  const changeAnalysis = await manager
+    .instance()
+    .analyzeChanges(migration.fromVersion, migration.toVersion);
 
   // check for breaking changes
   const invalidatingFields: any = [];
@@ -58,9 +91,13 @@ const startMigration = async (migration: DictionaryMigration) => {
   });
 
   // start iterating over paged donor documents records (that weren't checked before)
+  // TODO enhance to report progress of migration to db
+  // TODO report when done to slack
   let migrationDone = false;
   while (!migrationDone) {
-    const donors = await getNextUncheckedDonorDocumentsBatch(20);
+    let invalidCount = 0;
+    let validCount = 0;
+    const donors = await getNextUncheckedDonorDocumentsBatch(migrationId, 20);
 
     // no more unchecked donors ??
     if (donors.length == 0) {
@@ -70,17 +107,42 @@ const startMigration = async (migration: DictionaryMigration) => {
     }
 
     // check invalidation criteria against each one
-    donors.forEach(async donor => {
+    for (const donor of donors) {
       if (shouldInvalidate(donor, invalidatingFields)) {
         // if invalid mark as invalid and update document metadata
-        await markDonorAsInvalid(donor);
+        if (!dryRun) {
+          await markDonorAsInvalid(donor, migrationId);
+        } else {
+          await updateMigrationIdOnly(donor, migrationId);
+        }
+        invalidCount += 1;
+        continue;
       }
-    });
+
+      if (!dryRun) {
+        await markDonorAsValid(donor, migrationId, newSchemaVersion);
+      } else {
+        await updateMigrationIdOnly(donor, migrationId);
+      }
+
+      validCount += 1;
+    }
+
+    migration.stats.invalidDocumentsCount = invalidCount;
+    migration.stats.validDocumentsCount = validCount;
+    migration.stats.totalProcessed += donors.length;
+    migrationRepo.update(migration);
   }
+
+  migration.state = 'CLOSED';
+  migration.stage = 'COMPLETED';
+
+  await migrationRepo.update(migration);
+  return migration;
 };
 
-const getNextUncheckedDonorDocumentsBatch = async (batchSize: number) => {
-  return await clinicalService.getDonors('');
+const getNextUncheckedDonorDocumentsBatch = async (migrationId: string, limit: number) => {
+  return await clinicalService.getDonorsByMigrationId(migrationId, limit);
 };
 
 // TODO: enhance to return invalidation reasons
@@ -160,6 +222,23 @@ const donorHasInvalidValue = (
   return invalidValues.indexOf((clinicalEntity as { [field: string]: any })[fieldName]) !== -1;
 };
 
-const markDonorAsInvalid = async (donor: DeepReadonly<Donor>) => {
-  return await clinicalService.updateDonorSchemaMetadata(donor);
+const markDonorAsInvalid = async (donor: DeepReadonly<Donor>, migrationId: string) => {
+  return await clinicalService.updateDonorSchemaMetadata(donor, migrationId, false);
+};
+
+const markDonorAsValid = async (
+  donor: DeepReadonly<Donor>,
+  migrationId: string,
+  newSchemaVersion: string,
+) => {
+  return await clinicalService.updateDonorSchemaMetadata(
+    donor,
+    migrationId,
+    true,
+    newSchemaVersion,
+  );
+};
+
+const updateMigrationIdOnly = async (donor: DeepReadonly<Donor>, migrationId: string) => {
+  return await clinicalService.updateMigrationId(donor, migrationId);
 };

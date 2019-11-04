@@ -16,6 +16,7 @@ export enum DONOR_FIELDS {
   SPECIMEN_SUBMITTER_ID = 'specimens.submitterId',
   SPECIMEN_SAMPLE_SUBMITTER_ID = 'specimens.samples.submitterId',
   PROGRAM_ID = 'programId',
+  LAST_MIGRATION_ID = 'schemaMetadata.lastMigrationId',
 }
 
 export type FindByProgramAndSubmitterFilter = DeepReadonly<{
@@ -23,6 +24,7 @@ export type FindByProgramAndSubmitterFilter = DeepReadonly<{
   submitterId: string;
 }>;
 export interface DonorRepository {
+  findBy(criteria: any, limit: number): Promise<DeepReadonly<Donor[]>>;
   findByProgramId(programId: string): Promise<DeepReadonly<Donor[]>>;
   deleteByProgramId(programId: string): Promise<void>;
   findByProgramAndSubmitterId(
@@ -56,6 +58,19 @@ export const donorDao: DonorRepository = {
     }).exec();
   },
 
+  async findBy(criteria: any, limit: number) {
+    const result = await DonorModel.find(criteria)
+      .limit(limit)
+      .exec();
+    // convert the id to string to avoid runtime error on freezing
+    const mapped = result
+      .map((d: DonorDocument) => {
+        return MongooseUtils.toPojo(d);
+      })
+      .filter(notEmpty);
+    return F(mapped);
+  },
+
   async findByProgramId(programId: string): Promise<DeepReadonly<Donor[]>> {
     const result = await DonorModel.find(
       {
@@ -64,6 +79,7 @@ export const donorDao: DonorRepository = {
       undefined,
       { sort: { [DONOR_FIELDS.DONOR_ID]: 1 } },
     ).exec();
+
     // convert the id to string to avoid runtime error on freezing
     const mapped = result
       .map((d: DonorDocument) => {

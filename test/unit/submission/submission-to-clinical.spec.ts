@@ -12,6 +12,7 @@ const id2 = 'lafdksaf92149123';
 const reg1: ActiveRegistration = {
   _id: id1,
   creator: 'test',
+  schemaVersion: '1.0',
   programId: 'ABCD-EF',
   batchName: 'registration1.tsv',
   stats: {
@@ -54,6 +55,7 @@ const reg2: ActiveRegistration = {
   creator: 'test',
   programId: 'ABCD-EF',
   batchName: 'registration2.tsv',
+  schemaVersion: '1.0',
   stats: {
     alreadyRegistered: [],
     newDonorIds: [],
@@ -139,7 +141,7 @@ describe('submission-to-clinical', () => {
         followUps: [],
         treatments: [],
         chemotherapy: [],
-        HormoneTherapy: [],
+        hormoneTherapy: [],
       };
 
       registrationRepoFindByIdStub.withArgs(id1).returns(Promise.resolve(reg1));

@@ -11,6 +11,7 @@ export interface ActiveRegistration {
   readonly batchName: string;
   readonly stats: RegistrationStats;
   readonly records: Array<SubmittedRegistrationRecord>;
+  readonly schemaVersion: string;
 }
 
 export interface SubmittedRegistrationRecord {

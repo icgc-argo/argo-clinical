@@ -7,20 +7,27 @@ import { ControllerUtils } from '../utils';
 import { ClinicalEntityType } from './submission-entities';
 import AdmZip from 'adm-zip';
 import { HasFullWriteAccess } from '../auth-decorators';
-
+import * as migrationManager from './schema-migration/migration-manager';
 const L = loggerFor(__filename);
 
 class SchemaController {
   @HasFullWriteAccess()
   async update(req: Request, res: Response) {
     const version: string = req.body.version;
-    await manager.instance().updateVersion(manager.instance().getCurrent().name, version);
+    await migrationManager.updateSchemaVersion(version);
     setStatus('schema', { status: Status.OK });
     return res.status(200).send(manager.instance().getCurrent());
   }
 }
 
 export const schemaController = new SchemaController();
+
+export const probe = async (req: Request, res: Response) => {
+  const from = req.query.from;
+  const to = req.query.to;
+  const result = await manager.instance().analyzeChanges(from, to);
+  return res.status(200).send(result);
+};
 
 export const get = async (req: Request, res: Response) => {
   const schema = manager.instance().getCurrent();
@@ -53,9 +60,11 @@ export const getTemplate = async (req: Request, res: Response) => {
   const schema = schemasDictionary.schemas.find(schema => {
     return schema.name == schemaName;
   });
+
   if (!schema) {
     return ControllerUtils.notFound(res, "no schema named '" + schemaName + "' found");
   }
+
   const template = createTemplate(schema);
   return res
     .status(200)
