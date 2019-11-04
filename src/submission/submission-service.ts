@@ -746,13 +746,13 @@ export namespace operations {
 
       if (missingFields.length > 0)
         fieldNameErrors.push({
-          msg: `Missing requried headers: [${missingFields}]`,
+          msg: `Missing required headers: [${missingFields.join('], [')}]`,
           batchNames: [newClinicalEnity.batchName],
           code: SchemaValidationErrorTypes.MISSING_REQUIRED_FIELD,
         });
       if (unknownFields.length > 0)
         fieldNameErrors.push({
-          msg: `Found unknown headers: [${unknownFields}]`,
+          msg: `Found unknown headers: [${unknownFields.join('], [')}]`,
           batchNames: [newClinicalEnity.batchName],
           code: SchemaValidationErrorTypes.UNRECOGNIZED_FIELD,
         });
