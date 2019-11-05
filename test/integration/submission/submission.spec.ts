@@ -196,7 +196,7 @@ const expectedDonorErrors = [
     info: {
       value: 'ICGC_0001',
       donorSubmitterId: 'ICGC_0001',
-      duplicateWith: [2],
+      conflictingRows: [2],
     },
     message:
       'You are trying to submit the same [submitter_donor_id] in multiple rows. [submitter_donor_id] can only be submitted once per file.',
@@ -208,7 +208,7 @@ const expectedDonorErrors = [
     info: {
       value: 'ICGC_0001',
       donorSubmitterId: 'ICGC_0001',
-      duplicateWith: [1],
+      conflictingRows: [1],
     },
     message:
       'You are trying to submit the same [submitter_donor_id] in multiple rows. [submitter_donor_id] can only be submitted once per file.',

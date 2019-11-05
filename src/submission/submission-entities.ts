@@ -51,7 +51,7 @@ export enum FieldsEnum {
 export type SubmissionValidationError = {
   type: DataValidationErrors | SchemaValidationErrorTypes;
   fieldName: string;
-  info: object;
+  info: any;
   index: number;
   message: string;
 };
@@ -278,6 +278,7 @@ export const BatchNameRegex: Record<ClinicalEntityType, RegExp[]> = {
 
 // assumption: one field uniquely identifies a clinical type record in a batch of records
 export const ClinicalUniqueIndentifier = {
+  [ClinicalEntityType.REGISTRATION]: FieldsEnum.submitter_sample_id,
   [ClinicalEntityType.DONOR]: FieldsEnum.submitter_donor_id,
   [ClinicalEntityType.SPECIMEN]: FieldsEnum.submitter_specimen_id,
   [ClinicalEntityType.PRIMARY_DIAGNOSES]: FieldsEnum.submitter_donor_id,

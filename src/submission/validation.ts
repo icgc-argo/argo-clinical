@@ -20,6 +20,7 @@ import { DataRecord } from '../lectern-client/schema-entities';
 import { submissionValidator } from './validation-clinical/index';
 import validationErrorMessage from './submission-error-messages';
 import _ from 'lodash';
+import { buildSubmissionError } from './validation-clinical/utils';
 
 export const validateRegistrationData = async (
   expectedProgram: string,
@@ -72,7 +73,7 @@ export const validateRegistrationData = async (
   }
 
   // catch any rows that are exactly the same
-  errors = errors.concat(checkDuplicateRegistrationRecords(newRecords));
+  errors = errors.concat(checkUniqueRecords(ClinicalEntityType.REGISTRATION, newRecords, true));
 
   return {
     errors,
@@ -146,83 +147,51 @@ export const usingInvalidProgramId = (
   return [];
 };
 
-const checkDuplicateRegistrationRecords = (
-  newRecords: DeepReadonly<CreateRegistrationRecord[]>,
-): SubmissionValidationError[] => {
-  // clone registration records and add the originalIndex(makes it easier to find it later)
-  const mutableRecords = newRecords.map((record, index) => {
-    return { ...record, originalIndex: index };
-  });
-  let errors: SubmissionValidationError[] = [];
-  newRecords.forEach(record => {
-    // extract duplicate records
-    const duplicateRecords = _.remove(mutableRecords, (mutableRecord, index) =>
-      _.isEqual(mutableRecord, { ...record, originalIndex: index }),
-    );
-    // found no duplicate records
-    if (duplicateRecords.length == 1) {
-      return;
-    }
-    const duplicateRecordIndecies = duplicateRecords.map(r => r.originalIndex);
-    const duplicateRecordsErrors = duplicateRecords.map(duplicateRecord => {
-      return buildError(
-        duplicateRecord,
-        DataValidationErrors.DUPLICATE_REGISTRATION_RECORD,
-        FieldsEnum.submitter_sample_id,
-        duplicateRecord.originalIndex,
-        {
-          conflictingRows: duplicateRecordIndecies.filter(
-            index => index !== duplicateRecord.originalIndex,
-          ),
-        },
-      );
-    });
-    errors = errors.concat(duplicateRecordsErrors);
-  });
-  return errors;
-};
-
 export const checkUniqueRecords = (
   clinicalType: ClinicalEntityType,
-  newRecords: DeepReadonly<DataRecord[]>,
+  newRecords: DeepReadonly<DataRecord[] | CreateRegistrationRecord[]>,
+  useAllRecordValues?: boolean, // use all record properties so it behaves like duplicate check
 ): SubmissionValidationError[] => {
-  if (clinicalType === ClinicalEntityType.REGISTRATION) {
-    throw new Error(`Cannot check sample_registration duplicate records here.`);
-  }
-  let errors: SubmissionValidationError[] = [];
   const identifierToIndexMap: { [k: string]: number[] } = {};
+  const indexToErrorMap: { [index: number]: SubmissionValidationError } = {};
   const uniqueIdName = ClinicalUniqueIndentifier[clinicalType];
 
-  newRecords.forEach((record, index) => {
-    const uniqueIdentiferValue = record[uniqueIdName];
+  newRecords.forEach((record: any, index) => {
+    const uniqueIdentiferValue = useAllRecordValues ? JSON.stringify(record) : record[uniqueIdName];
+
     if (!identifierToIndexMap[uniqueIdentiferValue]) {
-      identifierToIndexMap[uniqueIdentiferValue] = [];
+      // only one index so not duplicate
+      identifierToIndexMap[uniqueIdentiferValue] = [index];
+    } else {
+      identifierToIndexMap[uniqueIdentiferValue].push(index);
+      const sameIdentifiedRecordIndecies = identifierToIndexMap[uniqueIdentiferValue];
+      sameIdentifiedRecordIndecies.forEach(recordIndex => {
+        const conflictingRows = sameIdentifiedRecordIndecies.filter(i => i !== recordIndex);
+        if (!indexToErrorMap[recordIndex]) {
+          // error object doesn't exist so add it
+          indexToErrorMap[recordIndex] =
+            clinicalType === ClinicalEntityType.REGISTRATION
+              ? buildError(
+                  record as CreateRegistrationRecord,
+                  DataValidationErrors.DUPLICATE_REGISTRATION_RECORD,
+                  uniqueIdName,
+                  recordIndex,
+                  { conflictingRows },
+                )
+              : buildSubmissionError(
+                  { ...record, index: recordIndex },
+                  DataValidationErrors.FOUND_IDENTICAL_IDS,
+                  uniqueIdName,
+                  { conflictingRows },
+                );
+        } else {
+          // error object already exists so just update the duplicateWith list
+          indexToErrorMap[recordIndex].info.conflictingRows.push(index);
+        }
+      });
     }
-    identifierToIndexMap[uniqueIdentiferValue].push(index);
   });
-  Object.entries(identifierToIndexMap).forEach(([identifierValue, indecies]) => {
-    if (indecies.length === 1) {
-      return;
-    }
-    // found multiple indecies mapped to an identifierValue
-    const indexSpecificErrors = indecies.map(
-      (originalIndex): SubmissionValidationError => {
-        return {
-          index: originalIndex,
-          type: DataValidationErrors.FOUND_IDENTICAL_IDS,
-          fieldName: uniqueIdName,
-          info: {
-            value: identifierValue,
-            duplicateWith: indecies.filter(i => i !== originalIndex),
-            donorSubmitterId: newRecords[originalIndex][FieldsEnum.submitter_donor_id],
-          },
-          message: validationErrorMessage(DataValidationErrors.FOUND_IDENTICAL_IDS, uniqueIdName),
-        };
-      },
-    );
-    errors = errors.concat(indexSpecificErrors);
-  });
-  return errors;
+  return Object.values(indexToErrorMap);
 };
 
 const getInfoObject = (

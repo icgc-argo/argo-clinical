@@ -28,8 +28,8 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
     `${errorData.info.field1} requires ${errorData.info.field2} in order to complete validation.  Please upload data for both fields in this clinical data submission.`,
   DUPLICATE_REGISTRATION_RECORD: () =>
     `You are trying to register the same sample in multiple rows. Samples can only be registered once.`,
-  FOUND_IDENTICAL_IDS: fieldName =>
-    `You are trying to submit the same [${fieldName}] in multiple rows. [${fieldName}] can only be submitted once per file.`,
+  FOUND_IDENTICAL_IDS: errorData =>
+    `You are trying to submit the same [${errorData.fieldName}] in multiple rows. [${errorData.fieldName}] can only be submitted once per file.`,
 };
 
 // Returns the formatted message for the given error key, taking any required properties from the info object
