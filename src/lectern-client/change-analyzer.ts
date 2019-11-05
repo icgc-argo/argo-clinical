@@ -5,8 +5,8 @@ import {
   FieldDiff,
   FieldDefinition,
   Change,
+  ChangeAnalysis,
 } from './schema-entities';
-import { SchemaType } from 'mongoose';
 
 const isFieldChange = (obj: any): obj is Change => {
   return obj.type !== undefined;
@@ -19,27 +19,6 @@ const isNestedChange = (obj: any): obj is { [field: string]: FieldChanges } => {
 const isRestrictionChange = (obj: any): obj is { [field: string]: FieldChanges } => {
   return obj.type === undefined;
 };
-
-interface ChangeAnalysis {
-  fields: {
-    addedFields: string[];
-    renamedFields: string[];
-    deletedFields: string[];
-  };
-  restrictionsChanges: {
-    codeLists: {
-      created: CodeListChange[];
-      deleted: CodeListChange[];
-      updated: CodeListChange[];
-    };
-  };
-}
-
-interface CodeListChange {
-  field: string;
-  addition: SchemaType[];
-  deletion: SchemaType[];
-}
 
 export const analyzeChanges = async (
   serviceUrl: string,

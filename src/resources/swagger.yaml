@@ -497,7 +497,7 @@ paths:
         - name: programId
           description: the short name of the program
           in: query
-          required: true
+          required: false
           schema:
             type: string
       responses:
@@ -522,7 +522,7 @@ paths:
         - name: programId
           description: the short name of the program
           in: query
-          required: true
+          required: false
           schema:
             type: string
       responses:

@@ -14,20 +14,35 @@ class SchemaController {
   @HasFullWriteAccess()
   async update(req: Request, res: Response) {
     const version: string = req.body.version;
-    await migrationManager.updateSchemaVersion(version);
+    const initiator = ControllerUtils.getUserFromToken(req);
+    await migrationManager.updateSchemaVersion(version, initiator);
     setStatus('schema', { status: Status.OK });
     return res.status(200).send(manager.instance().getCurrent());
+  }
+
+  async probe(req: Request, res: Response) {
+    const from = req.query.from;
+    const to = req.query.to;
+    const result = await manager.instance().analyzeChanges(from, to);
+    return res.status(200).send(result);
+  }
+
+  @HasFullWriteAccess()
+  async dryRunUpdate(req: Request, res: Response) {
+    const version: string = req.body.version;
+    const initiator = ControllerUtils.getUserFromToken(req);
+    const migration = await migrationManager.dryRunSchemaUpgrade(version, initiator);
+    return res.status(200).send(migration);
+  }
+
+  async getMigration(req: Request, res: Response) {
+    const id: string | undefined = req.params.id;
+    const migration = await migrationManager.getMigration(id);
+    return res.status(200).send(migration);
   }
 }
 
 export const schemaController = new SchemaController();
-
-export const probe = async (req: Request, res: Response) => {
-  const from = req.query.from;
-  const to = req.query.to;
-  const result = await manager.instance().analyzeChanges(from, to);
-  return res.status(200).send(result);
-};
 
 export const get = async (req: Request, res: Response) => {
   const schema = manager.instance().getCurrent();

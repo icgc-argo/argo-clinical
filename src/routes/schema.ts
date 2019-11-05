@@ -6,7 +6,12 @@ const router = express.Router();
 // get current schema
 router.get('/', wrapAsync(schemaApi.get));
 // update schema version api
+router.get('/migration/', wrapAsync(schemaApi.schemaController.getMigration));
+router.get('/migration/:id', wrapAsync(schemaApi.schemaController.getMigration));
 router.patch('/', wrapAsync(schemaApi.schemaController.update));
+router.patch('/dry-run-update', wrapAsync(schemaApi.schemaController.dryRunUpdate));
+// schema migration api
+router.post('/changes', wrapAsync(schemaApi.schemaController.probe));
 
 // returns a list of all sub-schemas except sample_registration
 router.get('/list', wrapAsync(schemaApi.getAllSchemas));
@@ -17,8 +22,5 @@ router.get('/template/:schemaName', wrapAsync(schemaApi.getTemplate));
 
 // temporary api
 router.post('/hack/replace', wrapAsync(schemaApi.replace));
-
-// temporary api
-router.post('/hack/probe', wrapAsync(schemaApi.probe));
 
 export default router;

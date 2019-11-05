@@ -92,3 +92,24 @@ export interface FieldNamesByPriorityMap {
   required: string[];
   optional: string[];
 }
+
+export interface ChangeAnalysis {
+  fields: {
+    addedFields: string[];
+    renamedFields: string[];
+    deletedFields: string[];
+  };
+  restrictionsChanges: {
+    codeLists: {
+      created: CodeListChange[];
+      deleted: CodeListChange[];
+      updated: CodeListChange[];
+    };
+  };
+}
+
+export interface CodeListChange {
+  field: string;
+  addition: SchemaTypes[];
+  deletion: SchemaTypes[];
+}

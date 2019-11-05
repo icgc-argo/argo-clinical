@@ -2,16 +2,16 @@ import { migrationRepo } from './migration-repo';
 import { Errors } from '../../utils';
 import { DictionaryMigration } from './migration-entities';
 import * as manager from '../../lectern-client/schema-manager';
+import { ChangeAnalysis } from '../../lectern-client/schema-entities';
 import { Donor } from '../../clinical/clinical-entities';
 import * as clinicalService from '../../clinical/clinical-service';
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 
 // TODO: this should kick any active submission/registration
-export const updateSchemaVersion = async (toVersion: string) => {
+export const updateSchemaVersion = async (toVersion: string, updater: string) => {
   // submit the migration request
-  await submitMigration(manager.instance().getCurrent().version, toVersion);
-
+  await submitMigration(manager.instance().getCurrent().version, toVersion, updater);
   // update the existing schema
   await manager.instance().loadNewVersion(manager.instance().getCurrent().name, toVersion);
 };
@@ -20,13 +20,30 @@ export const probeSchemaUpgrade = async (from: string, to: string) => {
   return await manager.instance().analyzeChanges(from, to);
 };
 
-export const dryRunSchemaUpgrade = async (from: string, to: string) => {
-  return await submitMigration(from, to, true);
+export const dryRunSchemaUpgrade = async (toVersion: string, initiator: string) => {
+  return await submitMigration(manager.instance().getCurrent().version, toVersion, initiator, true);
 };
 
-const submitMigration = async (fromVersion: string, toVersion: string, dryRun?: boolean) => {
+export const getMigration = async (migrationId: string | undefined) => {
+  if (!migrationId) {
+    return await migrationRepo.getAll();
+  }
+
+  const openMigration = await migrationRepo.getById(migrationId);
+  if (!openMigration) {
+    throw new Errors.NotFound(`no migration with that id ${migrationId}`);
+  }
+  return [openMigration];
+};
+
+const submitMigration = async (
+  fromVersion: string,
+  toVersion: string,
+  initiator: string,
+  dryRun?: boolean,
+) => {
   // can't submit if a migration already open
-  const openMigration = migrationRepo.getByState('OPEN');
+  const openMigration = await migrationRepo.getByState('OPEN');
   if (openMigration) {
     throw new Errors.StateConflict('A migration is already active');
   }
@@ -36,6 +53,7 @@ const submitMigration = async (fromVersion: string, toVersion: string, dryRun?: 
     toVersion,
     stage: 'SUBMITTED',
     state: 'OPEN',
+    createdBy: initiator,
     analysis: undefined,
     dryRun: dryRun || false,
     stats: {
@@ -49,12 +67,17 @@ const submitMigration = async (fromVersion: string, toVersion: string, dryRun?: 
     throw new Error('failed to submit migration');
   }
 
-  // start but don't wait on the migration process.
+  if (dryRun) {
+    const result = await startMigration(savedMigration);
+    return result;
+  }
+  // start but **DONT** await on the migration process to finish.
   startMigration(savedMigration);
   return savedMigration;
 };
 
-const startMigration = async (migration: DictionaryMigration) => {
+const startMigration = async (roMigration: DeepReadonly<DictionaryMigration>) => {
+  const migration = _.cloneDeep(roMigration) as DictionaryMigration;
   if (!migration._id) {
     throw new Error('Migration should have an id');
   }
@@ -63,36 +86,40 @@ const startMigration = async (migration: DictionaryMigration) => {
   const dryRun = migration.dryRun;
 
   // analyze changes
-  const changeAnalysis = await manager
-    .instance()
-    .analyzeChanges(migration.fromVersion, migration.toVersion);
+  if (!migration.analysis) {
+    const analysis = await manager
+      .instance()
+      .analyzeChanges(migration.fromVersion, migration.toVersion);
+
+    migration.analysis = analysis;
+    await migrationRepo.update(migration);
+  }
+
+  // get the change analysis from the migration object
+  const changeAnalysis = migration.analysis as ChangeAnalysis;
 
   // check for breaking changes
-  const invalidatingFields: any = [];
+  const invalidatingFields: any = findInvalidatingChangesFields(changeAnalysis);
 
-  // if we added a codeList restriction -> check other values
-  changeAnalysis.restrictionsChanges.codeLists.created.forEach(cc => {
-    invalidatingFields.push({
-      type: 'CODELIST_ADDED',
-      fieldPath: cc.field,
-      validValues: cc.addition,
-      noLongerValid: undefined,
-    });
-  });
+  await checkDonorDocuments(migration, migrationId, dryRun, invalidatingFields, newSchemaVersion);
 
-  // if we modifed codeList restriction, check for no longer valid values
-  changeAnalysis.restrictionsChanges.codeLists.updated.forEach(cc => {
-    invalidatingFields.push({
-      type: 'CODELIST_UPDATED',
-      fieldPath: cc.field,
-      validValues: cc.addition,
-      noLongerValid: cc.deletion,
-    });
-  });
+  // close migration
+  migration.state = 'CLOSED';
+  migration.stage = 'COMPLETED';
+  await migrationRepo.update(migration);
+  return migration;
+};
 
-  // start iterating over paged donor documents records (that weren't checked before)
-  // TODO enhance to report progress of migration to db
-  // TODO report when done to slack
+// start iterating over paged donor documents records (that weren't checked before)
+// TODO enhance to report progress of migration to db
+// TODO report when done to slack
+const checkDonorDocuments = async (
+  migration: DictionaryMigration,
+  migrationId: string,
+  dryRun: boolean,
+  invalidatingFields: any,
+  newSchemaVersion: string,
+) => {
   let migrationDone = false;
   while (!migrationDone) {
     let invalidCount = 0;
@@ -131,14 +158,8 @@ const startMigration = async (migration: DictionaryMigration) => {
     migration.stats.invalidDocumentsCount = invalidCount;
     migration.stats.validDocumentsCount = validCount;
     migration.stats.totalProcessed += donors.length;
-    migrationRepo.update(migration);
+    await migrationRepo.update(migration);
   }
-
-  migration.state = 'CLOSED';
-  migration.stage = 'COMPLETED';
-
-  await migrationRepo.update(migration);
-  return migration;
 };
 
 const getNextUncheckedDonorDocumentsBatch = async (migrationId: string, limit: number) => {
@@ -242,3 +263,26 @@ const markDonorAsValid = async (
 const updateMigrationIdOnly = async (donor: DeepReadonly<Donor>, migrationId: string) => {
   return await clinicalService.updateMigrationId(donor, migrationId);
 };
+
+function findInvalidatingChangesFields(changeAnalysis: ChangeAnalysis) {
+  const invalidatingFields: any = [];
+  // if we added a codeList restriction -> check other values
+  changeAnalysis.restrictionsChanges.codeLists.created.forEach(cc => {
+    invalidatingFields.push({
+      type: 'CODELIST_ADDED',
+      fieldPath: cc.field,
+      validValues: cc.addition,
+      noLongerValid: undefined,
+    });
+  });
+  // if we modifed codeList restriction, check for no longer valid values
+  changeAnalysis.restrictionsChanges.codeLists.updated.forEach(cc => {
+    invalidatingFields.push({
+      type: 'CODELIST_UPDATED',
+      fieldPath: cc.field,
+      validValues: cc.addition,
+      noLongerValid: cc.deletion,
+    });
+  });
+  return invalidatingFields;
+}

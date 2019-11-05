@@ -2,6 +2,8 @@ import express, { NextFunction, Request, Response, RequestHandler } from 'expres
 import multer from 'multer';
 import { loggerFor } from './logger';
 import { Errors } from './utils';
+import mongoose from 'mongoose';
+import { stat } from 'fs';
 const L = loggerFor(__filename);
 // multer file upload handler
 export const upload = multer({ dest: '/tmp' });
@@ -24,6 +26,7 @@ export const errorHandler = (err: Error, req: Request, res: Response, next: Next
     return next(err);
   }
   let status: number;
+  let customizableMsg = err.message;
   switch (true) {
     case err instanceof Errors.InvalidArgument:
       status = 400;
@@ -34,10 +37,15 @@ export const errorHandler = (err: Error, req: Request, res: Response, next: Next
     case err instanceof Errors.StateConflict:
       status = 409;
       break;
+    case (err as any).name == 'CastError':
+      status = 404;
+      err.name = 'Not found';
+      customizableMsg = 'Id not found';
+      break;
     default:
       status = 500;
   }
-  res.status(status).send({ error: err.name, message: err.message });
+  res.status(status).send({ error: err.name, message: customizableMsg });
   // pass the error down (so other error handlers can also process the error)
   next(err);
 };

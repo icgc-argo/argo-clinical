@@ -238,7 +238,8 @@ const DonorSchema = new mongoose.Schema(
     followUps: Array,
     treatments: Array,
     chemotherapy: Array,
-    HormoneTherapy: Array,
+    hormoneTherapy: Array,
+    schemaMetadata: {},
   },
   { timestamps: true },
 );

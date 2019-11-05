@@ -28,7 +28,7 @@ export async function updateMigrationId(donor: DeepReadonly<Donor>, migrationId:
   }
 
   donorCopy.schemaMetadata.lastMigrationId = migrationId;
-  return await donorDao.update(donor);
+  return await donorDao.update(donorCopy);
 }
 
 export async function getDonorsByMigrationId(migrationId: string, limit: number) {
@@ -45,7 +45,10 @@ export async function getDonorsByMigrationId(migrationId: string, limit: number)
 }
 
 export async function getDonors(programId: string) {
-  return await donorDao.findByProgramId(programId);
+  if (programId) {
+    return await donorDao.findByProgramId(programId);
+  }
+  return await donorDao.findBy({}, 999);
 }
 
 export async function findDonorId(submitterId: string, programId: string) {

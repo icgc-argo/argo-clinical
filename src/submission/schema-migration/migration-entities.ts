@@ -14,4 +14,5 @@ export interface DictionaryMigration {
     validDocumentsCount: number;
     invalidDocumentsCount: number;
   };
+  createdBy: string;
 }
