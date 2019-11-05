@@ -182,7 +182,7 @@ const checkDuplicateRegistrationRecords = (
   return errors;
 };
 
-export const checkDuplicateRecords = (
+export const checkUniqueRecords = (
   clinicalType: ClinicalEntityType,
   newRecords: DeepReadonly<DataRecord[]>,
 ): SubmissionValidationError[] => {

@@ -45,7 +45,7 @@ import { Errors, F, isStringMatchRegex } from '../utils';
 import { DeepReadonly } from 'deep-freeze';
 import { submissionRepository } from './submission-repo';
 import { v1 as uuid } from 'uuid';
-import { validateSubmissionData, checkDuplicateRecords } from './validation';
+import { validateSubmissionData, checkUniqueRecords } from './validation';
 const L = loggerFor(__filename);
 
 const emptyStats = {
@@ -628,8 +628,8 @@ export namespace operations {
   }
 
   const checkClinicalEntity = async (command: ClinicalSubmissionCommand): Promise<any> => {
-    // first check for duplicates
-    let errors: SubmissionValidationError[] = checkDuplicateRecords(
+    // check records are unique
+    let errors: SubmissionValidationError[] = checkUniqueRecords(
       command.clinicalType as ClinicalEntityType,
       command.records,
     );
