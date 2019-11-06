@@ -525,7 +525,7 @@ describe('data-validator', () => {
         },
         type: DataValidationErrors.NEW_SAMPLE_ID_CONFLICT,
         message:
-          'You are trying to register the same sample with multiple donors or specimens. Samples can only be registered to a single donor and specimen.',
+          'You are trying to register the same sample either with multiple donors, specimens or rows. Samples can only be registered once to a single donor and specimen.',
       };
 
       const row1Err = {
@@ -539,7 +539,7 @@ describe('data-validator', () => {
           value: 'AM1',
         },
         message:
-          'You are trying to register the same sample with multiple donors or specimens. Samples can only be registered to a single donor and specimen.',
+          'You are trying to register the same sample either with multiple donors, specimens or rows. Samples can only be registered once to a single donor and specimen.',
         type: DataValidationErrors.NEW_SAMPLE_ID_CONFLICT,
       };
 
@@ -809,7 +809,7 @@ describe('data-validator', () => {
             donorSubmitterId: 'AB1',
             gender: 'Female',
             programId: 'PEME-CA',
-            sampleSubmitterId: 'AM1',
+            sampleSubmitterId: 'AM2',
             specimenTissueSource: 'XYZ',
             sampleType: 'ST-2',
             specimenSubmitterId: 'SP1',
@@ -839,7 +839,7 @@ describe('data-validator', () => {
         index: 2,
         info: {
           donorSubmitterId: 'AB1',
-          sampleSubmitterId: 'AM1',
+          sampleSubmitterId: 'AM2',
           specimenSubmitterId: 'SP1',
           value: 'Female',
           conflictingRows: [0],
@@ -906,7 +906,7 @@ describe('data-validator', () => {
           conflictingRows: [2],
         },
         message:
-          'You are trying to register the same sample with multiple donors or specimens. Samples can only be registered to a single donor and specimen.',
+          'You are trying to register the same sample either with multiple donors, specimens or rows. Samples can only be registered once to a single donor and specimen.',
         type: DataValidationErrors.NEW_SAMPLE_ID_CONFLICT,
       };
 
@@ -921,7 +921,7 @@ describe('data-validator', () => {
           conflictingRows: [0],
         },
         message:
-          'You are trying to register the same sample with multiple donors or specimens. Samples can only be registered to a single donor and specimen.',
+          'You are trying to register the same sample either with multiple donors, specimens or rows. Samples can only be registered once to a single donor and specimen.',
         type: DataValidationErrors.NEW_SAMPLE_ID_CONFLICT,
       };
 
@@ -1005,7 +1005,9 @@ describe('data-validator', () => {
       chai.expect(result.errors).to.deep.include(row2Err);
     });
 
+    // records with same donor, specimen & sample submitter_id
     it('should detect duplicate registration records', async () => {
+      donorDaoCountByStub.returns(Promise.resolve(0));
       const result = await dv.validateRegistrationData(
         'PEME-CA',
         [
@@ -1055,8 +1057,8 @@ describe('data-validator', () => {
           conflictingRows: [1, 2],
         },
         message:
-          'You are trying to register the same sample in multiple rows. Samples can only be registered once.',
-        type: DataValidationErrors.DUPLICATE_REGISTRATION_RECORD,
+          'You are trying to register the same sample either with multiple donors, specimens or rows. Samples can only be registered once to a single donor and specimen.',
+        type: DataValidationErrors.NEW_SAMPLE_ID_CONFLICT,
       };
       const row1Err = {
         fieldName: FieldsEnum.submitter_sample_id,
@@ -1069,8 +1071,8 @@ describe('data-validator', () => {
           conflictingRows: [0, 2],
         },
         message:
-          'You are trying to register the same sample in multiple rows. Samples can only be registered once.',
-        type: DataValidationErrors.DUPLICATE_REGISTRATION_RECORD,
+          'You are trying to register the same sample either with multiple donors, specimens or rows. Samples can only be registered once to a single donor and specimen.',
+        type: DataValidationErrors.NEW_SAMPLE_ID_CONFLICT,
       };
       const row2Err = {
         fieldName: FieldsEnum.submitter_sample_id,
@@ -1083,8 +1085,8 @@ describe('data-validator', () => {
           conflictingRows: [0, 1],
         },
         message:
-          'You are trying to register the same sample in multiple rows. Samples can only be registered once.',
-        type: DataValidationErrors.DUPLICATE_REGISTRATION_RECORD,
+          'You are trying to register the same sample either with multiple donors, specimens or rows. Samples can only be registered once to a single donor and specimen.',
+        type: DataValidationErrors.NEW_SAMPLE_ID_CONFLICT,
       };
 
       chai.expect(result.errors.length).to.eq(3);

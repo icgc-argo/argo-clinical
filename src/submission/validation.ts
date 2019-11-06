@@ -72,9 +72,6 @@ export const validateRegistrationData = async (
     }
   }
 
-  // catch any rows that are exactly the same
-  errors = errors.concat(checkUniqueRecords(ClinicalEntityType.REGISTRATION, newRecords, true));
-
   return {
     errors,
   };
@@ -149,12 +146,16 @@ export const usingInvalidProgramId = (
 
 export const checkUniqueRecords = (
   clinicalType: ClinicalEntityType,
-  newRecords: DeepReadonly<DataRecord[] | CreateRegistrationRecord[]>,
+  newRecords: DeepReadonly<DataRecord[]>,
   useAllRecordValues?: boolean, // use all record properties so it behaves like duplicate check
 ): SubmissionValidationError[] => {
+  if (clinicalType === ClinicalEntityType.REGISTRATION) {
+    throw new Error('cannot check unique records for registration here.');
+  }
+
+  const uniqueIdName = ClinicalUniqueIndentifier[clinicalType];
   const identifierToIndexMap: { [k: string]: number[] } = {};
   const indexToErrorMap: { [index: number]: SubmissionValidationError } = {};
-  const uniqueIdName = ClinicalUniqueIndentifier[clinicalType];
 
   newRecords.forEach((record: any, index) => {
     const uniqueIdentiferValue = useAllRecordValues ? JSON.stringify(record) : record[uniqueIdName];
@@ -173,39 +174,15 @@ export const checkUniqueRecords = (
         return;
       }
       // error object doesn't exist so add it
-      indexToErrorMap[recordIndex] = buildUniquenessError(
-        clinicalType,
-        record,
-        recordIndex,
-        sameIdentifiedRecordIndecies.filter(i => i !== recordIndex),
+      indexToErrorMap[recordIndex] = buildSubmissionError(
+        { ...record, index: recordIndex },
+        DataValidationErrors.FOUND_IDENTICAL_IDS,
         uniqueIdName,
+        { conflictingRows: sameIdentifiedRecordIndecies.filter(i => i !== recordIndex) },
       );
     });
   });
   return Object.values(indexToErrorMap);
-};
-
-const buildUniquenessError = (
-  clinicalType: ClinicalEntityType,
-  record: any,
-  recordIndex: number,
-  conflictingRows: number[],
-  uniqueIdName: FieldsEnum,
-) => {
-  return clinicalType === ClinicalEntityType.REGISTRATION
-    ? buildError(
-        record as CreateRegistrationRecord,
-        DataValidationErrors.DUPLICATE_REGISTRATION_RECORD,
-        uniqueIdName,
-        recordIndex,
-        { conflictingRows },
-      )
-    : buildSubmissionError(
-        { ...record, index: recordIndex },
-        DataValidationErrors.FOUND_IDENTICAL_IDS,
-        uniqueIdName,
-        { conflictingRows },
-      );
 };
 
 const getInfoObject = (
@@ -380,8 +357,9 @@ const conflictingNewSample = (
     ) {
       if (newDonor.sampleType !== rec.sampleType) {
         conflictingSampleTypesIndices.push(index);
+      } else {
+        conflictingSamplesIndices.push(index);
       }
-
       return;
     }
 

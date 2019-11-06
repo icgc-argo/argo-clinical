@@ -19,15 +19,13 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
   NEW_SPECIMEN_ID_CONFLICT: () =>
     'You are trying to register the same sample to multiple donors. Specimens can only be registered to a single donor.',
   NEW_SAMPLE_ID_CONFLICT: () =>
-    'You are trying to register the same sample with multiple donors or specimens. Samples can only be registered to a single donor and specimen.',
+    'You are trying to register the same sample either with multiple donors, specimens or rows. Samples can only be registered once to a single donor and specimen.',
   ID_NOT_REGISTERED: errorData =>
     `${errorData.info.value} has not yet been registered. Please register here before submitting clinical data for this identifier.`,
   CONFLICTING_TIME_INTERVAL: () =>
     'survival_time cannot be less than Specimen acquisition_interval.',
   NOT_ENOUGH_INFO_TO_VALIDATE: errorData =>
     `${errorData.info.field1} requires ${errorData.info.field2} in order to complete validation.  Please upload data for both fields in this clinical data submission.`,
-  DUPLICATE_REGISTRATION_RECORD: () =>
-    `You are trying to register the same sample in multiple rows. Samples can only be registered once.`,
   FOUND_IDENTICAL_IDS: errorData =>
     `You are trying to submit the same [${errorData.fieldName}] in multiple rows. [${errorData.fieldName}] can only be submitted once per file.`,
 };
