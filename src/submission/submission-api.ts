@@ -139,7 +139,7 @@ class SubmissionController {
     }
     return res
       .status(status)
-      .send({ ...result, fileErrors: [...result.batchErrors, ...tsvParseErrors] });
+      .send({ ...result, batchErrors: [...result.batchErrors, ...tsvParseErrors] });
   }
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)

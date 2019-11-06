@@ -45,8 +45,7 @@ import { Errors, F, isStringMatchRegex } from '../utils';
 import { DeepReadonly } from 'deep-freeze';
 import { submissionRepository } from './submission-repo';
 import { v1 as uuid } from 'uuid';
-import { validateSubmissionData } from './validation';
-import validationErrorMessage from './submission-error-messages';
+import { validateSubmissionData, checkUniqueRecords } from './validation';
 const L = loggerFor(__filename);
 
 const emptyStats = {
@@ -632,7 +631,12 @@ export namespace operations {
   }
 
   const checkClinicalEntity = async (command: ClinicalSubmissionCommand): Promise<any> => {
-    let errors: SubmissionValidationError[] = [];
+    // check records are unique
+    let errors: SubmissionValidationError[] = checkUniqueRecords(
+      command.clinicalType as ClinicalEntityType,
+      command.records,
+    );
+
     const schemaResult = schemaManager.instance().process(command.clinicalType, command.records);
     if (schemaResult.validationErrors.length > 0) {
       const unifiedSchemaErrors = unifySchemaErrors(
@@ -740,13 +744,13 @@ export namespace operations {
 
       if (missingFields.length > 0)
         fieldNameErrors.push({
-          msg: `Missing requried headers: [${missingFields}]`,
+          msg: `Missing required headers: [${missingFields.join('], [')}]`,
           batchNames: [newClinicalEnity.batchName],
           code: SchemaValidationErrorTypes.MISSING_REQUIRED_FIELD,
         });
       if (unknownFields.length > 0)
         fieldNameErrors.push({
-          msg: `Found unknown headers: [${unknownFields}]`,
+          msg: `Found unknown headers: [${unknownFields.join('], [')}]`,
           batchNames: [newClinicalEnity.batchName],
           code: SchemaValidationErrorTypes.UNRECOGNIZED_FIELD,
         });

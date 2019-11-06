@@ -52,7 +52,7 @@ export enum FieldsEnum {
 export type SubmissionValidationError = {
   type: DataValidationErrors | SchemaValidationErrorTypes;
   fieldName: string;
-  info: object;
+  info: any;
   index: number;
   message: string;
 };
@@ -92,6 +92,7 @@ export enum DataValidationErrors {
   ID_NOT_REGISTERED = 'ID_NOT_REGISTERED',
   CONFLICTING_TIME_INTERVAL = 'CONFLICTING_TIME_INTERVAL',
   NOT_ENOUGH_INFO_TO_VALIDATE = 'NOT_ENOUGH_INFO_TO_VALIDATE',
+  FOUND_IDENTICAL_IDS = 'FOUND_IDENTICAL_IDS',
 }
 
 export type RegistrationStat = Array<{
@@ -268,9 +269,16 @@ export enum ClinicalEntityType {
 
 // batchNameRegex are arrays, so we can just add new file name regex when needed
 // also we should check file extensions at api level for each file type upload function
-export const BatchNameRegex = {
+export const BatchNameRegex: Record<ClinicalEntityType, RegExp[]> = {
   [ClinicalEntityType.REGISTRATION]: [/^sample_registration.*\.tsv$/],
   [ClinicalEntityType.DONOR]: [/^donor.*\.tsv$/],
   [ClinicalEntityType.SPECIMEN]: [/^specimen.*\.tsv$/],
   [ClinicalEntityType.PRIMARY_DIAGNOSES]: [/^primary_diagnosis.*\.tsv/],
+};
+
+// assumption: one field uniquely identifies a clinical type record in a batch of records
+export const ClinicalUniqueIndentifier = {
+  [ClinicalEntityType.DONOR]: FieldsEnum.submitter_donor_id,
+  [ClinicalEntityType.SPECIMEN]: FieldsEnum.submitter_specimen_id,
+  [ClinicalEntityType.PRIMARY_DIAGNOSES]: FieldsEnum.submitter_donor_id,
 };
