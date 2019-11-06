@@ -38,7 +38,7 @@ const programInvalidErr: SubmissionValidationError = {
     value: 'PEM-CA',
   },
   message:
-    'Program ID does not match the program you are uploading to. Please include the correct Program ID.',
+    'Program ID does not match. Please include the correct Program ID.',
   type: DataValidationErrors.INVALID_PROGRAM_ID,
 };
 const specimenMutatedErr: SubmissionValidationError = {
@@ -96,7 +96,7 @@ const specimenBelongsToOtherDonor: SubmissionValidationError = {
     otherDonorSubmitterId: 'AB1',
   },
   message:
-    'Specimen can only be registered to a single donor. This specimen has already been registered to donor AB1. Please correct your file or contact DCC to update the registered data.',
+    'Specimens can only be registered to a single donor. This specimen has already been registered to donor AB1. Please correct your file or contact DCC to update the registered data.',
   type: DataValidationErrors.SPECIMEN_BELONGS_TO_OTHER_DONOR,
 };
 
