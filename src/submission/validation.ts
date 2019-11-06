@@ -19,7 +19,6 @@ import { DeepReadonly } from 'deep-freeze';
 import { DataRecord } from '../lectern-client/schema-entities';
 import { submissionValidator } from './validation-clinical/index';
 import validationErrorMessage from './submission-error-messages';
-import _ from 'lodash';
 import { buildSubmissionError } from './validation-clinical/utils';
 
 export const validateRegistrationData = async (
@@ -360,6 +359,7 @@ const conflictingNewSample = (
       } else {
         conflictingSamplesIndices.push(index);
       }
+
       return;
     }
 
