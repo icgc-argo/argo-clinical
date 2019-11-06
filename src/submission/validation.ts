@@ -12,12 +12,14 @@ import {
   SubmissionValidationUpdate,
   ClinicalTypeValidateResult,
   ClinicalEntityType,
+  ClinicalUniqueIndentifier,
 } from './submission-entities';
 import { donorDao, DONOR_FIELDS } from '../clinical/donor-repo';
 import { DeepReadonly } from 'deep-freeze';
 import { DataRecord } from '../lectern-client/schema-entities';
 import { submissionValidator } from './validation-clinical/index';
 import validationErrorMessage from './submission-error-messages';
+import { buildSubmissionError } from './validation-clinical/utils';
 
 export const validateRegistrationData = async (
   expectedProgram: string,
@@ -140,6 +142,48 @@ export const usingInvalidProgramId = (
   }
   return [];
 };
+
+export const checkUniqueRecords = (
+  clinicalType: ClinicalEntityType,
+  newRecords: DeepReadonly<DataRecord[]>,
+  useAllRecordValues?: boolean, // use all record properties so it behaves like duplicate check
+): SubmissionValidationError[] => {
+  if (clinicalType === ClinicalEntityType.REGISTRATION) {
+    throw new Error('cannot check unique records for registration here.');
+  }
+
+  const uniqueIdName = ClinicalUniqueIndentifier[clinicalType];
+  const identifierToIndexMap: { [k: string]: number[] } = {};
+  const indexToErrorMap: { [index: number]: SubmissionValidationError } = {};
+
+  newRecords.forEach((record: any, index) => {
+    const uniqueIdentiferValue = useAllRecordValues ? JSON.stringify(record) : record[uniqueIdName];
+
+    // only one index so not duplicate
+    if (!identifierToIndexMap[uniqueIdentiferValue]) {
+      identifierToIndexMap[uniqueIdentiferValue] = [index];
+      return;
+    }
+    identifierToIndexMap[uniqueIdentiferValue].push(index);
+    const sameIdentifiedRecordIndecies = identifierToIndexMap[uniqueIdentiferValue];
+    sameIdentifiedRecordIndecies.forEach(recordIndex => {
+      // error object already exists so just update the duplicateWith list
+      if (indexToErrorMap[recordIndex]) {
+        indexToErrorMap[recordIndex].info.conflictingRows.push(index);
+        return;
+      }
+      // error object doesn't exist so add it
+      indexToErrorMap[recordIndex] = buildSubmissionError(
+        { ...record, index: recordIndex },
+        DataValidationErrors.FOUND_IDENTICAL_IDS,
+        uniqueIdName,
+        { conflictingRows: sameIdentifiedRecordIndecies.filter(i => i !== recordIndex) },
+      );
+    });
+  });
+  return Object.values(indexToErrorMap);
+};
+
 const getInfoObject = (
   type: ClinicalEntityType,
   record: DeepReadonly<DataRecord>,
@@ -312,6 +356,8 @@ const conflictingNewSample = (
     ) {
       if (newDonor.sampleType !== rec.sampleType) {
         conflictingSampleTypesIndices.push(index);
+      } else {
+        conflictingSamplesIndices.push(index);
       }
 
       return;

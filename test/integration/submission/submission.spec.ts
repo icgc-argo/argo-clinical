@@ -191,6 +191,30 @@ const ABCD_REGISTRATION_DOC: ActiveRegistration = {
 };
 const expectedDonorErrors = [
   {
+    index: 1,
+    type: 'FOUND_IDENTICAL_IDS',
+    info: {
+      value: 'ICGC_0001',
+      donorSubmitterId: 'ICGC_0001',
+      conflictingRows: [2],
+    },
+    message:
+      'You are trying to submit the same [submitter_donor_id] in multiple rows. [submitter_donor_id] can only be submitted once per file.',
+    fieldName: FieldsEnum.submitter_donor_id,
+  },
+  {
+    index: 2,
+    type: 'FOUND_IDENTICAL_IDS',
+    info: {
+      value: 'ICGC_0001',
+      donorSubmitterId: 'ICGC_0001',
+      conflictingRows: [1],
+    },
+    message:
+      'You are trying to submit the same [submitter_donor_id] in multiple rows. [submitter_donor_id] can only be submitted once per file.',
+    fieldName: FieldsEnum.submitter_donor_id,
+  },
+  {
     index: 0,
     type: 'INVALID_FIELD_VALUE_TYPE',
     info: {
@@ -687,7 +711,7 @@ describe('Submission Api', () => {
         .attach('clinicalFiles', files[3], 'specimen-invalid-headers.tsv')
         .end((err: any, res: any) => {
           res.should.have.status(207);
-          res.body.fileErrors.should.deep.eq([
+          res.body.batchErrors.should.deep.eq([
             {
               msg: 'Found multiple files of donor type',
               batchNames: ['donor.tsv', 'donor.invalid.tsv'],
@@ -700,12 +724,12 @@ describe('Submission Api', () => {
               code: 'INVALID_FILE_NAME',
             },
             {
-              msg: `Missing requried headers: [${FieldsEnum.submitter_donor_id}]`,
+              msg: `Missing required headers: [${FieldsEnum.submitter_donor_id}], [${FieldsEnum.submitter_specimen_id}]`,
               batchNames: ['specimen-invalid-headers.tsv'],
               code: 'MISSING_REQUIRED_FIELD',
             },
             {
-              msg: 'Found unknown headers: [submitter_id]',
+              msg: 'Found unknown headers: [submitter_id], [submitter_specmen_id]',
               batchNames: ['specimen-invalid-headers.tsv'],
               code: 'UNRECOGNIZED_FIELD',
             },
