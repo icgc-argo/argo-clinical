@@ -19,7 +19,7 @@ describe('clinical Api', () => {
     followUps: [],
     treatments: [],
     chemotherapy: [],
-    HormoneTherapy: [],
+    hormoneTherapy: [],
     donorId: 4001,
     gender: 'Male',
     submitterId: '1234abcd',
