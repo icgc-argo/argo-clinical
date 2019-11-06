@@ -159,39 +159,53 @@ export const checkUniqueRecords = (
   newRecords.forEach((record: any, index) => {
     const uniqueIdentiferValue = useAllRecordValues ? JSON.stringify(record) : record[uniqueIdName];
 
+    // only one index so not duplicate
     if (!identifierToIndexMap[uniqueIdentiferValue]) {
-      // only one index so not duplicate
       identifierToIndexMap[uniqueIdentiferValue] = [index];
-    } else {
-      identifierToIndexMap[uniqueIdentiferValue].push(index);
-      const sameIdentifiedRecordIndecies = identifierToIndexMap[uniqueIdentiferValue];
-      sameIdentifiedRecordIndecies.forEach(recordIndex => {
-        const conflictingRows = sameIdentifiedRecordIndecies.filter(i => i !== recordIndex);
-        if (!indexToErrorMap[recordIndex]) {
-          // error object doesn't exist so add it
-          indexToErrorMap[recordIndex] =
-            clinicalType === ClinicalEntityType.REGISTRATION
-              ? buildError(
-                  record as CreateRegistrationRecord,
-                  DataValidationErrors.DUPLICATE_REGISTRATION_RECORD,
-                  uniqueIdName,
-                  recordIndex,
-                  { conflictingRows },
-                )
-              : buildSubmissionError(
-                  { ...record, index: recordIndex },
-                  DataValidationErrors.FOUND_IDENTICAL_IDS,
-                  uniqueIdName,
-                  { conflictingRows },
-                );
-        } else {
-          // error object already exists so just update the duplicateWith list
-          indexToErrorMap[recordIndex].info.conflictingRows.push(index);
-        }
-      });
+      return;
     }
+    identifierToIndexMap[uniqueIdentiferValue].push(index);
+    const sameIdentifiedRecordIndecies = identifierToIndexMap[uniqueIdentiferValue];
+    sameIdentifiedRecordIndecies.forEach(recordIndex => {
+      // error object already exists so just update the duplicateWith list
+      if (indexToErrorMap[recordIndex]) {
+        indexToErrorMap[recordIndex].info.conflictingRows.push(index);
+        return;
+      }
+      // error object doesn't exist so add it
+      indexToErrorMap[recordIndex] = buildUniquenessError(
+        clinicalType,
+        record,
+        recordIndex,
+        sameIdentifiedRecordIndecies.filter(i => i !== recordIndex),
+        uniqueIdName,
+      );
+    });
   });
   return Object.values(indexToErrorMap);
+};
+
+const buildUniquenessError = (
+  clinicalType: ClinicalEntityType,
+  record: any,
+  recordIndex: number,
+  conflictingRows: number[],
+  uniqueIdName: FieldsEnum,
+) => {
+  return clinicalType === ClinicalEntityType.REGISTRATION
+    ? buildError(
+        record as CreateRegistrationRecord,
+        DataValidationErrors.DUPLICATE_REGISTRATION_RECORD,
+        uniqueIdName,
+        recordIndex,
+        { conflictingRows },
+      )
+    : buildSubmissionError(
+        { ...record, index: recordIndex },
+        DataValidationErrors.FOUND_IDENTICAL_IDS,
+        uniqueIdName,
+        { conflictingRows },
+      );
 };
 
 const getInfoObject = (
