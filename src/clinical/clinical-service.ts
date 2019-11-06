@@ -18,7 +18,7 @@ export async function updateDonorSchemaMetadata(
   donorCopy.schemaMetadata.isValid = isValid;
   donorCopy.schemaMetadata.lastMigrationId = migrationId;
   if (newSchemaVersion) donorCopy.schemaMetadata.currentSchemaVersion = newSchemaVersion;
-  return await donorDao.update(donor);
+  return await donorDao.update(donorCopy);
 }
 
 export async function updateMigrationId(donor: DeepReadonly<Donor>, migrationId: string) {

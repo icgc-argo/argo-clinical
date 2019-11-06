@@ -23,7 +23,7 @@ class SchemaController {
   async probe(req: Request, res: Response) {
     const from = req.query.from;
     const to = req.query.to;
-    const result = await manager.instance().analyzeChanges(from, to);
+    const result = await migrationManager.probeSchemaUpgrade(from, to);
     return res.status(200).send(result);
   }
 

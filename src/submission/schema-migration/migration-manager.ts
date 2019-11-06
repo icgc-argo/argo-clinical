@@ -17,7 +17,12 @@ export const updateSchemaVersion = async (toVersion: string, updater: string) =>
 };
 
 export const probeSchemaUpgrade = async (from: string, to: string) => {
-  return await manager.instance().analyzeChanges(from, to);
+  const analysis = await manager.instance().analyzeChanges(from, to);
+  const invalidatingFields = findInvalidatingChangesFields(analysis);
+  return {
+    analysis,
+    invalidatingFields,
+  };
 };
 
 export const dryRunSchemaUpgrade = async (toVersion: string, initiator: string) => {
@@ -271,8 +276,8 @@ function findInvalidatingChangesFields(changeAnalysis: ChangeAnalysis) {
     invalidatingFields.push({
       type: 'CODELIST_ADDED',
       fieldPath: cc.field,
-      validValues: cc.addition,
-      noLongerValid: undefined,
+      newValidValues: cc.addition,
+      noLongerValid: undefined, // this has to be changed to represent the set of All possible values
     });
   });
   // if we modifed codeList restriction, check for no longer valid values
@@ -280,7 +285,7 @@ function findInvalidatingChangesFields(changeAnalysis: ChangeAnalysis) {
     invalidatingFields.push({
       type: 'CODELIST_UPDATED',
       fieldPath: cc.field,
-      validValues: cc.addition,
+      newValidValues: cc.addition,
       noLongerValid: cc.deletion,
     });
   });
