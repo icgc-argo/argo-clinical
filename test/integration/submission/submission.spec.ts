@@ -1197,6 +1197,7 @@ describe('Submission Api', () => {
           submissionVersion = res.body.submission.version;
         });
     };
+
     const uploadSubmissionWithUpdates = async () => {
       let file: Buffer;
       try {
@@ -1481,6 +1482,7 @@ describe('Submission Api', () => {
           return done();
         });
     });
+
     it('get template not found', done => {
       const name = 'invalid';
       console.log("Getting template for '" + name + "'...");
@@ -1494,6 +1496,68 @@ describe('Submission Api', () => {
           res.should.header('Content-type', 'application/json; charset=utf-8');
           done();
         });
+    });
+
+    it('get template not found', done => {
+      const name = 'invalid';
+      console.log("Getting template for '" + name + "'...");
+      chai
+        .request(app)
+        .get('/submission/schema/template/' + name)
+        .auth(JWT_ABCDEF, { type: 'bearer' })
+        .end((err: any, res: any) => {
+          res.should.have.status(404);
+          res.body.message.should.equal("no schema named '" + name + "' found");
+          res.should.header('Content-type', 'application/json; charset=utf-8');
+          done();
+        });
+    });
+
+    describe('schema migration ', () => {
+      const programId = 'ABCD-EF';
+      const donor: Donor = emptyDonorDocument({
+        submitterId: 'ICGC_0001',
+        programId,
+        clinicalInfo: {
+          vital_status: 'Deceased',
+          cause_of_death: 'Unknown',
+          survival_time: 120,
+        },
+      });
+
+      this.beforeEach(async () => {
+        await clearCollections(dburl, ['donors', 'dictionarymigrations']);
+        await insertData(dburl, 'donors', donor);
+      });
+
+      // very simple smoke test of the migration to be expanded along developement
+      it('should update the schema ', async () => {
+        await chai
+          .request(app)
+          .patch('/submission/schema/')
+          .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+          .send({
+            version: '2.0',
+          })
+          .then((res: any) => {
+            res.should.have.status(200);
+            res.body.version.should.eq('2.0');
+
+            // TODO add a check to the db
+            // TOOD check invalid documents
+          });
+
+        // TODO get the latest migration and check it.
+
+        await chai
+          .request(app)
+          .get('/submission/schema/migration/')
+          .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+          .then((res: any) => {
+            res.should.have.status(200);
+            res.body.length.should.eq(1);
+          });
+      });
     });
   });
 });

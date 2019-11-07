@@ -48,6 +48,13 @@ export const emptyDonorDocument = (overrides?: object) => {
     donorId: 1,
     gender: '',
     submitterId: '',
+    schemaMetadata: {
+      currentSchemaVersion: '1.0',
+      isValid: true,
+      // tslint:disable-next-line
+      lastMigrationId: null,
+      originalSchemaVersion: '1.0',
+    },
     programId: '',
     specimens: [],
     followUps: [],
