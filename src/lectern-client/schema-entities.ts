@@ -105,6 +105,10 @@ export interface ChangeAnalysis {
       deleted: CodeListChange[];
       updated: CodeListChange[];
     };
+    regex: {
+      created: any;
+      deleted: any;
+    };
   };
 }
 

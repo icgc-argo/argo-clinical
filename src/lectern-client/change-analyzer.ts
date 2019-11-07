@@ -40,6 +40,10 @@ export const analyzeChanges = async (
         deleted: [],
         updated: [],
       },
+      regex: {
+        created: [],
+        deleted: [],
+      },
     },
   };
 
@@ -76,9 +80,11 @@ const categorizeRestrictionChanges = (
   field: string,
   restrictions: { [field: string]: FieldChanges },
 ) => {
+  // codelist
   if (restrictions.codeList) {
     console.log('codeLists change found');
     const codeListChange = restrictions.codeList as Change;
+
     if (codeListChange.type === 'updated') {
       analysis.restrictionsChanges.codeLists.updated.push({
         field: field,
@@ -100,6 +106,26 @@ const categorizeRestrictionChanges = (
         field: field,
         addition: [],
         deletion: [],
+      });
+    }
+  }
+
+  // regex
+  if (restrictions.regex) {
+    console.log('regex change found');
+    const regexChange = restrictions.regex as Change;
+
+    if (regexChange.type === 'created') {
+      analysis.restrictionsChanges.regex.created.push({
+        field: field,
+        regex: regexChange.data,
+      });
+    }
+
+    if (regexChange.type === 'deleted') {
+      analysis.restrictionsChanges.regex.deleted.push({
+        field: field,
+        regex: regexChange.data,
       });
     }
   }

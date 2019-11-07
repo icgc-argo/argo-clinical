@@ -1,6 +1,7 @@
 import mongo from 'mongodb';
 import _ from 'lodash';
 import chai from 'chai';
+import { Donor } from '../../src/clinical/clinical-entities';
 
 export const cleanCollection = async (dburl: string, collection: string): Promise<any> => {
   const conn = await mongo.connect(dburl);
@@ -43,8 +44,8 @@ export const insertData = async (
 };
 
 export const emptyDonorDocument = (overrides?: object) => {
-  const donor = {
-    donorId: '',
+  const donor: Donor = {
+    donorId: 1,
     gender: '',
     submitterId: '',
     programId: '',
@@ -52,7 +53,7 @@ export const emptyDonorDocument = (overrides?: object) => {
     followUps: [],
     treatments: [],
     chemotherapy: [],
-    HormoneTherapy: [],
+    hormoneTherapy: [],
   };
   if (!overrides) {
     return donor;

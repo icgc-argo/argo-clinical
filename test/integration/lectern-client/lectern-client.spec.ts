@@ -13,7 +13,6 @@ import {
   SchemasDictionary,
   SchemasDictionaryDiffs,
 } from '../../../src/lectern-client/schema-entities';
-import * as analyzer from '../../../src/lectern-client/change-analyzer';
 import { schemaClient } from '../../../src/lectern-client/schema-rest-client';
 const ServerMock: any = require('mock-http-server') as any;
 
@@ -89,9 +88,10 @@ describe('Lectern Client', () => {
 
   describe('manager', function() {
     this.beforeEach(async () => await cleanCollection(dburl, 'dataschemas'));
-    manager.create('http://localhost:54321/lectern');
 
     it('should load schema in db', async function() {
+      // has to be done in every test to reset the state of the manager
+      manager.create('http://localhost:54321/lectern');
       const dictionaries: SchemasDictionary[] = require('./dictionary.response.1.json') as SchemasDictionary[];
       server.on({
         method: 'GET',
@@ -125,6 +125,8 @@ describe('Lectern Client', () => {
     });
 
     it('should update schema version', async function() {
+      // has to be done in every test to reset the state of the manager
+      manager.create('http://localhost:54321/lectern');
       const dictionaryV1: SchemasDictionary[] = require('./dictionary.response.1.json') as SchemasDictionary[];
       const dictionaryV2: SchemasDictionary[] = require('./dictionary.response.2.json') as SchemasDictionary[];
       server.on({
