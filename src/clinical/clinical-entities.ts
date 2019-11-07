@@ -15,7 +15,7 @@ export interface Donor {
 }
 
 export interface SchemaMetadata {
-  lastMigrationId: string | undefined | null;
+  lastMigrationId?: string | undefined | null;
   currentSchemaVersion: string;
   originalSchemaVersion: string;
   isValid: boolean;

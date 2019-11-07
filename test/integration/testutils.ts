@@ -52,7 +52,6 @@ export const emptyDonorDocument = (overrides?: object) => {
       currentSchemaVersion: '1.0',
       isValid: true,
       // tslint:disable-next-line
-      lastMigrationId: null,
       originalSchemaVersion: '1.0',
     },
     programId: '',
