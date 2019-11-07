@@ -160,8 +160,8 @@ const checkDonorDocuments = async (
       validCount += 1;
     }
 
-    migration.stats.invalidDocumentsCount = invalidCount;
-    migration.stats.validDocumentsCount = validCount;
+    migration.stats.invalidDocumentsCount += invalidCount;
+    migration.stats.validDocumentsCount += validCount;
     migration.stats.totalProcessed += donors.length;
     await migrationRepo.update(migration);
   }

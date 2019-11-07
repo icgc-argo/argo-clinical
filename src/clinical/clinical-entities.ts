@@ -10,8 +10,8 @@ export interface Donor {
   primaryDiagnosis?: object;
   followUps?: Array<object>;
   treatments?: Array<object>;
-  chemotherapy?: Array<Object>;
-  hormoneTherapy?: Array<Object>;
+  chemotherapy?: Array<object>;
+  hormoneTherapy?: Array<object>;
 }
 
 export interface SchemaMetadata {

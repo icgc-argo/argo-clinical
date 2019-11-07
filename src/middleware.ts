@@ -1,9 +1,7 @@
-import express, { NextFunction, Request, Response, RequestHandler } from 'express';
+import { NextFunction, Request, Response, RequestHandler } from 'express';
 import multer from 'multer';
 import { loggerFor } from './logger';
 import { Errors } from './utils';
-import mongoose from 'mongoose';
-import { stat } from 'fs';
 const L = loggerFor(__filename);
 // multer file upload handler
 export const upload = multer({ dest: '/tmp' });
