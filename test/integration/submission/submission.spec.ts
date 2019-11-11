@@ -590,9 +590,43 @@ describe('Submission Api', () => {
         .end(async (err: any, res: any) => {
           try {
             res.should.have.status(400);
-            res.body.should.deep.eq({
-              msg: `invalid file name, must start with ${ClinicalEntityType.REGISTRATION} and have .tsv extension`,
+            res.body.batchErrors.should.deep.include({
+              msg: `Invalid file(s), must start with entity and have .tsv extension (e.g. donor*.tsv)`,
               code: SubmissionBatchErrorTypes.INVALID_FILE_NAME,
+              batchNames: ['thisIsARegistration.tsv'],
+            });
+          } catch (err) {
+            return done(err);
+          }
+          return done();
+        });
+    });
+
+    it('should not accept tsv files with invalid headers', done => {
+      let file: Buffer;
+      try {
+        file = fs.readFileSync(__dirname + '/sample_registration-invalidHeaders.tsv');
+      } catch (err) {
+        return done(err);
+      }
+      chai
+        .request(app)
+        .post('/submission/program/ABCD-EF/registration')
+        .type('form')
+        .attach('registrationFile', file, 'sample_registration-invalidHeaders.tsv')
+        .auth(JWT_ABCDEF, { type: 'bearer' })
+        .end(async (err: any, res: any) => {
+          try {
+            res.should.have.status(400);
+            res.body.batchErrors.should.deep.include({
+              msg: `Missing required headers: [program_id], [submitter_specimen_id]`,
+              code: `MISSING_REQUIRED_FIELD`,
+              batchNames: ['sample_registration-invalidHeaders.tsv'],
+            });
+            res.body.batchErrors.should.deep.include({
+              msg: `Found unknown headers: [prgram_id], [submittr_specimen_id]`,
+              code: `UNRECOGNIZED_FIELD`,
+              batchNames: ['sample_registration-invalidHeaders.tsv'],
             });
           } catch (err) {
             return done(err);

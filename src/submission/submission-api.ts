@@ -31,7 +31,7 @@ class SubmissionController {
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async createRegistrationWithTsv(req: Request, res: Response) {
-    if (!isValidCreateBody(req, res) || !validateFile(req, res, ClinicalEntityType.REGISTRATION)) {
+    if (!isValidCreateBody(req, res)) {
       return;
     }
     const programId = req.params.programId;
@@ -51,12 +51,17 @@ class SubmissionController {
       creator: creator,
       records: records,
       batchName: file.originalname,
+      fieldNames: Object.keys(records[0]), // every record in a tsv should have same fieldNames
     };
     const result = await submission.operations.createRegistration(command);
-    if (!result.successful) {
+
+    if (result.successful) {
+      return res.status(201).send(result);
+    } else if (result.batchErrors) {
+      return res.status(400).send(result);
+    } else if (result.errors) {
       return res.status(422).send(result);
     }
-    return res.status(201).send(result);
   }
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
@@ -92,10 +97,6 @@ class SubmissionController {
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async saveClinicalTsvFiles(req: Request, res: Response) {
     if (!isValidCreateBody(req, res)) {
-      return;
-    }
-    if (req.files === undefined || req.files.length === 0) {
-      ControllerUtils.badRequest(res, `Clinical file(s) upload required`);
       return;
     }
 
@@ -207,28 +208,28 @@ class SubmissionController {
 }
 
 const isValidCreateBody = (req: Request, res: Response): boolean => {
-  if (req.body == undefined) {
+  if (req.body === undefined) {
     L.debug('request body missing');
     ControllerUtils.badRequest(res, `no body`);
     return false;
   }
-  if (req.params.programId == undefined) {
+  if (req.params.programId === undefined) {
     L.debug('programId missing');
     ControllerUtils.badRequest(res, `programId is required`);
     return false;
   }
-  return true;
-};
-const validateFile = (req: Request, res: Response, type: ClinicalEntityType) => {
-  if (req.file == undefined) {
-    L.debug(`${type}File missing`);
-    ControllerUtils.badRequest(res, `${type}File file is required`);
+  if (req.file === undefined && (req.files === undefined || req.files.length === 0)) {
+    L.debug(`File(s) missing`);
+    ControllerUtils.badRequest(res, `Clinical file(s) upload required`);
     return false;
   }
-  if (!isStringMatchRegex(BatchNameRegex[type], req.file.originalname)) {
-    L.debug(`${type}File name is invalid`);
+  return true;
+};
+const validateRegistrationFile = (req: Request, res: Response) => {
+  if (!isStringMatchRegex(BatchNameRegex[ClinicalEntityType.REGISTRATION], req.file.originalname)) {
+    L.debug(`${ClinicalEntityType.REGISTRATION}File name is invalid`);
     ControllerUtils.badRequest(res, {
-      msg: `invalid file name, must start with ${type} and have .tsv extension`,
+      msg: `invalid file name, must start with ${ClinicalEntityType.REGISTRATION} and have .tsv extension`,
       code: SubmissionBatchErrorTypes.INVALID_FILE_NAME,
     });
     return false;

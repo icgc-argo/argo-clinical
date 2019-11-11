@@ -10,7 +10,7 @@ import {
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, Specimen } from '../../clinical/clinical-entities';
-import validationErrorMessage from '../submission-error-messages';
+import { validationErrorMessage } from '../submission-error-messages';
 import _ from 'lodash';
 
 export const checkDonorRegistered = (

@@ -1,3 +1,5 @@
+import { SubmissionBatchErrorTypes } from './submission-entities';
+
 const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
   /* ***************** *
    * VALIDATION ERRORS
@@ -30,12 +32,36 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
     `You are trying to submit the same [${errorData.fieldName}] in multiple rows. [${errorData.fieldName}] can only be submitted once per file.`,
 };
 
+const BATCH_ERROR_MESSAGES: Record<SubmissionBatchErrorTypes, (errorData: any) => string> = {
+  [SubmissionBatchErrorTypes.TSV_PARSING_FAILED]: errorData =>
+    `Failed to parse the tsv file: ${errorData}`,
+  [SubmissionBatchErrorTypes.INVALID_FILE_NAME]: errorData => {
+    if (errorData.clinicalType) {
+      return `Please retain the template file name and only append characters to the end. For example, ${errorData.clinicalType}<_optional_extension>.tsv`;
+    } else {
+      return `Invalid file(s), must start with entity and have .tsv extension (e.g. donor<_optional_extension>.tsv)`;
+    }
+  },
+
+  [SubmissionBatchErrorTypes.MULTIPLE_TYPED_FILES]: errorData =>
+    `Found multiple files of ${errorData.clinicalType} type`,
+  [SubmissionBatchErrorTypes.MISSING_REQUIRED_HEADER]: errorData =>
+    `Missing required headers: [${errorData.missingFields.join('], [')}]`,
+  [SubmissionBatchErrorTypes.UNRECOGNIZED_HEADER]: errorData =>
+    `Found unknown headers: [${errorData.unknownFields.join('], [')}]`,
+};
+
 // Returns the formatted message for the given error key, taking any required properties from the info object
 // Default value is the errorType itself (so we can identify errorTypes that we are missing messages for and the user could look up the error meaning in our docs)
-const validationErrorMessage = (errorType: string, errorData: any = {}): string => {
+export const validationErrorMessage = (errorType: string, errorData: any = {}): string => {
   return errorType && Object.keys(ERROR_MESSAGES).includes(errorType)
     ? ERROR_MESSAGES[errorType](errorData)
     : errorType;
 };
 
-export default validationErrorMessage;
+export const batchErrorMessage = (
+  errorType: SubmissionBatchErrorTypes,
+  errorData: any = {},
+): string => {
+  return BATCH_ERROR_MESSAGES[errorType](errorData);
+};
