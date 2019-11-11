@@ -92,7 +92,7 @@ export const approveClinicalSubmission = async (command: Readonly<ActiveSubmissi
     );
   } else {
     // We Did It! We have a valid active submission to commit! Everyone cheers!
-    performCommitSubmission(activeSubmission);
+    await performCommitSubmission(activeSubmission);
   }
 };
 
