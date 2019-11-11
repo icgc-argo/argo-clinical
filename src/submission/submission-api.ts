@@ -35,7 +35,7 @@ class SubmissionController {
       return;
     }
     const programId = req.params.programId;
-    const creator = getUserFromToken(req);
+    const creator = ControllerUtils.getUserFromToken(req);
     const file = req.file;
     let records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
     try {
@@ -99,7 +99,7 @@ class SubmissionController {
       return;
     }
 
-    const user = getUserFromToken(req);
+    const user = ControllerUtils.getUserFromToken(req);
     const newClinicalData: NewClinicalEntity[] = [];
     const tsvParseErrors: SubmissionBatchError[] = [];
     const clinicalFiles = req.files as Express.Multer.File[];
@@ -145,7 +145,7 @@ class SubmissionController {
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async validateActiveSubmission(req: Request, res: Response) {
     const { versionId, programId } = req.params;
-    const updater = getUserFromToken(req);
+    const updater = ControllerUtils.getUserFromToken(req);
     const result = await submission.operations.validateMultipleClinical({
       versionId,
       programId,
@@ -160,7 +160,7 @@ class SubmissionController {
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async clearFileFromActiveSubmission(req: Request, res: Response) {
     const { programId, versionId, fileType } = req.params;
-    const updater = getUserFromToken(req);
+    const updater = ControllerUtils.getUserFromToken(req);
     L.debug(`Entering clearFileFromActiveSubmission: ${{ programId, versionId, fileType }}`);
     const updatedSubmission = await submission.operations.clearSubmissionData({
       programId,
@@ -174,7 +174,7 @@ class SubmissionController {
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async commitActiveSubmission(req: Request, res: Response) {
     const { versionId, programId } = req.params;
-    const updater = getUserFromToken(req);
+    const updater = ControllerUtils.getUserFromToken(req);
     const activeSubmission = await submission2Clinical.commitClinicalSubmission({
       versionId,
       programId,
@@ -196,7 +196,7 @@ class SubmissionController {
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async reopenActiveSubmission(req: Request, res: Response) {
     const { versionId, programId } = req.params;
-    const updater = getUserFromToken(req);
+    const updater = ControllerUtils.getUserFromToken(req);
     const activeSubmission = await submission.operations.reopenClinicalSubmission({
       versionId,
       programId,
@@ -234,18 +234,6 @@ const validateFile = (req: Request, res: Response, type: ClinicalEntityType) => 
     return false;
   }
   return true;
-};
-// checks authHeader + decoded jwt and returns the user name
-const getUserFromToken = (req: Request): string => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) {
-    throw new Error("can't get here without auth header");
-  }
-  const decoded = jwt.decode(authHeader.split(' ')[1]) as any;
-  if (!decoded || !decoded.context || !decoded.context.user) {
-    throw new Error('invalid token structure');
-  }
-  return decoded.context.user.firstName + ' ' + decoded.context.user.lastName;
 };
 
 export default new SubmissionController();

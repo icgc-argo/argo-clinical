@@ -3,7 +3,7 @@
  * to the clinical model, somehow as set of ETL operations.
  */
 import { DeepReadonly } from 'deep-freeze';
-import { Donor, Specimen, Sample } from '../clinical/clinical-entities';
+import { Donor, Specimen, Sample, SchemaMetadata } from '../clinical/clinical-entities';
 import {
   ActiveClinicalSubmission,
   ActiveSubmissionIdentifier,
@@ -160,6 +160,7 @@ export const commitRegisteration = async (command: Readonly<CommitRegistrationCo
 
 const fromCreateDonorDtoToDonor = (createDonorDto: DeepReadonly<CreateDonorSampleDto>) => {
   const donor: Donor = {
+    schemaMetadata: createDonorDto.schemaMetadata,
     gender: createDonorDto.gender,
     submitterId: createDonorDto.submitterId,
     programId: createDonorDto.programId,
@@ -169,7 +170,7 @@ const fromCreateDonorDtoToDonor = (createDonorDto: DeepReadonly<CreateDonorSampl
     followUps: [],
     treatments: [],
     chemotherapy: [],
-    HormoneTherapy: [],
+    hormoneTherapy: [],
   };
   return donor;
 };
@@ -228,6 +229,12 @@ const mapToCreateDonorSampleDto = (registration: DeepReadonly<ActiveRegistration
         gender: rec[FieldsEnum.gender],
         programId: registration.programId,
         specimens: [firstSpecimen],
+        schemaMetadata: {
+          currentSchemaVersion: registration.schemaVersion,
+          isValid: true,
+          lastMigrationId: undefined,
+          originalSchemaVersion: registration.schemaVersion,
+        },
       };
       donors.push(donor);
       return;
@@ -297,6 +304,7 @@ export interface CreateDonorSampleDto {
   submitterId: string;
   programId: string;
   specimens: Array<CreateSpecimenDto>;
+  schemaMetadata: SchemaMetadata;
 }
 
 export interface CreateSpecimenDto {

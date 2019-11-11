@@ -145,7 +145,8 @@ export namespace operations {
     const stats = calculateUpdates(registrationRecords, donorsBySubmitterIdMap);
 
     // save the new registration object
-    const registration = toActiveRegistration(command, registrationRecords, stats);
+    const schemaVersion = schemaManager.instance().getCurrent().version;
+    const registration = toActiveRegistration(command, registrationRecords, stats, schemaVersion);
     const savedRegistration = await registrationRepository.create(registration);
     return F({
       registration: savedRegistration,
@@ -583,12 +584,14 @@ export namespace operations {
     command: CreateRegistrationCommand,
     registrationRecords: ReadonlyArray<CreateRegistrationRecord>,
     stats: DeepReadonly<RegistrationStats>,
+    schemaVersion: string,
   ): DeepReadonly<ActiveRegistration> => {
     return F({
       programId: command.programId,
       creator: command.creator,
       batchName: command.batchName,
       stats: stats,
+      schemaVersion: schemaVersion,
       records: registrationRecords.map(r => {
         const record: Readonly<SubmittedRegistrationRecord> = {
           [FieldsEnum.program_id]: command.programId,

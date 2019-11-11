@@ -5,7 +5,7 @@ export type AppHealth = {
   egoPublicKey: ComponentStatus;
 };
 
-// source : https://unicode.org/Public/emoji/12.0/emoji-test.txt
+// source: https://unicode.org/Public/emoji/12.0/emoji-test.txt
 export enum Status {
   OK = '😇',
   UNKNOWN = '🤔',
