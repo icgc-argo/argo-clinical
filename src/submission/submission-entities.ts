@@ -1,5 +1,6 @@
 import { DeepReadonly } from 'deep-freeze';
 import { SchemaValidationErrorTypes } from '../lectern-client/schema-entities';
+import _ from 'lodash';
 
 /**
  * Represents a valid registration that is not yet committed (in progress)
@@ -247,6 +248,7 @@ export interface ValidatorResult {
   type: ModificationType;
   index: number;
   resultArray?: SubmissionValidationError[] | SubmissionValidationUpdate[];
+  clinicalType?: ClinicalEntityType;
 }
 
 export enum ModificationType {
@@ -276,9 +278,69 @@ export const BatchNameRegex: Record<ClinicalEntityType, RegExp[]> = {
   [ClinicalEntityType.PRIMARY_DIAGNOSES]: [/^primary_diagnosis.*\.tsv/],
 };
 
-// assumption: one field uniquely identifies a clinical type record in a batch of records
-export const ClinicalUniqueIndentifier = {
+// assumption: one field uniquely identifies a clinical type record
+export const ClinicalUniqueIndentifier: Record<ClinicalEntityType, FieldsEnum> = {
+  [ClinicalEntityType.REGISTRATION]: FieldsEnum.submitter_sample_id,
   [ClinicalEntityType.DONOR]: FieldsEnum.submitter_donor_id,
   [ClinicalEntityType.SPECIMEN]: FieldsEnum.submitter_specimen_id,
   [ClinicalEntityType.PRIMARY_DIAGNOSES]: FieldsEnum.submitter_donor_id,
 };
+
+export interface RecordsToDonorMap {
+  [donoSubmitterId: string]: DonorRecordsObject;
+}
+
+export class DonorRecordsObject {
+  private _donorRecord: SubmittedClinicalRecord | undefined;
+  private _specimenRecords: SubmittedClinicalRecord[];
+  private _primaryDiagnosesRecord: SubmittedClinicalRecord | undefined;
+  private _entitiesToValidate: Set<ClinicalEntityType>;
+
+  constructor() {
+    this._donorRecord = undefined;
+    this._specimenRecords = [];
+    this._primaryDiagnosesRecord = undefined;
+    this._entitiesToValidate = new Set();
+  }
+
+  public addRecord(type: ClinicalEntityType, record: SubmittedClinicalRecord) {
+    switch (type) {
+      case ClinicalEntityType.DONOR: {
+        this._donorRecord = record;
+        this._entitiesToValidate.add(type);
+        break;
+      }
+      case ClinicalEntityType.SPECIMEN: {
+        this._specimenRecords.push(record);
+        this._entitiesToValidate.add(type);
+        break;
+      }
+      case ClinicalEntityType.PRIMARY_DIAGNOSES: {
+        this._primaryDiagnosesRecord = record;
+        this._entitiesToValidate.add(type);
+      }
+      default:
+        throw new Error(`Can't add record with type: ${type}`);
+    }
+  }
+
+  public getDonorRecord() {
+    return this._donorRecord;
+  }
+
+  public getEntitiesToValidate() {
+    return this._entitiesToValidate;
+  }
+
+  public getSpecimenRecords() {
+    return this._specimenRecords;
+  }
+
+  public getSpecimenRecordBySubmitterId(submitter_specimen_id: string) {
+    return _.find(this._specimenRecords, [FieldsEnum.submitter_specimen_id, submitter_specimen_id]);
+  }
+
+  public getPrimaryDiagnosesRecord() {
+    return this._primaryDiagnosesRecord;
+  }
+}

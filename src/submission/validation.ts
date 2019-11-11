@@ -6,20 +6,18 @@ import {
   ValidationResult,
   FieldsEnum,
   RegistrationToCreateRegistrationFieldsMap,
-  SubmittedClinicalRecord,
   ValidatorResult,
-  ModificationType,
-  SubmissionValidationUpdate,
   ClinicalTypeValidateResult,
   ClinicalEntityType,
   ClinicalUniqueIndentifier,
+  RecordsToDonorMap,
 } from './submission-entities';
 import { donorDao, DONOR_FIELDS } from '../clinical/donor-repo';
 import { DeepReadonly } from 'deep-freeze';
 import { DataRecord } from '../lectern-client/schema-entities';
 import { submissionValidator } from './validation-clinical/index';
 import validationErrorMessage from './submission-error-messages';
-import { buildSubmissionError } from './validation-clinical/utils';
+import { buildSubmissionError, buildClinicalValidationResult } from './validation-clinical/utils';
 
 export const validateRegistrationData = async (
   expectedProgram: string,
@@ -77,47 +75,72 @@ export const validateRegistrationData = async (
 };
 
 export const validateSubmissionData = async (
-  newDonorsRecords: DeepReadonly<{
-    [donoSubmitterId: string]: { [clinicalType: string]: SubmittedClinicalRecord };
-  }>,
+  newRecordsToDonorMap: RecordsToDonorMap,
   existingDonors: DeepReadonly<DonorMap>,
 ): Promise<ClinicalTypeValidateResult> => {
-  const validationResults: ClinicalTypeValidateResult = {};
-  for (const donorSubmitterId in newDonorsRecords) {
-    const newRecords = newDonorsRecords[donorSubmitterId];
+  const validatorResultMap: { [clinicalType: string]: ValidatorResult[] } = {};
+  for (const donorSubmitterId in newRecordsToDonorMap) {
+    const newRecordsObject = newRecordsToDonorMap[donorSubmitterId];
     const existentDonor = existingDonors[donorSubmitterId];
-
-    for (const clinicalType in newRecords) {
-      if (!validationResults[clinicalType]) {
-        validationResults[clinicalType] = {
-          dataErrors: [],
-          dataUpdates: [],
-          stats: {
-            new: [],
-            noUpdate: [],
-            updated: [],
-            errorsFound: [],
-          },
-        };
-      }
-
-      const result: ValidatorResult = await submissionValidator[clinicalType].validate(
-        newRecords,
+    for (const clinicalType of newRecordsObject.getEntitiesToValidate()) {
+      const results: ValidatorResult[] = await submissionValidator[clinicalType].validate(
+        newRecordsObject,
         existentDonor,
       );
-      validationResults[clinicalType].stats[result.type].push(result.index);
-      if (result.type === ModificationType.UPDATED) {
-        validationResults[clinicalType].dataUpdates = validationResults[
-          clinicalType
-        ].dataUpdates.concat(result.resultArray as SubmissionValidationUpdate[]);
-      } else if (result.type === ModificationType.ERRORSFOUND) {
-        validationResults[clinicalType].dataErrors = validationResults[
-          clinicalType
-        ].dataErrors.concat(result.resultArray as SubmissionValidationError[]);
-      }
+      // validatorResult is either resutls or add results to existing results
+      validatorResultMap[clinicalType] = !validatorResultMap[clinicalType]
+        ? results
+        : validatorResultMap[clinicalType].concat(results);
     }
   }
+
+  const validationResults: ClinicalTypeValidateResult = {};
+  Object.entries(validatorResultMap).forEach(([clincialType, validatorResults]) => {
+    validationResults[clincialType] = buildClinicalValidationResult(validatorResults);
+  });
   return validationResults;
+};
+
+export const checkDuplicateRecords = (
+  clinicalType: ClinicalEntityType,
+  newRecords: DeepReadonly<DataRecord[]>,
+): SubmissionValidationError[] => {
+  let errors: SubmissionValidationError[] = [];
+  const identifierToIndexMap: { [k: string]: number[] } = {};
+
+  const uniqueIdName = ClinicalUniqueIndentifier[clinicalType];
+
+  newRecords.forEach((record, index) => {
+    const uniqueIdentiferValue = record[uniqueIdName];
+    if (!identifierToIndexMap[uniqueIdentiferValue]) {
+      identifierToIndexMap[uniqueIdentiferValue] = [];
+    }
+    identifierToIndexMap[uniqueIdentiferValue].push(index);
+  });
+  Object.entries(identifierToIndexMap).forEach(([identifierValue, indecies]) => {
+    if (indecies.length > 1) {
+      errors = errors.concat(
+        indecies.map(
+          (index): SubmissionValidationError => {
+            return {
+              index: index,
+              type: DataValidationErrors.FOUND_IDENTICAL_IDS,
+              fieldName: uniqueIdName,
+              info: {
+                value: identifierValue,
+                duplicateWith: indecies.filter(i => i !== index),
+              },
+              message: validationErrorMessage(
+                DataValidationErrors.FOUND_IDENTICAL_IDS,
+                uniqueIdName,
+              ),
+            };
+          },
+        ),
+      );
+    }
+  });
+  return errors;
 };
 
 export const usingInvalidProgramId = (

@@ -9,7 +9,7 @@ import {
   ValidatorResult,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
-import { Donor, Specimen } from '../../clinical/clinical-entities';
+import { Donor } from '../../clinical/clinical-entities';
 import validationErrorMessage from '../submission-error-messages';
 import _ from 'lodash';
 
@@ -70,6 +70,32 @@ export const buildValidatorResult = (
   return { type, index, resultArray };
 };
 
+export const buildClinicalValidationResult = (results: ValidatorResult[]) => {
+  const stats = {
+    [ModificationType.NEW]: [] as number[],
+    [ModificationType.NOUPDATE]: [] as number[],
+    [ModificationType.UPDATED]: [] as number[],
+    [ModificationType.ERRORSFOUND]: [] as number[],
+  };
+  let dataErrors: SubmissionValidationError[] = [];
+  let dataUpdates: SubmissionValidationUpdate[] = [];
+
+  results.forEach(result => {
+    stats[result.type].push(result.index);
+    if (result.type === ModificationType.UPDATED) {
+      dataUpdates = dataUpdates.concat(result.resultArray as SubmissionValidationUpdate[]);
+    } else if (result.type === ModificationType.ERRORSFOUND) {
+      dataErrors = dataErrors.concat(result.resultArray as SubmissionValidationError[]);
+    }
+  });
+
+  return {
+    stats: stats,
+    dataErrors: dataErrors,
+    dataUpdates: dataUpdates,
+  };
+};
+
 export const getUpdatedFields = (clinicalObject: any, record: SubmittedClinicalRecord) => {
   const updateFields: any[] = [];
   if (clinicalObject) {
@@ -87,7 +113,7 @@ export const getUpdatedFields = (clinicalObject: any, record: SubmittedClinicalR
 // 1 new clinicalInfo <=> new
 // 2 changing clinicalInfo <=> update
 // 3 not new or update <=> noUpdate
-export const checkForUpdates = async (
+export const checkForUpdates = (
   record: DeepReadonly<SubmittedClinicalRecord>,
   clinicalObject: DeepReadonly<{ [field: string]: string | number } | object> | undefined,
 ) => {

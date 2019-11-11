@@ -31,6 +31,11 @@ import {
   NewClinicalEntities,
   ClinicalEntityType,
   BatchNameRegex,
+  RecordsToDonorMap,
+  ModificationType,
+  ValidatorResult,
+  DataValidationErrors,
+  DonorRecordsObject,
 } from './submission-entities';
 import * as schemaManager from '../lectern-client/schema-manager';
 import {
@@ -48,7 +53,7 @@ import { v1 as uuid } from 'uuid';
 import { validateSubmissionData, checkUniqueRecords } from './validation';
 const L = loggerFor(__filename);
 
-const emptyStats = {
+export const emptyStats = {
   dataErrors: [],
   dataUpdates: [],
   stats: {
@@ -337,10 +342,9 @@ export namespace operations {
       };
     }
     // map donors(via donorId) to their relevant records
-    const newDonorDataMap: {
-      [donoSubmitterId: string]: { [clinicalType: string]: SubmittedClinicalRecord };
-    } = {};
+    const newDonorDataMap: RecordsToDonorMap = {};
     const filters: FindByProgramAndSubmitterFilter[] = [];
+    // map records to submitterDonorId and build filters
     for (const clinicalType in exsistingActiveSubmission.clinicalEntities) {
       const clinicalEnity = exsistingActiveSubmission.clinicalEntities[clinicalType];
       clinicalEnity.records.forEach((rc, index) => {
@@ -350,16 +354,18 @@ export namespace operations {
           submitterId: donorId,
         });
         if (!newDonorDataMap[donorId]) {
-          newDonorDataMap[donorId] = {};
+          newDonorDataMap[donorId] = new DonorRecordsObject();
         }
-        newDonorDataMap[donorId][clinicalType] = {
+        // by this point we have already validated for uniqueness
+        newDonorDataMap[donorId].addRecord(clinicalType as ClinicalEntityType, {
           ...rc,
           submitter_donor_id: donorId,
           index: index,
-        };
+        });
       });
     }
     const relevantDonorsMap = await getDonorsInProgram(filters);
+    // const { mutableData, errors } = checkDonorRegistered(relevantDonorsMap, newDonorDataMap);
     const validateResult: ClinicalTypeValidateResult = await validateSubmissionData(
       newDonorDataMap,
       relevantDonorsMap,
