@@ -620,12 +620,12 @@ describe('Submission Api', () => {
             res.should.have.status(400);
             res.body.batchErrors.should.deep.include({
               msg: `Missing required headers: [program_id], [submitter_specimen_id]`,
-              code: `MISSING_REQUIRED_FIELD`,
+              code: SubmissionBatchErrorTypes.MISSING_REQUIRED_HEADER,
               batchNames: ['sample_registration-invalidHeaders.tsv'],
             });
             res.body.batchErrors.should.deep.include({
               msg: `Found unknown headers: [prgram_id], [submittr_specimen_id]`,
-              code: `UNRECOGNIZED_FIELD`,
+              code: SubmissionBatchErrorTypes.UNRECOGNIZED_HEADER,
               batchNames: ['sample_registration-invalidHeaders.tsv'],
             });
           } catch (err) {
@@ -761,12 +761,12 @@ describe('Submission Api', () => {
             {
               msg: `Missing required headers: [${FieldsEnum.submitter_donor_id}], [${FieldsEnum.submitter_specimen_id}]`,
               batchNames: ['specimen-invalid-headers.tsv'],
-              code: 'MISSING_REQUIRED_FIELD',
+              code: SubmissionBatchErrorTypes.MISSING_REQUIRED_HEADER,
             },
             {
               msg: 'Found unknown headers: [submitter_id], [submitter_specmen_id]',
               batchNames: ['specimen-invalid-headers.tsv'],
-              code: 'UNRECOGNIZED_FIELD',
+              code: SubmissionBatchErrorTypes.UNRECOGNIZED_HEADER,
             },
           ]);
           done();

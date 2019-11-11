@@ -39,10 +39,9 @@ const BATCH_ERROR_MESSAGES: Record<SubmissionBatchErrorTypes, (errorData: any) =
     if (errorData.clinicalType) {
       return `Please retain the template file name and only append characters to the end. For example, ${errorData.clinicalType}<_optional_extension>.tsv`;
     } else {
-      return `Invalid file(s), must start with entity and have .tsv extension (e.g. donor<_optional_extension>.tsv)`;
+      return `Invalid file(s), must start with entity and have .tsv extension (e.g. donor*.tsv)`;
     }
   },
-
   [SubmissionBatchErrorTypes.MULTIPLE_TYPED_FILES]: errorData =>
     `Found multiple files of ${errorData.clinicalType} type`,
   [SubmissionBatchErrorTypes.MISSING_REQUIRED_HEADER]: errorData =>

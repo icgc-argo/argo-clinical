@@ -700,7 +700,7 @@ export namespace operations {
 
       if (dataMatchToType.length > 1) {
         dataToEntityMapErrors.push({
-          msg: `Found multiple files of ${clinicalType} type`,
+          msg: batchErrorMessage(SubmissionBatchErrorTypes.MULTIPLE_TYPED_FILES, { clinicalType }),
           batchNames: dataMatchToType.map(data => data.batchName),
           code: SubmissionBatchErrorTypes.MULTIPLE_TYPED_FILES,
         });
@@ -711,7 +711,7 @@ export namespace operations {
 
     if (mutableClinicalData.length > 0) {
       dataToEntityMapErrors.push({
-        msg: batchErrorMessage(SubmissionBatchErrorTypes.INVALID_FILE_NAME, {),
+        msg: batchErrorMessage(SubmissionBatchErrorTypes.INVALID_FILE_NAME, {}),
         batchNames: mutableClinicalData.map(data => data.batchName),
         code: SubmissionBatchErrorTypes.INVALID_FILE_NAME,
       });
