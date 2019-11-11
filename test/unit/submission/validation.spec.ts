@@ -37,8 +37,7 @@ const programInvalidErr: SubmissionValidationError = {
     sampleSubmitterId: 'AM1',
     value: 'PEM-CA',
   },
-  message:
-    'Program ID does not match. Please include the correct Program ID.',
+  message: 'Program ID does not match. Please include the correct Program ID.',
   type: DataValidationErrors.INVALID_PROGRAM_ID,
 };
 const specimenMutatedErr: SubmissionValidationError = {
@@ -1122,7 +1121,7 @@ describe('data-validator', () => {
       );
       const specimenIdErr: SubmissionValidationError = {
         fieldName: FieldsEnum.submitter_specimen_id,
-        message: `SP2 has not yet been registered. Please register here before submitting clinical data for this identifier.`,
+        message: `SP2 has not yet been registered. Please register samples before submitting clinical data for this identifier.`,
         type: DataValidationErrors.ID_NOT_REGISTERED,
         index: 0,
         info: {
@@ -1133,7 +1132,7 @@ describe('data-validator', () => {
       const donorIdErr: SubmissionValidationError = {
         fieldName: FieldsEnum.submitter_donor_id,
         message:
-          'AB2 has not yet been registered. Please register here before submitting clinical data for this identifier.',
+          'AB2 has not yet been registered. Please register samples before submitting clinical data for this identifier.',
         type: DataValidationErrors.ID_NOT_REGISTERED,
         index: 1,
         info: {

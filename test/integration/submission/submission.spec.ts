@@ -773,7 +773,7 @@ describe('Submission Api', () => {
                         value: 'ICGC_0001',
                       },
                       message:
-                        'ICGC_0001 has not yet been registered. Please register here before submitting clinical data for this identifier.',
+                        'ICGC_0001 has not yet been registered. Please register samples before submitting clinical data for this identifier.',
                       index: 0,
                     },
                   ]);
