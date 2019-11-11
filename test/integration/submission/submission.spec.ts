@@ -1157,7 +1157,7 @@ describe('Submission Api', () => {
           res.should.have.status(200);
           res.body.should.eql({});
           // check activesubmission removed
-          assertDbCollectionEmpty(dburl, 'activesubmissions');
+          await assertDbCollectionEmpty(dburl, 'activesubmissions');
 
           // check donor merge
           const [updatedDonor] = await findInDb(dburl, 'donors', {
@@ -1206,7 +1206,7 @@ describe('Submission Api', () => {
         return err;
       }
 
-      return chai
+      return await chai
         .request(app)
         .post(`/submission/program/${programId}/clinical/upload`)
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
@@ -1216,7 +1216,7 @@ describe('Submission Api', () => {
         });
     };
     const validateSubmission = async () => {
-      return chai
+      return await chai
         .request(app)
         .post(`/submission/program/${programId}/clinical/validate/${submissionVersion}`)
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
@@ -1225,7 +1225,7 @@ describe('Submission Api', () => {
         });
     };
     const commitActiveSubmission = async () => {
-      return chai
+      return await chai
         .request(app)
         .post(`/submission/program/${programId}/clinical/commit/${submissionVersion}`)
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
@@ -1326,7 +1326,7 @@ describe('Submission Api', () => {
         .then(async (res: any) => {
           res.should.have.status(200);
           res.body.should.eql({});
-          assertDbCollectionEmpty(dburl, 'activesubmissions');
+          await assertDbCollectionEmpty(dburl, 'activesubmissions');
           const [updatedDonor] = await findInDb(dburl, 'donors', {
             programId: programId,
             submitterId: 'ICGC_0001',
