@@ -7,9 +7,9 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
   SAMPLE_BELONGS_TO_OTHER_SPECIMEN: errorData =>
     `Samples can only be registered to a single specimen. This sample has already been registered to specimen ${errorData.info.otherSpecimenSubmitterId}. Please correct your file or contact DCC to update the registered data.`,
   SPECIMEN_BELONGS_TO_OTHER_DONOR: errorData =>
-    `Specimen can only be registered to a single donor. This specimen has already been registered to donor ${errorData.info.otherDonorSubmitterId}. Please correct your file or contact DCC to update the registered data.`,
+    `Specimens can only be registered to a single donor. This specimen has already been registered to donor ${errorData.info.otherDonorSubmitterId}. Please correct your file or contact DCC to update the registered data.`,
   INVALID_PROGRAM_ID: () =>
-    'Program ID does not match the program you are uploading to. Please include the correct Program ID.',
+    'Program ID does not match. Please include the correct Program ID.',
   MUTATING_EXISTING_DATA: errorData =>
     `The value does not match the previously registered value of ${errorData.info.originalValue}. Please correct your file or contact DCC to update the registered data.`,
   NEW_SAMPLE_ATTR_CONFLICT: () =>
