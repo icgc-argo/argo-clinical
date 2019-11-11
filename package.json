@@ -18,7 +18,7 @@
     "local": "npm run build && sleep 3 && npm run watch-local",
     "resources": "copyfiles -u 1 src/resources/*.* dist/src",
     "serve-debug": "nodemon --inspect dist/src/server.js",
-    "watch-debug": "nodemon --watch 'src/**/*.ts' --ignore 'src/**/*.spec.ts' --exec node -r ts-node/register ./src/server.ts",
+    "watch-debug": "nodemon --watch 'src/**/*.ts' --ignore 'src/**/*.spec.ts' --exec node --inspect-brk -r ts-node/register ./src/server.ts",
     "watch-local": "nodemon --watch 'src/**/*.ts' --ignore 'src/**/*.spec.ts' --exec node -r ts-node/register ./src/server.ts"
   },
   "repository": {
