@@ -1057,29 +1057,6 @@ describe('Submission Api', () => {
           chai.expect(dbRead[0].clinicalEntities.specimen).to.exist;
         });
     });
-    it('should set the active submission state to OPEN', async () => {
-      const SUBMISSION = {
-        state: SUBMISSION_STATE.VALID,
-        programId: 'ABCD-EF',
-        version: 'asdf',
-        clinicalEntities: { donor: [{ submitterId: 123 }] },
-      };
-
-      await insertData(dburl, 'activesubmissions', SUBMISSION);
-      return chai
-        .request(app)
-        .delete(`/submission/program/ABCD-EF/clinical/asdf/all`)
-        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-        .then(async (res: any) => {
-          res.should.have.status(200);
-          res.body.state.should.equal(SUBMISSION_STATE.OPEN);
-
-          const dbRead = await findInDb(dburl, 'activesubmissions', {
-            programId: 'ABCD-EF',
-          });
-          chai.expect(dbRead[0].state).to.be.equal(SUBMISSION_STATE.OPEN);
-        });
-    });
     it('should clear active submission record if all data is cleared', async () => {
       const SUBMISSION = {
         state: SUBMISSION_STATE.VALID,
@@ -1372,7 +1349,7 @@ describe('Submission Api', () => {
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
         .then(async (res: any) => {
           res.should.have.status(200);
-          res.body.should.eql({});
+          res.body.should.be.empty;
           await assertDbCollectionEmpty(dburl, 'activesubmissions');
           const [updatedDonor] = await findInDb(dburl, 'donors', {
             programId: programId,
