@@ -108,7 +108,7 @@ export const submissionRepository: ClinicalSubmissionRepository = {
     updatingFields: DeepReadonly<ActiveClinicalSubmission>,
   ): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined> {
     try {
-      if (_.isEmpty(updatingFields.clinicalEntities)) {
+      if (_.has(updatingFields, 'clinicalEntities') && _.isEmpty(updatingFields.clinicalEntities)) {
         await ActiveSubmissionModel.findOneAndDelete({ programId: programId });
         return undefined;
       } else {
