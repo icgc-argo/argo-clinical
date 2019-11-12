@@ -205,22 +205,24 @@ export namespace operations {
       );
     } else {
       // Update clinical entities from the active submission
-      const updatedClinicalEntites: ClinicalEntities = {};
+      const updatedClinicalEntities: ClinicalEntities = {};
       if (command.fileType !== 'all') {
         for (const clinicalType in activeSubmission.clinicalEntities) {
           if (clinicalType !== command.fileType) {
-            updatedClinicalEntites[clinicalType] = {
+            updatedClinicalEntities[clinicalType] = {
               ...activeSubmission.clinicalEntities[clinicalType],
               ...emptyStats,
             };
           }
         }
       }
+      if (_.isEmpty(updatedClinicalEntities)) {
+      }
       const newActiveSubmission: ActiveClinicalSubmission = {
         programId: command.programId,
         state: SUBMISSION_STATE.OPEN,
         version: '', // version is irrelevant here, repo will set it
-        clinicalEntities: updatedClinicalEntites,
+        clinicalEntities: updatedClinicalEntities,
         updatedBy: command.updater,
       };
       // insert into database

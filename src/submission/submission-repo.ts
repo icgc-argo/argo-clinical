@@ -105,19 +105,24 @@ export const submissionRepository: ClinicalSubmissionRepository = {
   async updateSubmissionFieldsWithVersion(
     programId: string,
     version: string,
-    updatingFields: object,
+    updatingFields: DeepReadonly<ActiveClinicalSubmission>,
   ): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined> {
     try {
-      const newVersion = uuid();
-      const updated = await ActiveSubmissionModel.findOneAndUpdate(
-        { programId: programId, version: version },
-        { ...updatingFields, version: newVersion },
-        { new: true },
-      );
-      if (!updated) {
-        throw new Errors.StateConflict("Couldn't update program.");
+      if (_.isEmpty(updatingFields.clinicalEntities)) {
+        await ActiveSubmissionModel.findOneAndDelete({ programId: programId });
+        return undefined;
+      } else {
+        const newVersion = uuid();
+        const updated = await ActiveSubmissionModel.findOneAndUpdate(
+          { programId: programId, version: version },
+          { ...updatingFields, version: newVersion },
+          { new: true },
+        );
+        if (!updated) {
+          throw new Errors.StateConflict("Couldn't update program.");
+        }
+        return updated;
       }
-      return updated;
     } catch (err) {
       throw new InternalError(
         `failed to update ActiveSubmission with programId: ${programId} & version: ${version}`,
