@@ -1542,13 +1542,11 @@ describe('Submission Api', () => {
           .then((res: any) => {
             res.should.have.status(200);
             res.body.version.should.eq('2.0');
-
             // TODO add a check to the db
             // TOOD check invalid documents
           });
 
         // TODO get the latest migration and check it.
-
         await chai
           .request(app)
           .get('/submission/schema/migration/')

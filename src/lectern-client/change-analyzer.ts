@@ -6,6 +6,7 @@ import {
   FieldDefinition,
   Change,
   ChangeAnalysis,
+  RegexChange,
 } from './schema-entities';
 
 const isFieldChange = (obj: any): obj is Change => {
@@ -41,6 +42,7 @@ export const analyzeChanges = async (
         updated: [],
       },
       regex: {
+        updated: [],
         created: [],
         deleted: [],
       },
@@ -124,6 +126,13 @@ const categorizeRestrictionChanges = (
 
     if (regexChange.type === 'deleted') {
       analysis.restrictionsChanges.regex.deleted.push({
+        field: field,
+        regex: regexChange.data,
+      });
+    }
+
+    if (regexChange.type === 'updated') {
+      analysis.restrictionsChanges.regex.updated.push({
         field: field,
         regex: regexChange.data,
       });

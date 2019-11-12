@@ -106,8 +106,9 @@ export interface ChangeAnalysis {
       updated: CodeListChange[];
     };
     regex: {
-      created: any;
-      deleted: any;
+      updated: RegexChange[];
+      created: RegexChange[];
+      deleted: RegexChange[];
     };
   };
 }
@@ -116,4 +117,9 @@ export interface CodeListChange {
   field: string;
   addition: SchemaTypes[];
   deletion: SchemaTypes[];
+}
+
+export interface RegexChange {
+  field: string;
+  regex: string;
 }

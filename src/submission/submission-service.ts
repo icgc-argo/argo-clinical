@@ -32,7 +32,7 @@ import {
   ClinicalEntityType,
   BatchNameRegex,
 } from './submission-entities';
-import * as schemaManager from '../lectern-client/schema-manager';
+import * as schemaManager from './schema-manager';
 import {
   SchemaValidationError,
   TypedDataRecord,

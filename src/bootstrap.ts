@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { loggerFor } from './logger';
 import { AppConfig, initConfigs, JWT_TOKEN_PUBLIC_KEY } from './config';
-import * as manager from './lectern-client/schema-manager';
+import * as manager from './submission/schema-manager';
 import * as utils from './utils';
 import fetch from 'node-fetch';
 import { setStatus, Status } from './app-health';
@@ -156,7 +156,7 @@ export const run = async (config: AppConfig) => {
 
 async function loadSchema(config: AppConfig) {
   try {
-    await manager.instance().loadSchema(config.schemaName(), config.initialSchemaVersion());
+    await manager.instance().loadSchemaAndSave(config.schemaName(), config.initialSchemaVersion());
     setStatus('schema', { status: Status.OK });
   } catch (err) {
     L.error('failed to load the schema', err);

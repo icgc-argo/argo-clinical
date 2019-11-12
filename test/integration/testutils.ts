@@ -51,6 +51,7 @@ export const emptyDonorDocument = (overrides?: object) => {
     schemaMetadata: {
       currentSchemaVersion: '1.0',
       isValid: true,
+      lastValidSchemaVersion: '1.0',
       // tslint:disable-next-line
       originalSchemaVersion: '1.0',
     },

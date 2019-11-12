@@ -7,7 +7,7 @@ import mongoose from 'mongoose';
 import { GenericContainer } from 'testcontainers';
 import { cleanCollection, findInDb } from '../testutils';
 import _ from 'lodash';
-import * as manager from '../../../src/lectern-client/schema-manager';
+import * as manager from '../../../src/submission/schema-manager';
 import { promisify } from 'bluebird';
 import {
   SchemasDictionary,
@@ -108,7 +108,7 @@ describe('Lectern Client', () => {
 
       let result: SchemasDictionary | undefined = undefined;
       try {
-        result = await manager.instance().loadSchema(schemaName, '1.0');
+        result = await manager.instance().loadSchemaAndSave(schemaName, '1.0');
       } catch (er) {
         return er;
       }
@@ -147,13 +147,13 @@ describe('Lectern Client', () => {
       let resultV1: SchemasDictionary | undefined = undefined;
       let resultV2: SchemasDictionary | undefined = undefined;
       try {
-        resultV1 = await manager.instance().loadSchema(schemaName, '1.0');
+        resultV1 = await manager.instance().loadSchemaAndSave(schemaName, '1.0');
       } catch (er) {
         return er;
       }
       chai.expect(resultV1).to.not.be.undefined;
       try {
-        resultV2 = await manager.instance().loadNewVersion(schemaName, '2.0');
+        resultV2 = await manager.instance().loadAndSaveNewVersion(schemaName, '2.0');
       } catch (er) {
         return er;
       }
