@@ -738,7 +738,7 @@ describe('Submission Api', () => {
           done();
         });
     });
-    it.only('should clear active submission if there are upload errors that cause clinicalEntities to be empty', async () => {
+    it('should clear active submission if there are upload errors that cause clinicalEntities to be empty', async () => {
       const SUBMISSION = {
         state: SUBMISSION_STATE.VALID,
         programId: 'ABCD-EF',
@@ -1020,7 +1020,7 @@ describe('Submission Api', () => {
           res.should.have.status(409);
         });
     });
-    it.only('should return 200 when clear all is completed, and have no active submission for this program in the DB', async () => {
+    it('should return 200 when clear all is completed, and have no active submission for this program in the DB', async () => {
       await uploadSubmission();
       return chai
         .request(app)
@@ -1080,7 +1080,7 @@ describe('Submission Api', () => {
           chai.expect(dbRead[0].state).to.be.equal(SUBMISSION_STATE.OPEN);
         });
     });
-    it.only('should clear active submission record if all data is cleared', async () => {
+    it('should clear active submission record if all data is cleared', async () => {
       const SUBMISSION = {
         state: SUBMISSION_STATE.VALID,
         programId: 'ABCD-EF',
