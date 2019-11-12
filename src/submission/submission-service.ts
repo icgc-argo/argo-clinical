@@ -216,8 +216,6 @@ export namespace operations {
           }
         }
       }
-      if (_.isEmpty(updatedClinicalEntities)) {
-      }
       const newActiveSubmission: ActiveClinicalSubmission = {
         programId: command.programId,
         state: SUBMISSION_STATE.OPEN,
