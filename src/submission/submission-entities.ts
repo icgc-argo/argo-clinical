@@ -1,6 +1,5 @@
 import { DeepReadonly } from 'deep-freeze';
 import { SchemaValidationErrorTypes } from '../lectern-client/schema-entities';
-import _ from 'lodash';
 
 /**
  * Represents a valid registration that is not yet committed (in progress)
@@ -289,75 +288,6 @@ export interface RecordsToSubmitterDonorIdMap {
   [donoSubmitterId: string]: DonorRecordsOrganizer;
 }
 
-export class DonorRecordsOrganizer {
-  private _donorRecord: SubmittedClinicalRecord | undefined;
-  private _specimenRecords: SubmittedClinicalRecord[];
-  private _primaryDiagnosisRecord: SubmittedClinicalRecord | undefined;
-  private _entitiesToValidate: Set<ClinicalEntityType>;
-
-  constructor() {
-    this._donorRecord = undefined;
-    this._specimenRecords = [];
-    this._primaryDiagnosisRecord = undefined;
-    this._entitiesToValidate = new Set();
-  }
-
-  public freeze() {
-    Object.freeze(this);
-  }
-
-  // could probably replace switching logics with maps, only three so leaving it like this for now
-  public addRecord(type: ClinicalEntityType, record: SubmittedClinicalRecord) {
-    switch (type) {
-      case ClinicalEntityType.DONOR: {
-        this._donorRecord = record;
-        break;
-      }
-      case ClinicalEntityType.SPECIMEN: {
-        this._specimenRecords.push(record);
-        break;
-      }
-      case ClinicalEntityType.PRIMARY_DIAGNOSES: {
-        this._primaryDiagnosisRecord = record;
-      }
-      default:
-        throw new Error(`Can't add record with type: ${type}`);
-    }
-    this._entitiesToValidate.add(type);
-  }
-
-  public getRecordsAsArray(type: ClinicalEntityType): SubmittedClinicalRecord[] {
-    switch (type) {
-      case ClinicalEntityType.DONOR: {
-        return this._donorRecord ? [this._donorRecord] : [];
-      }
-      case ClinicalEntityType.SPECIMEN: {
-        return this._specimenRecords;
-      }
-      case ClinicalEntityType.PRIMARY_DIAGNOSES: {
-        return this._primaryDiagnosisRecord ? [this._primaryDiagnosisRecord] : [];
-      }
-    }
-    return [];
-  }
-
-  public getTypesToValidate() {
-    return this._entitiesToValidate;
-  }
-
-  public getDonorRecord() {
-    return this._donorRecord;
-  }
-
-  public getSpecimenRecords() {
-    return this._specimenRecords;
-  }
-
-  public getSpecimenRecordBySubmitterId(submitter_specimen_id: string) {
-    return _.find(this._specimenRecords, [FieldsEnum.submitter_specimen_id, submitter_specimen_id]);
-  }
-
-  public getPrimaryDiagnosesRecord() {
-    return this._primaryDiagnosisRecord;
-  }
+export interface DonorRecordsOrganizer {
+  [type: string]: SubmittedClinicalRecord | SubmittedClinicalRecord[];
 }

@@ -10,13 +10,14 @@ import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
+import { RecordsOrganizerOperations as organizerOperations } from './utils';
 
 export const validate = async (
-  recordOrganizer: DonorRecordsOrganizer,
+  newRecordsOrganizer: DeepReadonly<DonorRecordsOrganizer>,
   existentDonor: DeepReadonly<Donor>,
 ): Promise<RecordValidationResult> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
-  const donorRecord = recordOrganizer.getDonorRecord();
+  const donorRecord = organizerOperations.getDonorRecord(newRecordsOrganizer);
   if (!existentDonor || !donorRecord) {
     throw new Error("Can't call this function without donor & donor record");
   }
@@ -25,7 +26,7 @@ export const validate = async (
   const errors: SubmissionValidationError[] = []; // all errors for record
 
   // cross entity donor-specimen record validation
-  checkTimeConflictWithSpecimens(existentDonor, donorRecord, recordOrganizer, errors);
+  checkTimeConflictWithSpecimens(existentDonor, donorRecord, newRecordsOrganizer, errors);
 
   // other checks here and add to `errors`
 
@@ -35,7 +36,7 @@ export const validate = async (
 function checkTimeConflictWithSpecimens(
   donor: DeepReadonly<Donor>,
   donorRecord: DeepReadonly<SubmittedClinicalRecord>,
-  newRecords: DonorRecordsOrganizer,
+  recordsOrganizer: DeepReadonly<DonorRecordsOrganizer>,
   errors: SubmissionValidationError[],
 ) {
   if (
@@ -50,7 +51,10 @@ function checkTimeConflictWithSpecimens(
   donor.specimens.forEach(specimen => {
     let specimenAcqusitionInterval: number = 0;
     // specimenAcqusitionInterval comes from either registered specimen in new record or specimen.clincalInfo
-    const specimenRecord = newRecords.getSpecimenRecordBySubmitterId(specimen.submitterId);
+    const specimenRecord = organizerOperations.getSpecimenRecordBySubmitterId(
+      specimen.submitterId,
+      recordsOrganizer,
+    );
     if (specimenRecord) {
       specimenAcqusitionInterval = Number(
         specimenRecord[ClinicalInfoFieldsEnum.acquisition_interval],

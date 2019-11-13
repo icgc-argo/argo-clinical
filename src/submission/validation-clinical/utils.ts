@@ -7,6 +7,8 @@ import {
   ModificationType,
   SubmissionValidationUpdate,
   RecordValidationResult,
+  ClinicalEntityType,
+  DonorRecordsOrganizer,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
@@ -158,3 +160,71 @@ export const buildCommonRecordValidationResults = (
 
   return validationResults;
 };
+
+export namespace RecordsOrganizerOperations {
+  // this function will mutate recordsOrganizer
+  export function addRecord(
+    type: ClinicalEntityType,
+    records: DonorRecordsOrganizer,
+    record: SubmittedClinicalRecord,
+  ) {
+    switch (type) {
+      case ClinicalEntityType.PRIMARY_DIAGNOSES:
+      case ClinicalEntityType.DONOR: {
+        records[type] = record;
+        break;
+      }
+      case ClinicalEntityType.SPECIMEN: {
+        if (!records[type]) {
+          records[type] = [];
+        }
+        (records[type] as SubmittedClinicalRecord[]).push(record as SubmittedClinicalRecord);
+        break;
+      }
+      default:
+        throw new Error(`Can't add record with type: ${type}`);
+    }
+  }
+
+  export function getRecordsAsArray(
+    type: ClinicalEntityType,
+    records: DeepReadonly<DonorRecordsOrganizer>,
+  ): ReadonlyArray<SubmittedClinicalRecord> {
+    const recordsOfInterest = records[type];
+    if (!recordsOfInterest) {
+      return [];
+    } else if (Array.isArray(recordsOfInterest)) {
+      return recordsOfInterest;
+    } else {
+      return [recordsOfInterest as SubmittedClinicalRecord];
+    }
+  }
+
+  export function getDonorRecord(
+    records: DeepReadonly<DonorRecordsOrganizer>,
+  ): DeepReadonly<SubmittedClinicalRecord> {
+    return records[ClinicalEntityType.DONOR] as SubmittedClinicalRecord;
+  }
+
+  export function getSpecimenRecords(
+    records: DeepReadonly<DonorRecordsOrganizer>,
+  ): DeepReadonly<SubmittedClinicalRecord[]> {
+    return records[ClinicalEntityType.SPECIMEN] as SubmittedClinicalRecord[];
+  }
+
+  export function getSpecimenRecordBySubmitterId(
+    submitter_specimen_id: string,
+    records: DeepReadonly<DonorRecordsOrganizer>,
+  ): DeepReadonly<SubmittedClinicalRecord> {
+    return _.find(records[ClinicalEntityType.SPECIMEN], [
+      FieldsEnum.submitter_specimen_id,
+      submitter_specimen_id,
+    ]) as SubmittedClinicalRecord;
+  }
+
+  export function getPrimaryDiagnosesRecord(
+    records: DeepReadonly<DonorRecordsOrganizer>,
+  ): DeepReadonly<SubmittedClinicalRecord> {
+    return records[ClinicalEntityType.PRIMARY_DIAGNOSES] as SubmittedClinicalRecord;
+  }
+}

@@ -12,13 +12,14 @@ import { Donor, Specimen } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
 import { isEmptyString } from '../../utils';
+import { RecordsOrganizerOperations as organizerOperations } from './utils';
 
 export const validate = async (
-  recordOrganizer: DonorRecordsOrganizer,
+  recordOrganizer: DeepReadonly<DonorRecordsOrganizer>,
   existentDonor: DeepReadonly<Donor>,
 ): Promise<RecordValidationResult[]> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
-  const specimenRecords = recordOrganizer.getSpecimenRecords();
+  const specimenRecords = organizerOperations.getSpecimenRecords(recordOrganizer);
   if (specimenRecords.length === 0 || !existentDonor) {
     throw new Error("Can't call this function without donor & specimen records");
   }
@@ -57,13 +58,13 @@ export const validate = async (
 
 const getDataFromDonorRecordOrDonor = (
   donor: DeepReadonly<Donor>,
-  newDonorRecords: DonorRecordsOrganizer,
+  newDonorRecords: DeepReadonly<DonorRecordsOrganizer>,
   validationResults: RecordValidationResult[],
 ) => {
   let missingField: ClinicalInfoFieldsEnum[] = [];
   let donorVitalStatus: string = '';
   let donorSurvivalTime: number = NaN;
-  const donorDataSource = newDonorRecords.getDonorRecord() || donor.clinicalInfo;
+  const donorDataSource = organizerOperations.getDonorRecord(newDonorRecords) || donor.clinicalInfo;
 
   if (!donorDataSource) {
     missingField = [ClinicalInfoFieldsEnum.vital_status, ClinicalInfoFieldsEnum.survival_time];
@@ -76,7 +77,7 @@ const getDataFromDonorRecordOrDonor = (
   }
 
   if (missingField.length > 0) {
-    const specimenRecords = newDonorRecords.getSpecimenRecords();
+    const specimenRecords = organizerOperations.getSpecimenRecords(newDonorRecords);
     specimenRecords.forEach(specimenRecord =>
       validationResults.push(
         utils.buildRecordValidationResult(

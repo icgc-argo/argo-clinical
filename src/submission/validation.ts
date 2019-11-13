@@ -24,6 +24,7 @@ import {
   buildRecordValidationResult,
 } from './validation-clinical/utils';
 import _ from 'lodash';
+import { RecordsOrganizerOperations as organizerOperations } from './validation-clinical/utils';
 
 export const validateRegistrationData = async (
   expectedProgram: string,
@@ -81,7 +82,7 @@ export const validateRegistrationData = async (
 };
 
 export const validateSubmissionData = async (
-  newRecordsToDonorMap: RecordsToSubmitterDonorIdMap,
+  newRecordsToDonorMap: DeepReadonly<RecordsToSubmitterDonorIdMap>,
   existingDonors: DeepReadonly<DonorMap>,
 ): Promise<ValidateResultByClinicalType> => {
   const recordValidationResultMap: { [clinicalType: string]: RecordValidationResult[] } = {
@@ -91,18 +92,22 @@ export const validateSubmissionData = async (
   };
 
   for (const donorSubmitterId in newRecordsToDonorMap) {
-    const newRecords: DonorRecordsOrganizer = newRecordsToDonorMap[donorSubmitterId];
+    const recordsOrganizer: DeepReadonly<DonorRecordsOrganizer> =
+      newRecordsToDonorMap[donorSubmitterId];
     const existentDonor = existingDonors[donorSubmitterId];
 
     // Check if donor exsists
     if (!existentDonor) {
-      addErrorsForNoDonor(newRecords, recordValidationResultMap);
+      addErrorsForNoDonor(recordsOrganizer, recordValidationResultMap);
       continue;
     }
 
     // call submission validator or each clinical type
-    for (const clinicalType of newRecords.getTypesToValidate()) {
-      const results = await submissionValidator[clinicalType].validate(newRecords, existentDonor);
+    for (const clinicalType in recordsOrganizer) {
+      const results = await submissionValidator[clinicalType].validate(
+        recordsOrganizer,
+        existentDonor,
+      );
       recordValidationResultMap[clinicalType] = _.concat(
         recordValidationResultMap[clinicalType],
         results,
@@ -119,11 +124,14 @@ export const validateSubmissionData = async (
 };
 
 function addErrorsForNoDonor(
-  newRecords: DonorRecordsOrganizer,
+  newRecordsOrganizer: DeepReadonly<DonorRecordsOrganizer>,
   recordValidationResultMap: { [clinicalType: string]: RecordValidationResult[] },
 ) {
-  for (const clinicalType of newRecords.getTypesToValidate()) {
-    const records = newRecords.getRecordsAsArray(clinicalType);
+  for (const clinicalType in newRecordsOrganizer) {
+    const records = organizerOperations.getRecordsAsArray(
+      clinicalType as ClinicalEntityType,
+      newRecordsOrganizer,
+    );
 
     records.forEach(record => {
       recordValidationResultMap[clinicalType].push(
@@ -139,48 +147,6 @@ function addErrorsForNoDonor(
     });
   }
 }
-
-export const checkDuplicateRecords = (
-  clinicalType: ClinicalEntityType,
-  newRecords: DeepReadonly<DataRecord[]>,
-): SubmissionValidationError[] => {
-  let errors: SubmissionValidationError[] = [];
-  const identifierToIndexMap: { [k: string]: number[] } = {};
-
-  const uniqueIdName = ClinicalUniqueIndentifier[clinicalType];
-
-  newRecords.forEach((record, index) => {
-    const uniqueIdentiferValue = record[uniqueIdName];
-    if (!identifierToIndexMap[uniqueIdentiferValue]) {
-      identifierToIndexMap[uniqueIdentiferValue] = [];
-    }
-    identifierToIndexMap[uniqueIdentiferValue].push(index);
-  });
-  Object.entries(identifierToIndexMap).forEach(([identifierValue, indecies]) => {
-    if (indecies.length > 1) {
-      errors = errors.concat(
-        indecies.map(
-          (index): SubmissionValidationError => {
-            return {
-              index: index,
-              type: DataValidationErrors.FOUND_IDENTICAL_IDS,
-              fieldName: uniqueIdName,
-              info: {
-                value: identifierValue,
-                duplicateWith: indecies.filter(i => i !== index),
-              },
-              message: validationErrorMessage(
-                DataValidationErrors.FOUND_IDENTICAL_IDS,
-                uniqueIdName,
-              ),
-            };
-          },
-        ),
-      );
-    }
-  });
-  return errors;
-};
 
 export const usingInvalidProgramId = (
   type: ClinicalEntityType,

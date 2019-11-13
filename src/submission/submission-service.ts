@@ -47,6 +47,7 @@ import { DeepReadonly } from 'deep-freeze';
 import { submissionRepository } from './submission-repo';
 import { v1 as uuid } from 'uuid';
 import { validateSubmissionData, checkUniqueRecords } from './validation';
+import { RecordsOrganizerOperations as organizerOperations } from './validation-clinical/utils';
 const L = loggerFor(__filename);
 
 export const emptyStats = {
@@ -350,17 +351,21 @@ export namespace operations {
           submitterId: donorId,
         });
         if (!newDonorDataMap[donorId]) {
-          newDonorDataMap[donorId] = new DonorRecordsOrganizer();
+          newDonorDataMap[donorId] = {};
         }
         // by this point we have already validated for uniqueness
-        newDonorDataMap[donorId].addRecord(clinicalType as ClinicalEntityType, {
-          ...rc,
-          submitter_donor_id: donorId,
-          index: index,
-        });
+        organizerOperations.addRecord(
+          clinicalType as ClinicalEntityType,
+          newDonorDataMap[donorId],
+          {
+            ...rc,
+            submitter_donor_id: donorId,
+            index: index,
+          },
+        );
       });
     }
-    Object.values(newDonorDataMap).forEach(recordOrganizer => recordOrganizer.freeze());
+
     const relevantDonorsMap = await getDonorsInProgram(filters);
     const validateResult: ValidateResultByClinicalType = await validateSubmissionData(
       newDonorDataMap,
