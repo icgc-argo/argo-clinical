@@ -7,7 +7,7 @@ import {
   FieldsEnum,
   RegistrationToCreateRegistrationFieldsMap,
   RecordValidationResult,
-  ValidateResultByClinicalType,
+  ClinicalTypeValidateResult,
   ClinicalEntityType,
   ClinicalUniqueIndentifier,
   RecordsToSubmitterDonorIdMap,
@@ -22,6 +22,7 @@ import {
   buildSubmissionError,
   buildClinicalValidationResult,
   buildRecordValidationResult,
+  buildMultipleRecordValidationResults,
 } from './validation-clinical/utils';
 import _ from 'lodash';
 import { RecordsOrganizerOperations as organizerOperations } from './validation-clinical/utils';
@@ -84,10 +85,10 @@ export const validateRegistrationData = async (
 export const validateSubmissionData = async (
   newRecordsToDonorMap: DeepReadonly<RecordsToSubmitterDonorIdMap>,
   existingDonors: DeepReadonly<DonorMap>,
-): Promise<ValidateResultByClinicalType> => {
+): Promise<ClinicalTypeValidateResult> => {
   const recordValidationResultMap: { [clinicalType: string]: RecordValidationResult[] } = {
     [ClinicalEntityType.DONOR]: [],
-    [ClinicalEntityType.PRIMARY_DIAGNOSES]: [],
+    [ClinicalEntityType.PRIMARY_DIAGNOSIS]: [],
     [ClinicalEntityType.SPECIMEN]: [],
   };
 
@@ -115,7 +116,7 @@ export const validateSubmissionData = async (
     }
   }
 
-  const validationResults: ValidateResultByClinicalType = {};
+  const validationResults: ClinicalTypeValidateResult = {};
   Object.entries(recordValidationResultMap).forEach(([clincialType, validatorResults]) => {
     if (validatorResults.length === 0) return;
     validationResults[clincialType] = buildClinicalValidationResult(validatorResults);
@@ -132,19 +133,11 @@ function addErrorsForNoDonor(
       clinicalType as ClinicalEntityType,
       newRecordsOrganizer,
     );
-
-    records.forEach(record => {
-      recordValidationResultMap[clinicalType].push(
-        buildRecordValidationResult(
-          record,
-          buildSubmissionError(
-            record,
-            DataValidationErrors.ID_NOT_REGISTERED,
-            FieldsEnum.submitter_donor_id,
-          ),
-        ),
-      );
+    const multipleRecordValidationResults = buildMultipleRecordValidationResults(records, {
+      type: DataValidationErrors.ID_NOT_REGISTERED,
+      fieldName: FieldsEnum.submitter_donor_id,
     });
+    recordValidationResultMap[clinicalType].push(...multipleRecordValidationResults);
   }
 }
 

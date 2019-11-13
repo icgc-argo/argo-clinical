@@ -102,17 +102,17 @@ export const buildClinicalValidationResult = (results: RecordValidationResult[])
   };
 };
 
-export const getUpdatedFields = (clinicalObject: any, record: SubmittedClinicalRecord) => {
-  const updateFields: any[] = [];
+export const getSubmissionUpdateds = (clinicalObject: any, record: SubmittedClinicalRecord) => {
+  const submissionUpdates: SubmissionValidationUpdate[] = [];
   if (clinicalObject) {
     for (const fieldName in clinicalObject) {
       // this is assuming that the field name record and clinicalInfo both have snake casing
       if (clinicalObject[fieldName] !== record[fieldName]) {
-        updateFields.push(buildSubmissionUpdate(record, clinicalObject[fieldName], fieldName));
+        submissionUpdates.push(buildSubmissionUpdate(record, clinicalObject[fieldName], fieldName));
       }
     }
   }
-  return updateFields;
+  return submissionUpdates;
 };
 
 // cases
@@ -129,7 +129,7 @@ export const checkForUpdates = (
   }
 
   // check changing fields
-  const submissionUpdates: any[] = getUpdatedFields(clinicalInfo, record);
+  const submissionUpdates: any[] = getSubmissionUpdateds(clinicalInfo, record);
 
   // if no updates and not new return noUpdate
   return submissionUpdates.length === 0
@@ -137,12 +137,12 @@ export const checkForUpdates = (
     : { type: ModificationType.UPDATED, index: record.index, resultArray: submissionUpdates };
 };
 
-export const buildCommonRecordValidationResults = (
-  records: SubmittedClinicalRecord[],
+export const buildMultipleRecordValidationResults = (
+  records: ReadonlyArray<SubmittedClinicalRecord>,
   commonErrorProperties: {
     type: DataValidationErrors;
     fieldName: FieldsEnum | ClinicalInfoFieldsEnum;
-    info: any;
+    info?: any;
   },
 ): RecordValidationResult[] => {
   const validationResults = records.map(record => {
@@ -169,7 +169,7 @@ export namespace RecordsOrganizerOperations {
     record: SubmittedClinicalRecord,
   ) {
     switch (type) {
-      case ClinicalEntityType.PRIMARY_DIAGNOSES:
+      case ClinicalEntityType.PRIMARY_DIAGNOSIS:
       case ClinicalEntityType.DONOR: {
         records[type] = record;
         break;
@@ -222,9 +222,9 @@ export namespace RecordsOrganizerOperations {
     ]) as SubmittedClinicalRecord;
   }
 
-  export function getPrimaryDiagnosesRecord(
+  export function getPrimaryDiagnosisRecord(
     records: DeepReadonly<DonorRecordsOrganizer>,
   ): DeepReadonly<SubmittedClinicalRecord> {
-    return records[ClinicalEntityType.PRIMARY_DIAGNOSES] as SubmittedClinicalRecord;
+    return records[ClinicalEntityType.PRIMARY_DIAGNOSIS] as SubmittedClinicalRecord;
   }
 }

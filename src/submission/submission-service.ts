@@ -19,7 +19,7 @@ import {
   SUBMISSION_STATE,
   ActiveClinicalSubmission,
   SubmissionValidationUpdate,
-  ValidateResultByClinicalType,
+  ClinicalTypeValidateResult,
   ClinicalEntities,
   ClinicalSubmissionModifierCommand,
   RegistrationStat,
@@ -50,7 +50,7 @@ import { validateSubmissionData, checkUniqueRecords } from './validation';
 import { RecordsOrganizerOperations as organizerOperations } from './validation-clinical/utils';
 const L = loggerFor(__filename);
 
-export const emptyStats = {
+const emptyStats = {
   dataErrors: [],
   dataUpdates: [],
   stats: {
@@ -367,7 +367,7 @@ export namespace operations {
     }
 
     const relevantDonorsMap = await getDonorsInProgram(filters);
-    const validateResult: ValidateResultByClinicalType = await validateSubmissionData(
+    const validateResult: ClinicalTypeValidateResult = await validateSubmissionData(
       newDonorDataMap,
       relevantDonorsMap,
     );

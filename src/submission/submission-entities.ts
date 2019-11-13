@@ -256,7 +256,7 @@ export enum ModificationType {
   NOUPDATE = 'noUpdate',
 }
 
-export type ValidateResultByClinicalType = {
+export type ClinicalTypeValidateResult = {
   [clinicalType: string]: Pick<SavedClinicalEntity, 'dataErrors' | 'dataUpdates' | 'stats'>;
 };
 
@@ -264,7 +264,7 @@ export enum ClinicalEntityType {
   REGISTRATION = 'sample_registration',
   DONOR = 'donor',
   SPECIMEN = 'specimen',
-  PRIMARY_DIAGNOSES = 'primary_diagnosis',
+  PRIMARY_DIAGNOSIS = 'primary_diagnosis',
 }
 
 // batchNameRegex are arrays, so we can just add new file name regex when needed
@@ -273,15 +273,14 @@ export const BatchNameRegex: Record<ClinicalEntityType, RegExp[]> = {
   [ClinicalEntityType.REGISTRATION]: [/^sample_registration.*\.tsv$/],
   [ClinicalEntityType.DONOR]: [/^donor.*\.tsv$/],
   [ClinicalEntityType.SPECIMEN]: [/^specimen.*\.tsv$/],
-  [ClinicalEntityType.PRIMARY_DIAGNOSES]: [/^primary_diagnosis.*\.tsv/],
+  [ClinicalEntityType.PRIMARY_DIAGNOSIS]: [/^primary_diagnosis.*\.tsv/],
 };
 
 // assumption: one field uniquely identifies a clinical type record
-export const ClinicalUniqueIndentifier: Record<ClinicalEntityType, FieldsEnum> = {
-  [ClinicalEntityType.REGISTRATION]: FieldsEnum.submitter_sample_id,
+export const ClinicalUniqueIndentifier = {
   [ClinicalEntityType.DONOR]: FieldsEnum.submitter_donor_id,
   [ClinicalEntityType.SPECIMEN]: FieldsEnum.submitter_specimen_id,
-  [ClinicalEntityType.PRIMARY_DIAGNOSES]: FieldsEnum.submitter_donor_id,
+  [ClinicalEntityType.PRIMARY_DIAGNOSIS]: FieldsEnum.submitter_donor_id,
 };
 
 export interface RecordsToSubmitterDonorIdMap {

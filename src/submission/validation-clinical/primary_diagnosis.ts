@@ -14,8 +14,8 @@ export const validate = async (
   existentDonor: DeepReadonly<Donor>,
 ): Promise<RecordValidationResult> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
-  const pdRecord = organizerOperations.getPrimaryDiagnosesRecord(recordOrganizer);
-  if (!pdRecord || !existentDonor) {
+  const primaryDiagnosisRecord = organizerOperations.getPrimaryDiagnosisRecord(recordOrganizer);
+  if (!primaryDiagnosisRecord || !existentDonor) {
     throw new Error("Can't call this function without donor & primary_diagnosis record");
   }
 
@@ -24,5 +24,9 @@ export const validate = async (
 
   // comming soon...
 
-  return utils.buildRecordValidationResult(pdRecord, errors, existentDonor.primaryDiagnosis);
+  return utils.buildRecordValidationResult(
+    primaryDiagnosisRecord,
+    errors,
+    existentDonor.primaryDiagnosis,
+  );
 };

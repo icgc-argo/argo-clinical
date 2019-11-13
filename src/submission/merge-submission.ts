@@ -32,7 +32,7 @@ export const mergeActiveSubmissionWithDonors = async (
           case ClinicalEntityType.SPECIMEN:
             updateSpecimenRecord(donor, record);
             break;
-          case ClinicalEntityType.PRIMARY_DIAGNOSES:
+          case ClinicalEntityType.PRIMARY_DIAGNOSIS:
             updatePrimaryDiagnosesRecord(donor, record);
             break;
           default:
