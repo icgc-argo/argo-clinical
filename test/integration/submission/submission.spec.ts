@@ -1028,7 +1028,8 @@ describe('Submission Api', () => {
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
         .then(async (res: any) => {
           res.should.have.status(200);
-          chai.expect(res.body, 'Response should be empty object').to.be.empty;
+          chai.expect(res.text, 'Response should be empty object').to.equal('{}');
+          chai.expect(res.type, 'Response should be json type').to.equal('application/json');
 
           const dbRead = await findInDb(dburl, 'activesubmissions', {
             programId: 'ABCD-EF',
@@ -1072,7 +1073,8 @@ describe('Submission Api', () => {
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
         .then(async (res: any) => {
           res.should.have.status(200);
-          res.body.should.be.empty;
+          chai.expect(res.text, 'Response should be empty object').to.equal('{}');
+          chai.expect(res.type, 'Response should be json type').to.equal('application/json');
 
           const dbRead = await findInDb(dburl, 'activesubmissions', {
             programId: 'ABCD-EF',
