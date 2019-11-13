@@ -5,7 +5,7 @@ import {
   SubmittedClinicalRecord,
   ClinicalInfoFieldsEnum,
   RecordValidationResult,
-  DonorRecordsOrganizer,
+  SubmittedClinicalRecordsMap,
   ClinicalEntityType,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
@@ -13,14 +13,14 @@ import { Donor } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
 import { isEmptyString } from '../../utils';
-import { DonorRecordsOrganizerOperations as organizerOperations } from './utils';
+import { ClinicalSubmissionRecordsOperations } from './utils';
 
 export const validate = async (
-  newRecordsOrganizer: DeepReadonly<DonorRecordsOrganizer>,
+  submittedRecords: DeepReadonly<SubmittedClinicalRecordsMap>,
   existentDonor: DeepReadonly<Donor>,
 ): Promise<RecordValidationResult[]> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
-  const specimenRecords = organizerOperations.getSpecimenRecords(newRecordsOrganizer);
+  const specimenRecords = ClinicalSubmissionRecordsOperations.getSpecimenRecords(submittedRecords);
   if (specimenRecords.length === 0 || !existentDonor) {
     throw new Error("Can't call this function without donor & specimen records");
   }
@@ -28,7 +28,7 @@ export const validate = async (
 
   const donorDataToValidateWith = getDataFromDonorRecordOrDonor(
     existentDonor,
-    newRecordsOrganizer,
+    submittedRecords,
     recordValidationResults,
   );
   if (!donorDataToValidateWith) {
@@ -106,14 +106,14 @@ function checkTimeConflictWithDonor(
 
 const getDataFromDonorRecordOrDonor = (
   donor: DeepReadonly<Donor>,
-  recordsOrganizer: DeepReadonly<DonorRecordsOrganizer>,
+  submittedRecords: DeepReadonly<SubmittedClinicalRecordsMap>,
   validationResults: RecordValidationResult[],
 ) => {
   let missingField: ClinicalInfoFieldsEnum[] = [];
   let donorVitalStatus: string = '';
   let donorSurvivalTime: number = NaN;
   const donorDataSource =
-    organizerOperations.getDonorRecord(recordsOrganizer) || donor.clinicalInfo;
+    ClinicalSubmissionRecordsOperations.getDonorRecord(submittedRecords) || donor.clinicalInfo;
 
   if (!donorDataSource) {
     missingField = [ClinicalInfoFieldsEnum.vital_status, ClinicalInfoFieldsEnum.survival_time];
@@ -127,7 +127,7 @@ const getDataFromDonorRecordOrDonor = (
 
   if (missingField.length > 0) {
     const multipleRecordValidationResults = utils.buildMultipleRecordValidationResults(
-      organizerOperations.getRecordsAsArray(ClinicalEntityType.SPECIMEN, recordsOrganizer),
+      ClinicalSubmissionRecordsOperations.getSpecimenRecords(submittedRecords),
       {
         type: DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
         fieldName: ClinicalInfoFieldsEnum.acquisition_interval,

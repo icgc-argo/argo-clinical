@@ -30,8 +30,7 @@ import {
   NewClinicalEntities,
   ClinicalEntityType,
   BatchNameRegex,
-  RecordsToSubmitterDonorIdMap,
-  DonorRecordsOrganizer,
+  ClinicalSubmissionRecordsByDonorIdMap,
 } from './submission-entities';
 import * as schemaManager from '../lectern-client/schema-manager';
 import {
@@ -47,7 +46,7 @@ import { DeepReadonly } from 'deep-freeze';
 import { submissionRepository } from './submission-repo';
 import { v1 as uuid } from 'uuid';
 import { validateSubmissionData, checkUniqueRecords } from './validation';
-import { DonorRecordsOrganizerOperations as organizerOperations } from './validation-clinical/utils';
+import { ClinicalSubmissionRecordsOperations } from './validation-clinical/utils';
 const L = loggerFor(__filename);
 
 const emptyStats = {
@@ -339,7 +338,7 @@ export namespace operations {
       };
     }
     // map records to relevant submitter_donor_id
-    const newDonorDataMap: RecordsToSubmitterDonorIdMap = {};
+    const clinicalSubmissionRecords: ClinicalSubmissionRecordsByDonorIdMap = {};
     const filters: FindByProgramAndSubmitterFilter[] = [];
     // map records to submitterDonorId and build filters
     for (const clinicalType in exsistingActiveSubmission.clinicalEntities) {
@@ -350,13 +349,13 @@ export namespace operations {
           programId: command.programId,
           submitterId: donorId,
         });
-        if (!newDonorDataMap[donorId]) {
-          newDonorDataMap[donorId] = {};
+        if (!clinicalSubmissionRecords[donorId]) {
+          clinicalSubmissionRecords[donorId] = {};
         }
         // by this point we have already validated for uniqueness
-        organizerOperations.addRecord(
+        ClinicalSubmissionRecordsOperations.addRecord(
           clinicalType as ClinicalEntityType,
-          newDonorDataMap[donorId],
+          clinicalSubmissionRecords[donorId],
           {
             ...rc,
             submitter_donor_id: donorId,
@@ -368,7 +367,7 @@ export namespace operations {
 
     const relevantDonorsMap = await getDonorsInProgram(filters);
     const validateResult: ClinicalTypeValidateResult = await validateSubmissionData(
-      newDonorDataMap,
+      clinicalSubmissionRecords,
       relevantDonorsMap,
     );
 

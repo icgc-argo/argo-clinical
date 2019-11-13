@@ -283,10 +283,10 @@ export const ClinicalUniqueIndentifier = {
   [ClinicalEntityType.PRIMARY_DIAGNOSIS]: FieldsEnum.submitter_donor_id,
 };
 
-export interface RecordsToSubmitterDonorIdMap {
-  [donoSubmitterId: string]: DonorRecordsOrganizer;
+export interface ClinicalSubmissionRecordsByDonorIdMap {
+  [donoSubmitterId: string]: SubmittedClinicalRecordsMap;
 }
 
-export interface DonorRecordsOrganizer {
+export interface SubmittedClinicalRecordsMap {
   [type: string]: SubmittedClinicalRecord | SubmittedClinicalRecord[];
 }

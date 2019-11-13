@@ -1,20 +1,20 @@
 import {
   SubmissionValidationError,
   RecordValidationResult,
-  DonorRecordsOrganizer,
+  SubmittedClinicalRecordsMap,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
-import { DonorRecordsOrganizerOperations as organizerOperations } from './utils';
+import { ClinicalSubmissionRecordsOperations as organizerOperations } from './utils';
 
 export const validate = async (
-  recordOrganizer: DeepReadonly<DonorRecordsOrganizer>,
+  submittedRecords: DeepReadonly<SubmittedClinicalRecordsMap>,
   existentDonor: DeepReadonly<Donor>,
 ): Promise<RecordValidationResult> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
-  const primaryDiagnosisRecord = organizerOperations.getPrimaryDiagnosisRecord(recordOrganizer);
+  const primaryDiagnosisRecord = organizerOperations.getPrimaryDiagnosisRecord(submittedRecords);
   if (!primaryDiagnosisRecord || !existentDonor) {
     throw new Error("Can't call this function without donor & primary_diagnosis record");
   }
