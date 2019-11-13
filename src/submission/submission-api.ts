@@ -169,7 +169,8 @@ class SubmissionController {
       fileType,
       updater,
     });
-    return res.status(200).send(updatedSubmission);
+    // Handle case where submission was cleared and is now undefined
+    return res.status(200).send(updatedSubmission || {});
   }
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)

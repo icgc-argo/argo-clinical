@@ -9,9 +9,8 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
   SAMPLE_BELONGS_TO_OTHER_SPECIMEN: errorData =>
     `Samples can only be registered to a single specimen. This sample has already been registered to specimen ${errorData.info.otherSpecimenSubmitterId}. Please correct your file or contact DCC to update the registered data.`,
   SPECIMEN_BELONGS_TO_OTHER_DONOR: errorData =>
-    `Specimen can only be registered to a single donor. This specimen has already been registered to donor ${errorData.info.otherDonorSubmitterId}. Please correct your file or contact DCC to update the registered data.`,
-  INVALID_PROGRAM_ID: () =>
-    'Program ID does not match the program you are uploading to. Please include the correct Program ID.',
+    `Specimens can only be registered to a single donor. This specimen has already been registered to donor ${errorData.info.otherDonorSubmitterId}. Please correct your file or contact DCC to update the registered data.`,
+  INVALID_PROGRAM_ID: () => 'Program ID does not match. Please include the correct Program ID.',
   MUTATING_EXISTING_DATA: errorData =>
     `The value does not match the previously registered value of ${errorData.info.originalValue}. Please correct your file or contact DCC to update the registered data.`,
   NEW_SAMPLE_ATTR_CONFLICT: () =>
@@ -23,7 +22,7 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
   NEW_SAMPLE_ID_CONFLICT: () =>
     'You are trying to register the same sample either with multiple donors, specimens or rows. Samples can only be registered once to a single donor and specimen.',
   ID_NOT_REGISTERED: errorData =>
-    `${errorData.info.value} has not yet been registered. Please register here before submitting clinical data for this identifier.`,
+    `${errorData.info.value} has not yet been registered. Please register samples before submitting clinical data for this identifier.`,
   CONFLICTING_TIME_INTERVAL: () =>
     'survival_time cannot be less than Specimen acquisition_interval.',
   NOT_ENOUGH_INFO_TO_VALIDATE: errorData =>
