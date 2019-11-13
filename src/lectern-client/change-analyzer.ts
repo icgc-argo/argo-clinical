@@ -6,7 +6,7 @@ import {
   FieldDefinition,
   Change,
   ChangeAnalysis,
-  RegexChange,
+  StringAttributeChange,
 } from './schema-entities';
 
 const isFieldChange = (obj: any): obj is Change => {
@@ -42,6 +42,16 @@ export const analyzeChanges = async (
         updated: [],
       },
       regex: {
+        updated: [],
+        created: [],
+        deleted: [],
+      },
+      required: {
+        updated: [],
+        created: [],
+        deleted: [],
+      },
+      script: {
         updated: [],
         created: [],
         deleted: [],
@@ -120,30 +130,87 @@ const categorizeRestrictionChanges = (
     if (regexChange.type === 'created') {
       analysis.restrictionsChanges.regex.created.push({
         field: field,
-        regex: regexChange.data,
+        value: regexChange.data,
       });
     }
 
     if (regexChange.type === 'deleted') {
       analysis.restrictionsChanges.regex.deleted.push({
         field: field,
-        regex: regexChange.data,
+        value: regexChange.data,
       });
     }
 
     if (regexChange.type === 'updated') {
       analysis.restrictionsChanges.regex.updated.push({
         field: field,
-        regex: regexChange.data,
+        value: regexChange.data,
+      });
+    }
+  }
+
+  // required
+  if (restrictions.required) {
+    console.log('required change found');
+    const requiredChange = restrictions.required as Change;
+
+    if (requiredChange.type === 'created') {
+      analysis.restrictionsChanges.required.created.push({
+        field: field,
+        value: requiredChange.data,
+      });
+    }
+
+    if (requiredChange.type === 'deleted') {
+      analysis.restrictionsChanges.required.deleted.push({
+        field: field,
+        value: requiredChange.data,
+      });
+    }
+
+    if (requiredChange.type === 'updated') {
+      analysis.restrictionsChanges.required.updated.push({
+        field: field,
+        value: requiredChange.data,
+      });
+    }
+  }
+
+  // script
+  if (restrictions.script) {
+    console.log('script change found');
+    const scriptChange = restrictions.script as Change;
+
+    if (scriptChange.type === 'created') {
+      analysis.restrictionsChanges.script.created.push({
+        field: field,
+        value: scriptChange.data,
+      });
+    }
+
+    if (scriptChange.type === 'deleted') {
+      analysis.restrictionsChanges.script.deleted.push({
+        field: field,
+        value: scriptChange.data,
+      });
+    }
+
+    if (scriptChange.type === 'updated') {
+      analysis.restrictionsChanges.script.updated.push({
+        field: field,
+        value: scriptChange.data,
       });
     }
   }
 };
 
-const categorizeFieldChanges = (analysis: ChangeAnalysis, field: string, changes: FieldChanges) => {
+const categorizeFieldChanges = (analysis: ChangeAnalysis, field: string, changes: Change) => {
   const changeType = changes.type;
   if (changeType == 'created') {
-    analysis.fields.addedFields.push(field);
+    analysis.fields.addedFields.push({
+      name: field,
+      definition: changes.data,
+    });
   } else if (changeType == 'deleted') {
     analysis.fields.deletedFields.push(field);
   }

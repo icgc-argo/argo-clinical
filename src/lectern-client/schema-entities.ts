@@ -95,7 +95,7 @@ export interface FieldNamesByPriorityMap {
 
 export interface ChangeAnalysis {
   fields: {
-    addedFields: string[];
+    addedFields: AddedFieldChange[];
     renamedFields: string[];
     deletedFields: string[];
   };
@@ -106,20 +106,39 @@ export interface ChangeAnalysis {
       updated: CodeListChange[];
     };
     regex: {
-      updated: RegexChange[];
-      created: RegexChange[];
-      deleted: RegexChange[];
+      updated: StringAttributeChange[];
+      created: StringAttributeChange[];
+      deleted: StringAttributeChange[];
+    };
+    required: {
+      updated: BooleanAttributeChange[];
+      created: BooleanAttributeChange[];
+      deleted: BooleanAttributeChange[];
+    };
+    script: {
+      updated: StringAttributeChange[];
+      created: StringAttributeChange[];
+      deleted: StringAttributeChange[];
     };
   };
 }
 
+export interface AddedFieldChange {
+  name: string;
+  definition: FieldDefinition;
+}
 export interface CodeListChange {
   field: string;
   addition: SchemaTypes[];
   deletion: SchemaTypes[];
 }
 
-export interface RegexChange {
+export interface StringAttributeChange {
   field: string;
-  regex: string;
+  value: string;
+}
+
+export interface BooleanAttributeChange {
+  field: string;
+  value: boolean;
 }

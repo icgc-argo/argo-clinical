@@ -1642,6 +1642,12 @@ async function assertUploadOKRegistrationCreated(res: any, dburl: string) {
 
 const comittedDonors2: Donor[] = [
   {
+    schemaMetadata: {
+      currentSchemaVersion: '1.0',
+      isValid: true,
+      lastValidSchemaVersion: '1.0',
+      originalSchemaVersion: '1.0',
+    },
     followUps: [],
     treatments: [],
     chemotherapy: [],
@@ -1667,6 +1673,12 @@ const comittedDonors2: Donor[] = [
     donorId: 1,
   },
   {
+    schemaMetadata: {
+      currentSchemaVersion: '1.0',
+      isValid: true,
+      lastValidSchemaVersion: '1.0',
+      originalSchemaVersion: '1.0',
+    },
     followUps: [],
     treatments: [],
     chemotherapy: [],
@@ -1705,6 +1717,12 @@ const comittedDonors2: Donor[] = [
     donorId: 2,
   },
   {
+    schemaMetadata: {
+      currentSchemaVersion: '1.0',
+      isValid: true,
+      lastValidSchemaVersion: '1.0',
+      originalSchemaVersion: '1.0',
+    },
     followUps: [],
     treatments: [],
     chemotherapy: [],
@@ -1730,6 +1748,12 @@ const comittedDonors2: Donor[] = [
     donorId: 3,
   },
   {
+    schemaMetadata: {
+      currentSchemaVersion: '1.0',
+      isValid: true,
+      lastValidSchemaVersion: '1.0',
+      originalSchemaVersion: '1.0',
+    },
     followUps: [],
     treatments: [],
     chemotherapy: [],
@@ -1768,6 +1792,12 @@ const comittedDonors2: Donor[] = [
     donorId: 4,
   },
   {
+    schemaMetadata: {
+      currentSchemaVersion: '1.0',
+      isValid: true,
+      lastValidSchemaVersion: '1.0',
+      originalSchemaVersion: '1.0',
+    },
     followUps: [],
     treatments: [],
     chemotherapy: [],
@@ -1794,6 +1824,12 @@ const comittedDonors2: Donor[] = [
     donorId: 5,
   },
   {
+    schemaMetadata: {
+      currentSchemaVersion: '1.0',
+      isValid: true,
+      lastValidSchemaVersion: '1.0',
+      originalSchemaVersion: '1.0',
+    },
     followUps: [],
     treatments: [],
     chemotherapy: [],

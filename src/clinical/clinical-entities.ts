@@ -1,6 +1,6 @@
 export interface Donor {
   _id?: string;
-  schemaMetadata?: SchemaMetadata;
+  schemaMetadata: SchemaMetadata;
   donorId?: number;
   gender: string;
   submitterId: string;

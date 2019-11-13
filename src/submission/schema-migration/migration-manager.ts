@@ -9,7 +9,7 @@ import * as clinicalService from '../../clinical/clinical-service';
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 
-// TODO: this should kick any active submission/registration
+// TODO: this should update any active submission/registration
 export const updateSchemaVersion = async (toVersion: string, updater: string) => {
   // submit the migration request
   await submitMigration(manager.instance().getCurrent().version, toVersion, updater);
@@ -85,9 +85,11 @@ const submitMigration = async (
 
 const startMigration = async (roMigration: DeepReadonly<DictionaryMigration>) => {
   const migration = _.cloneDeep(roMigration) as DictionaryMigration;
+
   if (!migration._id) {
     throw new Error('Migration should have an id');
   }
+
   const migrationId = migration._id;
   const newSchemaVersion = migration.toVersion;
   const dryRun = migration.dryRun;
@@ -96,23 +98,7 @@ const startMigration = async (roMigration: DeepReadonly<DictionaryMigration>) =>
     .instance()
     .loadSchemaByVersion(manager.instance().getCurrent().name, newSchemaVersion);
 
-  // analyze changes
-  if (!migration.analysis) {
-    const analysis = await manager
-      .instance()
-      .analyzeChanges(migration.fromVersion, newSchemaVersion);
-
-    migration.analysis = analysis;
-    await migrationRepo.update(migration);
-  }
-
-  // get the change analysis from the migration object
-  const changeAnalysis = migration.analysis as ChangeAnalysis;
-
-  // check for breaking changes
-  const invalidatingFields: any = findInvalidatingChangesFields(changeAnalysis);
-
-  await checkDonorDocuments(migration, migrationId, dryRun, invalidatingFields, newTargetSchema);
+  await checkDonorDocuments(migration, migrationId, dryRun, newTargetSchema);
 
   // close migration
   migration.state = 'CLOSED';
@@ -122,13 +108,10 @@ const startMigration = async (roMigration: DeepReadonly<DictionaryMigration>) =>
 };
 
 // start iterating over paged donor documents records (that weren't checked before)
-// TODO enhance to report progress of migration to db
-// TODO report when done to slack
 const checkDonorDocuments = async (
   migration: DictionaryMigration,
   migrationId: string,
   dryRun: boolean,
-  invalidatingFields: any,
   newSchema: SchemasDictionary,
 ) => {
   let migrationDone = false;
@@ -136,7 +119,7 @@ const checkDonorDocuments = async (
     let invalidCount = 0;
     let validCount = 0;
     const donors = await getNextUncheckedDonorDocumentsBatch(migrationId, 20);
-
+    const newSchemaVersion = newSchema.version;
     // no more unchecked donors ??
     if (donors.length == 0) {
       // mark migration as done
@@ -146,7 +129,7 @@ const checkDonorDocuments = async (
 
     // check invalidation criteria against each one
     for (const donor of donors) {
-      if (shouldInvalidate(donor, newSchema, invalidatingFields)) {
+      if (shouldInvalidate(donor, newSchema, newSchemaVersion)) {
         // if invalid mark as invalid and update document metadata
         if (!dryRun) {
           await markDonorAsInvalid(donor, migrationId);
@@ -162,7 +145,6 @@ const checkDonorDocuments = async (
       } else {
         await updateMigrationIdOnly(donor, migrationId);
       }
-
       validCount += 1;
     }
 
@@ -178,18 +160,30 @@ const getNextUncheckedDonorDocumentsBatch = async (migrationId: string, limit: n
 };
 
 // TODO: enhance to return invalidation reasons
-const shouldInvalidate = (
+const shouldInvalidate = async (
   donor: DeepReadonly<Donor>,
   schema: SchemasDictionary,
-  breakingChanges: any,
+  newSchemaVersion: string,
 ) => {
   let invalid = false;
-  breakingChanges.forEach((c: any) => {
-    // short circuit if already found invalidating criteria
+
+  // analyze changes between the document last valid schema
+  const analysis = await manager
+    .instance()
+    .analyzeChanges(donor.schemaMetadata.lastValidSchemaVersion, newSchemaVersion);
+
+  // check for breaking changes
+  const invalidatingFields: any = findInvalidatingChangesFields(analysis);
+
+  const schemaNamesWithBreakingChanges = invalidatingFields.map((inf: any) => {
+    return inf.fieldPath.split('.')[0];
+  });
+
+  schemaNamesWithBreakingChanges.forEach((schemaName: string) => {
+    // short circuit if already found invalidating criteria, this will change when we start recording the reasons
     if (invalid) return;
-    // TODO this can be optimized to only iterate over schemas
     // not fields since we only need to check the whole schema once.
-    invalid = validateDonorAgainstNewSchema(c.fieldPath, schema, donor);
+    invalid = validateDonorEntityAgainstNewSchema(schemaName, schema, donor);
     return;
   });
 
@@ -204,31 +198,16 @@ function prepareForSchemaReProcessing(o: any, submitterDonorId: string) {
   return toString(copy);
 }
 
-function toString(obj: any) {
-  if (!obj) {
-    return undefined;
-  }
-  Object.keys(obj).forEach(k => {
-    if (typeof obj[k] === 'object') {
-      return toString(obj[k]);
-    }
-    obj[k] = `${obj[k]}`;
-  });
-
-  return obj;
-}
-
-const validateDonorAgainstNewSchema = (
-  schemaField: string,
+const validateDonorEntityAgainstNewSchema = (
+  schemaName: string,
   schema: SchemasDictionary,
   donor: DeepReadonly<Donor>,
 ) => {
-  console.log(`checking donor ${donor.submitterId} for field: ${schemaField}`);
-  const entity = schemaField.split('.')[0];
+  console.log(`checking donor ${donor.submitterId} for schema: ${schemaName}`);
 
-  if (entity == 'donor') {
+  if (schemaName == 'donor') {
     if (donor.clinicalInfo) {
-      const result = schemaService.process(schema, entity, [
+      const result = schemaService.process(schema, schemaName, [
         prepareForSchemaReProcessing(donor.clinicalInfo, donor.submitterId),
       ]);
       if (result.validationErrors.length > 0) {
@@ -237,12 +216,12 @@ const validateDonorAgainstNewSchema = (
     }
   }
 
-  if (entity == 'specimen') {
+  if (schemaName == 'specimen') {
     let invalidFound = false;
     donor.specimens.forEach(sp => {
       if (invalidFound) return;
       if (sp.clinicalInfo) {
-        const result = schemaService.process(schema, entity, [
+        const result = schemaService.process(schema, schemaName, [
           prepareForSchemaReProcessing(sp.clinicalInfo, donor.submitterId),
         ]);
         if (result.validationErrors.length > 0) {
@@ -256,7 +235,7 @@ const validateDonorAgainstNewSchema = (
     }
   }
 
-  const donorFieldName = _.camelCase(entity) as keyof Donor;
+  const donorFieldName = _.camelCase(schemaName) as keyof Donor;
   const clinicalEntity = donor[donorFieldName] || undefined;
 
   if (!clinicalEntity) {
@@ -267,7 +246,7 @@ const validateDonorAgainstNewSchema = (
     let invalidFound = false;
     clinicalEntity.forEach(ce => {
       if (invalidFound) return;
-      const result = schemaService.process(schema, entity, [
+      const result = schemaService.process(schema, schemaName, [
         prepareForSchemaReProcessing(ce, donor.submitterId),
       ]);
       if (result.validationErrors.length > 0) {
@@ -280,9 +259,10 @@ const validateDonorAgainstNewSchema = (
     }
   }
 
-  const result = schemaService.process(schema, entity, [
+  const result = schemaService.process(schema, schemaName, [
     prepareForSchemaReProcessing(clinicalEntity, donor.submitterId),
   ]);
+
   if (result.validationErrors.length > 0) {
     return true;
   }
@@ -311,9 +291,9 @@ const updateMigrationIdOnly = async (donor: DeepReadonly<Donor>, migrationId: st
   return await clinicalService.updateMigrationId(donor, migrationId);
 };
 
-// TODO change this to find breaking changes in entities not fields.
 function findInvalidatingChangesFields(changeAnalysis: ChangeAnalysis) {
   const invalidatingFields: any = [];
+
   /**************
    * CODELISTS
    ***************/
@@ -344,7 +324,7 @@ function findInvalidatingChangesFields(changeAnalysis: ChangeAnalysis) {
     invalidatingFields.push({
       type: 'REGEX_ADDED',
       fieldPath: rc.field,
-      newValidValue: rc.regex,
+      newValidValue: rc.value,
     });
   });
 
@@ -352,7 +332,73 @@ function findInvalidatingChangesFields(changeAnalysis: ChangeAnalysis) {
     invalidatingFields.push({
       type: 'REGEX_UPDATED',
       fieldPath: rc.field,
-      newValidValue: rc.regex,
+      newValidValue: rc.value,
+    });
+  });
+
+  /**************
+   * Required restrictions set
+   ***************/
+  changeAnalysis.restrictionsChanges.required.created.forEach(rc => {
+    // if required added with value true
+    if (rc.value) {
+      invalidatingFields.push({
+        type: 'REQUIRED_SET',
+        fieldPath: rc.field,
+        newValidValue: rc.value,
+      });
+    }
+  });
+
+  changeAnalysis.restrictionsChanges.required.updated.forEach(rc => {
+    // if required added with value true
+    if (rc.value) {
+      invalidatingFields.push({
+        type: 'REQUIRED_SET',
+        fieldPath: rc.field,
+        newValidValue: rc.value,
+      });
+    }
+  });
+
+  // ******************
+  // Adding new required field
+  // ******************
+  changeAnalysis.fields.addedFields.forEach(rc => {
+    if (rc.definition.restrictions && rc.definition.restrictions.required) {
+      invalidatingFields.push({
+        type: 'REQUIRED_FIELD_ADDED',
+        fieldPath: rc.name,
+      });
+    }
+  });
+
+  // ******************
+  // Removing a field
+  // ******************
+  changeAnalysis.fields.deletedFields.forEach(rc => {
+    invalidatingFields.push({
+      type: 'FIELD_REMOVED',
+      fieldPath: rc,
+    });
+  });
+
+  // ******************
+  // Scripts
+  // ******************
+  changeAnalysis.restrictionsChanges.script.created.forEach(rc => {
+    invalidatingFields.push({
+      type: 'SCRIPT_ADDED',
+      fieldPath: rc.field,
+      newValidValue: rc.value,
+    });
+  });
+
+  changeAnalysis.restrictionsChanges.script.updated.forEach(rc => {
+    invalidatingFields.push({
+      type: 'SCRIPT_UPDATED',
+      fieldPath: rc.field,
+      newValidValue: rc.value,
     });
   });
 
@@ -361,17 +407,19 @@ function findInvalidatingChangesFields(changeAnalysis: ChangeAnalysis) {
   // Ranges
   // ******************
 
-  // ******************
-  // Scripts
-  // ******************
-
-  // ******************
-  // Adding new field
-  // ******************
-
-  // ******************
-  // Removing a field
-  // ******************
-
   return invalidatingFields;
+}
+
+function toString(obj: any) {
+  if (!obj) {
+    return undefined;
+  }
+  Object.keys(obj).forEach(k => {
+    if (typeof obj[k] === 'object') {
+      return toString(obj[k]);
+    }
+    obj[k] = `${obj[k]}`;
+  });
+
+  return obj;
 }
