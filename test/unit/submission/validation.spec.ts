@@ -13,7 +13,7 @@ import {
 import { Donor } from '../../../src/clinical/clinical-entities';
 import { stubs } from './stubs';
 import { fail } from 'assert';
-import { DonorRecordsOrganizerOperations as organizerOperations } from '../../../src/submission/validation-clinical/utils';
+import { ClinicalSubmissionRecordsOperations } from '../../../src/submission/validation-clinical/utils';
 
 const genderMutatedErr: SubmissionValidationError = {
   fieldName: 'gender',
@@ -1101,22 +1101,34 @@ describe('data-validator', () => {
     it('should validate donor and specimen ids for specimen submissions', async () => {
       const existingDonorAB2Mock: Donor = stubs.validation.existingDonor04();
       const newDonorAB1Records = {};
-      organizerOperations.addRecord(ClinicalEntityType.SPECIMEN, newDonorAB1Records, {
-        [FieldsEnum.submitter_donor_id]: 'AB1',
-        [FieldsEnum.submitter_specimen_id]: 'SP1',
-        index: 2,
-      });
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntityType.SPECIMEN,
+        newDonorAB1Records,
+        {
+          [FieldsEnum.submitter_donor_id]: 'AB1',
+          [FieldsEnum.submitter_specimen_id]: 'SP1',
+          index: 2,
+        },
+      );
       const newDonorAB2Records = {};
-      organizerOperations.addRecord(ClinicalEntityType.SPECIMEN, newDonorAB2Records, {
-        [FieldsEnum.submitter_donor_id]: 'AB2',
-        [FieldsEnum.submitter_specimen_id]: 'SP2',
-        index: 0,
-      });
-      organizerOperations.addRecord(ClinicalEntityType.SPECIMEN, newDonorAB2Records, {
-        [FieldsEnum.submitter_donor_id]: 'AB2',
-        [FieldsEnum.submitter_specimen_id]: 'SP3',
-        index: 1,
-      });
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntityType.SPECIMEN,
+        newDonorAB2Records,
+        {
+          [FieldsEnum.submitter_donor_id]: 'AB2',
+          [FieldsEnum.submitter_specimen_id]: 'SP2',
+          index: 0,
+        },
+      );
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntityType.SPECIMEN,
+        newDonorAB2Records,
+        {
+          [FieldsEnum.submitter_donor_id]: 'AB2',
+          [FieldsEnum.submitter_specimen_id]: 'SP3',
+          index: 1,
+        },
+      );
 
       const result = await dv
         .validateSubmissionData(
@@ -1166,29 +1178,41 @@ describe('data-validator', () => {
       const existingDonorAB3Mock: Donor = stubs.validation.existingDonor03();
 
       const newDonorAB2Records = {};
-      organizerOperations.addRecord(ClinicalEntityType.SPECIMEN, newDonorAB2Records, {
-        [FieldsEnum.submitter_donor_id]: 'AB2',
-        [FieldsEnum.program_id]: 'PEME-CA',
-        [FieldsEnum.submitter_specimen_id]: 'SP13',
-        [ClinicalInfoFieldsEnum.acquisition_interval]: 5020,
-        index: 0,
-      });
-      organizerOperations.addRecord(ClinicalEntityType.SPECIMEN, newDonorAB2Records, {
-        [FieldsEnum.submitter_donor_id]: 'AB2',
-        [FieldsEnum.program_id]: 'PEME-CA',
-        [FieldsEnum.submitter_specimen_id]: 'SP14',
-        [ClinicalInfoFieldsEnum.acquisition_interval]: 9000,
-        index: 1,
-      });
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntityType.SPECIMEN,
+        newDonorAB2Records,
+        {
+          [FieldsEnum.submitter_donor_id]: 'AB2',
+          [FieldsEnum.program_id]: 'PEME-CA',
+          [FieldsEnum.submitter_specimen_id]: 'SP13',
+          [ClinicalInfoFieldsEnum.acquisition_interval]: 5020,
+          index: 0,
+        },
+      );
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntityType.SPECIMEN,
+        newDonorAB2Records,
+        {
+          [FieldsEnum.submitter_donor_id]: 'AB2',
+          [FieldsEnum.program_id]: 'PEME-CA',
+          [FieldsEnum.submitter_specimen_id]: 'SP14',
+          [ClinicalInfoFieldsEnum.acquisition_interval]: 9000,
+          index: 1,
+        },
+      );
       const newDonorAB3Records = {};
-      organizerOperations.addRecord(ClinicalEntityType.SPECIMEN, newDonorAB3Records, {
-        [FieldsEnum.submitter_donor_id]: 'AB3',
-        [FieldsEnum.program_id]: 'PEME-CA',
-        [FieldsEnum.submitter_specimen_id]: 'SP12',
-        [ClinicalInfoFieldsEnum.acquisition_interval]: 2000,
-        index: 0,
-      });
-      organizerOperations.addRecord(ClinicalEntityType.DONOR, newDonorAB3Records, {
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntityType.SPECIMEN,
+        newDonorAB3Records,
+        {
+          [FieldsEnum.submitter_donor_id]: 'AB3',
+          [FieldsEnum.program_id]: 'PEME-CA',
+          [FieldsEnum.submitter_specimen_id]: 'SP12',
+          [ClinicalInfoFieldsEnum.acquisition_interval]: 2000,
+          index: 0,
+        },
+      );
+      ClinicalSubmissionRecordsOperations.addRecord(ClinicalEntityType.DONOR, newDonorAB3Records, {
         [FieldsEnum.submitter_donor_id]: 'AB3',
         [FieldsEnum.program_id]: 'PEME-CA',
         [ClinicalInfoFieldsEnum.vital_status]: 'deceased',
@@ -1255,18 +1279,26 @@ describe('data-validator', () => {
     it('should detect not enough info to validate specimen file', async () => {
       const existingDonorMock: Donor = stubs.validation.existingDonor01();
       const newDonorAB1Records = {};
-      organizerOperations.addRecord(ClinicalEntityType.SPECIMEN, newDonorAB1Records, {
-        [FieldsEnum.submitter_donor_id]: 'AB1',
-        [FieldsEnum.submitter_specimen_id]: 'SP13',
-        [ClinicalInfoFieldsEnum.acquisition_interval]: 200,
-        index: 0,
-      });
-      organizerOperations.addRecord(ClinicalEntityType.SPECIMEN, newDonorAB1Records, {
-        [FieldsEnum.submitter_donor_id]: 'AB1',
-        [FieldsEnum.submitter_specimen_id]: 'SP14',
-        [ClinicalInfoFieldsEnum.acquisition_interval]: 200,
-        index: 1,
-      });
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntityType.SPECIMEN,
+        newDonorAB1Records,
+        {
+          [FieldsEnum.submitter_donor_id]: 'AB1',
+          [FieldsEnum.submitter_specimen_id]: 'SP13',
+          [ClinicalInfoFieldsEnum.acquisition_interval]: 200,
+          index: 0,
+        },
+      );
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntityType.SPECIMEN,
+        newDonorAB1Records,
+        {
+          [FieldsEnum.submitter_donor_id]: 'AB1',
+          [FieldsEnum.submitter_specimen_id]: 'SP14',
+          [ClinicalInfoFieldsEnum.acquisition_interval]: 200,
+          index: 1,
+        },
+      );
       const result = await dv
         .validateSubmissionData({ AB1: newDonorAB1Records }, { AB1: existingDonorMock })
         .catch((err: any) => fail(err));

@@ -10,8 +10,8 @@ import {
   ClinicalTypeValidateResult,
   ClinicalEntityType,
   ClinicalUniqueIndentifier,
-  RecordsToSubmitterDonorIdMap,
-  DonorRecordsOrganizer,
+  ClinicalSubmissionRecordsByDonorIdMap,
+  SubmittedClinicalRecordsMap,
 } from './submission-entities';
 import { donorDao, DONOR_FIELDS } from '../clinical/donor-repo';
 import { DeepReadonly } from 'deep-freeze';
@@ -24,7 +24,7 @@ import {
   buildMultipleRecordValidationResults,
 } from './validation-clinical/utils';
 import _ from 'lodash';
-import { DonorRecordsOrganizerOperations as organizerOperations } from './validation-clinical/utils';
+import { ClinicalSubmissionRecordsOperations } from './validation-clinical/utils';
 
 export const validateRegistrationData = async (
   expectedProgram: string,
@@ -82,7 +82,7 @@ export const validateRegistrationData = async (
 };
 
 export const validateSubmissionData = async (
-  newRecordsToDonorMap: DeepReadonly<RecordsToSubmitterDonorIdMap>,
+  newRecordsToDonorMap: DeepReadonly<ClinicalSubmissionRecordsByDonorIdMap>,
   existingDonors: DeepReadonly<DonorMap>,
 ): Promise<ClinicalTypeValidateResult> => {
   const recordValidationResultMap: { [clinicalType: string]: RecordValidationResult[] } = {
@@ -92,7 +92,7 @@ export const validateSubmissionData = async (
   };
 
   for (const donorSubmitterId in newRecordsToDonorMap) {
-    const recordsOrganizer: DeepReadonly<DonorRecordsOrganizer> =
+    const recordsOrganizer: DeepReadonly<SubmittedClinicalRecordsMap> =
       newRecordsToDonorMap[donorSubmitterId];
     const existentDonor = existingDonors[donorSubmitterId];
 
@@ -124,11 +124,11 @@ export const validateSubmissionData = async (
 };
 
 function addErrorsForNoDonor(
-  newRecordsOrganizer: DeepReadonly<DonorRecordsOrganizer>,
+  newRecordsOrganizer: DeepReadonly<SubmittedClinicalRecordsMap>,
   recordValidationResultMap: { [clinicalType: string]: RecordValidationResult[] },
 ) {
   for (const clinicalType in newRecordsOrganizer) {
-    const records = organizerOperations.getRecordsAsArray(
+    const records = ClinicalSubmissionRecordsOperations.getRecordsAsArray(
       clinicalType as ClinicalEntityType,
       newRecordsOrganizer,
     );
