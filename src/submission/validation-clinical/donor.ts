@@ -1,12 +1,10 @@
 import {
-  FieldsEnum,
   DataValidationErrors,
   SubmittedClinicalRecord,
   SubmissionValidationError,
   ClinicalInfoFieldsEnum,
-  ValidatorResult,
-  ModificationType,
-  DonorRecordsObject,
+  RecordValidationResult,
+  DonorRecordsOrganizer,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
@@ -14,41 +12,30 @@ import * as utils from './utils';
 import _ from 'lodash';
 
 export const validate = async (
-  newRecords: DonorRecordsObject,
+  recordOrganizer: DonorRecordsOrganizer,
   existentDonor: DeepReadonly<Donor>,
-): Promise<ValidatorResult[]> => {
-  const errors: SubmissionValidationError[] = [];
-  // there can only be one donor record mapped to a donor submitter ID
-  const donorRecord = newRecords.getDonorRecord();
-  if (!donorRecord) {
-    return [];
+): Promise<RecordValidationResult> => {
+  // ***Basic pre-check (to prevent execution if missing required variables)***
+  const donorRecord = recordOrganizer.getDonorRecord();
+  if (!existentDonor || !donorRecord) {
+    throw new Error("Can't call this function without donor & donor record");
   }
 
-  // Preconditions: if any one of these validation failed, can't continue
-  if (!utils.checkDonorRegistered(existentDonor, donorRecord)) {
-    return [
-      utils.buildValidatorResult(ModificationType.ERRORSFOUND, donorRecord.index, [
-        utils.buildSubmissionError(
-          donorRecord,
-          DataValidationErrors.ID_NOT_REGISTERED,
-          FieldsEnum.submitter_donor_id,
-        ),
-      ]),
-    ];
-  }
+  // ***Submission Validation checks***
+  const errors: SubmissionValidationError[] = []; // all errors for record
 
-  // cross entity donor record validation
-  checkTimeConflictWithSpecimens(existentDonor, donorRecord, newRecords, errors);
+  // cross entity donor-specimen record validation
+  checkTimeConflictWithSpecimens(existentDonor, donorRecord, recordOrganizer, errors);
 
-  return errors.length > 0
-    ? [utils.buildValidatorResult(ModificationType.ERRORSFOUND, donorRecord.index, errors)]
-    : [utils.checkForUpdates(donorRecord, existentDonor.clinicalInfo)];
+  // other checks here and add to `errors`
+
+  return utils.buildRecordValidationResult(donorRecord, errors, existentDonor.clinicalInfo);
 };
 
 function checkTimeConflictWithSpecimens(
   donor: DeepReadonly<Donor>,
   donorRecord: DeepReadonly<SubmittedClinicalRecord>,
-  newRecords: DonorRecordsObject,
+  newRecords: DonorRecordsOrganizer,
   errors: SubmissionValidationError[],
 ) {
   if (

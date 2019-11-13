@@ -18,9 +18,8 @@ import {
   CreateSubmissionResult,
   SUBMISSION_STATE,
   ActiveClinicalSubmission,
-  SubmittedClinicalRecord,
   SubmissionValidationUpdate,
-  ClinicalTypeValidateResult,
+  ValidateResultByClinicalType,
   ClinicalEntities,
   ClinicalSubmissionModifierCommand,
   RegistrationStat,
@@ -31,11 +30,8 @@ import {
   NewClinicalEntities,
   ClinicalEntityType,
   BatchNameRegex,
-  RecordsToDonorMap,
-  ModificationType,
-  ValidatorResult,
-  DataValidationErrors,
-  DonorRecordsObject,
+  RecordsToSubmitterDonorIdMap,
+  DonorRecordsOrganizer,
 } from './submission-entities';
 import * as schemaManager from '../lectern-client/schema-manager';
 import {
@@ -341,8 +337,8 @@ export namespace operations {
         successful: true,
       };
     }
-    // map donors(via donorId) to their relevant records
-    const newDonorDataMap: RecordsToDonorMap = {};
+    // map records to relevant submitter_donor_id
+    const newDonorDataMap: RecordsToSubmitterDonorIdMap = {};
     const filters: FindByProgramAndSubmitterFilter[] = [];
     // map records to submitterDonorId and build filters
     for (const clinicalType in exsistingActiveSubmission.clinicalEntities) {
@@ -354,7 +350,7 @@ export namespace operations {
           submitterId: donorId,
         });
         if (!newDonorDataMap[donorId]) {
-          newDonorDataMap[donorId] = new DonorRecordsObject();
+          newDonorDataMap[donorId] = new DonorRecordsOrganizer();
         }
         // by this point we have already validated for uniqueness
         newDonorDataMap[donorId].addRecord(clinicalType as ClinicalEntityType, {
@@ -364,9 +360,9 @@ export namespace operations {
         });
       });
     }
+    Object.values(newDonorDataMap).forEach(recordOrganizer => recordOrganizer.freeze());
     const relevantDonorsMap = await getDonorsInProgram(filters);
-    // const { mutableData, errors } = checkDonorRegistered(relevantDonorsMap, newDonorDataMap);
-    const validateResult: ClinicalTypeValidateResult = await validateSubmissionData(
+    const validateResult: ValidateResultByClinicalType = await validateSubmissionData(
       newDonorDataMap,
       relevantDonorsMap,
     );

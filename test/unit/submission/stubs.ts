@@ -82,7 +82,7 @@ export const stubs = {
       donorId: 10,
       clinicalInfo: {
         [ClinicalInfoFieldsEnum.vital_status]: 'deceased',
-        [ClinicalInfoFieldsEnum.survival_time]: '522',
+        [ClinicalInfoFieldsEnum.survival_time]: 522,
       },
       gender: 'Female',
       specimens: [

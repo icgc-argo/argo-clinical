@@ -6,7 +6,7 @@ import {
   ClinicalInfoFieldsEnum,
   ModificationType,
   SubmissionValidationUpdate,
-  ValidatorResult,
+  RecordValidationResult,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
@@ -48,7 +48,7 @@ export const buildSubmissionUpdate = (
   newRecord: SubmittedClinicalRecord,
   oldValue: string,
   fieldName: FieldsEnum | ClinicalInfoFieldsEnum | string,
-) => {
+): SubmissionValidationUpdate => {
   // typescript refused to take this directly
   const index: number = newRecord.index;
   return {
@@ -62,15 +62,19 @@ export const buildSubmissionUpdate = (
   };
 };
 
-export const buildValidatorResult = (
-  type: ModificationType,
-  index: number,
-  resultArray?: SubmissionValidationError[] | SubmissionValidationUpdate[],
-): ValidatorResult => {
-  return { type, index, resultArray };
+export const buildRecordValidationResult = (
+  record: SubmittedClinicalRecord,
+  errors: SubmissionValidationError | SubmissionValidationError[],
+  clinicalInfo: DeepReadonly<{ [field: string]: string | number } | object> | undefined = {},
+): RecordValidationResult => {
+  errors = _.concat([], errors); // make sure errors is array
+  if (errors.length > 0) {
+    return { type: ModificationType.ERRORSFOUND, index: record.index, resultArray: errors };
+  }
+  return checkForUpdates(record, clinicalInfo);
 };
 
-export const buildClinicalValidationResult = (results: ValidatorResult[]) => {
+export const buildClinicalValidationResult = (results: RecordValidationResult[]) => {
   const stats = {
     [ModificationType.NEW]: [] as number[],
     [ModificationType.NOUPDATE]: [] as number[],
@@ -115,18 +119,42 @@ export const getUpdatedFields = (clinicalObject: any, record: SubmittedClinicalR
 // 3 not new or update <=> noUpdate
 export const checkForUpdates = (
   record: DeepReadonly<SubmittedClinicalRecord>,
-  clinicalObject: DeepReadonly<{ [field: string]: string | number } | object> | undefined,
-) => {
-  // no updates to specimenTissueSource or tnd but there is no existent clinicalInfo => new
-  if (_.isEmpty(clinicalObject)) {
-    return buildValidatorResult(ModificationType.NEW, record.index);
+  clinicalInfo: DeepReadonly<{ [field: string]: string | number } | object> | undefined,
+): RecordValidationResult => {
+  // clinicalInfo empty so new
+  if (_.isEmpty(clinicalInfo)) {
+    return { type: ModificationType.NEW, index: record.index };
   }
 
   // check changing fields
-  const updatedFields: any[] = getUpdatedFields(clinicalObject, record);
+  const submissionUpdates: any[] = getUpdatedFields(clinicalInfo, record);
 
   // if no updates and not new return noUpdate
-  return updatedFields.length === 0
-    ? buildValidatorResult(ModificationType.NOUPDATE, record.index)
-    : buildValidatorResult(ModificationType.UPDATED, record.index, updatedFields);
+  return submissionUpdates.length === 0
+    ? { type: ModificationType.NOUPDATE, index: record.index }
+    : { type: ModificationType.UPDATED, index: record.index, resultArray: submissionUpdates };
+};
+
+export const buildCommonRecordValidationResults = (
+  records: SubmittedClinicalRecord[],
+  commonErrorProperties: {
+    type: DataValidationErrors;
+    fieldName: FieldsEnum | ClinicalInfoFieldsEnum;
+    info: any;
+  },
+): RecordValidationResult[] => {
+  const validationResults = records.map(record => {
+    return buildRecordValidationResult(
+      record,
+      buildSubmissionError(
+        record,
+        commonErrorProperties.type,
+        commonErrorProperties.fieldName,
+        commonErrorProperties.info,
+      ),
+      {},
+    );
+  });
+
+  return validationResults;
 };

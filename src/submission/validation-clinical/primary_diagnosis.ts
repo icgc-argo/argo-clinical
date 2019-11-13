@@ -3,10 +3,10 @@ import {
   DataValidationErrors,
   SubmittedClinicalRecord,
   SubmissionValidationError,
-  ValidatorResult,
+  RecordValidationResult,
   ModificationType,
   ClinicalEntityType,
-  DonorRecordsObject,
+  DonorRecordsOrganizer,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
@@ -14,34 +14,19 @@ import * as utils from './utils';
 import _ from 'lodash';
 
 export const validate = async (
-  newRecords: DonorRecordsObject,
+  recordOrganizer: DonorRecordsOrganizer,
   existentDonor: DeepReadonly<Donor>,
-): Promise<ValidatorResult[]> => {
-  const errors: SubmissionValidationError[] = [];
-  // there can only be one primary_diagnoses record per donor
-  const pdRecord = newRecords.getPrimaryDiagnosesRecord();
-  if (!pdRecord) {
-    return [];
+): Promise<RecordValidationResult> => {
+  // ***Basic pre-check (to prevent execution if missing required variables)***
+  const pdRecord = recordOrganizer.getPrimaryDiagnosesRecord();
+  if (!pdRecord || !existentDonor) {
+    throw new Error("Can't call this function without donor & primary_diagnosis record");
   }
 
-  // Preconditions: if any one of these validation failed, can't continue
-  if (!utils.checkDonorRegistered(existentDonor, pdRecord)) {
-    return [
-      utils.buildValidatorResult(ModificationType.ERRORSFOUND, pdRecord.index, [
-        utils.buildSubmissionError(
-          pdRecord,
-          DataValidationErrors.ID_NOT_REGISTERED,
-          FieldsEnum.submitter_donor_id,
-        ),
-      ]),
-    ];
-  }
+  // ***Submission Validation checks**
+  const errors: SubmissionValidationError[] = []; // all errors for record
 
-  // cross entity record validation
+  // comming soon...
 
-  return [
-    errors.length > 0
-      ? utils.buildValidatorResult(ModificationType.ERRORSFOUND, pdRecord.index, errors)
-      : await utils.checkForUpdates(pdRecord, existentDonor.primaryDiagnosis),
-  ];
+  return utils.buildRecordValidationResult(pdRecord, errors, existentDonor.primaryDiagnosis);
 };

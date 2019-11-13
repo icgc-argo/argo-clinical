@@ -6,18 +6,24 @@ import {
   ValidationResult,
   FieldsEnum,
   RegistrationToCreateRegistrationFieldsMap,
-  ValidatorResult,
-  ClinicalTypeValidateResult,
+  RecordValidationResult,
+  ValidateResultByClinicalType,
   ClinicalEntityType,
   ClinicalUniqueIndentifier,
-  RecordsToDonorMap,
+  RecordsToSubmitterDonorIdMap,
+  DonorRecordsOrganizer,
 } from './submission-entities';
 import { donorDao, DONOR_FIELDS } from '../clinical/donor-repo';
 import { DeepReadonly } from 'deep-freeze';
 import { DataRecord } from '../lectern-client/schema-entities';
 import { submissionValidator } from './validation-clinical/index';
 import validationErrorMessage from './submission-error-messages';
-import { buildSubmissionError, buildClinicalValidationResult } from './validation-clinical/utils';
+import {
+  buildSubmissionError,
+  buildClinicalValidationResult,
+  buildRecordValidationResult,
+} from './validation-clinical/utils';
+import _ from 'lodash';
 
 export const validateRegistrationData = async (
   expectedProgram: string,
@@ -75,31 +81,64 @@ export const validateRegistrationData = async (
 };
 
 export const validateSubmissionData = async (
-  newRecordsToDonorMap: RecordsToDonorMap,
+  newRecordsToDonorMap: RecordsToSubmitterDonorIdMap,
   existingDonors: DeepReadonly<DonorMap>,
-): Promise<ClinicalTypeValidateResult> => {
-  const validatorResultMap: { [clinicalType: string]: ValidatorResult[] } = {};
+): Promise<ValidateResultByClinicalType> => {
+  const recordValidationResultMap: { [clinicalType: string]: RecordValidationResult[] } = {
+    [ClinicalEntityType.DONOR]: [],
+    [ClinicalEntityType.PRIMARY_DIAGNOSES]: [],
+    [ClinicalEntityType.SPECIMEN]: [],
+  };
+
   for (const donorSubmitterId in newRecordsToDonorMap) {
-    const newRecordsObject = newRecordsToDonorMap[donorSubmitterId];
+    const newRecords: DonorRecordsOrganizer = newRecordsToDonorMap[donorSubmitterId];
     const existentDonor = existingDonors[donorSubmitterId];
-    for (const clinicalType of newRecordsObject.getEntitiesToValidate()) {
-      const results: ValidatorResult[] = await submissionValidator[clinicalType].validate(
-        newRecordsObject,
-        existentDonor,
+
+    // Check if donor exsists
+    if (!existentDonor) {
+      addErrorsForNoDonor(newRecords, recordValidationResultMap);
+      continue;
+    }
+
+    // call submission validator or each clinical type
+    for (const clinicalType of newRecords.getTypesToValidate()) {
+      const results = await submissionValidator[clinicalType].validate(newRecords, existentDonor);
+      recordValidationResultMap[clinicalType] = _.concat(
+        recordValidationResultMap[clinicalType],
+        results,
       );
-      // validatorResult is either resutls or add results to existing results
-      validatorResultMap[clinicalType] = !validatorResultMap[clinicalType]
-        ? results
-        : validatorResultMap[clinicalType].concat(results);
     }
   }
 
-  const validationResults: ClinicalTypeValidateResult = {};
-  Object.entries(validatorResultMap).forEach(([clincialType, validatorResults]) => {
+  const validationResults: ValidateResultByClinicalType = {};
+  Object.entries(recordValidationResultMap).forEach(([clincialType, validatorResults]) => {
+    if (validatorResults.length === 0) return;
     validationResults[clincialType] = buildClinicalValidationResult(validatorResults);
   });
   return validationResults;
 };
+
+function addErrorsForNoDonor(
+  newRecords: DonorRecordsOrganizer,
+  recordValidationResultMap: { [clinicalType: string]: RecordValidationResult[] },
+) {
+  for (const clinicalType of newRecords.getTypesToValidate()) {
+    const records = newRecords.getRecordsAsArray(clinicalType);
+
+    records.forEach(record => {
+      recordValidationResultMap[clinicalType].push(
+        buildRecordValidationResult(
+          record,
+          buildSubmissionError(
+            record,
+            DataValidationErrors.ID_NOT_REGISTERED,
+            FieldsEnum.submitter_donor_id,
+          ),
+        ),
+      );
+    });
+  }
+}
 
 export const checkDuplicateRecords = (
   clinicalType: ClinicalEntityType,

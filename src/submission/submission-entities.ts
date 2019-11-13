@@ -244,11 +244,10 @@ export enum ClinicalInfoFieldsEnum {
   survival_time = 'survival_time',
 }
 
-export interface ValidatorResult {
+export interface RecordValidationResult {
   type: ModificationType;
   index: number;
   resultArray?: SubmissionValidationError[] | SubmissionValidationUpdate[];
-  clinicalType?: ClinicalEntityType;
 }
 
 export enum ModificationType {
@@ -258,7 +257,7 @@ export enum ModificationType {
   NOUPDATE = 'noUpdate',
 }
 
-export type ClinicalTypeValidateResult = {
+export type ValidateResultByClinicalType = {
   [clinicalType: string]: Pick<SavedClinicalEntity, 'dataErrors' | 'dataUpdates' | 'stats'>;
 };
 
@@ -286,50 +285,68 @@ export const ClinicalUniqueIndentifier: Record<ClinicalEntityType, FieldsEnum> =
   [ClinicalEntityType.PRIMARY_DIAGNOSES]: FieldsEnum.submitter_donor_id,
 };
 
-export interface RecordsToDonorMap {
-  [donoSubmitterId: string]: DonorRecordsObject;
+export interface RecordsToSubmitterDonorIdMap {
+  [donoSubmitterId: string]: DonorRecordsOrganizer;
 }
 
-export class DonorRecordsObject {
+export class DonorRecordsOrganizer {
   private _donorRecord: SubmittedClinicalRecord | undefined;
   private _specimenRecords: SubmittedClinicalRecord[];
-  private _primaryDiagnosesRecord: SubmittedClinicalRecord | undefined;
+  private _primaryDiagnosisRecord: SubmittedClinicalRecord | undefined;
   private _entitiesToValidate: Set<ClinicalEntityType>;
 
   constructor() {
     this._donorRecord = undefined;
     this._specimenRecords = [];
-    this._primaryDiagnosesRecord = undefined;
+    this._primaryDiagnosisRecord = undefined;
     this._entitiesToValidate = new Set();
   }
 
+  public freeze() {
+    Object.freeze(this);
+  }
+
+  // could probably replace switching logics with maps, only three so leaving it like this for now
   public addRecord(type: ClinicalEntityType, record: SubmittedClinicalRecord) {
     switch (type) {
       case ClinicalEntityType.DONOR: {
         this._donorRecord = record;
-        this._entitiesToValidate.add(type);
         break;
       }
       case ClinicalEntityType.SPECIMEN: {
         this._specimenRecords.push(record);
-        this._entitiesToValidate.add(type);
         break;
       }
       case ClinicalEntityType.PRIMARY_DIAGNOSES: {
-        this._primaryDiagnosesRecord = record;
-        this._entitiesToValidate.add(type);
+        this._primaryDiagnosisRecord = record;
       }
       default:
         throw new Error(`Can't add record with type: ${type}`);
     }
+    this._entitiesToValidate.add(type);
+  }
+
+  public getRecordsAsArray(type: ClinicalEntityType): SubmittedClinicalRecord[] {
+    switch (type) {
+      case ClinicalEntityType.DONOR: {
+        return this._donorRecord ? [this._donorRecord] : [];
+      }
+      case ClinicalEntityType.SPECIMEN: {
+        return this._specimenRecords;
+      }
+      case ClinicalEntityType.PRIMARY_DIAGNOSES: {
+        return this._primaryDiagnosisRecord ? [this._primaryDiagnosisRecord] : [];
+      }
+    }
+    return [];
+  }
+
+  public getTypesToValidate() {
+    return this._entitiesToValidate;
   }
 
   public getDonorRecord() {
     return this._donorRecord;
-  }
-
-  public getEntitiesToValidate() {
-    return this._entitiesToValidate;
   }
 
   public getSpecimenRecords() {
@@ -341,6 +358,6 @@ export class DonorRecordsObject {
   }
 
   public getPrimaryDiagnosesRecord() {
-    return this._primaryDiagnosesRecord;
+    return this._primaryDiagnosisRecord;
   }
 }
