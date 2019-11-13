@@ -47,7 +47,7 @@ import { DeepReadonly } from 'deep-freeze';
 import { submissionRepository } from './submission-repo';
 import { v1 as uuid } from 'uuid';
 import { validateSubmissionData, checkUniqueRecords } from './validation';
-import { RecordsOrganizerOperations as organizerOperations } from './validation-clinical/utils';
+import { DonorRecordsOrganizerOperations as organizerOperations } from './validation-clinical/utils';
 const L = loggerFor(__filename);
 
 const emptyStats = {

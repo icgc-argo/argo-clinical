@@ -11,16 +11,8 @@ import {
   DonorRecordsOrganizer,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
-import { Donor } from '../../clinical/clinical-entities';
 import validationErrorMessage from '../submission-error-messages';
 import _ from 'lodash';
-
-export const checkDonorRegistered = (
-  aDonor: DeepReadonly<Donor>,
-  record: DeepReadonly<SubmittedClinicalRecord>,
-) => {
-  return aDonor && aDonor.submitterId === record[FieldsEnum.submitter_donor_id];
-};
 
 export const buildSubmissionError = (
   newRecord: SubmittedClinicalRecord,
@@ -76,6 +68,41 @@ export const buildRecordValidationResult = (
   return checkForUpdates(record, clinicalInfo);
 };
 
+// cases
+// 1 new clinicalInfo <=> new
+// 2 changing clinicalInfo <=> update
+// 3 not new or update <=> noUpdate
+const checkForUpdates = (
+  record: DeepReadonly<SubmittedClinicalRecord>,
+  clinicalInfo: DeepReadonly<{ [field: string]: string | number } | object> | undefined,
+): RecordValidationResult => {
+  // clinicalInfo empty so new
+  if (_.isEmpty(clinicalInfo)) {
+    return { type: ModificationType.NEW, index: record.index };
+  }
+
+  // check changing fields
+  const submissionUpdates: any[] = getSubmissionUpdates(clinicalInfo, record);
+
+  // if no updates and not new return noUpdate
+  return submissionUpdates.length === 0
+    ? { type: ModificationType.NOUPDATE, index: record.index }
+    : { type: ModificationType.UPDATED, index: record.index, resultArray: submissionUpdates };
+};
+
+const getSubmissionUpdates = (clinicalObject: any, record: SubmittedClinicalRecord) => {
+  const submissionUpdates: SubmissionValidationUpdate[] = [];
+  if (clinicalObject) {
+    for (const fieldName in clinicalObject) {
+      // this is assuming that the field name record and clinicalInfo both have snake casing
+      if (clinicalObject[fieldName] !== record[fieldName]) {
+        submissionUpdates.push(buildSubmissionUpdate(record, clinicalObject[fieldName], fieldName));
+      }
+    }
+  }
+  return submissionUpdates;
+};
+
 export const buildClinicalValidationResult = (results: RecordValidationResult[]) => {
   const stats = {
     [ModificationType.NEW]: [] as number[],
@@ -102,41 +129,6 @@ export const buildClinicalValidationResult = (results: RecordValidationResult[])
   };
 };
 
-export const getSubmissionUpdateds = (clinicalObject: any, record: SubmittedClinicalRecord) => {
-  const submissionUpdates: SubmissionValidationUpdate[] = [];
-  if (clinicalObject) {
-    for (const fieldName in clinicalObject) {
-      // this is assuming that the field name record and clinicalInfo both have snake casing
-      if (clinicalObject[fieldName] !== record[fieldName]) {
-        submissionUpdates.push(buildSubmissionUpdate(record, clinicalObject[fieldName], fieldName));
-      }
-    }
-  }
-  return submissionUpdates;
-};
-
-// cases
-// 1 new clinicalInfo <=> new
-// 2 changing clinicalInfo <=> update
-// 3 not new or update <=> noUpdate
-export const checkForUpdates = (
-  record: DeepReadonly<SubmittedClinicalRecord>,
-  clinicalInfo: DeepReadonly<{ [field: string]: string | number } | object> | undefined,
-): RecordValidationResult => {
-  // clinicalInfo empty so new
-  if (_.isEmpty(clinicalInfo)) {
-    return { type: ModificationType.NEW, index: record.index };
-  }
-
-  // check changing fields
-  const submissionUpdates: any[] = getSubmissionUpdateds(clinicalInfo, record);
-
-  // if no updates and not new return noUpdate
-  return submissionUpdates.length === 0
-    ? { type: ModificationType.NOUPDATE, index: record.index }
-    : { type: ModificationType.UPDATED, index: record.index, resultArray: submissionUpdates };
-};
-
 export const buildMultipleRecordValidationResults = (
   records: ReadonlyArray<SubmittedClinicalRecord>,
   commonErrorProperties: {
@@ -161,8 +153,8 @@ export const buildMultipleRecordValidationResults = (
   return validationResults;
 };
 
-export namespace RecordsOrganizerOperations {
-  // this function will mutate recordsOrganizer
+export namespace DonorRecordsOrganizerOperations {
+  // this function will mutate a DonorRecordsOrganizer
   export function addRecord(
     type: ClinicalEntityType,
     records: DonorRecordsOrganizer,

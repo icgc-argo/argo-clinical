@@ -21,11 +21,10 @@ import validationErrorMessage from './submission-error-messages';
 import {
   buildSubmissionError,
   buildClinicalValidationResult,
-  buildRecordValidationResult,
   buildMultipleRecordValidationResults,
 } from './validation-clinical/utils';
 import _ from 'lodash';
-import { RecordsOrganizerOperations as organizerOperations } from './validation-clinical/utils';
+import { DonorRecordsOrganizerOperations as organizerOperations } from './validation-clinical/utils';
 
 export const validateRegistrationData = async (
   expectedProgram: string,

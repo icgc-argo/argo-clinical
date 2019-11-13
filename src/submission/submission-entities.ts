@@ -276,7 +276,7 @@ export const BatchNameRegex: Record<ClinicalEntityType, RegExp[]> = {
   [ClinicalEntityType.PRIMARY_DIAGNOSIS]: [/^primary_diagnosis.*\.tsv/],
 };
 
-// assumption: one field uniquely identifies a clinical type record
+// assumption: one field uniquely identifies a clinical type record in a batch of records
 export const ClinicalUniqueIndentifier = {
   [ClinicalEntityType.DONOR]: FieldsEnum.submitter_donor_id,
   [ClinicalEntityType.SPECIMEN]: FieldsEnum.submitter_specimen_id,

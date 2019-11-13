@@ -33,7 +33,7 @@ export const mergeActiveSubmissionWithDonors = async (
             updateSpecimenRecord(donor, record);
             break;
           case ClinicalEntityType.PRIMARY_DIAGNOSIS:
-            updatePrimaryDiagnosesRecord(donor, record);
+            updatePrimaryDiagnosisRecord(donor, record);
             break;
           default:
             addOrUpdateClinicalRecord(donor, record, entityType);
@@ -62,7 +62,7 @@ const updateSpecimenRecord = (donor: Donor, record: ClinicalEnitityRecord) => {
   ]);
 };
 
-const updatePrimaryDiagnosesRecord = (donor: Donor, record: ClinicalEnitityRecord) => {
+const updatePrimaryDiagnosisRecord = (donor: Donor, record: ClinicalEnitityRecord) => {
   donor.primaryDiagnosis = _.omit(record, [FieldsEnum.submitter_donor_id]);
 };
 

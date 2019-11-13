@@ -13,7 +13,7 @@ import { Donor } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
 import { isEmptyString } from '../../utils';
-import { RecordsOrganizerOperations as organizerOperations } from './utils';
+import { DonorRecordsOrganizerOperations as organizerOperations } from './utils';
 
 export const validate = async (
   newRecordsOrganizer: DeepReadonly<DonorRecordsOrganizer>,
@@ -55,43 +55,6 @@ export const validate = async (
   }
 
   return recordValidationResults;
-};
-
-const getDataFromDonorRecordOrDonor = (
-  donor: DeepReadonly<Donor>,
-  recordsOrganizer: DeepReadonly<DonorRecordsOrganizer>,
-  validationResults: RecordValidationResult[],
-) => {
-  let missingField: ClinicalInfoFieldsEnum[] = [];
-  let donorVitalStatus: string = '';
-  let donorSurvivalTime: number = NaN;
-  const donorDataSource =
-    organizerOperations.getDonorRecord(recordsOrganizer) || donor.clinicalInfo;
-
-  if (!donorDataSource) {
-    missingField = [ClinicalInfoFieldsEnum.vital_status, ClinicalInfoFieldsEnum.survival_time];
-  } else {
-    donorVitalStatus = donorDataSource[ClinicalInfoFieldsEnum.vital_status] as string;
-    donorSurvivalTime = Number(donorDataSource[ClinicalInfoFieldsEnum.survival_time]) || NaN;
-
-    if (isEmptyString(donorVitalStatus)) missingField.push(ClinicalInfoFieldsEnum.vital_status);
-    if (isNaN(donorSurvivalTime)) missingField.push(ClinicalInfoFieldsEnum.survival_time);
-  }
-
-  if (missingField.length > 0) {
-    const multipleRecordValidationResults = utils.buildMultipleRecordValidationResults(
-      organizerOperations.getRecordsAsArray(ClinicalEntityType.SPECIMEN, recordsOrganizer),
-      {
-        type: DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
-        fieldName: ClinicalInfoFieldsEnum.acquisition_interval,
-        info: { missingField },
-      },
-    );
-    validationResults.push(...multipleRecordValidationResults);
-    return undefined;
-  }
-
-  return { donorVitalStatus, donorSurvivalTime };
 };
 
 function getSpecimenFromDonor(
@@ -140,3 +103,40 @@ function checkTimeConflictWithDonor(
     );
   }
 }
+
+const getDataFromDonorRecordOrDonor = (
+  donor: DeepReadonly<Donor>,
+  recordsOrganizer: DeepReadonly<DonorRecordsOrganizer>,
+  validationResults: RecordValidationResult[],
+) => {
+  let missingField: ClinicalInfoFieldsEnum[] = [];
+  let donorVitalStatus: string = '';
+  let donorSurvivalTime: number = NaN;
+  const donorDataSource =
+    organizerOperations.getDonorRecord(recordsOrganizer) || donor.clinicalInfo;
+
+  if (!donorDataSource) {
+    missingField = [ClinicalInfoFieldsEnum.vital_status, ClinicalInfoFieldsEnum.survival_time];
+  } else {
+    donorVitalStatus = donorDataSource[ClinicalInfoFieldsEnum.vital_status] as string;
+    donorSurvivalTime = Number(donorDataSource[ClinicalInfoFieldsEnum.survival_time]) || NaN;
+
+    if (isEmptyString(donorVitalStatus)) missingField.push(ClinicalInfoFieldsEnum.vital_status);
+    if (isNaN(donorSurvivalTime)) missingField.push(ClinicalInfoFieldsEnum.survival_time);
+  }
+
+  if (missingField.length > 0) {
+    const multipleRecordValidationResults = utils.buildMultipleRecordValidationResults(
+      organizerOperations.getRecordsAsArray(ClinicalEntityType.SPECIMEN, recordsOrganizer),
+      {
+        type: DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
+        fieldName: ClinicalInfoFieldsEnum.acquisition_interval,
+        info: { missingField },
+      },
+    );
+    validationResults.push(...multipleRecordValidationResults);
+    return undefined;
+  }
+
+  return { donorVitalStatus, donorSurvivalTime };
+};

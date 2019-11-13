@@ -7,7 +7,7 @@ import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
-import { RecordsOrganizerOperations as organizerOperations } from './utils';
+import { DonorRecordsOrganizerOperations as organizerOperations } from './utils';
 
 export const validate = async (
   recordOrganizer: DeepReadonly<DonorRecordsOrganizer>,

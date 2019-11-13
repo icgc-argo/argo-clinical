@@ -13,7 +13,7 @@ import {
 import { Donor } from '../../../src/clinical/clinical-entities';
 import { stubs } from './stubs';
 import { fail } from 'assert';
-import { RecordsOrganizerOperations as organizerOperations } from '../../../src/submission/validation-clinical/utils';
+import { DonorRecordsOrganizerOperations as organizerOperations } from '../../../src/submission/validation-clinical/utils';
 
 const genderMutatedErr: SubmissionValidationError = {
   fieldName: 'gender',
