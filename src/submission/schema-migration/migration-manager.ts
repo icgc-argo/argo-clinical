@@ -1,9 +1,13 @@
 import { migrationRepo } from './migration-repo';
-import { Errors } from '../../utils';
+import { Errors, notEmpty } from '../../utils';
 import { DictionaryMigration } from './migration-entities';
 import * as manager from '../schema-manager';
 import * as schemaService from '../../lectern-client/schema-functions';
-import { ChangeAnalysis, SchemasDictionary } from '../../lectern-client/schema-entities';
+import {
+  ChangeAnalysis,
+  SchemasDictionary,
+  SchemaValidationError,
+} from '../../lectern-client/schema-entities';
 import { Donor } from '../../clinical/clinical-entities';
 import * as clinicalService from '../../clinical/clinical-service';
 import { DeepReadonly } from 'deep-freeze';
@@ -68,6 +72,7 @@ const submitMigration = async (
       totalProcessed: 0,
       validDocumentsCount: 0,
     },
+    invalidDonorsErrors: [],
   });
 
   if (!savedMigration) {
@@ -92,29 +97,37 @@ const startMigration = async (roMigration: DeepReadonly<DictionaryMigration>) =>
 
   const migrationId = migration._id;
   const newSchemaVersion = migration.toVersion;
-  const dryRun = migration.dryRun;
 
   const newTargetSchema = await manager
     .instance()
     .loadSchemaByVersion(manager.instance().getCurrent().name, newSchemaVersion);
 
-  await checkDonorDocuments(migration, migrationId, dryRun, newTargetSchema);
+  await checkDonorDocuments(migration, newTargetSchema);
 
   // close migration
-  migration.state = 'CLOSED';
-  migration.stage = 'COMPLETED';
-  await migrationRepo.update(migration);
-  return migration;
+  const updatedMigration = await migrationRepo.getById(migrationId);
+  const migrationToClose = _.cloneDeep(updatedMigration) as DictionaryMigration;
+  if (!migrationToClose) {
+    throw new Error('where did the migration go? expected migration not found');
+  }
+  migrationToClose.state = 'CLOSED';
+  migrationToClose.stage = 'COMPLETED';
+  const closedMigration = await migrationRepo.update(migrationToClose);
+  return closedMigration;
 };
 
 // start iterating over paged donor documents records (that weren't checked before)
 const checkDonorDocuments = async (
   migration: DictionaryMigration,
-  migrationId: string,
-  dryRun: boolean,
   newSchema: SchemasDictionary,
 ) => {
   let migrationDone = false;
+  if (!migration._id) {
+    throw new Error('Migration should have an id');
+  }
+  const migrationId = migration._id;
+  const dryRun = migration.dryRun;
+
   while (!migrationDone) {
     let invalidCount = 0;
     let validCount = 0;
@@ -129,13 +142,22 @@ const checkDonorDocuments = async (
 
     // check invalidation criteria against each one
     for (const donor of donors) {
-      if (shouldInvalidate(donor, newSchema, newSchemaVersion)) {
+      const result = await revalidateDonorClinicalEntities(donor, newSchema, newSchemaVersion);
+      if (result && result.length > 0) {
         // if invalid mark as invalid and update document metadata
         if (!dryRun) {
           await markDonorAsInvalid(donor, migrationId);
         } else {
           await updateMigrationIdOnly(donor, migrationId);
         }
+
+        migration.invalidDonorsErrors.push({
+          donorId: donor.donorId,
+          submitterDonorId: donor.submitterId,
+          programId: donor.programId,
+          errors: result,
+        });
+
         invalidCount += 1;
         continue;
       }
@@ -151,7 +173,7 @@ const checkDonorDocuments = async (
     migration.stats.invalidDocumentsCount += invalidCount;
     migration.stats.validDocumentsCount += validCount;
     migration.stats.totalProcessed += donors.length;
-    await migrationRepo.update(migration);
+    migration = await migrationRepo.update(migration);
   }
 };
 
@@ -160,13 +182,12 @@ const getNextUncheckedDonorDocumentsBatch = async (migrationId: string, limit: n
 };
 
 // TODO: enhance to return invalidation reasons
-const shouldInvalidate = async (
+const revalidateDonorClinicalEntities = async (
   donor: DeepReadonly<Donor>,
   schema: SchemasDictionary,
   newSchemaVersion: string,
 ) => {
-  let invalid = false;
-
+  const donorSchemaErrors: any[] = [];
   // analyze changes between the document last valid schema
   const analysis = await manager
     .instance()
@@ -175,19 +196,23 @@ const shouldInvalidate = async (
   // check for breaking changes
   const invalidatingFields: any = findInvalidatingChangesFields(analysis);
 
-  const schemaNamesWithBreakingChanges = invalidatingFields.map((inf: any) => {
-    return inf.fieldPath.split('.')[0];
-  });
+  const schemaNamesWithBreakingChanges = _.uniqBy(
+    invalidatingFields.map((inf: any) => {
+      return inf.fieldPath.split('.')[0];
+    }),
+    (e: string) => e,
+  );
 
-  schemaNamesWithBreakingChanges.forEach((schemaName: string) => {
-    // short circuit if already found invalidating criteria, this will change when we start recording the reasons
-    if (invalid) return;
+  for (const schemaName of schemaNamesWithBreakingChanges) {
     // not fields since we only need to check the whole schema once.
-    invalid = validateDonorEntityAgainstNewSchema(schemaName, schema, donor);
-    return;
-  });
-
-  return invalid;
+    const errors = validateDonorEntityAgainstNewSchema(schemaName, schema, donor);
+    if (errors && errors.length > 0) {
+      donorSchemaErrors.push({
+        [schemaName]: errors,
+      });
+    }
+  }
+  return donorSchemaErrors;
 };
 
 function prepareForSchemaReProcessing(o: any, submitterDonorId: string) {
@@ -211,27 +236,22 @@ const validateDonorEntityAgainstNewSchema = (
         prepareForSchemaReProcessing(donor.clinicalInfo, donor.submitterId),
       ]);
       if (result.validationErrors.length > 0) {
-        return true;
+        return result.validationErrors;
       }
     }
   }
 
   if (schemaName == 'specimen') {
-    let invalidFound = false;
-    donor.specimens.forEach(sp => {
-      if (invalidFound) return;
-      if (sp.clinicalInfo) {
-        const result = schemaService.process(schema, schemaName, [
-          prepareForSchemaReProcessing(sp.clinicalInfo, donor.submitterId),
-        ]);
-        if (result.validationErrors.length > 0) {
-          invalidFound = true;
+    const clinicalRecords = donor.specimens
+      .map(sp => {
+        if (sp.clinicalInfo) {
+          return prepareForSchemaReProcessing(sp.clinicalInfo, donor.submitterId);
         }
-      }
-    });
-
-    if (invalidFound) {
-      return true;
+      })
+      .filter(notEmpty);
+    const result = schemaService.process(schema, schemaName, clinicalRecords);
+    if (result.validationErrors.length > 0) {
+      return result.validationErrors;
     }
   }
 
@@ -239,23 +259,19 @@ const validateDonorEntityAgainstNewSchema = (
   const clinicalEntity = donor[donorFieldName] || undefined;
 
   if (!clinicalEntity) {
-    return false;
+    return undefined;
   }
 
   if (_.isArray(clinicalEntity)) {
-    let invalidFound = false;
-    clinicalEntity.forEach(ce => {
-      if (invalidFound) return;
-      const result = schemaService.process(schema, schemaName, [
-        prepareForSchemaReProcessing(ce, donor.submitterId),
-      ]);
-      if (result.validationErrors.length > 0) {
-        invalidFound = true;
-      }
-    });
+    const records = clinicalEntity
+      .map(ce => {
+        return prepareForSchemaReProcessing(ce, donor.submitterId);
+      })
+      .filter(notEmpty);
 
-    if (invalidFound) {
-      return true;
+    const result = schemaService.process(schema, schemaName, records);
+    if (result.validationErrors.length > 0) {
+      return result.validationErrors;
     }
   }
 
@@ -264,10 +280,10 @@ const validateDonorEntityAgainstNewSchema = (
   ]);
 
   if (result.validationErrors.length > 0) {
-    return true;
+    return result.validationErrors;
   }
 
-  return false;
+  return undefined;
 };
 
 const markDonorAsInvalid = async (donor: DeepReadonly<Donor>, migrationId: string) => {
