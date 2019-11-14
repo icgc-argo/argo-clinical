@@ -3,7 +3,6 @@ import { loggerFor } from '../../logger';
 import { MongooseUtils, F, notEmpty } from '../../utils';
 import { MigrationState, DictionaryMigration } from './migration-entities';
 import { DeepReadonly } from 'deep-freeze';
-import { ObjectID, ObjectId } from 'bson';
 const L = loggerFor(__filename);
 
 export interface DictionaryMigrationRepository {

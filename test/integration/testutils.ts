@@ -44,9 +44,10 @@ export const insertData = async (
 };
 
 export const emptyDonorDocument = (overrides?: object) => {
+  const gender = Math.random() > 0.5 ? 'Male' : 'Female';
   const donor: Donor = {
     donorId: 1,
-    gender: '',
+    gender: gender,
     submitterId: '',
     schemaMetadata: {
       currentSchemaVersion: '1.0',
@@ -74,13 +75,11 @@ export const generateDonor = async (
   submitterDonorId?: string,
 ) => {
   const submitterId = submitterDonorId || Date.now();
-  const gender = Math.random() > 0.5 ? 'Male' : 'Female';
 
   const doc = emptyDonorDocument({
     submitterId,
     programId,
     donorId: submitterId,
-    gender,
   });
   await insertData(dburl, 'donors', doc);
   return doc;

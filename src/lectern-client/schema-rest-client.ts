@@ -50,8 +50,14 @@ export const schemaClient: SchemaServiceRestClient = {
     fromVersion: string,
     toVersion: string,
   ): Promise<SchemasDictionaryDiffs> => {
-    const url = `${schemaSvcBaseUrl}/diff?name=${name}&left=${fromVersion}&right=${toVersion}`;
-    const diffResponse = (await doRequest(url)) as any[];
+    // for testing where we need to work against stub schema
+    let diffResponse: any;
+    if (schemaSvcBaseUrl.startsWith('file://')) {
+      diffResponse = await loadDiffFromFile(schemaSvcBaseUrl, name, fromVersion, toVersion);
+    } else {
+      const url = `${schemaSvcBaseUrl}/diff?name=${name}&left=${fromVersion}&right=${toVersion}`;
+      diffResponse = (await doRequest(url)) as any[];
+    }
     const result: SchemasDictionaryDiffs = {};
     for (const entry of diffResponse) {
       const fieldName = entry[0] as string;

@@ -63,20 +63,20 @@ export const analyzeChanges = async (
     const fieldChange: FieldDiff = changes[field];
     if (fieldChange) {
       console.log(`field : ${field} has changes`);
-      const changes = fieldChange.diff;
+      const fieldDiff = fieldChange.diff;
       // if we have type at first level then it's a field add/delete
-      if (isFieldChange(changes)) {
-        categorizeFieldChanges(analysis, field, changes);
+      if (isFieldChange(fieldDiff)) {
+        categorizeFieldChanges(analysis, field, fieldDiff);
       }
 
-      if (isNestedChange(changes)) {
-        if (changes.meta) {
+      if (isNestedChange(fieldDiff)) {
+        if (fieldDiff.meta) {
           console.log('meta change found');
         }
 
-        if (changes.restrictions) {
+        if (fieldDiff.restrictions) {
           console.log('restrictions change found');
-          categorizeRestrictionChanges(analysis, field, changes.restrictions as {
+          categorizeRestrictionChanges(analysis, field, fieldDiff.restrictions as {
             [field: string]: FieldChanges;
           });
         }

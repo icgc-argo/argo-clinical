@@ -36,6 +36,8 @@ import { Donor } from '../../../src/clinical/clinical-entities';
 import AdmZip from 'adm-zip';
 
 import * as _ from 'lodash';
+import { SchemasDictionary } from '../../../src/lectern-client/schema-entities';
+import { DictionaryMigration } from '../../../src/submission/schema-migration/migration-entities';
 
 chai.use(require('chai-http'));
 chai.should();
@@ -1513,7 +1515,7 @@ describe('Submission Api', () => {
         });
     });
 
-    describe('schema migration ', () => {
+    describe('schema migration api', () => {
       const programId = 'ABCD-EF';
       const donor: Donor = emptyDonorDocument({
         submitterId: 'ICGC_0001',
@@ -1525,9 +1527,20 @@ describe('Submission Api', () => {
         },
       });
 
+      const donor2: Donor = emptyDonorDocument({
+        submitterId: 'ICGC_0002',
+        programId,
+        clinicalInfo: {
+          vital_status: 'Unknown',
+          cause_of_death: 'Died of cancer',
+          survival_time: 67,
+        },
+      });
+
       this.beforeEach(async () => {
         await clearCollections(dburl, ['donors', 'dictionarymigrations']);
         await insertData(dburl, 'donors', donor);
+        await insertData(dburl, 'donors', donor2);
       });
 
       // very simple smoke test of the migration to be expanded along developement
@@ -1539,21 +1552,83 @@ describe('Submission Api', () => {
           .send({
             version: '2.0',
           })
-          .then((res: any) => {
+          .then(async (res: any) => {
             res.should.have.status(200);
             res.body.version.should.eq('2.0');
-            // TODO add a check to the db
-            // TOOD check invalid documents
+
+            const schema = (await findInDb(dburl, 'dataschemas', {})) as SchemasDictionary[];
+            schema[0].version.should.eq('2.0');
           });
 
-        // TODO get the latest migration and check it.
         await chai
           .request(app)
           .get('/submission/schema/migration/')
           .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-          .then((res: any) => {
+          .then(async (res: any) => {
             res.should.have.status(200);
             res.body.length.should.eq(1);
+            const migrationId = res.body[0]._id;
+            const migrations = (await findInDb(
+              dburl,
+              'dictionarymigrations',
+              {},
+            )) as DictionaryMigration[];
+            migrations.should.not.be.empty;
+            migrations[0].should.not.be.undefined;
+            if (!migrations[0]._id) {
+              throw new Error('migration in db with no id');
+            }
+            migrations[0]._id.toString().should.eq(migrationId);
+          });
+      });
+
+      it('should create dry run migration', async () => {
+        await chai
+          .request(app)
+          .patch('/submission/schema/dry-run-update')
+          .send({
+            version: '2.0',
+          })
+          .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+          .then(async (res: any) => {
+            res.should.have.status(200);
+            const migration = res.body as DictionaryMigration;
+            migration.should.not.be.undefined;
+            const migrations = (await findInDb(
+              dburl,
+              'dictionarymigrations',
+              {},
+            )) as DictionaryMigration[];
+            migrations.should.not.be.empty;
+            migrations[0].should.not.be.undefined;
+            const dbMigration = migrations[0];
+            if (!dbMigration._id) {
+              throw new Error('migration in db with no id');
+            }
+            dbMigration._id = dbMigration._id.toString();
+            const normalizedDbMigration = JSON.parse(JSON.stringify(dbMigration));
+            normalizedDbMigration.should.deep.include(migration);
+            migration.stats.invalidDocumentsCount.should.eq(1);
+            migration.stats.validDocumentsCount.should.eq(1);
+            migration.stats.totalProcessed.should.eq(2);
+            migration.invalidDonorsErrors[0].should.deep.eq({
+              donorId: 1,
+              submitterDonorId: 'ICGC_0002',
+              programId: 'ABCD-EF',
+              errors: [
+                {
+                  donor: [
+                    {
+                      errorType: 'INVALID_ENUM_VALUE',
+                      fieldName: 'vital_status',
+                      index: 0,
+                      info: {},
+                      message: 'The value is not permissible for this field.',
+                    },
+                  ],
+                },
+              ],
+            });
           });
       });
     });
