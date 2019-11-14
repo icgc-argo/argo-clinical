@@ -3,6 +3,7 @@ import { Response, Request } from 'express';
 import deepFreeze from 'deep-freeze';
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
+import { SubmissionBatchError } from './submission/submission-entities';
 
 const fsPromises = fs.promises;
 
@@ -37,23 +38,22 @@ export namespace TsvUtils {
 }
 
 export namespace ControllerUtils {
-  export interface ControllerBadRequestError {
-    msg: string;
-    code: string;
-  }
-
   export const notFound = (res: Response, msg: string): any => {
     res.status(404).send({ message: msg });
   };
 
-  export const badRequest = (
+  export const badRequest = (res: Response, message: string): any => {
+    return res.status(400).send({ message });
+  };
+
+  export const invalidBatch = (
     res: Response,
-    msg: string | ControllerBadRequestError | Array<ControllerBadRequestError>,
+    batchErrors: SubmissionBatchError | SubmissionBatchError[],
   ): any => {
-    if (typeof msg === 'string') {
-      return res.status(400).send({ message: msg });
+    if (Array.isArray(batchErrors)) {
+      return res.status(422).send({ batchErrors });
     }
-    res.status(400).send(msg);
+    return res.status(422).send({ batchErrors: [batchErrors] });
   };
 
   // checks authHeader + decoded jwt and returns the user name

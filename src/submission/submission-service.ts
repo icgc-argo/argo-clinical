@@ -706,7 +706,9 @@ export namespace operations {
 
       if (dataMatchToType.length > 1) {
         dataToEntityMapErrors.push({
-          msg: batchErrorMessage(SubmissionBatchErrorTypes.MULTIPLE_TYPED_FILES, { clinicalType }),
+          message: batchErrorMessage(SubmissionBatchErrorTypes.MULTIPLE_TYPED_FILES, {
+            clinicalType,
+          }),
           batchNames: dataMatchToType.map(data => data.batchName),
           code: SubmissionBatchErrorTypes.MULTIPLE_TYPED_FILES,
         });
@@ -717,7 +719,7 @@ export namespace operations {
 
     if (mutableClinicalData.length > 0) {
       dataToEntityMapErrors.push({
-        msg: batchErrorMessage(SubmissionBatchErrorTypes.INVALID_FILE_NAME, {}),
+        message: batchErrorMessage(SubmissionBatchErrorTypes.INVALID_FILE_NAME),
         batchNames: mutableClinicalData.map(data => data.batchName),
         code: SubmissionBatchErrorTypes.INVALID_FILE_NAME,
       });
@@ -759,7 +761,7 @@ export namespace operations {
 
       if (missingFields.length > 0)
         fieldNameErrors.push({
-          msg: batchErrorMessage(SubmissionBatchErrorTypes.MISSING_REQUIRED_HEADER, {
+          message: batchErrorMessage(SubmissionBatchErrorTypes.MISSING_REQUIRED_HEADER, {
             missingFields,
           }),
           batchNames: [newClinicalEnity.batchName],
@@ -767,7 +769,9 @@ export namespace operations {
         });
       if (unknownFields.length > 0)
         fieldNameErrors.push({
-          msg: batchErrorMessage(SubmissionBatchErrorTypes.UNRECOGNIZED_HEADER, { unknownFields }),
+          message: batchErrorMessage(SubmissionBatchErrorTypes.UNRECOGNIZED_HEADER, {
+            unknownFields,
+          }),
           batchNames: [newClinicalEnity.batchName],
           code: SubmissionBatchErrorTypes.UNRECOGNIZED_HEADER,
         });

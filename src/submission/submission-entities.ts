@@ -68,7 +68,7 @@ export type SubmissionValidationUpdate = {
 };
 
 export type SubmissionBatchError = {
-  msg: string;
+  message: string;
   batchNames: string[];
   code: SubmissionBatchErrorTypes | SchemaValidationErrorTypes;
 };

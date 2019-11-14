@@ -589,9 +589,9 @@ describe('Submission Api', () => {
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .end(async (err: any, res: any) => {
           try {
-            res.should.have.status(400);
+            res.should.have.status(422);
             res.body.batchErrors.should.deep.include({
-              msg: `Invalid file(s), must start with entity and have .tsv extension (e.g. donor*.tsv)`,
+              message: `Please retain the template file name and only append characters to the end. For example, sample_registration<_optional_extension>.tsv`,
               code: SubmissionBatchErrorTypes.INVALID_FILE_NAME,
               batchNames: ['thisIsARegistration.tsv'],
             });
@@ -617,14 +617,14 @@ describe('Submission Api', () => {
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .end(async (err: any, res: any) => {
           try {
-            res.should.have.status(400);
+            res.should.have.status(422);
             res.body.batchErrors.should.deep.include({
-              msg: `Missing required headers: [program_id], [submitter_specimen_id]`,
+              message: `Missing required headers: [program_id], [submitter_specimen_id]`,
               code: SubmissionBatchErrorTypes.MISSING_REQUIRED_HEADER,
               batchNames: ['sample_registration-invalidHeaders.tsv'],
             });
             res.body.batchErrors.should.deep.include({
-              msg: `Found unknown headers: [prgram_id], [submittr_specimen_id]`,
+              message: `Found unknown headers: [prgram_id], [submittr_specimen_id]`,
               code: SubmissionBatchErrorTypes.UNRECOGNIZED_HEADER,
               batchNames: ['sample_registration-invalidHeaders.tsv'],
             });
@@ -748,23 +748,23 @@ describe('Submission Api', () => {
           res.should.have.status(207);
           res.body.batchErrors.should.deep.eq([
             {
-              msg: 'Found multiple files of donor type',
+              message: 'Found multiple files of donor type',
               batchNames: ['donor.tsv', 'donor.invalid.tsv'],
               code: 'MULTIPLE_TYPED_FILES',
             },
             {
-              msg:
-                'Invalid file(s), must start with entity and have .tsv extension (e.g. donor*.tsv)',
+              message:
+                'Please retain the template file name and only append characters to the end. For example, sample_registration<_optional_extension>.tsv',
               batchNames: ['thisissample.tsv'],
               code: 'INVALID_FILE_NAME',
             },
             {
-              msg: `Missing required headers: [${FieldsEnum.submitter_donor_id}], [${FieldsEnum.submitter_specimen_id}]`,
+              message: `Missing required headers: [${FieldsEnum.submitter_donor_id}], [${FieldsEnum.submitter_specimen_id}]`,
               batchNames: ['specimen-invalid-headers.tsv'],
               code: SubmissionBatchErrorTypes.MISSING_REQUIRED_HEADER,
             },
             {
-              msg: 'Found unknown headers: [submitter_id], [submitter_specmen_id]',
+              message: 'Found unknown headers: [submitter_id], [submitter_specmen_id]',
               batchNames: ['specimen-invalid-headers.tsv'],
               code: SubmissionBatchErrorTypes.UNRECOGNIZED_HEADER,
             },

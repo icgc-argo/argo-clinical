@@ -15,6 +15,7 @@ import {
 import { HasFullWriteAccess, HasProgramWriteAccess } from '../auth-decorators';
 import jwt from 'jsonwebtoken';
 import _ from 'lodash';
+import { batchErrorMessage } from './submission-error-messages';
 const L = loggerFor(__filename);
 
 class SubmissionController {
@@ -41,8 +42,10 @@ class SubmissionController {
     try {
       records = await TsvUtils.tsvToJson(file.path);
     } catch (err) {
-      return ControllerUtils.badRequest(res, {
-        msg: `failed to parse the tsv file: ${err}`,
+      L.error(`Clinical Submission TSV_PARSING_FAILED`, err);
+      return ControllerUtils.invalidBatch(res, {
+        message: batchErrorMessage(SubmissionBatchErrorTypes.TSV_PARSING_FAILED),
+        batchNames: [file.originalname],
         code: SubmissionBatchErrorTypes.TSV_PARSING_FAILED,
       });
     }
@@ -55,13 +58,9 @@ class SubmissionController {
     };
     const result = await submission.operations.createRegistration(command);
 
-    if (result.successful) {
-      return res.status(201).send(result);
-    } else if (result.batchErrors) {
-      return res.status(400).send(result);
-    } else if (result.errors) {
-      return res.status(422).send(result);
-    }
+    if (result.successful) return res.status(201).send(result);
+
+    return res.status(422).send(result);
   }
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
@@ -119,8 +118,9 @@ class SubmissionController {
           fieldNames: Object.keys(records[0]), // every record in a tsv should have same fieldNames
         });
       } catch (err) {
+        L.error(`Clinical Submission TSV_PARSING_FAILED`, err);
         tsvParseErrors.push({
-          msg: `failed to parse the tsv file: ${err}`,
+          message: batchErrorMessage(SubmissionBatchErrorTypes.TSV_PARSING_FAILED),
           batchNames: [file.originalname],
           code: SubmissionBatchErrorTypes.TSV_PARSING_FAILED,
         });
@@ -222,17 +222,6 @@ const isValidCreateBody = (req: Request, res: Response): boolean => {
   if (req.file === undefined && (req.files === undefined || req.files.length === 0)) {
     L.debug(`File(s) missing`);
     ControllerUtils.badRequest(res, `Clinical file(s) upload required`);
-    return false;
-  }
-  return true;
-};
-const validateRegistrationFile = (req: Request, res: Response) => {
-  if (!isStringMatchRegex(BatchNameRegex[ClinicalEntityType.REGISTRATION], req.file.originalname)) {
-    L.debug(`${ClinicalEntityType.REGISTRATION}File name is invalid`);
-    ControllerUtils.badRequest(res, {
-      msg: `invalid file name, must start with ${ClinicalEntityType.REGISTRATION} and have .tsv extension`,
-      code: SubmissionBatchErrorTypes.INVALID_FILE_NAME,
-    });
     return false;
   }
   return true;
