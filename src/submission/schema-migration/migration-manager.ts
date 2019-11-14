@@ -127,6 +127,7 @@ const checkDonorDocuments = async (
   }
   const migrationId = migration._id;
   const dryRun = migration.dryRun;
+  const breakingChangesEntitesCache: { [versions: string]: string[] } = {};
 
   while (!migrationDone) {
     let invalidCount = 0;
@@ -142,7 +143,11 @@ const checkDonorDocuments = async (
 
     // check invalidation criteria against each one
     for (const donor of donors) {
-      const result = await revalidateDonorClinicalEntities(donor, newSchema, newSchemaVersion);
+      const result = await revalidateDonorClinicalEntities(
+        donor,
+        newSchema,
+        breakingChangesEntitesCache,
+      );
       if (result && result.length > 0) {
         // if invalid mark as invalid and update document metadata
         if (!dryRun) {
@@ -181,31 +186,39 @@ const getNextUncheckedDonorDocumentsBatch = async (migrationId: string, limit: n
   return await clinicalService.getDonorsByMigrationId(migrationId, limit);
 };
 
-// TODO: enhance to return invalidation reasons
 const revalidateDonorClinicalEntities = async (
   donor: DeepReadonly<Donor>,
-  schema: SchemasDictionary,
-  newSchemaVersion: string,
+  newSchema: SchemasDictionary,
+  breakingChangesEntitesCache: { [versions: string]: string[] },
 ) => {
   const donorSchemaErrors: any[] = [];
-  // analyze changes between the document last valid schema
-  const analysis = await manager
-    .instance()
-    .analyzeChanges(donor.schemaMetadata.lastValidSchemaVersion, newSchemaVersion);
+  const donorDocSchemaVersion = donor.schemaMetadata.lastValidSchemaVersion;
 
-  // check for breaking changes
-  const invalidatingFields: any = findInvalidatingChangesFields(analysis);
+  const versionsKey = `${donorDocSchemaVersion}->${newSchema.version}`;
 
-  const schemaNamesWithBreakingChanges = _.uniqBy(
-    invalidatingFields.map((inf: any) => {
-      return inf.fieldPath.split('.')[0];
-    }),
-    (e: string) => e,
-  );
+  if (!breakingChangesEntitesCache[versionsKey]) {
+    console.log(`didn't find cached changes analysis for versions: ${versionsKey}`);
+    // analyze changes between the document last valid schema
+    const analysis = await manager
+      .instance()
+      .analyzeChanges(donor.schemaMetadata.lastValidSchemaVersion, newSchema.version);
 
+    // check for breaking changes
+    const invalidatingFields: any = findInvalidatingChangesFields(analysis);
+
+    const schemaNamesWithBreakingChanges = _.uniqBy(
+      invalidatingFields.map((inf: any) => {
+        return inf.fieldPath.split('.')[0];
+      }),
+      (e: string) => e,
+    );
+    breakingChangesEntitesCache[versionsKey] = schemaNamesWithBreakingChanges;
+  }
+
+  const schemaNamesWithBreakingChanges = breakingChangesEntitesCache[versionsKey];
   for (const schemaName of schemaNamesWithBreakingChanges) {
     // not fields since we only need to check the whole schema once.
-    const errors = validateDonorEntityAgainstNewSchema(schemaName, schema, donor);
+    const errors = validateDonorEntityAgainstNewSchema(schemaName, newSchema, donor);
     if (errors && errors.length > 0) {
       donorSchemaErrors.push({
         [schemaName]: errors,
