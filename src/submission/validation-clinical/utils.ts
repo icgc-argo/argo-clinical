@@ -6,19 +6,14 @@ import {
   ClinicalInfoFieldsEnum,
   ModificationType,
   SubmissionValidationUpdate,
-  ValidatorResult,
+  RecordValidationResult,
+  ClinicalEntityType,
+  SubmittedClinicalRecordsMap,
+  ClinicalUniqueIndentifier,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
-import { Donor, Specimen } from '../../clinical/clinical-entities';
 import validationErrorMessage from '../submission-error-messages';
 import _ from 'lodash';
-
-export const checkDonorRegistered = (
-  aDonor: DeepReadonly<Donor>,
-  record: DeepReadonly<SubmittedClinicalRecord>,
-) => {
-  return aDonor && aDonor.submitterId === record[FieldsEnum.submitter_donor_id];
-};
 
 export const buildSubmissionError = (
   newRecord: SubmittedClinicalRecord,
@@ -48,7 +43,7 @@ export const buildSubmissionUpdate = (
   newRecord: SubmittedClinicalRecord,
   oldValue: string,
   fieldName: FieldsEnum | ClinicalInfoFieldsEnum | string,
-) => {
+): SubmissionValidationUpdate => {
   // typescript refused to take this directly
   const index: number = newRecord.index;
   return {
@@ -62,45 +57,156 @@ export const buildSubmissionUpdate = (
   };
 };
 
-export const buildValidatorResult = (
-  type: ModificationType,
-  index: number,
-  resultArray?: SubmissionValidationError[] | SubmissionValidationUpdate[],
-): ValidatorResult => {
-  return { type, index, resultArray };
-};
-
-export const getUpdatedFields = (clinicalObject: any, record: SubmittedClinicalRecord) => {
-  const updateFields: any[] = [];
-  if (clinicalObject) {
-    for (const fieldName in clinicalObject) {
-      // this is assuming that the field name record and clinicalInfo both have snake casing
-      if (clinicalObject[fieldName] !== record[fieldName]) {
-        updateFields.push(buildSubmissionUpdate(record, clinicalObject[fieldName], fieldName));
-      }
-    }
+export const buildRecordValidationResult = (
+  record: SubmittedClinicalRecord,
+  errors: SubmissionValidationError | SubmissionValidationError[],
+  clinicalInfo: DeepReadonly<{ [field: string]: string | number } | object> | undefined = {},
+): RecordValidationResult => {
+  errors = _.concat([], errors); // make sure errors is array
+  if (errors.length > 0) {
+    return { type: ModificationType.ERRORSFOUND, index: record.index, resultArray: errors };
   }
-  return updateFields;
+  return checkForUpdates(record, clinicalInfo);
 };
 
 // cases
 // 1 new clinicalInfo <=> new
 // 2 changing clinicalInfo <=> update
 // 3 not new or update <=> noUpdate
-export const checkForUpdates = async (
+const checkForUpdates = (
   record: DeepReadonly<SubmittedClinicalRecord>,
-  clinicalObject: DeepReadonly<{ [field: string]: string | number } | object> | undefined,
-) => {
-  // no updates to specimenTissueSource or tnd but there is no existent clinicalInfo => new
-  if (_.isEmpty(clinicalObject)) {
-    return buildValidatorResult(ModificationType.NEW, record.index);
+  clinicalInfo: DeepReadonly<{ [field: string]: string | number } | object> | undefined,
+): RecordValidationResult => {
+  // clinicalInfo empty so new
+  if (_.isEmpty(clinicalInfo)) {
+    return { type: ModificationType.NEW, index: record.index };
   }
 
   // check changing fields
-  const updatedFields: any[] = getUpdatedFields(clinicalObject, record);
+  const submissionUpdates: any[] = getSubmissionUpdates(clinicalInfo, record);
 
   // if no updates and not new return noUpdate
-  return updatedFields.length === 0
-    ? buildValidatorResult(ModificationType.NOUPDATE, record.index)
-    : buildValidatorResult(ModificationType.UPDATED, record.index, updatedFields);
+  return submissionUpdates.length === 0
+    ? { type: ModificationType.NOUPDATE, index: record.index }
+    : { type: ModificationType.UPDATED, index: record.index, resultArray: submissionUpdates };
 };
+
+const getSubmissionUpdates = (clinicalObject: any, record: SubmittedClinicalRecord) => {
+  const submissionUpdates: SubmissionValidationUpdate[] = [];
+  if (clinicalObject) {
+    for (const fieldName in clinicalObject) {
+      // this is assuming that the field name record and clinicalInfo both have snake casing
+      if (clinicalObject[fieldName] !== record[fieldName]) {
+        submissionUpdates.push(buildSubmissionUpdate(record, clinicalObject[fieldName], fieldName));
+      }
+    }
+  }
+  return submissionUpdates;
+};
+
+export const buildClinicalValidationResult = (results: RecordValidationResult[]) => {
+  const stats = {
+    [ModificationType.NEW]: [] as number[],
+    [ModificationType.NOUPDATE]: [] as number[],
+    [ModificationType.UPDATED]: [] as number[],
+    [ModificationType.ERRORSFOUND]: [] as number[],
+  };
+  let dataErrors: SubmissionValidationError[] = [];
+  let dataUpdates: SubmissionValidationUpdate[] = [];
+
+  results.forEach(result => {
+    stats[result.type].push(result.index);
+    if (result.type === ModificationType.UPDATED) {
+      dataUpdates = dataUpdates.concat(result.resultArray as SubmissionValidationUpdate[]);
+    } else if (result.type === ModificationType.ERRORSFOUND) {
+      dataErrors = dataErrors.concat(result.resultArray as SubmissionValidationError[]);
+    }
+  });
+
+  return {
+    stats: stats,
+    dataErrors: dataErrors,
+    dataUpdates: dataUpdates,
+  };
+};
+
+export const buildMultipleRecordValidationResults = (
+  records: ReadonlyArray<SubmittedClinicalRecord>,
+  commonErrorProperties: {
+    type: DataValidationErrors;
+    fieldName: FieldsEnum | ClinicalInfoFieldsEnum;
+    info?: any;
+  },
+): RecordValidationResult[] => {
+  const validationResults = records.map(record => {
+    return buildRecordValidationResult(
+      record,
+      buildSubmissionError(
+        record,
+        commonErrorProperties.type,
+        commonErrorProperties.fieldName,
+        commonErrorProperties.info,
+      ),
+      {},
+    );
+  });
+
+  return validationResults;
+};
+
+export namespace ClinicalSubmissionRecordsOperations {
+  // this function will mutate a SubmittedRecords
+  export function addRecord(
+    type: ClinicalEntityType,
+    records: SubmittedClinicalRecordsMap,
+    record: SubmittedClinicalRecord,
+  ) {
+    checkNotRegistration(type);
+    if (!records[type]) {
+      records[type] = [];
+    }
+    records[type].push(record);
+  }
+
+  export function getSingleRecord(
+    type: ClinicalEntityType,
+    records: DeepReadonly<SubmittedClinicalRecordsMap>,
+  ): DeepReadonly<SubmittedClinicalRecord | undefined> {
+    checkNotRegistration(type);
+    if (!records[type]) {
+      return undefined;
+    } else if (records[type].length !== 1) {
+      throw new Error(`Clinical type [${type}] doesn't have single record`);
+    }
+    return records[type][0];
+  }
+
+  export function getArrayRecords(
+    type: ClinicalEntityType,
+    records: DeepReadonly<SubmittedClinicalRecordsMap>,
+  ): DeepReadonly<SubmittedClinicalRecord[]> {
+    checkNotRegistration(type);
+    return records[type];
+  }
+
+  export function getRecordBySubmitterId(
+    type: ClinicalEntityType,
+    submitter_id: string,
+    records: DeepReadonly<SubmittedClinicalRecordsMap>,
+  ): DeepReadonly<SubmittedClinicalRecord> {
+    // checkNotRegistration(type); typescript wouldn't detect this check
+    if (type === ClinicalEntityType.REGISTRATION) {
+      throw new Error(`Invalid clinical type: ${type}`);
+    }
+    return _.find(records[type], [
+      ClinicalUniqueIndentifier[type],
+      submitter_id,
+    ]) as SubmittedClinicalRecord;
+  }
+
+  function checkNotRegistration(type: ClinicalEntityType) {
+    if (type === ClinicalEntityType.REGISTRATION) {
+      throw new Error(`Invalid clinical type: ${type}`);
+    }
+  }
+}

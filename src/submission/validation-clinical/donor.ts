@@ -1,53 +1,54 @@
 import {
-  FieldsEnum,
   DataValidationErrors,
   SubmittedClinicalRecord,
   SubmissionValidationError,
   ClinicalInfoFieldsEnum,
-  ValidatorResult,
-  ModificationType,
+  RecordValidationResult,
+  SubmittedClinicalRecordsMap,
   ClinicalEntityType,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
+import { ClinicalSubmissionRecordsOperations } from './utils';
 
 export const validate = async (
-  newRecords: DeepReadonly<{ [clinicalType: string]: SubmittedClinicalRecord }>,
+  submittedRecords: DeepReadonly<SubmittedClinicalRecordsMap>,
   existentDonor: DeepReadonly<Donor>,
-): Promise<ValidatorResult> => {
-  const errors: SubmissionValidationError[] = [];
-  const donorRecord = newRecords[ClinicalEntityType.DONOR];
-
-  // Preconditions: if any one of these validation failed, can't continue
-  if (!utils.checkDonorRegistered(existentDonor, donorRecord)) {
-    return utils.buildValidatorResult(ModificationType.ERRORSFOUND, donorRecord.index, [
-      utils.buildSubmissionError(
-        donorRecord,
-        DataValidationErrors.ID_NOT_REGISTERED,
-        FieldsEnum.submitter_donor_id,
-      ),
-    ]);
+): Promise<RecordValidationResult> => {
+  // ***Basic pre-check (to prevent execution if missing required variables)***
+  const submittedDonorClinicalRecord = ClinicalSubmissionRecordsOperations.getSingleRecord(
+    ClinicalEntityType.DONOR,
+    submittedRecords,
+  );
+  if (!existentDonor || !submittedDonorClinicalRecord) {
+    throw new Error("Can't call this function without donor & donor record");
   }
 
-  // cross entity donor record validation
-  checkTimeConflictWithSpecimen(
+  // ***Submission Validation checks***
+  const errors: SubmissionValidationError[] = []; // all errors for record
+  // cross entity donor-specimen record validation
+  checkTimeConflictWithSpecimens(
     existentDonor,
-    donorRecord,
-    newRecords[ClinicalEntityType.SPECIMEN],
+    submittedDonorClinicalRecord,
+    submittedRecords,
     errors,
   );
 
-  return errors.length > 0
-    ? utils.buildValidatorResult(ModificationType.ERRORSFOUND, donorRecord.index, errors)
-    : await utils.checkForUpdates(donorRecord, existentDonor.clinicalInfo);
+  // other checks here and add to `errors`
+
+  return utils.buildRecordValidationResult(
+    submittedDonorClinicalRecord,
+    errors,
+    existentDonor.clinicalInfo,
+  );
 };
 
-function checkTimeConflictWithSpecimen(
+function checkTimeConflictWithSpecimens(
   donor: DeepReadonly<Donor>,
   donorRecord: DeepReadonly<SubmittedClinicalRecord>,
-  specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
+  submittedRecords: DeepReadonly<SubmittedClinicalRecordsMap>,
   errors: SubmissionValidationError[],
 ) {
   if (
@@ -62,10 +63,12 @@ function checkTimeConflictWithSpecimen(
   donor.specimens.forEach(specimen => {
     let specimenAcqusitionInterval: number = 0;
     // specimenAcqusitionInterval comes from either registered specimen in new record or specimen.clincalInfo
-    if (
-      specimenRecord &&
-      specimenRecord[FieldsEnum.submitter_specimen_id] === specimen.submitterId
-    ) {
+    const specimenRecord = ClinicalSubmissionRecordsOperations.getRecordBySubmitterId(
+      ClinicalEntityType.SPECIMEN,
+      specimen.submitterId,
+      submittedRecords,
+    );
+    if (specimenRecord) {
       specimenAcqusitionInterval = Number(
         specimenRecord[ClinicalInfoFieldsEnum.acquisition_interval],
       );

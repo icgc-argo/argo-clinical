@@ -8,8 +8,7 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
     `Samples can only be registered to a single specimen. This sample has already been registered to specimen ${errorData.info.otherSpecimenSubmitterId}. Please correct your file or contact DCC to update the registered data.`,
   SPECIMEN_BELONGS_TO_OTHER_DONOR: errorData =>
     `Specimens can only be registered to a single donor. This specimen has already been registered to donor ${errorData.info.otherDonorSubmitterId}. Please correct your file or contact DCC to update the registered data.`,
-  INVALID_PROGRAM_ID: () =>
-    'Program ID does not match. Please include the correct Program ID.',
+  INVALID_PROGRAM_ID: () => 'Program ID does not match. Please include the correct Program ID.',
   MUTATING_EXISTING_DATA: errorData =>
     `The value does not match the previously registered value of ${errorData.info.originalValue}. Please correct your file or contact DCC to update the registered data.`,
   NEW_SAMPLE_ATTR_CONFLICT: () =>
@@ -25,7 +24,9 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
   CONFLICTING_TIME_INTERVAL: () =>
     'survival_time cannot be less than Specimen acquisition_interval.',
   NOT_ENOUGH_INFO_TO_VALIDATE: errorData =>
-    `${errorData.info.field1} requires ${errorData.info.field2} in order to complete validation.  Please upload data for both fields in this clinical data submission.`,
+    `[${errorData.fieldName}] requires [${errorData.info.missingField.join(
+      '], [',
+    )}] in order to complete validation.  Please upload data for all fields in this clinical data submission.`,
   FOUND_IDENTICAL_IDS: errorData =>
     `You are trying to submit the same [${errorData.fieldName}] in multiple rows. [${errorData.fieldName}] can only be submitted once per file.`,
 };
