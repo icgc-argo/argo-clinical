@@ -6,20 +6,25 @@ import {
   ValidationResult,
   FieldsEnum,
   RegistrationToCreateRegistrationFieldsMap,
-  SubmittedClinicalRecord,
-  ValidatorResult,
-  ModificationType,
-  SubmissionValidationUpdate,
+  RecordValidationResult,
   ClinicalTypeValidateResult,
   ClinicalEntityType,
   ClinicalUniqueIndentifier,
+  ClinicalSubmissionRecordsByDonorIdMap,
+  SubmittedClinicalRecordsMap,
 } from './submission-entities';
 import { donorDao, DONOR_FIELDS } from '../clinical/donor-repo';
 import { DeepReadonly } from 'deep-freeze';
 import { DataRecord } from '../lectern-client/schema-entities';
 import { submissionValidator } from './validation-clinical/index';
 import { validationErrorMessage } from './submission-error-messages';
-import { buildSubmissionError } from './validation-clinical/utils';
+import {
+  buildSubmissionError,
+  buildClinicalValidationResult,
+  buildMultipleRecordValidationResults,
+} from './validation-clinical/utils';
+import _ from 'lodash';
+import { ClinicalSubmissionRecordsOperations } from './validation-clinical/utils';
 
 export const validateRegistrationData = async (
   expectedProgram: string,
@@ -77,48 +82,62 @@ export const validateRegistrationData = async (
 };
 
 export const validateSubmissionData = async (
-  newDonorsRecords: DeepReadonly<{
-    [donoSubmitterId: string]: { [clinicalType: string]: SubmittedClinicalRecord };
-  }>,
+  newRecordsToDonorMap: DeepReadonly<ClinicalSubmissionRecordsByDonorIdMap>,
   existingDonors: DeepReadonly<DonorMap>,
 ): Promise<ClinicalTypeValidateResult> => {
-  const validationResults: ClinicalTypeValidateResult = {};
-  for (const donorSubmitterId in newDonorsRecords) {
-    const newRecords = newDonorsRecords[donorSubmitterId];
+  const recordValidationResultMap: { [clinicalType: string]: RecordValidationResult[] } = {};
+  Object.values(ClinicalEntityType)
+    .filter(type => type != ClinicalEntityType.REGISTRATION)
+    .map(type => (recordValidationResultMap[type] = []));
+
+  for (const donorSubmitterId in newRecordsToDonorMap) {
+    const submittedRecords: DeepReadonly<SubmittedClinicalRecordsMap> =
+      newRecordsToDonorMap[donorSubmitterId];
     const existentDonor = existingDonors[donorSubmitterId];
 
-    for (const clinicalType in newRecords) {
-      if (!validationResults[clinicalType]) {
-        validationResults[clinicalType] = {
-          dataErrors: [],
-          dataUpdates: [],
-          stats: {
-            new: [],
-            noUpdate: [],
-            updated: [],
-            errorsFound: [],
-          },
-        };
-      }
+    // Check if donor exsists
+    if (!existentDonor) {
+      addErrorsForNoDonor(submittedRecords, recordValidationResultMap);
+      continue;
+    }
 
-      const result: ValidatorResult = await submissionValidator[clinicalType].validate(
-        newRecords,
+    // call submission validator or each clinical type
+    for (const clinicalType in submittedRecords) {
+      const results = await submissionValidator[clinicalType].validate(
+        submittedRecords,
         existentDonor,
       );
-      validationResults[clinicalType].stats[result.type].push(result.index);
-      if (result.type === ModificationType.UPDATED) {
-        validationResults[clinicalType].dataUpdates = validationResults[
-          clinicalType
-        ].dataUpdates.concat(result.resultArray as SubmissionValidationUpdate[]);
-      } else if (result.type === ModificationType.ERRORSFOUND) {
-        validationResults[clinicalType].dataErrors = validationResults[
-          clinicalType
-        ].dataErrors.concat(result.resultArray as SubmissionValidationError[]);
-      }
+      recordValidationResultMap[clinicalType] = _.concat(
+        recordValidationResultMap[clinicalType],
+        results,
+      );
     }
   }
+
+  const validationResults: ClinicalTypeValidateResult = {};
+  Object.entries(recordValidationResultMap).forEach(([clincialType, validatorResults]) => {
+    if (validatorResults.length === 0) return;
+    validationResults[clincialType] = buildClinicalValidationResult(validatorResults);
+  });
   return validationResults;
 };
+
+function addErrorsForNoDonor(
+  submittedRecords: DeepReadonly<SubmittedClinicalRecordsMap>,
+  recordValidationResultMap: { [clinicalType: string]: RecordValidationResult[] },
+) {
+  for (const clinicalType in submittedRecords) {
+    const records = ClinicalSubmissionRecordsOperations.getArrayRecords(
+      clinicalType as ClinicalEntityType,
+      submittedRecords,
+    );
+    const multipleRecordValidationResults = buildMultipleRecordValidationResults(records, {
+      type: DataValidationErrors.ID_NOT_REGISTERED,
+      fieldName: FieldsEnum.submitter_donor_id,
+    });
+    recordValidationResultMap[clinicalType].push(...multipleRecordValidationResults);
+  }
+}
 
 export const usingInvalidProgramId = (
   type: ClinicalEntityType,

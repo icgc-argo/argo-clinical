@@ -26,7 +26,9 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
   CONFLICTING_TIME_INTERVAL: () =>
     'survival_time cannot be less than Specimen acquisition_interval.',
   NOT_ENOUGH_INFO_TO_VALIDATE: errorData =>
-    `${errorData.info.field1} requires ${errorData.info.field2} in order to complete validation.  Please upload data for both fields in this clinical data submission.`,
+    `[${errorData.fieldName}] requires [${errorData.info.missingField.join(
+      '], [',
+    )}] in order to complete validation.  Please upload data for all fields in this clinical data submission.`,
   FOUND_IDENTICAL_IDS: errorData =>
     `You are trying to submit the same [${errorData.fieldName}] in multiple rows. [${errorData.fieldName}] can only be submitted once per file.`,
 };
