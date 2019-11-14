@@ -85,11 +85,10 @@ export const validateSubmissionData = async (
   newRecordsToDonorMap: DeepReadonly<ClinicalSubmissionRecordsByDonorIdMap>,
   existingDonors: DeepReadonly<DonorMap>,
 ): Promise<ClinicalTypeValidateResult> => {
-  const recordValidationResultMap: { [clinicalType: string]: RecordValidationResult[] } = {
-    [ClinicalEntityType.DONOR]: [],
-    [ClinicalEntityType.PRIMARY_DIAGNOSIS]: [],
-    [ClinicalEntityType.SPECIMEN]: [],
-  };
+  const recordValidationResultMap: { [clinicalType: string]: RecordValidationResult[] } = {};
+  Object.values(ClinicalEntityType)
+    .filter(type => type != ClinicalEntityType.REGISTRATION)
+    .map(type => (recordValidationResultMap[type] = []));
 
   for (const donorSubmitterId in newRecordsToDonorMap) {
     const submittedRecords: DeepReadonly<SubmittedClinicalRecordsMap> =
