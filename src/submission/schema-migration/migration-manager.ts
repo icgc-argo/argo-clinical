@@ -12,6 +12,7 @@ import { Donor } from '../../clinical/clinical-entities';
 import * as clinicalService from '../../clinical/clinical-service';
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
+import { ClinicalEntityType } from '../submission-entities';
 
 // TODO: this should update any active submission/registration
 export const updateSchemaVersion = async (toVersion: string, updater: string) => {
@@ -133,7 +134,6 @@ const checkDonorDocuments = async (
     let invalidCount = 0;
     let validCount = 0;
     const donors = await getNextUncheckedDonorDocumentsBatch(migrationId, 20);
-    const newSchemaVersion = newSchema.version;
     // no more unchecked donors ??
     if (donors.length == 0) {
       // mark migration as done
@@ -228,14 +228,6 @@ const revalidateDonorClinicalEntities = async (
   return donorSchemaErrors;
 };
 
-function prepareForSchemaReProcessing(o: any, submitterDonorId: string) {
-  console.log('to string on record: ' + JSON.stringify(o));
-  // we copy to avoid frozen attributes
-  const copy = _.cloneDeep(o);
-  copy.submitter_donor_id = submitterDonorId;
-  return toString(copy);
-}
-
 const validateDonorEntityAgainstNewSchema = (
   schemaName: string,
   schema: SchemasDictionary,
@@ -243,10 +235,10 @@ const validateDonorEntityAgainstNewSchema = (
 ) => {
   console.log(`checking donor ${donor.submitterId} for schema: ${schemaName}`);
 
-  if (schemaName == 'donor') {
+  if (schemaName == ClinicalEntityType.DONOR) {
     if (donor.clinicalInfo) {
       const result = schemaService.process(schema, schemaName, [
-        prepareForSchemaReProcessing(donor.clinicalInfo, donor.submitterId),
+        prepareForSchemaReProcessing(schemaName, donor.clinicalInfo, donor.submitterId),
       ]);
       if (result.validationErrors.length > 0) {
         return result.validationErrors;
@@ -254,11 +246,16 @@ const validateDonorEntityAgainstNewSchema = (
     }
   }
 
-  if (schemaName == 'specimen') {
+  if (schemaName == ClinicalEntityType.SPECIMEN) {
     const clinicalRecords = donor.specimens
       .map(sp => {
         if (sp.clinicalInfo) {
-          return prepareForSchemaReProcessing(sp.clinicalInfo, donor.submitterId);
+          return prepareForSchemaReProcessing(
+            schemaName,
+            sp.clinicalInfo,
+            donor.submitterId,
+            sp.submitterId,
+          );
         }
       })
       .filter(notEmpty);
@@ -278,7 +275,7 @@ const validateDonorEntityAgainstNewSchema = (
   if (_.isArray(clinicalEntity)) {
     const records = clinicalEntity
       .map(ce => {
-        return prepareForSchemaReProcessing(ce, donor.submitterId);
+        return prepareForSchemaReProcessing(schemaName, ce, donor.submitterId);
       })
       .filter(notEmpty);
 
@@ -289,7 +286,7 @@ const validateDonorEntityAgainstNewSchema = (
   }
 
   const result = schemaService.process(schema, schemaName, [
-    prepareForSchemaReProcessing(clinicalEntity, donor.submitterId),
+    prepareForSchemaReProcessing(schemaName, clinicalEntity, donor.submitterId),
   ]);
 
   if (result.validationErrors.length > 0) {
@@ -298,6 +295,22 @@ const validateDonorEntityAgainstNewSchema = (
 
   return undefined;
 };
+
+function prepareForSchemaReProcessing(
+  schemaName: string,
+  record: any,
+  submitterDonorId: string,
+  submitterSpecimenId?: string,
+) {
+  console.log('to string on record: ' + JSON.stringify(record));
+  // we copy to avoid frozen attributes
+  const copy = _.cloneDeep(record);
+  copy.submitter_donor_id = submitterDonorId;
+  if (schemaName == ClinicalEntityType.SPECIMEN) {
+    copy.submitter_specimen_id = submitterSpecimenId;
+  }
+  return toString(copy);
+}
 
 const markDonorAsInvalid = async (donor: DeepReadonly<Donor>, migrationId: string) => {
   return await clinicalService.updateDonorSchemaMetadata(donor, migrationId, false);
