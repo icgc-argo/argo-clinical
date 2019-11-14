@@ -92,20 +92,20 @@ export const validateSubmissionData = async (
   };
 
   for (const donorSubmitterId in newRecordsToDonorMap) {
-    const recordsOrganizer: DeepReadonly<SubmittedClinicalRecordsMap> =
+    const submittedRecords: DeepReadonly<SubmittedClinicalRecordsMap> =
       newRecordsToDonorMap[donorSubmitterId];
     const existentDonor = existingDonors[donorSubmitterId];
 
     // Check if donor exsists
     if (!existentDonor) {
-      addErrorsForNoDonor(recordsOrganizer, recordValidationResultMap);
+      addErrorsForNoDonor(submittedRecords, recordValidationResultMap);
       continue;
     }
 
     // call submission validator or each clinical type
-    for (const clinicalType in recordsOrganizer) {
+    for (const clinicalType in submittedRecords) {
       const results = await submissionValidator[clinicalType].validate(
-        recordsOrganizer,
+        submittedRecords,
         existentDonor,
       );
       recordValidationResultMap[clinicalType] = _.concat(
@@ -124,13 +124,13 @@ export const validateSubmissionData = async (
 };
 
 function addErrorsForNoDonor(
-  newRecordsOrganizer: DeepReadonly<SubmittedClinicalRecordsMap>,
+  submittedRecords: DeepReadonly<SubmittedClinicalRecordsMap>,
   recordValidationResultMap: { [clinicalType: string]: RecordValidationResult[] },
 ) {
-  for (const clinicalType in newRecordsOrganizer) {
-    const records = ClinicalSubmissionRecordsOperations.getRecordsAsArray(
+  for (const clinicalType in submittedRecords) {
+    const records = ClinicalSubmissionRecordsOperations.getArrayRecords(
       clinicalType as ClinicalEntityType,
-      newRecordsOrganizer,
+      submittedRecords,
     );
     const multipleRecordValidationResults = buildMultipleRecordValidationResults(records, {
       type: DataValidationErrors.ID_NOT_REGISTERED,

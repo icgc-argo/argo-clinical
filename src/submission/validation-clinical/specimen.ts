@@ -20,10 +20,14 @@ export const validate = async (
   existentDonor: DeepReadonly<Donor>,
 ): Promise<RecordValidationResult[]> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
-  const specimenRecords = ClinicalSubmissionRecordsOperations.getSpecimenRecords(submittedRecords);
+  const specimenRecords = ClinicalSubmissionRecordsOperations.getArrayRecords(
+    ClinicalEntityType.SPECIMEN,
+    submittedRecords,
+  );
   if (specimenRecords.length === 0 || !existentDonor) {
     throw new Error("Can't call this function without donor & specimen records");
   }
+
   const recordValidationResults: RecordValidationResult[] = [];
 
   const donorDataToValidateWith = getDataFromDonorRecordOrDonor(
@@ -113,7 +117,10 @@ const getDataFromDonorRecordOrDonor = (
   let donorVitalStatus: string = '';
   let donorSurvivalTime: number = NaN;
   const donorDataSource =
-    ClinicalSubmissionRecordsOperations.getDonorRecord(submittedRecords) || donor.clinicalInfo;
+    ClinicalSubmissionRecordsOperations.getSingleRecord(
+      ClinicalEntityType.DONOR,
+      submittedRecords,
+    ) || donor.clinicalInfo;
 
   if (!donorDataSource) {
     missingField = [ClinicalInfoFieldsEnum.vital_status, ClinicalInfoFieldsEnum.survival_time];
@@ -127,7 +134,10 @@ const getDataFromDonorRecordOrDonor = (
 
   if (missingField.length > 0) {
     const multipleRecordValidationResults = utils.buildMultipleRecordValidationResults(
-      ClinicalSubmissionRecordsOperations.getSpecimenRecords(submittedRecords),
+      ClinicalSubmissionRecordsOperations.getArrayRecords(
+        ClinicalEntityType.SPECIMEN,
+        submittedRecords,
+      ),
       {
         type: DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
         fieldName: ClinicalInfoFieldsEnum.acquisition_interval,

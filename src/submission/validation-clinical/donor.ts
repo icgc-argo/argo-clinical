@@ -5,6 +5,7 @@ import {
   ClinicalInfoFieldsEnum,
   RecordValidationResult,
   SubmittedClinicalRecordsMap,
+  ClinicalEntityType,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
@@ -17,20 +18,31 @@ export const validate = async (
   existentDonor: DeepReadonly<Donor>,
 ): Promise<RecordValidationResult> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
-  const donorRecord = ClinicalSubmissionRecordsOperations.getDonorRecord(submittedRecords);
-  if (!existentDonor || !donorRecord) {
+  const submittedDonorClinicalRecord = ClinicalSubmissionRecordsOperations.getSingleRecord(
+    ClinicalEntityType.DONOR,
+    submittedRecords,
+  );
+  if (!existentDonor || !submittedDonorClinicalRecord) {
     throw new Error("Can't call this function without donor & donor record");
   }
 
   // ***Submission Validation checks***
   const errors: SubmissionValidationError[] = []; // all errors for record
-
   // cross entity donor-specimen record validation
-  checkTimeConflictWithSpecimens(existentDonor, donorRecord, submittedRecords, errors);
+  checkTimeConflictWithSpecimens(
+    existentDonor,
+    submittedDonorClinicalRecord,
+    submittedRecords,
+    errors,
+  );
 
   // other checks here and add to `errors`
 
-  return utils.buildRecordValidationResult(donorRecord, errors, existentDonor.clinicalInfo);
+  return utils.buildRecordValidationResult(
+    submittedDonorClinicalRecord,
+    errors,
+    existentDonor.clinicalInfo,
+  );
 };
 
 function checkTimeConflictWithSpecimens(
@@ -51,7 +63,8 @@ function checkTimeConflictWithSpecimens(
   donor.specimens.forEach(specimen => {
     let specimenAcqusitionInterval: number = 0;
     // specimenAcqusitionInterval comes from either registered specimen in new record or specimen.clincalInfo
-    const specimenRecord = ClinicalSubmissionRecordsOperations.getSpecimenRecordBySubmitterId(
+    const specimenRecord = ClinicalSubmissionRecordsOperations.getRecordBySubmitterId(
+      ClinicalEntityType.SPECIMEN,
       specimen.submitterId,
       submittedRecords,
     );

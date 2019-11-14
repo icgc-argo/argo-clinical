@@ -9,6 +9,7 @@ import {
   RecordValidationResult,
   ClinicalEntityType,
   SubmittedClinicalRecordsMap,
+  ClinicalUniqueIndentifier,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import validationErrorMessage from '../submission-error-messages';
@@ -154,69 +155,58 @@ export const buildMultipleRecordValidationResults = (
 };
 
 export namespace ClinicalSubmissionRecordsOperations {
-  // this function will mutate a DonorRecordsOrganizer
+  // this function will mutate a SubmittedRecords
   export function addRecord(
     type: ClinicalEntityType,
     records: SubmittedClinicalRecordsMap,
     record: SubmittedClinicalRecord,
   ) {
-    switch (type) {
-      case ClinicalEntityType.PRIMARY_DIAGNOSIS:
-      case ClinicalEntityType.DONOR: {
-        records[type] = record;
-        break;
-      }
-      case ClinicalEntityType.SPECIMEN: {
-        if (!records[type]) {
-          records[type] = [];
-        }
-        (records[type] as SubmittedClinicalRecord[]).push(record as SubmittedClinicalRecord);
-        break;
-      }
-      default:
-        throw new Error(`Can't add record with type: ${type}`);
+    checkNotRegistration(type);
+    if (!records[type]) {
+      records[type] = [];
     }
+    records[type].push(record);
   }
 
-  export function getRecordsAsArray(
+  export function getSingleRecord(
     type: ClinicalEntityType,
     records: DeepReadonly<SubmittedClinicalRecordsMap>,
-  ): ReadonlyArray<SubmittedClinicalRecord> {
-    const recordsOfInterest = records[type];
-    if (!recordsOfInterest) {
-      return [];
-    } else if (Array.isArray(recordsOfInterest)) {
-      return recordsOfInterest;
-    } else {
-      return [recordsOfInterest as SubmittedClinicalRecord];
+  ): DeepReadonly<SubmittedClinicalRecord | undefined> {
+    checkNotRegistration(type);
+    if (!records[type]) {
+      return undefined;
+    } else if (records[type].length !== 1) {
+      throw new Error(`Clinical type [${type}] doesn't have single record`);
     }
+    return records[type][0];
   }
 
-  export function getDonorRecord(
-    records: DeepReadonly<SubmittedClinicalRecordsMap>,
-  ): DeepReadonly<SubmittedClinicalRecord> {
-    return records[ClinicalEntityType.DONOR] as SubmittedClinicalRecord;
-  }
-
-  export function getSpecimenRecords(
+  export function getArrayRecords(
+    type: ClinicalEntityType,
     records: DeepReadonly<SubmittedClinicalRecordsMap>,
   ): DeepReadonly<SubmittedClinicalRecord[]> {
-    return records[ClinicalEntityType.SPECIMEN] as SubmittedClinicalRecord[];
+    checkNotRegistration(type);
+    return records[type];
   }
 
-  export function getSpecimenRecordBySubmitterId(
-    submitter_specimen_id: string,
+  export function getRecordBySubmitterId(
+    type: ClinicalEntityType,
+    submitter_id: string,
     records: DeepReadonly<SubmittedClinicalRecordsMap>,
   ): DeepReadonly<SubmittedClinicalRecord> {
-    return _.find(records[ClinicalEntityType.SPECIMEN], [
-      FieldsEnum.submitter_specimen_id,
-      submitter_specimen_id,
+    // checkNotRegistration(type); typescript wouldn't detect this check
+    if (type === ClinicalEntityType.REGISTRATION) {
+      throw new Error(`Invalid clinical type: ${type}`);
+    }
+    return _.find(records[type], [
+      ClinicalUniqueIndentifier[type],
+      submitter_id,
     ]) as SubmittedClinicalRecord;
   }
 
-  export function getPrimaryDiagnosisRecord(
-    records: DeepReadonly<SubmittedClinicalRecordsMap>,
-  ): DeepReadonly<SubmittedClinicalRecord> {
-    return records[ClinicalEntityType.PRIMARY_DIAGNOSIS] as SubmittedClinicalRecord;
+  function checkNotRegistration(type: ClinicalEntityType) {
+    if (type === ClinicalEntityType.REGISTRATION) {
+      throw new Error(`Invalid clinical type: ${type}`);
+    }
   }
 }

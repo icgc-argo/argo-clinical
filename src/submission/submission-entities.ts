@@ -288,5 +288,5 @@ export interface ClinicalSubmissionRecordsByDonorIdMap {
 }
 
 export interface SubmittedClinicalRecordsMap {
-  [type: string]: SubmittedClinicalRecord | SubmittedClinicalRecord[];
+  [type: string]: SubmittedClinicalRecord[];
 }
