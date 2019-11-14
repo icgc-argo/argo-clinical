@@ -1,7 +1,9 @@
 import fs from 'fs';
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import deepFreeze from 'deep-freeze';
 import mongoose from 'mongoose';
+import jwt from 'jsonwebtoken';
+
 const fsPromises = fs.promises;
 
 export namespace TsvUtils {
@@ -52,6 +54,19 @@ export namespace ControllerUtils {
       return res.status(400).send({ message: msg });
     }
     res.status(400).send(msg);
+  };
+
+  // checks authHeader + decoded jwt and returns the user name
+  export const getUserFromToken = (req: Request): string => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      throw new Error("can't get here without auth header");
+    }
+    const decoded = jwt.decode(authHeader.split(' ')[1]) as any;
+    if (!decoded || !decoded.context || !decoded.context.user) {
+      throw new Error('invalid token structure');
+    }
+    return decoded.context.user.firstName + ' ' + decoded.context.user.lastName;
   };
 }
 

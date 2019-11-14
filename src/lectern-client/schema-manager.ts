@@ -6,6 +6,7 @@ import {
   FieldNamesByPriorityMap,
   SchemaDefinition,
 } from './schema-entities';
+import * as changeAnalyzer from './change-analyzer';
 import { schemaClient as schemaServiceAdapter } from './schema-rest-client';
 import { schemaRepo } from './schema-repo';
 import { loggerFor } from '../logger';
@@ -64,7 +65,17 @@ class SchemaManager {
     return service.process(this.getCurrent(), definition, records);
   };
 
-  updateVersion = async (name: string, newVersion: string): Promise<SchemasDictionary> => {
+  analyzeChanges = async (oldVersion: string, newVersion: string) => {
+    const result = await changeAnalyzer.analyzeChanges(
+      this.schemaServiceUrl,
+      this.currentSchema.name,
+      oldVersion,
+      newVersion,
+    );
+    return result;
+  };
+
+  loadNewVersion = async (name: string, newVersion: string): Promise<SchemasDictionary> => {
     const newSchema = await schemaServiceAdapter.fetchSchema(
       this.schemaServiceUrl,
       name,
@@ -101,6 +112,7 @@ class SchemaManager {
         version: initialVersion,
       };
     } else {
+      L.info(`schema found in db`);
       this.currentSchema = storedSchema;
     }
 
@@ -119,6 +131,7 @@ class SchemaManager {
       if (!saved) {
         throw new Error("couldn't save/update new schema");
       }
+      L.info(`schema saved in db`);
       return saved;
     }
     return this.currentSchema;

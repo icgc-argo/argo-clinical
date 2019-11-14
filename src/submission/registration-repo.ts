@@ -88,6 +88,7 @@ const ActiveRegistrationSchema = new mongoose.Schema(
     status: { type: String },
     stats: { type: Object },
     records: [ActiveRegistrationItem],
+    schemaVersion: { type: String, required: true },
   },
   { timestamps: true, minimize: false },
 );

@@ -154,6 +154,7 @@ const expectedResponse1 = {
 const ABCD_REGISTRATION_DOC: ActiveRegistration = {
   programId: 'ABCD-EF',
   creator: 'Test User',
+  schemaVersion: '1.0',
   batchName: `${ClinicalEntityType.REGISTRATION}.tsv`,
   stats: {
     newDonorIds: [
@@ -737,6 +738,33 @@ describe('Submission Api', () => {
           done();
         });
     });
+    it('should clear active submission if there are upload errors that cause clinicalEntities to be empty', async () => {
+      const SUBMISSION = {
+        state: SUBMISSION_STATE.VALID,
+        programId: 'ABCD-EF',
+        version: 'asdf',
+        clinicalEntities: { donor: [{ submitterId: 123 }] },
+      };
+
+      await insertData(dburl, 'activesubmissions', SUBMISSION);
+      const files: Buffer[] = [];
+      try {
+        files.push(fs.readFileSync(__dirname + '/donor.invalid.tsv'));
+      } catch (err) {}
+      await chai
+        .request(app)
+        // data base is empty so ID shouldn't exist
+        .post('/submission/program/ABCD-EF/clinical/upload')
+        .auth(JWT_ABCDEF, { type: 'bearer' })
+        .attach('clinicalFiles', files[0], 'donor.invalid.tsv');
+
+      const dbRead = await findInDb(dburl, 'activesubmissions', {
+        programId: 'ABCD-EF',
+      });
+      chai
+        .expect(dbRead.length, 'There should be no active submission for this program')
+        .to.equal(0);
+    });
   });
 
   describe('clinical-submission: validate', function() {
@@ -772,7 +800,7 @@ describe('Submission Api', () => {
                         value: 'ICGC_0001',
                       },
                       message:
-                        'ICGC_0001 has not yet been registered. Please register here before submitting clinical data for this identifier.',
+                        'ICGC_0001 has not yet been registered. Please register samples before submitting clinical data for this identifier.',
                       index: 0,
                     },
                   ]);
@@ -798,7 +826,7 @@ describe('Submission Api', () => {
         followUps: [],
         treatments: [],
         chemotherapy: [],
-        HormoneTherapy: [],
+        hormoneTherapy: [],
         gender: 'Male',
         submitterId: 'ICGC_0001',
         programId: 'ABCD-EF',
@@ -847,7 +875,7 @@ describe('Submission Api', () => {
         followUps: [],
         treatments: [],
         chemotherapy: [],
-        HormoneTherapy: [],
+        hormoneTherapy: [],
         gender: 'Male',
         submitterId: 'ICGC_0001',
         programId: 'ABCD-EF',
@@ -992,7 +1020,7 @@ describe('Submission Api', () => {
           res.should.have.status(409);
         });
     });
-    it('should return 200 when clear all is completed, and have no clinicalEntities in DB', async () => {
+    it('should return 200 when clear all is completed, and have no active submission for this program in the DB', async () => {
       await uploadSubmission();
       return chai
         .request(app)
@@ -1000,20 +1028,18 @@ describe('Submission Api', () => {
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
         .then(async (res: any) => {
           res.should.have.status(200);
-          chai.expect(
-            res.body.clinicalEntities,
-            'Response should have empty clinicalEntities object',
-          ).to.be.empty;
+          chai.expect(res.text, 'Response should be empty object').to.equal('{}');
+          chai.expect(res.type, 'Response should be json type').to.equal('application/json');
 
           const dbRead = await findInDb(dburl, 'activesubmissions', {
             programId: 'ABCD-EF',
           });
-          chai.expect(
-            dbRead[0].clinicalEntities,
-            'DB Record for Active Submission should hae empty clincialEntities',
-          ).to.be.empty;
+          chai
+            .expect(dbRead.length, 'There should be no active submission for this program')
+            .to.equal(0);
         });
     });
+
     it('should return 200 when clear donor is completed, have specimen in clinicalEntities but no donor', async () => {
       await uploadSubmission();
       return chai
@@ -1032,7 +1058,7 @@ describe('Submission Api', () => {
           chai.expect(dbRead[0].clinicalEntities.specimen).to.exist;
         });
     });
-    it('should set the active submission state to OPEN', async () => {
+    it('should clear active submission record if all data is cleared', async () => {
       const SUBMISSION = {
         state: SUBMISSION_STATE.VALID,
         programId: 'ABCD-EF',
@@ -1043,16 +1069,17 @@ describe('Submission Api', () => {
       await insertData(dburl, 'activesubmissions', SUBMISSION);
       return chai
         .request(app)
-        .delete(`/submission/program/ABCD-EF/clinical/asdf/all`)
+        .delete(`/submission/program/ABCD-EF/clinical/asdf/donor`)
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
         .then(async (res: any) => {
           res.should.have.status(200);
-          res.body.state.should.equal(SUBMISSION_STATE.OPEN);
+          chai.expect(res.text, 'Response should be empty object').to.equal('{}');
+          chai.expect(res.type, 'Response should be json type').to.equal('application/json');
 
           const dbRead = await findInDb(dburl, 'activesubmissions', {
             programId: 'ABCD-EF',
           });
-          chai.expect(dbRead[0].state).to.be.equal(SUBMISSION_STATE.OPEN);
+          chai.expect(dbRead.length).to.equal(0);
         });
     });
   });
@@ -1156,7 +1183,7 @@ describe('Submission Api', () => {
           res.should.have.status(200);
           res.body.should.eql({});
           // check activesubmission removed
-          assertDbCollectionEmpty(dburl, 'activesubmissions');
+          await assertDbCollectionEmpty(dburl, 'activesubmissions');
 
           // check donor merge
           const [updatedDonor] = await findInDb(dburl, 'donors', {
@@ -1196,6 +1223,7 @@ describe('Submission Api', () => {
           submissionVersion = res.body.submission.version;
         });
     };
+
     const uploadSubmissionWithUpdates = async () => {
       let file: Buffer;
       try {
@@ -1204,7 +1232,7 @@ describe('Submission Api', () => {
         return err;
       }
 
-      return chai
+      return await chai
         .request(app)
         .post(`/submission/program/${programId}/clinical/upload`)
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
@@ -1214,7 +1242,7 @@ describe('Submission Api', () => {
         });
     };
     const validateSubmission = async () => {
-      return chai
+      return await chai
         .request(app)
         .post(`/submission/program/${programId}/clinical/validate/${submissionVersion}`)
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
@@ -1223,7 +1251,7 @@ describe('Submission Api', () => {
         });
     };
     const commitActiveSubmission = async () => {
-      return chai
+      return await chai
         .request(app)
         .post(`/submission/program/${programId}/clinical/commit/${submissionVersion}`)
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
@@ -1323,8 +1351,8 @@ describe('Submission Api', () => {
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
         .then(async (res: any) => {
           res.should.have.status(200);
-          res.body.should.eql({});
-          assertDbCollectionEmpty(dburl, 'activesubmissions');
+          res.body.should.be.empty;
+          await assertDbCollectionEmpty(dburl, 'activesubmissions');
           const [updatedDonor] = await findInDb(dburl, 'donors', {
             programId: programId,
             submitterId: 'ICGC_0001',
@@ -1480,6 +1508,7 @@ describe('Submission Api', () => {
           return done();
         });
     });
+
     it('get template not found', done => {
       const name = 'invalid';
       console.log("Getting template for '" + name + "'...");
@@ -1493,6 +1522,68 @@ describe('Submission Api', () => {
           res.should.header('Content-type', 'application/json; charset=utf-8');
           done();
         });
+    });
+
+    it('get template not found', done => {
+      const name = 'invalid';
+      console.log("Getting template for '" + name + "'...");
+      chai
+        .request(app)
+        .get('/submission/schema/template/' + name)
+        .auth(JWT_ABCDEF, { type: 'bearer' })
+        .end((err: any, res: any) => {
+          res.should.have.status(404);
+          res.body.message.should.equal("no schema named '" + name + "' found");
+          res.should.header('Content-type', 'application/json; charset=utf-8');
+          done();
+        });
+    });
+
+    describe('schema migration ', () => {
+      const programId = 'ABCD-EF';
+      const donor: Donor = emptyDonorDocument({
+        submitterId: 'ICGC_0001',
+        programId,
+        clinicalInfo: {
+          vital_status: 'Deceased',
+          cause_of_death: 'Unknown',
+          survival_time: 120,
+        },
+      });
+
+      this.beforeEach(async () => {
+        await clearCollections(dburl, ['donors', 'dictionarymigrations']);
+        await insertData(dburl, 'donors', donor);
+      });
+
+      // very simple smoke test of the migration to be expanded along developement
+      it('should update the schema ', async () => {
+        await chai
+          .request(app)
+          .patch('/submission/schema/')
+          .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+          .send({
+            version: '2.0',
+          })
+          .then((res: any) => {
+            res.should.have.status(200);
+            res.body.version.should.eq('2.0');
+
+            // TODO add a check to the db
+            // TOOD check invalid documents
+          });
+
+        // TODO get the latest migration and check it.
+
+        await chai
+          .request(app)
+          .get('/submission/schema/migration/')
+          .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+          .then((res: any) => {
+            res.should.have.status(200);
+            res.body.length.should.eq(1);
+          });
+      });
     });
   });
 });
@@ -1582,7 +1673,7 @@ const comittedDonors2: Donor[] = [
     followUps: [],
     treatments: [],
     chemotherapy: [],
-    HormoneTherapy: [],
+    hormoneTherapy: [],
     gender: 'Male',
     submitterId: 'abcd-125',
     programId: 'ABCD-EF',
@@ -1607,7 +1698,7 @@ const comittedDonors2: Donor[] = [
     followUps: [],
     treatments: [],
     chemotherapy: [],
-    HormoneTherapy: [],
+    hormoneTherapy: [],
     gender: 'Female',
     submitterId: 'abcd-126',
     programId: 'ABCD-EF',
@@ -1645,7 +1736,7 @@ const comittedDonors2: Donor[] = [
     followUps: [],
     treatments: [],
     chemotherapy: [],
-    HormoneTherapy: [],
+    hormoneTherapy: [],
     gender: 'Male',
     submitterId: 'abcd-127',
     programId: 'ABCD-EF',
@@ -1670,7 +1761,7 @@ const comittedDonors2: Donor[] = [
     followUps: [],
     treatments: [],
     chemotherapy: [],
-    HormoneTherapy: [],
+    hormoneTherapy: [],
     gender: 'Female',
     submitterId: 'abcd-128',
     programId: 'ABCD-EF',
@@ -1708,7 +1799,7 @@ const comittedDonors2: Donor[] = [
     followUps: [],
     treatments: [],
     chemotherapy: [],
-    HormoneTherapy: [],
+    hormoneTherapy: [],
     _id: '5d534820ae008e4dcb205274',
     gender: 'Female',
     submitterId: 'abcd-129',
@@ -1734,7 +1825,7 @@ const comittedDonors2: Donor[] = [
     followUps: [],
     treatments: [],
     chemotherapy: [],
-    HormoneTherapy: [],
+    hormoneTherapy: [],
     gender: 'Male',
     submitterId: 'abcd-200',
     programId: 'ABCD-EF',

@@ -1,9 +1,54 @@
-import { donorDao } from './donor-repo';
+import { donorDao, DONOR_FIELDS } from './donor-repo';
 import { Errors } from '../utils';
-import { Sample } from './clinical-entities';
+import { Sample, Donor } from './clinical-entities';
+import { DeepReadonly } from 'deep-freeze';
+import _ from 'lodash';
+
+export async function updateDonorSchemaMetadata(
+  donor: DeepReadonly<Donor>,
+  migrationId: string,
+  isValid: boolean,
+  newSchemaVersion?: string,
+) {
+  const donorCopy = _.cloneDeep(donor) as Donor;
+  if (!donorCopy.schemaMetadata) {
+    throw new Error('donor document without metadata.. fix it');
+  }
+
+  donorCopy.schemaMetadata.isValid = isValid;
+  donorCopy.schemaMetadata.lastMigrationId = migrationId;
+  if (newSchemaVersion) donorCopy.schemaMetadata.currentSchemaVersion = newSchemaVersion;
+  return await donorDao.update(donorCopy);
+}
+
+export async function updateMigrationId(donor: DeepReadonly<Donor>, migrationId: string) {
+  const donorCopy = _.cloneDeep(donor) as Donor;
+  if (!donorCopy.schemaMetadata) {
+    throw new Error('donor document without metadata.. fix it');
+  }
+
+  donorCopy.schemaMetadata.lastMigrationId = migrationId;
+  return await donorDao.update(donorCopy);
+}
+
+export async function getDonorsByMigrationId(migrationId: string, limit: number) {
+  return await donorDao.findBy(
+    {
+      $or: [
+        { [DONOR_FIELDS.LAST_MIGRATION_ID]: { $ne: migrationId } },
+        { [DONOR_FIELDS.LAST_MIGRATION_ID]: undefined },
+        { [DONOR_FIELDS.LAST_MIGRATION_ID]: { $exists: false } },
+      ],
+    },
+    limit,
+  );
+}
 
 export async function getDonors(programId: string) {
-  return await donorDao.findByProgramId(programId);
+  if (programId) {
+    return await donorDao.findByProgramId(programId);
+  }
+  return await donorDao.findBy({}, 999);
 }
 
 export async function findDonorId(submitterId: string, programId: string) {

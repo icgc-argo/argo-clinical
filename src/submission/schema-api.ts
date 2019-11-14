@@ -7,16 +7,38 @@ import { ControllerUtils } from '../utils';
 import { ClinicalEntityType } from './submission-entities';
 import AdmZip from 'adm-zip';
 import { HasFullWriteAccess } from '../auth-decorators';
-
+import * as migrationManager from './schema-migration/migration-manager';
 const L = loggerFor(__filename);
 
 class SchemaController {
   @HasFullWriteAccess()
   async update(req: Request, res: Response) {
     const version: string = req.body.version;
-    await manager.instance().updateVersion(manager.instance().getCurrent().name, version);
+    const initiator = ControllerUtils.getUserFromToken(req);
+    await migrationManager.updateSchemaVersion(version, initiator);
     setStatus('schema', { status: Status.OK });
     return res.status(200).send(manager.instance().getCurrent());
+  }
+
+  async probe(req: Request, res: Response) {
+    const from = req.query.from;
+    const to = req.query.to;
+    const result = await migrationManager.probeSchemaUpgrade(from, to);
+    return res.status(200).send(result);
+  }
+
+  @HasFullWriteAccess()
+  async dryRunUpdate(req: Request, res: Response) {
+    const version: string = req.body.version;
+    const initiator = ControllerUtils.getUserFromToken(req);
+    const migration = await migrationManager.dryRunSchemaUpgrade(version, initiator);
+    return res.status(200).send(migration);
+  }
+
+  async getMigration(req: Request, res: Response) {
+    const id: string | undefined = req.params.id;
+    const migration = await migrationManager.getMigration(id);
+    return res.status(200).send(migration);
   }
 }
 
@@ -53,9 +75,11 @@ export const getTemplate = async (req: Request, res: Response) => {
   const schema = schemasDictionary.schemas.find(schema => {
     return schema.name == schemaName;
   });
+
   if (!schema) {
     return ControllerUtils.notFound(res, "no schema named '" + schemaName + "' found");
   }
+
   const template = createTemplate(schema);
   return res
     .status(200)

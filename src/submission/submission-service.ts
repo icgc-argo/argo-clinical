@@ -18,7 +18,6 @@ import {
   CreateSubmissionResult,
   SUBMISSION_STATE,
   ActiveClinicalSubmission,
-  SubmittedClinicalRecord,
   SubmissionValidationUpdate,
   ClinicalTypeValidateResult,
   ClinicalEntities,
@@ -31,6 +30,7 @@ import {
   NewClinicalEntities,
   ClinicalEntityType,
   BatchNameRegex,
+  ClinicalSubmissionRecordsByDonorIdMap,
 } from './submission-entities';
 import * as schemaManager from '../lectern-client/schema-manager';
 import {
@@ -46,6 +46,7 @@ import { DeepReadonly } from 'deep-freeze';
 import { submissionRepository } from './submission-repo';
 import { v1 as uuid } from 'uuid';
 import { validateSubmissionData, checkUniqueRecords } from './validation';
+import { ClinicalSubmissionRecordsOperations } from './validation-clinical/utils';
 const L = loggerFor(__filename);
 
 const emptyStats = {
@@ -145,7 +146,8 @@ export namespace operations {
     const stats = calculateUpdates(registrationRecords, donorsBySubmitterIdMap);
 
     // save the new registration object
-    const registration = toActiveRegistration(command, registrationRecords, stats);
+    const schemaVersion = schemaManager.instance().getCurrent().version;
+    const registration = toActiveRegistration(command, registrationRecords, stats, schemaVersion);
     const savedRegistration = await registrationRepository.create(registration);
     return F({
       registration: savedRegistration,
@@ -204,11 +206,11 @@ export namespace operations {
       );
     } else {
       // Update clinical entities from the active submission
-      const updatedClinicalEntites: ClinicalEntities = {};
+      const updatedClinicalEntities: ClinicalEntities = {};
       if (command.fileType !== 'all') {
         for (const clinicalType in activeSubmission.clinicalEntities) {
           if (clinicalType !== command.fileType) {
-            updatedClinicalEntites[clinicalType] = {
+            updatedClinicalEntities[clinicalType] = {
               ...activeSubmission.clinicalEntities[clinicalType],
               ...emptyStats,
             };
@@ -219,7 +221,7 @@ export namespace operations {
         programId: command.programId,
         state: SUBMISSION_STATE.OPEN,
         version: '', // version is irrelevant here, repo will set it
-        clinicalEntities: updatedClinicalEntites,
+        clinicalEntities: updatedClinicalEntities,
         updatedBy: command.updater,
       };
       // insert into database
@@ -335,11 +337,10 @@ export namespace operations {
         successful: true,
       };
     }
-    // map donors(via donorId) to their relevant records
-    const newDonorDataMap: {
-      [donoSubmitterId: string]: { [clinicalType: string]: SubmittedClinicalRecord };
-    } = {};
+    // map records to relevant submitter_donor_id
+    const clinicalSubmissionRecords: ClinicalSubmissionRecordsByDonorIdMap = {};
     const filters: FindByProgramAndSubmitterFilter[] = [];
+    // map records to submitterDonorId and build filters
     for (const clinicalType in exsistingActiveSubmission.clinicalEntities) {
       const clinicalEnity = exsistingActiveSubmission.clinicalEntities[clinicalType];
       clinicalEnity.records.forEach((rc, index) => {
@@ -348,19 +349,25 @@ export namespace operations {
           programId: command.programId,
           submitterId: donorId,
         });
-        if (!newDonorDataMap[donorId]) {
-          newDonorDataMap[donorId] = {};
+        if (!clinicalSubmissionRecords[donorId]) {
+          clinicalSubmissionRecords[donorId] = {};
         }
-        newDonorDataMap[donorId][clinicalType] = {
-          ...rc,
-          submitter_donor_id: donorId,
-          index: index,
-        };
+        // by this point we have already validated for uniqueness
+        ClinicalSubmissionRecordsOperations.addRecord(
+          clinicalType as ClinicalEntityType,
+          clinicalSubmissionRecords[donorId],
+          {
+            ...rc,
+            submitter_donor_id: donorId,
+            index: index,
+          },
+        );
       });
     }
+
     const relevantDonorsMap = await getDonorsInProgram(filters);
     const validateResult: ClinicalTypeValidateResult = await validateSubmissionData(
-      newDonorDataMap,
+      clinicalSubmissionRecords,
       relevantDonorsMap,
     );
 
@@ -583,12 +590,14 @@ export namespace operations {
     command: CreateRegistrationCommand,
     registrationRecords: ReadonlyArray<CreateRegistrationRecord>,
     stats: DeepReadonly<RegistrationStats>,
+    schemaVersion: string,
   ): DeepReadonly<ActiveRegistration> => {
     return F({
       programId: command.programId,
       creator: command.creator,
       batchName: command.batchName,
       stats: stats,
+      schemaVersion: schemaVersion,
       records: registrationRecords.map(r => {
         const record: Readonly<SubmittedRegistrationRecord> = {
           [FieldsEnum.program_id]: command.programId,

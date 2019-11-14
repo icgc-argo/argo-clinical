@@ -1,5 +1,6 @@
 export interface Donor {
   _id?: string;
+  schemaMetadata?: SchemaMetadata;
   donorId?: number;
   gender: string;
   submitterId: string;
@@ -9,8 +10,15 @@ export interface Donor {
   primaryDiagnosis?: object;
   followUps?: Array<object>;
   treatments?: Array<object>;
-  chemotherapy?: Array<Object>;
-  HormoneTherapy?: Array<Object>;
+  chemotherapy?: Array<object>;
+  hormoneTherapy?: Array<object>;
+}
+
+export interface SchemaMetadata {
+  lastMigrationId?: string | undefined | null;
+  currentSchemaVersion: string;
+  originalSchemaVersion: string;
+  isValid: boolean;
 }
 
 export interface Specimen {

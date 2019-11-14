@@ -1,5 +1,4 @@
 // using import fails when running the test
-// import * as chai from "chai";
 import chai from 'chai';
 // needed for types
 import 'chai-http';
@@ -10,19 +9,26 @@ import { cleanCollection, findInDb } from '../testutils';
 import _ from 'lodash';
 import * as manager from '../../../src/lectern-client/schema-manager';
 import { promisify } from 'bluebird';
-import { SchemasDictionary } from '../../../src/lectern-client/schema-entities';
-
+import {
+  SchemasDictionary,
+  SchemasDictionaryDiffs,
+} from '../../../src/lectern-client/schema-entities';
+import { schemaClient } from '../../../src/lectern-client/schema-rest-client';
 const ServerMock: any = require('mock-http-server') as any;
 
 chai.use(require('chai-http'));
 chai.should();
 mongoose.set('debug', true);
+
 describe('Lectern Client', () => {
   let mongoContainer: any;
   let dburl = ``;
   const schemaName = 'ARGO Clinical Submission';
   const server = new ServerMock({ host: 'localhost', port: 54321 });
   const startServerPromise = promisify(server.start);
+
+  // we don't do a full bootstrap here like other integration tests, this test is meant to be
+  // lectern client specific and agnostic of clinical so it can be isolated without dependencies on argo
   const prep = async (mongoUrl: string) => {
     await mongoose.connect(mongoUrl, {
       // https://mongoosejs.com/docs/deprecations.html
@@ -55,10 +61,38 @@ describe('Lectern Client', () => {
     await mongoContainer.stop();
   });
 
+  describe('rest client', () => {
+    it('should fetch schema diff', async function() {
+      const diffResponse: any[] = require('./schema-diff.1.json') as SchemasDictionary[];
+      server.on({
+        method: 'GET',
+        path: '/lectern/diff',
+        reply: {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+          body: () => {
+            console.log('in mock server reply');
+            return JSON.stringify(diffResponse);
+          },
+        },
+      });
+      const response = await schemaClient.fetchDiff(
+        'http://localhost:54321/lectern',
+        'abc',
+        '1.0',
+        '2.0',
+      );
+      chai.expect(response).to.not.be.undefined;
+    });
+  });
+
   describe('manager', function() {
     this.beforeEach(async () => await cleanCollection(dburl, 'dataschemas'));
+
     it('should load schema in db', async function() {
-      const dictionaries: SchemasDictionary[] = require('./stub-schema.1.json') as SchemasDictionary[];
+      // has to be done in every test to reset the state of the manager
+      manager.create('http://localhost:54321/lectern');
+      const dictionaries: SchemasDictionary[] = require('./dictionary.response.1.json') as SchemasDictionary[];
       server.on({
         method: 'GET',
         path: '/lectern/dictionaries',
@@ -71,7 +105,7 @@ describe('Lectern Client', () => {
           },
         },
       });
-      manager.create('http://localhost:54321/lectern');
+
       let result: SchemasDictionary | undefined = undefined;
       try {
         result = await manager.instance().loadSchema(schemaName, '1.0');
@@ -91,8 +125,10 @@ describe('Lectern Client', () => {
     });
 
     it('should update schema version', async function() {
-      const dictionaryV1: SchemasDictionary[] = require('./stub-schema.1.json') as SchemasDictionary[];
-      const dictionaryV2: SchemasDictionary[] = require('./stub-schema.2.json') as SchemasDictionary[];
+      // has to be done in every test to reset the state of the manager
+      manager.create('http://localhost:54321/lectern');
+      const dictionaryV1: SchemasDictionary[] = require('./dictionary.response.1.json') as SchemasDictionary[];
+      const dictionaryV2: SchemasDictionary[] = require('./dictionary.response.2.json') as SchemasDictionary[];
       server.on({
         method: 'GET',
         path: '/lectern/dictionaries',
@@ -108,7 +144,6 @@ describe('Lectern Client', () => {
           },
         },
       });
-      manager.create('http://localhost:54321/lectern');
       let resultV1: SchemasDictionary | undefined = undefined;
       let resultV2: SchemasDictionary | undefined = undefined;
       try {
@@ -118,7 +153,7 @@ describe('Lectern Client', () => {
       }
       chai.expect(resultV1).to.not.be.undefined;
       try {
-        resultV2 = await manager.instance().updateVersion(schemaName, '2.0');
+        resultV2 = await manager.instance().loadNewVersion(schemaName, '2.0');
       } catch (er) {
         return er;
       }

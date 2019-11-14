@@ -4,68 +4,88 @@ import {
   FieldsEnum,
   SubmittedClinicalRecord,
   ClinicalInfoFieldsEnum,
-  ValidatorResult,
-  ModificationType,
+  RecordValidationResult,
+  SubmittedClinicalRecordsMap,
   ClinicalEntityType,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
+import { isEmptyString } from '../../utils';
+import { ClinicalSubmissionRecordsOperations } from './utils';
 
 export const validate = async (
-  newDonorRecords: DeepReadonly<{ [clinicalType: string]: SubmittedClinicalRecord }>,
+  submittedRecords: DeepReadonly<SubmittedClinicalRecordsMap>,
   existentDonor: DeepReadonly<Donor>,
-): Promise<ValidatorResult> => {
-  const errors: SubmissionValidationError[] = [];
-  const specimenRecord = newDonorRecords[ClinicalEntityType.SPECIMEN];
-
-  // Preconditions: if any one of the validation in try catch failed, can't continue
-  if (!utils.checkDonorRegistered(existentDonor, specimenRecord)) {
-    return utils.buildValidatorResult(ModificationType.ERRORSFOUND, specimenRecord.index, [
-      utils.buildSubmissionError(
-        specimenRecord,
-        DataValidationErrors.ID_NOT_REGISTERED,
-        FieldsEnum.submitter_donor_id,
-      ),
-    ]);
+): Promise<RecordValidationResult[]> => {
+  // ***Basic pre-check (to prevent execution if missing required variables)***
+  const specimenRecords = ClinicalSubmissionRecordsOperations.getArrayRecords(
+    ClinicalEntityType.SPECIMEN,
+    submittedRecords,
+  );
+  if (specimenRecords.length === 0 || !existentDonor) {
+    throw new Error("Can't call this function without donor & specimen records");
   }
 
+  const recordValidationResults: RecordValidationResult[] = [];
+
+  const donorDataToValidateWith = getDataFromDonorRecordOrDonor(
+    existentDonor,
+    submittedRecords,
+    recordValidationResults,
+  );
+  if (!donorDataToValidateWith) {
+    return recordValidationResults;
+  }
+
+  for (const specimenRecord of specimenRecords) {
+    // ***Precondition for each specimenRecord checks***
+    const specimen = getSpecimenFromDonor(existentDonor, specimenRecord, recordValidationResults);
+    if (!specimen) {
+      continue;
+    }
+
+    // ***Submission Validation checks***
+    const errors: SubmissionValidationError[] = []; // all errors for record
+    // cross entity donor-sepecimen record validation
+    checkTimeConflictWithDonor(donorDataToValidateWith, specimenRecord, errors);
+
+    // other checks here and add to `errors`
+
+    recordValidationResults.push(
+      utils.buildRecordValidationResult(specimenRecord, errors, specimen.clinicalInfo),
+    );
+  }
+
+  return recordValidationResults;
+};
+
+function getSpecimenFromDonor(
+  existentDonor: DeepReadonly<Donor>,
+  specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
+  validationResults: RecordValidationResult[],
+) {
   const specimen = _.find(existentDonor.specimens, [
     'submitterId',
     specimenRecord[FieldsEnum.submitter_specimen_id],
   ]);
   if (!specimen) {
-    return utils.buildValidatorResult(ModificationType.ERRORSFOUND, specimenRecord.index, [
-      utils.buildSubmissionError(
+    validationResults.push(
+      utils.buildRecordValidationResult(
         specimenRecord,
-        DataValidationErrors.ID_NOT_REGISTERED,
-        FieldsEnum.submitter_specimen_id,
+        utils.buildSubmissionError(
+          specimenRecord,
+          DataValidationErrors.ID_NOT_REGISTERED,
+          FieldsEnum.submitter_specimen_id,
+        ),
       ),
-    ]);
+    );
+    return undefined;
   }
 
-  const donorDataToValidateWith = getDataFromRecordOrDonor(
-    newDonorRecords[ClinicalEntityType.DONOR],
-    existentDonor,
-  );
-  if (!donorDataToValidateWith) {
-    return utils.buildValidatorResult(ModificationType.ERRORSFOUND, specimenRecord.index, [
-      utils.buildSubmissionError(
-        specimenRecord,
-        DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
-        ClinicalInfoFieldsEnum.acquisition_interval,
-      ),
-    ]);
-  }
-
-  // cross entity sepecimen record validation
-  checkTimeConflictWithDonor(donorDataToValidateWith, specimenRecord, errors);
-
-  return errors.length > 0
-    ? utils.buildValidatorResult(ModificationType.ERRORSFOUND, specimenRecord.index, errors)
-    : await utils.checkForUpdates(specimenRecord, specimen.clinicalInfo);
-};
+  return specimen;
+}
 
 function checkTimeConflictWithDonor(
   donorDataToValidateWith: { [k: string]: any },
@@ -88,20 +108,43 @@ function checkTimeConflictWithDonor(
   }
 }
 
-const getDataFromRecordOrDonor = (
-  donorRecord: DeepReadonly<SubmittedClinicalRecord>,
+const getDataFromDonorRecordOrDonor = (
   donor: DeepReadonly<Donor>,
+  submittedRecords: DeepReadonly<SubmittedClinicalRecordsMap>,
+  validationResults: RecordValidationResult[],
 ) => {
-  let donorVitalStatus: string;
-  let donorSurvivalTime: number;
+  let missingField: ClinicalInfoFieldsEnum[] = [];
+  let donorVitalStatus: string = '';
+  let donorSurvivalTime: number = NaN;
+  const donorDataSource =
+    ClinicalSubmissionRecordsOperations.getSingleRecord(
+      ClinicalEntityType.DONOR,
+      submittedRecords,
+    ) || donor.clinicalInfo;
 
-  if (donorRecord) {
-    donorVitalStatus = String(donorRecord[ClinicalInfoFieldsEnum.vital_status]);
-    donorSurvivalTime = Number(donorRecord[ClinicalInfoFieldsEnum.survival_time]);
-  } else if (donor.clinicalInfo) {
-    donorVitalStatus = String(donor.clinicalInfo[ClinicalInfoFieldsEnum.vital_status]);
-    donorSurvivalTime = Number(donor.clinicalInfo[ClinicalInfoFieldsEnum.survival_time]);
+  if (!donorDataSource) {
+    missingField = [ClinicalInfoFieldsEnum.vital_status, ClinicalInfoFieldsEnum.survival_time];
   } else {
+    donorVitalStatus = donorDataSource[ClinicalInfoFieldsEnum.vital_status] as string;
+    donorSurvivalTime = Number(donorDataSource[ClinicalInfoFieldsEnum.survival_time]) || NaN;
+
+    if (isEmptyString(donorVitalStatus)) missingField.push(ClinicalInfoFieldsEnum.vital_status);
+    if (isNaN(donorSurvivalTime)) missingField.push(ClinicalInfoFieldsEnum.survival_time);
+  }
+
+  if (missingField.length > 0) {
+    const multipleRecordValidationResults = utils.buildMultipleRecordValidationResults(
+      ClinicalSubmissionRecordsOperations.getArrayRecords(
+        ClinicalEntityType.SPECIMEN,
+        submittedRecords,
+      ),
+      {
+        type: DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
+        fieldName: ClinicalInfoFieldsEnum.acquisition_interval,
+        info: { missingField },
+      },
+    );
+    validationResults.push(...multipleRecordValidationResults);
     return undefined;
   }
 
