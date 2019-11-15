@@ -56,6 +56,12 @@ export interface FieldDefinition {
     regex?: string;
     script?: string;
     required?: boolean;
+    range: {
+      min?: number;
+      max?: number;
+      exclusiveMin?: number;
+      exclusiveMax?: number;
+    };
   };
 }
 
@@ -75,6 +81,7 @@ export enum SchemaValidationErrorTypes {
   MISSING_REQUIRED_FIELD = 'MISSING_REQUIRED_FIELD',
   INVALID_FIELD_VALUE_TYPE = 'INVALID_FIELD_VALUE_TYPE',
   INVALID_BY_REGEX = 'INVALID_BY_REGEX',
+  INVALID_BY_RANGE = 'INVALID_BY_RANGE',
   INVALID_BY_SCRIPT = 'INVALID_BY_SCRIPT',
   INVALID_ENUM_VALUE = 'INVALID_ENUM_VALUE',
   UNRECOGNIZED_FIELD = 'UNRECOGNIZED_FIELD',

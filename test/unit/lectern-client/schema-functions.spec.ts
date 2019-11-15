@@ -4,8 +4,12 @@ import {
   SchemasDictionary,
   SchemaValidationErrorTypes,
 } from '../../../src/lectern-client/schema-entities';
+import schemaErrorMessage from '../../../src/lectern-client/schema-error-messages';
 chai.should();
 const schema: SchemasDictionary = require('./schema.json')[0];
+
+const VALUE_NOT_ALLOWED = 'The value is not permissible for this field.';
+const PROGRAM_ID_REQ = 'program_id is a required field.';
 
 describe('schema-functions', () => {
   it('should populate records based on default value ', () => {
@@ -84,7 +88,7 @@ describe('schema-functions', () => {
       fieldName: 'program_id',
       index: 0,
       info: {},
-      message: 'program_id is a required field.',
+      message: PROGRAM_ID_REQ,
     });
   });
 
@@ -101,7 +105,7 @@ describe('schema-functions', () => {
       fieldName: 'unit_number',
       index: 0,
       info: {},
-      message: 'The value is not permissible for this field.',
+      message: VALUE_NOT_ALLOWED,
     });
   });
 
@@ -138,7 +142,41 @@ describe('schema-functions', () => {
       fieldName: 'program_id',
       index: 0,
       info: {},
-      message: 'The value is not permissible for this field.',
+      message: VALUE_NOT_ALLOWED,
+    });
+  });
+
+  it.only('should validate range', () => {
+    const result = schemaService.process(schema, 'address', [
+      {
+        country: 'US',
+        postal_code: '12345',
+        unit_number: '-1',
+      },
+      {
+        country: 'US',
+        postal_code: '12345',
+        unit_number: '223',
+      },
+      {
+        country: 'US',
+        postal_code: '12345',
+        unit_number: '500000',
+      },
+    ]);
+    chai.expect(result.validationErrors).to.deep.include({
+      errorType: SchemaValidationErrorTypes.INVALID_BY_RANGE,
+      fieldName: 'unit_number',
+      index: 0,
+      info: {},
+      message: schemaErrorMessage(SchemaValidationErrorTypes.INVALID_BY_RANGE),
+    });
+    chai.expect(result.validationErrors).to.deep.include({
+      errorType: SchemaValidationErrorTypes.INVALID_BY_RANGE,
+      fieldName: 'unit_number',
+      index: 2,
+      info: {},
+      message: schemaErrorMessage(SchemaValidationErrorTypes.INVALID_BY_RANGE),
     });
   });
 
@@ -163,14 +201,14 @@ describe('schema-functions', () => {
       fieldName: 'postal_code',
       index: 0,
       info: { message: 'invalid postal code for US' },
-      message: 'The value is not permissible for this field.',
+      message: VALUE_NOT_ALLOWED,
     });
     chai.expect(result.validationErrors).to.deep.include({
       errorType: SchemaValidationErrorTypes.INVALID_BY_SCRIPT,
       fieldName: 'postal_code',
       index: 1,
       info: { message: 'invalid postal code for CANADA' },
-      message: 'The value is not permissible for this field.',
+      message: VALUE_NOT_ALLOWED,
     });
   });
 
@@ -226,7 +264,7 @@ describe('schema-functions', () => {
       fieldName: 'survival_time',
       index: 0,
       info: {},
-      message: 'The value is not permissible for this field.',
+      message: VALUE_NOT_ALLOWED,
     });
   });
 

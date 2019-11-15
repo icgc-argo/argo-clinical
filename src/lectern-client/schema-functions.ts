@@ -215,6 +215,7 @@ const validateAfterTypeConversion = (
   const validationErrors = validation
     .runValidationPipeline(record, index, schemaDef.fields, [
       validation.validateRegex,
+      validation.validateRange,
       validation.validateEnum,
       validation.validateScript,
     ])
@@ -285,6 +286,30 @@ namespace validation {
           isInvalidRegexValue(field.restrictions.regex, value)
         ) {
           return buildError(SchemaValidationErrorTypes.INVALID_BY_REGEX, field.name, index);
+        }
+        return undefined;
+      })
+      .filter(notEmpty);
+  };
+
+  export const validateRange: TypedValidationFunction = (
+    rec: TypedDataRecord,
+    index: number,
+    fields: ReadonlyArray<FieldDefinition>,
+  ) => {
+    return fields
+      .map(field => {
+        const value = rec[field.name];
+        if (value && typeof value !== 'number') {
+          return undefined;
+        }
+
+        if (
+          field.restrictions &&
+          field.restrictions.range &&
+          isOutOfRange(field.restrictions.range, value as number | undefined)
+        ) {
+          return buildError(SchemaValidationErrorTypes.INVALID_BY_RANGE, field.name, index);
         }
         return undefined;
       })
@@ -405,6 +430,19 @@ namespace validation {
     return field.restrictions && field.restrictions.required && isEmptyString(record[field.name]);
   };
 
+  const isOutOfRange = (range: any, value: number | undefined) => {
+    if (value == undefined) return false;
+    const invalidRange =
+      // less than the min if defined ?
+      (range.min !== undefined && value < range.min) ||
+      (range.exclusiveMin !== undefined && value <= range.exclusiveMin) ||
+      false ||
+      // bigger than max if define ?
+      ((range.max !== undefined && value > range.max) ||
+        (range.exclusiveMax !== undefined && value >= range.exclusiveMax) ||
+        false);
+    return invalidRange;
+  };
   const isInvalidEnumValue = (
     codeList: Array<string | number>,
     value: string | boolean | number | undefined,

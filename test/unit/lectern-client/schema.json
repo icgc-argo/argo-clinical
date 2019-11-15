@@ -156,7 +156,13 @@
           {
             "name": "unit_number",
             "valueType": "integer",
-            "description": "unit number"
+            "description": "unit number",
+            "restrictions": {
+              "range": {
+                "min": 0,
+                "exclusiveMax": 999
+              }
+            }
           },
           {
             "name": "country",
