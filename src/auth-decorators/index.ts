@@ -38,10 +38,6 @@ const hasScope = (scopes: string[], token: any) => {
 };
 
 const checkAuthorization = (scopes: string[], request: Request, response: Response) => {
-  if (config.getConfig().authDisabled()) {
-    L.info('WARNING: AUTH_DISABLED is true, skipping scopes check');
-    return undefined;
-  }
   const token = getToken(request);
   if (!token) {
     return response.status(401).send('This endpoint needs a valid authentication token');

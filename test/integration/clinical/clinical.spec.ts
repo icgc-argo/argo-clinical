@@ -53,9 +53,6 @@ describe('clinical Api', () => {
           mongoPassword() {
             return '';
           },
-          authDisabled() {
-            return false;
-          },
           mongoUser() {
             return '';
           },
