@@ -1552,6 +1552,7 @@ describe('Submission Api', () => {
         clinicalInfo: {
           vital_status: 'Deceased',
           cause_of_death: 'Unknown',
+          submitter_donor_id: 'ICGC_0001',
           survival_time: 120,
         },
       });
@@ -1562,6 +1563,7 @@ describe('Submission Api', () => {
         clinicalInfo: {
           vital_status: 'Unknown',
           cause_of_death: 'Died of cancer',
+          submitter_donor_id: 'ICGC_0002',
           survival_time: 67,
         },
       });
@@ -1611,54 +1613,57 @@ describe('Submission Api', () => {
           });
       });
 
-      it('should create dry run migration', async () => {
-        await chai
-          .request(app)
-          .patch('/submission/schema/dry-run-update')
-          .send({
-            version: '2.0',
-          })
-          .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-          .then(async (res: any) => {
-            res.should.have.status(200);
-            const migration = res.body as DictionaryMigration;
-            migration.should.not.be.undefined;
-            const migrations = (await findInDb(
-              dburl,
-              'dictionarymigrations',
-              {},
-            )) as DictionaryMigration[];
-            migrations.should.not.be.empty;
-            migrations[0].should.not.be.undefined;
-            const dbMigration = migrations[0];
-            if (!dbMigration._id) {
-              throw new Error('migration in db with no id');
-            }
-            dbMigration._id = dbMigration._id.toString();
-            const normalizedDbMigration = JSON.parse(JSON.stringify(dbMigration));
-            normalizedDbMigration.should.deep.include(migration);
-            migration.stats.invalidDocumentsCount.should.eq(1);
-            migration.stats.validDocumentsCount.should.eq(1);
-            migration.stats.totalProcessed.should.eq(2);
-            migration.invalidDonorsErrors[0].should.deep.eq({
-              donorId: 1,
-              submitterDonorId: 'ICGC_0002',
-              programId: 'ABCD-EF',
-              errors: [
-                {
-                  donor: [
-                    {
-                      errorType: 'INVALID_ENUM_VALUE',
-                      fieldName: 'vital_status',
-                      index: 0,
-                      info: {},
-                      message: 'The value is not permissible for this field.',
-                    },
-                  ],
-                },
-              ],
+      describe('dry run migration api', () => {
+        it('should report donor validation errors', async () => {
+          await chai
+            .request(app)
+            .patch('/submission/schema/dry-run-update')
+            .send({
+              version: '2.0',
+            })
+            .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+            .then(async (res: any) => {
+              res.should.have.status(200);
+              const migration = res.body as DictionaryMigration;
+              migration.should.not.be.undefined;
+              const migrations = (await findInDb(
+                dburl,
+                'dictionarymigrations',
+                {},
+              )) as DictionaryMigration[];
+              migrations.should.not.be.empty;
+              migrations[0].should.not.be.undefined;
+              const dbMigration = migrations[0];
+              if (!dbMigration._id) {
+                throw new Error('migration in db with no id');
+              }
+              dbMigration._id = dbMigration._id.toString();
+              // we convert to json string to normalize dates
+              const normalizedDbMigration = JSON.parse(JSON.stringify(dbMigration));
+              normalizedDbMigration.should.deep.include(migration);
+              migration.stats.invalidDocumentsCount.should.eq(1);
+              migration.stats.validDocumentsCount.should.eq(1);
+              migration.stats.totalProcessed.should.eq(2);
+              migration.invalidDonorsErrors[0].should.deep.eq({
+                donorId: 1,
+                submitterDonorId: 'ICGC_0002',
+                programId: 'ABCD-EF',
+                errors: [
+                  {
+                    donor: [
+                      {
+                        errorType: 'INVALID_ENUM_VALUE',
+                        fieldName: 'vital_status',
+                        index: 0,
+                        info: {},
+                        message: 'The value is not permissible for this field.',
+                      },
+                    ],
+                  },
+                ],
+              });
             });
-          });
+        });
       });
     });
   });
