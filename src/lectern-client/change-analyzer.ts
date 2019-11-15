@@ -56,6 +56,11 @@ export const analyzeChanges = async (
         created: [],
         deleted: [],
       },
+      range: {
+        updated: [],
+        created: [],
+        deleted: [],
+      },
     },
   };
 
@@ -199,6 +204,32 @@ const categorizeRestrictionChanges = (
       analysis.restrictionsChanges.script.updated.push({
         field: field,
         value: scriptChange.data,
+      });
+    }
+  }
+
+  if (restrictions.range) {
+    console.log('range change found');
+    const rangeChange = restrictions.range as Change;
+
+    if (rangeChange.type === 'created') {
+      analysis.restrictionsChanges.script.created.push({
+        field: field,
+        value: rangeChange.data,
+      });
+    }
+
+    if (rangeChange.type === 'deleted') {
+      analysis.restrictionsChanges.script.deleted.push({
+        field: field,
+        value: rangeChange.data,
+      });
+    }
+
+    if (rangeChange.type === 'updated') {
+      analysis.restrictionsChanges.script.updated.push({
+        field: field,
+        value: rangeChange.data,
       });
     }
   }

@@ -146,7 +146,7 @@ describe('schema-functions', () => {
     });
   });
 
-  it.only('should validate range', () => {
+  it('should validate range', () => {
     const result = schemaService.process(schema, 'address', [
       {
         country: 'US',

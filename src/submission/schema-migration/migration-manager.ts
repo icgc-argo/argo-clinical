@@ -3,11 +3,7 @@ import { Errors, notEmpty } from '../../utils';
 import { DictionaryMigration } from './migration-entities';
 import * as manager from '../schema-manager';
 import * as schemaService from '../../lectern-client/schema-functions';
-import {
-  ChangeAnalysis,
-  SchemasDictionary,
-  SchemaValidationError,
-} from '../../lectern-client/schema-entities';
+import { ChangeAnalysis, SchemasDictionary } from '../../lectern-client/schema-entities';
 import { Donor } from '../../clinical/clinical-entities';
 import * as clinicalService from '../../clinical/clinical-service';
 import { DeepReadonly } from 'deep-freeze';
@@ -431,10 +427,22 @@ function findInvalidatingChangesFields(changeAnalysis: ChangeAnalysis) {
     });
   });
 
-  /** TODOS */
   // ******************
   // Ranges
   // ******************
+  changeAnalysis.restrictionsChanges.range.created.forEach(rc => {
+    invalidatingFields.push({
+      type: 'RANGE_ADDED',
+      fieldPath: rc.field,
+    });
+  });
+
+  changeAnalysis.restrictionsChanges.range.updated.forEach(rc => {
+    invalidatingFields.push({
+      type: 'RANGE_UPDATED',
+      fieldPath: rc.field,
+    });
+  });
 
   return invalidatingFields;
 }

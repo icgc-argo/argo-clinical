@@ -127,6 +127,11 @@ export interface ChangeAnalysis {
       created: StringAttributeChange[];
       deleted: StringAttributeChange[];
     };
+    range: {
+      updated: RangeChange[];
+      created: RangeChange[];
+      deleted: RangeChange[];
+    };
   };
 }
 
@@ -134,6 +139,12 @@ export interface AddedFieldChange {
   name: string;
   definition: FieldDefinition;
 }
+
+export interface RangeChange {
+  field: string;
+  definition: any;
+}
+
 export interface CodeListChange {
   field: string;
   addition: SchemaTypes[];
