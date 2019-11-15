@@ -3,7 +3,7 @@
  * to the clinical model, somehow as set of ETL operations.
  */
 import { DeepReadonly } from 'deep-freeze';
-import { Donor, Specimen, Sample, SchemaMetadata } from '../clinical/clinical-entities';
+import { Donor, Specimen, Sample, SchemaMetadata } from '../../clinical/clinical-entities';
 import {
   ActiveClinicalSubmission,
   ActiveSubmissionIdentifier,
@@ -13,14 +13,14 @@ import {
   SubmittedRegistrationRecord,
   FieldsEnum,
   SUBMISSION_STATE,
-} from './submission-entities';
+} from '../submission-entities';
 
-import { Errors } from '../utils';
-import { donorDao } from '../clinical/donor-repo';
+import { Errors } from '../../utils';
+import { donorDao } from '../../clinical/donor-repo';
 import _ from 'lodash';
-import { F } from '../utils';
-import { registrationRepository } from './registration-repo';
-import { submissionRepository } from './submission-repo';
+import { F } from '../../utils';
+import { registrationRepository } from '../registration-repo';
+import { submissionRepository } from '../submission-repo';
 import { mergeActiveSubmissionWithDonors } from './merge-submission';
 
 /**

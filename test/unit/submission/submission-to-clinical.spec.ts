@@ -1,6 +1,6 @@
 import chai from 'chai';
 import * as sinon from 'sinon';
-import * as s2c from '../../../src/submission/submission-to-clinical';
+import * as s2c from '../../../src/submission/submission-to-clinical/submission-to-clinical';
 
 import { registrationRepository } from '../../../src/submission/registration-repo';
 import { donorDao, FindByProgramAndSubmitterFilter } from '../../../src/clinical/donor-repo';

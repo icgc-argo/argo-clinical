@@ -35,6 +35,13 @@ let server: Server;
     mongoUrl(): string {
       return process.env.CLINICAL_DB_URL || '';
     },
+    authDisabled(): boolean {
+      // don't allow this to be set in production
+      if (process.env.NODE_ENV == 'PRODUCTION') {
+        return false;
+      }
+      return process.env.AUTH_DISABLED === 'true' || false;
+    },
     initialSchemaVersion(): string {
       return process.env.INITIAL_SCHEMA_VERSION || '';
     },

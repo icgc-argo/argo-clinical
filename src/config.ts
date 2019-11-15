@@ -15,6 +15,7 @@ export interface AppConfig {
   mongoPassword(): string;
   schemaName(): string;
   initialSchemaVersion(): string;
+  authDisabled(): boolean;
   jwtPubKeyUrl(): string;
   jwtPubKey(): string;
   schemaServiceUrl(): string;

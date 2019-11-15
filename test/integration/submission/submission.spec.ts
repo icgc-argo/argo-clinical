@@ -265,6 +265,9 @@ describe('Submission Api', () => {
           mongoPassword() {
             return '';
           },
+          authDisabled() {
+            return false;
+          },
           mongoUser() {
             return '';
           },
