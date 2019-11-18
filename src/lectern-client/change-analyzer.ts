@@ -101,13 +101,12 @@ const categorizeRestrictionChanges = (
   field: string,
   restrictionsChange: { [field: string]: FieldChanges } | Change,
 ) => {
-  const restrictionsToCheck = ['regex', 'script', 'required'];
+  const restrictionsToCheck = ['regex', 'script', 'required', 'codeList', 'range'];
 
   // additions or deletions of a restriction object as whole (i.e. contains 1 or many restrictions within the 'data')
   if (restrictionsChange.type) {
     const createOrAddChange = restrictionsChange as Change;
     const restrictionsData = createOrAddChange.data as any;
-    const restrictionsToCheck = ['regex', 'script', 'required'];
 
     for (const k of restrictionsToCheck) {
       if (restrictionsData[k]) {
@@ -115,96 +114,46 @@ const categorizeRestrictionChanges = (
           restrictionsChange.type as ChangeTypeName
         ].push({
           field: field,
-          value: restrictionsData[k],
+          definition: restrictionsData[k],
         } as any);
       }
     }
-
-    if (restrictionsData.codeList) {
-      if (restrictionsChange.type === 'created') {
-        analysis.restrictionsChanges.codeList.created.push({
-          field: field,
-          addition: restrictionsData.codeList,
-          deletion: [],
-        });
-      }
-
-      if (restrictionsChange.type === 'deleted') {
-        analysis.restrictionsChanges.codeList.deleted.push({
-          field: field,
-          addition: [],
-          deletion: [],
-        });
-      }
-    }
+    return;
   }
 
+  // in case 'restrictions' key was already there but we modified its contents
   const restrictionUpdate = restrictionsChange as { [field: string]: FieldChanges };
-  // codelist
-  if (restrictionUpdate.codeList) {
-    console.log('codeLists change found');
-    const codeListChange = restrictionUpdate.codeList as Change;
-
-    if (codeListChange.type === 'updated') {
-      analysis.restrictionsChanges.codeList.updated.push({
-        field: field,
-        addition: codeListChange.data.added || [],
-        deletion: codeListChange.data.deleted || [],
-      });
-    }
-
-    if (codeListChange.type === 'created') {
-      analysis.restrictionsChanges.codeList.created.push({
-        field: field,
-        addition: codeListChange.data,
-        deletion: [],
-      });
-    }
-
-    if (codeListChange.type === 'deleted') {
-      analysis.restrictionsChanges.codeList.deleted.push({
-        field: field,
-        addition: [],
-        deletion: [],
-      });
-    }
-  }
-
   for (const k of restrictionsToCheck) {
     if (restrictionUpdate[k]) {
       const change = restrictionUpdate[k] as Change;
+      // we need the '|| change'  in case of nested attributes like ranges
+      /*
+      "diff": {
+        "restrictions": {
+          "range": {
+            "exclusiveMin": {
+              "type": "deleted",
+              "data": 0
+            },
+            "max": {
+              "type": "updated",
+              "data": 200000
+            },
+            "min": {
+              "type": "created",
+              "data": 0
+            }
+          }
+        }
+      }
+      */
+      const definition = change.data || change;
       analysis.restrictionsChanges[k as keyof RestrictionChanges][
         change.type as ChangeTypeName
       ].push({
         field: field,
-        value: change.data,
+        definition,
       } as any);
-    }
-  }
-
-  if (restrictions.range) {
-    console.log('range change found');
-    const rangeChange = restrictions.range as Change;
-
-    if (rangeChange.type === 'created') {
-      analysis.restrictionsChanges.script.created.push({
-        field: field,
-        value: rangeChange.data,
-      });
-    }
-
-    if (rangeChange.type === 'deleted') {
-      analysis.restrictionsChanges.script.deleted.push({
-        field: field,
-        value: rangeChange.data,
-      });
-    }
-
-    if (rangeChange.type === 'updated') {
-      analysis.restrictionsChanges.script.updated.push({
-        field: field,
-        value: rangeChange.data,
-      });
     }
   }
 };

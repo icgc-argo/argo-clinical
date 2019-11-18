@@ -15,15 +15,7 @@ import {
   SchemaValidationErrorTypes,
 } from './schema-entities';
 import { loggerFor } from '../logger';
-import {
-  Checks,
-  notEmpty,
-  isEmptyString,
-  isNotEmptyString,
-  isAbsent,
-  F,
-  isNotAbsent,
-} from '../utils';
+import { Checks, notEmpty, isEmptyString, isAbsent, F, isNotAbsent } from '../utils';
 import schemaErrorMessage from './schema-error-messages';
 const L = loggerFor(__filename);
 

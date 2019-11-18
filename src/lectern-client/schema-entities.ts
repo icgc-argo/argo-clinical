@@ -117,14 +117,10 @@ export interface ChangeAnalysis {
 
 export type RestrictionChanges = {
   range: {
-    updated: RangeChange[];
-    created: RangeChange[];
-    deleted: RangeChange[];
+    [key in ChangeTypeName]: ObjectChange[];
   };
   codeList: {
-    created: CodeListChange[];
-    deleted: CodeListChange[];
-    updated: CodeListChange[];
+    [key in ChangeTypeName]: ObjectChange[];
   };
   regex: RegexChanges;
   required: RequiredChanges;
@@ -148,23 +144,22 @@ export interface AddedFieldChange {
   definition: FieldDefinition;
 }
 
-export interface RangeChange {
+export interface ObjectChange {
   field: string;
   definition: any;
 }
 
 export interface CodeListChange {
   field: string;
-  addition: SchemaTypes[];
-  deletion: SchemaTypes[];
+  definition: any;
 }
 
 export interface StringAttributeChange {
   field: string;
-  value: string;
+  definition: string;
 }
 
 export interface BooleanAttributeChange {
   field: string;
-  value: boolean;
+  definition: boolean;
 }

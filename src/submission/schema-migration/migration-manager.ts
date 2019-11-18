@@ -327,7 +327,6 @@ function findInvalidatingChangesFields(changeAnalysis: ChangeAnalysis) {
     invalidatingFields.push({
       type: 'CODELIST_ADDED',
       fieldPath: cc.field,
-      newValidValues: cc.addition,
       noLongerValid: undefined, // this has to be changed to represent the set of All possible values
     });
   });
@@ -337,8 +336,6 @@ function findInvalidatingChangesFields(changeAnalysis: ChangeAnalysis) {
     invalidatingFields.push({
       type: 'CODELIST_UPDATED',
       fieldPath: cc.field,
-      newValidValues: cc.addition,
-      noLongerValid: cc.deletion,
     });
   });
 
@@ -349,7 +346,7 @@ function findInvalidatingChangesFields(changeAnalysis: ChangeAnalysis) {
     invalidatingFields.push({
       type: 'REGEX_ADDED',
       fieldPath: rc.field,
-      newValidValue: rc.value,
+      newValidValue: rc.definition,
     });
   });
 
@@ -357,7 +354,7 @@ function findInvalidatingChangesFields(changeAnalysis: ChangeAnalysis) {
     invalidatingFields.push({
       type: 'REGEX_UPDATED',
       fieldPath: rc.field,
-      newValidValue: rc.value,
+      newValidValue: rc.definition,
     });
   });
 
@@ -366,22 +363,22 @@ function findInvalidatingChangesFields(changeAnalysis: ChangeAnalysis) {
    ***************/
   changeAnalysis.restrictionsChanges.required.created.forEach(rc => {
     // if required added with value true
-    if (rc.value) {
+    if (rc.definition) {
       invalidatingFields.push({
         type: 'REQUIRED_SET',
         fieldPath: rc.field,
-        newValidValue: rc.value,
+        newValidValue: rc.definition,
       });
     }
   });
 
   changeAnalysis.restrictionsChanges.required.updated.forEach(rc => {
     // if required added with value true
-    if (rc.value) {
+    if (rc.definition) {
       invalidatingFields.push({
         type: 'REQUIRED_SET',
         fieldPath: rc.field,
-        newValidValue: rc.value,
+        newValidValue: rc.definition,
       });
     }
   });
@@ -415,7 +412,7 @@ function findInvalidatingChangesFields(changeAnalysis: ChangeAnalysis) {
     invalidatingFields.push({
       type: 'SCRIPT_ADDED',
       fieldPath: rc.field,
-      newValidValue: rc.value,
+      newValidValue: rc.definition,
     });
   });
 
@@ -423,7 +420,7 @@ function findInvalidatingChangesFields(changeAnalysis: ChangeAnalysis) {
     invalidatingFields.push({
       type: 'SCRIPT_UPDATED',
       fieldPath: rc.field,
-      newValidValue: rc.value,
+      newValidValue: rc.definition,
     });
   });
 
