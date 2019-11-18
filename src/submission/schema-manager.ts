@@ -4,7 +4,6 @@ import {
   DataRecord,
   SchemaProcessingResult,
   FieldNamesByPriorityMap,
-  SchemaDefinition,
 } from '../lectern-client/schema-entities';
 import * as changeAnalyzer from '../lectern-client/change-analyzer';
 import { schemaClient as schemaServiceAdapter } from '../lectern-client/schema-rest-client';
@@ -53,7 +52,7 @@ class SchemaManager {
   };
 
   analyzeChanges = async (oldVersion: string, newVersion: string) => {
-    const result = await changeAnalyzer.analyzeChanges(
+    const result = await changeAnalyzer.fetchDiffAndAnalyze(
       this.schemaServiceUrl,
       this.currentSchema.name,
       oldVersion,

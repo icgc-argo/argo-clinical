@@ -3,11 +3,7 @@ import { Errors, notEmpty } from '../../utils';
 import { DictionaryMigration } from './migration-entities';
 import * as manager from '../schema-manager';
 import * as schemaService from '../../lectern-client/schema-functions';
-import {
-  ChangeAnalysis,
-  SchemasDictionary,
-  SchemaValidationError,
-} from '../../lectern-client/schema-entities';
+import { ChangeAnalysis, SchemasDictionary } from '../../lectern-client/schema-entities';
 import { Donor } from '../../clinical/clinical-entities';
 import * as clinicalService from '../../clinical/clinical-service';
 import { DeepReadonly } from 'deep-freeze';
@@ -327,7 +323,7 @@ function findInvalidatingChangesFields(changeAnalysis: ChangeAnalysis) {
    * CODELISTS
    ***************/
   // if we added a codeList restriction -> check other values
-  changeAnalysis.restrictionsChanges.codeLists.created.forEach(cc => {
+  changeAnalysis.restrictionsChanges.codeList.created.forEach(cc => {
     invalidatingFields.push({
       type: 'CODELIST_ADDED',
       fieldPath: cc.field,
@@ -337,7 +333,7 @@ function findInvalidatingChangesFields(changeAnalysis: ChangeAnalysis) {
   });
 
   // if we modifed codeList restriction, check for no longer valid values
-  changeAnalysis.restrictionsChanges.codeLists.updated.forEach(cc => {
+  changeAnalysis.restrictionsChanges.codeList.updated.forEach(cc => {
     invalidatingFields.push({
       type: 'CODELIST_UPDATED',
       fieldPath: cc.field,
