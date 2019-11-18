@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { loggerFor } from './logger';
 import { AppConfig, initConfigs, JWT_TOKEN_PUBLIC_KEY } from './config';
-import * as manager from './submission/schema-manager';
+import * as manager from './submission/schema/schema-manager';
 import * as utils from './utils';
 import fetch from 'node-fetch';
 import { setStatus, Status } from './app-health';
