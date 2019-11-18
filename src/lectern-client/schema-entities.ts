@@ -41,8 +41,14 @@ export interface FieldDiff {
 // in case of nested fields: {"fieldName1": {"fieldName2": {"data":.., "type": ..}}}
 export type FieldChanges = { [field: string]: FieldChanges } | Change;
 
+export enum ChangeTypeName {
+  CREATED = 'created',
+  DELETED = 'deleted',
+  UPDATED = 'updated',
+}
+
 export interface Change {
-  type: 'created' | 'deleted' | 'updated';
+  type: ChangeTypeName;
   data: any;
 }
 
@@ -106,34 +112,36 @@ export interface ChangeAnalysis {
     renamedFields: string[];
     deletedFields: string[];
   };
-  restrictionsChanges: {
-    codeLists: {
-      created: CodeListChange[];
-      deleted: CodeListChange[];
-      updated: CodeListChange[];
-    };
-    regex: {
-      updated: StringAttributeChange[];
-      created: StringAttributeChange[];
-      deleted: StringAttributeChange[];
-    };
-    required: {
-      updated: BooleanAttributeChange[];
-      created: BooleanAttributeChange[];
-      deleted: BooleanAttributeChange[];
-    };
-    script: {
-      updated: StringAttributeChange[];
-      created: StringAttributeChange[];
-      deleted: StringAttributeChange[];
-    };
-    range: {
-      updated: RangeChange[];
-      created: RangeChange[];
-      deleted: RangeChange[];
-    };
-  };
+  restrictionsChanges: RestrictionChanges;
 }
+
+export type RestrictionChanges = {
+  range: {
+    updated: RangeChange[];
+    created: RangeChange[];
+    deleted: RangeChange[];
+  };
+  codeList: {
+    created: CodeListChange[];
+    deleted: CodeListChange[];
+    updated: CodeListChange[];
+  };
+  regex: RegexChanges;
+  required: RequiredChanges;
+  script: ScriptChanges;
+};
+
+export type RegexChanges = {
+  [key in ChangeTypeName]: StringAttributeChange[];
+};
+
+export type RequiredChanges = {
+  [key in ChangeTypeName]: BooleanAttributeChange[];
+};
+
+export type ScriptChanges = {
+  [key in ChangeTypeName]: StringAttributeChange[];
+};
 
 export interface AddedFieldChange {
   name: string;

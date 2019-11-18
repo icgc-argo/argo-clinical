@@ -323,7 +323,7 @@ function findInvalidatingChangesFields(changeAnalysis: ChangeAnalysis) {
    * CODELISTS
    ***************/
   // if we added a codeList restriction -> check other values
-  changeAnalysis.restrictionsChanges.codeLists.created.forEach(cc => {
+  changeAnalysis.restrictionsChanges.codeList.created.forEach(cc => {
     invalidatingFields.push({
       type: 'CODELIST_ADDED',
       fieldPath: cc.field,
@@ -333,7 +333,7 @@ function findInvalidatingChangesFields(changeAnalysis: ChangeAnalysis) {
   });
 
   // if we modifed codeList restriction, check for no longer valid values
-  changeAnalysis.restrictionsChanges.codeLists.updated.forEach(cc => {
+  changeAnalysis.restrictionsChanges.codeList.updated.forEach(cc => {
     invalidatingFields.push({
       type: 'CODELIST_UPDATED',
       fieldPath: cc.field,
