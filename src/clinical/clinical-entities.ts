@@ -1,6 +1,6 @@
 export interface Donor {
   _id?: string;
-  schemaMetadata?: SchemaMetadata;
+  schemaMetadata: SchemaMetadata;
   donorId?: number;
   gender: string;
   submitterId: string;
@@ -17,6 +17,7 @@ export interface Donor {
 export interface SchemaMetadata {
   lastMigrationId?: string | undefined | null;
   currentSchemaVersion: string;
+  lastValidSchemaVersion: string;
   originalSchemaVersion: string;
   isValid: boolean;
 }

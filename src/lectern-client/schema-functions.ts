@@ -3,6 +3,7 @@ import {
   TypedDataRecord,
   SchemaTypes,
   SchemaProcessingResult,
+  FieldNamesByPriorityMap,
 } from './schema-entities';
 import vm from 'vm';
 import {
@@ -25,6 +26,27 @@ import {
 } from '../utils';
 import schemaErrorMessage from './schema-error-messages';
 const L = loggerFor(__filename);
+
+export const getSubSchemaFieldNamesWithPriority = (
+  schema: SchemasDictionary,
+  definition: string,
+): FieldNamesByPriorityMap => {
+  const schemaDef: SchemaDefinition | undefined = schema.schemas.find(
+    schema => schema.name === definition,
+  );
+  if (!schemaDef) {
+    throw new Error(`no schema found for : ${definition}`);
+  }
+  const fieldNamesMapped: FieldNamesByPriorityMap = { required: [], optional: [] };
+  schemaDef.fields.forEach(field => {
+    if (field.restrictions && field.restrictions.required) {
+      fieldNamesMapped.required.push(field.name);
+    } else {
+      fieldNamesMapped.optional.push(field.name);
+    }
+  });
+  return fieldNamesMapped;
+};
 
 export const process = (
   dataSchema: SchemasDictionary,

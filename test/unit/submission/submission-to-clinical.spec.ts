@@ -1,6 +1,6 @@
 import chai from 'chai';
 import * as sinon from 'sinon';
-import * as s2c from '../../../src/submission/submission-to-clinical';
+import * as s2c from '../../../src/submission/submission-to-clinical/submission-to-clinical';
 
 import { registrationRepository } from '../../../src/submission/registration-repo';
 import { donorDao, FindByProgramAndSubmitterFilter } from '../../../src/clinical/donor-repo';
@@ -119,6 +119,12 @@ describe('submission-to-clinical', () => {
       };
 
       const expectedDonorDto: Donor = {
+        schemaMetadata: {
+          currentSchemaVersion: '1.0',
+          isValid: true,
+          lastValidSchemaVersion: '1.0',
+          originalSchemaVersion: '1.0',
+        },
         gender: 'Male',
         submitterId: 'abcd123',
         programId: 'ABCD-EF',
@@ -161,6 +167,12 @@ describe('submission-to-clinical', () => {
       };
 
       const existingDonor: Donor = {
+        schemaMetadata: {
+          currentSchemaVersion: '1.0',
+          isValid: true,
+          lastValidSchemaVersion: '1.0',
+          originalSchemaVersion: '1.0',
+        },
         _id: 'lkjsdal214',
         donorId: 3023,
         gender: 'Male',
@@ -184,6 +196,12 @@ describe('submission-to-clinical', () => {
       };
 
       const expectedDonorDto: Donor = {
+        schemaMetadata: {
+          currentSchemaVersion: '1.0',
+          isValid: true,
+          lastValidSchemaVersion: '1.0',
+          originalSchemaVersion: '1.0',
+        },
         _id: 'lkjsdal214',
         donorId: 3023,
         gender: 'Male',

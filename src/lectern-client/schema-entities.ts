@@ -41,8 +41,14 @@ export interface FieldDiff {
 // in case of nested fields: {"fieldName1": {"fieldName2": {"data":.., "type": ..}}}
 export type FieldChanges = { [field: string]: FieldChanges } | Change;
 
+export enum ChangeTypeName {
+  CREATED = 'created',
+  DELETED = 'deleted',
+  UPDATED = 'updated',
+}
+
 export interface Change {
-  type: 'created' | 'deleted' | 'updated';
+  type: ChangeTypeName;
   data: any;
 }
 
@@ -95,25 +101,52 @@ export interface FieldNamesByPriorityMap {
 
 export interface ChangeAnalysis {
   fields: {
-    addedFields: string[];
+    addedFields: AddedFieldChange[];
     renamedFields: string[];
     deletedFields: string[];
   };
-  restrictionsChanges: {
-    codeLists: {
-      created: CodeListChange[];
-      deleted: CodeListChange[];
-      updated: CodeListChange[];
-    };
-    regex: {
-      created: any;
-      deleted: any;
-    };
-  };
+  restrictionsChanges: RestrictionChanges;
 }
 
+export type RestrictionChanges = {
+  codeList: {
+    created: CodeListChange[];
+    deleted: CodeListChange[];
+    updated: CodeListChange[];
+  };
+  regex: RegexChanges;
+  required: RequiredChanges;
+  script: ScriptChanges;
+};
+
+export type RegexChanges = {
+  [key in ChangeTypeName]: StringAttributeChange[];
+};
+
+export type RequiredChanges = {
+  [key in ChangeTypeName]: BooleanAttributeChange[];
+};
+
+export type ScriptChanges = {
+  [key in ChangeTypeName]: StringAttributeChange[];
+};
+
+export interface AddedFieldChange {
+  name: string;
+  definition: FieldDefinition;
+}
 export interface CodeListChange {
   field: string;
   addition: SchemaTypes[];
   deletion: SchemaTypes[];
+}
+
+export interface StringAttributeChange {
+  field: string;
+  value: string;
+}
+
+export interface BooleanAttributeChange {
+  field: string;
+  value: boolean;
 }

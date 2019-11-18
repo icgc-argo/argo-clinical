@@ -1,4 +1,4 @@
-import * as manager from '../lectern-client/schema-manager';
+import * as manager from './schema-manager';
 import { Request, Response } from 'express';
 import { loggerFor } from '../logger';
 import { SchemasDictionary, SchemaDefinition } from '../lectern-client/schema-entities';

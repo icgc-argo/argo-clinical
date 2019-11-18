@@ -1,5 +1,5 @@
 import * as submission from './submission-service';
-import * as submission2Clinical from './submission-to-clinical';
+import * as submission2Clinical from './submission-to-clinical/submission-to-clinical';
 import { Request, Response } from 'express';
 import { TsvUtils, ControllerUtils, isStringMatchRegex } from '../utils';
 import { loggerFor } from '../logger';

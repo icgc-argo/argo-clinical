@@ -3,7 +3,6 @@ import { loggerFor } from '../../logger';
 import { MongooseUtils, F, notEmpty } from '../../utils';
 import { MigrationState, DictionaryMigration } from './migration-entities';
 import { DeepReadonly } from 'deep-freeze';
-import { ObjectID, ObjectId } from 'bson';
 const L = loggerFor(__filename);
 
 export interface DictionaryMigrationRepository {
@@ -11,7 +10,7 @@ export interface DictionaryMigrationRepository {
   create(migration: DictionaryMigration): Promise<DictionaryMigration | undefined>;
   getByState(state: MigrationState): Promise<DictionaryMigration | undefined>;
   getById(migrationId: string): Promise<DictionaryMigration | undefined>;
-  update(migration: DictionaryMigration): Promise<void>;
+  update(migration: DictionaryMigration): Promise<DictionaryMigration>;
 }
 
 export const migrationRepo: DictionaryMigrationRepository = {
@@ -45,11 +44,11 @@ export const migrationRepo: DictionaryMigrationRepository = {
     }
     return F(MongooseUtils.toPojo(migration));
   },
-  update: async (migration: DictionaryMigration): Promise<void> => {
+  update: async (migration: DictionaryMigration): Promise<DictionaryMigration> => {
     const doc = new DictionaryMigrationModel(migration);
     doc.isNew = false;
-    await doc.save();
-    return;
+    const updated = await doc.save();
+    return updated;
   },
 };
 
@@ -70,6 +69,7 @@ const DictionaryMigrationSchema = new mongoose.Schema(
       required: true,
     },
     analysis: {},
+    invalidDonorsErrors: [],
     dryRun: { type: Boolean, required: false },
     stats: {},
     createdBy: { type: String, required: true },

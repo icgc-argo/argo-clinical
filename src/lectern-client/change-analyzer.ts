@@ -6,6 +6,10 @@ import {
   FieldDefinition,
   Change,
   ChangeAnalysis,
+  StringAttributeChange,
+  RegexChanges,
+  ChangeTypeName,
+  RestrictionChanges,
 } from './schema-entities';
 
 const isFieldChange = (obj: any): obj is Change => {
@@ -20,14 +24,17 @@ const isRestrictionChange = (obj: any): obj is { [field: string]: FieldChanges }
   return obj.type === undefined;
 };
 
-export const analyzeChanges = async (
+export const fetchDiffAndAnalyze = async (
   serviceUrl: string,
   name: string,
   fromVersion: string,
   toVersion: string,
-): Promise<ChangeAnalysis> => {
+) => {
   const changes = await schemaClient.fetchDiff(serviceUrl, name, fromVersion, toVersion);
+  return analyzeChanges(changes);
+};
 
+export const analyzeChanges = (schemasDiff: SchemasDictionaryDiffs): ChangeAnalysis => {
   const analysis: ChangeAnalysis = {
     fields: {
       addedFields: [],
@@ -35,38 +42,47 @@ export const analyzeChanges = async (
       deletedFields: [],
     },
     restrictionsChanges: {
-      codeLists: {
+      codeList: {
         created: [],
         deleted: [],
         updated: [],
       },
       regex: {
+        updated: [],
+        created: [],
+        deleted: [],
+      },
+      required: {
+        updated: [],
+        created: [],
+        deleted: [],
+      },
+      script: {
+        updated: [],
         created: [],
         deleted: [],
       },
     },
   };
 
-  for (const field of Object.keys(changes)) {
-    const fieldChange: FieldDiff = changes[field];
+  for (const field of Object.keys(schemasDiff)) {
+    const fieldChange: FieldDiff = schemasDiff[field];
     if (fieldChange) {
       console.log(`field : ${field} has changes`);
-      const changes = fieldChange.diff;
+      const fieldDiff = fieldChange.diff;
       // if we have type at first level then it's a field add/delete
-      if (isFieldChange(changes)) {
-        categorizeFieldChanges(analysis, field, changes);
+      if (isFieldChange(fieldDiff)) {
+        categorizeFieldChanges(analysis, field, fieldDiff);
       }
 
-      if (isNestedChange(changes)) {
-        if (changes.meta) {
+      if (isNestedChange(fieldDiff)) {
+        if (fieldDiff.meta) {
           console.log('meta change found');
         }
 
-        if (changes.restrictions) {
+        if (fieldDiff.restrictions) {
           console.log('restrictions change found');
-          categorizeRestrictionChanges(analysis, field, changes.restrictions as {
-            [field: string]: FieldChanges;
-          });
+          categorizeRestrictionChanges(analysis, field, fieldDiff.restrictions);
         }
       }
     }
@@ -78,15 +94,54 @@ export const analyzeChanges = async (
 const categorizeRestrictionChanges = (
   analysis: ChangeAnalysis,
   field: string,
-  restrictions: { [field: string]: FieldChanges },
+  restrictionsChange: { [field: string]: FieldChanges } | Change,
 ) => {
+  const restrictionsToCheck = ['regex', 'script', 'required'];
+
+  // additions or deletions of a restriction object as whole (i.e. contains 1 or many restrictions within the 'data')
+  if (restrictionsChange.type) {
+    const createOrAddChange = restrictionsChange as Change;
+    const restrictionsData = createOrAddChange.data as any;
+    const restrictionsToCheck = ['regex', 'script', 'required'];
+
+    for (const k of restrictionsToCheck) {
+      if (restrictionsData[k]) {
+        analysis.restrictionsChanges[k as keyof RestrictionChanges][
+          restrictionsChange.type as ChangeTypeName
+        ].push({
+          field: field,
+          value: restrictionsData[k],
+        } as any);
+      }
+    }
+
+    if (restrictionsData.codeList) {
+      if (restrictionsChange.type === 'created') {
+        analysis.restrictionsChanges.codeList.created.push({
+          field: field,
+          addition: restrictionsData.codeList,
+          deletion: [],
+        });
+      }
+
+      if (restrictionsChange.type === 'deleted') {
+        analysis.restrictionsChanges.codeList.deleted.push({
+          field: field,
+          addition: [],
+          deletion: [],
+        });
+      }
+    }
+  }
+
+  const restrictionUpdate = restrictionsChange as { [field: string]: FieldChanges };
   // codelist
-  if (restrictions.codeList) {
+  if (restrictionUpdate.codeList) {
     console.log('codeLists change found');
-    const codeListChange = restrictions.codeList as Change;
+    const codeListChange = restrictionUpdate.codeList as Change;
 
     if (codeListChange.type === 'updated') {
-      analysis.restrictionsChanges.codeLists.updated.push({
+      analysis.restrictionsChanges.codeList.updated.push({
         field: field,
         addition: codeListChange.data.added || [],
         deletion: codeListChange.data.deleted || [],
@@ -94,7 +149,7 @@ const categorizeRestrictionChanges = (
     }
 
     if (codeListChange.type === 'created') {
-      analysis.restrictionsChanges.codeLists.created.push({
+      analysis.restrictionsChanges.codeList.created.push({
         field: field,
         addition: codeListChange.data,
         deletion: [],
@@ -102,7 +157,7 @@ const categorizeRestrictionChanges = (
     }
 
     if (codeListChange.type === 'deleted') {
-      analysis.restrictionsChanges.codeLists.deleted.push({
+      analysis.restrictionsChanges.codeList.deleted.push({
         field: field,
         addition: [],
         deletion: [],
@@ -110,31 +165,26 @@ const categorizeRestrictionChanges = (
     }
   }
 
-  // regex
-  if (restrictions.regex) {
-    console.log('regex change found');
-    const regexChange = restrictions.regex as Change;
-
-    if (regexChange.type === 'created') {
-      analysis.restrictionsChanges.regex.created.push({
+  for (const k of restrictionsToCheck) {
+    if (restrictionUpdate[k]) {
+      const change = restrictionUpdate[k] as Change;
+      analysis.restrictionsChanges[k as keyof RestrictionChanges][
+        change.type as ChangeTypeName
+      ].push({
         field: field,
-        regex: regexChange.data,
-      });
-    }
-
-    if (regexChange.type === 'deleted') {
-      analysis.restrictionsChanges.regex.deleted.push({
-        field: field,
-        regex: regexChange.data,
-      });
+        value: change.data,
+      } as any);
     }
   }
 };
 
-const categorizeFieldChanges = (analysis: ChangeAnalysis, field: string, changes: FieldChanges) => {
+const categorizeFieldChanges = (analysis: ChangeAnalysis, field: string, changes: Change) => {
   const changeType = changes.type;
   if (changeType == 'created') {
-    analysis.fields.addedFields.push(field);
+    analysis.fields.addedFields.push({
+      name: field,
+      definition: changes.data,
+    });
   } else if (changeType == 'deleted') {
     analysis.fields.deletedFields.push(field);
   }
