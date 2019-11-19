@@ -237,6 +237,9 @@ const expectedDonorErrors = [
   },
 ];
 
+const INVALID_FILENAME_ERROR =
+  'Please retain the template file name and only append characters to the end. For example, sample_registration<_optional_extension>.tsv';
+
 const clearCollections = async (dburl: string, collections: string[]) => {
   try {
     console.log(`Clearing collections pre-test:`, collections.join(', '));
@@ -591,7 +594,7 @@ describe('Submission Api', () => {
           try {
             res.should.have.status(422);
             res.body.batchErrors.should.deep.include({
-              message: `Please retain the template file name and only append characters to the end. For example, sample_registration<_optional_extension>.tsv`,
+              message: INVALID_FILENAME_ERROR,
               code: SubmissionBatchErrorTypes.INVALID_FILE_NAME,
               batchNames: ['thisIsARegistration.tsv'],
             });
@@ -753,8 +756,7 @@ describe('Submission Api', () => {
               code: 'MULTIPLE_TYPED_FILES',
             },
             {
-              message:
-                'Please retain the template file name and only append characters to the end. For example, sample_registration<_optional_extension>.tsv',
+              message: INVALID_FILENAME_ERROR,
               batchNames: ['thisissample.tsv'],
               code: 'INVALID_FILE_NAME',
             },

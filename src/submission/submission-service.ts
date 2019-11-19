@@ -73,7 +73,7 @@ export namespace operations {
       command.programId,
     );
 
-    const preCheckError = createRegistrationPreCheck(command);
+    const preCheckError = preCheckRegistrationFields(command);
     if (preCheckError) {
       return {
         registration: existingActivRegistration,
@@ -780,7 +780,7 @@ export namespace operations {
   };
 
   // pre check registration create command
-  const createRegistrationPreCheck = (
+  const preCheckRegistrationFields = (
     command: CreateRegistrationCommand,
   ): DeepReadonly<SubmissionBatchError[] | undefined> => {
     const {
