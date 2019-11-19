@@ -12,7 +12,7 @@ import {
   ClinicalUniqueIndentifier,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
-import validationErrorMessage from '../submission-error-messages';
+import { validationErrorMessage } from '../submission-error-messages';
 import _ from 'lodash';
 
 export const buildSubmissionError = (

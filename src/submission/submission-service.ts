@@ -38,7 +38,6 @@ import {
   TypedDataRecord,
   DataRecord,
   SchemaProcessingResult,
-  SchemaValidationErrorTypes,
 } from '../lectern-client/schema-entities';
 import { loggerFor } from '../logger';
 import { Errors, F, isStringMatchRegex } from '../utils';
@@ -46,6 +45,7 @@ import { DeepReadonly } from 'deep-freeze';
 import { submissionRepository } from './submission-repo';
 import { v1 as uuid } from 'uuid';
 import { validateSubmissionData, checkUniqueRecords } from './validation';
+import { batchErrorMessage } from './submission-error-messages';
 import { ClinicalSubmissionRecordsOperations } from './validation-clinical/utils';
 const L = loggerFor(__filename);
 
@@ -69,12 +69,21 @@ export namespace operations {
   export const createRegistration = async (
     command: CreateRegistrationCommand,
   ): Promise<CreateRegistrationResult> => {
-    // delete any existing active registration to replace it with the new one
-    // we can only have 1 active registration per program
     const existingActivRegistration = await registrationRepository.findByProgramId(
       command.programId,
     );
 
+    const preCheckError = preCheckRegistrationFields(command);
+    if (preCheckError) {
+      return {
+        registration: existingActivRegistration,
+        batchErrors: preCheckError,
+        successful: false,
+      };
+    }
+
+    // delete any existing active registration to replace it with the new one
+    // we can only have 1 active registration per program
     if (existingActivRegistration != undefined && existingActivRegistration._id) {
       await registrationRepository.delete(existingActivRegistration._id);
     }
@@ -263,7 +272,7 @@ export namespace operations {
       Object.values(ClinicalEntityType).filter(type => type !== ClinicalEntityType.REGISTRATION),
     );
     // Step 2 filter entites with invalid fieldNames
-    const { filteredClinicalEntites, fieldNameErrors } = ckeckEntityFieldNames(
+    const { filteredClinicalEntites, fieldNameErrors } = checkEntityFieldNames(
       newClinicalEntitesMap,
     );
 
@@ -697,7 +706,9 @@ export namespace operations {
 
       if (dataMatchToType.length > 1) {
         dataToEntityMapErrors.push({
-          msg: `Found multiple files of ${clinicalType} type`,
+          message: batchErrorMessage(SubmissionBatchErrorTypes.MULTIPLE_TYPED_FILES, {
+            clinicalType,
+          }),
           batchNames: dataMatchToType.map(data => data.batchName),
           code: SubmissionBatchErrorTypes.MULTIPLE_TYPED_FILES,
         });
@@ -708,7 +719,7 @@ export namespace operations {
 
     if (mutableClinicalData.length > 0) {
       dataToEntityMapErrors.push({
-        msg: `Invalid file(s), must start with entity and have .tsv extension (e.g. donor*.tsv)`,
+        message: batchErrorMessage(SubmissionBatchErrorTypes.INVALID_FILE_NAME),
         batchNames: mutableClinicalData.map(data => data.batchName),
         code: SubmissionBatchErrorTypes.INVALID_FILE_NAME,
       });
@@ -717,7 +728,7 @@ export namespace operations {
     return F({ newClinicalEntitesMap, dataToEntityMapErrors });
   };
 
-  const ckeckEntityFieldNames = (newClinicalEntitesMap: DeepReadonly<NewClinicalEntities>) => {
+  const checkEntityFieldNames = (newClinicalEntitesMap: DeepReadonly<NewClinicalEntities>) => {
     const fieldNameErrors: SubmissionBatchError[] = [];
     const filteredClinicalEntites: NewClinicalEntities = {};
     for (const [clinicalType, newClinicalEnity] of Object.entries(newClinicalEntitesMap)) {
@@ -750,17 +761,49 @@ export namespace operations {
 
       if (missingFields.length > 0)
         fieldNameErrors.push({
-          msg: `Missing required headers: [${missingFields.join('], [')}]`,
+          message: batchErrorMessage(SubmissionBatchErrorTypes.MISSING_REQUIRED_HEADER, {
+            missingFields,
+          }),
           batchNames: [newClinicalEnity.batchName],
-          code: SchemaValidationErrorTypes.MISSING_REQUIRED_FIELD,
+          code: SubmissionBatchErrorTypes.MISSING_REQUIRED_HEADER,
         });
       if (unknownFields.length > 0)
         fieldNameErrors.push({
-          msg: `Found unknown headers: [${unknownFields.join('], [')}]`,
+          message: batchErrorMessage(SubmissionBatchErrorTypes.UNRECOGNIZED_HEADER, {
+            unknownFields,
+          }),
           batchNames: [newClinicalEnity.batchName],
-          code: SchemaValidationErrorTypes.UNRECOGNIZED_FIELD,
+          code: SubmissionBatchErrorTypes.UNRECOGNIZED_HEADER,
         });
     }
     return { filteredClinicalEntites, fieldNameErrors };
+  };
+
+  // pre check registration create command
+  const preCheckRegistrationFields = (
+    command: CreateRegistrationCommand,
+  ): DeepReadonly<SubmissionBatchError[] | undefined> => {
+    const {
+      newClinicalEntitesMap: registrationMapped,
+      dataToEntityMapErrors,
+    } = mapClinicalDataToEntity(
+      [
+        {
+          records: command.records,
+          batchName: command.batchName,
+          creator: command.creator,
+          fieldNames: command.fieldNames,
+        },
+      ],
+      [ClinicalEntityType.REGISTRATION],
+    );
+    if (dataToEntityMapErrors.length !== 0) {
+      return dataToEntityMapErrors;
+    }
+    const { fieldNameErrors } = checkEntityFieldNames(registrationMapped);
+    if (fieldNameErrors.length !== 0) {
+      return fieldNameErrors;
+    }
+    return undefined;
   };
 }
