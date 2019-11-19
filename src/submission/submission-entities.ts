@@ -68,7 +68,7 @@ export type SubmissionValidationUpdate = {
 };
 
 export type SubmissionBatchError = {
-  msg: string;
+  message: string;
   batchNames: string[];
   code: SubmissionBatchErrorTypes | SchemaValidationErrorTypes;
 };
@@ -77,6 +77,8 @@ export enum SubmissionBatchErrorTypes {
   TSV_PARSING_FAILED = 'TSV_PARSING_FAILED',
   INVALID_FILE_NAME = 'INVALID_FILE_NAME',
   MULTIPLE_TYPED_FILES = 'MULTIPLE_TYPED_FILES',
+  UNRECOGNIZED_HEADER = 'UNRECOGNIZED_HEADER',
+  MISSING_REQUIRED_HEADER = 'MISSING_REQUIRED_HEADER',
 }
 
 export enum DataValidationErrors {
@@ -135,12 +137,14 @@ export interface CreateRegistrationCommand {
   readonly creator: string;
   readonly programId: string;
   readonly batchName: string;
+  fieldNames?: ReadonlyArray<string>; // used if all records have common field names
 }
 
 export interface CreateRegistrationResult {
   readonly registration: DeepReadonly<ActiveRegistration> | undefined;
   readonly successful: boolean;
-  errors: DeepReadonly<SubmissionValidationError[]>;
+  errors?: DeepReadonly<SubmissionValidationError[]>; // these can be schema and validation
+  batchErrors?: DeepReadonly<SubmissionBatchError[]>; // batch related errors only
 }
 
 export interface ValidationResult {
