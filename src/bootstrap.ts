@@ -129,7 +129,7 @@ export const run = async (config: AppConfig) => {
 
   try {
     manager.create(config.schemaServiceUrl());
-    await loadSchema(config);
+    await loadSchema(config.schemaName(), config.initialSchemaVersion());
   } catch (err) {
     L.error('failed to load schema', err);
   }
@@ -154,16 +154,16 @@ export const run = async (config: AppConfig) => {
   process.on('SIGINT', gracefulExit).on('SIGTERM', gracefulExit);
 };
 
-async function loadSchema(config: AppConfig) {
+export async function loadSchema(schemaName: string, initialVersion: string) {
   try {
-    await manager.instance().loadSchemaAndSave(config.schemaName(), config.initialSchemaVersion());
+    await manager.instance().loadSchemaAndSave(schemaName, initialVersion);
     setStatus('schema', { status: Status.OK });
   } catch (err) {
     L.error('failed to load the schema', err);
     setStatus('schema', { status: Status.ERROR, info: { error: err } });
     setTimeout(() => {
       L.debug('retrying to fetch schema');
-      loadSchema(config);
+      loadSchema(schemaName, initialVersion);
     }, 5000);
   }
 }

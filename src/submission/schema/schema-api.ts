@@ -13,8 +13,9 @@ class SchemaController {
   @HasFullWriteAccess()
   async update(req: Request, res: Response) {
     const version: string = req.body.version;
+    const sync: boolean = req.query.sync;
     const initiator = ControllerUtils.getUserFromToken(req);
-    await manager.instance().updateSchemaVersion(version, initiator);
+    await manager.instance().updateSchemaVersion(version, initiator, sync);
     setStatus('schema', { status: Status.OK });
     return res.status(200).send(manager.instance().getCurrent());
   }

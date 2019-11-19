@@ -254,6 +254,8 @@ const clearCollections = async (dburl: string, collections: string[]) => {
     return err;
   }
 };
+const schemaName = 'ARGO Clinical Submission';
+const schemaVersion = '1.0';
 
 describe('Submission Api', () => {
   let mongoContainer: any;
@@ -278,10 +280,10 @@ describe('Submission Api', () => {
             return dburl;
           },
           initialSchemaVersion() {
-            return '1.0';
+            return schemaVersion;
           },
           schemaName() {
-            return 'ARGO Clinical Submission';
+            return schemaName;
           },
           jwtPubKey() {
             return TEST_PUB_KEY;
@@ -1605,13 +1607,15 @@ describe('Submission Api', () => {
         await clearCollections(dburl, ['donors', 'dictionarymigrations']);
         await insertData(dburl, 'donors', donor);
         await insertData(dburl, 'donors', donor2);
+        // reset the base schema since tests can load new one
+        await bootstrap.loadSchema(schemaName, schemaVersion);
       });
 
       // very simple smoke test of the migration to be expanded along developement
       it('should update the schema ', async () => {
         await chai
           .request(app)
-          .patch('/submission/schema/')
+          .patch('/submission/schema?sync=true')
           .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
           .send({
             version: '2.0',

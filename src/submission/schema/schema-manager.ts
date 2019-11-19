@@ -131,7 +131,13 @@ class SchemaManager {
 
   updateSchemaVersion = async (toVersion: string, updater: string, sync?: boolean) => {
     // submit the migration request
-    await MigrationManager.submitMigration(this.getCurrent().version, toVersion, updater);
+    await MigrationManager.submitMigration(
+      this.getCurrent().version,
+      toVersion,
+      updater,
+      false,
+      sync,
+    );
     // update the existing schema
     await this.loadAndSaveNewVersion(this.getCurrent().name, toVersion);
   };
