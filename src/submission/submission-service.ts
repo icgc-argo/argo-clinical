@@ -32,7 +32,7 @@ import {
   BatchNameRegex,
   ClinicalSubmissionRecordsByDonorIdMap,
 } from './submission-entities';
-import * as schemaManager from './schema-manager';
+import * as schemaManager from './schema/schema-manager';
 import {
   SchemaValidationError,
   TypedDataRecord,

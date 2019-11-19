@@ -17,7 +17,9 @@ export async function updateDonorSchemaMetadata(
 
   donorCopy.schemaMetadata.isValid = isValid;
   donorCopy.schemaMetadata.lastMigrationId = migrationId;
-  if (newSchemaVersion) donorCopy.schemaMetadata.currentSchemaVersion = newSchemaVersion;
+  if (isValid && newSchemaVersion) {
+    donorCopy.schemaMetadata.lastValidSchemaVersion = newSchemaVersion;
+  }
   return await donorDao.update(donorCopy);
 }
 

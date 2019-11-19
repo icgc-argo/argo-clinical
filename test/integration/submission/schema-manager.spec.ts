@@ -7,12 +7,9 @@ import mongoose from 'mongoose';
 import { GenericContainer } from 'testcontainers';
 import { cleanCollection, findInDb } from '../testutils';
 import _ from 'lodash';
-import * as manager from '../../../src/submission/schema-manager';
+import * as manager from '../../../src/submission/schema/schema-manager';
 import { promisify } from 'bluebird';
-import {
-  SchemasDictionary,
-  SchemasDictionaryDiffs,
-} from '../../../src/lectern-client/schema-entities';
+import { SchemasDictionary } from '../../../src/lectern-client/schema-entities';
 import { schemaClient } from '../../../src/lectern-client/schema-rest-client';
 const ServerMock: any = require('mock-http-server') as any;
 
@@ -141,5 +138,9 @@ describe('manager', () => {
     // had to convert the id to string from bsonArray before comparison
     dbSchema[0]._id = dbSchema[0]._id.toString();
     chai.expect(resultV2).to.deep.eq(dbSchema[0]);
+  });
+
+  describe('migration apis', () => {
+    describe('probe changes api', () => {});
   });
 });

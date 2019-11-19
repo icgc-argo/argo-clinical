@@ -50,7 +50,6 @@ export const emptyDonorDocument = (overrides?: object) => {
     gender: gender,
     submitterId: '',
     schemaMetadata: {
-      currentSchemaVersion: '1.0',
       isValid: true,
       lastValidSchemaVersion: '1.0',
       // tslint:disable-next-line

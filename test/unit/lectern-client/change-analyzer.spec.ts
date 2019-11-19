@@ -32,15 +32,16 @@ const expectedResult: ChangeAnalysis = {
       deleted: [
         {
           field: 'donor.vital_status',
-          addition: [],
-          deletion: [],
+          definition: ['Alive', 'Deceased', 'Not reported', 'Unknown'],
         },
       ],
       updated: [
         {
           field: 'donor.cause_of_death',
-          addition: ['N/A'],
-          deletion: ['Died of cancer', 'Unknown'],
+          definition: {
+            added: ['N/A'],
+            deleted: ['Died of cancer', 'Unknown'],
+          },
         },
       ],
     },
@@ -48,17 +49,17 @@ const expectedResult: ChangeAnalysis = {
       updated: [
         {
           field: 'donor.submitter_donor_id',
-          value: '[A-Za-z0-9\\-\\._]{3,64}',
+          definition: '[A-Za-z0-9\\-\\._]{3,64}',
         },
         {
           field: 'primary_diagnosis.cancer_type_code',
-          value: '[A-Z]{1}[0-9]{2}.[0-9]{0,3}[A-Z]{2,3}$',
+          definition: '[A-Z]{1}[0-9]{2}.[0-9]{0,3}[A-Z]{2,3}$',
         },
       ],
       created: [
         {
           field: 'donor.vital_status',
-          value: '[A-Z]{3,100}',
+          definition: '[A-Z]{3,100}',
         },
       ],
       deleted: [],
@@ -73,7 +74,20 @@ const expectedResult: ChangeAnalysis = {
       created: [
         {
           field: 'donor.survival_time',
-          value: ' $field / 2 == 0 ',
+          definition: ' $field / 2 == 0 ',
+        },
+      ],
+      deleted: [],
+    },
+    range: {
+      updated: [],
+      created: [
+        {
+          field: 'donor.survival_time',
+          definition: {
+            min: 0,
+            max: 200000,
+          },
         },
       ],
       deleted: [],

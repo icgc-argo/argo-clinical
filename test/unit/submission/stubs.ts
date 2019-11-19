@@ -8,7 +8,6 @@ export const stubs = {
   validation: {
     existingDonor01: (): Donor => ({
       schemaMetadata: {
-        currentSchemaVersion: '1.0',
         isValid: true,
         lastValidSchemaVersion: '1.0',
         originalSchemaVersion: '1.0',
@@ -37,7 +36,6 @@ export const stubs = {
 
     existingDonor02: (): Donor => ({
       schemaMetadata: {
-        currentSchemaVersion: '1.0',
         isValid: true,
         lastValidSchemaVersion: '1.0',
         originalSchemaVersion: '1.0',
@@ -66,7 +64,6 @@ export const stubs = {
 
     existingDonor03: (): Donor => ({
       schemaMetadata: {
-        currentSchemaVersion: '1.0',
         isValid: true,
         lastValidSchemaVersion: '1.0',
         originalSchemaVersion: '1.0',
@@ -95,7 +92,6 @@ export const stubs = {
 
     existingDonor04: (): Donor => ({
       schemaMetadata: {
-        currentSchemaVersion: '1.0',
         isValid: true,
         lastValidSchemaVersion: '1.0',
         originalSchemaVersion: '1.0',

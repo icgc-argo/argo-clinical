@@ -1,21 +1,21 @@
 import * as manager from './schema-manager';
 import { Request, Response } from 'express';
-import { loggerFor } from '../logger';
-import { SchemasDictionary, SchemaDefinition } from '../lectern-client/schema-entities';
-import { setStatus, Status } from '../app-health';
-import { ControllerUtils } from '../utils';
-import { ClinicalEntityType } from './submission-entities';
+import { loggerFor } from '../../logger';
+import { SchemasDictionary, SchemaDefinition } from '../../lectern-client/schema-entities';
+import { setStatus, Status } from '../../app-health';
+import { ControllerUtils } from '../../utils';
+import { ClinicalEntityType } from '../submission-entities';
 import AdmZip from 'adm-zip';
-import { HasFullWriteAccess } from '../auth-decorators';
-import * as migrationManager from './schema-migration/migration-manager';
+import { HasFullWriteAccess } from '../../auth-decorators';
 const L = loggerFor(__filename);
 
 class SchemaController {
   @HasFullWriteAccess()
   async update(req: Request, res: Response) {
     const version: string = req.body.version;
+    const sync: boolean = req.query.sync;
     const initiator = ControllerUtils.getUserFromToken(req);
-    await migrationManager.updateSchemaVersion(version, initiator);
+    await manager.instance().updateSchemaVersion(version, initiator, sync);
     setStatus('schema', { status: Status.OK });
     return res.status(200).send(manager.instance().getCurrent());
   }
@@ -23,7 +23,7 @@ class SchemaController {
   async probe(req: Request, res: Response) {
     const from = req.query.from;
     const to = req.query.to;
-    const result = await migrationManager.probeSchemaUpgrade(from, to);
+    const result = await manager.instance().probeSchemaUpgrade(from, to);
     return res.status(200).send(result);
   }
 
@@ -31,13 +31,13 @@ class SchemaController {
   async dryRunUpdate(req: Request, res: Response) {
     const version: string = req.body.version;
     const initiator = ControllerUtils.getUserFromToken(req);
-    const migration = await migrationManager.dryRunSchemaUpgrade(version, initiator);
+    const migration = await manager.instance().dryRunSchemaUpgrade(version, initiator);
     return res.status(200).send(migration);
   }
 
   async getMigration(req: Request, res: Response) {
     const id: string | undefined = req.params.id;
-    const migration = await migrationManager.getMigration(id);
+    const migration = await manager.instance().getMigration(id);
     return res.status(200).send(migration);
   }
 }
