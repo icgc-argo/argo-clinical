@@ -1785,7 +1785,6 @@ async function assertUploadOKRegistrationCreated(res: any, dburl: string) {
 const comittedDonors2: Donor[] = [
   {
     schemaMetadata: {
-      currentSchemaVersion: '1.0',
       isValid: true,
       lastValidSchemaVersion: '1.0',
       originalSchemaVersion: '1.0',
@@ -1816,7 +1815,6 @@ const comittedDonors2: Donor[] = [
   },
   {
     schemaMetadata: {
-      currentSchemaVersion: '1.0',
       isValid: true,
       lastValidSchemaVersion: '1.0',
       originalSchemaVersion: '1.0',
@@ -1860,7 +1858,6 @@ const comittedDonors2: Donor[] = [
   },
   {
     schemaMetadata: {
-      currentSchemaVersion: '1.0',
       isValid: true,
       lastValidSchemaVersion: '1.0',
       originalSchemaVersion: '1.0',
@@ -1891,7 +1888,6 @@ const comittedDonors2: Donor[] = [
   },
   {
     schemaMetadata: {
-      currentSchemaVersion: '1.0',
       isValid: true,
       lastValidSchemaVersion: '1.0',
       originalSchemaVersion: '1.0',
@@ -1935,7 +1931,6 @@ const comittedDonors2: Donor[] = [
   },
   {
     schemaMetadata: {
-      currentSchemaVersion: '1.0',
       isValid: true,
       lastValidSchemaVersion: '1.0',
       originalSchemaVersion: '1.0',
@@ -1967,7 +1962,6 @@ const comittedDonors2: Donor[] = [
   },
   {
     schemaMetadata: {
-      currentSchemaVersion: '1.0',
       isValid: true,
       lastValidSchemaVersion: '1.0',
       originalSchemaVersion: '1.0',

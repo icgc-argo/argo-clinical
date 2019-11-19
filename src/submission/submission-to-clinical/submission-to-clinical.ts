@@ -231,7 +231,6 @@ const mapToCreateDonorSampleDto = (registration: DeepReadonly<ActiveRegistration
         specimens: [firstSpecimen],
         schemaMetadata: {
           lastValidSchemaVersion: registration.schemaVersion,
-          currentSchemaVersion: registration.schemaVersion,
           isValid: true,
           lastMigrationId: undefined,
           originalSchemaVersion: registration.schemaVersion,

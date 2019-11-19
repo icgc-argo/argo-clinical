@@ -120,7 +120,6 @@ describe('submission-to-clinical', () => {
 
       const expectedDonorDto: Donor = {
         schemaMetadata: {
-          currentSchemaVersion: '1.0',
           isValid: true,
           lastValidSchemaVersion: '1.0',
           originalSchemaVersion: '1.0',
@@ -168,7 +167,6 @@ describe('submission-to-clinical', () => {
 
       const existingDonor: Donor = {
         schemaMetadata: {
-          currentSchemaVersion: '1.0',
           isValid: true,
           lastValidSchemaVersion: '1.0',
           originalSchemaVersion: '1.0',
@@ -197,7 +195,6 @@ describe('submission-to-clinical', () => {
 
       const expectedDonorDto: Donor = {
         schemaMetadata: {
-          currentSchemaVersion: '1.0',
           isValid: true,
           lastValidSchemaVersion: '1.0',
           originalSchemaVersion: '1.0',
