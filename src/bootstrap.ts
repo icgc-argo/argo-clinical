@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { loggerFor } from './logger';
 import { AppConfig, initConfigs, JWT_TOKEN_PUBLIC_KEY } from './config';
-import * as manager from './lectern-client/schema-manager';
+import * as manager from './submission/schema/schema-manager';
 import * as utils from './utils';
 import fetch from 'node-fetch';
 import { setStatus, Status } from './app-health';
@@ -129,7 +129,7 @@ export const run = async (config: AppConfig) => {
 
   try {
     manager.create(config.schemaServiceUrl());
-    await loadSchema(config);
+    await loadSchema(config.schemaName(), config.initialSchemaVersion());
   } catch (err) {
     L.error('failed to load schema', err);
   }
@@ -154,16 +154,16 @@ export const run = async (config: AppConfig) => {
   process.on('SIGINT', gracefulExit).on('SIGTERM', gracefulExit);
 };
 
-async function loadSchema(config: AppConfig) {
+export async function loadSchema(schemaName: string, initialVersion: string) {
   try {
-    await manager.instance().loadSchema(config.schemaName(), config.initialSchemaVersion());
+    await manager.instance().loadSchemaAndSave(schemaName, initialVersion);
     setStatus('schema', { status: Status.OK });
   } catch (err) {
     L.error('failed to load the schema', err);
     setStatus('schema', { status: Status.ERROR, info: { error: err } });
     setTimeout(() => {
       L.debug('retrying to fetch schema');
-      loadSchema(config);
+      loadSchema(schemaName, initialVersion);
     }, 5000);
   }
 }

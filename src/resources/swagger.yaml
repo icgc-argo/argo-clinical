@@ -373,6 +373,7 @@ paths:
     post:
       tags:
         - Submission
+      summary: Upload clinical submission files
       parameters:
         - $ref: '#/components/parameters/PathProgramId'
       requestBody:
@@ -411,6 +412,7 @@ paths:
     delete:
       tags:
         - Submission
+      summary: Remove file from the active submission
       parameters:
         - $ref: '#/components/parameters/PathProgramId'
         - $ref: '#/components/parameters/PathVersionId'
@@ -420,7 +422,6 @@ paths:
           required: true
           schema:
             type: string
-      summary: Remove file from the active submission
       description: Clears data for the specified file type from the active submission, removes all validation and resets the submission status to OPEN. Cannot be performed if the submission is in PENDING_APPROVAL state.
       responses:
         '200':
@@ -445,11 +446,11 @@ paths:
     delete:
       tags:
         - Submission
+      summary: Remove all data from the active clinical submission
       parameters:
         - $ref: '#/components/parameters/PathProgramId'
         - $ref: '#/components/parameters/PathVersionId'
-      summary: Remove all data from the active clinical submission
-      description: Clears all data from the active submission. Removes all validation and resets the submission status to OPEN. Cannot be performed if the submission is in PENDING_APPROVAL state.
+      description: Clears all data from the active submission. Removes all validation and deletes the submission. Cannot be performed if the submission is in PENDING_APPROVAL state.
       responses:
         '200':
           description: 'Data cleared succesfully. Returns the current active clinical submission or empty body if no submission data is available.'
@@ -473,6 +474,7 @@ paths:
     post:
       tags:
         - Submission
+      summary: Validate data for clinical submission
       parameters:
         - $ref: '#/components/parameters/PathProgramId'
         - $ref: '#/components/parameters/PathVersionId'
@@ -501,6 +503,7 @@ paths:
     post:
       tags:
         - Submission
+      summary: Commit data from clinical submission
       description: Commit in progress clinical submission to the clinical DB. Requires Submission to be in VALID state.
       parameters:
         - $ref: '#/components/parameters/PathProgramId'
@@ -524,6 +527,7 @@ paths:
     post:
       tags:
         - Submission
+      summary: Approve a clinical submission
       description: Approve and commit in progress clinical submission to the clinical DB. Requires Submission to be in PENDING_APPROVAL state, and can only be performed by a DCC Admin user.
       parameters:
         - $ref: '#/components/parameters/PathProgramId'
@@ -547,6 +551,7 @@ paths:
     post:
       tags:
         - Submission
+      summary: Reopen a clinical submission
       description: Reopen in progress clinical submission (clears all stats). Requires Submission to be in PENDING_APPROVAL state, and can only be performed by a DCC Admin user.
       parameters:
         - $ref: '#/components/parameters/PathProgramId'
@@ -745,6 +750,26 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    BatchError:
+      type: object
+      properties:
+        message:
+          type: string
+          description: a message describing the error
+        type:
+          type: string
+          description: the type of error
+          enum:
+            - TSV_PARSING_FAILED
+            - INVALID_FILE_NAME
+            - MULTIPLE_TYPED_FILES
+            - UNRECOGNIZED_HEADER
+            - MISSING_REQUIRED_HEADER
+        batchNames:
+          type: array
+          description: list of batch names causing error
+          items:
+            type: string
     ValidationError:
       type: object
       required:
@@ -776,7 +801,7 @@ components:
           description: the 0 based index of the row for this error
         type:
           type: string
-          description: The name of the parameter
+          description: the type of error
           enum:
             - CONFLICTING_TIME_INTERVAL
             - ID_NOT_REGISTERED
@@ -985,6 +1010,11 @@ components:
           description: list of all errors, should be empty on success
           items:
             $ref: '#/components/schemas/RegistrationValidationError'
+        batchErrors:
+          type: array
+          description: list of all batch related errors, should be empty on success
+          items:
+            $ref: '#/components/schemas/BatchError'
 
     CreateSubmission:
       required:
@@ -997,16 +1027,13 @@ components:
         successful:
           type: boolean
           description: whether the file was valid or not
-        errors:
+        schemaErrors:
           type: array
-          description: list of all errors, should be empty on success
+          description: list of all schema errors, should be empty on success
           items:
             $ref: '#/components/schemas/ValidationError'
-        fileErrors:
-          type: object
-          properties:
-            message:
-              type: string
-            code:
-              type: string
-              enum: ['TSV_PARSING_FAILED', 'INVALID_FILE_NAME']
+        batchErrors:
+          type: array
+          description: list of all batch related errors, should be empty on success
+          items:
+            $ref: '#/components/schemas/BatchError'

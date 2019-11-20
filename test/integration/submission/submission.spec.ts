@@ -36,6 +36,8 @@ import { Donor } from '../../../src/clinical/clinical-entities';
 import AdmZip from 'adm-zip';
 
 import * as _ from 'lodash';
+import { SchemasDictionary } from '../../../src/lectern-client/schema-entities';
+import { DictionaryMigration } from '../../../src/submission/schema/migration-entities';
 
 chai.use(require('chai-http'));
 chai.should();
@@ -237,6 +239,9 @@ const expectedDonorErrors = [
   },
 ];
 
+const INVALID_FILENAME_ERROR =
+  'Please retain the template file name and only append characters to the end. For example, sample_registration<_optional_extension>.tsv';
+
 const clearCollections = async (dburl: string, collections: string[]) => {
   try {
     console.log(`Clearing collections pre-test:`, collections.join(', '));
@@ -249,6 +254,8 @@ const clearCollections = async (dburl: string, collections: string[]) => {
     return err;
   }
 };
+const schemaName = 'ARGO Clinical Submission';
+const schemaVersion = '1.0';
 
 describe('Submission Api', () => {
   let mongoContainer: any;
@@ -273,10 +280,10 @@ describe('Submission Api', () => {
             return dburl;
           },
           initialSchemaVersion() {
-            return '1.0';
+            return schemaVersion;
           },
           schemaName() {
-            return 'ARGO Clinical Submission';
+            return schemaName;
           },
           jwtPubKey() {
             return TEST_PUB_KEY;
@@ -589,10 +596,44 @@ describe('Submission Api', () => {
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .end(async (err: any, res: any) => {
           try {
-            res.should.have.status(400);
-            res.body.should.deep.eq({
-              msg: `invalid file name, must start with ${ClinicalEntityType.REGISTRATION} and have .tsv extension`,
+            res.should.have.status(422);
+            res.body.batchErrors.should.deep.include({
+              message: INVALID_FILENAME_ERROR,
               code: SubmissionBatchErrorTypes.INVALID_FILE_NAME,
+              batchNames: ['thisIsARegistration.tsv'],
+            });
+          } catch (err) {
+            return done(err);
+          }
+          return done();
+        });
+    });
+
+    it('should not accept tsv files with invalid headers', done => {
+      let file: Buffer;
+      try {
+        file = fs.readFileSync(__dirname + '/sample_registration-invalidHeaders.tsv');
+      } catch (err) {
+        return done(err);
+      }
+      chai
+        .request(app)
+        .post('/submission/program/ABCD-EF/registration')
+        .type('form')
+        .attach('registrationFile', file, 'sample_registration-invalidHeaders.tsv')
+        .auth(JWT_ABCDEF, { type: 'bearer' })
+        .end(async (err: any, res: any) => {
+          try {
+            res.should.have.status(422);
+            res.body.batchErrors.should.deep.include({
+              message: `Missing required headers: [program_id], [submitter_specimen_id]`,
+              code: SubmissionBatchErrorTypes.MISSING_REQUIRED_HEADER,
+              batchNames: ['sample_registration-invalidHeaders.tsv'],
+            });
+            res.body.batchErrors.should.deep.include({
+              message: `Found unknown headers: [prgram_id], [submittr_specimen_id]`,
+              code: SubmissionBatchErrorTypes.UNRECOGNIZED_HEADER,
+              batchNames: ['sample_registration-invalidHeaders.tsv'],
             });
           } catch (err) {
             return done(err);
@@ -714,25 +755,24 @@ describe('Submission Api', () => {
           res.should.have.status(207);
           res.body.batchErrors.should.deep.eq([
             {
-              msg: 'Found multiple files of donor type',
+              message: 'Found multiple files of donor type',
               batchNames: ['donor.tsv', 'donor.invalid.tsv'],
               code: 'MULTIPLE_TYPED_FILES',
             },
             {
-              msg:
-                'Invalid file(s), must start with entity and have .tsv extension (e.g. donor*.tsv)',
+              message: INVALID_FILENAME_ERROR,
               batchNames: ['thisissample.tsv'],
               code: 'INVALID_FILE_NAME',
             },
             {
-              msg: `Missing required headers: [${FieldsEnum.submitter_donor_id}], [${FieldsEnum.submitter_specimen_id}]`,
+              message: `Missing required headers: [${FieldsEnum.submitter_donor_id}], [${FieldsEnum.submitter_specimen_id}]`,
               batchNames: ['specimen-invalid-headers.tsv'],
-              code: 'MISSING_REQUIRED_FIELD',
+              code: SubmissionBatchErrorTypes.MISSING_REQUIRED_HEADER,
             },
             {
-              msg: 'Found unknown headers: [submitter_id], [submitter_specmen_id]',
+              message: 'Found unknown headers: [submitter_id], [submitter_specmen_id]',
               batchNames: ['specimen-invalid-headers.tsv'],
-              code: 'UNRECOGNIZED_FIELD',
+              code: SubmissionBatchErrorTypes.UNRECOGNIZED_HEADER,
             },
           ]);
           done();
@@ -1539,7 +1579,7 @@ describe('Submission Api', () => {
         });
     });
 
-    describe('schema migration ', () => {
+    describe('schema migration api', () => {
       const programId = 'ABCD-EF';
       const donor: Donor = emptyDonorDocument({
         submitterId: 'ICGC_0001',
@@ -1547,42 +1587,120 @@ describe('Submission Api', () => {
         clinicalInfo: {
           vital_status: 'Deceased',
           cause_of_death: 'Unknown',
+          submitter_donor_id: 'ICGC_0001',
           survival_time: 120,
+        },
+      });
+
+      const donor2: Donor = emptyDonorDocument({
+        submitterId: 'ICGC_0002',
+        programId,
+        clinicalInfo: {
+          vital_status: 'Unknown',
+          cause_of_death: 'Died of cancer',
+          submitter_donor_id: 'ICGC_0002',
+          survival_time: 67,
         },
       });
 
       this.beforeEach(async () => {
         await clearCollections(dburl, ['donors', 'dictionarymigrations']);
         await insertData(dburl, 'donors', donor);
+        await insertData(dburl, 'donors', donor2);
+        // reset the base schema since tests can load new one
+        await bootstrap.loadSchema(schemaName, schemaVersion);
       });
 
       // very simple smoke test of the migration to be expanded along developement
       it('should update the schema ', async () => {
         await chai
           .request(app)
-          .patch('/submission/schema/')
+          .patch('/submission/schema?sync=true')
           .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
           .send({
             version: '2.0',
           })
-          .then((res: any) => {
+          .then(async (res: any) => {
             res.should.have.status(200);
             res.body.version.should.eq('2.0');
 
-            // TODO add a check to the db
-            // TOOD check invalid documents
+            const schema = (await findInDb(dburl, 'dataschemas', {})) as SchemasDictionary[];
+            schema[0].version.should.eq('2.0');
           });
-
-        // TODO get the latest migration and check it.
 
         await chai
           .request(app)
           .get('/submission/schema/migration/')
           .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-          .then((res: any) => {
+          .then(async (res: any) => {
             res.should.have.status(200);
             res.body.length.should.eq(1);
+            const migrationId = res.body[0]._id;
+            const migrations = (await findInDb(
+              dburl,
+              'dictionarymigrations',
+              {},
+            )) as DictionaryMigration[];
+            migrations.should.not.be.empty;
+            migrations[0].should.not.be.undefined;
+            if (!migrations[0]._id) {
+              throw new Error('migration in db with no id');
+            }
+            migrations[0]._id.toString().should.eq(migrationId);
           });
+      });
+
+      describe('dry run migration api', () => {
+        it('should report donor validation errors', async () => {
+          await chai
+            .request(app)
+            .patch('/submission/schema/dry-run-update')
+            .send({
+              version: '2.0',
+            })
+            .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+            .then(async (res: any) => {
+              res.should.have.status(200);
+              const migration = res.body as DictionaryMigration;
+              migration.should.not.be.undefined;
+              const migrations = (await findInDb(
+                dburl,
+                'dictionarymigrations',
+                {},
+              )) as DictionaryMigration[];
+              migrations.should.not.be.empty;
+              migrations[0].should.not.be.undefined;
+              const dbMigration = migrations[0];
+              if (!dbMigration._id) {
+                throw new Error('migration in db with no id');
+              }
+              dbMigration._id = dbMigration._id.toString();
+              // we convert to json string to normalize dates
+              const normalizedDbMigration = JSON.parse(JSON.stringify(dbMigration));
+              normalizedDbMigration.should.deep.include(migration);
+              migration.stats.invalidDocumentsCount.should.eq(1);
+              migration.stats.validDocumentsCount.should.eq(1);
+              migration.stats.totalProcessed.should.eq(2);
+              migration.invalidDonorsErrors[0].should.deep.eq({
+                donorId: 1,
+                submitterDonorId: 'ICGC_0002',
+                programId: 'ABCD-EF',
+                errors: [
+                  {
+                    donor: [
+                      {
+                        errorType: 'INVALID_ENUM_VALUE',
+                        fieldName: 'vital_status',
+                        index: 0,
+                        info: {},
+                        message: 'The value is not permissible for this field.',
+                      },
+                    ],
+                  },
+                ],
+              });
+            });
+        });
       });
     });
   });
@@ -1670,6 +1788,11 @@ async function assertUploadOKRegistrationCreated(res: any, dburl: string) {
 
 const comittedDonors2: Donor[] = [
   {
+    schemaMetadata: {
+      isValid: true,
+      lastValidSchemaVersion: '1.0',
+      originalSchemaVersion: '1.0',
+    },
     followUps: [],
     treatments: [],
     chemotherapy: [],
@@ -1695,6 +1818,11 @@ const comittedDonors2: Donor[] = [
     donorId: 1,
   },
   {
+    schemaMetadata: {
+      isValid: true,
+      lastValidSchemaVersion: '1.0',
+      originalSchemaVersion: '1.0',
+    },
     followUps: [],
     treatments: [],
     chemotherapy: [],
@@ -1733,6 +1861,11 @@ const comittedDonors2: Donor[] = [
     donorId: 2,
   },
   {
+    schemaMetadata: {
+      isValid: true,
+      lastValidSchemaVersion: '1.0',
+      originalSchemaVersion: '1.0',
+    },
     followUps: [],
     treatments: [],
     chemotherapy: [],
@@ -1758,6 +1891,11 @@ const comittedDonors2: Donor[] = [
     donorId: 3,
   },
   {
+    schemaMetadata: {
+      isValid: true,
+      lastValidSchemaVersion: '1.0',
+      originalSchemaVersion: '1.0',
+    },
     followUps: [],
     treatments: [],
     chemotherapy: [],
@@ -1796,6 +1934,11 @@ const comittedDonors2: Donor[] = [
     donorId: 4,
   },
   {
+    schemaMetadata: {
+      isValid: true,
+      lastValidSchemaVersion: '1.0',
+      originalSchemaVersion: '1.0',
+    },
     followUps: [],
     treatments: [],
     chemotherapy: [],
@@ -1822,6 +1965,11 @@ const comittedDonors2: Donor[] = [
     donorId: 5,
   },
   {
+    schemaMetadata: {
+      isValid: true,
+      lastValidSchemaVersion: '1.0',
+      originalSchemaVersion: '1.0',
+    },
     followUps: [],
     treatments: [],
     chemotherapy: [],

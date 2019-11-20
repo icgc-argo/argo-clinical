@@ -3,6 +3,7 @@ import {
   TypedDataRecord,
   SchemaTypes,
   SchemaProcessingResult,
+  FieldNamesByPriorityMap,
 } from './schema-entities';
 import vm from 'vm';
 import {
@@ -14,17 +15,30 @@ import {
   SchemaValidationErrorTypes,
 } from './schema-entities';
 import { loggerFor } from '../logger';
-import {
-  Checks,
-  notEmpty,
-  isEmptyString,
-  isNotEmptyString,
-  isAbsent,
-  F,
-  isNotAbsent,
-} from '../utils';
+import { Checks, notEmpty, isEmptyString, isAbsent, F, isNotAbsent } from '../utils';
 import schemaErrorMessage from './schema-error-messages';
 const L = loggerFor(__filename);
+
+export const getSubSchemaFieldNamesWithPriority = (
+  schema: SchemasDictionary,
+  definition: string,
+): FieldNamesByPriorityMap => {
+  const schemaDef: SchemaDefinition | undefined = schema.schemas.find(
+    schema => schema.name === definition,
+  );
+  if (!schemaDef) {
+    throw new Error(`no schema found for : ${definition}`);
+  }
+  const fieldNamesMapped: FieldNamesByPriorityMap = { required: [], optional: [] };
+  schemaDef.fields.forEach(field => {
+    if (field.restrictions && field.restrictions.required) {
+      fieldNamesMapped.required.push(field.name);
+    } else {
+      fieldNamesMapped.optional.push(field.name);
+    }
+  });
+  return fieldNamesMapped;
+};
 
 export const process = (
   dataSchema: SchemasDictionary,
@@ -193,6 +207,7 @@ const validateAfterTypeConversion = (
   const validationErrors = validation
     .runValidationPipeline(record, index, schemaDef.fields, [
       validation.validateRegex,
+      validation.validateRange,
       validation.validateEnum,
       validation.validateScript,
     ])
@@ -263,6 +278,30 @@ namespace validation {
           isInvalidRegexValue(field.restrictions.regex, value)
         ) {
           return buildError(SchemaValidationErrorTypes.INVALID_BY_REGEX, field.name, index);
+        }
+        return undefined;
+      })
+      .filter(notEmpty);
+  };
+
+  export const validateRange: TypedValidationFunction = (
+    rec: TypedDataRecord,
+    index: number,
+    fields: ReadonlyArray<FieldDefinition>,
+  ) => {
+    return fields
+      .map(field => {
+        const value = rec[field.name];
+        if (value && typeof value !== 'number') {
+          return undefined;
+        }
+
+        if (
+          field.restrictions &&
+          field.restrictions.range &&
+          isOutOfRange(field.restrictions.range, value as number | undefined)
+        ) {
+          return buildError(SchemaValidationErrorTypes.INVALID_BY_RANGE, field.name, index);
         }
         return undefined;
       })
@@ -383,6 +422,17 @@ namespace validation {
     return field.restrictions && field.restrictions.required && isEmptyString(record[field.name]);
   };
 
+  const isOutOfRange = (range: any, value: number | undefined) => {
+    if (value == undefined) return false;
+    const invalidRange =
+      // less than the min if defined ?
+      (range.min !== undefined && value < range.min) ||
+      (range.exclusiveMin !== undefined && value <= range.exclusiveMin) ||
+      // bigger than max if defined ?
+      ((range.max !== undefined && value > range.max) ||
+        (range.exclusiveMax !== undefined && value >= range.exclusiveMax));
+    return invalidRange;
+  };
   const isInvalidEnumValue = (
     codeList: Array<string | number>,
     value: string | boolean | number | undefined,

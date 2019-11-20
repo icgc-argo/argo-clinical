@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
-import { SchemasDictionary } from './schema-entities';
-import { loggerFor } from '../logger';
-import { MongooseUtils } from '../utils';
+import { SchemasDictionary } from '../../lectern-client/schema-entities';
+import { loggerFor } from '../../logger';
+import { MongooseUtils } from '../../utils';
 const L = loggerFor(__filename);
 
 export interface SchemaRepository {

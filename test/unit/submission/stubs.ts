@@ -7,6 +7,11 @@ import { ClinicalInfoFieldsEnum } from '../../../src/submission/submission-entit
 export const stubs = {
   validation: {
     existingDonor01: (): Donor => ({
+      schemaMetadata: {
+        isValid: true,
+        lastValidSchemaVersion: '1.0',
+        originalSchemaVersion: '1.0',
+      },
       _id: 'i8321321',
       submitterId: 'AB1',
       programId: 'PEME-CA',
@@ -30,6 +35,11 @@ export const stubs = {
     }),
 
     existingDonor02: (): Donor => ({
+      schemaMetadata: {
+        isValid: true,
+        lastValidSchemaVersion: '1.0',
+        originalSchemaVersion: '1.0',
+      },
       _id: 'juadskasd23',
       submitterId: 'AB1',
       programId: 'PEME-CA',
@@ -53,6 +63,11 @@ export const stubs = {
     }),
 
     existingDonor03: (): Donor => ({
+      schemaMetadata: {
+        isValid: true,
+        lastValidSchemaVersion: '1.0',
+        originalSchemaVersion: '1.0',
+      },
       _id: 'juadskasd122',
       submitterId: 'AB3',
       programId: 'PEME-CA',
@@ -76,6 +91,11 @@ export const stubs = {
     }),
 
     existingDonor04: (): Donor => ({
+      schemaMetadata: {
+        isValid: true,
+        lastValidSchemaVersion: '1.0',
+        originalSchemaVersion: '1.0',
+      },
       _id: 'juadskasd122',
       submitterId: 'AB2',
       programId: 'PEME-CA',

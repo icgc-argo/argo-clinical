@@ -41,8 +41,14 @@ export interface FieldDiff {
 // in case of nested fields: {"fieldName1": {"fieldName2": {"data":.., "type": ..}}}
 export type FieldChanges = { [field: string]: FieldChanges } | Change;
 
+export enum ChangeTypeName {
+  CREATED = 'created',
+  DELETED = 'deleted',
+  UPDATED = 'updated',
+}
+
 export interface Change {
-  type: 'created' | 'deleted' | 'updated';
+  type: ChangeTypeName;
   data: any;
 }
 
@@ -56,6 +62,12 @@ export interface FieldDefinition {
     regex?: string;
     script?: string;
     required?: boolean;
+    range: {
+      min?: number;
+      max?: number;
+      exclusiveMin?: number;
+      exclusiveMax?: number;
+    };
   };
 }
 
@@ -75,6 +87,7 @@ export enum SchemaValidationErrorTypes {
   MISSING_REQUIRED_FIELD = 'MISSING_REQUIRED_FIELD',
   INVALID_FIELD_VALUE_TYPE = 'INVALID_FIELD_VALUE_TYPE',
   INVALID_BY_REGEX = 'INVALID_BY_REGEX',
+  INVALID_BY_RANGE = 'INVALID_BY_RANGE',
   INVALID_BY_SCRIPT = 'INVALID_BY_SCRIPT',
   INVALID_ENUM_VALUE = 'INVALID_ENUM_VALUE',
   UNRECOGNIZED_FIELD = 'UNRECOGNIZED_FIELD',
@@ -95,25 +108,58 @@ export interface FieldNamesByPriorityMap {
 
 export interface ChangeAnalysis {
   fields: {
-    addedFields: string[];
+    addedFields: AddedFieldChange[];
     renamedFields: string[];
     deletedFields: string[];
   };
-  restrictionsChanges: {
-    codeLists: {
-      created: CodeListChange[];
-      deleted: CodeListChange[];
-      updated: CodeListChange[];
-    };
-    regex: {
-      created: any;
-      deleted: any;
-    };
+  restrictionsChanges: RestrictionChanges;
+}
+
+export type RestrictionChanges = {
+  range: {
+    [key in ChangeTypeName]: ObjectChange[];
   };
+  codeList: {
+    [key in ChangeTypeName]: ObjectChange[];
+  };
+  regex: RegexChanges;
+  required: RequiredChanges;
+  script: ScriptChanges;
+};
+
+export type RegexChanges = {
+  [key in ChangeTypeName]: StringAttributeChange[];
+};
+
+export type RequiredChanges = {
+  [key in ChangeTypeName]: BooleanAttributeChange[];
+};
+
+export type ScriptChanges = {
+  [key in ChangeTypeName]: StringAttributeChange[];
+};
+
+export interface AddedFieldChange {
+  name: string;
+  definition: FieldDefinition;
+}
+
+export interface ObjectChange {
+  field: string;
+  definition: any;
 }
 
 export interface CodeListChange {
   field: string;
-  addition: SchemaTypes[];
-  deletion: SchemaTypes[];
+  definition: any;
+}
+
+export interface StringAttributeChange {
+  field: string;
+  definition: string;
+}
+
+export interface BooleanAttributeChange {
+  field: string;
+  definition: boolean;
 }
