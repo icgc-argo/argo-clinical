@@ -132,7 +132,7 @@ class SubmissionController {
       programId: req.params.programId,
       updater: user,
     };
-    const result = await submission.operations.uploadMultipleClinical(command);
+    const result = await submission.operations.submitMultiClinicalBatches(command);
     let status = 200;
     if (!result.successful) {
       status = 422;

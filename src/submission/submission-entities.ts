@@ -179,7 +179,6 @@ export interface ClinicalSubmissionModifierCommand {
 export interface CreateSubmissionResult {
   readonly submission: DeepReadonly<ActiveClinicalSubmission> | undefined;
   readonly successful: boolean;
-  schemaErrors: DeepReadonly<{ [clinicalType: string]: SubmissionValidationError[] }>;
   batchErrors: DeepReadonly<SubmissionBatchError[]>;
 }
 
@@ -204,6 +203,7 @@ export interface SavedClinicalEntity {
   creator: string;
   records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
   createdAt: DeepReadonly<Date>;
+  schemaErrors: DeepReadonly<SubmissionValidationError[]>;
   dataErrors: SubmissionValidationError[];
   dataUpdates: SubmissionValidationUpdate[];
   stats: {

@@ -15,7 +15,12 @@ import { DictionaryMigration } from './migration-entities';
 import { Donor } from '../../clinical/clinical-entities';
 import { DeepReadonly } from 'deep-freeze';
 import * as clinicalService from '../../clinical/clinical-service';
-import { ClinicalEntityType } from '../submission-entities';
+import * as submissionService from '../submission-service';
+import {
+  ClinicalEntityType,
+  MultiClinicalSubmissionCommand as SubmitMultiClinicalCommand,
+  NewClinicalEntity,
+} from '../submission-entities';
 import { notEmpty, Errors } from '../../utils';
 import _ from 'lodash';
 const L = loggerFor(__filename);
@@ -53,11 +58,15 @@ class SchemaManager {
    *
    * @returns object contains the validation errors and the valid processed records.
    */
-  process = (schemaName: string, records: ReadonlyArray<DataRecord>): SchemaProcessingResult => {
-    if (this.getCurrent() === undefined) {
+  process = (
+    schemaName: string,
+    records: ReadonlyArray<DataRecord>,
+    schema?: SchemasDictionary,
+  ): SchemaProcessingResult => {
+    if (!schema && this.getCurrent() === undefined) {
       throw new Error('schema manager not initialized correctly');
     }
-    return service.process(this.getCurrent(), schemaName, records);
+    return service.process(schema || this.getCurrent(), schemaName, records);
   };
 
   analyzeChanges = async (oldVersion: string, newVersion: string) => {
@@ -254,6 +263,10 @@ namespace MigrationManager {
 
     await checkDonorDocuments(migration, newTargetSchema);
 
+    // only validate submission if it's not dry run
+    if (!migration.dryRun) {
+      await revalidateOpenSubmissionsWithNewSchema(migration, newTargetSchema);
+    }
     // close migration
     const updatedMigration = await migrationRepo.getById(migrationId);
     const migrationToClose = _.cloneDeep(updatedMigration) as DictionaryMigration;
@@ -264,6 +277,35 @@ namespace MigrationManager {
     migrationToClose.stage = 'COMPLETED';
     const closedMigration = await migrationRepo.update(migrationToClose);
     return closedMigration;
+  };
+
+  const revalidateOpenSubmissionsWithNewSchema = async (
+    migration: DictionaryMigration,
+    newSchema: SchemasDictionary,
+  ) => {
+    const submissions = await submissionService.operations.findActiveClinicalSubmission();
+    for (const sub of submissions) {
+      if (sub.updatedBy == `MIGRATION-${migration._id}`) {
+        continue;
+      }
+      const keys = Object.keys(sub.clinicalEntities);
+      const clinicalData: NewClinicalEntity[] = [];
+
+      keys.forEach((key: string) => {
+        clinicalData.push({
+          batchName: sub.clinicalEntities[key].batchName,
+          creator: sub.clinicalEntities[key].creator,
+          records: sub.clinicalEntities[key].records.map(prepareForSchemaReProcessing),
+        });
+      });
+
+      const command: SubmitMultiClinicalCommand = {
+        programId: sub.programId,
+        updater: `MIGRATION-${migration._id}`,
+        newClinicalData: clinicalData,
+      };
+      await submissionService.operations.submitMultiClinicalBatches(command, newSchema);
+    }
   };
 
   // start iterating over paged donor documents records (that weren't checked before)

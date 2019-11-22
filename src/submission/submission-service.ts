@@ -38,6 +38,7 @@ import {
   TypedDataRecord,
   DataRecord,
   SchemaProcessingResult,
+  SchemasDictionary,
 } from '../lectern-client/schema-entities';
 import { loggerFor } from '../logger';
 import { Errors, F, isStringMatchRegex } from '../utils';
@@ -47,6 +48,7 @@ import { v1 as uuid } from 'uuid';
 import { validateSubmissionData, checkUniqueRecords } from './validation';
 import { batchErrorMessage } from './submission-error-messages';
 import { ClinicalSubmissionRecordsOperations } from './validation-clinical/utils';
+import { Schema } from 'mongoose';
 const L = loggerFor(__filename);
 
 const emptyStats = {
@@ -221,6 +223,7 @@ export namespace operations {
           if (clinicalType !== command.fileType) {
             updatedClinicalEntities[clinicalType] = {
               ...activeSubmission.clinicalEntities[clinicalType],
+              schemaErrors: [],
               ...emptyStats,
             };
           }
@@ -243,6 +246,10 @@ export namespace operations {
     }
   };
 
+  export const findActiveClinicalSubmission = async () => {
+    return await submissionRepository.findAll();
+  };
+
   /**
    * upload multiple clinical submissions
    * Three validation steps before upload is done:
@@ -250,9 +257,12 @@ export namespace operations {
    * 2. check headers (if provided) => can find batchError
    * 3. schemaValidation, done by lectern-client => can return schemaError
    * @param command MultiClinicalSubmissionCommand
+   * @param targetSchema this is needed for migration case where we target new schema
+   *                      if not provided, the default is the current schema.
    */
-  export const uploadMultipleClinical = async (
+  export const submitMultiClinicalBatches = async (
     command: MultiClinicalSubmissionCommand,
+    targetSchema?: SchemasDictionary,
   ): Promise<CreateSubmissionResult> => {
     // get program or create new one
     let exsistingActiveSubmission = await submissionRepository.findByProgramId(command.programId);
@@ -282,26 +292,43 @@ export namespace operations {
     const createdAt: DeepReadonly<Date> = new Date();
     const schemaErrors: { [k: string]: SubmissionValidationError[] } = {}; // object to store all errors for entity
     for (const [clinicalType, newClinicalEnity] of Object.entries(filteredClinicalEntites)) {
-      const { schemaErrorsTemp, processedRecords } = await checkClinicalEntity({
-        records: newClinicalEnity.records,
-        programId: command.programId,
-        clinicalType: clinicalType,
-      });
-      if (schemaErrorsTemp.length > 0) {
+      const {
+        schemaErrorsTemp: clinicalEntitySchemaErrors,
+        processedRecords,
+      } = await checkClinicalEntity(
+        {
+          records: newClinicalEnity.records,
+          programId: command.programId,
+          clinicalType: clinicalType,
+        },
+        targetSchema || schemaManager.instance().getCurrent(),
+      );
+
+      if (clinicalEntitySchemaErrors.length > 0) {
         // store errors found and remove clinical type from clinical entities
-        schemaErrors[clinicalType] = schemaErrorsTemp;
-        delete updatedClinicalEntites[clinicalType];
-      } else {
-        // update or add entity
+        schemaErrors[clinicalType] = clinicalEntitySchemaErrors;
         updatedClinicalEntites[clinicalType] = {
           batchName: newClinicalEnity.batchName,
           creator: newClinicalEnity.creator,
           createdAt: createdAt,
-          records: processedRecords,
           ...emptyStats,
+          records: [],
+          schemaErrors: clinicalEntitySchemaErrors,
         };
+        continue;
       }
+
+      // update or add entity
+      updatedClinicalEntites[clinicalType] = {
+        batchName: newClinicalEnity.batchName,
+        schemaErrors: [],
+        creator: newClinicalEnity.creator,
+        createdAt: createdAt,
+        records: processedRecords as any,
+        ...emptyStats,
+      };
     }
+
     const newActiveSubmission: ActiveClinicalSubmission = {
       programId: command.programId,
       state: SUBMISSION_STATE.OPEN,
@@ -309,6 +336,7 @@ export namespace operations {
       clinicalEntities: updatedClinicalEntites,
       updatedBy: command.updater,
     };
+
     // insert into database
     const updated = await submissionRepository.updateSubmissionWithVersion(
       command.programId,
@@ -318,7 +346,6 @@ export namespace operations {
 
     return {
       submission: updated,
-      schemaErrors: schemaErrors,
       successful: Object.keys(schemaErrors).length === 0,
       batchErrors: [...dataToEntityMapErrors, ...fieldNameErrors],
     };
@@ -645,14 +672,19 @@ export namespace operations {
     );
   }
 
-  const checkClinicalEntity = async (command: ClinicalSubmissionCommand): Promise<any> => {
+  const checkClinicalEntity = async (
+    command: ClinicalSubmissionCommand,
+    schema: SchemasDictionary,
+  ) => {
     // check records are unique
     let errors: SubmissionValidationError[] = checkUniqueRecords(
       command.clinicalType as ClinicalEntityType,
       command.records,
     );
 
-    const schemaResult = schemaManager.instance().process(command.clinicalType, command.records);
+    const schemaResult = schemaManager
+      .instance()
+      .process(command.clinicalType, command.records, schema);
     if (schemaResult.validationErrors.length > 0) {
       const unifiedSchemaErrors = unifySchemaErrors(
         command.clinicalType as ClinicalEntityType,
@@ -733,6 +765,7 @@ export namespace operations {
     const filteredClinicalEntites: NewClinicalEntities = {};
     for (const [clinicalType, newClinicalEnity] of Object.entries(newClinicalEntitesMap)) {
       if (!newClinicalEnity.fieldNames) {
+        filteredClinicalEntites[clinicalType] = { ...newClinicalEnity };
         continue;
       }
       const commonFieldNamesSet = new Set(newClinicalEnity.fieldNames);

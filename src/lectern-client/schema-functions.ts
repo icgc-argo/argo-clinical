@@ -179,6 +179,7 @@ const convertFromRawStrings = (
   });
   return F(mutableRecord);
 };
+
 /**
  * Run schema validation pipeline for a schema defintion on the list of records provided.
  * @param definition the schema definition name.

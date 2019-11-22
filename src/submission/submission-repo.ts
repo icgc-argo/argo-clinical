@@ -9,6 +9,7 @@ import uuid from 'uuid';
 const L = loggerFor(__filename);
 
 export interface ClinicalSubmissionRepository {
+  findAll(): Promise<DeepReadonly<ActiveClinicalSubmission[]>>;
   delete(id: string): Promise<void>;
   deleteByProgramId(id: string): Promise<void>;
   create(
@@ -36,6 +37,9 @@ export interface ClinicalSubmissionRepository {
 
 // Mongoose implementation of the ClinicalSubmissionRepository
 export const submissionRepository: ClinicalSubmissionRepository = {
+  async findAll() {
+    return ActiveSubmissionModel.find({});
+  },
   async findById(id: string) {
     const registration = await ActiveSubmissionModel.findById(id);
     if (registration === null) {
