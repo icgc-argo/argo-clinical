@@ -7,10 +7,10 @@ const router = express.Router();
 router.get('/', wrapAsync(schemaApi.get));
 // update schema version api
 router.patch('/', wrapAsync(schemaApi.schemaController.update));
-router.patch('/migration/resume', wrapAsync(schemaApi.schemaController.resumeMigration));
+router.post('/migration/resume', wrapAsync(schemaApi.schemaController.resumeMigration));
 router.get('/migration/:id', wrapAsync(schemaApi.schemaController.getMigration));
 router.get('/migration/', wrapAsync(schemaApi.schemaController.getMigration));
-router.patch('/dry-run-update', wrapAsync(schemaApi.schemaController.dryRunUpdate));
+router.post('/dry-run-update', wrapAsync(schemaApi.schemaController.dryRunUpdate));
 // schema migration api
 router.get('/changes', wrapAsync(schemaApi.schemaController.probe));
 
