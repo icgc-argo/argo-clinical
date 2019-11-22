@@ -53,7 +53,7 @@ paths:
               schema:
                 type: object
   /submission/schema/dry-run-update:
-    patch:
+    post:
       tags:
         - Schemas
       requestBody:
@@ -73,7 +73,7 @@ paths:
               schema:
                 type: object
   /submission/schema/migration/resume:
-    patch:
+    post:
       tags:
         - Schemas
       responses:
