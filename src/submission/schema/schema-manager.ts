@@ -44,7 +44,7 @@ class SchemaManager {
 
   /**
    * This method does three things:
-   * 1- populate default values for missing fields
+   * 1- populate default values for empty optional fields
    * 2- validate the record against the schema
    * 3- convert the raw data from strings to their proper type if needed.
    *
