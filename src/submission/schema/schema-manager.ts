@@ -198,7 +198,7 @@ namespace MigrationManager {
       throw new Errors.NotFound(`No active migration found!`);
     }
 
-    return await runMigrationSyncOrAsync(sync || openMigration.dryRun, openMigration);
+    return await runMigrationSyncOrAsync(openMigration, sync || openMigration.dryRun);
   };
 
   export const submitMigration = async (
@@ -235,12 +235,12 @@ namespace MigrationManager {
       throw new Error('failed to submit migration');
     }
 
-    return await runMigrationSyncOrAsync(sync || savedMigration.dryRun, savedMigration);
+    return await runMigrationSyncOrAsync(savedMigration, sync || savedMigration.dryRun);
   };
 
   async function runMigrationSyncOrAsync(
-    sync: boolean,
     migrationToRun: DeepReadonly<DictionaryMigration>,
+    sync?: boolean,
   ) {
     // explicit sync so wait till done
     if (sync) {
