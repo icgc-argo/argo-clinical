@@ -198,7 +198,7 @@ namespace MigrationManager {
       throw new Errors.NotFound(`No active migration found!`);
     }
 
-    return await runMigrationSyncOrAsync(sync, openMigration);
+    return await runMigrationSyncOrAsync(sync || openMigration.dryRun || false, openMigration);
   };
 
   export const submitMigration = async (

@@ -72,6 +72,19 @@ paths:
             application/json:
               schema:
                 type: object
+  /submission/schema/migration/resume:
+    patch:
+      tags:
+        - Schemas
+      responses:
+        '200':
+          description: 'Resume an active migration'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
   /submission/schema/migration/{migrationId}:
     get:
       tags:
