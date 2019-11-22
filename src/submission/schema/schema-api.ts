@@ -40,6 +40,13 @@ class SchemaController {
     const migration = await manager.instance().getMigration(id);
     return res.status(200).send(migration);
   }
+
+  @HasFullWriteAccess()
+  async resumeMigration(req: Request, res: Response) {
+    const sync: boolean = req.query.sync || false;
+    const migration = await manager.instance().resumeMigration(sync);
+    return res.status(200).send(migration);
+  }
 }
 
 export const schemaController = new SchemaController();
