@@ -192,13 +192,13 @@ namespace MigrationManager {
     return [openMigration];
   };
 
-  export const resumeMigration = async (sync: boolean) => {
+  export const resumeMigration = async (sync?: boolean) => {
     const openMigration = await migrationRepo.getByState('OPEN');
     if (!openMigration) {
       throw new Errors.NotFound(`No active migration found!`);
     }
 
-    return await runMigrationSyncOrAsync(sync || openMigration.dryRun || false, openMigration);
+    return await runMigrationSyncOrAsync(sync || openMigration.dryRun, openMigration);
   };
 
   export const submitMigration = async (
@@ -235,7 +235,7 @@ namespace MigrationManager {
       throw new Error('failed to submit migration');
     }
 
-    return await runMigrationSyncOrAsync(sync || dryRun || false, savedMigration);
+    return await runMigrationSyncOrAsync(sync || savedMigration.dryRun, savedMigration);
   };
 
   async function runMigrationSyncOrAsync(
