@@ -295,6 +295,7 @@ describe('Submission Api', () => {
             return `file://${__dirname}/stub-schema.json`;
           },
         });
+        await insertData(dburl, 'configurations', { submissionLock: false });
       } catch (err) {
         console.error('before >>>>>>>>>>>', err);
         return err;

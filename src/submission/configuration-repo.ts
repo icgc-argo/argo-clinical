@@ -8,6 +8,7 @@ export interface ConfigurationRepository {
   setSubmissionLock(lock: boolean): Promise<Configuration | null>;
   getSubmissionLockStatus(): Promise<boolean>;
   create(configuration: any): Promise<Configuration>;
+  update(configuration: any): Promise<Configuration>;
 }
 
 export const configRepository: ConfigurationRepository = {
@@ -22,6 +23,13 @@ export const configRepository: ConfigurationRepository = {
     return F(MongooseUtils.toPojo(newconfiguration));
   },
 
+  async update(configuration: any) {
+    return await ConfigurationModel.findOneAndUpdate(
+      {},
+      { ...configuration },
+      { upsert: true, new: true },
+    ).exec();
+  },
   async setSubmissionLock(lock: boolean): Promise<Configuration> {
     const updatedConfig = await ConfigurationModel.findOneAndUpdate(
       {},

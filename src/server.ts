@@ -4,6 +4,7 @@ import * as bootstrap from './bootstrap';
 import app from './app';
 import * as vault from './vault-k8s';
 import { Server } from 'http';
+import { configRepository } from './submission/configuration-repo';
 
 let secrets: any = {};
 let server: Server;
@@ -53,6 +54,10 @@ let server: Server;
   };
 
   await bootstrap.run(defaultAppConfigImpl);
+
+  // temp, so app doesn't crash
+  await configRepository.update({ submissionLock: false });
+
   /**
    * Start Express server.
    */
