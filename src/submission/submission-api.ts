@@ -1,7 +1,7 @@
 import * as submission from './submission-service';
 import * as submission2Clinical from './submission-to-clinical/submission-to-clinical';
-import { Request, Response } from 'express';
-import { TsvUtils, ControllerUtils, isStringMatchRegex } from '../utils';
+import { Request, Response, RequestHandler, NextFunction } from 'express';
+import { TsvUtils, ControllerUtils } from '../utils';
 import { loggerFor } from '../logger';
 import {
   CreateRegistrationCommand,
@@ -9,11 +9,8 @@ import {
   NewClinicalEntity,
   SubmissionBatchError,
   SubmissionBatchErrorTypes,
-  ClinicalEntityType,
-  BatchNameRegex,
 } from './submission-entities';
 import { HasFullWriteAccess, HasProgramWriteAccess } from '../auth-decorators';
-import jwt from 'jsonwebtoken';
 import _ from 'lodash';
 import { batchErrorMessage } from './submission-error-messages';
 const L = loggerFor(__filename);
@@ -32,7 +29,7 @@ class SubmissionController {
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async createRegistrationWithTsv(req: Request, res: Response) {
-    if (!isValidCreateBody(req, res)) {
+    if ((await submissionSystemIsLocked(res)) || !isValidCreateBody(req, res)) {
       return;
     }
     const programId = req.params.programId;
@@ -66,6 +63,7 @@ class SubmissionController {
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async commitRegistration(req: Request, res: Response) {
+    if (await submissionSystemIsLocked(res)) return;
     const programId = req.params.programId;
     const newSamples: string[] = await submission2Clinical.commitRegisteration({
       registrationId: req.params.id,
@@ -96,7 +94,7 @@ class SubmissionController {
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async saveClinicalTsvFiles(req: Request, res: Response) {
-    if (!isValidCreateBody(req, res)) {
+    if ((await submissionSystemIsLocked(res)) || !isValidCreateBody(req, res)) {
       return;
     }
 
@@ -146,6 +144,7 @@ class SubmissionController {
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async validateActiveSubmission(req: Request, res: Response) {
+    if (await submissionSystemIsLocked(res)) return;
     const { versionId, programId } = req.params;
     const updater = ControllerUtils.getUserFromToken(req);
     const result = await submission.operations.validateMultipleClinical({
@@ -176,6 +175,7 @@ class SubmissionController {
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async commitActiveSubmission(req: Request, res: Response) {
+    if (await submissionSystemIsLocked(res)) return;
     const { versionId, programId } = req.params;
     const updater = ControllerUtils.getUserFromToken(req);
     const activeSubmission = await submission2Clinical.commitClinicalSubmission({
@@ -188,6 +188,7 @@ class SubmissionController {
 
   @HasFullWriteAccess()
   async approveActiveSubmission(req: Request, res: Response) {
+    if (await submissionSystemIsLocked(res)) return;
     const { versionId, programId } = req.params;
     await submission2Clinical.approveClinicalSubmission({
       versionId,
@@ -198,6 +199,7 @@ class SubmissionController {
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async reopenActiveSubmission(req: Request, res: Response) {
+    if (await submissionSystemIsLocked(res)) return;
     const { versionId, programId } = req.params;
     const updater = ControllerUtils.getUserFromToken(req);
     const activeSubmission = await submission.operations.reopenClinicalSubmission({
@@ -207,7 +209,30 @@ class SubmissionController {
     });
     return res.status(200).send(activeSubmission);
   }
+
+  @HasFullWriteAccess()
+  async setSubmissionLockState(req: Request, res: Response) {
+    const { lockState } = req.params;
+    if (
+      lockState.toString().toLowerCase() !== 'true' &&
+      lockState.toString().toLowerCase() !== 'false'
+    ) {
+      return ControllerUtils.badRequest(res, 'Lock can only be true or false');
+    }
+    await submission.operations.setSubmissionLock(lockState);
+    return res.status(200).send(`Sample registration and submissions locked=${lockState}`);
+  }
 }
+
+const submissionSystemIsLocked = async (res: Response) => {
+  const submissionSystemLocked = await submission.operations.getSubmissionLockStatus();
+  if (submissionSystemLocked) {
+    L.debug(`Got submission request while submission system is locked`);
+    ControllerUtils.badRequest(res, `This submission operation is currently locked.`);
+    return true;
+  }
+  return false;
+};
 
 const isValidCreateBody = (req: Request, res: Response): boolean => {
   if (req.body === undefined) {
