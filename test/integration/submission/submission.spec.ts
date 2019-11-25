@@ -1654,7 +1654,7 @@ describe('Submission Api', () => {
         it('should report donor validation errors', async () => {
           await chai
             .request(app)
-            .patch('/submission/schema/dry-run-update')
+            .post('/submission/schema/dry-run-update')
             .send({
               version: '2.0',
             })
