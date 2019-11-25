@@ -53,7 +53,7 @@ paths:
               schema:
                 type: object
   /submission/schema/dry-run-update:
-    patch:
+    post:
       tags:
         - Schemas
       requestBody:
@@ -72,6 +72,19 @@ paths:
             application/json:
               schema:
                 type: object
+  /submission/schema/migration/resume:
+    post:
+      tags:
+        - Schemas
+      responses:
+        '200':
+          description: 'Resume an active migration'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
   /submission/schema/migration/{migrationId}:
     get:
       tags:

@@ -17,6 +17,7 @@ import {
 import { loggerFor } from '../logger';
 import { Checks, notEmpty, isEmptyString, isAbsent, F, isNotAbsent } from '../utils';
 import schemaErrorMessage from './schema-error-messages';
+import _ from 'lodash';
 const L = loggerFor(__filename);
 
 export const getSubSchemaFieldNamesWithPriority = (
@@ -92,7 +93,7 @@ export const process = (
 
 /**
  * Populate the passed records with the default value based on the field name if the field is
- * missing from the records it will be added.
+ * missing from the records it will NOT be added.
  * @param definition the name of the schema definition to use for these records
  * @param records the list of records to populate with the default values.
  */
@@ -138,6 +139,13 @@ const convertFromRawStrings = (
       )
     ) {
       return undefined;
+    }
+
+    /*
+     * if the field is missing from the records don't set it to undefined
+     */
+    if (!_.has(record, field.name)) {
+      return;
     }
 
     if (isEmptyString(record[field.name])) {
