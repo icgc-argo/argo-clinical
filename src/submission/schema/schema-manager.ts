@@ -20,6 +20,7 @@ import {
   ClinicalEntityType,
   MultiClinicalSubmissionCommand as SubmitMultiClinicalCommand,
   NewClinicalEntity,
+  RevalidateClinicalSubmissionCommand,
 } from '../submission-entities';
 import { notEmpty, Errors } from '../../utils';
 import _ from 'lodash';
@@ -28,7 +29,7 @@ const L = loggerFor(__filename);
 let manager: SchemaManager;
 
 class SchemaManager {
-  private currentSchema: SchemasDictionary = {
+  private currentSchemaDictionary: SchemasDictionary = {
     schemas: [],
     name: '',
     version: '',
@@ -36,15 +37,15 @@ class SchemaManager {
   constructor(private schemaServiceUrl: string) {}
 
   getCurrent = (): SchemasDictionary => {
-    return this.currentSchema;
+    return this.currentSchemaDictionary;
   };
 
   getSubSchemasList = (): string[] => {
-    return this.currentSchema.schemas.map(s => s.name);
+    return this.currentSchemaDictionary.schemas.map(s => s.name);
   };
 
-  getSubSchemaFieldNamesWithPriority = (definition: string): FieldNamesByPriorityMap => {
-    return service.getSubSchemaFieldNamesWithPriority(this.currentSchema, definition);
+  getSchemaFieldNamesWithPriority = (definition: string): FieldNamesByPriorityMap => {
+    return service.getSchemaFieldNamesWithPriority(this.currentSchemaDictionary, definition);
   };
 
   /**
@@ -72,7 +73,7 @@ class SchemaManager {
   analyzeChanges = async (oldVersion: string, newVersion: string) => {
     const result = await changeAnalyzer.fetchDiffAndAnalyze(
       this.schemaServiceUrl,
-      this.currentSchema.name,
+      this.currentSchemaDictionary.name,
       oldVersion,
       newVersion,
     );
@@ -85,8 +86,8 @@ class SchemaManager {
     if (!result) {
       throw new Error("couldn't save/update new schema.");
     }
-    this.currentSchema = result;
-    return this.currentSchema;
+    this.currentSchemaDictionary = result;
+    return this.currentSchemaDictionary;
   };
 
   loadSchemaByVersion = async (name: string, version: string): Promise<SchemasDictionary> => {
@@ -99,8 +100,8 @@ class SchemaManager {
     if (!result) {
       throw new Error("couldn't save/update new schema.");
     }
-    this.currentSchema = result;
-    return this.currentSchema;
+    this.currentSchemaDictionary = result;
+    return this.currentSchemaDictionary;
   };
 
   loadSchemaAndSave = async (name: string, initialVersion: string): Promise<SchemasDictionary> => {
@@ -111,31 +112,34 @@ class SchemaManager {
     const storedSchema = await schemaRepo.get(name);
     if (storedSchema === null) {
       L.info(`schema not found in db`);
-      this.currentSchema = {
+      this.currentSchemaDictionary = {
         schemas: [],
         name: name,
         version: initialVersion,
       };
     } else {
       L.info(`schema found in db`);
-      this.currentSchema = storedSchema;
+      this.currentSchemaDictionary = storedSchema;
     }
 
     // if the schema is not complete we need to load it from the
     // schema service (lectern)
-    if (!this.currentSchema.schemas || this.currentSchema.schemas.length === 0) {
+    if (
+      !this.currentSchemaDictionary.schemas ||
+      this.currentSchemaDictionary.schemas.length === 0
+    ) {
       L.debug(`fetching schema from schema service.`);
-      const result = await this.loadSchemaByVersion(name, this.currentSchema.version);
+      const result = await this.loadSchemaByVersion(name, this.currentSchemaDictionary.version);
       L.info(`fetched schema ${result.version}`);
-      this.currentSchema.schemas = result.schemas;
-      const saved = await schemaRepo.createOrUpdate(this.currentSchema);
+      this.currentSchemaDictionary.schemas = result.schemas;
+      const saved = await schemaRepo.createOrUpdate(this.currentSchemaDictionary);
       if (!saved) {
         throw new Error("couldn't save/update new schema");
       }
       L.info(`schema saved in db`);
       return saved;
     }
-    return this.currentSchema;
+    return this.currentSchemaDictionary;
   };
 
   updateSchemaVersion = async (toVersion: string, updater: string, sync?: boolean) => {
@@ -280,15 +284,16 @@ namespace MigrationManager {
     await checkDonorDocuments(migration, newTargetSchema);
 
     // only validate submission if it's not dry run
-    if (!migration.dryRun) {
-      await revalidateOpenSubmissionsWithNewSchema(migration, newTargetSchema);
-    }
+    await revalidateOpenSubmissionsWithNewSchema(migration, newTargetSchema, migration.dryRun);
+
     // close migration
     const updatedMigration = await migrationRepo.getById(migrationId);
     const migrationToClose = _.cloneDeep(updatedMigration) as DictionaryMigration;
+
     if (!migrationToClose) {
       throw new Error('where did the migration go? expected migration not found');
     }
+
     migrationToClose.state = 'CLOSED';
     migrationToClose.stage = 'COMPLETED';
     const closedMigration = await migrationRepo.update(migrationToClose);
@@ -298,12 +303,10 @@ namespace MigrationManager {
   const revalidateOpenSubmissionsWithNewSchema = async (
     migration: DictionaryMigration,
     newSchema: SchemasDictionary,
+    dryRun: boolean,
   ) => {
     const submissions = await submissionService.operations.findActiveClinicalSubmission();
     for (const sub of submissions) {
-      if (sub.updatedBy == `MIGRATION-${migration._id}`) {
-        continue;
-      }
       const keys = Object.keys(sub.clinicalEntities);
       const clinicalData: NewClinicalEntity[] = [];
 
@@ -315,12 +318,14 @@ namespace MigrationManager {
         });
       });
 
-      const command: SubmitMultiClinicalCommand = {
+      const command: RevalidateClinicalSubmissionCommand = {
         programId: sub.programId,
-        updater: `MIGRATION-${migration._id}`,
-        newClinicalData: clinicalData,
+        migrationId: migration._id as string,
       };
-      await submissionService.operations.submitMultiClinicalBatches(command, newSchema);
+
+      // TODO handle dry run case
+      // TODO handle marking submission as checked
+      await submissionService.operations.migrateMultiClinicalBatches(command, newSchema);
     }
   };
 

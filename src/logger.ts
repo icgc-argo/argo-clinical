@@ -19,7 +19,7 @@ const logConfiguration = {
 };
 
 export interface Logger {
-  error(msg: string, err: Error): void;
+  error(msg: string, err: Error | undefined): void;
   info(msg: string): void;
   debug(msg: string): void;
 }

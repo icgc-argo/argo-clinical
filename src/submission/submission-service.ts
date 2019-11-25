@@ -31,6 +31,7 @@ import {
   ClinicalEntityType,
   BatchNameRegex,
   ClinicalSubmissionRecordsByDonorIdMap,
+  RevalidateClinicalSubmissionCommand,
 } from './submission-entities';
 import * as schemaManager from './schema/schema-manager';
 import {
@@ -48,7 +49,6 @@ import { v1 as uuid } from 'uuid';
 import { validateSubmissionData, checkUniqueRecords } from './validation';
 import { batchErrorMessage } from './submission-error-messages';
 import { ClinicalSubmissionRecordsOperations } from './validation-clinical/utils';
-import { Schema } from 'mongoose';
 const L = loggerFor(__filename);
 
 const emptyStats = {
@@ -262,7 +262,6 @@ export namespace operations {
    */
   export const submitMultiClinicalBatches = async (
     command: MultiClinicalSubmissionCommand,
-    targetSchema?: SchemasDictionary,
   ): Promise<CreateSubmissionResult> => {
     // get program or create new one
     let exsistingActiveSubmission = await submissionRepository.findByProgramId(command.programId);
@@ -281,6 +280,7 @@ export namespace operations {
       command.newClinicalData,
       Object.values(ClinicalEntityType).filter(type => type !== ClinicalEntityType.REGISTRATION),
     );
+
     // Step 2 filter entites with invalid fieldNames
     const { filteredClinicalEntites, fieldNameErrors } = checkEntityFieldNames(
       newClinicalEntitesMap,
@@ -289,31 +289,32 @@ export namespace operations {
     const updatedClinicalEntites: ClinicalEntities = clearClinicalEnitytStats(
       exsistingActiveSubmission.clinicalEntities,
     );
+
     const createdAt: DeepReadonly<Date> = new Date();
-    const schemaErrors: { [k: string]: SubmissionValidationError[] } = {}; // object to store all errors for entity
+
+    // object to store all errors for entity
+    const schemaErrors: { [k: string]: SubmissionValidationError[] } = {};
+
     for (const [clinicalType, newClinicalEnity] of Object.entries(filteredClinicalEntites)) {
-      const {
-        schemaErrorsTemp: clinicalEntitySchemaErrors,
-        processedRecords,
-      } = await checkClinicalEntity(
+      const { schemaErrorsTemp, processedRecords } = await checkClinicalEntity(
         {
           records: newClinicalEnity.records,
           programId: command.programId,
           clinicalType: clinicalType,
         },
-        targetSchema || schemaManager.instance().getCurrent(),
+        schemaManager.instance().getCurrent(),
       );
 
-      if (clinicalEntitySchemaErrors.length > 0) {
+      if (schemaErrorsTemp.length > 0) {
         // store errors found and remove clinical type from clinical entities
-        schemaErrors[clinicalType] = clinicalEntitySchemaErrors;
+        schemaErrors[clinicalType] = schemaErrorsTemp;
         updatedClinicalEntites[clinicalType] = {
           batchName: newClinicalEnity.batchName,
           creator: newClinicalEnity.creator,
           createdAt: createdAt,
-          ...emptyStats,
+          schemaErrors: schemaErrorsTemp,
           records: [],
-          schemaErrors: clinicalEntitySchemaErrors,
+          ...emptyStats,
         };
         continue;
       }
@@ -321,9 +322,9 @@ export namespace operations {
       // update or add entity
       updatedClinicalEntites[clinicalType] = {
         batchName: newClinicalEnity.batchName,
-        schemaErrors: [],
         creator: newClinicalEnity.creator,
         createdAt: createdAt,
+        schemaErrors: [],
         records: processedRecords as any,
         ...emptyStats,
       };
@@ -346,8 +347,92 @@ export namespace operations {
 
     return {
       submission: updated,
+      schemaErrors: schemaErrors,
       successful: Object.keys(schemaErrors).length === 0,
       batchErrors: [...dataToEntityMapErrors, ...fieldNameErrors],
+    };
+  };
+
+  /**
+   * checks existing submission records against a target schema
+   * @param command RevalidateClinicalSubmissionCommand
+   * @param targetSchema the schema that the submission records will be validated with.
+   */
+  export const migrateMultiClinicalBatches = async (
+    command: RevalidateClinicalSubmissionCommand,
+    targetSchema: SchemasDictionary,
+    dryRun = false,
+  ): Promise<CreateSubmissionResult> => {
+    // get program or create new one
+    const exsistingActiveSubmission = await submissionRepository.findByProgramId(command.programId);
+    if (!exsistingActiveSubmission) {
+      throw new Error('trying to migrate non existing submission');
+    }
+
+    const existingClinicalEntities = _.cloneDeep(
+      exsistingActiveSubmission.clinicalEntities,
+    ) as ClinicalEntities;
+    const schemaErrors: { [k: string]: SubmissionValidationError[] } = {}; // object to store all errors for entity
+
+    for (const [clinicalType, clinicalEntityBatch] of Object.entries(existingClinicalEntities)) {
+      const {
+        schemaErrorsTemp: clinicalEntitySchemaErrors,
+        processedRecords,
+      } = await checkClinicalEntity(
+        {
+          records: clinicalEntityBatch.records,
+          programId: command.programId,
+          clinicalType: clinicalType,
+        },
+        targetSchema,
+      );
+
+      // if it doesn't pass the new schema
+      if (clinicalEntitySchemaErrors.length > 0) {
+        // store errors found and remove clinical type from clinical entities
+        schemaErrors[clinicalType] = clinicalEntitySchemaErrors;
+        existingClinicalEntities[clinicalType].schemaErrors = clinicalEntitySchemaErrors;
+        continue;
+      }
+    }
+
+    const successful = Object.keys(schemaErrors).length === 0;
+    let state = exsistingActiveSubmission.state;
+
+    // special state to indicate that the submission is invalid my migration process.
+    if (!successful) {
+      state = SUBMISSION_STATE.INVALID_BY_MIGRATION;
+    }
+
+    const newActiveSubmission: ActiveClinicalSubmission = {
+      programId: command.programId,
+      state: state,
+      version: '', // version is irrelevant here, repo will set it
+      clinicalEntities: existingClinicalEntities,
+      updatedBy: exsistingActiveSubmission.updatedBy,
+    };
+
+    // insert into database
+    if (dryRun) {
+      return {
+        submission: newActiveSubmission,
+        successful: successful,
+        schemaErrors: undefined,
+        batchErrors: [],
+      };
+    }
+
+    const updated = await submissionRepository.updateSubmissionWithVersion(
+      command.programId,
+      exsistingActiveSubmission.version,
+      newActiveSubmission,
+    );
+
+    return {
+      submission: updated,
+      successful: successful,
+      schemaErrors: undefined,
+      batchErrors: [],
     };
   };
 
@@ -771,7 +856,7 @@ export namespace operations {
       const commonFieldNamesSet = new Set(newClinicalEnity.fieldNames);
       const clinicalFieldNamesByPriorityMap = schemaManager
         .instance()
-        .getSubSchemaFieldNamesWithPriority(clinicalType);
+        .getSchemaFieldNamesWithPriority(clinicalType);
       const missingFields: string[] = [];
 
       clinicalFieldNamesByPriorityMap.required.forEach(requriedField => {
@@ -781,6 +866,7 @@ export namespace operations {
           commonFieldNamesSet.delete(requriedField);
         }
       });
+
       clinicalFieldNamesByPriorityMap.optional.forEach(optionalField =>
         commonFieldNamesSet.delete(optionalField),
       );
@@ -792,7 +878,7 @@ export namespace operations {
         continue;
       }
 
-      if (missingFields.length > 0)
+      if (missingFields.length > 0) {
         fieldNameErrors.push({
           message: batchErrorMessage(SubmissionBatchErrorTypes.MISSING_REQUIRED_HEADER, {
             missingFields,
@@ -800,7 +886,9 @@ export namespace operations {
           batchNames: [newClinicalEnity.batchName],
           code: SubmissionBatchErrorTypes.MISSING_REQUIRED_HEADER,
         });
-      if (unknownFields.length > 0)
+      }
+
+      if (unknownFields.length > 0) {
         fieldNameErrors.push({
           message: batchErrorMessage(SubmissionBatchErrorTypes.UNRECOGNIZED_HEADER, {
             unknownFields,
@@ -808,6 +896,7 @@ export namespace operations {
           batchNames: [newClinicalEnity.batchName],
           code: SubmissionBatchErrorTypes.UNRECOGNIZED_HEADER,
         });
+      }
     }
     return { filteredClinicalEntites, fieldNameErrors };
   };

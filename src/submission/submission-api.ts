@@ -9,8 +9,6 @@ import {
   NewClinicalEntity,
   SubmissionBatchError,
   SubmissionBatchErrorTypes,
-  ClinicalEntityType,
-  BatchNameRegex,
 } from './submission-entities';
 import { HasFullWriteAccess, HasProgramWriteAccess } from '../auth-decorators';
 import jwt from 'jsonwebtoken';
