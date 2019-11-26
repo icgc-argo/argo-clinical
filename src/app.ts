@@ -13,7 +13,7 @@ import dataRouter from './routes/data';
 import registrationRouter from './routes/registration';
 import submissionRouter from './routes/submission';
 import schemaRouter from './routes/schema';
-import adminRouter from './routes/admin';
+import configRouter from './routes/config';
 
 const L = loggerFor(__filename);
 
@@ -54,7 +54,7 @@ app.use(
 );
 
 /** Attach Routers */
-app.use('/admin', adminRouter);
+app.use('/submission/persistedConfig', configRouter);
 app.use('/submission/program/:programId/registration', registrationRouter);
 app.use('/submission/program/:programId/clinical', submissionRouter);
 app.use('/submission/schema', schemaRouter);

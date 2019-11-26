@@ -1,4 +1,4 @@
-import { loggerFor } from '../logger';
+import { loggerFor } from '../../logger';
 import mongoose from 'mongoose';
 
 const L = loggerFor(__filename);
@@ -12,17 +12,17 @@ export interface PersistedConfigurationRepository {
 
 export const configRepository: PersistedConfigurationRepository = {
   async createOrUpdate(configuration: any) {
-    return await ConfigurationModel.findOneAndUpdate(
+    return await PersistedConfigurationModel.findOneAndUpdate(
       {},
       { ...configuration },
       { upsert: true, new: true },
     ).exec();
   },
   async getPersistedConfig() {
-    return await ConfigurationModel.findOne({}).exec();
+    return await PersistedConfigurationModel.findOne({}).exec();
   },
   async setSubmissionDisabled(disabled: boolean) {
-    const updatedConfig = await ConfigurationModel.findOneAndUpdate(
+    const updatedConfig = await PersistedConfigurationModel.findOneAndUpdate(
       {},
       { submissionDisabled: disabled },
       { new: true },
@@ -33,7 +33,7 @@ export const configRepository: PersistedConfigurationRepository = {
     return updatedConfig.submissionDisabled;
   },
   async getSubmissionDisabled() {
-    const configuration = await ConfigurationModel.findOne({}).exec();
+    const configuration = await PersistedConfigurationModel.findOne({}).exec();
     if (!configuration) {
       throw new Error('Missing persisted configurations!');
     }
@@ -47,14 +47,14 @@ interface Configuration {
 
 type ConfigurationDocument = mongoose.Document & Configuration;
 
-const ConfigurationSchema = new mongoose.Schema(
+const PersistedConfigurationSchema = new mongoose.Schema(
   {
     submissionDisabled: { type: Boolean, default: false },
   },
   { timestamps: true, minimize: false },
 );
 
-export const ConfigurationModel = mongoose.model<ConfigurationDocument>(
-  'Configuration',
-  ConfigurationSchema,
+export const PersistedConfigurationModel = mongoose.model<ConfigurationDocument>(
+  'PersistedConfiguration',
+  PersistedConfigurationSchema,
 );

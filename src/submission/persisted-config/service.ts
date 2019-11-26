@@ -1,5 +1,5 @@
-import { configRepository } from './configuration-repo';
-import { loggerFor } from '../logger';
+import { configRepository } from './repo';
+import { loggerFor } from '../../logger';
 const L = loggerFor(__filename);
 
 // this can/will be moved outside of code base..

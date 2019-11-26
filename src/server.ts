@@ -4,7 +4,7 @@ import * as bootstrap from './bootstrap';
 import app from './app';
 import * as vault from './vault-k8s';
 import { Server } from 'http';
-import * as admin from './admin/service';
+import * as persistedConfig from './submission/persisted-config/service';
 
 let secrets: any = {};
 let server: Server;
@@ -55,7 +55,7 @@ let server: Server;
 
   await bootstrap.run(defaultAppConfigImpl);
 
-  await admin.operations.setDefaultPersistedConfig();
+  await persistedConfig.operations.setDefaultPersistedConfig();
 
   /**
    * Start Express server.

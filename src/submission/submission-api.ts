@@ -1,5 +1,5 @@
 import * as submission from './submission-service';
-import * as admin from '../admin/service';
+import * as persistedConfig from './persisted-config/service';
 import * as submission2Clinical from './submission-to-clinical/submission-to-clinical';
 import { Request, Response } from 'express';
 import { TsvUtils, ControllerUtils } from '../utils';
@@ -217,7 +217,7 @@ class SubmissionController {
 }
 
 const submissionSystemIsDisabled = async (res: Response) => {
-  const submissionSystemDisabled = await admin.operations.getSubmissionDisabledState();
+  const submissionSystemDisabled = await persistedConfig.operations.getSubmissionDisabledState();
   if (submissionSystemDisabled) {
     L.debug(`Got submission request while submission system is disabled`);
     ControllerUtils.serviceUnavailable(res, `This submission operation is currently unavailable.`);

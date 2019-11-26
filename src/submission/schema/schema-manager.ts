@@ -17,7 +17,7 @@ import { DeepReadonly } from 'deep-freeze';
 import * as clinicalService from '../../clinical/clinical-service';
 import { ClinicalEntityType } from '../submission-entities';
 import { notEmpty, Errors, sleep } from '../../utils';
-import * as admin from '../../admin/service';
+import * as persistedConfig from '../persisted-config/service';
 import _ from 'lodash';
 const L = loggerFor(__filename);
 
@@ -244,7 +244,9 @@ namespace MigrationManager {
     sync?: boolean,
   ) {
     // disable submissions system and wait for 2 sec to allow trailing activesubmission operations to complete
-    const submissionSystemDisabled = await admin.operations.setSubmissionDisabledState(true);
+    const submissionSystemDisabled = await persistedConfig.operations.setSubmissionDisabledState(
+      true,
+    );
     if (!submissionSystemDisabled)
       throw new Error('Failed to disable submissions system, aborting mirgraiton...');
     await sleep(2000);
@@ -286,6 +288,9 @@ namespace MigrationManager {
     migrationToClose.state = 'CLOSED';
     migrationToClose.stage = 'COMPLETED';
     const closedMigration = await migrationRepo.update(migrationToClose);
+
+    await persistedConfig.operations.setSubmissionDisabledState(false);
+
     return closedMigration;
   };
 

@@ -1,13 +1,13 @@
-import { ControllerUtils } from '../utils';
-import { HasFullWriteAccess } from '../auth-decorators';
+import { ControllerUtils } from '../../utils';
+import { HasFullWriteAccess } from '../../auth-decorators';
 import { Request, Response } from 'express';
-import * as admin from './service';
+import * as persistedConfig from './service';
 
 class AdminController {
   // no auth check because temporary hack
   async replacePersistedConfig(req: Request, res: Response) {
     const newConfiguration = req.body;
-    const result = await admin.operations.updatePersistedConifig(newConfiguration);
+    const result = await persistedConfig.operations.updatePersistedConifig(newConfiguration);
     return res.status(200).send(result);
   }
 
@@ -17,14 +17,14 @@ class AdminController {
     if (!Boolean(setDisabled)) {
       return ControllerUtils.badRequest(res, 'setDisabled can only be true or false');
     }
-    const disabled = await admin.operations.setSubmissionDisabledState(setDisabled);
+    const disabled = await persistedConfig.operations.setSubmissionDisabledState(setDisabled);
     return res
       .status(200)
       .send(`Sample registration and clinical submission system: disabled=${disabled}`);
   }
   @HasFullWriteAccess()
   async getSubmissionDisableState(req: Request, res: Response) {
-    const disabled = await admin.operations.getSubmissionDisabledState();
+    const disabled = await persistedConfig.operations.getSubmissionDisabledState();
     return res
       .status(200)
       .send(`Sample registration and clinical submission system: disabled=${disabled}`);

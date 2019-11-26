@@ -19,20 +19,20 @@ paths:
               schema:
                 type: object
 
-  /admin/submission/disable:
+  /submission/persistedConfig/submissionDisabled:
     get:
       tags:
-        - Admin
+        - Persisted Configurations
       summary: Get sample registration and clinical submission state
       responses:
         '200':
           description: 'Sample registration and Clinical Submission system disabled state'
     post:
       tags:
-        - Admin
+        - Persisted Configurations
       summary: Disable sample registration and clinical submission
       parameters:
-        - name: setDisable
+        - name: setDisabled
           description: the boolean state of the submission system lock
           in: query
           required: true
@@ -43,10 +43,10 @@ paths:
           description: 'Failed to lock system'
         '200':
           description: 'Sample registration and Clinical Submission lock state has been set'
-  /admin/persistedConfig/replace:
+  /submission/persistedConfig/replace:
     post:
       tags:
-        - Admin
+        - Persisted Configurations
       description: force replace persisted configurations
       requestBody:
         content:
@@ -730,7 +730,7 @@ servers:
 tags:
   - name: Health
     description: Service status monitoring
-  - name: Admin
+  - name: Persisted Configurations
     description: Admin functions
   - name: Schemas
     description: View and manage the Data Schema used by Argo-Clinical
