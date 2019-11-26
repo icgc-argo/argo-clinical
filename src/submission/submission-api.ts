@@ -18,6 +18,7 @@ const L = loggerFor(__filename);
 class SubmissionController {
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async getRegistrationByProgramId(req: Request, res: Response) {
+    if (await submissionSystemIsLocked(res)) return;
     L.debug('in getRegistrationByProgramId');
     const programId = req.params.programId;
     const registration = await submission.operations.findByProgramId(programId);
@@ -76,6 +77,7 @@ class SubmissionController {
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async deleteRegistration(req: Request, res: Response) {
+    if (await submissionSystemIsLocked(res)) return;
     const programId = req.params.programId;
     const registrationId = req.params.id;
     await submission.operations.deleteRegistration(registrationId, programId);
@@ -84,6 +86,7 @@ class SubmissionController {
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async getActiveSubmissionByProgramId(req: Request, res: Response) {
+    if (await submissionSystemIsLocked(res)) return;
     const programId = req.params.programId;
     const activeSubmission = await submission.operations.findSubmissionByProgramId(programId);
     if (activeSubmission === undefined) {
@@ -160,6 +163,7 @@ class SubmissionController {
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async clearFileFromActiveSubmission(req: Request, res: Response) {
+    if (await submissionSystemIsLocked(res)) return;
     const { programId, versionId, fileType } = req.params;
     const updater = ControllerUtils.getUserFromToken(req);
     L.debug(`Entering clearFileFromActiveSubmission: ${{ programId, versionId, fileType }}`);
@@ -212,15 +216,15 @@ class SubmissionController {
 
   @HasFullWriteAccess()
   async setSubmissionLockState(req: Request, res: Response) {
-    const { lockState } = req.params;
+    const { setLock } = req.query;
     if (
-      lockState.toString().toLowerCase() !== 'true' &&
-      lockState.toString().toLowerCase() !== 'false'
+      setLock.toString().toLowerCase() !== 'true' &&
+      setLock.toString().toLowerCase() !== 'false'
     ) {
       return ControllerUtils.badRequest(res, 'Lock can only be true or false');
     }
-    await submission.operations.setSubmissionLock(lockState);
-    return res.status(200).send(`Sample registration and submissions locked=${lockState}`);
+    await submission.operations.setSubmissionLock(setLock);
+    return res.status(200).send(`Sample registration and submissions: locked=${setLock}`);
   }
 }
 
