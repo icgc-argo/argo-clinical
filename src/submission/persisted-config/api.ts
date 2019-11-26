@@ -3,7 +3,7 @@ import { HasFullWriteAccess } from '../../auth-decorators';
 import { Request, Response } from 'express';
 import * as persistedConfig from './service';
 
-class AdminController {
+class PersistedConfigController {
   // no auth check because temporary hack
   async replacePersistedConfig(req: Request, res: Response) {
     const newConfiguration = req.body;
@@ -31,4 +31,4 @@ class AdminController {
   }
 }
 
-export default new AdminController();
+export default new PersistedConfigController();

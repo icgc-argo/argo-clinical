@@ -731,7 +731,7 @@ tags:
   - name: Health
     description: Service status monitoring
   - name: Persisted Configurations
-    description: Admin functions
+    description: Persisted configuration functions
   - name: Schemas
     description: View and manage the Data Schema used by Argo-Clinical
   - name: Sample Registration
