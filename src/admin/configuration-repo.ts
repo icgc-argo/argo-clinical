@@ -5,8 +5,8 @@ const L = loggerFor(__filename);
 
 export interface PersistedConfigurationRepository {
   createOrUpdate(configuration: any): Promise<Configuration>;
-  setSubmissionLock(lock: boolean): Promise<Configuration | null>;
-  getSubmissionLockStatus(): Promise<boolean>;
+  setSubmissionDisabled(disabled: boolean): Promise<boolean>;
+  getSubmissionDisabled(): Promise<boolean>;
 }
 
 export const configRepository: PersistedConfigurationRepository = {
@@ -17,35 +17,35 @@ export const configRepository: PersistedConfigurationRepository = {
       { upsert: true, new: true },
     ).exec();
   },
-  async setSubmissionLock(lockSetting: boolean): Promise<Configuration> {
+  async setSubmissionDisabled(disabled: boolean) {
     const updatedConfig = await ConfigurationModel.findOneAndUpdate(
       {},
-      { submissionLock: lockSetting },
+      { submissionDisabled: disabled },
       { new: true },
     ).exec();
     if (!updatedConfig) {
       throw new Error('Missing configurations!');
     }
-    return updatedConfig;
+    return updatedConfig.submissionDisabled;
   },
-  async getSubmissionLockStatus() {
+  async getSubmissionDisabled() {
     const configuration = await ConfigurationModel.findOne({}).exec();
     if (!configuration) {
       throw new Error('Missing configurations!');
     }
-    return configuration.submissionLock;
+    return configuration.submissionDisabled;
   },
 };
 
 interface Configuration {
-  submissionLock: boolean;
+  submissionDisabled: boolean;
 }
 
 type ConfigurationDocument = mongoose.Document & Configuration;
 
 const ConfigurationSchema = new mongoose.Schema(
   {
-    submissionLock: { type: Boolean, default: false },
+    submissionDisabled: { type: Boolean, default: false },
   },
   { timestamps: true, minimize: false },
 );

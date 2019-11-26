@@ -5,8 +5,8 @@ import adminAPI from '../admin/api';
 
 const router = express.Router();
 
-router.get('/submission/lock', wrapAsync(adminAPI.getSubmissionLockState));
-router.post('/submission/lock', wrapAsync(adminAPI.setSubmissionLockState));
+router.get('/submission/disable', wrapAsync(adminAPI.getSubmissionDisableState));
+router.post('/submission/disable', wrapAsync(adminAPI.setSubmissionDisableState));
 
 // hacks - for dev purpose
 router.post('/persistedConfig/replace', wrapAsync(adminAPI.replacePersistedConfig));

@@ -2,7 +2,7 @@ import { configRepository } from './configuration-repo';
 
 // this can/will be moved to a file..
 const defaultConfiguration = {
-  submissionLock: false,
+  submissionDisabled: false,
 };
 
 export namespace operations {
@@ -14,10 +14,10 @@ export namespace operations {
   };
 
   // *** Submission persisted-configuration operations ***
-  export const setSubmissionLock = async (lockSetting: boolean) => {
-    return await configRepository.setSubmissionLock(lockSetting);
+  export const setSubmissionDisabledState = async (disableSetting: boolean) => {
+    return await configRepository.setSubmissionDisabled(disableSetting);
   };
-  export const getSubmissionLockStatus = async () => {
-    return await configRepository.getSubmissionLockStatus();
+  export const getSubmissionDisabledState = async () => {
+    return await configRepository.getSubmissionDisabled();
   };
 }

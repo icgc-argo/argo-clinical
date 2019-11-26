@@ -12,21 +12,22 @@ class AdminController {
   }
 
   @HasFullWriteAccess()
-  async setSubmissionLockState(req: Request, res: Response) {
-    const { setLock } = req.query;
-    if (
-      setLock.toString().toLowerCase() !== 'true' &&
-      setLock.toString().toLowerCase() !== 'false'
-    ) {
-      return ControllerUtils.badRequest(res, 'Lock can only be true or false');
+  async setSubmissionDisableState(req: Request, res: Response) {
+    const { setDisabled } = req.query;
+    if (!Boolean(setDisabled)) {
+      return ControllerUtils.badRequest(res, 'setDisabled can only be true or false');
     }
-    await admin.operations.setSubmissionLock(setLock);
-    return res.status(200).send(`Sample registration and submissions: locked=${setLock}`);
+    const disabled = await admin.operations.setSubmissionDisabledState(setDisabled);
+    return res
+      .status(200)
+      .send(`Sample registration and clinical submission system: disabled=${disabled}`);
   }
   @HasFullWriteAccess()
-  async getSubmissionLockState(req: Request, res: Response) {
-    const lockState = await admin.operations.getSubmissionLockStatus();
-    return res.status(200).send(`Sample registration and submissions: locked=${lockState}`);
+  async getSubmissionDisableState(req: Request, res: Response) {
+    const disabled = await admin.operations.getSubmissionDisabledState();
+    return res
+      .status(200)
+      .send(`Sample registration and clinical submission system: disabled=${disabled}`);
   }
 }
 

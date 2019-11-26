@@ -16,7 +16,8 @@ import { Donor } from '../../clinical/clinical-entities';
 import { DeepReadonly } from 'deep-freeze';
 import * as clinicalService from '../../clinical/clinical-service';
 import { ClinicalEntityType } from '../submission-entities';
-import { notEmpty, Errors } from '../../utils';
+import { notEmpty, Errors, sleep } from '../../utils';
+import * as admin from '../../admin/service';
 import _ from 'lodash';
 const L = loggerFor(__filename);
 
@@ -242,6 +243,12 @@ namespace MigrationManager {
     migrationToRun: DeepReadonly<DictionaryMigration>,
     sync?: boolean,
   ) {
+    // disable submissions system and wait for 2 sec to allow trailing activesubmission operations to complete
+    const submissionSystemDisabled = await admin.operations.setSubmissionDisabledState(true);
+    if (!submissionSystemDisabled)
+      throw new Error('Failed to disable submissions system, aborting mirgraiton...');
+    await sleep(2000);
+
     // explicit sync so wait till done
     if (sync) {
       const result = await runMigration(migrationToRun);

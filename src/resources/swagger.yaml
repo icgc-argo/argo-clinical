@@ -19,13 +19,20 @@ paths:
               schema:
                 type: object
 
-  /admin/submission/lock:
+  /admin/submission/disable:
+    get:
+      tags:
+        - Admin
+      summary: Get sample registration and clinical submission state
+      responses:
+        '200':
+          description: 'Sample registration and Clinical Submission system disabled state'
     post:
       tags:
         - Admin
-      summary: Set sample registration and clinical submission lock state
+      summary: Disable sample registration and clinical submission
       parameters:
-        - name: setLock
+        - name: setDisable
           description: the boolean state of the submission system lock
           in: query
           required: true
@@ -36,6 +43,23 @@ paths:
           description: 'Failed to lock system'
         '200':
           description: 'Sample registration and Clinical Submission lock state has been set'
+  /admin/persistedConfig/replace:
+    post:
+      tags:
+        - Admin
+      description: force replace persisted configurations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: 'the current persisted configuration'
+          content:
+            application/json:
+              schema:
+                type: object
 
   /submission/schema:
     get:

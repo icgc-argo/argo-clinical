@@ -217,10 +217,10 @@ class SubmissionController {
 }
 
 const submissionSystemIsLocked = async (res: Response) => {
-  const submissionSystemLocked = await admin.operations.getSubmissionLockStatus();
+  const submissionSystemLocked = await admin.operations.getSubmissionDisabledState();
   if (submissionSystemLocked) {
-    L.debug(`Got submission request while submission system is locked`);
-    ControllerUtils.badRequest(res, `This submission operation is currently locked.`);
+    L.debug(`Got submission request while submission system is disabled`);
+    ControllerUtils.serviceUnavailable(res, `This submission operation is currently unavailable.`);
     return true;
   }
   return false;
