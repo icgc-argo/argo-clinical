@@ -9,6 +9,6 @@ router.get('/submission/lock', wrapAsync(adminAPI.getSubmissionLockState));
 router.post('/submission/lock', wrapAsync(adminAPI.setSubmissionLockState));
 
 // hacks - for dev purpose
-router.post('/config/replace', wrapAsync(adminAPI.replace));
+router.post('/persistedConfig/replace', wrapAsync(adminAPI.replacePersistedConfig));
 
 export default router;

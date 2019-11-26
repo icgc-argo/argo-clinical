@@ -4,17 +4,14 @@ import { Request, Response } from 'express';
 import * as admin from './service';
 
 class AdminController {
-  // temporary hack
-  async loadDefault(req: Request, res: Response) {
-    return res.status(200).send(await admin.operations.loadDefaultPersistedConfig());
-  }
-  async replace(req: Request, res: Response) {
+  // no auth check because temporary hack
+  async replacePersistedConfig(req: Request, res: Response) {
     const newConfiguration = req.body;
-    const result = await admin.operations.setConifugration(newConfiguration);
+    const result = await admin.operations.setPersistedConifig(newConfiguration);
     return res.status(200).send(result);
   }
 
-  // @HasFullWriteAccess()
+  @HasFullWriteAccess()
   async setSubmissionLockState(req: Request, res: Response) {
     const { setLock } = req.query;
     if (
@@ -26,7 +23,7 @@ class AdminController {
     await admin.operations.setSubmissionLock(setLock);
     return res.status(200).send(`Sample registration and submissions: locked=${setLock}`);
   }
-  // @HasFullWriteAccess()
+  @HasFullWriteAccess()
   async getSubmissionLockState(req: Request, res: Response) {
     const lockState = await admin.operations.getSubmissionLockStatus();
     return res.status(200).send(`Sample registration and submissions: locked=${lockState}`);

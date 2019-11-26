@@ -9,7 +9,7 @@ export namespace operations {
   export const loadDefaultPersistedConfig = async () => {
     return await configRepository.createOrUpdate(defaultConfiguration);
   };
-  export const setConifugration = async (configuration: object) => {
+  export const setPersistedConifig = async (configuration: object) => {
     return await configRepository.createOrUpdate(configuration);
   };
 
