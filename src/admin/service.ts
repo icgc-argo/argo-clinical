@@ -1,19 +1,28 @@
 import { configRepository } from './configuration-repo';
+import { loggerFor } from '../logger';
+const L = loggerFor(__filename);
 
-// this can/will be moved to a file..
+// this can/will be moved outside of code base..
 const defaultConfiguration = {
   submissionDisabled: false,
 };
 
 export namespace operations {
-  export const loadDefaultPersistedConfig = async () => {
-    return await configRepository.createOrUpdate(defaultConfiguration);
+  // load defaults if no persisted config present
+  export const setPersistedConfig = async () => {
+    const persistedConfig = await configRepository.getPersistedConfig();
+    if (persistedConfig) {
+      L.debug(`persistedConfig is already set: ${persistedConfig}`);
+      return persistedConfig;
+    }
+    L.debug(`persistedConfig not found setting defaults: ${defaultConfiguration}`);
+    await configRepository.createOrUpdate(defaultConfiguration);
   };
-  export const setPersistedConifig = async (configuration: object) => {
+  export const updatePersistedConifig = async (configuration: object) => {
     return await configRepository.createOrUpdate(configuration);
   };
 
-  // *** Submission persisted-configuration operations ***
+  // *** Submission persisted-config operations ***
   export const setSubmissionDisabledState = async (disableSetting: boolean) => {
     return await configRepository.setSubmissionDisabled(disableSetting);
   };

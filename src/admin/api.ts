@@ -7,7 +7,7 @@ class AdminController {
   // no auth check because temporary hack
   async replacePersistedConfig(req: Request, res: Response) {
     const newConfiguration = req.body;
-    const result = await admin.operations.setPersistedConifig(newConfiguration);
+    const result = await admin.operations.updatePersistedConifig(newConfiguration);
     return res.status(200).send(result);
   }
 
