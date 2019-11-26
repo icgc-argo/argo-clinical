@@ -18,9 +18,8 @@ import * as clinicalService from '../../clinical/clinical-service';
 import * as submissionService from '../submission-service';
 import {
   ClinicalEntityType,
-  MultiClinicalSubmissionCommand as SubmitMultiClinicalCommand,
-  NewClinicalEntity,
   RevalidateClinicalSubmissionCommand,
+  SUBMISSION_STATE,
 } from '../submission-entities';
 import { notEmpty, Errors } from '../../utils';
 import _ from 'lodash';
@@ -242,6 +241,8 @@ namespace MigrationManager {
         validDocumentsCount: 0,
       },
       invalidDonorsErrors: [],
+      invalidSubmissions: [],
+      checkedSubmissions: [],
     });
 
     if (!savedMigration) {
@@ -281,10 +282,9 @@ namespace MigrationManager {
       newSchemaVersion,
     );
 
-    await checkDonorDocuments(migration, newTargetSchema);
+    const migration1 = await checkDonorDocuments(migration, newTargetSchema);
 
-    // only validate submission if it's not dry run
-    await revalidateOpenSubmissionsWithNewSchema(migration, newTargetSchema, migration.dryRun);
+    await revalidateOpenSubmissionsWithNewSchema(migration1, newTargetSchema, migration.dryRun);
 
     // close migration
     const updatedMigration = await migrationRepo.getById(migrationId);
@@ -306,16 +306,26 @@ namespace MigrationManager {
     dryRun: boolean,
   ) => {
     const submissions = await submissionService.operations.findActiveClinicalSubmission();
-    for (const sub of submissions) {
-      const keys = Object.keys(sub.clinicalEntities);
-      const clinicalData: NewClinicalEntity[] = [];
 
-      keys.forEach((key: string) => {
-        clinicalData.push({
-          batchName: sub.clinicalEntities[key].batchName,
-          creator: sub.clinicalEntities[key].creator,
-          records: sub.clinicalEntities[key].records.map(prepareForSchemaReProcessing),
-        });
+    for (const sub of submissions) {
+      if (
+        sub.state == SUBMISSION_STATE.INVALID ||
+        sub.state == SUBMISSION_STATE.INVALID_BY_MIGRATION
+      ) {
+        continue;
+      }
+
+      const checkedSubmission = migration.checkedSubmissions.find(x => {
+        x._id = sub._id;
+      });
+
+      if (checkedSubmission) {
+        continue;
+      }
+
+      migration.checkedSubmissions.push({
+        programId: sub.programId,
+        id: sub._id,
       });
 
       const command: RevalidateClinicalSubmissionCommand = {
@@ -323,9 +333,23 @@ namespace MigrationManager {
         migrationId: migration._id as string,
       };
 
-      // TODO handle dry run case
-      // TODO handle marking submission as checked
-      await submissionService.operations.migrateMultiClinicalBatches(command, newSchema);
+      const result = await submissionService.operations.revalidateClinicalSubmission(
+        command,
+        newSchema,
+        dryRun,
+      );
+      if (!result.submission) {
+        continue;
+      }
+
+      if (result.submission.state == 'INVALID_BY_MIGRATION') {
+        migration.invalidSubmissions.push({
+          programId: sub.programId,
+          id: sub._id,
+        });
+      }
+
+      migration = await migrationRepo.update(migration);
     }
   };
 
@@ -392,6 +416,7 @@ namespace MigrationManager {
       migration.stats.totalProcessed += donors.length;
       migration = await migrationRepo.update(migration);
     }
+    return migration;
   };
 
   const getNextUncheckedDonorDocumentsBatch = async (migrationId: string, limit: number) => {

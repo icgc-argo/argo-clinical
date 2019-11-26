@@ -233,6 +233,7 @@ export enum SUBMISSION_STATE {
 }
 
 export interface ActiveClinicalSubmission {
+  _id?: string;
   programId: string;
   state: SUBMISSION_STATE;
   version: string;

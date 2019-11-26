@@ -38,7 +38,8 @@ export interface ClinicalSubmissionRepository {
 // Mongoose implementation of the ClinicalSubmissionRepository
 export const submissionRepository: ClinicalSubmissionRepository = {
   async findAll() {
-    return ActiveSubmissionModel.find({});
+    const activeSubmissions = await ActiveSubmissionModel.find({}).exec();
+    return activeSubmissions.map((as: any) => F(MongooseUtils.toPojo(as)));
   },
   async findById(id: string) {
     const registration = await ActiveSubmissionModel.findById(id);

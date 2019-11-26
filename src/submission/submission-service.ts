@@ -42,7 +42,7 @@ import {
   SchemasDictionary,
 } from '../lectern-client/schema-entities';
 import { loggerFor } from '../logger';
-import { Errors, F, isStringMatchRegex } from '../utils';
+import { Errors, F, isStringMatchRegex, toString } from '../utils';
 import { DeepReadonly } from 'deep-freeze';
 import { submissionRepository } from './submission-repo';
 import { v1 as uuid } from 'uuid';
@@ -358,7 +358,7 @@ export namespace operations {
    * @param command RevalidateClinicalSubmissionCommand
    * @param targetSchema the schema that the submission records will be validated with.
    */
-  export const migrateMultiClinicalBatches = async (
+  export const revalidateClinicalSubmission = async (
     command: RevalidateClinicalSubmissionCommand,
     targetSchema: SchemasDictionary,
     dryRun = false,
@@ -375,12 +375,9 @@ export namespace operations {
     const schemaErrors: { [k: string]: SubmissionValidationError[] } = {}; // object to store all errors for entity
 
     for (const [clinicalType, clinicalEntityBatch] of Object.entries(existingClinicalEntities)) {
-      const {
-        schemaErrorsTemp: clinicalEntitySchemaErrors,
-        processedRecords,
-      } = await checkClinicalEntity(
+      const { schemaErrorsTemp: clinicalEntitySchemaErrors } = await checkClinicalEntity(
         {
-          records: clinicalEntityBatch.records,
+          records: clinicalEntityBatch.records.map(prepareForSchemaReProcessing),
           programId: command.programId,
           clinicalType: clinicalType,
         },
@@ -928,4 +925,10 @@ export namespace operations {
     }
     return undefined;
   };
+}
+
+function prepareForSchemaReProcessing(record: object) {
+  // we copy to avoid frozen attributes
+  const copy = _.cloneDeep(record);
+  return toString(copy);
 }
