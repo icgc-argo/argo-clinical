@@ -55,7 +55,7 @@ let server: Server;
 
   await bootstrap.run(defaultAppConfigImpl);
 
-  await admin.operations.setPersistedConfig();
+  await admin.operations.setDefaultPersistedConfig();
 
   /**
    * Start Express server.

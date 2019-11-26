@@ -9,7 +9,7 @@ const defaultConfiguration = {
 
 export namespace operations {
   // load defaults if no persisted config present
-  export const setPersistedConfig = async () => {
+  export const setDefaultPersistedConfig = async () => {
     const persistedConfig = await configRepository.getPersistedConfig();
     if (persistedConfig) {
       L.debug(`persistedConfig is already set: ${persistedConfig}`);
