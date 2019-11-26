@@ -1,39 +1,26 @@
 import { loggerFor } from '../logger';
 import mongoose from 'mongoose';
-import { F, MongooseUtils } from '../utils';
 
 const L = loggerFor(__filename);
 
-export interface ConfigurationRepository {
+export interface PersistedConfigurationRepository {
+  createOrUpdate(configuration: any): Promise<Configuration>;
   setSubmissionLock(lock: boolean): Promise<Configuration | null>;
   getSubmissionLockStatus(): Promise<boolean>;
-  create(configuration: any): Promise<Configuration>;
-  update(configuration: any): Promise<Configuration>;
 }
 
-export const configRepository: ConfigurationRepository = {
-  async create(configuration: any) {
-    const existingConfiguration = await ConfigurationModel.findOne({}).exec();
-    if (existingConfiguration) {
-      throw new Error('Configuration already exists, can have only one');
-    }
-
-    const newconfiguration = new ConfigurationModel(configuration);
-    await newconfiguration.save();
-    return F(MongooseUtils.toPojo(newconfiguration));
-  },
-
-  async update(configuration: any) {
+export const configRepository: PersistedConfigurationRepository = {
+  async createOrUpdate(configuration: any) {
     return await ConfigurationModel.findOneAndUpdate(
       {},
       { ...configuration },
       { upsert: true, new: true },
     ).exec();
   },
-  async setSubmissionLock(lock: boolean): Promise<Configuration> {
+  async setSubmissionLock(lockSetting: boolean): Promise<Configuration> {
     const updatedConfig = await ConfigurationModel.findOneAndUpdate(
       {},
-      { submissionLock: lock },
+      { submissionLock: lockSetting },
       { new: true },
     ).exec();
     if (!updatedConfig) {
@@ -41,7 +28,6 @@ export const configRepository: ConfigurationRepository = {
     }
     return updatedConfig;
   },
-
   async getSubmissionLockStatus() {
     const configuration = await ConfigurationModel.findOne({}).exec();
     if (!configuration) {
@@ -59,7 +45,7 @@ type ConfigurationDocument = mongoose.Document & Configuration;
 
 const ConfigurationSchema = new mongoose.Schema(
   {
-    submissionLock: Boolean,
+    submissionLock: { type: Boolean, default: false },
   },
   { timestamps: true, minimize: false },
 );

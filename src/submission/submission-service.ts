@@ -47,7 +47,6 @@ import { v1 as uuid } from 'uuid';
 import { validateSubmissionData, checkUniqueRecords } from './validation';
 import { batchErrorMessage } from './submission-error-messages';
 import { ClinicalSubmissionRecordsOperations } from './validation-clinical/utils';
-import { configRepository } from './configuration-repo';
 const L = loggerFor(__filename);
 
 const emptyStats = {
@@ -61,13 +60,6 @@ const emptyStats = {
   },
 };
 export namespace operations {
-  export const setSubmissionLock = async (lockSetting: boolean) => {
-    return configRepository.setSubmissionLock(lockSetting);
-  };
-  export const getSubmissionLockStatus = async () => {
-    return configRepository.getSubmissionLockStatus();
-  };
-
   /**
    * This method creates an in progress registration after validating but doesn't create the donors in the donor collection
    * it overrides and deletes any previously uncomitted registrations.

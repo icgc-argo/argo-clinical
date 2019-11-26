@@ -1,6 +1,7 @@
 import * as submission from './submission-service';
+import * as admin from '../admin/service';
 import * as submission2Clinical from './submission-to-clinical/submission-to-clinical';
-import { Request, Response, RequestHandler, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import { TsvUtils, ControllerUtils } from '../utils';
 import { loggerFor } from '../logger';
 import {
@@ -213,23 +214,10 @@ class SubmissionController {
     });
     return res.status(200).send(activeSubmission);
   }
-
-  @HasFullWriteAccess()
-  async setSubmissionLockState(req: Request, res: Response) {
-    const { setLock } = req.query;
-    if (
-      setLock.toString().toLowerCase() !== 'true' &&
-      setLock.toString().toLowerCase() !== 'false'
-    ) {
-      return ControllerUtils.badRequest(res, 'Lock can only be true or false');
-    }
-    await submission.operations.setSubmissionLock(setLock);
-    return res.status(200).send(`Sample registration and submissions: locked=${setLock}`);
-  }
 }
 
 const submissionSystemIsLocked = async (res: Response) => {
-  const submissionSystemLocked = await submission.operations.getSubmissionLockStatus();
+  const submissionSystemLocked = await admin.operations.getSubmissionLockStatus();
   if (submissionSystemLocked) {
     L.debug(`Got submission request while submission system is locked`);
     ControllerUtils.badRequest(res, `This submission operation is currently locked.`);
