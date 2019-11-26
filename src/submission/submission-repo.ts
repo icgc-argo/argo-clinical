@@ -11,6 +11,7 @@ const L = loggerFor(__filename);
 export interface ClinicalSubmissionRepository {
   findAll(): Promise<DeepReadonly<ActiveClinicalSubmission[]>>;
   delete(id: string): Promise<void>;
+  deleteByProgramIdAndVersion(args: { programId: string; version: string }): Promise<void>;
   deleteByProgramId(id: string): Promise<void>;
   create(
     command: DeepReadonly<ActiveClinicalSubmission>,
@@ -106,6 +107,13 @@ export const submissionRepository: ClinicalSubmissionRepository = {
   ): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined> {
     return await this.updateSubmissionFieldsWithVersion(programId, version, updatedSubmission);
   },
+  async deleteByProgramIdAndVersion(args: { programId: string; version: string }): Promise<void> {
+    await ActiveSubmissionModel.findOneAndDelete({
+      programId: args.programId,
+      version: args.version,
+    });
+    return;
+  },
   // this is bassically findOneAndUpdate but with new version everytime
   async updateSubmissionFieldsWithVersion(
     programId: string,
@@ -113,21 +121,16 @@ export const submissionRepository: ClinicalSubmissionRepository = {
     updatingFields: DeepReadonly<ActiveClinicalSubmission>,
   ): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined> {
     try {
-      if (_.has(updatingFields, 'clinicalEntities') && _.isEmpty(updatingFields.clinicalEntities)) {
-        await ActiveSubmissionModel.findOneAndDelete({ programId, version });
-        return undefined;
-      } else {
-        const newVersion = uuid();
-        const updated = await ActiveSubmissionModel.findOneAndUpdate(
-          { programId, version },
-          { ...updatingFields, version: newVersion },
-          { new: true },
-        );
-        if (!updated) {
-          throw new Errors.StateConflict("Couldn't update program.");
-        }
-        return updated;
+      const newVersion = uuid();
+      const updated = await ActiveSubmissionModel.findOneAndUpdate(
+        { programId, version },
+        { ...updatingFields, version: newVersion },
+        { new: true },
+      );
+      if (!updated) {
+        throw new Errors.StateConflict("Couldn't update program.");
       }
+      return updated;
     } catch (err) {
       throw new InternalError(
         `failed to update ActiveSubmission with programId: ${programId} & version: ${version}`,

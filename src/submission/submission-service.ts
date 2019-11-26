@@ -206,47 +206,51 @@ export namespace operations {
 
     if (activeSubmission === undefined) {
       throw new Errors.NotFound('No active submission data found for this program.');
-    } else if (activeSubmission.version !== command.versionId) {
+    }
+
+    if (activeSubmission.version !== command.versionId) {
       throw new Errors.InvalidArgument(
         'Version ID provided does not match the latest submission version for this program.',
       );
-    } else if (activeSubmission.state === SUBMISSION_STATE.PENDING_APPROVAL) {
+    }
+
+    if (activeSubmission.state === SUBMISSION_STATE.PENDING_APPROVAL) {
       // confirm that the state is VALID
       throw new Errors.StateConflict(
         'Active submission is in PENDING_APPROVAL state and cannot be modified.',
       );
-    } else {
-      // Update clinical entities from the active submission
-      const updatedClinicalEntities: ClinicalEntities = {};
-      if (command.fileType !== 'all') {
-        for (const clinicalType in activeSubmission.clinicalEntities) {
-          if (clinicalType !== command.fileType) {
-            updatedClinicalEntities[clinicalType] = {
-              ...activeSubmission.clinicalEntities[clinicalType],
-              schemaErrors: [],
-              ...emptyStats,
-            };
-          }
+    }
+
+    // Update clinical entities from the active submission
+    const updatedClinicalEntities: ClinicalEntities = {};
+    if (command.fileType !== 'all') {
+      for (const clinicalType in activeSubmission.clinicalEntities) {
+        if (clinicalType !== command.fileType) {
+          updatedClinicalEntities[clinicalType] = {
+            ...activeSubmission.clinicalEntities[clinicalType],
+            schemaErrors: [],
+            ...emptyStats,
+          };
         }
       }
-      const newActiveSubmission: ActiveClinicalSubmission = {
-        programId: command.programId,
-        state: SUBMISSION_STATE.OPEN,
-        version: '', // version is irrelevant here, repo will set it
-        clinicalEntities: updatedClinicalEntities,
-        updatedBy: command.updater,
-      };
-      // insert into database
-      const updated = await submissionRepository.updateSubmissionWithVersion(
-        command.programId,
-        activeSubmission.version,
-        newActiveSubmission,
-      );
-      return updated;
     }
+    const newActiveSubmission: ActiveClinicalSubmission = {
+      programId: command.programId,
+      state: SUBMISSION_STATE.OPEN,
+      version: '', // version is irrelevant here, repo will set it
+      clinicalEntities: updatedClinicalEntities,
+      updatedBy: command.updater,
+    };
+    // insert into database
+    const updated = await updateSubmissionWithVersionOrDeleteEmpty(
+      command.programId,
+      activeSubmission.version,
+      newActiveSubmission,
+    );
+    return updated;
   };
 
-  export const findActiveClinicalSubmission = async () => {
+  export const findActiveClinicalSubmissions = async () => {
     return await submissionRepository.findAll();
   };
 
@@ -305,17 +309,13 @@ export namespace operations {
         schemaManager.instance().getCurrent(),
       );
 
+      // because there was a requirement to not keep an open empty submission
+      // we have to return a fake submission object in case there are schema errors
+      // after the update/delete submission is callled below
       if (schemaErrorsTemp.length > 0) {
         // store errors found and remove clinical type from clinical entities
         schemaErrors[clinicalType] = schemaErrorsTemp;
-        updatedClinicalEntites[clinicalType] = {
-          batchName: newClinicalEnity.batchName,
-          creator: newClinicalEnity.creator,
-          createdAt: createdAt,
-          schemaErrors: schemaErrorsTemp,
-          records: [],
-          ...emptyStats,
-        };
+        delete updatedClinicalEntites[clinicalType];
         continue;
       }
 
@@ -339,14 +339,30 @@ export namespace operations {
     };
 
     // insert into database
-    const updated = await submissionRepository.updateSubmissionWithVersion(
+    let updated = (await updateSubmissionWithVersionOrDeleteEmpty(
       command.programId,
       exsistingActiveSubmission.version,
       newActiveSubmission,
-    );
+    )) as ActiveClinicalSubmission;
+
+    if (updated == undefined) {
+      updated = {
+        clinicalEntities: {},
+        programId: newActiveSubmission.programId,
+        state: newActiveSubmission.state,
+        version: '',
+        updatedBy: newActiveSubmission.updatedBy,
+      };
+    }
+    // put the schema errors in each clinical entity
+    for (const clinicalType in schemaErrors) {
+      updated.clinicalEntities[clinicalType] = {} as any;
+      updated.clinicalEntities[clinicalType].schemaErrors = schemaErrors[clinicalType];
+    }
 
     return {
       submission: updated,
+      // this is only here for backward compatibility, will be removed in future PR.
       schemaErrors: schemaErrors,
       successful: Object.keys(schemaErrors).length === 0,
       batchErrors: [...dataToEntityMapErrors, ...fieldNameErrors],
@@ -419,7 +435,7 @@ export namespace operations {
       };
     }
 
-    const updated = await submissionRepository.updateSubmissionWithVersion(
+    const updated = await updateSubmissionWithVersionOrDeleteEmpty(
       command.programId,
       exsistingActiveSubmission.version,
       newActiveSubmission,
@@ -931,4 +947,22 @@ function prepareForSchemaReProcessing(record: object) {
   // we copy to avoid frozen attributes
   const copy = _.cloneDeep(record);
   return toString(copy);
+}
+
+// this is bassically findOneAndUpdate but with new version everytime
+async function updateSubmissionWithVersionOrDeleteEmpty(
+  programId: string,
+  version: string,
+  updatingFields: DeepReadonly<ActiveClinicalSubmission>,
+): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined> {
+  if (_.has(updatingFields, 'clinicalEntities') && _.isEmpty(updatingFields.clinicalEntities)) {
+    await submissionRepository.deleteByProgramIdAndVersion({ programId, version });
+    return undefined;
+  }
+
+  return await submissionRepository.updateSubmissionFieldsWithVersion(
+    programId,
+    version,
+    updatingFields,
+  );
 }

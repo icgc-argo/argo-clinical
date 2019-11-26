@@ -305,7 +305,7 @@ namespace MigrationManager {
     newSchema: SchemasDictionary,
     dryRun: boolean,
   ) => {
-    const submissions = await submissionService.operations.findActiveClinicalSubmission();
+    const submissions = await submissionService.operations.findActiveClinicalSubmissions();
 
     for (const sub of submissions) {
       if (
