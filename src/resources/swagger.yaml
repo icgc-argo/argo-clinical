@@ -19,6 +19,24 @@ paths:
               schema:
                 type: object
 
+  /admin/submission/lock:
+    get:
+      tags:
+        - Admin
+      summary: Set sample registration and clinical submission lock state
+      parameters:
+        - name: lockState
+          description: the boolean state of the submission system lock
+          in: path
+          required: true
+          schema:
+            type: boolean
+      responses:
+        '500':
+          description: 'Failed to lock system'
+        '200':
+          description: 'Sample registration and Clinical Submission lock state has been set'
+
   /submission/schema:
     get:
       tags:
@@ -688,6 +706,8 @@ servers:
 tags:
   - name: Health
     description: Service status monitoring
+  - name: Admin
+    description: Admin functions
   - name: Schemas
     description: View and manage the Data Schema used by Argo-Clinical
   - name: Sample Registration
