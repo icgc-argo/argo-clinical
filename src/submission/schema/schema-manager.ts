@@ -282,9 +282,13 @@ namespace MigrationManager {
       newSchemaVersion,
     );
 
-    const migration1 = await checkDonorDocuments(migration, newTargetSchema);
+    const migrationAfterDonorCheck = await checkDonorDocuments(migration, newTargetSchema);
 
-    await revalidateOpenSubmissionsWithNewSchema(migration1, newTargetSchema, migration.dryRun);
+    const migrationAfterSubmissionsCheck = await revalidateOpenSubmissionsWithNewSchema(
+      migrationAfterDonorCheck,
+      newTargetSchema,
+      migration.dryRun,
+    );
 
     // close migration
     const updatedMigration = await migrationRepo.getById(migrationId);
@@ -309,14 +313,14 @@ namespace MigrationManager {
 
     for (const sub of submissions) {
       if (
-        sub.state == SUBMISSION_STATE.INVALID ||
-        sub.state == SUBMISSION_STATE.INVALID_BY_MIGRATION
+        sub.state === SUBMISSION_STATE.INVALID ||
+        sub.state === SUBMISSION_STATE.INVALID_BY_MIGRATION
       ) {
         continue;
       }
 
       const checkedSubmission = migration.checkedSubmissions.find(x => {
-        x._id = sub._id;
+        return x._id == sub._id;
       });
 
       if (checkedSubmission) {
@@ -338,11 +342,12 @@ namespace MigrationManager {
         newSchema,
         dryRun,
       );
+
       if (!result.submission) {
         continue;
       }
 
-      if (result.submission.state == 'INVALID_BY_MIGRATION') {
+      if (result.submission.state === 'INVALID_BY_MIGRATION') {
         migration.invalidSubmissions.push({
           programId: sub.programId,
           id: sub._id,
@@ -351,6 +356,7 @@ namespace MigrationManager {
 
       migration = await migrationRepo.update(migration);
     }
+    return migration;
   };
 
   // start iterating over paged donor documents records (that weren't checked before)

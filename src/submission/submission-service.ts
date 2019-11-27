@@ -345,7 +345,7 @@ export namespace operations {
       newActiveSubmission,
     )) as ActiveClinicalSubmission;
 
-    if (updated == undefined) {
+    if (updated === undefined) {
       updated = {
         clinicalEntities: {},
         programId: newActiveSubmission.programId,
