@@ -19,7 +19,7 @@ paths:
               schema:
                 type: object
 
-  /submission/persistedConfig/submissionDisabled:
+  /submission/persisted-config/submissionDisabled:
     get:
       tags:
         - Persisted Configurations
@@ -27,24 +27,26 @@ paths:
       responses:
         '200':
           description: 'Sample registration and Clinical Submission system disabled state'
-    post:
+    patch:
       tags:
         - Persisted Configurations
       summary: Disable sample registration and clinical submission
-      parameters:
-        - name: setDisabled
-          description: the boolean state to set for submissionDisabled
-          in: query
-          required: true
-          schema:
-            type: boolean
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                setDisabled:
+                  description: the new schema version to update to.
+                  type: boolean
       responses:
         '500':
           description: 'Failed to set submissionDisabled'
         '200':
           description: 'Sample registration and Clinical Submission disabled state has been set'
-  /submission/persistedConfig/replace:
-    post:
+  /submission/persisted-config/replace:
+    patch:
       tags:
         - Persisted Configurations
       description: force replace persisted configurations

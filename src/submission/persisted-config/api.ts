@@ -13,9 +13,9 @@ class PersistedConfigController {
 
   @HasFullWriteAccess()
   async setSubmissionDisabledState(req: Request, res: Response) {
-    const { setDisabled } = req.query;
-    if (!Boolean(setDisabled)) {
-      return ControllerUtils.badRequest(res, 'setDisabled can only be true or false');
+    const { setDisabled } = req.body;
+    if (typeof setDisabled !== 'boolean') {
+      return ControllerUtils.badRequest(res, 'setDisabled can only be boolean true or false');
     }
     const disabled = await persistedConfig.operations.setSubmissionDisabledState(setDisabled);
     return res

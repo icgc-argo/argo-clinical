@@ -6,9 +6,9 @@ import configAPI from '../submission/persisted-config/api';
 const router = express.Router();
 
 router.get('/submissionDisabled', wrapAsync(configAPI.getSubmissionDisabledState));
-router.post('/submissionDisabled', wrapAsync(configAPI.setSubmissionDisabledState));
+router.patch('/submissionDisabled', wrapAsync(configAPI.setSubmissionDisabledState));
 
 // hacks - for dev purpose
-router.post('/replace', wrapAsync(configAPI.replacePersistedConfig));
+router.patch('/replace', wrapAsync(configAPI.replacePersistedConfig));
 
 export default router;
