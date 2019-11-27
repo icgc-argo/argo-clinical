@@ -425,16 +425,16 @@ export namespace operations {
       updatedBy: exsistingActiveSubmission.updatedBy,
     };
 
-    // insert into database
+    // if dry run, then we don't actually want to update the submission we just return the result now
     if (dryRun) {
       return {
         submission: newActiveSubmission,
         successful: successful,
-        schemaErrors: undefined,
         batchErrors: [],
       };
     }
 
+    // update the submission, it will not delete since we keep all clinical entities
     const updated = await updateSubmissionWithVersionOrDeleteEmpty(
       command.programId,
       exsistingActiveSubmission.version,
@@ -444,7 +444,6 @@ export namespace operations {
     return {
       submission: updated,
       successful: successful,
-      schemaErrors: undefined,
       batchErrors: [],
     };
   };
