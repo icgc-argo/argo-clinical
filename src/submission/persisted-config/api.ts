@@ -12,7 +12,7 @@ class PersistedConfigController {
   }
 
   @HasFullWriteAccess()
-  async setSubmissionDisableState(req: Request, res: Response) {
+  async setSubmissionDisabledState(req: Request, res: Response) {
     const { setDisabled } = req.query;
     if (!Boolean(setDisabled)) {
       return ControllerUtils.badRequest(res, 'setDisabled can only be true or false');
@@ -23,7 +23,7 @@ class PersistedConfigController {
       .send(`Sample registration and clinical submission system: disabled=${disabled}`);
   }
   @HasFullWriteAccess()
-  async getSubmissionDisableState(req: Request, res: Response) {
+  async getSubmissionDisabledState(req: Request, res: Response) {
     const disabled = await persistedConfig.operations.getSubmissionDisabledState();
     return res
       .status(200)

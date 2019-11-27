@@ -33,16 +33,16 @@ paths:
       summary: Disable sample registration and clinical submission
       parameters:
         - name: setDisabled
-          description: the boolean state of the submission system lock
+          description: the boolean state to set for submissionDisabled
           in: query
           required: true
           schema:
             type: boolean
       responses:
         '500':
-          description: 'Failed to lock system'
+          description: 'Failed to set submissionDisabled'
         '200':
-          description: 'Sample registration and Clinical Submission lock state has been set'
+          description: 'Sample registration and Clinical Submission disabled state has been set'
   /submission/persistedConfig/replace:
     post:
       tags:
