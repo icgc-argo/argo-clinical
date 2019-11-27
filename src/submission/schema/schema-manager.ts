@@ -44,7 +44,7 @@ class SchemaManager {
 
   /**
    * This method does three things:
-   * 1- populate default values for missing fields
+   * 1- populate default values for empty optional fields
    * 2- validate the record against the schema
    * 3- convert the raw data from strings to their proper type if needed.
    *
@@ -158,6 +158,10 @@ class SchemaManager {
   getMigration = async (migrationId: string | undefined) => {
     return await MigrationManager.getMigration(migrationId);
   };
+
+  resumeMigration = async (sync: boolean) => {
+    return await MigrationManager.resumeMigration(sync);
+  };
 }
 
 export function instance() {
@@ -186,6 +190,15 @@ namespace MigrationManager {
       throw new Errors.NotFound(`no migration with that id ${migrationId}`);
     }
     return [openMigration];
+  };
+
+  export const resumeMigration = async (sync?: boolean) => {
+    const openMigration = await migrationRepo.getByState('OPEN');
+    if (!openMigration) {
+      throw new Errors.NotFound(`No active migration found!`);
+    }
+
+    return await runMigrationSyncOrAsync(openMigration, sync || openMigration.dryRun);
   };
 
   export const submitMigration = async (
@@ -222,22 +235,25 @@ namespace MigrationManager {
       throw new Error('failed to submit migration');
     }
 
-    if (dryRun) {
-      const result = await startMigration(savedMigration);
+    return await runMigrationSyncOrAsync(savedMigration, sync || savedMigration.dryRun);
+  };
+
+  async function runMigrationSyncOrAsync(
+    migrationToRun: DeepReadonly<DictionaryMigration>,
+    sync?: boolean,
+  ) {
+    // explicit sync so wait till done
+    if (sync) {
+      const result = await runMigration(migrationToRun);
       return result;
     }
 
-    if (sync) {
-      await startMigration(savedMigration);
-      return savedMigration;
-    }
-
     // start but **DONT** await on the migration process to finish.
-    startMigration(savedMigration);
-    return savedMigration;
-  };
+    runMigration(migrationToRun);
+    return migrationToRun;
+  }
 
-  const startMigration = async (roMigration: DeepReadonly<DictionaryMigration>) => {
+  const runMigration = async (roMigration: DeepReadonly<DictionaryMigration>) => {
     const migration = _.cloneDeep(roMigration) as DictionaryMigration;
 
     if (!migration._id) {
