@@ -146,4 +146,18 @@ export const sleep = async (milliSeconds: number = 2000) => {
   return new Promise(resolve => setTimeout(resolve, milliSeconds));
 };
 
+export function toString(obj: any) {
+  if (!obj) {
+    return undefined;
+  }
+  Object.keys(obj).forEach(k => {
+    if (typeof obj[k] === 'object') {
+      return toString(obj[k]);
+    }
+    obj[k] = `${obj[k]}`;
+  });
+
+  return obj;
+}
+
 export const F = deepFreeze;

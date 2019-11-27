@@ -15,16 +15,21 @@ import { DictionaryMigration } from './migration-entities';
 import { Donor } from '../../clinical/clinical-entities';
 import { DeepReadonly } from 'deep-freeze';
 import * as clinicalService from '../../clinical/clinical-service';
-import { ClinicalEntityType } from '../submission-entities';
-import { notEmpty, Errors, sleep } from '../../utils';
 import * as persistedConfig from '../persisted-config/service';
+import * as submissionService from '../submission-service';
+import {
+  ClinicalEntityType,
+  RevalidateClinicalSubmissionCommand,
+  SUBMISSION_STATE,
+} from '../submission-entities';
+import { notEmpty, Errors, sleep } from '../../utils';
 import _ from 'lodash';
 const L = loggerFor(__filename);
 
 let manager: SchemaManager;
 
 class SchemaManager {
-  private currentSchema: SchemasDictionary = {
+  private currentSchemaDictionary: SchemasDictionary = {
     schemas: [],
     name: '',
     version: '',
@@ -32,15 +37,15 @@ class SchemaManager {
   constructor(private schemaServiceUrl: string) {}
 
   getCurrent = (): SchemasDictionary => {
-    return this.currentSchema;
+    return this.currentSchemaDictionary;
   };
 
   getSubSchemasList = (): string[] => {
-    return this.currentSchema.schemas.map(s => s.name);
+    return this.currentSchemaDictionary.schemas.map(s => s.name);
   };
 
-  getSubSchemaFieldNamesWithPriority = (definition: string): FieldNamesByPriorityMap => {
-    return service.getSubSchemaFieldNamesWithPriority(this.currentSchema, definition);
+  getSchemaFieldNamesWithPriority = (definition: string): FieldNamesByPriorityMap => {
+    return service.getSchemaFieldNamesWithPriority(this.currentSchemaDictionary, definition);
   };
 
   /**
@@ -54,17 +59,21 @@ class SchemaManager {
    *
    * @returns object contains the validation errors and the valid processed records.
    */
-  process = (schemaName: string, records: ReadonlyArray<DataRecord>): SchemaProcessingResult => {
-    if (this.getCurrent() === undefined) {
+  process = (
+    schemaName: string,
+    records: ReadonlyArray<DataRecord>,
+    schema?: SchemasDictionary,
+  ): SchemaProcessingResult => {
+    if (!schema && this.getCurrent() === undefined) {
       throw new Error('schema manager not initialized correctly');
     }
-    return service.process(this.getCurrent(), schemaName, records);
+    return service.process(schema || this.getCurrent(), schemaName, records);
   };
 
   analyzeChanges = async (oldVersion: string, newVersion: string) => {
     const result = await changeAnalyzer.fetchDiffAndAnalyze(
       this.schemaServiceUrl,
-      this.currentSchema.name,
+      this.currentSchemaDictionary.name,
       oldVersion,
       newVersion,
     );
@@ -77,8 +86,8 @@ class SchemaManager {
     if (!result) {
       throw new Error("couldn't save/update new schema.");
     }
-    this.currentSchema = result;
-    return this.currentSchema;
+    this.currentSchemaDictionary = result;
+    return this.currentSchemaDictionary;
   };
 
   loadSchemaByVersion = async (name: string, version: string): Promise<SchemasDictionary> => {
@@ -91,8 +100,8 @@ class SchemaManager {
     if (!result) {
       throw new Error("couldn't save/update new schema.");
     }
-    this.currentSchema = result;
-    return this.currentSchema;
+    this.currentSchemaDictionary = result;
+    return this.currentSchemaDictionary;
   };
 
   loadSchemaAndSave = async (name: string, initialVersion: string): Promise<SchemasDictionary> => {
@@ -103,31 +112,34 @@ class SchemaManager {
     const storedSchema = await schemaRepo.get(name);
     if (storedSchema === null) {
       L.info(`schema not found in db`);
-      this.currentSchema = {
+      this.currentSchemaDictionary = {
         schemas: [],
         name: name,
         version: initialVersion,
       };
     } else {
       L.info(`schema found in db`);
-      this.currentSchema = storedSchema;
+      this.currentSchemaDictionary = storedSchema;
     }
 
     // if the schema is not complete we need to load it from the
     // schema service (lectern)
-    if (!this.currentSchema.schemas || this.currentSchema.schemas.length === 0) {
+    if (
+      !this.currentSchemaDictionary.schemas ||
+      this.currentSchemaDictionary.schemas.length === 0
+    ) {
       L.debug(`fetching schema from schema service.`);
-      const result = await this.loadSchemaByVersion(name, this.currentSchema.version);
+      const result = await this.loadSchemaByVersion(name, this.currentSchemaDictionary.version);
       L.info(`fetched schema ${result.version}`);
-      this.currentSchema.schemas = result.schemas;
-      const saved = await schemaRepo.createOrUpdate(this.currentSchema);
+      this.currentSchemaDictionary.schemas = result.schemas;
+      const saved = await schemaRepo.createOrUpdate(this.currentSchemaDictionary);
       if (!saved) {
         throw new Error("couldn't save/update new schema");
       }
       L.info(`schema saved in db`);
       return saved;
     }
-    return this.currentSchema;
+    return this.currentSchemaDictionary;
   };
 
   updateSchemaVersion = async (toVersion: string, updater: string, sync?: boolean) => {
@@ -230,6 +242,8 @@ namespace MigrationManager {
         validDocumentsCount: 0,
       },
       invalidDonorsErrors: [],
+      invalidSubmissions: [],
+      checkedSubmissions: [],
     });
 
     if (!savedMigration) {
@@ -277,14 +291,22 @@ namespace MigrationManager {
       newSchemaVersion,
     );
 
-    await checkDonorDocuments(migration, newTargetSchema);
+    const migrationAfterDonorCheck = await checkDonorDocuments(migration, newTargetSchema);
+
+    const migrationAfterSubmissionsCheck = await revalidateOpenSubmissionsWithNewSchema(
+      migrationAfterDonorCheck,
+      newTargetSchema,
+      migration.dryRun,
+    );
 
     // close migration
     const updatedMigration = await migrationRepo.getById(migrationId);
     const migrationToClose = _.cloneDeep(updatedMigration) as DictionaryMigration;
+
     if (!migrationToClose) {
       throw new Error('where did the migration go? expected migration not found');
     }
+
     migrationToClose.state = 'CLOSED';
     migrationToClose.stage = 'COMPLETED';
     const closedMigration = await migrationRepo.update(migrationToClose);
@@ -292,6 +314,61 @@ namespace MigrationManager {
     await persistedConfig.operations.setSubmissionDisabledState(false);
 
     return closedMigration;
+  };
+
+  const revalidateOpenSubmissionsWithNewSchema = async (
+    migration: DictionaryMigration,
+    newSchema: SchemasDictionary,
+    dryRun: boolean,
+  ) => {
+    const submissions = await submissionService.operations.findActiveClinicalSubmissions();
+
+    for (const sub of submissions) {
+      if (
+        sub.state === SUBMISSION_STATE.INVALID ||
+        sub.state === SUBMISSION_STATE.INVALID_BY_MIGRATION
+      ) {
+        continue;
+      }
+
+      const checkedSubmission = migration.checkedSubmissions.find(x => {
+        return x._id == sub._id;
+      });
+
+      if (checkedSubmission) {
+        continue;
+      }
+
+      migration.checkedSubmissions.push({
+        programId: sub.programId,
+        id: sub._id,
+      });
+
+      const command: RevalidateClinicalSubmissionCommand = {
+        programId: sub.programId,
+        migrationId: migration._id as string,
+      };
+
+      const result = await submissionService.operations.revalidateClinicalSubmission(
+        command,
+        newSchema,
+        dryRun,
+      );
+
+      if (!result.submission) {
+        continue;
+      }
+
+      if (result.submission.state === 'INVALID_BY_MIGRATION') {
+        migration.invalidSubmissions.push({
+          programId: sub.programId,
+          id: sub._id,
+        });
+      }
+
+      migration = await migrationRepo.update(migration);
+    }
+    return migration;
   };
 
   // start iterating over paged donor documents records (that weren't checked before)
@@ -357,6 +434,7 @@ namespace MigrationManager {
       migration.stats.totalProcessed += donors.length;
       migration = await migrationRepo.update(migration);
     }
+    return migration;
   };
 
   const getNextUncheckedDonorDocumentsBatch = async (migrationId: string, limit: number) => {
