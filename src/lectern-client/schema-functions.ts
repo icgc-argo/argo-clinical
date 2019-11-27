@@ -20,7 +20,7 @@ import schemaErrorMessage from './schema-error-messages';
 import _ from 'lodash';
 const L = loggerFor(__filename);
 
-export const getSubSchemaFieldNamesWithPriority = (
+export const getSchemaFieldNamesWithPriority = (
   schema: SchemasDictionary,
   definition: string,
 ): FieldNamesByPriorityMap => {

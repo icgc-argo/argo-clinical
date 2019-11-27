@@ -70,6 +70,8 @@ const DictionaryMigrationSchema = new mongoose.Schema(
     },
     analysis: {},
     invalidDonorsErrors: [],
+    invalidSubmissions: [],
+    checkedSubmissions: [],
     dryRun: { type: Boolean, required: false },
     stats: {},
     createdBy: { type: String, required: true },

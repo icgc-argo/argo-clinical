@@ -9,8 +9,6 @@ import {
   NewClinicalEntity,
   SubmissionBatchError,
   SubmissionBatchErrorTypes,
-  ClinicalEntityType,
-  BatchNameRegex,
 } from './submission-entities';
 import { HasFullWriteAccess, HasProgramWriteAccess } from '../auth-decorators';
 import jwt from 'jsonwebtoken';
@@ -132,7 +130,7 @@ class SubmissionController {
       programId: req.params.programId,
       updater: user,
     };
-    const result = await submission.operations.uploadMultipleClinical(command);
+    const result = await submission.operations.submitMultiClinicalBatches(command);
     let status = 200;
     if (!result.successful) {
       status = 422;
