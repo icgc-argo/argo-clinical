@@ -15,7 +15,8 @@ router.post('/dry-run-update', wrapAsync(schemaApi.schemaController.dryRunUpdate
 router.get('/changes', wrapAsync(schemaApi.schemaController.probe));
 
 // returns a list of all sub-schemas except sample_registration
-router.get('/list', wrapAsync(schemaApi.getAllSchemas));
+router.get('/list', wrapAsync(schemaApi.getClinicalEntities));
+
 // this takes precedence over /:schemaName
 router.get('/template/all', wrapAsync(schemaApi.getAllTemplates));
 // get template for a given schema
