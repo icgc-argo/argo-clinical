@@ -175,15 +175,22 @@ paths:
     get:
       tags:
         - Schemas
+      parameters:
+        - name: includeFields
+          description: include fields of each schema in the response
+          in: query
+          required: false
+          schema:
+            type: boolean
       responses:
         '200':
-          description: 'a list of all current loaded schema for clinical submission (without sample_registration'
+          description: 'a list of all current loaded schema for clinical submission (without sample_registration)'
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  type: string
+                  type: object
 
   /submission/schema/template/all:
     get:

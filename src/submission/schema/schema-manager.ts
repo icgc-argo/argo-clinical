@@ -40,7 +40,19 @@ class SchemaManager {
     return this.currentSchemaDictionary;
   };
 
-  getSubSchemasList = (): string[] => {
+  getSchemasWithFields = (): {
+    name: string;
+    fields: string[];
+  }[] => {
+    return this.currentSchemaDictionary.schemas.map(s => {
+      return {
+        name: s.name,
+        fields: s.fields.map(f => f.name),
+      };
+    });
+  };
+
+  getSchemas = (): string[] => {
     return this.currentSchemaDictionary.schemas.map(s => s.name);
   };
 
