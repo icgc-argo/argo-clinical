@@ -1,5 +1,8 @@
 import { DeepReadonly } from 'deep-freeze';
-import { SchemaValidationErrorTypes } from '../lectern-client/schema-entities';
+import {
+  SchemaValidationErrorTypes,
+  SchemaValidationError,
+} from '../lectern-client/schema-entities';
 
 /**
  * Represents a valid registration that is not yet committed (in progress)
@@ -170,6 +173,11 @@ export interface MultiClinicalSubmissionCommand {
   readonly updater: string;
 }
 
+export interface RevalidateClinicalSubmissionCommand {
+  readonly programId: string;
+  readonly migrationId: string;
+}
+
 export interface ClinicalSubmissionModifierCommand {
   readonly programId: string;
   readonly versionId: string;
@@ -179,7 +187,8 @@ export interface ClinicalSubmissionModifierCommand {
 export interface CreateSubmissionResult {
   readonly submission: DeepReadonly<ActiveClinicalSubmission> | undefined;
   readonly successful: boolean;
-  schemaErrors: DeepReadonly<{ [clinicalType: string]: SubmissionValidationError[] }>;
+  /** @deprecated */
+  readonly schemaErrors?: { [k: string]: SubmissionValidationError[] };
   batchErrors: DeepReadonly<SubmissionBatchError[]>;
 }
 
@@ -204,6 +213,7 @@ export interface SavedClinicalEntity {
   creator: string;
   records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
   createdAt: DeepReadonly<Date>;
+  schemaErrors: DeepReadonly<SubmissionValidationError[]>;
   dataErrors: SubmissionValidationError[];
   dataUpdates: SubmissionValidationUpdate[];
   stats: {
@@ -217,11 +227,13 @@ export interface SavedClinicalEntity {
 export enum SUBMISSION_STATE {
   OPEN = 'OPEN',
   VALID = 'VALID',
+  INVALID_BY_MIGRATION = 'INVALID_BY_MIGRATION',
   INVALID = 'INVALID',
   PENDING_APPROVAL = 'PENDING_APPROVAL',
 }
 
 export interface ActiveClinicalSubmission {
+  _id?: string;
   programId: string;
   state: SUBMISSION_STATE;
   version: string;

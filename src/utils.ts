@@ -138,4 +138,18 @@ export const isNotAbsent = (value: string | number | boolean | undefined) => {
   return value !== null && value !== undefined;
 };
 
+export function toString(obj: any) {
+  if (!obj) {
+    return undefined;
+  }
+  Object.keys(obj).forEach(k => {
+    if (typeof obj[k] === 'object') {
+      return toString(obj[k]);
+    }
+    obj[k] = `${obj[k]}`;
+  });
+
+  return obj;
+}
+
 export const F = deepFreeze;

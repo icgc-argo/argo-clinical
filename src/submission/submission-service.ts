@@ -31,6 +31,7 @@ import {
   ClinicalEntityType,
   BatchNameRegex,
   ClinicalSubmissionRecordsByDonorIdMap,
+  RevalidateClinicalSubmissionCommand,
 } from './submission-entities';
 import * as schemaManager from './schema/schema-manager';
 import {
@@ -38,9 +39,10 @@ import {
   TypedDataRecord,
   DataRecord,
   SchemaProcessingResult,
+  SchemasDictionary,
 } from '../lectern-client/schema-entities';
 import { loggerFor } from '../logger';
-import { Errors, F, isStringMatchRegex } from '../utils';
+import { Errors, F, isStringMatchRegex, toString } from '../utils';
 import { DeepReadonly } from 'deep-freeze';
 import { submissionRepository } from './submission-repo';
 import { v1 as uuid } from 'uuid';
@@ -204,43 +206,52 @@ export namespace operations {
 
     if (activeSubmission === undefined) {
       throw new Errors.NotFound('No active submission data found for this program.');
-    } else if (activeSubmission.version !== command.versionId) {
+    }
+
+    if (activeSubmission.version !== command.versionId) {
       throw new Errors.InvalidArgument(
         'Version ID provided does not match the latest submission version for this program.',
       );
-    } else if (activeSubmission.state === SUBMISSION_STATE.PENDING_APPROVAL) {
+    }
+
+    if (activeSubmission.state === SUBMISSION_STATE.PENDING_APPROVAL) {
       // confirm that the state is VALID
       throw new Errors.StateConflict(
         'Active submission is in PENDING_APPROVAL state and cannot be modified.',
       );
-    } else {
-      // Update clinical entities from the active submission
-      const updatedClinicalEntities: ClinicalEntities = {};
-      if (command.fileType !== 'all') {
-        for (const clinicalType in activeSubmission.clinicalEntities) {
-          if (clinicalType !== command.fileType) {
-            updatedClinicalEntities[clinicalType] = {
-              ...activeSubmission.clinicalEntities[clinicalType],
-              ...emptyStats,
-            };
-          }
+    }
+
+    // Update clinical entities from the active submission
+    const updatedClinicalEntities: ClinicalEntities = {};
+    if (command.fileType !== 'all') {
+      for (const clinicalType in activeSubmission.clinicalEntities) {
+        if (clinicalType !== command.fileType) {
+          updatedClinicalEntities[clinicalType] = {
+            ...activeSubmission.clinicalEntities[clinicalType],
+            schemaErrors: [],
+            ...emptyStats,
+          };
         }
       }
-      const newActiveSubmission: ActiveClinicalSubmission = {
-        programId: command.programId,
-        state: SUBMISSION_STATE.OPEN,
-        version: '', // version is irrelevant here, repo will set it
-        clinicalEntities: updatedClinicalEntities,
-        updatedBy: command.updater,
-      };
-      // insert into database
-      const updated = await submissionRepository.updateSubmissionWithVersion(
-        command.programId,
-        activeSubmission.version,
-        newActiveSubmission,
-      );
-      return updated;
     }
+    const newActiveSubmission: ActiveClinicalSubmission = {
+      programId: command.programId,
+      state: SUBMISSION_STATE.OPEN,
+      version: '', // version is irrelevant here, repo will set it
+      clinicalEntities: updatedClinicalEntities,
+      updatedBy: command.updater,
+    };
+    // insert into database
+    const updated = await updateSubmissionWithVersionOrDeleteEmpty(
+      command.programId,
+      activeSubmission.version,
+      newActiveSubmission,
+    );
+    return updated;
+  };
+
+  export const findActiveClinicalSubmissions = async () => {
+    return await submissionRepository.findAll();
   };
 
   /**
@@ -250,8 +261,10 @@ export namespace operations {
    * 2. check headers (if provided) => can find batchError
    * 3. schemaValidation, done by lectern-client => can return schemaError
    * @param command MultiClinicalSubmissionCommand
+   * @param targetSchema this is needed for migration case where we target new schema
+   *                      if not provided, the default is the current schema.
    */
-  export const uploadMultipleClinical = async (
+  export const submitMultiClinicalBatches = async (
     command: MultiClinicalSubmissionCommand,
   ): Promise<CreateSubmissionResult> => {
     // get program or create new one
@@ -271,6 +284,7 @@ export namespace operations {
       command.newClinicalData,
       Object.values(ClinicalEntityType).filter(type => type !== ClinicalEntityType.REGISTRATION),
     );
+
     // Step 2 filter entites with invalid fieldNames
     const { filteredClinicalEntites, fieldNameErrors } = checkEntityFieldNames(
       newClinicalEntitesMap,
@@ -279,29 +293,43 @@ export namespace operations {
     const updatedClinicalEntites: ClinicalEntities = clearClinicalEnitytStats(
       exsistingActiveSubmission.clinicalEntities,
     );
+
     const createdAt: DeepReadonly<Date> = new Date();
-    const schemaErrors: { [k: string]: SubmissionValidationError[] } = {}; // object to store all errors for entity
+
+    // object to store all errors for entity
+    const schemaErrors: { [k: string]: SubmissionValidationError[] } = {};
+
     for (const [clinicalType, newClinicalEnity] of Object.entries(filteredClinicalEntites)) {
-      const { schemaErrorsTemp, processedRecords } = await checkClinicalEntity({
-        records: newClinicalEnity.records,
-        programId: command.programId,
-        clinicalType: clinicalType,
-      });
+      const { schemaErrorsTemp, processedRecords } = await checkClinicalEntity(
+        {
+          records: newClinicalEnity.records,
+          programId: command.programId,
+          clinicalType: clinicalType,
+        },
+        schemaManager.instance().getCurrent(),
+      );
+
+      // because there was a requirement to not keep an open empty submission
+      // we have to return a fake submission object in case there are schema errors
+      // after the update/delete submission is callled below
       if (schemaErrorsTemp.length > 0) {
         // store errors found and remove clinical type from clinical entities
         schemaErrors[clinicalType] = schemaErrorsTemp;
         delete updatedClinicalEntites[clinicalType];
-      } else {
-        // update or add entity
-        updatedClinicalEntites[clinicalType] = {
-          batchName: newClinicalEnity.batchName,
-          creator: newClinicalEnity.creator,
-          createdAt: createdAt,
-          records: processedRecords,
-          ...emptyStats,
-        };
+        continue;
       }
+
+      // update or add entity
+      updatedClinicalEntites[clinicalType] = {
+        batchName: newClinicalEnity.batchName,
+        creator: newClinicalEnity.creator,
+        createdAt: createdAt,
+        schemaErrors: [],
+        records: processedRecords as any,
+        ...emptyStats,
+      };
     }
+
     const newActiveSubmission: ActiveClinicalSubmission = {
       programId: command.programId,
       state: SUBMISSION_STATE.OPEN,
@@ -309,8 +337,107 @@ export namespace operations {
       clinicalEntities: updatedClinicalEntites,
       updatedBy: command.updater,
     };
+
     // insert into database
-    const updated = await submissionRepository.updateSubmissionWithVersion(
+    let updated = (await updateSubmissionWithVersionOrDeleteEmpty(
+      command.programId,
+      exsistingActiveSubmission.version,
+      newActiveSubmission,
+    )) as ActiveClinicalSubmission;
+
+    if (updated === undefined) {
+      // this is to be able to put the schema errors in the clinical entities
+      // without having to save an empty submission.
+      updated = {
+        clinicalEntities: {},
+        programId: undefined,
+        state: undefined,
+        version: undefined,
+        updatedBy: undefined,
+      } as any;
+    }
+    // put the schema errors in each clinical entity
+    for (const clinicalType in schemaErrors) {
+      updated.clinicalEntities[clinicalType] = {} as any;
+      updated.clinicalEntities[clinicalType].schemaErrors = schemaErrors[clinicalType];
+    }
+
+    return {
+      submission: updated,
+      // this is only here for backward compatibility, will be removed in future PR.
+      schemaErrors: schemaErrors,
+      successful: Object.keys(schemaErrors).length === 0,
+      batchErrors: [...dataToEntityMapErrors, ...fieldNameErrors],
+    };
+  };
+
+  /**
+   * checks existing submission records against a target schema
+   * @param command RevalidateClinicalSubmissionCommand
+   * @param targetSchema the schema that the submission records will be validated with.
+   */
+  export const revalidateClinicalSubmission = async (
+    command: RevalidateClinicalSubmissionCommand,
+    targetSchema: SchemasDictionary,
+    dryRun = false,
+  ): Promise<CreateSubmissionResult> => {
+    // get program or create new one
+    const exsistingActiveSubmission = await submissionRepository.findByProgramId(command.programId);
+    if (!exsistingActiveSubmission) {
+      throw new Error('trying to migrate non existing submission');
+    }
+
+    const existingClinicalEntities = _.cloneDeep(
+      exsistingActiveSubmission.clinicalEntities,
+    ) as ClinicalEntities;
+    const schemaErrors: { [k: string]: SubmissionValidationError[] } = {}; // object to store all errors for entity
+
+    for (const [clinicalType, clinicalEntityBatch] of Object.entries(existingClinicalEntities)) {
+      const { schemaErrorsTemp: clinicalEntitySchemaErrors } = await checkClinicalEntity(
+        {
+          records: clinicalEntityBatch.records.map(prepareForSchemaReProcessing),
+          programId: command.programId,
+          clinicalType: clinicalType,
+        },
+        targetSchema,
+      );
+
+      // if it doesn't pass the new schema
+      if (clinicalEntitySchemaErrors.length > 0) {
+        // store errors found and remove clinical type from clinical entities
+        schemaErrors[clinicalType] = clinicalEntitySchemaErrors;
+        existingClinicalEntities[clinicalType].schemaErrors = clinicalEntitySchemaErrors;
+        continue;
+      }
+    }
+
+    const successful = Object.keys(schemaErrors).length === 0;
+    let state = exsistingActiveSubmission.state;
+
+    // special state to indicate that the submission is invalid my migration process.
+    if (!successful) {
+      state = SUBMISSION_STATE.INVALID_BY_MIGRATION;
+    }
+
+    const newActiveSubmission: ActiveClinicalSubmission = {
+      programId: command.programId,
+      state: state,
+      version: '', // version is irrelevant here, repo will set it
+      clinicalEntities: existingClinicalEntities,
+      updatedBy: exsistingActiveSubmission.updatedBy,
+    };
+
+    // if dry run, then we don't actually want to update the submission we just return the result now
+    if (dryRun) {
+      return {
+        submission: newActiveSubmission,
+        successful: successful,
+        batchErrors: [],
+      };
+    }
+
+    // update the submission, it will not delete since we keep all clinical entities
+    const updated = await updateSubmissionWithVersionOrDeleteEmpty(
       command.programId,
       exsistingActiveSubmission.version,
       newActiveSubmission,
@@ -318,9 +445,8 @@ export namespace operations {
 
     return {
       submission: updated,
-      schemaErrors: schemaErrors,
-      successful: Object.keys(schemaErrors).length === 0,
-      batchErrors: [...dataToEntityMapErrors, ...fieldNameErrors],
+      successful: successful,
+      batchErrors: [],
     };
   };
 
@@ -645,14 +771,19 @@ export namespace operations {
     );
   }
 
-  const checkClinicalEntity = async (command: ClinicalSubmissionCommand): Promise<any> => {
+  const checkClinicalEntity = async (
+    command: ClinicalSubmissionCommand,
+    schema: SchemasDictionary,
+  ) => {
     // check records are unique
     let errors: SubmissionValidationError[] = checkUniqueRecords(
       command.clinicalType as ClinicalEntityType,
       command.records,
     );
 
-    const schemaResult = schemaManager.instance().process(command.clinicalType, command.records);
+    const schemaResult = schemaManager
+      .instance()
+      .process(command.clinicalType, command.records, schema);
     if (schemaResult.validationErrors.length > 0) {
       const unifiedSchemaErrors = unifySchemaErrors(
         command.clinicalType as ClinicalEntityType,
@@ -733,12 +864,13 @@ export namespace operations {
     const filteredClinicalEntites: NewClinicalEntities = {};
     for (const [clinicalType, newClinicalEnity] of Object.entries(newClinicalEntitesMap)) {
       if (!newClinicalEnity.fieldNames) {
+        filteredClinicalEntites[clinicalType] = { ...newClinicalEnity };
         continue;
       }
       const commonFieldNamesSet = new Set(newClinicalEnity.fieldNames);
       const clinicalFieldNamesByPriorityMap = schemaManager
         .instance()
-        .getSubSchemaFieldNamesWithPriority(clinicalType);
+        .getSchemaFieldNamesWithPriority(clinicalType);
       const missingFields: string[] = [];
 
       clinicalFieldNamesByPriorityMap.required.forEach(requriedField => {
@@ -748,6 +880,7 @@ export namespace operations {
           commonFieldNamesSet.delete(requriedField);
         }
       });
+
       clinicalFieldNamesByPriorityMap.optional.forEach(optionalField =>
         commonFieldNamesSet.delete(optionalField),
       );
@@ -759,7 +892,7 @@ export namespace operations {
         continue;
       }
 
-      if (missingFields.length > 0)
+      if (missingFields.length > 0) {
         fieldNameErrors.push({
           message: batchErrorMessage(SubmissionBatchErrorTypes.MISSING_REQUIRED_HEADER, {
             missingFields,
@@ -767,7 +900,9 @@ export namespace operations {
           batchNames: [newClinicalEnity.batchName],
           code: SubmissionBatchErrorTypes.MISSING_REQUIRED_HEADER,
         });
-      if (unknownFields.length > 0)
+      }
+
+      if (unknownFields.length > 0) {
         fieldNameErrors.push({
           message: batchErrorMessage(SubmissionBatchErrorTypes.UNRECOGNIZED_HEADER, {
             unknownFields,
@@ -775,6 +910,7 @@ export namespace operations {
           batchNames: [newClinicalEnity.batchName],
           code: SubmissionBatchErrorTypes.UNRECOGNIZED_HEADER,
         });
+      }
     }
     return { filteredClinicalEntites, fieldNameErrors };
   };
@@ -806,4 +942,28 @@ export namespace operations {
     }
     return undefined;
   };
+}
+
+function prepareForSchemaReProcessing(record: object) {
+  // we copy to avoid frozen attributes
+  const copy = _.cloneDeep(record);
+  return toString(copy);
+}
+
+// this is bassically findOneAndUpdate but with new version everytime
+async function updateSubmissionWithVersionOrDeleteEmpty(
+  programId: string,
+  version: string,
+  updatingFields: DeepReadonly<ActiveClinicalSubmission>,
+): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined> {
+  if (_.has(updatingFields, 'clinicalEntities') && _.isEmpty(updatingFields.clinicalEntities)) {
+    await submissionRepository.deleteByProgramIdAndVersion({ programId, version });
+    return undefined;
+  }
+
+  return await submissionRepository.updateSubmissionFieldsWithVersion(
+    programId,
+    version,
+    updatingFields,
+  );
 }

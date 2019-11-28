@@ -15,5 +15,7 @@ export interface DictionaryMigration {
     invalidDocumentsCount: number;
   };
   invalidDonorsErrors: any[];
+  checkedSubmissions: any[];
+  invalidSubmissions: any[];
   createdBy: string;
 }
