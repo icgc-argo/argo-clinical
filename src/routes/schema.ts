@@ -21,7 +21,4 @@ router.get('/template/all', wrapAsync(schemaApi.getAllTemplates));
 // get template for a given schema
 router.get('/template/:schemaName', wrapAsync(schemaApi.getTemplate));
 
-// temporary api
-router.post('/hack/replace', wrapAsync(schemaApi.replace));
-
 export default router;

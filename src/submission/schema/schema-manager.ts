@@ -15,13 +15,14 @@ import { DictionaryMigration } from './migration-entities';
 import { Donor } from '../../clinical/clinical-entities';
 import { DeepReadonly } from 'deep-freeze';
 import * as clinicalService from '../../clinical/clinical-service';
+import * as persistedConfig from '../persisted-config/service';
 import * as submissionService from '../submission-service';
 import {
   ClinicalEntityType,
   RevalidateClinicalSubmissionCommand,
   SUBMISSION_STATE,
 } from '../submission-entities';
-import { notEmpty, Errors } from '../../utils';
+import { notEmpty, Errors, sleep } from '../../utils';
 import _ from 'lodash';
 const L = loggerFor(__filename);
 
@@ -256,6 +257,12 @@ namespace MigrationManager {
     migrationToRun: DeepReadonly<DictionaryMigration>,
     sync?: boolean,
   ) {
+    // disable submissions system and wait for 2 sec to allow trailing activesubmission operations to complete
+    const submissionSystemDisabled = await persistedConfig.setSubmissionDisabledState(true);
+    if (!submissionSystemDisabled)
+      throw new Error('Failed to disable submissions system, aborting mirgraiton...');
+    await sleep(2000);
+
     // explicit sync so wait till done
     if (sync) {
       const result = await runMigration(migrationToRun);
@@ -301,6 +308,9 @@ namespace MigrationManager {
     migrationToClose.state = 'CLOSED';
     migrationToClose.stage = 'COMPLETED';
     const closedMigration = await migrationRepo.update(migrationToClose);
+
+    await persistedConfig.setSubmissionDisabledState(false);
+
     return closedMigration;
   };
 
