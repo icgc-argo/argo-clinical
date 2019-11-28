@@ -3,13 +3,14 @@ import {
   SubmittedClinicalRecord,
   DataValidationErrors,
   SubmissionValidationError,
-  ClinicalInfoFieldsEnum,
   ModificationType,
   SubmissionValidationUpdate,
   RecordValidationResult,
   ClinicalEntityType,
   SubmittedClinicalRecordsMap,
   ClinicalUniqueIndentifier,
+  DonorFieldsEnum,
+  SpecimenFieldsEnum,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { validationErrorMessage } from '../submission-error-messages';
@@ -18,7 +19,7 @@ import _ from 'lodash';
 export const buildSubmissionError = (
   newRecord: SubmittedClinicalRecord,
   type: DataValidationErrors,
-  fieldName: FieldsEnum | ClinicalInfoFieldsEnum,
+  fieldName: FieldsEnum | DonorFieldsEnum | SpecimenFieldsEnum,
   info: object = {},
 ): SubmissionValidationError => {
   // typescript refused to take this directly
@@ -42,7 +43,7 @@ export const buildSubmissionError = (
 export const buildSubmissionUpdate = (
   newRecord: SubmittedClinicalRecord,
   oldValue: string,
-  fieldName: FieldsEnum | ClinicalInfoFieldsEnum | string,
+  fieldName: FieldsEnum | string,
 ): SubmissionValidationUpdate => {
   // typescript refused to take this directly
   const index: number = newRecord.index;
@@ -134,7 +135,7 @@ export const buildMultipleRecordValidationResults = (
   records: ReadonlyArray<SubmittedClinicalRecord>,
   commonErrorProperties: {
     type: DataValidationErrors;
-    fieldName: FieldsEnum | ClinicalInfoFieldsEnum;
+    fieldName: FieldsEnum | DonorFieldsEnum | SpecimenFieldsEnum;
     info?: any;
   },
 ): RecordValidationResult[] => {

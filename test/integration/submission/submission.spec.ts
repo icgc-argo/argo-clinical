@@ -25,10 +25,10 @@ import {
   ActiveClinicalSubmission,
   FieldsEnum,
   SUBMISSION_STATE,
-  ClinicalInfoFieldsEnum,
   DataValidationErrors,
   SubmissionBatchErrorTypes,
   ClinicalEntityType,
+  DonorFieldsEnum,
 } from '../../../src/submission/submission-entities';
 import { TsvUtils } from '../../../src/utils';
 import { donorDao } from '../../../src/clinical/donor-repo';
@@ -225,7 +225,7 @@ const expectedDonorErrors = [
       donorSubmitterId: 'ICGC_0002',
     },
     message: 'The value is not permissible for this field.',
-    fieldName: ClinicalInfoFieldsEnum.survival_time,
+    fieldName: DonorFieldsEnum.survival_time,
   },
   {
     index: 0,
@@ -235,7 +235,7 @@ const expectedDonorErrors = [
       donorSubmitterId: 'ICGC_0002',
     },
     message: 'The value is not permissible for this field.',
-    fieldName: ClinicalInfoFieldsEnum.vital_status,
+    fieldName: DonorFieldsEnum.vital_status,
   },
 ];
 
@@ -1234,8 +1234,8 @@ describe('Submission Api', () => {
           chai.expect(updatedDonor).to.deep.include(donor);
           chai.expect(updatedDonor.clinicalInfo).to.exist;
           chai.expect(updatedDonor.clinicalInfo).to.deep.include({
-            [ClinicalInfoFieldsEnum.vital_status]: 'Deceased',
-            [ClinicalInfoFieldsEnum.survival_time]: 522,
+            [DonorFieldsEnum.vital_status]: 'Deceased',
+            [DonorFieldsEnum.survival_time]: 522,
           });
         });
     });
@@ -1405,7 +1405,7 @@ describe('Submission Api', () => {
             );
           chai
             .expect(updatedDonor.clinicalInfo)
-            .to.deep.include({ [ClinicalInfoFieldsEnum.vital_status]: 'Alive' });
+            .to.deep.include({ [DonorFieldsEnum.vital_status]: 'Alive' });
         });
     });
   });

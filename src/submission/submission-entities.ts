@@ -253,10 +253,12 @@ export interface SubmittedClinicalRecord {
   [fieldName: string]: string | number;
 }
 
-export enum ClinicalInfoFieldsEnum {
-  acquisition_interval = 'acquisition_interval',
+export enum DonorFieldsEnum {
   vital_status = 'vital_status',
   survival_time = 'survival_time',
+}
+export enum SpecimenFieldsEnum {
+  acquisition_interval = 'acquisition_interval',
 }
 
 export interface RecordValidationResult {
