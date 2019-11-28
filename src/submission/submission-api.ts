@@ -19,7 +19,6 @@ const L = loggerFor(__filename);
 class SubmissionController {
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async getRegistrationByProgramId(req: Request, res: Response) {
-    if (await submissionSystemIsDisabled(res)) return;
     L.debug('in getRegistrationByProgramId');
     const programId = req.params.programId;
     const registration = await submission.operations.findByProgramId(programId);
@@ -87,7 +86,6 @@ class SubmissionController {
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async getActiveSubmissionByProgramId(req: Request, res: Response) {
-    if (await submissionSystemIsDisabled(res)) return;
     const programId = req.params.programId;
     const activeSubmission = await submission.operations.findSubmissionByProgramId(programId);
     if (activeSubmission === undefined) {
