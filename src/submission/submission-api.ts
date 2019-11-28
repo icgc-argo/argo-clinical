@@ -1,7 +1,8 @@
 import * as submission from './submission-service';
+import * as persistedConfig from './persisted-config/service';
 import * as submission2Clinical from './submission-to-clinical/submission-to-clinical';
 import { Request, Response } from 'express';
-import { TsvUtils, ControllerUtils, isStringMatchRegex } from '../utils';
+import { TsvUtils, ControllerUtils } from '../utils';
 import { loggerFor } from '../logger';
 import {
   CreateRegistrationCommand,
@@ -11,7 +12,6 @@ import {
   SubmissionBatchErrorTypes,
 } from './submission-entities';
 import { HasFullWriteAccess, HasProgramWriteAccess } from '../auth-decorators';
-import jwt from 'jsonwebtoken';
 import _ from 'lodash';
 import { batchErrorMessage } from './submission-error-messages';
 const L = loggerFor(__filename);
@@ -19,6 +19,7 @@ const L = loggerFor(__filename);
 class SubmissionController {
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async getRegistrationByProgramId(req: Request, res: Response) {
+    if (await submissionSystemIsDisabled(res)) return;
     L.debug('in getRegistrationByProgramId');
     const programId = req.params.programId;
     const registration = await submission.operations.findByProgramId(programId);
@@ -30,7 +31,7 @@ class SubmissionController {
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async createRegistrationWithTsv(req: Request, res: Response) {
-    if (!isValidCreateBody(req, res)) {
+    if ((await submissionSystemIsDisabled(res)) || !isValidCreateBody(req, res)) {
       return;
     }
     const programId = req.params.programId;
@@ -64,6 +65,7 @@ class SubmissionController {
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async commitRegistration(req: Request, res: Response) {
+    if (await submissionSystemIsDisabled(res)) return;
     const programId = req.params.programId;
     const newSamples: string[] = await submission2Clinical.commitRegisteration({
       registrationId: req.params.id,
@@ -76,6 +78,7 @@ class SubmissionController {
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async deleteRegistration(req: Request, res: Response) {
+    if (await submissionSystemIsDisabled(res)) return;
     const programId = req.params.programId;
     const registrationId = req.params.id;
     await submission.operations.deleteRegistration(registrationId, programId);
@@ -84,6 +87,7 @@ class SubmissionController {
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async getActiveSubmissionByProgramId(req: Request, res: Response) {
+    if (await submissionSystemIsDisabled(res)) return;
     const programId = req.params.programId;
     const activeSubmission = await submission.operations.findSubmissionByProgramId(programId);
     if (activeSubmission === undefined) {
@@ -94,7 +98,7 @@ class SubmissionController {
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async saveClinicalTsvFiles(req: Request, res: Response) {
-    if (!isValidCreateBody(req, res)) {
+    if ((await submissionSystemIsDisabled(res)) || !isValidCreateBody(req, res)) {
       return;
     }
 
@@ -144,6 +148,7 @@ class SubmissionController {
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async validateActiveSubmission(req: Request, res: Response) {
+    if (await submissionSystemIsDisabled(res)) return;
     const { versionId, programId } = req.params;
     const updater = ControllerUtils.getUserFromToken(req);
     const result = await submission.operations.validateMultipleClinical({
@@ -159,6 +164,7 @@ class SubmissionController {
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async clearFileFromActiveSubmission(req: Request, res: Response) {
+    if (await submissionSystemIsDisabled(res)) return;
     const { programId, versionId, fileType } = req.params;
     const updater = ControllerUtils.getUserFromToken(req);
     L.debug(`Entering clearFileFromActiveSubmission: ${{ programId, versionId, fileType }}`);
@@ -174,6 +180,7 @@ class SubmissionController {
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async commitActiveSubmission(req: Request, res: Response) {
+    if (await submissionSystemIsDisabled(res)) return;
     const { versionId, programId } = req.params;
     const updater = ControllerUtils.getUserFromToken(req);
     const activeSubmission = await submission2Clinical.commitClinicalSubmission({
@@ -186,6 +193,7 @@ class SubmissionController {
 
   @HasFullWriteAccess()
   async approveActiveSubmission(req: Request, res: Response) {
+    if (await submissionSystemIsDisabled(res)) return;
     const { versionId, programId } = req.params;
     await submission2Clinical.approveClinicalSubmission({
       versionId,
@@ -196,6 +204,7 @@ class SubmissionController {
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async reopenActiveSubmission(req: Request, res: Response) {
+    if (await submissionSystemIsDisabled(res)) return;
     const { versionId, programId } = req.params;
     const updater = ControllerUtils.getUserFromToken(req);
     const activeSubmission = await submission.operations.reopenClinicalSubmission({
@@ -206,6 +215,16 @@ class SubmissionController {
     return res.status(200).send(activeSubmission);
   }
 }
+
+const submissionSystemIsDisabled = async (res: Response) => {
+  const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
+  if (submissionSystemDisabled) {
+    L.debug(`Got submission request while submission system is disabled`);
+    ControllerUtils.serviceUnavailable(res, `This submission operation is currently unavailable.`);
+    return true;
+  }
+  return false;
+};
 
 const isValidCreateBody = (req: Request, res: Response): boolean => {
   if (req.body === undefined) {

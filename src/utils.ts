@@ -46,6 +46,10 @@ export namespace ControllerUtils {
     return res.status(400).send({ message });
   };
 
+  export const serviceUnavailable = (res: Response, message: string): any => {
+    return res.status(503).send({ message });
+  };
+
   export const invalidBatch = (
     res: Response,
     batchErrors: SubmissionBatchError | SubmissionBatchError[],
@@ -136,6 +140,10 @@ export const isAbsent = (value: string | number | boolean | undefined) => {
 
 export const isNotAbsent = (value: string | number | boolean | undefined) => {
   return value !== null && value !== undefined;
+};
+
+export const sleep = async (milliSeconds: number = 2000) => {
+  return new Promise(resolve => setTimeout(resolve, milliSeconds));
 };
 
 export function toString(obj: any) {
