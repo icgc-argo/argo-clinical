@@ -346,13 +346,15 @@ export namespace operations {
     )) as ActiveClinicalSubmission;
 
     if (updated === undefined) {
+      // this is to be able to put the schema errors in the clinical entities
+      // without having to save an empty submission.
       updated = {
         clinicalEntities: {},
-        programId: newActiveSubmission.programId,
-        state: newActiveSubmission.state,
-        version: '',
-        updatedBy: newActiveSubmission.updatedBy,
-      };
+        programId: undefined,
+        state: undefined,
+        version: undefined,
+        updatedBy: undefined,
+      } as any;
     }
     // put the schema errors in each clinical entity
     for (const clinicalType in schemaErrors) {
