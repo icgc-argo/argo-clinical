@@ -217,7 +217,7 @@ class SubmissionController {
 }
 
 const submissionSystemIsDisabled = async (res: Response) => {
-  const submissionSystemDisabled = await persistedConfig.operations.getSubmissionDisabledState();
+  const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
   if (submissionSystemDisabled) {
     L.debug(`Got submission request while submission system is disabled`);
     ControllerUtils.serviceUnavailable(res, `This submission operation is currently unavailable.`);

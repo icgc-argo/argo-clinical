@@ -5,6 +5,7 @@ import * as manager from './submission/schema/schema-manager';
 import * as utils from './utils';
 import fetch from 'node-fetch';
 import { setStatus, Status } from './app-health';
+import * as persistedConfig from './submission/persisted-config/service';
 
 const L = loggerFor(__filename);
 
@@ -149,6 +150,8 @@ export const run = async (config: AppConfig) => {
     }
     setJwtPublicKey(config.jwtPubKeyUrl());
   }
+
+  await persistedConfig.initSubmissionConfigsIfNoneExist();
 
   // If the Node process ends, close the Mongoose connection
   process.on('SIGINT', gracefulExit).on('SIGTERM', gracefulExit);

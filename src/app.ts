@@ -54,7 +54,7 @@ app.use(
 );
 
 /** Attach Routers */
-app.use('/submission/persisted-config', configRouter);
+app.use('/submission/configs', configRouter);
 app.use('/submission/program/:programId/registration', registrationRouter);
 app.use('/submission/program/:programId/clinical', submissionRouter);
 app.use('/submission/schema', schemaRouter);

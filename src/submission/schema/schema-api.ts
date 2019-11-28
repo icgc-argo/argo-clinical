@@ -69,13 +69,6 @@ export const getAllSchemas = async (req: Request, res: Response) => {
   );
 };
 
-export const replace = async (req: Request, res: Response) => {
-  // currently we only use 1 version
-  await manager.instance().replace(req.body as SchemasDictionary);
-  setStatus('schema', { status: Status.OK });
-  return res.status(200).send(manager.instance().getCurrent());
-};
-
 export const getTemplate = async (req: Request, res: Response) => {
   const schemaName: string = req.params.schemaName;
   const schemasDictionary = manager.instance().getCurrent();

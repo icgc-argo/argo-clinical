@@ -19,49 +19,34 @@ paths:
               schema:
                 type: object
 
-  /submission/persisted-config/submissionDisabled:
+  /submission/configs:
     get:
       tags:
-        - Persisted Configurations
-      summary: Get sample registration and clinical submission state
+        - Submission Configurations
+      summary: Get submission service configs
       responses:
         '200':
-          description: 'Sample registration and Clinical Submission system disabled state'
+          description: 'Submissions config'
+
+  /submission/configs/submission-disabled:
     patch:
       tags:
-        - Persisted Configurations
-      summary: Disable sample registration and clinical submission
+        - Submission Configurations
+      summary: Disable/lock sample registration and clinical submission
       requestBody:
         content:
           application/json:
             schema:
               type: object
               properties:
-                setDisabled:
-                  description: the new schema version to update to.
+                submissionDisabled:
+                  description: set to true/false to lock/unlock the submission service.
                   type: boolean
       responses:
         '500':
           description: 'Failed to set submissionDisabled'
         '200':
           description: 'Sample registration and Clinical Submission disabled state has been set'
-  /submission/persisted-config/replace:
-    patch:
-      tags:
-        - Persisted Configurations
-      description: force replace persisted configurations
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '200':
-          description: 'the current persisted configuration'
-          content:
-            application/json:
-              schema:
-                type: object
 
   /submission/schema:
     get:
@@ -232,35 +217,6 @@ paths:
               schema:
                 example: 'program_id\tsubmitter_donor_id\tgender\tsubmitter_specimen_id\tspecimen_type\ttumour_normal_designation\tsubmitter_sample_id\tsample_type'
                 type: string
-  /submission/schema/hack/refresh:
-    post:
-      tags:
-        - Schemas
-      description: force reload the schema from the schema service and override the cache
-      responses:
-        '200':
-          description: 'the current loaded schema by the clinical submission'
-          content:
-            application/json:
-              schema:
-                type: object
-  /submission/schema/hack/replace:
-    post:
-      tags:
-        - Schemas
-      description: force replace the schema from the provided schema in body
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '200':
-          description: 'the current loaded schema by the clinical submission'
-          content:
-            application/json:
-              schema:
-                type: object
 
   /submission/program/{programId}/registration:
     parameters:
@@ -732,8 +688,8 @@ servers:
 tags:
   - name: Health
     description: Service status monitoring
-  - name: Persisted Configurations
-    description: Persisted configuration functions
+  - name: Submission Configurations
+    description: Submission Service Configurations
   - name: Schemas
     description: View and manage the Data Schema used by Argo-Clinical
   - name: Sample Registration

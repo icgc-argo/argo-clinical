@@ -258,9 +258,7 @@ namespace MigrationManager {
     sync?: boolean,
   ) {
     // disable submissions system and wait for 2 sec to allow trailing activesubmission operations to complete
-    const submissionSystemDisabled = await persistedConfig.operations.setSubmissionDisabledState(
-      true,
-    );
+    const submissionSystemDisabled = await persistedConfig.setSubmissionDisabledState(true);
     if (!submissionSystemDisabled)
       throw new Error('Failed to disable submissions system, aborting mirgraiton...');
     await sleep(2000);
@@ -311,7 +309,7 @@ namespace MigrationManager {
     migrationToClose.stage = 'COMPLETED';
     const closedMigration = await migrationRepo.update(migrationToClose);
 
-    await persistedConfig.operations.setSubmissionDisabledState(false);
+    await persistedConfig.setSubmissionDisabledState(false);
 
     return closedMigration;
   };
