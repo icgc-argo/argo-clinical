@@ -60,11 +60,21 @@ export const get = async (req: Request, res: Response) => {
   return res.status(200).send(schema);
 };
 
-export const getAllSchemas = async (req: Request, res: Response) => {
+export const getClinicalEntities = async (req: Request, res: Response) => {
+  const includeFields = req.query.includeFields as string;
+  if (includeFields && includeFields.toLowerCase() === 'true') {
+    return res.status(200).send(
+      manager
+        .instance()
+        .getSchemasWithFields()
+        .filter(s => s.name !== ClinicalEntityType.REGISTRATION),
+    );
+  }
+
   return res.status(200).send(
     manager
       .instance()
-      .getSubSchemasList()
+      .getSchemas()
       .filter(s => s !== ClinicalEntityType.REGISTRATION),
   );
 };
