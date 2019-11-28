@@ -295,7 +295,6 @@ describe('Submission Api', () => {
             return `file://${__dirname}/stub-schema.json`;
           },
         });
-        // await insertData(dburl, 'persistedconfigurations', { submissionDisabled: false });
       } catch (err) {
         console.error('before >>>>>>>>>>>', err);
         return err;
