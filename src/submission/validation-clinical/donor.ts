@@ -2,10 +2,11 @@ import {
   DataValidationErrors,
   SubmittedClinicalRecord,
   SubmissionValidationError,
-  ClinicalInfoFieldsEnum,
   RecordValidationResult,
   SubmittedClinicalRecordsMap,
   ClinicalEntityType,
+  SpecimenFieldsEnum,
+  DonorFieldsEnum,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
@@ -52,13 +53,13 @@ function checkTimeConflictWithSpecimens(
   errors: SubmissionValidationError[],
 ) {
   if (
-    donorRecord[ClinicalInfoFieldsEnum.vital_status].toString().toLowerCase() !== 'deceased' ||
-    !donorRecord[ClinicalInfoFieldsEnum.survival_time]
+    donorRecord[DonorFieldsEnum.vital_status].toString().toLowerCase() !== 'deceased' ||
+    !donorRecord[DonorFieldsEnum.survival_time]
   ) {
     return;
   }
   const specimenIdsWithTimeConflicts: string[] = [];
-  const donoSurvivalTime: number = Number(donorRecord[ClinicalInfoFieldsEnum.survival_time]);
+  const donoSurvivalTime: number = Number(donorRecord[DonorFieldsEnum.survival_time]);
 
   donor.specimens.forEach(specimen => {
     let specimenAcqusitionInterval: number = 0;
@@ -69,12 +70,10 @@ function checkTimeConflictWithSpecimens(
       submittedRecords,
     );
     if (specimenRecord) {
-      specimenAcqusitionInterval = Number(
-        specimenRecord[ClinicalInfoFieldsEnum.acquisition_interval],
-      );
+      specimenAcqusitionInterval = Number(specimenRecord[SpecimenFieldsEnum.acquisition_interval]);
     } else if (specimen.clinicalInfo) {
       specimenAcqusitionInterval = Number(
-        specimen.clinicalInfo[ClinicalInfoFieldsEnum.acquisition_interval],
+        specimen.clinicalInfo[SpecimenFieldsEnum.acquisition_interval],
       );
     } else {
       return; // no specimenAcqusitionInterval so move on to next specimen
@@ -91,7 +90,7 @@ function checkTimeConflictWithSpecimens(
       utils.buildSubmissionError(
         donorRecord,
         DataValidationErrors.CONFLICTING_TIME_INTERVAL,
-        ClinicalInfoFieldsEnum.survival_time,
+        DonorFieldsEnum.survival_time,
         {
           conflictingSpecimenSubmitterIds: specimenIdsWithTimeConflicts,
         },
