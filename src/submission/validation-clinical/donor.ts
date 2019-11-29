@@ -23,6 +23,7 @@ export const validate = async (
     ClinicalEntityType.DONOR,
     submittedRecords,
   );
+
   if (!existentDonor || !submittedDonorClinicalRecord) {
     throw new Error("Can't call this function without donor & donor record");
   }

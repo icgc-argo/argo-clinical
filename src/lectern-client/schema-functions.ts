@@ -41,7 +41,7 @@ export const getSchemaFieldNamesWithPriority = (
   return fieldNamesMapped;
 };
 
-export const process = (
+export const processRecords = (
   dataSchema: SchemasDictionary,
   definition: string,
   records: ReadonlyArray<DataRecord>,
@@ -58,33 +58,71 @@ export const process = (
   }
 
   let validationErrors: SchemaValidationError[] = [];
-  const processedRecords: TypedDataRecord[] = [];
+  let processedRecords: TypedDataRecord[] = [];
 
-  records.forEach((rec, index) => {
-    const defaultedRecord: DataRecord = populateDefaults(schemaDef, F(rec), index);
-    L.debug(`done populating defaults for record #${index}`);
-    const result = validate(schemaDef, defaultedRecord, index);
-    L.debug(`done validation for record #${index}`);
-    if (result && result.length > 0) {
-      L.debug(`${result.length} validation errors for record #${index}`);
-      validationErrors = validationErrors.concat(result);
-    }
-    const convertedRecord = convertFromRawStrings(schemaDef, defaultedRecord, index, result);
-    L.debug(`converted row #${index} from raw strings`);
-    const postTypeConversionValidationResult = validateAfterTypeConversion(
-      schemaDef,
-      convertedRecord,
-      index,
-    );
-    if (postTypeConversionValidationResult && postTypeConversionValidationResult.length > 0) {
-      validationErrors = validationErrors.concat(postTypeConversionValidationResult);
-      return;
-    }
-    processedRecords.push(convertedRecord);
+  records.forEach((r, i) => {
+    const result = process(dataSchema, definition, r, i);
+    validationErrors = validationErrors.concat(result.validationErrors);
+    processedRecords = processedRecords.concat(result.processedRecords);
   });
+
   L.debug(
     `done processing all rows, validationErrors: ${validationErrors.length}, validRecords: ${processedRecords.length}`,
   );
+
+  return F({
+    validationErrors,
+    processedRecords,
+  });
+};
+
+export const process = (
+  dataSchema: SchemasDictionary,
+  definition: string,
+  rec: Readonly<DataRecord>,
+  index: number,
+): SchemaProcessingResult => {
+  Checks.checkNotNull('records', rec);
+  Checks.checkNotNull('dataSchema', dataSchema);
+  Checks.checkNotNull('definition', definition);
+
+  const schemaDef: SchemaDefinition | undefined = dataSchema.schemas.find(
+    e => e.name === definition,
+  );
+
+  if (!schemaDef) {
+    throw new Error(`no schema found for : ${definition}`);
+  }
+
+  let validationErrors: SchemaValidationError[] = [];
+  const processedRecords: TypedDataRecord[] = [];
+
+  const defaultedRecord: DataRecord = populateDefaults(schemaDef, F(rec), index);
+  L.debug(`done populating defaults for record #${index}`);
+  const result = validate(schemaDef, defaultedRecord, index);
+  L.debug(`done validation for record #${index}`);
+  if (result && result.length > 0) {
+    L.debug(`${result.length} validation errors for record #${index}`);
+    validationErrors = validationErrors.concat(result);
+  }
+  const convertedRecord = convertFromRawStrings(schemaDef, defaultedRecord, index, result);
+  L.debug(`converted row #${index} from raw strings`);
+  const postTypeConversionValidationResult = validateAfterTypeConversion(
+    schemaDef,
+    convertedRecord,
+    index,
+  );
+
+  if (postTypeConversionValidationResult && postTypeConversionValidationResult.length > 0) {
+    validationErrors = validationErrors.concat(postTypeConversionValidationResult);
+  } else {
+    processedRecords.push(convertedRecord);
+  }
+
+  L.debug(
+    `done processing all rows, validationErrors: ${validationErrors.length}, validRecords: ${processedRecords.length}`,
+  );
+
   return F({
     validationErrors,
     processedRecords,

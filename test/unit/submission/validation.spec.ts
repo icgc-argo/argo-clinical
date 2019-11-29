@@ -1,7 +1,7 @@
 import chai from 'chai';
 import sinon from 'sinon';
 import { donorDao } from '../../../src/clinical/donor-repo';
-import * as dv from '../../../src/submission/validation';
+import * as dv from '../../../src/submission/validation-clinical/validation';
 import {
   SubmissionValidationError,
   DataValidationErrors,
@@ -14,7 +14,10 @@ import {
 import { Donor } from '../../../src/clinical/clinical-entities';
 import { stubs } from './stubs';
 import { fail } from 'assert';
-import { ClinicalSubmissionRecordsOperations } from '../../../src/submission/validation-clinical/utils';
+import {
+  ClinicalSubmissionRecordsOperations,
+  usingInvalidProgramId,
+} from '../../../src/submission/validation-clinical/utils';
 
 const genderMutatedErr: SubmissionValidationError = {
   fieldName: 'gender',
@@ -166,7 +169,7 @@ describe('data-validator', () => {
     it('should detect invalid program id', async () => {
       donorDaoCountByStub.returns(Promise.resolve(0));
       // test call
-      const result = await dv.usingInvalidProgramId(
+      const result = await usingInvalidProgramId(
         ClinicalEntityType.REGISTRATION,
         0,
         {
