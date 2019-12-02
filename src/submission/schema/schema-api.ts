@@ -104,7 +104,7 @@ export const getAllTemplates = async (req: Request, res: Response) => {
   res
     .status(200)
     .contentType('application/zip')
-    .attachment('argo_submission_templates.zip');
+    .attachment('argo_clinical_templates.zip');
 
   schemasDictionary.schemas
     .filter(s => s.name !== ClinicalEntityType.REGISTRATION)
