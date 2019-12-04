@@ -509,7 +509,6 @@ export namespace operations {
     const validateResult: ClinicalTypeValidateResult = await validateSubmissionData(
       clinicalSubmissionRecords,
       relevantDonorsMap,
-      command.programId,
     );
 
     // update data errors/updates and stats

@@ -84,7 +84,6 @@ export const validateRegistrationData = async (
 export const validateSubmissionData = async (
   newRecordsToDonorMap: DeepReadonly<ClinicalSubmissionRecordsByDonorIdMap>,
   existingDonors: DeepReadonly<DonorMap>,
-  expectedProgram?: string,
 ): Promise<ClinicalTypeValidateResult> => {
   const recordValidationResultMap: { [clinicalType: string]: RecordValidationResult[] } = {};
   Object.values(ClinicalEntityType)
