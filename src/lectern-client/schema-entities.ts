@@ -80,6 +80,11 @@ export enum ValueType {
 
 export type SchemaProcessingResult = DeepReadonly<{
   validationErrors: SchemaValidationError[];
+  processedRecord: TypedDataRecord;
+}>;
+
+export type BatchProcessingResult = DeepReadonly<{
+  validationErrors: SchemaValidationError[];
   processedRecords: TypedDataRecord[];
 }>;
 

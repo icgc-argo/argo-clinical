@@ -94,7 +94,7 @@ export namespace operations {
     }
 
     let unifiedSchemaErrors: DeepReadonly<SubmissionValidationError[]> = [];
-    let validRecordsAccumulator: DeepReadonly<any[]> = [];
+    const validRecordsAccumulator: any[] = [];
     // check the program id if it matches the authorized one
     // This check is used to validate the program Id along with the schema validations
     // to save extra round trips
@@ -117,7 +117,7 @@ export namespace operations {
       );
 
       unifiedSchemaErrors = unifiedSchemaErrors.concat(programIdError);
-      validRecordsAccumulator = validRecordsAccumulator.concat(schemaResult.processedRecords);
+      validRecordsAccumulator.push(schemaResult.processedRecord);
     });
 
     if (!_.isEmpty(unifiedSchemaErrors)) {
@@ -764,7 +764,7 @@ export namespace operations {
     );
 
     let errorsAccumulator: DeepReadonly<SubmissionValidationError[]> = [];
-    let validRecordsAccumulator: DeepReadonly<any[]> = [];
+    const validRecordsAccumulator: any[] = [];
 
     command.records.forEach((r, index) => {
       const schemaResult = schemaManager.instance().process(command.clinicalType, r, index, schema);
@@ -786,7 +786,7 @@ export namespace operations {
         command.programId,
       );
       errorsAccumulator = errorsAccumulator.concat(programIdError);
-      validRecordsAccumulator = validRecordsAccumulator.concat(schemaResult.processedRecords);
+      validRecordsAccumulator.push(schemaResult.processedRecord);
     });
 
     return {

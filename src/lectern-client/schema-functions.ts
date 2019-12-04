@@ -4,6 +4,7 @@ import {
   SchemaTypes,
   SchemaProcessingResult,
   FieldNamesByPriorityMap,
+  BatchProcessingResult,
 } from './schema-entities';
 import vm from 'vm';
 import {
@@ -45,7 +46,7 @@ export const processRecords = (
   dataSchema: SchemasDictionary,
   definition: string,
   records: ReadonlyArray<DataRecord>,
-): SchemaProcessingResult => {
+): BatchProcessingResult => {
   Checks.checkNotNull('records', records);
   Checks.checkNotNull('dataSchema', dataSchema);
   Checks.checkNotNull('definition', definition);
@@ -58,12 +59,12 @@ export const processRecords = (
   }
 
   let validationErrors: SchemaValidationError[] = [];
-  let processedRecords: TypedDataRecord[] = [];
+  const processedRecords: TypedDataRecord[] = [];
 
   records.forEach((r, i) => {
     const result = process(dataSchema, definition, r, i);
     validationErrors = validationErrors.concat(result.validationErrors);
-    processedRecords = processedRecords.concat(result.processedRecords);
+    processedRecords.push(result.processedRecord);
   });
 
   L.debug(
@@ -95,7 +96,6 @@ export const process = (
   }
 
   let validationErrors: SchemaValidationError[] = [];
-  const processedRecords: TypedDataRecord[] = [];
 
   const defaultedRecord: DataRecord = populateDefaults(schemaDef, F(rec), index);
   L.debug(`done populating defaults for record #${index}`);
@@ -115,17 +115,15 @@ export const process = (
 
   if (postTypeConversionValidationResult && postTypeConversionValidationResult.length > 0) {
     validationErrors = validationErrors.concat(postTypeConversionValidationResult);
-  } else {
-    processedRecords.push(convertedRecord);
   }
 
   L.debug(
-    `done processing all rows, validationErrors: ${validationErrors.length}, validRecords: ${processedRecords.length}`,
+    `done processing all rows, validationErrors: ${validationErrors.length}, validRecords: ${convertedRecord}`,
   );
 
   return F({
     validationErrors,
-    processedRecords,
+    processedRecord: convertedRecord,
   });
 };
 
