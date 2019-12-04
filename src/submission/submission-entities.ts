@@ -187,8 +187,6 @@ export interface ClinicalSubmissionModifierCommand {
 export interface CreateSubmissionResult {
   readonly submission: DeepReadonly<ActiveClinicalSubmission> | undefined;
   readonly successful: boolean;
-  /** @deprecated */
-  readonly schemaErrors?: { [k: string]: SubmissionValidationError[] };
   batchErrors: DeepReadonly<SubmissionBatchError[]>;
 }
 

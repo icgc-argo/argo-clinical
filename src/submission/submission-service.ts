@@ -368,9 +368,10 @@ export namespace operations {
 
     return {
       submission: updated,
-      // this is only here for backward compatibility, will be removed in future PR.
-      schemaErrors: schemaErrors,
-      successful: Object.keys(schemaErrors).length === 0,
+      successful:
+        Object.keys(schemaErrors).length === 0 &&
+        dataToEntityMapErrors.length === 0 &&
+        fieldNameErrors.length === 0,
       batchErrors: [...dataToEntityMapErrors, ...fieldNameErrors],
     };
   };

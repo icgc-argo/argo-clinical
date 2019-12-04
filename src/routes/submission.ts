@@ -12,7 +12,7 @@ router.get('/', wrapAsync(submissionAPI.getActiveSubmissionByProgramId));
 router.post(
   '/upload',
   upload.array('clinicalFiles'),
-  wrapAsync(submissionAPI.saveClinicalTsvFiles),
+  wrapAsync(submissionAPI.uploadClinicalTsvFiles),
 );
 
 router.post('/validate/:versionId', wrapAsync(submissionAPI.validateActiveSubmission));
