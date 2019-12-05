@@ -698,8 +698,10 @@ describe('Submission Api', () => {
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .attach('clinicalFiles', file, 'donor.invalid.tsv')
         .end((err: any, res: any) => {
-          res.should.have.status(422);
-          res.body.schemaErrors.should.deep.eq({ donor: expectedDonorErrors });
+          res.should.have.status(207);
+          res.body.submission.clinicalEntities.donor.schemaErrors.should.deep.eq(
+            expectedDonorErrors,
+          );
           res.body.successful.should.deep.eq(false);
           done();
         });
@@ -1585,6 +1587,7 @@ describe('Submission Api', () => {
         submitterId: 'ICGC_0001',
         programId,
         clinicalInfo: {
+          program_id: 'ABCD-EF',
           vital_status: 'Deceased',
           cause_of_death: 'Unknown',
           submitter_donor_id: 'ICGC_0001',
@@ -1596,6 +1599,7 @@ describe('Submission Api', () => {
         submitterId: 'ICGC_0002',
         programId,
         clinicalInfo: {
+          program_id: 'ABCD-EF',
           vital_status: 'Unknown',
           cause_of_death: 'Died of cancer',
           submitter_donor_id: 'ICGC_0002',

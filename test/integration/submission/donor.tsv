@@ -1,2 +1,2 @@
-submitter_donor_id	vital_status	cause_of_death	survival_time
-ICGC_0001	deceased	died of cancer	522
+program_id	submitter_donor_id	vital_status	cause_of_death	survival_time
+ABCD-EF	ICGC_0001	deceased	died of cancer	522
