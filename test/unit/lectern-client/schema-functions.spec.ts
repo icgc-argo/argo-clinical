@@ -13,7 +13,7 @@ const PROGRAM_ID_REQ = 'program_id is a required field.';
 
 describe('schema-functions', () => {
   it('should populate records based on default value ', () => {
-    const result = schemaService.process(schema, 'registration', [
+    const result = schemaService.processRecords(schema, 'registration', [
       {
         program_id: 'PEME-CA',
         submitter_donor_id: 'OD1234',
@@ -40,7 +40,7 @@ describe('schema-functions', () => {
   });
 
   it('should NOT populate missing columns based on default value ', () => {
-    const result = schemaService.process(schema, 'registration', [
+    const result = schemaService.processRecords(schema, 'registration', [
       {
         program_id: 'PEME-CA',
         submitter_donor_id: 'OD1234',
@@ -72,7 +72,7 @@ describe('schema-functions', () => {
   });
 
   it('should validate required', () => {
-    const result = schemaService.process(schema, 'registration', [
+    const result = schemaService.processRecords(schema, 'registration', [
       {
         submitter_donor_id: 'OD1234',
         gender: 'Female',
@@ -93,7 +93,7 @@ describe('schema-functions', () => {
   });
 
   it('should validate value types', () => {
-    const result = schemaService.process(schema, 'address', [
+    const result = schemaService.processRecords(schema, 'address', [
       {
         country: 'US',
         unit_number: 'abc',
@@ -110,7 +110,7 @@ describe('schema-functions', () => {
   });
 
   it('should convert string to integer after processing', () => {
-    const result = schemaService.process(schema, 'address', [
+    const result = schemaService.processRecords(schema, 'address', [
       {
         country: 'US',
         unit_number: '123',
@@ -125,7 +125,7 @@ describe('schema-functions', () => {
   });
 
   it('should validate regex', () => {
-    const result = schemaService.process(schema, 'registration', [
+    const result = schemaService.processRecords(schema, 'registration', [
       {
         program_id: 'PEME-CAA',
         submitter_donor_id: 'OD1234',
@@ -147,7 +147,7 @@ describe('schema-functions', () => {
   });
 
   it('should validate range', () => {
-    const result = schemaService.process(schema, 'address', [
+    const result = schemaService.processRecords(schema, 'address', [
       {
         country: 'US',
         postal_code: '12345',
@@ -181,7 +181,7 @@ describe('schema-functions', () => {
   });
 
   it('should validate script', () => {
-    const result = schemaService.process(schema, 'address', [
+    const result = schemaService.processRecords(schema, 'address', [
       {
         country: 'US',
         postal_code: '12',
@@ -213,7 +213,7 @@ describe('schema-functions', () => {
   });
 
   it('should validate if non-required feilds are not provided', () => {
-    const result = schemaService.process(schema, 'donor', [
+    const result = schemaService.processRecords(schema, 'donor', [
       // optional enum field not provided
       {
         program_id: 'PACA-AU',
@@ -247,7 +247,7 @@ describe('schema-functions', () => {
   });
 
   it('should error if integer fields are not valid', () => {
-    const result = schemaService.process(schema, 'donor', [
+    const result = schemaService.processRecords(schema, 'donor', [
       {
         program_id: 'PACA-AU',
         submitter_donor_id: 'ICGC_0002',
@@ -269,7 +269,7 @@ describe('schema-functions', () => {
   });
 
   it('should validate case insensitive enums, return proper format', () => {
-    const result = schemaService.process(schema, 'registration', [
+    const result = schemaService.processRecords(schema, 'registration', [
       {
         program_id: 'PACA-AU',
         submitter_donor_id: 'OD1234',
@@ -295,7 +295,7 @@ describe('schema-functions', () => {
   });
 
   it('should not validate if unrecognized fields are provided', () => {
-    const result = schemaService.process(schema, 'donor', [
+    const result = schemaService.processRecords(schema, 'donor', [
       {
         program_id: 'PACA-AU',
         submitter_donor_id: 'ICGC_0002',

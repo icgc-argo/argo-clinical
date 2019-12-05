@@ -1,5 +1,5 @@
 import { Donor } from '../../../src/clinical/clinical-entities';
-import { ClinicalInfoFieldsEnum } from '../../../src/submission/submission-entities';
+import { DonorFieldsEnum } from '../../../src/submission/submission-entities';
 
 /**
  * strongly typed stubs file!!
@@ -101,8 +101,8 @@ export const stubs = {
       programId: 'PEME-CA',
       donorId: 10,
       clinicalInfo: {
-        [ClinicalInfoFieldsEnum.vital_status]: 'deceased',
-        [ClinicalInfoFieldsEnum.survival_time]: 522,
+        [DonorFieldsEnum.vital_status]: 'deceased',
+        [DonorFieldsEnum.survival_time]: 522,
       },
       gender: 'Female',
       specimens: [

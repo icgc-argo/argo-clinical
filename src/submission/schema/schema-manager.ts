@@ -73,13 +73,14 @@ class SchemaManager {
    */
   process = (
     schemaName: string,
-    records: ReadonlyArray<DataRecord>,
+    record: Readonly<DataRecord>,
+    index: number,
     schema?: SchemasDictionary,
   ): SchemaProcessingResult => {
     if (!schema && this.getCurrent() === undefined) {
       throw new Error('schema manager not initialized correctly');
     }
-    return service.process(schema || this.getCurrent(), schemaName, records);
+    return service.process(schema || this.getCurrent(), schemaName, record, index);
   };
 
   analyzeChanges = async (oldVersion: string, newVersion: string) => {
@@ -503,7 +504,7 @@ namespace MigrationManager {
 
     if (schemaName == ClinicalEntityType.DONOR) {
       if (donor.clinicalInfo) {
-        const result = service.process(schema, schemaName, [
+        const result = service.processRecords(schema, schemaName, [
           prepareForSchemaReProcessing(donor.clinicalInfo),
         ]);
         if (result.validationErrors.length > 0) {
@@ -520,7 +521,7 @@ namespace MigrationManager {
           }
         })
         .filter(notEmpty);
-      const result = service.process(schema, schemaName, clinicalRecords);
+      const result = service.processRecords(schema, schemaName, clinicalRecords);
       if (result.validationErrors.length > 0) {
         return result.validationErrors;
       }
@@ -540,13 +541,13 @@ namespace MigrationManager {
         })
         .filter(notEmpty);
 
-      const result = service.process(schema, schemaName, records);
+      const result = service.processRecords(schema, schemaName, records);
       if (result.validationErrors.length > 0) {
         return result.validationErrors;
       }
     }
 
-    const result = service.process(schema, schemaName, [
+    const result = service.processRecords(schema, schemaName, [
       prepareForSchemaReProcessing(clinicalEntity),
     ]);
 

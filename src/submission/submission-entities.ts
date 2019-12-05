@@ -187,8 +187,6 @@ export interface ClinicalSubmissionModifierCommand {
 export interface CreateSubmissionResult {
   readonly submission: DeepReadonly<ActiveClinicalSubmission> | undefined;
   readonly successful: boolean;
-  /** @deprecated */
-  readonly schemaErrors?: { [k: string]: SubmissionValidationError[] };
   batchErrors: DeepReadonly<SubmissionBatchError[]>;
 }
 
@@ -253,10 +251,12 @@ export interface SubmittedClinicalRecord {
   [fieldName: string]: string | number;
 }
 
-export enum ClinicalInfoFieldsEnum {
-  acquisition_interval = 'acquisition_interval',
+export enum DonorFieldsEnum {
   vital_status = 'vital_status',
   survival_time = 'survival_time',
+}
+export enum SpecimenFieldsEnum {
+  acquisition_interval = 'acquisition_interval',
 }
 
 export interface RecordValidationResult {

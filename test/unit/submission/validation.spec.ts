@@ -1,19 +1,23 @@
 import chai from 'chai';
 import sinon from 'sinon';
 import { donorDao } from '../../../src/clinical/donor-repo';
-import * as dv from '../../../src/submission/validation';
+import * as dv from '../../../src/submission/validation-clinical/validation';
 import {
   SubmissionValidationError,
   DataValidationErrors,
   CreateRegistrationRecord,
   FieldsEnum,
-  ClinicalInfoFieldsEnum,
   ClinicalEntityType,
+  SpecimenFieldsEnum,
+  DonorFieldsEnum,
 } from '../../../src/submission/submission-entities';
 import { Donor } from '../../../src/clinical/clinical-entities';
 import { stubs } from './stubs';
 import { fail } from 'assert';
-import { ClinicalSubmissionRecordsOperations } from '../../../src/submission/validation-clinical/utils';
+import {
+  ClinicalSubmissionRecordsOperations,
+  usingInvalidProgramId,
+} from '../../../src/submission/validation-clinical/utils';
 
 const genderMutatedErr: SubmissionValidationError = {
   fieldName: 'gender',
@@ -165,7 +169,7 @@ describe('data-validator', () => {
     it('should detect invalid program id', async () => {
       donorDaoCountByStub.returns(Promise.resolve(0));
       // test call
-      const result = await dv.usingInvalidProgramId(
+      const result = await usingInvalidProgramId(
         ClinicalEntityType.REGISTRATION,
         0,
         {
@@ -1184,7 +1188,7 @@ describe('data-validator', () => {
           [FieldsEnum.submitter_donor_id]: 'AB2',
           [FieldsEnum.program_id]: 'PEME-CA',
           [FieldsEnum.submitter_specimen_id]: 'SP13',
-          [ClinicalInfoFieldsEnum.acquisition_interval]: 5020,
+          [SpecimenFieldsEnum.acquisition_interval]: 5020,
           index: 0,
         },
       );
@@ -1195,7 +1199,7 @@ describe('data-validator', () => {
           [FieldsEnum.submitter_donor_id]: 'AB2',
           [FieldsEnum.program_id]: 'PEME-CA',
           [FieldsEnum.submitter_specimen_id]: 'SP14',
-          [ClinicalInfoFieldsEnum.acquisition_interval]: 9000,
+          [SpecimenFieldsEnum.acquisition_interval]: 9000,
           index: 1,
         },
       );
@@ -1207,15 +1211,15 @@ describe('data-validator', () => {
           [FieldsEnum.submitter_donor_id]: 'AB3',
           [FieldsEnum.program_id]: 'PEME-CA',
           [FieldsEnum.submitter_specimen_id]: 'SP12',
-          [ClinicalInfoFieldsEnum.acquisition_interval]: 2000,
+          [SpecimenFieldsEnum.acquisition_interval]: 2000,
           index: 0,
         },
       );
       ClinicalSubmissionRecordsOperations.addRecord(ClinicalEntityType.DONOR, newDonorAB3Records, {
         [FieldsEnum.submitter_donor_id]: 'AB3',
         [FieldsEnum.program_id]: 'PEME-CA',
-        [ClinicalInfoFieldsEnum.vital_status]: 'deceased',
-        [ClinicalInfoFieldsEnum.survival_time]: 522,
+        [DonorFieldsEnum.vital_status]: 'deceased',
+        [DonorFieldsEnum.survival_time]: 522,
         index: 0,
       });
       // AB2 is where only specimen is being uploaded and donor already has clinicalInfo
@@ -1230,7 +1234,7 @@ describe('data-validator', () => {
         )
         .catch(err => fail(err));
       const specimenIntervalErr: SubmissionValidationError = {
-        fieldName: ClinicalInfoFieldsEnum.acquisition_interval,
+        fieldName: SpecimenFieldsEnum.acquisition_interval,
         message: 'survival_time cannot be less than Specimen acquisition_interval.',
         type: DataValidationErrors.CONFLICTING_TIME_INTERVAL,
         index: 0,
@@ -1240,7 +1244,7 @@ describe('data-validator', () => {
         },
       };
       const specimenIntervalErr2 = {
-        fieldName: ClinicalInfoFieldsEnum.acquisition_interval,
+        fieldName: SpecimenFieldsEnum.acquisition_interval,
         type: DataValidationErrors.CONFLICTING_TIME_INTERVAL,
         index: 1,
         info: {
@@ -1249,7 +1253,7 @@ describe('data-validator', () => {
         },
       };
       const specimenIntervalErr3 = {
-        fieldName: ClinicalInfoFieldsEnum.acquisition_interval,
+        fieldName: SpecimenFieldsEnum.acquisition_interval,
         type: DataValidationErrors.CONFLICTING_TIME_INTERVAL,
         index: 0,
         info: {
@@ -1258,7 +1262,7 @@ describe('data-validator', () => {
         },
       };
       const donorSurvivalTimeErr = {
-        fieldName: ClinicalInfoFieldsEnum.survival_time,
+        fieldName: DonorFieldsEnum.survival_time,
         type: DataValidationErrors.CONFLICTING_TIME_INTERVAL,
         index: 0,
         info: {
@@ -1284,7 +1288,7 @@ describe('data-validator', () => {
         {
           [FieldsEnum.submitter_donor_id]: 'AB1',
           [FieldsEnum.submitter_specimen_id]: 'SP13',
-          [ClinicalInfoFieldsEnum.acquisition_interval]: 200,
+          [SpecimenFieldsEnum.acquisition_interval]: 200,
           index: 0,
         },
       );
@@ -1294,34 +1298,42 @@ describe('data-validator', () => {
         {
           [FieldsEnum.submitter_donor_id]: 'AB1',
           [FieldsEnum.submitter_specimen_id]: 'SP14',
-          [ClinicalInfoFieldsEnum.acquisition_interval]: 200,
+          [SpecimenFieldsEnum.acquisition_interval]: 200,
           index: 1,
         },
       );
+
       const result = await dv
         .validateSubmissionData({ AB1: newDonorAB1Records }, { AB1: existingDonorMock })
         .catch((err: any) => fail(err));
 
       const specimenIdErr1: SubmissionValidationError = {
-        fieldName: ClinicalInfoFieldsEnum.acquisition_interval,
-        message: `[acquisition_interval] requires [vital_status], [survival_time] in order to complete validation.  Please upload data for all fields in this clinical data submission.`,
+        fieldName: SpecimenFieldsEnum.acquisition_interval,
+        message: `[acquisition_interval] requires [donor.vital_status], [donor.survival_time] in order to complete validation.  Please upload data for all fields in this clinical data submission.`,
         type: DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
         index: 0,
         info: {
           donorSubmitterId: 'AB1',
           value: 200,
-          missingField: [ClinicalInfoFieldsEnum.vital_status, ClinicalInfoFieldsEnum.survival_time],
+          missingField: [
+            ClinicalEntityType.DONOR + '.' + DonorFieldsEnum.vital_status,
+            ClinicalEntityType.DONOR + '.' + DonorFieldsEnum.survival_time,
+          ],
         },
       };
+
       const specimenIdErr2: SubmissionValidationError = {
-        fieldName: ClinicalInfoFieldsEnum.acquisition_interval,
-        message: `[acquisition_interval] requires [vital_status], [survival_time] in order to complete validation.  Please upload data for all fields in this clinical data submission.`,
+        fieldName: SpecimenFieldsEnum.acquisition_interval,
+        message: `[acquisition_interval] requires [donor.vital_status], [donor.survival_time] in order to complete validation.  Please upload data for all fields in this clinical data submission.`,
         type: DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
         index: 1,
         info: {
           donorSubmitterId: 'AB1',
           value: 200,
-          missingField: [ClinicalInfoFieldsEnum.vital_status, ClinicalInfoFieldsEnum.survival_time],
+          missingField: [
+            ClinicalEntityType.DONOR + '.' + DonorFieldsEnum.vital_status,
+            ClinicalEntityType.DONOR + '.' + DonorFieldsEnum.survival_time,
+          ],
         },
       };
       chai.expect(result.specimen.dataErrors.length).to.eq(2);

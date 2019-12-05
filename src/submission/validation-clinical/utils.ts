@@ -3,22 +3,26 @@ import {
   SubmittedClinicalRecord,
   DataValidationErrors,
   SubmissionValidationError,
-  ClinicalInfoFieldsEnum,
   ModificationType,
   SubmissionValidationUpdate,
   RecordValidationResult,
   ClinicalEntityType,
   SubmittedClinicalRecordsMap,
   ClinicalUniqueIndentifier,
+  DonorFieldsEnum,
+  SpecimenFieldsEnum,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { validationErrorMessage } from '../submission-error-messages';
 import _ from 'lodash';
+import { DataRecord } from '../../lectern-client/schema-entities';
+import { SchemaValidationError } from '../../lectern-client/schema-entities';
+import { F } from '../../utils';
 
 export const buildSubmissionError = (
   newRecord: SubmittedClinicalRecord,
   type: DataValidationErrors,
-  fieldName: FieldsEnum | ClinicalInfoFieldsEnum,
+  fieldName: FieldsEnum | DonorFieldsEnum | SpecimenFieldsEnum,
   info: object = {},
 ): SubmissionValidationError => {
   // typescript refused to take this directly
@@ -42,7 +46,7 @@ export const buildSubmissionError = (
 export const buildSubmissionUpdate = (
   newRecord: SubmittedClinicalRecord,
   oldValue: string,
-  fieldName: FieldsEnum | ClinicalInfoFieldsEnum | string,
+  fieldName: FieldsEnum | string,
 ): SubmissionValidationUpdate => {
   // typescript refused to take this directly
   const index: number = newRecord.index;
@@ -134,7 +138,7 @@ export const buildMultipleRecordValidationResults = (
   records: ReadonlyArray<SubmittedClinicalRecord>,
   commonErrorProperties: {
     type: DataValidationErrors;
-    fieldName: FieldsEnum | ClinicalInfoFieldsEnum;
+    fieldName: FieldsEnum | DonorFieldsEnum | SpecimenFieldsEnum;
     info?: any;
   },
 ): RecordValidationResult[] => {
@@ -210,3 +214,51 @@ export namespace ClinicalSubmissionRecordsOperations {
     }
   }
 }
+
+export const usingInvalidProgramId = (
+  type: ClinicalEntityType,
+  newDonorIndex: number,
+  record: DataRecord,
+  expectedProgram: string,
+) => {
+  const errors: SubmissionValidationError[] = [];
+  const programId = record[FieldsEnum.program_id];
+  if (programId) {
+    if (expectedProgram !== programId) {
+      errors.push({
+        type: DataValidationErrors.INVALID_PROGRAM_ID,
+        fieldName: FieldsEnum.program_id,
+        index: newDonorIndex,
+        info: getSubmissionErrorInfoObject(type, record, expectedProgram),
+        message: validationErrorMessage(DataValidationErrors.INVALID_PROGRAM_ID),
+      });
+    }
+    return errors;
+  }
+  return [];
+};
+
+const getSubmissionErrorInfoObject = (
+  type: ClinicalEntityType,
+  record: DeepReadonly<DataRecord>,
+  expectedProgram: string,
+) => {
+  switch (type) {
+    case ClinicalEntityType.REGISTRATION: {
+      return {
+        value: record[FieldsEnum.program_id],
+        sampleSubmitterId: record[FieldsEnum.submitter_sample_id],
+        specimenSubmitterId: record[FieldsEnum.submitter_specimen_id],
+        donorSubmitterId: record[FieldsEnum.submitter_donor_id],
+        expectedProgram,
+      };
+    }
+    default: {
+      return {
+        value: record[FieldsEnum.program_id],
+        donorSubmitterId: record[FieldsEnum.submitter_donor_id],
+        expectedProgram,
+      };
+    }
+  }
+};

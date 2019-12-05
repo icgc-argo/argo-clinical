@@ -25,10 +25,10 @@ import {
   ActiveClinicalSubmission,
   FieldsEnum,
   SUBMISSION_STATE,
-  ClinicalInfoFieldsEnum,
   DataValidationErrors,
   SubmissionBatchErrorTypes,
   ClinicalEntityType,
+  DonorFieldsEnum,
 } from '../../../src/submission/submission-entities';
 import { TsvUtils } from '../../../src/utils';
 import { donorDao } from '../../../src/clinical/donor-repo';
@@ -225,7 +225,7 @@ const expectedDonorErrors = [
       donorSubmitterId: 'ICGC_0002',
     },
     message: 'The value is not permissible for this field.',
-    fieldName: ClinicalInfoFieldsEnum.survival_time,
+    fieldName: DonorFieldsEnum.survival_time,
   },
   {
     index: 0,
@@ -235,7 +235,7 @@ const expectedDonorErrors = [
       donorSubmitterId: 'ICGC_0002',
     },
     message: 'The value is not permissible for this field.',
-    fieldName: ClinicalInfoFieldsEnum.vital_status,
+    fieldName: DonorFieldsEnum.vital_status,
   },
 ];
 
@@ -698,8 +698,10 @@ describe('Submission Api', () => {
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .attach('clinicalFiles', file, 'donor.invalid.tsv')
         .end((err: any, res: any) => {
-          res.should.have.status(422);
-          res.body.schemaErrors.should.deep.eq({ donor: expectedDonorErrors });
+          res.should.have.status(207);
+          res.body.submission.clinicalEntities.donor.schemaErrors.should.deep.eq(
+            expectedDonorErrors,
+          );
           res.body.successful.should.deep.eq(false);
           done();
         });
@@ -1234,8 +1236,8 @@ describe('Submission Api', () => {
           chai.expect(updatedDonor).to.deep.include(donor);
           chai.expect(updatedDonor.clinicalInfo).to.exist;
           chai.expect(updatedDonor.clinicalInfo).to.deep.include({
-            [ClinicalInfoFieldsEnum.vital_status]: 'Deceased',
-            [ClinicalInfoFieldsEnum.survival_time]: 522,
+            [DonorFieldsEnum.vital_status]: 'Deceased',
+            [DonorFieldsEnum.survival_time]: 522,
           });
         });
     });
@@ -1405,7 +1407,7 @@ describe('Submission Api', () => {
             );
           chai
             .expect(updatedDonor.clinicalInfo)
-            .to.deep.include({ [ClinicalInfoFieldsEnum.vital_status]: 'Alive' });
+            .to.deep.include({ [DonorFieldsEnum.vital_status]: 'Alive' });
         });
     });
   });
@@ -1585,6 +1587,7 @@ describe('Submission Api', () => {
         submitterId: 'ICGC_0001',
         programId,
         clinicalInfo: {
+          program_id: 'ABCD-EF',
           vital_status: 'Deceased',
           cause_of_death: 'Unknown',
           submitter_donor_id: 'ICGC_0001',
@@ -1596,6 +1599,7 @@ describe('Submission Api', () => {
         submitterId: 'ICGC_0002',
         programId,
         clinicalInfo: {
+          program_id: 'ABCD-EF',
           vital_status: 'Unknown',
           cause_of_death: 'Died of cancer',
           submitter_donor_id: 'ICGC_0002',

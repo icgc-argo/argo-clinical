@@ -208,6 +208,14 @@
           "description": "The collection of data elements related to a specific donor in a specific ICGC-ARGO program.",
           "fields": [
             {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "restrictions": {
+                "required": true
+              }
+            },
+            {
               "description": "Unique identifier of the donor, assigned by the data provider.",
               "name": "submitter_donor_id",
               "restrictions": {
@@ -247,6 +255,14 @@
           "name": "primary_diagnosis",
           "description": "The collection of data elements related to a donor's primary diagnosis. The primary diagnosis is the first diagnosed case of cancer in a donor.",
           "fields": [
+            {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "restrictions": {
+                "required": true
+              }
+            },
             {
               "name": "submitter_donor_id",
               "valueType": "string",
@@ -337,6 +353,14 @@
           "name": "specimen",
           "description": "The collection of data elements related to a donor's specimen. A specimen is any material sample taken for testing, diagnostic or research purposes.",
           "fields": [
+            {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "restrictions": {
+                "required": true
+              }
+            },
             {
               "name": "submitter_donor_id",
               "description": "Unique identifier of the donor, assigned by the data provider.",
@@ -622,6 +646,14 @@
           "description": "The collection of data elements related to a specific donor in a specific ICGC-ARGO program.",
           "fields": [
             {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "restrictions": {
+                "required": true
+              }
+            },
+            {
               "description": "Unique identifier of the donor, assigned by the data provider.",
               "name": "submitter_donor_id",
               "restrictions": {
@@ -661,6 +693,14 @@
           "name": "primary_diagnosis",
           "description": "The collection of data elements related to a donor's primary diagnosis. The primary diagnosis is the first diagnosed case of cancer in a donor.",
           "fields": [
+            {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "restrictions": {
+                "required": true
+              }
+            },
             {
               "name": "submitter_donor_id",
               "valueType": "string",
@@ -751,6 +791,14 @@
           "name": "specimen",
           "description": "The collection of data elements related to a donor's specimen. A specimen is any material sample taken for testing, diagnostic or research purposes.",
           "fields": [
+            {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "restrictions": {
+                "required": true
+              }
+            },
             {
               "name": "submitter_donor_id",
               "description": "Unique identifier of the donor, assigned by the data provider.",
@@ -1036,6 +1084,14 @@
           "description": "The collection of data elements related to a specific donor in a specific ICGC-ARGO program.",
           "fields": [
             {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "restrictions": {
+                "required": true
+              }
+            },
+            {
               "description": "Unique identifier of the donor, assigned by the data provider.",
               "name": "submitter_donor_id",
               "restrictions": {
@@ -1075,6 +1131,14 @@
           "name": "primary_diagnosis",
           "description": "The collection of data elements related to a donor's primary diagnosis. The primary diagnosis is the first diagnosed case of cancer in a donor.",
           "fields": [
+            {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "restrictions": {
+                "required": true
+              }
+            },
             {
               "name": "submitter_donor_id",
               "valueType": "string",
@@ -1165,6 +1229,14 @@
           "name": "specimen",
           "description": "The collection of data elements related to a donor's specimen. A specimen is any material sample taken for testing, diagnostic or research purposes.",
           "fields": [
+            {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "restrictions": {
+                "required": true
+              }
+            },
             {
               "name": "submitter_donor_id",
               "description": "Unique identifier of the donor, assigned by the data provider.",
