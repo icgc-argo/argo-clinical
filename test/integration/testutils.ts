@@ -59,8 +59,6 @@ export const emptyDonorDocument = (overrides?: object) => {
     specimens: [],
     followUps: [],
     treatments: [],
-    chemotherapy: [],
-    hormoneTherapy: [],
   };
   if (!overrides) {
     return donor;

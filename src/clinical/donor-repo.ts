@@ -226,6 +226,24 @@ const SpecimenSchema = new mongoose.Schema(
 );
 SpecimenSchema.plugin(AutoIncrement, { inc_field: 'specimenId' });
 
+const TherapySchema = new mongoose.Schema(
+  {
+    clinicalInfo: {},
+    // can add other internal fields here if needed
+  },
+  { _id: false },
+);
+
+const TreatmentSchema = new mongoose.Schema(
+  {
+    clinicalInfo: {},
+    chemotherapy: [TherapySchema],
+    hormoneTherapy: [TherapySchema],
+    // can add other internal fields here if needed
+  },
+  { _id: false },
+);
+
 const DonorSchema = new mongoose.Schema(
   {
     donorId: { type: Number, index: true, unique: true, get: prefixDonorId },
@@ -236,9 +254,7 @@ const DonorSchema = new mongoose.Schema(
     clinicalInfo: {},
     primaryDiagnosis: {},
     followUps: Array,
-    treatments: Array,
-    chemotherapy: Array,
-    hormoneTherapy: Array,
+    treatments: [TreatmentSchema],
     schemaMetadata: {},
   },
   { timestamps: true },
