@@ -103,7 +103,7 @@ export const validateSubmissionData = async (
 
     // call submission validator or each clinical type
     for (const clinicalType in submittedRecords) {
-      const results = await submissionValidator[clinicalType].validate(
+      const results = await submissionValidator(clinicalType).validate(
         submittedRecords,
         existentDonor,
       );
