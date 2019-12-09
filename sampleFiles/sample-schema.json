@@ -2227,7 +2227,7 @@
             {
               "name": "chemotherapy_dosage_units",
               "description": "Indicate units used to record chemotherapy drug dosage.",
-              "valueType": "integer",
+              "valueType": "string",
               "restrictions": {
                 "required": true,
                 "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg"]

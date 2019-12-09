@@ -258,6 +258,9 @@ export enum DonorFieldsEnum {
 export enum SpecimenFieldsEnum {
   acquisition_interval = 'acquisition_interval',
 }
+export enum TreatmentFieldsEnum {
+  submitter_treatment_id = 'submitter_treatment_id',
+}
 
 export interface RecordValidationResult {
   type: ModificationType;
@@ -281,6 +284,8 @@ export enum ClinicalEntityType {
   DONOR = 'donor',
   SPECIMEN = 'specimen',
   PRIMARY_DIAGNOSIS = 'primary_diagnosis',
+  TREATMENT = 'treatment',
+  CHEMOTHERAPY = 'chemotherapy',
 }
 
 // batchNameRegex are arrays, so we can just add new file name regex when needed
@@ -290,13 +295,16 @@ export const BatchNameRegex: Record<ClinicalEntityType, RegExp[]> = {
   [ClinicalEntityType.DONOR]: [/^donor.*\.tsv$/],
   [ClinicalEntityType.SPECIMEN]: [/^specimen.*\.tsv$/],
   [ClinicalEntityType.PRIMARY_DIAGNOSIS]: [/^primary_diagnosis.*\.tsv/],
+  [ClinicalEntityType.TREATMENT]: [/^treatment.*\.tsv/],
+  [ClinicalEntityType.CHEMOTHERAPY]: [/^chemotherapy.*\.tsv/],
 };
 
 // assumption: one field uniquely identifies a clinical type record in a batch of records
-export const ClinicalUniqueIndentifier = {
+export const ClinicalUniqueIndentifier: { [clinicalType: string]: any } = {
   [ClinicalEntityType.DONOR]: FieldsEnum.submitter_donor_id,
   [ClinicalEntityType.SPECIMEN]: FieldsEnum.submitter_specimen_id,
   [ClinicalEntityType.PRIMARY_DIAGNOSIS]: FieldsEnum.submitter_donor_id,
+  [ClinicalEntityType.TREATMENT]: TreatmentFieldsEnum.submitter_treatment_id,
 };
 
 export interface ClinicalSubmissionRecordsByDonorIdMap {

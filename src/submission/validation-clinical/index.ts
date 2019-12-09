@@ -12,7 +12,7 @@ const availableValidators: { [k: string]: any } = {
 export const submissionValidator = (clinicalType: string): any => {
   const validator = availableValidators[clinicalType];
   if (!validator) {
-    // gracefully return a dummy validators if one doesn't exist
+    // return a dummy validator if one doesn't exist
     return { validate: () => [] };
   }
   return validator;

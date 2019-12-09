@@ -29,8 +29,10 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
     `[${errorData.fieldName}] requires [${errorData.info.missingField.join(
       '], [',
     )}] in order to complete validation.  Please upload data for all fields in this clinical data submission.`,
-  FOUND_IDENTICAL_IDS: errorData =>
-    `You are trying to submit the same [${errorData.fieldName}] in multiple rows. [${errorData.fieldName}] can only be submitted once per file.`,
+  FOUND_IDENTICAL_IDS: errorData => {
+    if (errorData.info.useAllRecordValues === true) return `This row is identical with another row`;
+    return `You are trying to submit the same [${errorData.fieldName}] in multiple rows. [${errorData.fieldName}] can only be submitted once per file.`;
+  },
 };
 
 const BATCH_ERROR_MESSAGES: Record<SubmissionBatchErrorTypes, (errorData: any) => string> = {

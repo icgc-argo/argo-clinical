@@ -143,13 +143,15 @@ function addErrorsForNoDonor(
 export const checkUniqueRecords = (
   clinicalType: ClinicalEntityType,
   newRecords: DeepReadonly<DataRecord[]>,
-  useAllRecordValues?: boolean, // use all record properties so it behaves like duplicate check
+  useAllRecordValues: boolean = false, // use all record properties so it behaves like duplicate check
 ): SubmissionValidationError[] => {
   if (clinicalType === ClinicalEntityType.REGISTRATION) {
     throw new Error('cannot check unique records for registration here.');
   }
 
   const uniqueIdName = ClinicalUniqueIndentifier[clinicalType];
+  if (!uniqueIdName) useAllRecordValues = true;
+
   const identifierToIndexMap: { [k: string]: number[] } = {};
   const indexToErrorMap: { [index: number]: SubmissionValidationError } = {};
 
@@ -174,7 +176,10 @@ export const checkUniqueRecords = (
         { ...record, index: recordIndex },
         DataValidationErrors.FOUND_IDENTICAL_IDS,
         uniqueIdName,
-        { conflictingRows: sameIdentifiedRecordIndecies.filter(i => i !== recordIndex) },
+        {
+          conflictingRows: sameIdentifiedRecordIndecies.filter(i => i !== recordIndex),
+          useAllRecordValues,
+        },
       );
     });
   });
