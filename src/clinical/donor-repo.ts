@@ -229,7 +229,7 @@ SpecimenSchema.plugin(AutoIncrement, { inc_field: 'specimenId' });
 const TherapySchema = new mongoose.Schema(
   {
     clinicalInfo: {},
-    // can add other internal fields here if needed
+    therapyType: { type: String },
   },
   { _id: false },
 );
@@ -237,9 +237,7 @@ const TherapySchema = new mongoose.Schema(
 const TreatmentSchema = new mongoose.Schema(
   {
     clinicalInfo: {},
-    chemotherapy: [TherapySchema],
-    hormoneTherapy: [TherapySchema],
-    // can add other internal fields here if needed
+    therapies: [TherapySchema],
   },
   { _id: false },
 );

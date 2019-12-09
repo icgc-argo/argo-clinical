@@ -36,16 +36,16 @@ export interface Sample {
 
 export interface Treatment {
   clinicalInfo?: ClinicalInfo;
-  chemotherapy: Array<Therapy>;
-  hormoneTherapy: Array<Therapy>;
+  therapies: Array<Therapy>;
 }
 
 export interface Therapy {
   clinicalInfo?: ClinicalInfo;
+  therapyType: string;
 }
 
 export interface ClinicalInfo {
-  [field: string]: string | number;
+  [field: string]: string | number | boolean | undefined;
 }
 
 export type DonorMap = Readonly<{ [submitterId: string]: Donor }>;
