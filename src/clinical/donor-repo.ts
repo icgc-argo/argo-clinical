@@ -229,7 +229,7 @@ SpecimenSchema.plugin(AutoIncrement, { inc_field: 'specimenId' });
 const TherapySchema = new mongoose.Schema(
   {
     clinicalInfo: {},
-    therapyType: { type: String },
+    therapyType: { type: String, required: true },
   },
   { _id: false },
 );
