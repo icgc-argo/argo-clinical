@@ -1452,7 +1452,7 @@ describe('Submission Api', () => {
         });
     });
 
-    it.only('TC-SMUIDAV should mark updated invalid donors as valid when they are approved', async () => {
+    it('TC-SMUIDAV should mark updated invalid donors as valid when they are approved', async () => {
       await createDonorDoc(
         dburl,
         emptyDonorDocument({
