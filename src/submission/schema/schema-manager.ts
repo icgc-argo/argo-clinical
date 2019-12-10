@@ -12,7 +12,7 @@ import { schemaRepo } from './schema-repo';
 import { loggerFor } from '../../logger';
 import { migrationRepo } from './migration-repo';
 import { DictionaryMigration } from './migration-entities';
-import { Donor } from '../../clinical/clinical-entities';
+import { Donor, ClinicalInfo } from '../../clinical/clinical-entities';
 import { DeepReadonly } from 'deep-freeze';
 import * as clinicalService from '../../clinical/clinical-service';
 import * as persistedConfig from '../persisted-config/service';
@@ -197,23 +197,21 @@ export const revalidateAllDonorClinicalEntitiesAgainstSchema = (
 ) => {
   const clinicalSchemaNames = getSchemaNamesForDonorClinicalEntities(donor);
   let isValid = true;
-  clinicalSchemaNames.forEach((p: any) => {
+  clinicalSchemaNames.forEach((schemaName: ClinicalEntitySchemaNames) => {
     if (!isValid) {
       return;
     }
-    const errs = MigrationManager.validateDonorEntityAgainstNewSchema(p.schemaName, schema, donor);
-    isValid = isValid && !(errs && errs.length > 0);
+    const errs = MigrationManager.validateDonorEntityAgainstNewSchema(schemaName, schema, donor);
+    isValid = !errs || errs.length == 0;
   });
   return isValid;
 };
 
 const getSchemaNamesForDonorClinicalEntities = (donor: DeepReadonly<Donor>) => {
-  const result: string[] = [];
-  for (const key in ClinicalEntitySchemaNames) {
-    const clinicalRecords = getClinicalEntitiesFromDonorBySchemaName(
-      donor,
-      key as ClinicalEntitySchemaNames,
-    );
+  const result: ClinicalEntitySchemaNames[] = [];
+  for (const key of Object.values(ClinicalEntitySchemaNames)) {
+    const clinicalRecords = getClinicalEntitiesFromDonorBySchemaName(donor, key);
+
     if (clinicalRecords.length > 0) {
       result.push(key);
     }
@@ -424,7 +422,7 @@ namespace MigrationManager {
     }
     const migrationId = migration._id;
     const dryRun = migration.dryRun;
-    const breakingChangesEntitesCache: { [versions: string]: string[] } = {};
+    const breakingChangesEntitesCache: { [versions: string]: ClinicalEntitySchemaNames[] } = {};
 
     while (!migrationDone) {
       let invalidCount = 0;
@@ -486,7 +484,7 @@ namespace MigrationManager {
   const revalidateDonorClinicalEntities = async (
     donor: DeepReadonly<Donor>,
     newSchema: SchemasDictionary,
-    breakingChangesEntitesCache: { [versions: string]: string[] },
+    breakingChangesEntitesCache: { [versions: string]: ClinicalEntitySchemaNames[] },
   ) => {
     const donorSchemaErrors: any[] = [];
     const donorDocSchemaVersion = donor.schemaMetadata.lastValidSchemaVersion;
@@ -508,7 +506,7 @@ namespace MigrationManager {
           return inf.fieldPath.split('.')[0];
         }),
         (e: string) => e,
-      );
+      ) as ClinicalEntitySchemaNames[];
       breakingChangesEntitesCache[versionsKey] = schemaNamesWithBreakingChanges;
     }
 
@@ -526,13 +524,13 @@ namespace MigrationManager {
   };
 
   export const validateDonorEntityAgainstNewSchema = (
-    schemaName: string,
+    schemaName: ClinicalEntitySchemaNames,
     schema: SchemasDictionary,
     donor: DeepReadonly<Donor>,
   ) => {
     L.debug(`checking donor ${donor.submitterId} for schema: ${schemaName}`);
     // todoo replace with clinical info definition
-    const clinicalRecords: any[] = getClinicalEntitiesFromDonorBySchemaName(
+    const clinicalRecords: ClinicalInfo[] = getClinicalEntitiesFromDonorBySchemaName(
       donor as Donor,
       schemaName as ClinicalEntitySchemaNames,
     );

@@ -24,6 +24,8 @@ import { registrationRepository } from '../registration-repo';
 import { submissionRepository } from '../submission-repo';
 import { mergeActiveSubmissionWithDonors } from './merge-submission';
 import * as schemaManager from '../schema/schema-manager';
+import { loggerFor } from '../../logger';
+const L = loggerFor(__filename);
 /**
  * This method will move the current submitted clinical data to
  * the clinical database
@@ -114,11 +116,13 @@ const performCommitSubmission = async (
   // check donor if was invalid against latest schema
   updatedDonorDTOs.forEach(ud => {
     if (ud.schemaMetadata.isValid === false) {
+      L.debug('Donor is invalid, revalidating if valid now');
       const isValid = schemaManager.revalidateAllDonorClinicalEntitiesAgainstSchema(
         ud,
         schemaManager.instance().getCurrent(),
       );
       if (isValid) {
+        L.info(`donor ${ud._id} is now valid`);
         ud.schemaMetadata.isValid = true;
         ud.schemaMetadata.lastValidSchemaVersion = schemaManager.instance().getCurrent().version;
       }
@@ -335,7 +339,9 @@ export function getClinicalEntitiesFromDonorBySchemaName(
   }
 
   if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS) {
-    return [donor.primaryDiagnosis];
+    if (donor.primaryDiagnosis) {
+      return [donor.primaryDiagnosis];
+    }
   }
   return [];
 }

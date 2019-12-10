@@ -18,6 +18,7 @@ import {
   generateDonor,
   assertDbCollectionEmpty,
   findInDb,
+  createDonorDoc,
 } from '../testutils';
 import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN, JWT_ABCDEF, JWT_WXYZEF } from '../test.jwt';
 import {
@@ -914,7 +915,7 @@ describe('Submission Api', () => {
           }
         });
     });
-    it.only('should return with appropriate stats', async () => {
+    it('should return with appropriate stats', async () => {
       const files: Buffer[] = [];
       try {
         files.push(fs.readFileSync(__dirname + '/donor.tsv'));
@@ -1157,16 +1158,15 @@ describe('Submission Api', () => {
     const programId = 'ABCD-EF';
     let donor: any;
     let submissionVersion: string;
-
     this.beforeEach(async () => {
       await clearCollections(dburl, ['donors', 'activesubmissions']);
       donor = await generateDonor(dburl, programId, 'ICGC_0001');
     });
 
-    const uploadSubmission = async () => {
+    const uploadSubmission = async (fileName: string = 'donor.tsv') => {
       let file: Buffer;
       try {
-        file = fs.readFileSync(__dirname + '/donor.tsv');
+        file = fs.readFileSync(__dirname + `/${fileName}`);
       } catch (err) {
         return err;
       }
@@ -1275,10 +1275,10 @@ describe('Submission Api', () => {
     let donor: any;
     let submissionVersion: string;
 
-    const uploadSubmission = async () => {
+    const uploadSubmission = async (fileName: string = 'donor.tsv') => {
       let file: Buffer;
       try {
-        file = fs.readFileSync(__dirname + '/donor.tsv');
+        file = fs.readFileSync(__dirname + `/${fileName}`);
       } catch (err) {
         return err;
       }
@@ -1333,6 +1333,7 @@ describe('Submission Api', () => {
       await clearCollections(dburl, ['donors', 'activesubmissions']);
       donor = await generateDonor(dburl, programId, 'ICGC_0001');
     });
+
     it('should return 401 if no auth is provided', done => {
       chai
         .request(app)
@@ -1401,6 +1402,7 @@ describe('Submission Api', () => {
           res.body.updatedBy.should.eq('Test User'); // the user who signed off into pending_approval
         });
     });
+
     it('should return 200 when commit is completed', async () => {
       // To get submission into correct state (pending approval) we need to already have a completed submission...
       await uploadSubmission();
@@ -1435,6 +1437,56 @@ describe('Submission Api', () => {
           chai
             .expect(updatedDonor.clinicalInfo)
             .to.deep.include({ [DonorFieldsEnum.vital_status]: 'Alive' });
+        });
+    });
+
+    it.only('should mark updated invalid donors as valid when they are approved', async () => {
+      await createDonorDoc(
+        dburl,
+        emptyDonorDocument({
+          submitterId: 'ICGC_0002',
+          programId,
+          schemaMetadata: {
+            isValid: false,
+            lastValidSchemaVersion: '0.1',
+            originalSchemaVersion: '0.1',
+          },
+          clinicalInfo: {
+            program_id: 'PACA-AU',
+            submitter_donor_id: 'ICGC_0001.1',
+            vital_status: 'InvalidOldValue',
+            cause_of_death: 'Died of other reasons',
+            survival_time: 540,
+          },
+        }),
+      );
+      await uploadSubmission('donor2.tsv');
+      await validateSubmission();
+      await commitActiveSubmission();
+
+      return chai
+        .request(app)
+        .post(`/submission/program/${programId}/clinical/approve/${submissionVersion}`)
+        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+        .then(async (res: any) => {
+          res.should.have.status(200);
+          res.body.should.be.empty;
+
+          // check activesubmission removed
+          await assertDbCollectionEmpty(dburl, 'activesubmissions');
+
+          // check donor merge
+          const [updatedDonor]: Donor[] = await findInDb(dburl, 'donors', {
+            programId: programId,
+            submitterId: 'ICGC_0002',
+          });
+
+          chai.expect(updatedDonor.schemaMetadata.isValid).to.be.true;
+          chai.expect(updatedDonor.schemaMetadata.lastValidSchemaVersion).to.eq('1.0');
+          chai.expect(updatedDonor.clinicalInfo).to.deep.include({
+            [DonorFieldsEnum.vital_status]: 'Deceased',
+            [DonorFieldsEnum.survival_time]: 100,
+          });
         });
     });
   });
