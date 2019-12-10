@@ -1,10 +1,5 @@
 import { DeepReadonly } from 'deep-freeze';
-import {
-  SchemaValidationErrorTypes,
-  SchemaValidationError,
-} from '../lectern-client/schema-entities';
-import { any } from 'bluebird';
-import { DONOR_CLINICAL_ENTITIES_FIELDS } from '../clinical/clinical-entities';
+import { SchemaValidationErrorTypes } from '../lectern-client/schema-entities';
 
 /**
  * Represents a valid registration that is not yet committed (in progress)

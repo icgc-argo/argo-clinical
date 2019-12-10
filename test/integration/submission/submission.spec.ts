@@ -1440,7 +1440,7 @@ describe('Submission Api', () => {
         });
     });
 
-    it.only('should mark updated invalid donors as valid when they are approved', async () => {
+    it('should mark updated invalid donors as valid when they are approved', async () => {
       await createDonorDoc(
         dburl,
         emptyDonorDocument({
