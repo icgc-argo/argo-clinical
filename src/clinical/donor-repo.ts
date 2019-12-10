@@ -237,6 +237,7 @@ const TherapySchema = new mongoose.Schema(
 const TreatmentSchema = new mongoose.Schema(
   {
     clinicalInfo: {},
+    submitterId: { type: String, required: true },
     therapies: [TherapySchema],
   },
   { _id: false },

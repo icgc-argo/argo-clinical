@@ -1,6 +1,11 @@
 import { DeepReadonly } from 'deep-freeze';
-import { Donor } from '../../clinical/clinical-entities';
-import { ActiveClinicalSubmission, FieldsEnum, ClinicalEntityType } from '../submission-entities';
+import { Donor, Treatment } from '../../clinical/clinical-entities';
+import {
+  ActiveClinicalSubmission,
+  FieldsEnum,
+  ClinicalEntityType,
+  TreatmentFieldsEnum,
+} from '../submission-entities';
 import _ from 'lodash';
 import { loggerFor } from '../../logger';
 import { Errors } from '../../utils';
@@ -40,6 +45,12 @@ export const mergeActiveSubmissionWithDonors = async (
         case ClinicalEntityType.PRIMARY_DIAGNOSIS:
           donor.primaryDiagnosis = record;
           break;
+        case ClinicalEntityType.TREATMENT:
+          addOrUpdateTreatementRecord(donor, record);
+          break;
+        case ClinicalEntityType.CHEMOTHERAPY: // other therapies here e.g. HormoneTherapy
+          addTherapyRecordToTretament(donor, record, entityType);
+          break;
         default:
           addOrUpdateClinicalEntity(donor, entityType, record);
           break;
@@ -54,6 +65,35 @@ const updateSpecimenRecord = (donor: Donor, record: ClinicalEnitityRecord) => {
   // Find specimen in donor
   const specimen = findSpecimen(donor, record[FieldsEnum.submitter_specimen_id]);
   specimen.clinicalInfo = record;
+};
+
+const addOrUpdateTreatementRecord = (donor: Donor, record: ClinicalEnitityRecord): Treatment => {
+  const submitterTreatementId = record[TreatmentFieldsEnum.submitter_treatment_id];
+  // Find treatment in donor and update
+  const treatment = findTreatment(donor, submitterTreatementId);
+  if (treatment) {
+    treatment.clinicalInfo = record;
+    return treatment;
+  }
+  // no treatment, so just add
+  donor.treatments = [{ submitterId: submitterTreatementId, clinicalInfo: record, therapies: [] }];
+  return donor.treatments[0];
+};
+
+const addTherapyRecordToTretament = (
+  donor: Donor,
+  record: ClinicalEnitityRecord,
+  therapyType: ClinicalEntityType,
+) => {
+  const submitterTreatementId = record[TreatmentFieldsEnum.submitter_treatment_id];
+  let treatment = findTreatment(donor, submitterTreatementId);
+  if (!treatment) {
+    // just add a dummy treatment for now, validation already checked treatment file will exsist for this therapy
+    treatment = addOrUpdateTreatementRecord(donor, {
+      [TreatmentFieldsEnum.submitter_treatment_id]: submitterTreatementId,
+    });
+  }
+  treatment.therapies.push({ clinicalInfo: record, therapyType });
 };
 
 const addOrUpdateClinicalEntity = (
@@ -83,4 +123,11 @@ const findSpecimen = (donor: Donor, specimenId: string) => {
   }
 
   return specimen;
+};
+
+const findTreatment = (donor: Donor, treatmentId: string) => {
+  if (donor.treatments) {
+    return donor.treatments.find(tr => tr.submitterId === treatmentId);
+  }
+  return undefined;
 };
