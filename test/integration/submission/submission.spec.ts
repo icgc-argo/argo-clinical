@@ -914,7 +914,7 @@ describe('Submission Api', () => {
           }
         });
     });
-    it('should return with appropriate stats', async () => {
+    it.only('should return with appropriate stats', async () => {
       const files: Buffer[] = [];
       try {
         files.push(fs.readFileSync(__dirname + '/donor.tsv'));
@@ -937,7 +937,24 @@ describe('Submission Api', () => {
             specimenTissueSource: 'Other',
             tumourNormalDesignation: 'Normal',
             submitterId: '8013861',
-            clinicalInfo: { percent_tumour_cells: 0.5 },
+            clinicalInfo: {
+              program_id: 'ABCD-EF',
+              submitter_donor_id: 'ICGC_0001',
+              submitter_specimen_id: '8013861',
+              acquisition_interval: 200,
+              anatomic_location_of_specimen_collection: 'Other',
+              central_pathology_confirmed: 'No',
+              tumour_histological_type: 'M-1111/22',
+              tumour_grading_system: 'Default',
+              tumour_grade: 'aStringValue',
+              tumour_staging_system: 'Murphy',
+              pathological_stage_group: 'aStringValue',
+              percent_proliferating_cells: 0.5,
+              percent_inflammatory_tissue: 0.6,
+              percent_stromal_cells: 0.65,
+              percent_necrosis: 0.65,
+              percent_tumour_cells: 0.5,
+            },
           },
         ],
         donorId: 1,

@@ -99,6 +99,8 @@ const getSubmissionUpdates = (clinicalObject: any, record: SubmittedClinicalReco
   const submissionUpdates: SubmissionValidationUpdate[] = [];
   if (clinicalObject) {
     for (const fieldName in record) {
+      // skip the index field
+      if (fieldName == 'index') continue;
       // new field added not in the old object
       if (!clinicalObject[fieldName]) {
         submissionUpdates.push(buildSubmissionUpdate(record, '', fieldName));
