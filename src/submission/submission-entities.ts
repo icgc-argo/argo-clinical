@@ -100,6 +100,12 @@ export enum DataValidationErrors {
   FOUND_IDENTICAL_IDS = 'FOUND_IDENTICAL_IDS',
 }
 
+export enum TreatmentDataValidationErrors {
+  INVALID_CHEMOTHERAPY_DATA = 'INVALID_CHEMOTHERAPY_DATA',
+  CONFLICTING_THERAPY_TREATMENT_DATA = 'CONFLICTING_THERAPY_TREATMENT_DATA',
+  TREATMENT_ID_NOT_FOUND = 'TREATMENT_ID_NOT_FOUND',
+}
+
 export type RegistrationStat = Array<{
   submitterId: string;
   rowNumbers: number[];
@@ -260,6 +266,7 @@ export enum SpecimenFieldsEnum {
 }
 export enum TreatmentFieldsEnum {
   submitter_treatment_id = 'submitter_treatment_id',
+  treatment_type = 'treatment_type',
 }
 
 export interface RecordValidationResult {
@@ -284,7 +291,7 @@ export enum ClinicalEntityType {
   DONOR = 'donor',
   SPECIMEN = 'specimen',
   PRIMARY_DIAGNOSIS = 'primary_diagnosis',
-  TREATMENT = 'treatment',
+  TREATMENT = 'treatment', // make treatments!?
   CHEMOTHERAPY = 'chemotherapy',
 }
 

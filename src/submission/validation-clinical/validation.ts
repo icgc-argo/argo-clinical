@@ -25,6 +25,7 @@ import {
 } from './utils';
 import _ from 'lodash';
 import { ClinicalSubmissionRecordsOperations } from './utils';
+import { mergeRecordsIntoDonor as mergeRecordsAndDonor } from './merge-donor';
 
 export const validateRegistrationData = async (
   expectedProgram: string,
@@ -101,11 +102,14 @@ export const validateSubmissionData = async (
       continue;
     }
 
+    const mergedDonor = mergeRecordsAndDonor(submittedRecords, existentDonor);
+
     // call submission validator or each clinical type
     for (const clinicalType in submittedRecords) {
       const results = await submissionValidator(clinicalType).validate(
         submittedRecords,
         existentDonor,
+        mergedDonor,
       );
 
       recordValidationResultMap[clinicalType] = _.concat(

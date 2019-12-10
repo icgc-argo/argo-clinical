@@ -1,12 +1,16 @@
 import * as donor from './donor';
 import * as specimen from './specimen';
 import * as primary_diagnosis from './primary_diagnosis';
+import * as treatment from './treatment';
+import * as chemotherapy from './chemotherapy';
 
 // this done because typescript doesn't allow mapping with string index signature for default export
 const availableValidators: { [k: string]: any } = {
   donor,
   primary_diagnosis,
   specimen,
+  treatment,
+  chemotherapy,
 };
 
 export const submissionValidator = (clinicalType: string): any => {

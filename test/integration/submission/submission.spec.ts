@@ -199,6 +199,7 @@ const expectedDonorErrors = [
     info: {
       value: 'ICGC_0001',
       donorSubmitterId: 'ICGC_0001',
+      useAllRecordValues: false,
       conflictingRows: [2],
     },
     message:
@@ -211,6 +212,7 @@ const expectedDonorErrors = [
     info: {
       value: 'ICGC_0001',
       donorSubmitterId: 'ICGC_0001',
+      useAllRecordValues: false,
       conflictingRows: [1],
     },
     message:
