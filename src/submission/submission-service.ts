@@ -28,7 +28,7 @@ import {
   SubmissionBatchErrorTypes,
   ValidateSubmissionResult,
   NewClinicalEntities,
-  ClinicalEntityType,
+  ClinicalEntitySchemaNames,
   BatchNameRegex,
   ClinicalSubmissionRecordsByDonorIdMap,
   RevalidateClinicalSubmissionCommand,
@@ -101,16 +101,16 @@ export namespace operations {
     command.records.forEach((r, index) => {
       const schemaResult = schemaManager
         .instance()
-        .process(ClinicalEntityType.REGISTRATION, r, index);
+        .process(ClinicalEntitySchemaNames.REGISTRATION, r, index);
 
       if (anyErrors(schemaResult.validationErrors)) {
         unifiedSchemaErrors = unifiedSchemaErrors.concat(
-          unifySchemaErrors(ClinicalEntityType.REGISTRATION, schemaResult, command.records),
+          unifySchemaErrors(ClinicalEntitySchemaNames.REGISTRATION, schemaResult, command.records),
         );
       }
 
       const programIdError = usingInvalidProgramId(
-        ClinicalEntityType.REGISTRATION,
+        ClinicalEntitySchemaNames.REGISTRATION,
         index,
         r,
         command.programId,
@@ -286,7 +286,9 @@ export namespace operations {
     // Step 1 map dataArray to entitesMap
     const { newClinicalEntitesMap, dataToEntityMapErrors } = mapClinicalDataToEntity(
       command.newClinicalData,
-      Object.values(ClinicalEntityType).filter(type => type !== ClinicalEntityType.REGISTRATION),
+      Object.values(ClinicalEntitySchemaNames).filter(
+        type => type !== ClinicalEntitySchemaNames.REGISTRATION,
+      ),
     );
 
     // Step 2 filter entites with invalid fieldNames
@@ -494,7 +496,7 @@ export namespace operations {
         }
         // by this point we have already validated for uniqueness
         ClinicalSubmissionRecordsOperations.addRecord(
-          clinicalType as ClinicalEntityType,
+          clinicalType as ClinicalEntitySchemaNames,
           clinicalSubmissionRecords[donorId],
           {
             ...rc,
@@ -626,7 +628,7 @@ export namespace operations {
   };
 
   const unifySchemaErrors = (
-    type: ClinicalEntityType,
+    type: ClinicalEntitySchemaNames,
     result: SchemaProcessingResult,
     records: ReadonlyArray<DataRecord>,
   ) => {
@@ -758,7 +760,7 @@ export namespace operations {
   ) => {
     // check records are unique
     const errors: SubmissionValidationError[] = checkUniqueRecords(
-      command.clinicalType as ClinicalEntityType,
+      command.clinicalType as ClinicalEntitySchemaNames,
       command.records,
     );
 
@@ -771,7 +773,7 @@ export namespace operations {
       if (schemaResult.validationErrors.length > 0) {
         errorsAccumulator = errorsAccumulator.concat(
           unifySchemaErrors(
-            command.clinicalType as ClinicalEntityType,
+            command.clinicalType as ClinicalEntitySchemaNames,
             schemaResult,
             command.records,
           ),
@@ -779,7 +781,7 @@ export namespace operations {
       }
 
       const programIdError = usingInvalidProgramId(
-        ClinicalEntityType.REGISTRATION,
+        ClinicalEntitySchemaNames.REGISTRATION,
         index,
         r,
         command.programId,
@@ -816,7 +818,7 @@ export namespace operations {
 
   const mapClinicalDataToEntity = (
     clinicalData: ReadonlyArray<NewClinicalEntity>,
-    expectedClinicalEntites: ReadonlyArray<ClinicalEntityType>,
+    expectedClinicalEntites: ReadonlyArray<ClinicalEntitySchemaNames>,
   ): DeepReadonly<{
     newClinicalEntitesMap: NewClinicalEntities;
     dataToEntityMapErrors: Array<SubmissionBatchError>;
@@ -927,7 +929,7 @@ export namespace operations {
           fieldNames: command.fieldNames,
         },
       ],
-      [ClinicalEntityType.REGISTRATION],
+      [ClinicalEntitySchemaNames.REGISTRATION],
     );
     if (dataToEntityMapErrors.length !== 0) {
       return dataToEntityMapErrors;
@@ -965,12 +967,12 @@ async function updateSubmissionWithVersionOrDeleteEmpty(
 }
 
 const getSchemaValidationErrorInfoObject = (
-  type: ClinicalEntityType,
+  type: ClinicalEntitySchemaNames,
   schemaErr: DeepReadonly<SchemaValidationError>,
   record: DeepReadonly<DataRecord>,
 ) => {
   switch (type) {
-    case ClinicalEntityType.REGISTRATION: {
+    case ClinicalEntitySchemaNames.REGISTRATION: {
       return F({
         ...schemaErr.info,
         value: record[schemaErr.fieldName],

@@ -8,7 +8,7 @@ import {
   RegistrationToCreateRegistrationFieldsMap,
   RecordValidationResult,
   ClinicalTypeValidateResult,
-  ClinicalEntityType,
+  ClinicalEntitySchemaNames,
   ClinicalUniqueIndentifier,
   ClinicalSubmissionRecordsByDonorIdMap,
   SubmittedClinicalRecordsMap,
@@ -86,8 +86,8 @@ export const validateSubmissionData = async (
   existingDonors: DeepReadonly<DonorMap>,
 ): Promise<ClinicalTypeValidateResult> => {
   const recordValidationResultMap: { [clinicalType: string]: RecordValidationResult[] } = {};
-  Object.values(ClinicalEntityType)
-    .filter(type => type != ClinicalEntityType.REGISTRATION)
+  Object.values(ClinicalEntitySchemaNames)
+    .filter(type => type != ClinicalEntitySchemaNames.REGISTRATION)
     .map(type => (recordValidationResultMap[type] = []));
 
   for (const donorSubmitterId in newRecordsToDonorMap) {
@@ -128,7 +128,7 @@ function addErrorsForNoDonor(
 ) {
   for (const clinicalType in submittedRecords) {
     const records = ClinicalSubmissionRecordsOperations.getArrayRecords(
-      clinicalType as ClinicalEntityType,
+      clinicalType as ClinicalEntitySchemaNames,
       submittedRecords,
     );
     const multipleRecordValidationResults = buildMultipleRecordValidationResults(records, {
@@ -140,7 +140,7 @@ function addErrorsForNoDonor(
 }
 
 export const usingInvalidProgramId = (
-  type: ClinicalEntityType,
+  type: ClinicalEntitySchemaNames,
   newDonorIndex: number,
   record: DataRecord,
   expectedProgram: string,
@@ -163,11 +163,11 @@ export const usingInvalidProgramId = (
 };
 
 export const checkUniqueRecords = (
-  clinicalType: ClinicalEntityType,
+  clinicalType: ClinicalEntitySchemaNames,
   newRecords: DeepReadonly<DataRecord[]>,
   useAllRecordValues?: boolean, // use all record properties so it behaves like duplicate check
 ): SubmissionValidationError[] => {
-  if (clinicalType === ClinicalEntityType.REGISTRATION) {
+  if (clinicalType === ClinicalEntitySchemaNames.REGISTRATION) {
     throw new Error('cannot check unique records for registration here.');
   }
 
@@ -204,12 +204,12 @@ export const checkUniqueRecords = (
 };
 
 const getInfoObject = (
-  type: ClinicalEntityType,
+  type: ClinicalEntitySchemaNames,
   record: DeepReadonly<DataRecord>,
   expectedProgram: string,
 ) => {
   switch (type) {
-    case ClinicalEntityType.REGISTRATION: {
+    case ClinicalEntitySchemaNames.REGISTRATION: {
       return {
         value: record[FieldsEnum.program_id],
         sampleSubmitterId: record[FieldsEnum.submitter_sample_id],

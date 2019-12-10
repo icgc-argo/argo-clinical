@@ -27,7 +27,7 @@ import {
   SUBMISSION_STATE,
   DataValidationErrors,
   SubmissionBatchErrorTypes,
-  ClinicalEntityType,
+  ClinicalEntitySchemaNames,
   DonorFieldsEnum,
 } from '../../../src/submission/submission-entities';
 import { TsvUtils } from '../../../src/utils';
@@ -157,7 +157,7 @@ const ABCD_REGISTRATION_DOC: ActiveRegistration = {
   programId: 'ABCD-EF',
   creator: 'Test User',
   schemaVersion: '1.0',
-  batchName: `${ClinicalEntityType.REGISTRATION}.tsv`,
+  batchName: `${ClinicalEntitySchemaNames.REGISTRATION}.tsv`,
   stats: {
     newDonorIds: [
       {
@@ -346,7 +346,7 @@ describe('Submission Api', () => {
     it("should return 403 requested program doesn't match authorized in token scopes", done => {
       let file: Buffer;
       try {
-        file = fs.readFileSync(__dirname + `/${ClinicalEntityType.REGISTRATION}.tsv`);
+        file = fs.readFileSync(__dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.tsv`);
       } catch (err) {
         return done(err);
       }
@@ -356,7 +356,7 @@ describe('Submission Api', () => {
         // passing token with different program
         .auth(JWT_WXYZEF, { type: 'bearer' })
         .type('form')
-        .attach('registrationFile', file, `${ClinicalEntityType.REGISTRATION}.tsv`)
+        .attach('registrationFile', file, `${ClinicalEntitySchemaNames.REGISTRATION}.tsv`)
         .end((err: any, res: any) => {
           res.should.have.status(403);
           done();
@@ -369,17 +369,17 @@ describe('Submission Api', () => {
       let rows: any[];
 
       try {
-        file = fs.readFileSync(__dirname + `/${ClinicalEntityType.REGISTRATION}.1.tsv`);
+        file = fs.readFileSync(__dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`);
         (async () =>
           (rows = (await TsvUtils.tsvToJson(
-            __dirname + `/${ClinicalEntityType.REGISTRATION}.1.tsv`,
+            __dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`,
           )) as any[]))();
       } catch (err) {
         return done(err);
       }
 
       try {
-        file2 = fs.readFileSync(__dirname + `/${ClinicalEntityType.REGISTRATION}.2.tsv`);
+        file2 = fs.readFileSync(__dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.2.tsv`);
       } catch (err) {
         return done(err);
       }
@@ -389,7 +389,7 @@ describe('Submission Api', () => {
         .post('/submission/program/ABCD-EF/registration')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .type('form')
-        .attach('registrationFile', file, `${ClinicalEntityType.REGISTRATION}.1.tsv`)
+        .attach('registrationFile', file, `${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`)
         .end(async (err: any, res: any) => {
           try {
             await assertUploadOKRegistrationCreated(res, dburl);
@@ -406,7 +406,11 @@ describe('Submission Api', () => {
                     .post('/submission/program/ABCD-EF/registration')
                     .auth(JWT_ABCDEF, { type: 'bearer' })
                     .type('form')
-                    .attach('registrationFile', file2, `${ClinicalEntityType.REGISTRATION}.2.tsv`)
+                    .attach(
+                      'registrationFile',
+                      file2,
+                      `${ClinicalEntitySchemaNames.REGISTRATION}.2.tsv`,
+                    )
                     .end(async (err: any, res: any) => {
                       try {
                         await assertUploadOKRegistrationCreated(res, dburl);
@@ -441,10 +445,10 @@ describe('Submission Api', () => {
       let file: Buffer;
       let rows: any[];
       try {
-        file = fs.readFileSync(__dirname + `/${ClinicalEntityType.REGISTRATION}.1.tsv`);
+        file = fs.readFileSync(__dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`);
         (async () =>
           (rows = (await TsvUtils.tsvToJson(
-            __dirname + `/${ClinicalEntityType.REGISTRATION}.1.tsv`,
+            __dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`,
           )) as any[]))();
       } catch (err) {
         return done(err);
@@ -455,7 +459,7 @@ describe('Submission Api', () => {
         .post('/submission/program/ABCD-EF/registration')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .type('form')
-        .attach('registrationFile', file, `${ClinicalEntityType.REGISTRATION}.1.tsv`)
+        .attach('registrationFile', file, `${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`)
         .end(async (err: any, res: any) => {
           try {
             await assertUploadOKRegistrationCreated(res, dburl);
@@ -480,7 +484,11 @@ describe('Submission Api', () => {
                     .post('/submission/program/ABCD-EF/registration')
                     .auth(JWT_ABCDEF, { type: 'bearer' })
                     .type('form')
-                    .attach('registrationFile', file, `${ClinicalEntityType.REGISTRATION}.1.tsv`)
+                    .attach(
+                      'registrationFile',
+                      file,
+                      `${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`,
+                    )
                     .end(async (err: any, res: any) => {
                       try {
                         await assertUploadOKRegistrationCreated(res, dburl);
@@ -516,7 +524,7 @@ describe('Submission Api', () => {
     it('should accept valid registration tsv', done => {
       let file: Buffer;
       try {
-        file = fs.readFileSync(__dirname + `/${ClinicalEntityType.REGISTRATION}.tsv`);
+        file = fs.readFileSync(__dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.tsv`);
       } catch (err) {
         return done(err);
       }
@@ -525,7 +533,7 @@ describe('Submission Api', () => {
         .post('/submission/program/ABCD-EF/registration')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .type('form')
-        .attach('registrationFile', file, `${ClinicalEntityType.REGISTRATION}.tsv`)
+        .attach('registrationFile', file, `${ClinicalEntitySchemaNames.REGISTRATION}.tsv`)
         .end(async (err: any, res: any) => {
           try {
             res.should.have.status(201);
@@ -557,7 +565,9 @@ describe('Submission Api', () => {
       await insertData(dburl, 'activeregistrations', ABCD_REGISTRATION_DOC);
       let file: Buffer;
       try {
-        file = fs.readFileSync(__dirname + `/${ClinicalEntityType.REGISTRATION}.invalid.tsv`);
+        file = fs.readFileSync(
+          __dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.invalid.tsv`,
+        );
       } catch (err) {
         throw err;
       }
@@ -565,7 +575,7 @@ describe('Submission Api', () => {
         .request(app)
         .post('/submission/program/ABCD-EF/registration')
         .type('form')
-        .attach('registrationFile', file, `${ClinicalEntityType.REGISTRATION}.invalid.tsv`)
+        .attach('registrationFile', file, `${ClinicalEntitySchemaNames.REGISTRATION}.invalid.tsv`)
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .end(async (err: any, res: any) => {
           try {
@@ -1496,7 +1506,7 @@ describe('Submission Api', () => {
 
   describe('schema', function() {
     it('get template found', done => {
-      const name = ClinicalEntityType.REGISTRATION;
+      const name = ClinicalEntitySchemaNames.REGISTRATION;
       console.log("Getting template for '" + name + "'...");
       chai
         .request(app)

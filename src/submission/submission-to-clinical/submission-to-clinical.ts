@@ -13,16 +13,19 @@ import {
   SubmittedRegistrationRecord,
   FieldsEnum,
   SUBMISSION_STATE,
+  ClinicalEntitySchemaNames,
+  DONOR_FIELDS_TO_SCHEMA_NAMES,
+  CLINICAL_SCHEMA_NAMES_TO_DONOR_FIELDS,
 } from '../submission-entities';
 
-import { Errors } from '../../utils';
+import { Errors, notEmpty, deepFind } from '../../utils';
 import { donorDao } from '../../clinical/donor-repo';
 import _ from 'lodash';
 import { F } from '../../utils';
 import { registrationRepository } from '../registration-repo';
 import { submissionRepository } from '../submission-repo';
 import { mergeActiveSubmissionWithDonors } from './merge-submission';
-
+import * as schemaManager from '../schema/schema-manager';
 /**
  * This method will move the current submitted clinical data to
  * the clinical database
@@ -105,19 +108,33 @@ const performCommitSubmission = async (
     throw new Errors.StateConflict(
       'Donors for this submission cannot be found in the clinical database.',
     );
-  } else {
-    // Update with all relevant records
-    const updatedDonorDTOs = await mergeActiveSubmissionWithDonors(activeSubmission, donorDTOs);
+  }
 
-    try {
-      // write each updated donor to the db
-      await donorDao.updateAll(updatedDonorDTOs.map(dto => F(dto)));
+  // Update with all relevant records
+  const updatedDonorDTOs = await mergeActiveSubmissionWithDonors(activeSubmission, donorDTOs);
 
-      // If the save completed without error, we can delete the active registration
-      submissionRepository.deleteByProgramId(activeSubmission.programId);
-    } catch (err) {
-      throw new Error(`Failure occured saving clinical data: ${err}`);
+  // check donor if was invalid against latest schema
+  updatedDonorDTOs.forEach(ud => {
+    if (ud.schemaMetadata.isValid === false) {
+      const isValid = schemaManager.revalidateAllDonorClinicalEntitiesAgainstSchema(
+        ud,
+        schemaManager.instance().getCurrent(),
+      );
+      if (isValid) {
+        ud.schemaMetadata.isValid = true;
+        ud.schemaMetadata.lastValidSchemaVersion = schemaManager.instance().getCurrent().version;
+      }
     }
+  });
+
+  try {
+    // write each updated donor to the db
+    await donorDao.updateAll(updatedDonorDTOs.map(dto => F(dto)));
+
+    // If the save completed without error, we can delete the active registration
+    submissionRepository.deleteByProgramId(activeSubmission.programId);
+  } catch (err) {
+    throw new Error(`Failure occured saving clinical data: ${err}`);
   }
 };
 
@@ -156,6 +173,13 @@ export const commitRegisteration = async (command: Readonly<CommitRegistrationCo
       registration.stats.newSampleIds.map(s => s.submitterId)) ||
     []
   );
+};
+
+export const getDonorClinicalInfo = (
+  clinicalEntitySchemaName: ClinicalEntitySchemaNames,
+  donor: Donor,
+) => {
+  return deepFind(donor, CLINICAL_SCHEMA_NAMES_TO_DONOR_FIELDS[clinicalEntitySchemaName]);
 };
 
 const fromCreateDonorDtoToDonor = (createDonorDto: DeepReadonly<CreateDonorSampleDto>) => {
@@ -298,6 +322,34 @@ const getDonorSpecimen = (record: SubmittedRegistrationRecord) => {
     ],
   };
 };
+
+export function getClinicalEntitiesFromDonorBySchemaName(
+  donor: DeepReadonly<Donor>,
+  clinicalEntitySchemaName: ClinicalEntitySchemaNames,
+): any[] {
+  if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.DONOR) {
+    if (donor.clinicalInfo) {
+      return [donor.clinicalInfo];
+    }
+    return [];
+  }
+
+  if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.SPECIMEN) {
+    const clinicalRecords = donor.specimens
+      .map(sp => {
+        if (sp.clinicalInfo) {
+          return sp.clinicalInfo;
+        }
+      })
+      .filter(notEmpty);
+    return clinicalRecords;
+  }
+
+  if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS) {
+    return [donor.primaryDiagnosis];
+  }
+  return [];
+}
 
 export interface CreateDonorSampleDto {
   gender: string;

@@ -1,6 +1,10 @@
 import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
-import { ActiveClinicalSubmission, FieldsEnum, ClinicalEntityType } from '../submission-entities';
+import {
+  ActiveClinicalSubmission,
+  FieldsEnum,
+  ClinicalEntitySchemaNames,
+} from '../submission-entities';
 import _ from 'lodash';
 import { loggerFor } from '../../logger';
 import { Errors } from '../../utils';
@@ -31,13 +35,13 @@ export const mergeActiveSubmissionWithDonors = async (
       }
 
       switch (entityType) {
-        case ClinicalEntityType.DONOR:
+        case ClinicalEntitySchemaNames.DONOR:
           donor.clinicalInfo = record;
           break;
-        case ClinicalEntityType.SPECIMEN:
+        case ClinicalEntitySchemaNames.SPECIMEN:
           updateSpecimenRecord(donor, record);
           break;
-        case ClinicalEntityType.PRIMARY_DIAGNOSIS:
+        case ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS:
           donor.primaryDiagnosis = record;
           break;
         default:

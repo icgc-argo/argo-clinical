@@ -6,7 +6,7 @@ import {
   ModificationType,
   SubmissionValidationUpdate,
   RecordValidationResult,
-  ClinicalEntityType,
+  ClinicalEntitySchemaNames,
   SubmittedClinicalRecordsMap,
   ClinicalUniqueIndentifier,
   DonorFieldsEnum,
@@ -161,7 +161,7 @@ export const buildMultipleRecordValidationResults = (
 export namespace ClinicalSubmissionRecordsOperations {
   // this function will mutate a SubmittedRecords
   export function addRecord(
-    type: ClinicalEntityType,
+    type: ClinicalEntitySchemaNames,
     records: SubmittedClinicalRecordsMap,
     record: SubmittedClinicalRecord,
   ) {
@@ -173,7 +173,7 @@ export namespace ClinicalSubmissionRecordsOperations {
   }
 
   export function getSingleRecord(
-    type: ClinicalEntityType,
+    type: ClinicalEntitySchemaNames,
     records: DeepReadonly<SubmittedClinicalRecordsMap>,
   ): DeepReadonly<SubmittedClinicalRecord | undefined> {
     checkNotRegistration(type);
@@ -186,7 +186,7 @@ export namespace ClinicalSubmissionRecordsOperations {
   }
 
   export function getArrayRecords(
-    type: ClinicalEntityType,
+    type: ClinicalEntitySchemaNames,
     records: DeepReadonly<SubmittedClinicalRecordsMap>,
   ): DeepReadonly<SubmittedClinicalRecord[]> {
     checkNotRegistration(type);
@@ -194,12 +194,12 @@ export namespace ClinicalSubmissionRecordsOperations {
   }
 
   export function getRecordBySubmitterId(
-    type: ClinicalEntityType,
+    type: ClinicalEntitySchemaNames,
     submitter_id: string,
     records: DeepReadonly<SubmittedClinicalRecordsMap>,
   ): DeepReadonly<SubmittedClinicalRecord> {
     // checkNotRegistration(type); typescript wouldn't detect this check
-    if (type === ClinicalEntityType.REGISTRATION) {
+    if (type === ClinicalEntitySchemaNames.REGISTRATION) {
       throw new Error(`Invalid clinical type: ${type}`);
     }
     return _.find(records[type], [
@@ -208,15 +208,15 @@ export namespace ClinicalSubmissionRecordsOperations {
     ]) as SubmittedClinicalRecord;
   }
 
-  function checkNotRegistration(type: ClinicalEntityType) {
-    if (type === ClinicalEntityType.REGISTRATION) {
+  function checkNotRegistration(type: ClinicalEntitySchemaNames) {
+    if (type === ClinicalEntitySchemaNames.REGISTRATION) {
       throw new Error(`Invalid clinical type: ${type}`);
     }
   }
 }
 
 export const usingInvalidProgramId = (
-  type: ClinicalEntityType,
+  type: ClinicalEntitySchemaNames,
   newDonorIndex: number,
   record: DataRecord,
   expectedProgram: string,
@@ -239,12 +239,12 @@ export const usingInvalidProgramId = (
 };
 
 const getSubmissionErrorInfoObject = (
-  type: ClinicalEntityType,
+  type: ClinicalEntitySchemaNames,
   record: DeepReadonly<DataRecord>,
   expectedProgram: string,
 ) => {
   switch (type) {
-    case ClinicalEntityType.REGISTRATION: {
+    case ClinicalEntitySchemaNames.REGISTRATION: {
       return {
         value: record[FieldsEnum.program_id],
         sampleSubmitterId: record[FieldsEnum.submitter_sample_id],

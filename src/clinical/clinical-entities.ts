@@ -14,6 +14,12 @@ export interface Donor {
   hormoneTherapy?: Array<object>;
 }
 
+export enum DONOR_CLINICAL_ENTITIES_FIELDS {
+  DONOR_CLINICAL_INFO = 'clinicalInfo',
+  SPECIMEN_CLINICAL_INFO = 'specimens.clinicalInfo',
+  PRIMARY_DIAGNOSIS = 'primaryDiagnosis',
+}
+
 export interface SchemaMetadata {
   lastMigrationId?: string | undefined | null;
   lastValidSchemaVersion: string;
