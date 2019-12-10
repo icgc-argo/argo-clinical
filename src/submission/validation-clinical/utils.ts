@@ -98,7 +98,12 @@ const checkForUpdates = (
 const getSubmissionUpdates = (clinicalObject: any, record: SubmittedClinicalRecord) => {
   const submissionUpdates: SubmissionValidationUpdate[] = [];
   if (clinicalObject) {
-    for (const fieldName in clinicalObject) {
+    for (const fieldName in record) {
+      // new field added not in the old object
+      if (!clinicalObject[fieldName]) {
+        submissionUpdates.push(buildSubmissionUpdate(record, '', fieldName));
+        continue;
+      }
       // this is assuming that the field name record and clinicalInfo both have snake casing
       if (clinicalObject[fieldName] !== record[fieldName]) {
         submissionUpdates.push(buildSubmissionUpdate(record, clinicalObject[fieldName], fieldName));
