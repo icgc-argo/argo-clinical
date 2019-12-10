@@ -21,8 +21,6 @@ import {
   ClinicalEntitySchemaNames,
   RevalidateClinicalSubmissionCommand,
   SUBMISSION_STATE,
-  DONOR_FIELDS_TO_SCHEMA_NAMES,
-  CLINICAL_SCHEMA_NAMES_TO_DONOR_FIELDS,
 } from '../submission-entities';
 import { notEmpty, Errors, sleep, deepFind } from '../../utils';
 import _ from 'lodash';
@@ -492,7 +490,6 @@ namespace MigrationManager {
   ) => {
     const donorSchemaErrors: any[] = [];
     const donorDocSchemaVersion = donor.schemaMetadata.lastValidSchemaVersion;
-
     const versionsKey = `${donorDocSchemaVersion}->${newSchema.version}`;
 
     if (!breakingChangesEntitesCache[versionsKey]) {
@@ -542,12 +539,12 @@ namespace MigrationManager {
     if (!clinicalRecords || clinicalRecords.length == 0) {
       return undefined;
     }
-    clinicalRecords
+    const stringifyedRecords = clinicalRecords
       .map(cr => {
         return prepareForSchemaReProcessing(cr);
       })
       .filter(notEmpty);
-    const result = service.processRecords(schema, schemaName, clinicalRecords);
+    const result = service.processRecords(schema, schemaName, stringifyedRecords);
     if (result.validationErrors.length > 0) {
       return result.validationErrors;
     }

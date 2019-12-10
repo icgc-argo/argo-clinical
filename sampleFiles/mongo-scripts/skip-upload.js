@@ -12,10 +12,6 @@ db.donors.find({});
 // insert many donors
 db.donors.insertMany([
   {
-    followUps: [],
-    treatments: [],
-    chemotherapy: [],
-    hormoneTherapy: [],
     schemaMetadata: {
       lastValidSchemaVersion: '1.0',
       currentSchemaVersion: '1.0',
