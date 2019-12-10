@@ -193,8 +193,6 @@ const fromCreateDonorDtoToDonor = (createDonorDto: DeepReadonly<CreateDonorSampl
     primaryDiagnosis: {},
     followUps: [],
     treatments: [],
-    chemotherapy: [],
-    hormoneTherapy: [],
   };
   return donor;
 };

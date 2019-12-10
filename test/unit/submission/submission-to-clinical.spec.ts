@@ -145,8 +145,6 @@ describe('submission-to-clinical', () => {
         primaryDiagnosis: {},
         followUps: [],
         treatments: [],
-        chemotherapy: [],
-        hormoneTherapy: [],
       };
 
       registrationRepoFindByIdStub.withArgs(id1).returns(Promise.resolve(reg1));

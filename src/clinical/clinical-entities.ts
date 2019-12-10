@@ -6,12 +6,10 @@ export interface Donor {
   submitterId: string;
   programId: string;
   specimens: Array<Specimen>;
-  clinicalInfo?: { [field: string]: string | number };
+  clinicalInfo?: ClinicalInfo;
   primaryDiagnosis?: object;
   followUps?: Array<object>;
-  treatments?: Array<object>;
-  chemotherapy?: Array<object>;
-  hormoneTherapy?: Array<object>;
+  treatments?: Array<Treatment>;
 }
 
 export enum DONOR_CLINICAL_ENTITIES_FIELDS {
@@ -33,13 +31,27 @@ export interface Specimen {
   submitterId: string;
   specimenId?: number;
   tumourNormalDesignation: string;
-  clinicalInfo?: { [field: string]: string | number };
+  clinicalInfo?: ClinicalInfo;
 }
 
 export interface Sample {
   sampleId?: number;
   sampleType: string;
   submitterId: string;
+}
+
+export interface Treatment {
+  clinicalInfo?: ClinicalInfo;
+  therapies: Array<Therapy>;
+}
+
+export interface Therapy {
+  clinicalInfo?: ClinicalInfo;
+  therapyType: string;
+}
+
+export interface ClinicalInfo {
+  [field: string]: string | number | boolean | undefined;
 }
 
 export type DonorMap = Readonly<{ [submitterId: string]: Donor }>;
