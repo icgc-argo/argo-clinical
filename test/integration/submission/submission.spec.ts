@@ -1275,22 +1275,34 @@ describe('Submission Api', () => {
     let donor: any;
     let submissionVersion: string;
 
-    const uploadSubmission = async (fileName: string = 'donor.tsv') => {
-      let file: Buffer;
+    const uploadSubmission = async (
+      donorFileName: string = 'donor.tsv',
+      primaryDiagnosisFileName: string = '',
+    ) => {
+      let donorFile: Buffer;
+      let primaryDiagFile: Buffer | undefined = undefined;
       try {
-        file = fs.readFileSync(__dirname + `/${fileName}`);
+        donorFile = fs.readFileSync(__dirname + `/${donorFileName}`);
+        if (primaryDiagnosisFileName != '') {
+          primaryDiagFile = fs.readFileSync(__dirname + `/${primaryDiagnosisFileName}`);
+        }
       } catch (err) {
         return err;
       }
 
-      return chai
+      let req = chai
         .request(app)
         .post(`/submission/program/${programId}/clinical/upload`)
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-        .attach('clinicalFiles', file, 'donor.tsv')
-        .then((res: any) => {
-          submissionVersion = res.body.submission.version;
-        });
+        .attach('clinicalFiles', donorFile, 'donor.tsv');
+
+      if (primaryDiagFile) {
+        req = req.attach('clinicalFiles', primaryDiagFile, 'primary_diagnosis.tsv');
+      }
+
+      return req.then((res: any) => {
+        submissionVersion = res.body.submission.version;
+      });
     };
 
     const uploadSubmissionWithUpdates = async () => {
@@ -1440,7 +1452,7 @@ describe('Submission Api', () => {
         });
     });
 
-    it('should mark updated invalid donors as valid when they are approved', async () => {
+    it.only('TC-SMUIDAV should mark updated invalid donors as valid when they are approved', async () => {
       await createDonorDoc(
         dburl,
         emptyDonorDocument({
@@ -1453,14 +1465,41 @@ describe('Submission Api', () => {
           },
           clinicalInfo: {
             program_id: 'PACA-AU',
-            submitter_donor_id: 'ICGC_0001.1',
+            submitter_donor_id: 'ICGC_0002',
             vital_status: 'InvalidOldValue',
             cause_of_death: 'Died of other reasons',
             survival_time: 540,
           },
         }),
       );
-      await uploadSubmission('donor2.tsv');
+      await createDonorDoc(
+        dburl,
+        emptyDonorDocument({
+          submitterId: 'ICGC_0003',
+          programId,
+          schemaMetadata: {
+            isValid: false,
+            lastValidSchemaVersion: '0.1',
+            originalSchemaVersion: '0.1',
+          },
+          clinicalInfo: {
+            program_id: programId,
+            submitter_donor_id: 'ICGC_0003',
+            vital_status: 'InvalidOldValue',
+            cause_of_death: 'Died of cancer',
+            survival_time: 23,
+          },
+          primaryDiagnosis: {
+            program_id: programId,
+            number_lymph_nodes_positive: 1,
+            submitter_donor_id: 'ICGC_0003',
+            age_at_diagnosis: 96,
+            cancer_type_code: 'A11.1A',
+            tumour_staging_system: 'Binet', // this will be updated to Murphy
+          },
+        }),
+      );
+      await uploadSubmission('donor_TC-SMUIDAV.tsv', 'primary_diagnosis_TC-SMUIDAV.tsv');
       await validateSubmission();
       await commitActiveSubmission();
 
@@ -1481,11 +1520,25 @@ describe('Submission Api', () => {
             submitterId: 'ICGC_0002',
           });
 
+          const [updatedDonor2]: Donor[] = await findInDb(dburl, 'donors', {
+            programId: programId,
+            submitterId: 'ICGC_0003',
+          });
+
           chai.expect(updatedDonor.schemaMetadata.isValid).to.be.true;
+          chai.expect(updatedDonor2.schemaMetadata.isValid).to.be.false;
           chai.expect(updatedDonor.schemaMetadata.lastValidSchemaVersion).to.eq('1.0');
+          chai.expect(updatedDonor2.schemaMetadata.lastValidSchemaVersion).to.eq('0.1');
+
           chai.expect(updatedDonor.clinicalInfo).to.deep.include({
             [DonorFieldsEnum.vital_status]: 'Deceased',
             [DonorFieldsEnum.survival_time]: 100,
+          });
+
+          // we expect the other invalid donor to be updated even that it remained invalid
+          // due to not updating the invalid clinical file (donor.clinicalInfo)
+          chai.expect(updatedDonor2.primaryDiagnosis).to.deep.include({
+            tumour_staging_system: 'Murphy',
           });
         });
     });
