@@ -308,15 +308,3 @@ export interface ClinicalSubmissionRecordsByDonorIdMap {
 export interface SubmittedClinicalRecordsMap {
   [type: string]: SubmittedClinicalRecord[];
 }
-
-export const CLINICAL_SCHEMA_NAMES_TO_DONOR_FIELDS: { [k: string]: string } = {
-  [ClinicalEntitySchemaNames.DONOR]: DONOR_CLINICAL_ENTITIES_FIELDS.DONOR_CLINICAL_INFO,
-  [ClinicalEntitySchemaNames.SPECIMEN]: DONOR_CLINICAL_ENTITIES_FIELDS.SPECIMEN_CLINICAL_INFO,
-  [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: DONOR_CLINICAL_ENTITIES_FIELDS.PRIMARY_DIAGNOSIS,
-};
-
-export const DONOR_FIELDS_TO_SCHEMA_NAMES: { [k: string]: string } = {
-  [DONOR_CLINICAL_ENTITIES_FIELDS.DONOR_CLINICAL_INFO]: ClinicalEntitySchemaNames.DONOR,
-  [DONOR_CLINICAL_ENTITIES_FIELDS.SPECIMEN_CLINICAL_INFO]: ClinicalEntitySchemaNames.SPECIMEN,
-  [DONOR_CLINICAL_ENTITIES_FIELDS.PRIMARY_DIAGNOSIS]: ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
-};

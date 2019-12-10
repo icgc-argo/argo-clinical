@@ -14,8 +14,6 @@ import {
   FieldsEnum,
   SUBMISSION_STATE,
   ClinicalEntitySchemaNames,
-  DONOR_FIELDS_TO_SCHEMA_NAMES,
-  CLINICAL_SCHEMA_NAMES_TO_DONOR_FIELDS,
 } from '../submission-entities';
 
 import { Errors, notEmpty, deepFind } from '../../utils';
@@ -173,13 +171,6 @@ export const commitRegisteration = async (command: Readonly<CommitRegistrationCo
       registration.stats.newSampleIds.map(s => s.submitterId)) ||
     []
   );
-};
-
-export const getDonorClinicalInfo = (
-  clinicalEntitySchemaName: ClinicalEntitySchemaNames,
-  donor: Donor,
-) => {
-  return deepFind(donor, CLINICAL_SCHEMA_NAMES_TO_DONOR_FIELDS[clinicalEntitySchemaName]);
 };
 
 const fromCreateDonorDtoToDonor = (createDonorDto: DeepReadonly<CreateDonorSampleDto>) => {

@@ -22,7 +22,7 @@ import {
   RevalidateClinicalSubmissionCommand,
   SUBMISSION_STATE,
 } from '../submission-entities';
-import { notEmpty, Errors, sleep, deepFind } from '../../utils';
+import { notEmpty, Errors, sleep } from '../../utils';
 import _ from 'lodash';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../submission-to-clinical/submission-to-clinical';
 const L = loggerFor(__filename);
