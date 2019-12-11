@@ -4,10 +4,13 @@ import {
   ActiveClinicalSubmission,
   SampleRegistrationFieldsEnum,
   ClinicalEntitySchemaNames,
+  FollowupFieldsEnum,
+  ClinicalUniqueIndentifier,
 } from '../submission-entities';
 import _ from 'lodash';
 import { loggerFor } from '../../logger';
-import { Errors } from '../../utils';
+import { Errors, F } from '../../utils';
+import { getClinicalEntitiesFromDonorBySchemaName } from './submission-to-clinical';
 const L = loggerFor(__filename);
 
 type ClinicalEnitityRecord = DeepReadonly<
@@ -44,6 +47,8 @@ export const mergeActiveSubmissionWithDonors = async (
         case ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS:
           donor.primaryDiagnosis = record;
           break;
+        case ClinicalEntitySchemaNames.FOLLOW_UP:
+          updateFollowUp(donor, record);
         default:
           addOrUpdateClinicalEntity(donor, entityType, record);
           break;
@@ -58,6 +63,25 @@ const updateSpecimenRecord = (donor: Donor, record: ClinicalEnitityRecord) => {
   // Find specimen in donor
   const specimen = findSpecimen(donor, record[SampleRegistrationFieldsEnum.submitter_specimen_id]);
   specimen.clinicalInfo = record;
+};
+
+const updateFollowUp = (donor: Donor, record: ClinicalEnitityRecord) => {
+  let followUpClinicalInfo = getFollowUp(
+    donor,
+    record[ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.FOLLOW_UP]],
+  );
+  if (followUpClinicalInfo) {
+    followUpClinicalInfo = { ...record };
+    return;
+  }
+
+  if (!donor.followUps) {
+    donor.followUps = [];
+  }
+
+  donor.followUps.push({
+    clinicalInfo: record,
+  });
 };
 
 const addOrUpdateClinicalEntity = (
@@ -88,3 +112,11 @@ const findSpecimen = (donor: Donor, specimenId: string) => {
 
   return specimen;
 };
+
+function getFollowUp(donor: Donor, followUpId: string) {
+  const followUp = getClinicalEntitiesFromDonorBySchemaName(
+    F(_.clone(donor)),
+    ClinicalEntitySchemaNames.FOLLOW_UP,
+  ).find(f => f[ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.FOLLOW_UP]] === followUpId);
+  return _.cloneDeep(followUp);
+}

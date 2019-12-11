@@ -695,6 +695,7 @@ describe('Submission Api', () => {
           done();
         });
     });
+
     it('should return 422 if try to upload invalid tsv files', done => {
       let file: Buffer;
       try {
@@ -1275,53 +1276,34 @@ describe('Submission Api', () => {
     let donor: any;
     let submissionVersion: string;
 
-    const uploadSubmission = async (
-      donorFileName: string = 'donor.tsv',
-      primaryDiagnosisFileName: string = '',
-    ) => {
-      let donorFile: Buffer;
-      let primaryDiagFile: Buffer | undefined = undefined;
-      try {
-        donorFile = fs.readFileSync(__dirname + `/${donorFileName}`);
-        if (primaryDiagnosisFileName != '') {
-          primaryDiagFile = fs.readFileSync(__dirname + `/${primaryDiagnosisFileName}`);
-        }
-      } catch (err) {
-        return err;
-      }
-
+    const uploadSubmission = async (fileNames: string[] = ['donor.tsv']) => {
+      const files: Buffer[] = [];
       let req = chai
         .request(app)
         .post(`/submission/program/${programId}/clinical/upload`)
-        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-        .attach('clinicalFiles', donorFile, 'donor.tsv');
+        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' });
 
-      if (primaryDiagFile) {
-        req = req.attach('clinicalFiles', primaryDiagFile, 'primary_diagnosis.tsv');
-      }
+      fileNames.forEach(fn => {
+        try {
+          const file = fs.readFileSync(__dirname + `/${fn}`);
+          req = req.attach('clinicalFiles', file, fn);
+        } catch (err) {
+          return err;
+        }
+      });
 
       return req.then((res: any) => {
+        res.body.successful.should.be.true;
         submissionVersion = res.body.submission.version;
       });
     };
 
-    const uploadSubmissionWithUpdates = async () => {
-      let file: Buffer;
-      try {
-        file = fs.readFileSync(__dirname + '/donor-with-updates.tsv');
-      } catch (err) {
-        return err;
-      }
-
-      return await chai
-        .request(app)
-        .post(`/submission/program/${programId}/clinical/upload`)
-        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-        .attach('clinicalFiles', file, 'donor.tsv')
-        .then((res: any) => {
-          submissionVersion = res.body.submission.version;
-        });
+    const uploadSubmissionWithUpdates = async (
+      fileNames: string[] = ['donor-with-updates.tsv'],
+    ) => {
+      return await uploadSubmission(fileNames);
     };
+
     const validateSubmission = async () => {
       return await chai
         .request(app)
@@ -1331,6 +1313,7 @@ describe('Submission Api', () => {
           submissionVersion = res.body.submission.version;
         });
     };
+
     const commitActiveSubmission = async () => {
       return await chai
         .request(app)
@@ -1415,13 +1398,13 @@ describe('Submission Api', () => {
         });
     });
 
-    it('should return 200 when commit is completed', async () => {
+    it.only('should return 200 when commit is completed', async () => {
       // To get submission into correct state (pending approval) we need to already have a completed submission...
-      await uploadSubmission();
+      await uploadSubmission(['donor.tsv', 'primary_diagnosis.tsv', 'follow_up.tsv']);
       await validateSubmission();
       await commitActiveSubmission();
       // Now we need to have a submission with updates, and validate to get it into the correct state
-      await uploadSubmissionWithUpdates();
+      await uploadSubmissionWithUpdates(['donor-with-updates.tsv', 'follow_up_update.tsv']);
       await validateSubmission();
       await commitActiveSubmission();
       const [donorBeforeApproveCommit] = await findInDb(dburl, 'donors', {
@@ -1499,7 +1482,7 @@ describe('Submission Api', () => {
           },
         }),
       );
-      await uploadSubmission('donor_TC-SMUIDAV.tsv', 'primary_diagnosis_TC-SMUIDAV.tsv');
+      await uploadSubmission(['donor_TC-SMUIDAV.tsv', 'primary_diagnosis_TC-SMUIDAV.tsv']);
       await validateSubmission();
       await commitActiveSubmission();
 

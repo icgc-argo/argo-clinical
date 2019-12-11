@@ -3,7 +3,13 @@
  * to the clinical model, somehow as set of ETL operations.
  */
 import { DeepReadonly } from 'deep-freeze';
-import { Donor, Specimen, Sample, SchemaMetadata } from '../../clinical/clinical-entities';
+import {
+  Donor,
+  Specimen,
+  Sample,
+  SchemaMetadata,
+  ClinicalInfo,
+} from '../../clinical/clinical-entities';
 import {
   ActiveClinicalSubmission,
   ActiveSubmissionIdentifier,
@@ -321,7 +327,7 @@ const getDonorSpecimen = (record: SubmittedRegistrationRecord) => {
 export function getClinicalEntitiesFromDonorBySchemaName(
   donor: DeepReadonly<Donor>,
   clinicalEntitySchemaName: ClinicalEntitySchemaNames,
-): any[] {
+): ClinicalInfo[] {
   if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.DONOR) {
     if (donor.clinicalInfo) {
       return [donor.clinicalInfo];
@@ -345,6 +351,21 @@ export function getClinicalEntitiesFromDonorBySchemaName(
       return [donor.primaryDiagnosis];
     }
   }
+
+  if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.FOLLOW_UP) {
+    if (donor.followUps) {
+      const clinicalRecords = donor.followUps
+        .map(f => {
+          if (f.clinicalInfo) {
+            return f.clinicalInfo;
+          }
+        })
+        .filter(notEmpty);
+      return clinicalRecords;
+    }
+    return [];
+  }
+
   return [];
 }
 
