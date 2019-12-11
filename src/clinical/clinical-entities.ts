@@ -7,8 +7,8 @@ export interface Donor {
   programId: string;
   specimens: Array<Specimen>;
   clinicalInfo?: ClinicalInfo;
-  primaryDiagnosis?: object;
-  followUps?: Array<object>;
+  primaryDiagnosis?: ClinicalInfo;
+  followUps?: Array<FollowUp>;
   treatments?: Array<Treatment>;
 }
 
@@ -42,6 +42,10 @@ export interface Treatment {
 export interface Therapy {
   clinicalInfo?: ClinicalInfo;
   therapyType: string;
+}
+
+export interface FollowUp {
+  clinicalInfo: ClinicalInfo;
 }
 
 export interface ClinicalInfo {

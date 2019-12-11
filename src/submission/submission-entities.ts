@@ -38,17 +38,6 @@ export const RegistrationToCreateRegistrationFieldsMap: x = {
   sample_type: 'sampleType',
 };
 
-export enum FieldsEnum {
-  program_id = 'program_id',
-  submitter_donor_id = 'submitter_donor_id',
-  gender = 'gender',
-  submitter_specimen_id = 'submitter_specimen_id',
-  specimen_tissue_source = 'specimen_tissue_source',
-  tumour_normal_designation = 'tumour_normal_designation',
-  submitter_sample_id = 'submitter_sample_id',
-  sample_type = 'sample_type',
-}
-
 export type SubmissionValidationError = {
   type: DataValidationErrors | SchemaValidationErrorTypes;
   fieldName: string;
@@ -248,12 +237,33 @@ export interface SubmittedClinicalRecord {
   [fieldName: string]: string | number;
 }
 
+/**
+ * Those field enums are not all inclusive, they only contain fields used
+ * in validation in code, we don't need to list all fields unless necessary
+ */
+export enum SampleRegistrationFieldsEnum {
+  program_id = 'program_id',
+  submitter_donor_id = 'submitter_donor_id',
+  gender = 'gender',
+  submitter_specimen_id = 'submitter_specimen_id',
+  specimen_tissue_source = 'specimen_tissue_source',
+  tumour_normal_designation = 'tumour_normal_designation',
+  submitter_sample_id = 'submitter_sample_id',
+  sample_type = 'sample_type',
+}
+
 export enum DonorFieldsEnum {
+  submitter_donor_id = 'submitter_donor_id',
   vital_status = 'vital_status',
   survival_time = 'survival_time',
 }
 export enum SpecimenFieldsEnum {
+  submitter_specimen_id = 'submitter_specimen_id',
   acquisition_interval = 'acquisition_interval',
+}
+
+export enum FollowupFieldsEnum {
+  submitter_follow_up_id = 'submitter_follow_up_id',
 }
 
 export interface RecordValidationResult {
@@ -278,6 +288,7 @@ export enum ClinicalEntitySchemaNames {
   DONOR = 'donor',
   SPECIMEN = 'specimen',
   PRIMARY_DIAGNOSIS = 'primary_diagnosis',
+  FOLLOW_UP = 'follow_up',
 }
 
 // batchNameRegex are arrays, so we can just add new file name regex when needed
@@ -287,13 +298,15 @@ export const BatchNameRegex: Record<ClinicalEntitySchemaNames, RegExp[]> = {
   [ClinicalEntitySchemaNames.DONOR]: [/^donor.*\.tsv$/],
   [ClinicalEntitySchemaNames.SPECIMEN]: [/^specimen.*\.tsv$/],
   [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: [/^primary_diagnosis.*\.tsv/],
+  [ClinicalEntitySchemaNames.FOLLOW_UP]: [/^follow_up.*\.tsv/],
 };
 
 // assumption: one field uniquely identifies a clinical type record in a batch of records
 export const ClinicalUniqueIndentifier = {
-  [ClinicalEntitySchemaNames.DONOR]: FieldsEnum.submitter_donor_id,
-  [ClinicalEntitySchemaNames.SPECIMEN]: FieldsEnum.submitter_specimen_id,
-  [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: FieldsEnum.submitter_donor_id,
+  [ClinicalEntitySchemaNames.DONOR]: DonorFieldsEnum.submitter_donor_id,
+  [ClinicalEntitySchemaNames.SPECIMEN]: SpecimenFieldsEnum.submitter_specimen_id,
+  [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: DonorFieldsEnum.submitter_donor_id,
+  [ClinicalEntitySchemaNames.FOLLOW_UP]: FollowupFieldsEnum.submitter_follow_up_id,
 };
 
 export interface ClinicalSubmissionRecordsByDonorIdMap {
