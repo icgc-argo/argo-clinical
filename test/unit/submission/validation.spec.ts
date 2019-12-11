@@ -1352,7 +1352,7 @@ describe('data-validator', () => {
       const existingDonorMock: Donor = stubs.validation.existingDonor01();
       const newDonorAB1Records = {};
       ClinicalSubmissionRecordsOperations.addRecord(
-        ClinicalEntityType.TREATMENT,
+        ClinicalEntitySchemaNames.TREATMENT,
         newDonorAB1Records,
         {
           [FieldsEnum.submitter_donor_id]: 'AB1',
@@ -1374,7 +1374,7 @@ describe('data-validator', () => {
         info: {
           donorSubmitterId: 'AB1',
           value: 'Combined chemo+immunotherapy',
-          therapyType: ClinicalEntityType.CHEMOTHERAPY,
+          therapyType: ClinicalEntitySchemaNames.CHEMOTHERAPY,
         },
       };
       chai.expect(result.treatment.dataErrors.length).to.eq(1);
@@ -1384,7 +1384,7 @@ describe('data-validator', () => {
       const existingDonorMock: Donor = stubs.validation.existingDonor01();
       const newDonorAB1Records = {};
       ClinicalSubmissionRecordsOperations.addRecord(
-        ClinicalEntityType.TREATMENT,
+        ClinicalEntitySchemaNames.TREATMENT,
         newDonorAB1Records,
         {
           [FieldsEnum.submitter_donor_id]: 'AB1',
@@ -1394,7 +1394,7 @@ describe('data-validator', () => {
         },
       );
       ClinicalSubmissionRecordsOperations.addRecord(
-        ClinicalEntityType.CHEMOTHERAPY,
+        ClinicalEntitySchemaNames.CHEMOTHERAPY,
         newDonorAB1Records,
         {
           [FieldsEnum.submitter_donor_id]: 'AB1',
@@ -1403,7 +1403,7 @@ describe('data-validator', () => {
         },
       );
       ClinicalSubmissionRecordsOperations.addRecord(
-        ClinicalEntityType.CHEMOTHERAPY,
+        ClinicalEntitySchemaNames.CHEMOTHERAPY,
         newDonorAB1Records,
         {
           [FieldsEnum.submitter_donor_id]: 'AB1',

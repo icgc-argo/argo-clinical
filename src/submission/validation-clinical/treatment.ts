@@ -2,7 +2,7 @@ import {
   SubmissionValidationError,
   RecordValidationResult,
   SubmittedClinicalRecordsMap,
-  ClinicalEntityType,
+  ClinicalEntitySchemaNames,
   TreatmentFieldsEnum,
   SubmittedClinicalRecord,
   TreatmentDataValidationErrors,
@@ -21,7 +21,7 @@ export const validate = async (
 ): Promise<RecordValidationResult[]> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
   const submittedTreatmentRecords = ClinicalSubmissionRecordsOperations.getArrayRecords(
-    ClinicalEntityType.TREATMENT,
+    ClinicalEntitySchemaNames.TREATMENT,
     submittedRecords,
   );
   if (!submittedTreatmentRecords || !existentDonor) {
@@ -71,7 +71,7 @@ function checkChemoFileNeeded(
 
   if (
     treatment.therapies.length === 0 ||
-    !treatment.therapies.some(th => th.therapyType === ClinicalEntityType.CHEMOTHERAPY)
+    !treatment.therapies.some(th => th.therapyType === ClinicalEntitySchemaNames.CHEMOTHERAPY)
   ) {
     errors.push(
       utils.buildSubmissionError(
@@ -79,7 +79,7 @@ function checkChemoFileNeeded(
         TreatmentDataValidationErrors.MISSING_THERAPY_DATA,
         TreatmentFieldsEnum.treatment_type,
         {
-          therapyType: ClinicalEntityType.CHEMOTHERAPY,
+          therapyType: ClinicalEntitySchemaNames.CHEMOTHERAPY,
         },
       ),
     );

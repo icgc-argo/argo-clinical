@@ -2,7 +2,7 @@ import {
   SubmissionValidationError,
   RecordValidationResult,
   SubmittedClinicalRecordsMap,
-  ClinicalEntityType,
+  ClinicalEntitySchemaNames,
   TreatmentFieldsEnum,
   SubmittedClinicalRecord,
   TreatmentDataValidationErrors,
@@ -22,7 +22,7 @@ export const validate = async (
 ): Promise<RecordValidationResult[]> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
   const submittedChemotherapyRecords = ClinicalSubmissionRecordsOperations.getArrayRecords(
-    ClinicalEntityType.CHEMOTHERAPY,
+    ClinicalEntitySchemaNames.CHEMOTHERAPY,
     submittedRecords,
   );
   if (!submittedChemotherapyRecords || !existentDonor) {

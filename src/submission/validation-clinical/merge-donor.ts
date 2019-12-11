@@ -6,7 +6,7 @@ import {
   SubmittedClinicalRecordsMap,
   FieldsEnum,
   TreatmentFieldsEnum,
-  ClinicalEntityType,
+  ClinicalEntitySchemaNames,
 } from '../submission-entities';
 import { Donor, Treatment } from '../../../src/clinical/clinical-entities';
 import _ from 'lodash';
@@ -18,23 +18,28 @@ export function mergeRecordsIntoDonor(
   const submittedClinicalTypes: Set<String> = new Set(Object.keys(submittedRecords));
   const mergedDonor: any = _.cloneDeep(exsistentDonor);
 
-  if (submittedClinicalTypes.has(ClinicalEntityType.DONOR)) {
-    updateDonorInfo(mergedDonor, submittedRecords[ClinicalEntityType.DONOR][0]);
+  if (submittedClinicalTypes.has(ClinicalEntitySchemaNames.DONOR)) {
+    updateDonorInfo(mergedDonor, submittedRecords[ClinicalEntitySchemaNames.DONOR][0]);
   }
-  if (submittedClinicalTypes.has(ClinicalEntityType.PRIMARY_DIAGNOSIS)) {
-    updatePrimaryDiagnosis(mergedDonor, submittedRecords[ClinicalEntityType.PRIMARY_DIAGNOSIS][0]);
+  if (submittedClinicalTypes.has(ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS)) {
+    updatePrimaryDiagnosis(
+      mergedDonor,
+      submittedRecords[ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS][0],
+    );
   }
-  if (submittedClinicalTypes.has(ClinicalEntityType.SPECIMEN)) {
-    submittedRecords[ClinicalEntityType.SPECIMEN].forEach(r => updateSpecimenInfo(mergedDonor, r));
+  if (submittedClinicalTypes.has(ClinicalEntitySchemaNames.SPECIMEN)) {
+    submittedRecords[ClinicalEntitySchemaNames.SPECIMEN].forEach(r =>
+      updateSpecimenInfo(mergedDonor, r),
+    );
   }
-  if (submittedClinicalTypes.has(ClinicalEntityType.TREATMENT)) {
-    submittedRecords[ClinicalEntityType.TREATMENT].forEach(r =>
+  if (submittedClinicalTypes.has(ClinicalEntitySchemaNames.TREATMENT)) {
+    submittedRecords[ClinicalEntitySchemaNames.TREATMENT].forEach(r =>
       addOrUpdateTreatementInfo(mergedDonor, r),
     );
   }
-  if (submittedClinicalTypes.has(ClinicalEntityType.CHEMOTHERAPY)) {
-    submittedRecords[ClinicalEntityType.CHEMOTHERAPY].forEach(r =>
-      addTherapyToTretament(mergedDonor, r, ClinicalEntityType.CHEMOTHERAPY),
+  if (submittedClinicalTypes.has(ClinicalEntitySchemaNames.CHEMOTHERAPY)) {
+    submittedRecords[ClinicalEntitySchemaNames.CHEMOTHERAPY].forEach(r =>
+      addTherapyToTretament(mergedDonor, r, ClinicalEntitySchemaNames.CHEMOTHERAPY),
     );
   }
   return mergedDonor;
@@ -65,7 +70,7 @@ const addOrUpdateTreatementInfo = (donor: Donor, record: any): Treatment => {
   donor.treatments = [{ submitterId: submitterTreatementId, clinicalInfo: record, therapies: [] }];
   return donor.treatments[0];
 };
-const addTherapyToTretament = (donor: any, record: any, therapyType: ClinicalEntityType) => {
+const addTherapyToTretament = (donor: any, record: any, therapyType: ClinicalEntitySchemaNames) => {
   const submitterTreatementId = record[TreatmentFieldsEnum.submitter_treatment_id] as string;
   const treatment = findTreatment(donor, submitterTreatementId);
   if (!treatment) return;
