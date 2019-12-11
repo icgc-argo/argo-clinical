@@ -6,7 +6,7 @@ import {
   ModificationType,
   SubmissionValidationUpdate,
   RecordValidationResult,
-  ClinicalEntityType,
+  ClinicalEntitySchemaNames,
   SubmittedClinicalRecordsMap,
   ClinicalUniqueIndentifier,
   DonorFieldsEnum,
@@ -96,7 +96,14 @@ const checkForUpdates = (
 const getSubmissionUpdates = (clinicalObject: any, record: SubmittedClinicalRecord) => {
   const submissionUpdates: SubmissionValidationUpdate[] = [];
   if (clinicalObject) {
-    for (const fieldName in clinicalObject) {
+    for (const fieldName in record) {
+      // skip the index field
+      if (fieldName == 'index') continue;
+      // new field added not in the old object
+      if (!clinicalObject[fieldName]) {
+        submissionUpdates.push(buildSubmissionUpdate(record, '', fieldName));
+        continue;
+      }
       // this is assuming that the field name record and clinicalInfo both have snake casing
       if (clinicalObject[fieldName] !== record[fieldName]) {
         submissionUpdates.push(buildSubmissionUpdate(record, clinicalObject[fieldName], fieldName));
@@ -159,7 +166,7 @@ export const buildMultipleRecordValidationResults = (
 export namespace ClinicalSubmissionRecordsOperations {
   // this function will mutate a SubmittedRecords
   export function addRecord(
-    type: ClinicalEntityType,
+    type: ClinicalEntitySchemaNames,
     records: SubmittedClinicalRecordsMap,
     record: SubmittedClinicalRecord,
   ) {
@@ -171,7 +178,7 @@ export namespace ClinicalSubmissionRecordsOperations {
   }
 
   export function getSingleRecord(
-    type: ClinicalEntityType,
+    type: ClinicalEntitySchemaNames,
     records: DeepReadonly<SubmittedClinicalRecordsMap>,
   ): DeepReadonly<SubmittedClinicalRecord | undefined> {
     checkNotRegistration(type);
@@ -184,7 +191,7 @@ export namespace ClinicalSubmissionRecordsOperations {
   }
 
   export function getArrayRecords(
-    type: ClinicalEntityType,
+    type: ClinicalEntitySchemaNames,
     records: DeepReadonly<SubmittedClinicalRecordsMap>,
   ): DeepReadonly<SubmittedClinicalRecord[]> {
     checkNotRegistration(type);
@@ -192,12 +199,12 @@ export namespace ClinicalSubmissionRecordsOperations {
   }
 
   export function getRecordBySubmitterId(
-    type: ClinicalEntityType,
+    type: ClinicalEntitySchemaNames,
     submitter_id: string,
     records: DeepReadonly<SubmittedClinicalRecordsMap>,
   ): DeepReadonly<SubmittedClinicalRecord> {
     // checkNotRegistration(type); typescript wouldn't detect this check
-    if (type === ClinicalEntityType.REGISTRATION) {
+    if (type === ClinicalEntitySchemaNames.REGISTRATION) {
       throw new Error(`Invalid clinical type: ${type}`);
     }
     return _.find(records[type], [
@@ -206,15 +213,15 @@ export namespace ClinicalSubmissionRecordsOperations {
     ]) as SubmittedClinicalRecord;
   }
 
-  function checkNotRegistration(type: ClinicalEntityType) {
-    if (type === ClinicalEntityType.REGISTRATION) {
+  function checkNotRegistration(type: ClinicalEntitySchemaNames) {
+    if (type === ClinicalEntitySchemaNames.REGISTRATION) {
       throw new Error(`Invalid clinical type: ${type}`);
     }
   }
 }
 
 export const usingInvalidProgramId = (
-  type: ClinicalEntityType,
+  type: ClinicalEntitySchemaNames,
   newDonorIndex: number,
   record: DataRecord,
   expectedProgram: string,
@@ -237,12 +244,12 @@ export const usingInvalidProgramId = (
 };
 
 const getSubmissionErrorInfoObject = (
-  type: ClinicalEntityType,
+  type: ClinicalEntitySchemaNames,
   record: DeepReadonly<DataRecord>,
   expectedProgram: string,
 ) => {
   switch (type) {
-    case ClinicalEntityType.REGISTRATION: {
+    case ClinicalEntitySchemaNames.REGISTRATION: {
       return {
         value: record[FieldsEnum.program_id],
         sampleSubmitterId: record[FieldsEnum.submitter_sample_id],

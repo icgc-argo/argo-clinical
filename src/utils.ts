@@ -4,6 +4,7 @@ import deepFreeze from 'deep-freeze';
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import { SubmissionBatchError } from './submission/submission-entities';
+import _ from 'lodash';
 
 const fsPromises = fs.promises;
 
@@ -158,6 +159,33 @@ export function toString(obj: any) {
   });
 
   return obj;
+}
+
+export function deepFind(obj: any, path: string) {
+  const paths = path.split('.');
+  let current = obj;
+  let result: any[] = [];
+
+  for (let i = 0; i < paths.length; ++i) {
+    if (_.isArray(current)) {
+      const r = current
+        .map(e => {
+          return deepFind(e, paths.slice(i).join('.'));
+        })
+        .filter(notEmpty);
+      result = result.concat(...r);
+      return result;
+    }
+
+    if (current[paths[i]] == undefined) {
+      return [];
+    } else {
+      current = current[paths[i]];
+    }
+  }
+
+  current && result.push(current);
+  return result;
 }
 
 export const F = deepFreeze;

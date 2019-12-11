@@ -12,18 +12,19 @@ import { schemaRepo } from './schema-repo';
 import { loggerFor } from '../../logger';
 import { migrationRepo } from './migration-repo';
 import { DictionaryMigration } from './migration-entities';
-import { Donor } from '../../clinical/clinical-entities';
+import { Donor, ClinicalInfo } from '../../clinical/clinical-entities';
 import { DeepReadonly } from 'deep-freeze';
 import * as clinicalService from '../../clinical/clinical-service';
 import * as persistedConfig from '../persisted-config/service';
 import * as submissionService from '../submission-service';
 import {
-  ClinicalEntityType,
+  ClinicalEntitySchemaNames,
   RevalidateClinicalSubmissionCommand,
   SUBMISSION_STATE,
 } from '../submission-entities';
 import { notEmpty, Errors, sleep } from '../../utils';
 import _ from 'lodash';
+import { getClinicalEntitiesFromDonorBySchemaName } from '../submission-to-clinical/submission-to-clinical';
 const L = loggerFor(__filename);
 
 let manager: SchemaManager;
@@ -189,6 +190,34 @@ class SchemaManager {
     return await MigrationManager.resumeMigration(sync);
   };
 }
+
+export const revalidateAllDonorClinicalEntitiesAgainstSchema = (
+  donor: DeepReadonly<Donor>,
+  schema: SchemasDictionary,
+) => {
+  const clinicalSchemaNames = getSchemaNamesForDonorClinicalEntities(donor);
+  let isValid = true;
+  clinicalSchemaNames.forEach((schemaName: ClinicalEntitySchemaNames) => {
+    if (!isValid) {
+      return;
+    }
+    const errs = MigrationManager.validateDonorEntityAgainstNewSchema(schemaName, schema, donor);
+    isValid = !errs || errs.length == 0;
+  });
+  return isValid;
+};
+
+const getSchemaNamesForDonorClinicalEntities = (donor: DeepReadonly<Donor>) => {
+  const result: ClinicalEntitySchemaNames[] = [];
+  for (const key of Object.values(ClinicalEntitySchemaNames)) {
+    const clinicalRecords = getClinicalEntitiesFromDonorBySchemaName(donor, key);
+
+    if (clinicalRecords.length > 0) {
+      result.push(key);
+    }
+  }
+  return result;
+};
 
 export function instance() {
   if (manager === undefined) {
@@ -393,7 +422,7 @@ namespace MigrationManager {
     }
     const migrationId = migration._id;
     const dryRun = migration.dryRun;
-    const breakingChangesEntitesCache: { [versions: string]: string[] } = {};
+    const breakingChangesEntitesCache: { [versions: string]: ClinicalEntitySchemaNames[] } = {};
 
     while (!migrationDone) {
       let invalidCount = 0;
@@ -455,11 +484,10 @@ namespace MigrationManager {
   const revalidateDonorClinicalEntities = async (
     donor: DeepReadonly<Donor>,
     newSchema: SchemasDictionary,
-    breakingChangesEntitesCache: { [versions: string]: string[] },
+    breakingChangesEntitesCache: { [versions: string]: ClinicalEntitySchemaNames[] },
   ) => {
     const donorSchemaErrors: any[] = [];
     const donorDocSchemaVersion = donor.schemaMetadata.lastValidSchemaVersion;
-
     const versionsKey = `${donorDocSchemaVersion}->${newSchema.version}`;
 
     if (!breakingChangesEntitesCache[versionsKey]) {
@@ -478,7 +506,7 @@ namespace MigrationManager {
           return inf.fieldPath.split('.')[0];
         }),
         (e: string) => e,
-      );
+      ) as ClinicalEntitySchemaNames[];
       breakingChangesEntitesCache[versionsKey] = schemaNamesWithBreakingChanges;
     }
 
@@ -495,66 +523,29 @@ namespace MigrationManager {
     return donorSchemaErrors;
   };
 
-  const validateDonorEntityAgainstNewSchema = (
-    schemaName: string,
+  export const validateDonorEntityAgainstNewSchema = (
+    schemaName: ClinicalEntitySchemaNames,
     schema: SchemasDictionary,
     donor: DeepReadonly<Donor>,
   ) => {
     L.debug(`checking donor ${donor.submitterId} for schema: ${schemaName}`);
-
-    if (schemaName == ClinicalEntityType.DONOR) {
-      if (donor.clinicalInfo) {
-        const result = service.processRecords(schema, schemaName, [
-          prepareForSchemaReProcessing(donor.clinicalInfo),
-        ]);
-        if (result.validationErrors.length > 0) {
-          return result.validationErrors;
-        }
-      }
-    }
-
-    if (schemaName == ClinicalEntityType.SPECIMEN) {
-      const clinicalRecords = donor.specimens
-        .map(sp => {
-          if (sp.clinicalInfo) {
-            return prepareForSchemaReProcessing(sp.clinicalInfo);
-          }
-        })
-        .filter(notEmpty);
-      const result = service.processRecords(schema, schemaName, clinicalRecords);
-      if (result.validationErrors.length > 0) {
-        return result.validationErrors;
-      }
-    }
-
-    const donorFieldName = _.camelCase(schemaName) as keyof Donor;
-    const clinicalEntity = (donor[donorFieldName] as object) || undefined;
-
-    if (!clinicalEntity) {
+    // todoo replace with clinical info definition
+    const clinicalRecords: ClinicalInfo[] = getClinicalEntitiesFromDonorBySchemaName(
+      donor as Donor,
+      schemaName as ClinicalEntitySchemaNames,
+    );
+    if (!clinicalRecords || clinicalRecords.length == 0) {
       return undefined;
     }
-
-    if (_.isArray(clinicalEntity)) {
-      const records = clinicalEntity
-        .map(ce => {
-          return prepareForSchemaReProcessing(ce);
-        })
-        .filter(notEmpty);
-
-      const result = service.processRecords(schema, schemaName, records);
-      if (result.validationErrors.length > 0) {
-        return result.validationErrors;
-      }
-    }
-
-    const result = service.processRecords(schema, schemaName, [
-      prepareForSchemaReProcessing(clinicalEntity),
-    ]);
-
+    const stringifyedRecords = clinicalRecords
+      .map(cr => {
+        return prepareForSchemaReProcessing(cr);
+      })
+      .filter(notEmpty);
+    const result = service.processRecords(schema, schemaName, stringifyedRecords);
     if (result.validationErrors.length > 0) {
       return result.validationErrors;
     }
-
     return undefined;
   };
 

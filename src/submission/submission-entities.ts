@@ -1,8 +1,5 @@
 import { DeepReadonly } from 'deep-freeze';
-import {
-  SchemaValidationErrorTypes,
-  SchemaValidationError,
-} from '../lectern-client/schema-entities';
+import { SchemaValidationErrorTypes } from '../lectern-client/schema-entities';
 
 /**
  * Represents a valid registration that is not yet committed (in progress)
@@ -292,7 +289,7 @@ export type ClinicalTypeValidateResult = {
   [clinicalType: string]: Pick<SavedClinicalEntity, 'dataErrors' | 'dataUpdates' | 'stats'>;
 };
 
-export enum ClinicalEntityType {
+export enum ClinicalEntitySchemaNames {
   REGISTRATION = 'sample_registration',
   DONOR = 'donor',
   SPECIMEN = 'specimen',
@@ -303,21 +300,21 @@ export enum ClinicalEntityType {
 
 // batchNameRegex are arrays, so we can just add new file name regex when needed
 // also we should check file extensions at api level for each file type upload function
-export const BatchNameRegex: Record<ClinicalEntityType, RegExp[]> = {
-  [ClinicalEntityType.REGISTRATION]: [/^sample_registration.*\.tsv$/],
-  [ClinicalEntityType.DONOR]: [/^donor.*\.tsv$/],
-  [ClinicalEntityType.SPECIMEN]: [/^specimen.*\.tsv$/],
-  [ClinicalEntityType.PRIMARY_DIAGNOSIS]: [/^primary_diagnosis.*\.tsv/],
-  [ClinicalEntityType.TREATMENT]: [/^treatment.*\.tsv/],
-  [ClinicalEntityType.CHEMOTHERAPY]: [/^chemotherapy.*\.tsv/],
+export const BatchNameRegex: Record<ClinicalEntitySchemaNames, RegExp[]> = {
+  [ClinicalEntitySchemaNames.REGISTRATION]: [/^sample_registration.*\.tsv$/],
+  [ClinicalEntitySchemaNames.DONOR]: [/^donor.*\.tsv$/],
+  [ClinicalEntitySchemaNames.SPECIMEN]: [/^specimen.*\.tsv$/],
+  [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: [/^primary_diagnosis.*\.tsv/],
+  [ClinicalEntitySchemaNames.TREATMENT]: [/^treatment.*\.tsv/],
+  [ClinicalEntitySchemaNames.CHEMOTHERAPY]: [/^chemotherapy.*\.tsv/],
 };
 
 // assumption: one field uniquely identifies a clinical type record in a batch of records
-export const ClinicalUniqueIndentifier: { [clinicalType: string]: any } = {
-  [ClinicalEntityType.DONOR]: FieldsEnum.submitter_donor_id,
-  [ClinicalEntityType.SPECIMEN]: FieldsEnum.submitter_specimen_id,
-  [ClinicalEntityType.PRIMARY_DIAGNOSIS]: FieldsEnum.submitter_donor_id,
-  [ClinicalEntityType.TREATMENT]: TreatmentFieldsEnum.submitter_treatment_id,
+export const ClinicalUniqueIndentifier = {
+  [ClinicalEntitySchemaNames.DONOR]: FieldsEnum.submitter_donor_id,
+  [ClinicalEntitySchemaNames.SPECIMEN]: FieldsEnum.submitter_specimen_id,
+  [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: FieldsEnum.submitter_donor_id,
+  [ClinicalEntitySchemaNames.TREATMENT]: TreatmentFieldsEnum.submitter_treatment_id,
 };
 
 export interface ClinicalSubmissionRecordsByDonorIdMap {

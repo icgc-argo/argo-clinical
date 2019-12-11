@@ -1,4 +1,4 @@
-import { SubmissionBatchErrorTypes, ClinicalEntityType } from './submission-entities';
+import { SubmissionBatchErrorTypes, ClinicalEntitySchemaNames } from './submission-entities';
 
 const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
   /* ***************** *

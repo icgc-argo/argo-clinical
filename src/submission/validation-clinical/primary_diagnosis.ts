@@ -2,7 +2,7 @@ import {
   SubmissionValidationError,
   RecordValidationResult,
   SubmittedClinicalRecordsMap,
-  ClinicalEntityType,
+  ClinicalEntitySchemaNames,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
@@ -16,7 +16,7 @@ export const validate = async (
 ): Promise<RecordValidationResult> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
   const primaryDiagnosisRecord = ClinicalSubmissionRecordsOperations.getSingleRecord(
-    ClinicalEntityType.PRIMARY_DIAGNOSIS,
+    ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
     submittedRecords,
   );
   if (!primaryDiagnosisRecord || !existentDonor) {

@@ -3,7 +3,7 @@ import { Donor, Treatment } from '../../clinical/clinical-entities';
 import {
   ActiveClinicalSubmission,
   FieldsEnum,
-  ClinicalEntityType,
+  ClinicalEntitySchemaNames,
   TreatmentFieldsEnum,
 } from '../submission-entities';
 import _ from 'lodash';
@@ -36,19 +36,19 @@ export const mergeActiveSubmissionWithDonors = async (
       }
 
       switch (entityType) {
-        case ClinicalEntityType.DONOR:
+        case ClinicalEntitySchemaNames.DONOR:
           donor.clinicalInfo = record;
           break;
-        case ClinicalEntityType.SPECIMEN:
+        case ClinicalEntitySchemaNames.SPECIMEN:
           updateSpecimenRecord(donor, record);
           break;
-        case ClinicalEntityType.PRIMARY_DIAGNOSIS:
+        case ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS:
           donor.primaryDiagnosis = record;
           break;
-        case ClinicalEntityType.TREATMENT:
+        case ClinicalEntitySchemaNames.TREATMENT:
           addOrUpdateTreatementRecord(donor, record);
           break;
-        case ClinicalEntityType.CHEMOTHERAPY: // other therapies here e.g. HormoneTherapy
+        case ClinicalEntitySchemaNames.CHEMOTHERAPY: // other therapies here e.g. HormoneTherapy
           addTherapyRecordToTretament(donor, record, entityType);
           break;
         default:
@@ -83,7 +83,7 @@ const addOrUpdateTreatementRecord = (donor: Donor, record: ClinicalEnitityRecord
 const addTherapyRecordToTretament = (
   donor: Donor,
   record: ClinicalEnitityRecord,
-  therapyType: ClinicalEntityType,
+  therapyType: ClinicalEntitySchemaNames,
 ) => {
   const submitterTreatementId = record[TreatmentFieldsEnum.submitter_treatment_id];
   let treatment = findTreatment(donor, submitterTreatementId);

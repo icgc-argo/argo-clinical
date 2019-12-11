@@ -8,7 +8,7 @@ import {
   RegistrationToCreateRegistrationFieldsMap,
   RecordValidationResult,
   ClinicalTypeValidateResult,
-  ClinicalEntityType,
+  ClinicalEntitySchemaNames,
   ClinicalUniqueIndentifier,
   ClinicalSubmissionRecordsByDonorIdMap,
   SubmittedClinicalRecordsMap,
@@ -87,8 +87,8 @@ export const validateSubmissionData = async (
   existingDonors: DeepReadonly<DonorMap>,
 ): Promise<ClinicalTypeValidateResult> => {
   const recordValidationResultMap: { [clinicalType: string]: RecordValidationResult[] } = {};
-  Object.values(ClinicalEntityType)
-    .filter(type => type != ClinicalEntityType.REGISTRATION)
+  Object.values(ClinicalEntitySchemaNames)
+    .filter(type => type != ClinicalEntitySchemaNames.REGISTRATION)
     .map(type => (recordValidationResultMap[type] = []));
 
   for (const donorSubmitterId in newRecordsToDonorMap) {
@@ -133,7 +133,7 @@ function addErrorsForNoDonor(
 ) {
   for (const clinicalType in submittedRecords) {
     const records = ClinicalSubmissionRecordsOperations.getArrayRecords(
-      clinicalType as ClinicalEntityType,
+      clinicalType as ClinicalEntitySchemaNames,
       submittedRecords,
     );
     const multipleRecordValidationResults = buildMultipleRecordValidationResults(records, {
@@ -145,11 +145,11 @@ function addErrorsForNoDonor(
 }
 
 export const checkUniqueRecords = (
-  clinicalType: ClinicalEntityType,
+  clinicalType: ClinicalEntitySchemaNames,
   newRecords: DeepReadonly<DataRecord[]>,
   useAllRecordValues: boolean = false, // use all record properties so it behaves like duplicate check
 ): SubmissionValidationError[] => {
-  if (clinicalType === ClinicalEntityType.REGISTRATION) {
+  if (clinicalType === ClinicalEntitySchemaNames.REGISTRATION) {
     throw new Error('cannot check unique records for registration here.');
   }
 
