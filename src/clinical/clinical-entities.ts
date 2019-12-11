@@ -36,7 +36,6 @@ export interface Sample {
 
 export interface Treatment {
   clinicalInfo: ClinicalInfo;
-  submitterId: string;
   therapies: Array<Therapy>;
 }
 

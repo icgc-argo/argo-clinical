@@ -49,8 +49,9 @@ function getTreatmentClinicalInfo(
   existentDonor: DeepReadonly<Donor>,
   treatmentRecord: SubmittedClinicalRecord,
 ) {
-  const submitter_treatment_id = treatmentRecord[TreatmentFieldsEnum.submitter_treatment_id];
-  return (existentDonor.treatments || []).find(tr => tr.submitterId === submitter_treatment_id);
+  const idFieldName = TreatmentFieldsEnum.submitter_treatment_id;
+  const treatment_id = treatmentRecord[idFieldName];
+  return (existentDonor.treatments || []).find(tr => tr.clinicalInfo[idFieldName] === treatment_id);
 }
 
 function checkChemoFileNeeded(

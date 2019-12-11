@@ -11,7 +11,6 @@ import {
   SpecimenFieldsEnum,
   DonorFieldsEnum,
   TreatmentFieldsEnum,
-  DataValidationErrors,
 } from '../../../src/submission/submission-entities';
 import { Donor } from '../../../src/clinical/clinical-entities';
 import { stubs } from './stubs';
@@ -1355,7 +1354,7 @@ describe('data-validator', () => {
         ClinicalEntitySchemaNames.TREATMENT,
         newDonorAB1Records,
         {
-          [FieldsEnum.submitter_donor_id]: 'AB1',
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
           [TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
           [TreatmentFieldsEnum.treatment_type]: 'Combined chemo+immunotherapy',
           index: 0,
@@ -1387,7 +1386,7 @@ describe('data-validator', () => {
         ClinicalEntitySchemaNames.TREATMENT,
         newDonorAB1Records,
         {
-          [FieldsEnum.submitter_donor_id]: 'AB1',
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
           [TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
           [TreatmentFieldsEnum.treatment_type]: 'Ablation',
           index: 0,
@@ -1397,7 +1396,7 @@ describe('data-validator', () => {
         ClinicalEntitySchemaNames.CHEMOTHERAPY,
         newDonorAB1Records,
         {
-          [FieldsEnum.submitter_donor_id]: 'AB1',
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
           [TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
           index: 0,
         },
@@ -1406,7 +1405,7 @@ describe('data-validator', () => {
         ClinicalEntitySchemaNames.CHEMOTHERAPY,
         newDonorAB1Records,
         {
-          [FieldsEnum.submitter_donor_id]: 'AB1',
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
           [TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
           index: 1,
         },

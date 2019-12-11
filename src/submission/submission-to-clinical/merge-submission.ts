@@ -122,7 +122,7 @@ const addOrUpdateTreatementInfo = (donor: Donor, record: any): Treatment => {
     return treatment;
   }
   // no treatment, so just add
-  donor.treatments = [{ submitterId: submitterTreatementId, clinicalInfo: record, therapies: [] }];
+  donor.treatments = [{ clinicalInfo: record, therapies: [] }];
   return donor.treatments[0];
 };
 
@@ -168,7 +168,9 @@ const findSpecimen = (donor: Donor, specimenId: string) => {
 export const findTreatment = (donor: Donor, treatmentId: string): Treatment | undefined => {
   let treatment = undefined;
   if (donor.treatments) {
-    treatment = donor.treatments.find(tr => tr.submitterId === treatmentId);
+    treatment = donor.treatments.find(
+      tr => tr.clinicalInfo[TreatmentFieldsEnum.submitter_treatment_id] === treatmentId,
+    );
   }
   return treatment;
 };
