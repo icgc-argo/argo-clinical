@@ -8,16 +8,16 @@ import {
   TreatmentDataValidationErrors,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
-import { Donor, Treatment } from '../../clinical/clinical-entities';
+import { Donor } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
 import { ClinicalSubmissionRecordsOperations } from './utils';
-import { Errors } from '../../../src/utils';
+import { findTreatment } from '../submission-to-clinical/merge-submission';
 
 export const validate = async (
   submittedRecords: DeepReadonly<SubmittedClinicalRecordsMap>,
   existentDonor: DeepReadonly<Donor>,
-  mergedDonor: DeepReadonly<Donor>,
+  mergedDonor: Donor,
 ): Promise<RecordValidationResult[]> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
   const submittedTreatmentRecords = ClinicalSubmissionRecordsOperations.getArrayRecords(
@@ -34,8 +34,8 @@ export const validate = async (
 
     checkChemoFileNeeded(treatmentRecord, mergedDonor, errors);
 
+    // leaving this for now, stats will me moved out of validate so this won't be needed
     const treatmentClinicalInfo = getTreatmentClinicalInfo(existentDonor, treatmentRecord);
-
     recordValidationResults.push(
       utils.buildRecordValidationResult(treatmentRecord, errors, treatmentClinicalInfo),
     );
@@ -44,6 +44,7 @@ export const validate = async (
   return recordValidationResults;
 };
 
+// same here
 function getTreatmentClinicalInfo(
   existentDonor: DeepReadonly<Donor>,
   treatmentRecord: SubmittedClinicalRecord,
@@ -54,7 +55,7 @@ function getTreatmentClinicalInfo(
 
 function checkChemoFileNeeded(
   treatmentRecord: SubmittedClinicalRecord,
-  mergedDonor: DeepReadonly<Donor>,
+  mergedDonor: Donor,
   errors: SubmissionValidationError[],
 ) {
   const treatmentType = treatmentRecord[TreatmentFieldsEnum.treatment_type];
@@ -68,6 +69,7 @@ function checkChemoFileNeeded(
 
   const treatmentId = treatmentRecord[TreatmentFieldsEnum.submitter_treatment_id];
   const treatment = findTreatment(mergedDonor, treatmentId as string);
+  if (!treatment) throw new Error('Missing treatment, shouldnt be possible');
 
   if (
     treatment.therapies.length === 0 ||
@@ -84,15 +86,4 @@ function checkChemoFileNeeded(
       ),
     );
   }
-}
-
-function findTreatment(donor: DeepReadonly<Donor>, treatmentId: string): DeepReadonly<Treatment> {
-  let treatment;
-  if (donor.treatments) {
-    treatment = donor.treatments.find(tr => tr.submitterId === treatmentId);
-  }
-  if (!treatment) {
-    throw new Errors.StateConflict(`Treatment missing from donor.`);
-  }
-  return treatment;
 }

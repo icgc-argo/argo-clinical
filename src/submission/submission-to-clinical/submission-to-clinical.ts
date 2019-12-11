@@ -343,6 +343,24 @@ export function getClinicalEntitiesFromDonorBySchemaName(
       return [donor.primaryDiagnosis];
     }
   }
+
+  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.TREATMENT) {
+    if (donor.treatments) {
+      return donor.treatments.map(tr => tr.clinicalInfo).filter(notEmpty);
+    }
+  }
+
+  // this would work for other therapies
+  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.CHEMOTHERAPY) {
+    if (donor.treatments) {
+      return donor.treatments
+        .map(tr =>
+          tr.therapies.map(th => th.therapyType === ClinicalEntitySchemaNames.CHEMOTHERAPY),
+        )
+        .filter(notEmpty);
+    }
+  }
+
   return [];
 }
 

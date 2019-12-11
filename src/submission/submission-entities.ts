@@ -95,11 +95,6 @@ export enum DataValidationErrors {
   CONFLICTING_TIME_INTERVAL = 'CONFLICTING_TIME_INTERVAL',
   NOT_ENOUGH_INFO_TO_VALIDATE = 'NOT_ENOUGH_INFO_TO_VALIDATE',
   FOUND_IDENTICAL_IDS = 'FOUND_IDENTICAL_IDS',
-
-  // ** treatement validation errors **
-  INVALID_THERAPY_DATA = 'INVALID_THERAPY_DATA',
-  CONFLICTING_THERAPY_TREATMENT_DATA = 'CONFLICTING_THERAPY_TREATMENT_DATA',
-  TREATMENT_ID_NOT_FOUND = 'TREATMENT_ID_NOT_FOUND',
 }
 
 export enum TreatmentDataValidationErrors {
@@ -294,7 +289,7 @@ export enum ClinicalEntitySchemaNames {
   DONOR = 'donor',
   SPECIMEN = 'specimen',
   PRIMARY_DIAGNOSIS = 'primary_diagnosis',
-  TREATMENT = 'treatment', // make treatments!?
+  TREATMENT = 'treatment',
   CHEMOTHERAPY = 'chemotherapy',
 }
 

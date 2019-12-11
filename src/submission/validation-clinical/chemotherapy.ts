@@ -6,19 +6,18 @@ import {
   TreatmentFieldsEnum,
   SubmittedClinicalRecord,
   TreatmentDataValidationErrors,
-  DataValidationErrors,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, Treatment } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
 import { ClinicalSubmissionRecordsOperations } from './utils';
-import { Errors } from '../../../src/utils';
+import { findTreatment } from '../submission-to-clinical/merge-submission';
 
 export const validate = async (
   submittedRecords: DeepReadonly<SubmittedClinicalRecordsMap>,
   existentDonor: DeepReadonly<Donor>,
-  mergedDonor: DeepReadonly<Donor>,
+  mergedDonor: Donor,
 ): Promise<RecordValidationResult[]> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
   const submittedChemotherapyRecords = ClinicalSubmissionRecordsOperations.getArrayRecords(
@@ -72,7 +71,7 @@ function checkTreatementHasCorrectType(
 
 function getTreatment(
   chemoRecord: SubmittedClinicalRecord,
-  mergedDonor: DeepReadonly<Donor>,
+  mergedDonor: Donor,
   validationResults: RecordValidationResult[],
 ) {
   const treatmentId = chemoRecord[TreatmentFieldsEnum.submitter_treatment_id];
@@ -92,10 +91,4 @@ function getTreatment(
   }
 
   return treatment;
-}
-function findTreatment(donor: DeepReadonly<Donor>, treatmentId: string) {
-  if (donor.treatments) {
-    return donor.treatments.find(tr => tr.submitterId === treatmentId);
-  }
-  return undefined;
 }
