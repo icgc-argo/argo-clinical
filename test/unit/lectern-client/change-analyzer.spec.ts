@@ -5,6 +5,8 @@ import {
   FieldDiff,
   ChangeAnalysis,
 } from '../../../src/lectern-client/schema-entities';
+import _ from 'lodash';
+import { notEmpty } from '../../../src/utils';
 chai.should();
 const diffResponse: any = require('./schema-diff.json');
 const schemaDiff: SchemasDictionaryDiffs = {};

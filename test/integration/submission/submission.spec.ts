@@ -18,6 +18,7 @@ import {
   generateDonor,
   assertDbCollectionEmpty,
   findInDb,
+  createDonorDoc,
 } from '../testutils';
 import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN, JWT_ABCDEF, JWT_WXYZEF } from '../test.jwt';
 import {
@@ -27,7 +28,7 @@ import {
   SUBMISSION_STATE,
   DataValidationErrors,
   SubmissionBatchErrorTypes,
-  ClinicalEntityType,
+  ClinicalEntitySchemaNames,
   DonorFieldsEnum,
 } from '../../../src/submission/submission-entities';
 import { TsvUtils } from '../../../src/utils';
@@ -157,7 +158,7 @@ const ABCD_REGISTRATION_DOC: ActiveRegistration = {
   programId: 'ABCD-EF',
   creator: 'Test User',
   schemaVersion: '1.0',
-  batchName: `${ClinicalEntityType.REGISTRATION}.tsv`,
+  batchName: `${ClinicalEntitySchemaNames.REGISTRATION}.tsv`,
   stats: {
     newDonorIds: [
       {
@@ -346,7 +347,7 @@ describe('Submission Api', () => {
     it("should return 403 requested program doesn't match authorized in token scopes", done => {
       let file: Buffer;
       try {
-        file = fs.readFileSync(__dirname + `/${ClinicalEntityType.REGISTRATION}.tsv`);
+        file = fs.readFileSync(__dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.tsv`);
       } catch (err) {
         return done(err);
       }
@@ -356,7 +357,7 @@ describe('Submission Api', () => {
         // passing token with different program
         .auth(JWT_WXYZEF, { type: 'bearer' })
         .type('form')
-        .attach('registrationFile', file, `${ClinicalEntityType.REGISTRATION}.tsv`)
+        .attach('registrationFile', file, `${ClinicalEntitySchemaNames.REGISTRATION}.tsv`)
         .end((err: any, res: any) => {
           res.should.have.status(403);
           done();
@@ -369,17 +370,17 @@ describe('Submission Api', () => {
       let rows: any[];
 
       try {
-        file = fs.readFileSync(__dirname + `/${ClinicalEntityType.REGISTRATION}.1.tsv`);
+        file = fs.readFileSync(__dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`);
         (async () =>
           (rows = (await TsvUtils.tsvToJson(
-            __dirname + `/${ClinicalEntityType.REGISTRATION}.1.tsv`,
+            __dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`,
           )) as any[]))();
       } catch (err) {
         return done(err);
       }
 
       try {
-        file2 = fs.readFileSync(__dirname + `/${ClinicalEntityType.REGISTRATION}.2.tsv`);
+        file2 = fs.readFileSync(__dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.2.tsv`);
       } catch (err) {
         return done(err);
       }
@@ -389,7 +390,7 @@ describe('Submission Api', () => {
         .post('/submission/program/ABCD-EF/registration')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .type('form')
-        .attach('registrationFile', file, `${ClinicalEntityType.REGISTRATION}.1.tsv`)
+        .attach('registrationFile', file, `${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`)
         .end(async (err: any, res: any) => {
           try {
             await assertUploadOKRegistrationCreated(res, dburl);
@@ -406,7 +407,11 @@ describe('Submission Api', () => {
                     .post('/submission/program/ABCD-EF/registration')
                     .auth(JWT_ABCDEF, { type: 'bearer' })
                     .type('form')
-                    .attach('registrationFile', file2, `${ClinicalEntityType.REGISTRATION}.2.tsv`)
+                    .attach(
+                      'registrationFile',
+                      file2,
+                      `${ClinicalEntitySchemaNames.REGISTRATION}.2.tsv`,
+                    )
                     .end(async (err: any, res: any) => {
                       try {
                         await assertUploadOKRegistrationCreated(res, dburl);
@@ -441,10 +446,10 @@ describe('Submission Api', () => {
       let file: Buffer;
       let rows: any[];
       try {
-        file = fs.readFileSync(__dirname + `/${ClinicalEntityType.REGISTRATION}.1.tsv`);
+        file = fs.readFileSync(__dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`);
         (async () =>
           (rows = (await TsvUtils.tsvToJson(
-            __dirname + `/${ClinicalEntityType.REGISTRATION}.1.tsv`,
+            __dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`,
           )) as any[]))();
       } catch (err) {
         return done(err);
@@ -455,7 +460,7 @@ describe('Submission Api', () => {
         .post('/submission/program/ABCD-EF/registration')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .type('form')
-        .attach('registrationFile', file, `${ClinicalEntityType.REGISTRATION}.1.tsv`)
+        .attach('registrationFile', file, `${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`)
         .end(async (err: any, res: any) => {
           try {
             await assertUploadOKRegistrationCreated(res, dburl);
@@ -480,7 +485,11 @@ describe('Submission Api', () => {
                     .post('/submission/program/ABCD-EF/registration')
                     .auth(JWT_ABCDEF, { type: 'bearer' })
                     .type('form')
-                    .attach('registrationFile', file, `${ClinicalEntityType.REGISTRATION}.1.tsv`)
+                    .attach(
+                      'registrationFile',
+                      file,
+                      `${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`,
+                    )
                     .end(async (err: any, res: any) => {
                       try {
                         await assertUploadOKRegistrationCreated(res, dburl);
@@ -516,7 +525,7 @@ describe('Submission Api', () => {
     it('should accept valid registration tsv', done => {
       let file: Buffer;
       try {
-        file = fs.readFileSync(__dirname + `/${ClinicalEntityType.REGISTRATION}.tsv`);
+        file = fs.readFileSync(__dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.tsv`);
       } catch (err) {
         return done(err);
       }
@@ -525,7 +534,7 @@ describe('Submission Api', () => {
         .post('/submission/program/ABCD-EF/registration')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .type('form')
-        .attach('registrationFile', file, `${ClinicalEntityType.REGISTRATION}.tsv`)
+        .attach('registrationFile', file, `${ClinicalEntitySchemaNames.REGISTRATION}.tsv`)
         .end(async (err: any, res: any) => {
           try {
             res.should.have.status(201);
@@ -557,7 +566,9 @@ describe('Submission Api', () => {
       await insertData(dburl, 'activeregistrations', ABCD_REGISTRATION_DOC);
       let file: Buffer;
       try {
-        file = fs.readFileSync(__dirname + `/${ClinicalEntityType.REGISTRATION}.invalid.tsv`);
+        file = fs.readFileSync(
+          __dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.invalid.tsv`,
+        );
       } catch (err) {
         throw err;
       }
@@ -565,7 +576,7 @@ describe('Submission Api', () => {
         .request(app)
         .post('/submission/program/ABCD-EF/registration')
         .type('form')
-        .attach('registrationFile', file, `${ClinicalEntityType.REGISTRATION}.invalid.tsv`)
+        .attach('registrationFile', file, `${ClinicalEntitySchemaNames.REGISTRATION}.invalid.tsv`)
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .end(async (err: any, res: any) => {
           try {
@@ -927,7 +938,24 @@ describe('Submission Api', () => {
             specimenTissueSource: 'Other',
             tumourNormalDesignation: 'Normal',
             submitterId: '8013861',
-            clinicalInfo: { percent_tumour_cells: 0.5 },
+            clinicalInfo: {
+              program_id: 'ABCD-EF',
+              submitter_donor_id: 'ICGC_0001',
+              submitter_specimen_id: '8013861',
+              acquisition_interval: 200,
+              anatomic_location_of_specimen_collection: 'Other',
+              central_pathology_confirmed: 'No',
+              tumour_histological_type: 'M-1111/22',
+              tumour_grading_system: 'Default',
+              tumour_grade: 'aStringValue',
+              tumour_staging_system: 'Murphy',
+              pathological_stage_group: 'aStringValue',
+              percent_proliferating_cells: 0.5,
+              percent_inflammatory_tissue: 0.6,
+              percent_stromal_cells: 0.65,
+              percent_necrosis: 0.65,
+              percent_tumour_cells: 0.5,
+            },
           },
         ],
         donorId: 1,
@@ -1130,16 +1158,15 @@ describe('Submission Api', () => {
     const programId = 'ABCD-EF';
     let donor: any;
     let submissionVersion: string;
-
     this.beforeEach(async () => {
       await clearCollections(dburl, ['donors', 'activesubmissions']);
       donor = await generateDonor(dburl, programId, 'ICGC_0001');
     });
 
-    const uploadSubmission = async () => {
+    const uploadSubmission = async (fileName: string = 'donor.tsv') => {
       let file: Buffer;
       try {
-        file = fs.readFileSync(__dirname + '/donor.tsv');
+        file = fs.readFileSync(__dirname + `/${fileName}`);
       } catch (err) {
         return err;
       }
@@ -1248,22 +1275,34 @@ describe('Submission Api', () => {
     let donor: any;
     let submissionVersion: string;
 
-    const uploadSubmission = async () => {
-      let file: Buffer;
+    const uploadSubmission = async (
+      donorFileName: string = 'donor.tsv',
+      primaryDiagnosisFileName: string = '',
+    ) => {
+      let donorFile: Buffer;
+      let primaryDiagFile: Buffer | undefined = undefined;
       try {
-        file = fs.readFileSync(__dirname + '/donor.tsv');
+        donorFile = fs.readFileSync(__dirname + `/${donorFileName}`);
+        if (primaryDiagnosisFileName != '') {
+          primaryDiagFile = fs.readFileSync(__dirname + `/${primaryDiagnosisFileName}`);
+        }
       } catch (err) {
         return err;
       }
 
-      return chai
+      let req = chai
         .request(app)
         .post(`/submission/program/${programId}/clinical/upload`)
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-        .attach('clinicalFiles', file, 'donor.tsv')
-        .then((res: any) => {
-          submissionVersion = res.body.submission.version;
-        });
+        .attach('clinicalFiles', donorFile, 'donor.tsv');
+
+      if (primaryDiagFile) {
+        req = req.attach('clinicalFiles', primaryDiagFile, 'primary_diagnosis.tsv');
+      }
+
+      return req.then((res: any) => {
+        submissionVersion = res.body.submission.version;
+      });
     };
 
     const uploadSubmissionWithUpdates = async () => {
@@ -1306,6 +1345,7 @@ describe('Submission Api', () => {
       await clearCollections(dburl, ['donors', 'activesubmissions']);
       donor = await generateDonor(dburl, programId, 'ICGC_0001');
     });
+
     it('should return 401 if no auth is provided', done => {
       chai
         .request(app)
@@ -1374,6 +1414,7 @@ describe('Submission Api', () => {
           res.body.updatedBy.should.eq('Test User'); // the user who signed off into pending_approval
         });
     });
+
     it('should return 200 when commit is completed', async () => {
       // To get submission into correct state (pending approval) we need to already have a completed submission...
       await uploadSubmission();
@@ -1408,6 +1449,97 @@ describe('Submission Api', () => {
           chai
             .expect(updatedDonor.clinicalInfo)
             .to.deep.include({ [DonorFieldsEnum.vital_status]: 'Alive' });
+        });
+    });
+
+    it('TC-SMUIDAV should mark updated invalid donors as valid when they are approved', async () => {
+      await createDonorDoc(
+        dburl,
+        emptyDonorDocument({
+          submitterId: 'ICGC_0002',
+          programId,
+          schemaMetadata: {
+            isValid: false,
+            lastValidSchemaVersion: '0.1',
+            originalSchemaVersion: '0.1',
+          },
+          clinicalInfo: {
+            program_id: 'PACA-AU',
+            submitter_donor_id: 'ICGC_0002',
+            vital_status: 'InvalidOldValue',
+            cause_of_death: 'Died of other reasons',
+            survival_time: 540,
+          },
+        }),
+      );
+      await createDonorDoc(
+        dburl,
+        emptyDonorDocument({
+          submitterId: 'ICGC_0003',
+          programId,
+          schemaMetadata: {
+            isValid: false,
+            lastValidSchemaVersion: '0.1',
+            originalSchemaVersion: '0.1',
+          },
+          clinicalInfo: {
+            program_id: programId,
+            submitter_donor_id: 'ICGC_0003',
+            vital_status: 'InvalidOldValue',
+            cause_of_death: 'Died of cancer',
+            survival_time: 23,
+          },
+          primaryDiagnosis: {
+            program_id: programId,
+            number_lymph_nodes_positive: 1,
+            submitter_donor_id: 'ICGC_0003',
+            age_at_diagnosis: 96,
+            cancer_type_code: 'A11.1A',
+            tumour_staging_system: 'Binet', // this will be updated to Murphy
+          },
+        }),
+      );
+      await uploadSubmission('donor_TC-SMUIDAV.tsv', 'primary_diagnosis_TC-SMUIDAV.tsv');
+      await validateSubmission();
+      await commitActiveSubmission();
+
+      return chai
+        .request(app)
+        .post(`/submission/program/${programId}/clinical/approve/${submissionVersion}`)
+        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+        .then(async (res: any) => {
+          res.should.have.status(200);
+          res.body.should.be.empty;
+
+          // check activesubmission removed
+          await assertDbCollectionEmpty(dburl, 'activesubmissions');
+
+          // check donor merge
+          const [updatedDonor]: Donor[] = await findInDb(dburl, 'donors', {
+            programId: programId,
+            submitterId: 'ICGC_0002',
+          });
+
+          const [updatedDonor2]: Donor[] = await findInDb(dburl, 'donors', {
+            programId: programId,
+            submitterId: 'ICGC_0003',
+          });
+
+          chai.expect(updatedDonor.schemaMetadata.isValid).to.be.true;
+          chai.expect(updatedDonor2.schemaMetadata.isValid).to.be.false;
+          chai.expect(updatedDonor.schemaMetadata.lastValidSchemaVersion).to.eq('1.0');
+          chai.expect(updatedDonor2.schemaMetadata.lastValidSchemaVersion).to.eq('0.1');
+
+          chai.expect(updatedDonor.clinicalInfo).to.deep.include({
+            [DonorFieldsEnum.vital_status]: 'Deceased',
+            [DonorFieldsEnum.survival_time]: 100,
+          });
+
+          // we expect the other invalid donor to be updated even that it remained invalid
+          // due to not updating the invalid clinical file (donor.clinicalInfo)
+          chai.expect(updatedDonor2.primaryDiagnosis).to.deep.include({
+            tumour_staging_system: 'Murphy',
+          });
         });
     });
   });
@@ -1496,7 +1628,7 @@ describe('Submission Api', () => {
 
   describe('schema', function() {
     it('get template found', done => {
-      const name = ClinicalEntityType.REGISTRATION;
+      const name = ClinicalEntitySchemaNames.REGISTRATION;
       console.log("Getting template for '" + name + "'...");
       chai
         .request(app)

@@ -7,7 +7,7 @@ import {
   DataValidationErrors,
   CreateRegistrationRecord,
   FieldsEnum,
-  ClinicalEntityType,
+  ClinicalEntitySchemaNames,
   SpecimenFieldsEnum,
   DonorFieldsEnum,
 } from '../../../src/submission/submission-entities';
@@ -170,7 +170,7 @@ describe('data-validator', () => {
       donorDaoCountByStub.returns(Promise.resolve(0));
       // test call
       const result = await usingInvalidProgramId(
-        ClinicalEntityType.REGISTRATION,
+        ClinicalEntitySchemaNames.REGISTRATION,
         0,
         {
           [FieldsEnum.submitter_donor_id]: 'AB1',
@@ -1105,7 +1105,7 @@ describe('data-validator', () => {
       const existingDonorAB2Mock: Donor = stubs.validation.existingDonor04();
       const newDonorAB1Records = {};
       ClinicalSubmissionRecordsOperations.addRecord(
-        ClinicalEntityType.SPECIMEN,
+        ClinicalEntitySchemaNames.SPECIMEN,
         newDonorAB1Records,
         {
           [FieldsEnum.submitter_donor_id]: 'AB1',
@@ -1115,7 +1115,7 @@ describe('data-validator', () => {
       );
       const newDonorAB2Records = {};
       ClinicalSubmissionRecordsOperations.addRecord(
-        ClinicalEntityType.SPECIMEN,
+        ClinicalEntitySchemaNames.SPECIMEN,
         newDonorAB2Records,
         {
           [FieldsEnum.submitter_donor_id]: 'AB2',
@@ -1124,7 +1124,7 @@ describe('data-validator', () => {
         },
       );
       ClinicalSubmissionRecordsOperations.addRecord(
-        ClinicalEntityType.SPECIMEN,
+        ClinicalEntitySchemaNames.SPECIMEN,
         newDonorAB2Records,
         {
           [FieldsEnum.submitter_donor_id]: 'AB2',
@@ -1182,7 +1182,7 @@ describe('data-validator', () => {
 
       const newDonorAB2Records = {};
       ClinicalSubmissionRecordsOperations.addRecord(
-        ClinicalEntityType.SPECIMEN,
+        ClinicalEntitySchemaNames.SPECIMEN,
         newDonorAB2Records,
         {
           [FieldsEnum.submitter_donor_id]: 'AB2',
@@ -1193,7 +1193,7 @@ describe('data-validator', () => {
         },
       );
       ClinicalSubmissionRecordsOperations.addRecord(
-        ClinicalEntityType.SPECIMEN,
+        ClinicalEntitySchemaNames.SPECIMEN,
         newDonorAB2Records,
         {
           [FieldsEnum.submitter_donor_id]: 'AB2',
@@ -1205,7 +1205,7 @@ describe('data-validator', () => {
       );
       const newDonorAB3Records = {};
       ClinicalSubmissionRecordsOperations.addRecord(
-        ClinicalEntityType.SPECIMEN,
+        ClinicalEntitySchemaNames.SPECIMEN,
         newDonorAB3Records,
         {
           [FieldsEnum.submitter_donor_id]: 'AB3',
@@ -1215,13 +1215,17 @@ describe('data-validator', () => {
           index: 0,
         },
       );
-      ClinicalSubmissionRecordsOperations.addRecord(ClinicalEntityType.DONOR, newDonorAB3Records, {
-        [FieldsEnum.submitter_donor_id]: 'AB3',
-        [FieldsEnum.program_id]: 'PEME-CA',
-        [DonorFieldsEnum.vital_status]: 'deceased',
-        [DonorFieldsEnum.survival_time]: 522,
-        index: 0,
-      });
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.DONOR,
+        newDonorAB3Records,
+        {
+          [FieldsEnum.submitter_donor_id]: 'AB3',
+          [FieldsEnum.program_id]: 'PEME-CA',
+          [DonorFieldsEnum.vital_status]: 'deceased',
+          [DonorFieldsEnum.survival_time]: 522,
+          index: 0,
+        },
+      );
       // AB2 is where only specimen is being uploaded and donor already has clinicalInfo
       // AB3 is when donor and specimen are being updated
       const errors = await dv
@@ -1283,7 +1287,7 @@ describe('data-validator', () => {
       const existingDonorMock: Donor = stubs.validation.existingDonor01();
       const newDonorAB1Records = {};
       ClinicalSubmissionRecordsOperations.addRecord(
-        ClinicalEntityType.SPECIMEN,
+        ClinicalEntitySchemaNames.SPECIMEN,
         newDonorAB1Records,
         {
           [FieldsEnum.submitter_donor_id]: 'AB1',
@@ -1293,7 +1297,7 @@ describe('data-validator', () => {
         },
       );
       ClinicalSubmissionRecordsOperations.addRecord(
-        ClinicalEntityType.SPECIMEN,
+        ClinicalEntitySchemaNames.SPECIMEN,
         newDonorAB1Records,
         {
           [FieldsEnum.submitter_donor_id]: 'AB1',
@@ -1316,8 +1320,8 @@ describe('data-validator', () => {
           donorSubmitterId: 'AB1',
           value: 200,
           missingField: [
-            ClinicalEntityType.DONOR + '.' + DonorFieldsEnum.vital_status,
-            ClinicalEntityType.DONOR + '.' + DonorFieldsEnum.survival_time,
+            ClinicalEntitySchemaNames.DONOR + '.' + DonorFieldsEnum.vital_status,
+            ClinicalEntitySchemaNames.DONOR + '.' + DonorFieldsEnum.survival_time,
           ],
         },
       };
@@ -1331,8 +1335,8 @@ describe('data-validator', () => {
           donorSubmitterId: 'AB1',
           value: 200,
           missingField: [
-            ClinicalEntityType.DONOR + '.' + DonorFieldsEnum.vital_status,
-            ClinicalEntityType.DONOR + '.' + DonorFieldsEnum.survival_time,
+            ClinicalEntitySchemaNames.DONOR + '.' + DonorFieldsEnum.vital_status,
+            ClinicalEntitySchemaNames.DONOR + '.' + DonorFieldsEnum.survival_time,
           ],
         },
       };
