@@ -5,7 +5,7 @@ import {
   SubmittedClinicalRecord,
   RecordValidationResult,
   SubmittedClinicalRecordsMap,
-  ClinicalEntityType,
+  ClinicalEntitySchemaNames,
   DonorFieldsEnum,
   SpecimenFieldsEnum,
 } from '../submission-entities';
@@ -22,7 +22,7 @@ export const validate = async (
 ): Promise<RecordValidationResult[]> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
   const specimenRecords = ClinicalSubmissionRecordsOperations.getArrayRecords(
-    ClinicalEntityType.SPECIMEN,
+    ClinicalEntitySchemaNames.SPECIMEN,
     submittedRecords,
   );
   if (specimenRecords.length === 0 || !existentDonor) {
@@ -119,7 +119,7 @@ const getDataFromDonorRecordOrDonor = (
   let donorSurvivalTime: number = NaN;
   const donorDataSource =
     ClinicalSubmissionRecordsOperations.getSingleRecord(
-      ClinicalEntityType.DONOR,
+      ClinicalEntitySchemaNames.DONOR,
       submittedRecords,
     ) || donor.clinicalInfo;
 
@@ -136,13 +136,15 @@ const getDataFromDonorRecordOrDonor = (
   if (missingDonorFields.length > 0) {
     const multipleRecordValidationResults = utils.buildMultipleRecordValidationResults(
       ClinicalSubmissionRecordsOperations.getArrayRecords(
-        ClinicalEntityType.SPECIMEN,
+        ClinicalEntitySchemaNames.SPECIMEN,
         submittedRecords,
       ),
       {
         type: DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
         fieldName: SpecimenFieldsEnum.acquisition_interval,
-        info: { missingField: missingDonorFields.map(s => ClinicalEntityType.DONOR + '.' + s) },
+        info: {
+          missingField: missingDonorFields.map(s => ClinicalEntitySchemaNames.DONOR + '.' + s),
+        },
       },
     );
     validationResults.push(...multipleRecordValidationResults);

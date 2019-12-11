@@ -4,7 +4,7 @@ import { loggerFor } from '../../logger';
 import { SchemasDictionary, SchemaDefinition } from '../../lectern-client/schema-entities';
 import { setStatus, Status } from '../../app-health';
 import { ControllerUtils } from '../../utils';
-import { ClinicalEntityType } from '../submission-entities';
+import { ClinicalEntitySchemaNames } from '../submission-entities';
 import AdmZip from 'adm-zip';
 import { HasFullWriteAccess } from '../../auth-decorators';
 const L = loggerFor(__filename);
@@ -67,7 +67,7 @@ export const getClinicalEntities = async (req: Request, res: Response) => {
       manager
         .instance()
         .getSchemasWithFields()
-        .filter(s => s.name !== ClinicalEntityType.REGISTRATION),
+        .filter(s => s.name !== ClinicalEntitySchemaNames.REGISTRATION),
     );
   }
 
@@ -75,7 +75,7 @@ export const getClinicalEntities = async (req: Request, res: Response) => {
     manager
       .instance()
       .getSchemas()
-      .filter(s => s !== ClinicalEntityType.REGISTRATION),
+      .filter(s => s !== ClinicalEntitySchemaNames.REGISTRATION),
   );
 };
 
@@ -107,7 +107,7 @@ export const getAllTemplates = async (req: Request, res: Response) => {
     .attachment('argo_clinical_templates.zip');
 
   schemasDictionary.schemas
-    .filter(s => s.name !== ClinicalEntityType.REGISTRATION)
+    .filter(s => s.name !== ClinicalEntitySchemaNames.REGISTRATION)
     .forEach(schema => {
       const template = createTemplate(schema);
       zip.addFile(`${schema.name}.tsv`, Buffer.alloc(template.length, template));

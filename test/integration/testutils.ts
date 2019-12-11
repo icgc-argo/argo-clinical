@@ -43,7 +43,7 @@ export const insertData = async (
   return document._id;
 };
 
-export const emptyDonorDocument = (overrides?: object) => {
+export const emptyDonorDocument = (overrides?: Partial<Donor>) => {
   const gender = Math.random() > 0.5 ? 'Male' : 'Female';
   const donor: Donor = {
     donorId: 1,
@@ -52,15 +52,12 @@ export const emptyDonorDocument = (overrides?: object) => {
     schemaMetadata: {
       isValid: true,
       lastValidSchemaVersion: '1.0',
-      // tslint:disable-next-line
       originalSchemaVersion: '1.0',
     },
     programId: '',
     specimens: [],
     followUps: [],
     treatments: [],
-    chemotherapy: [],
-    hormoneTherapy: [],
   };
   if (!overrides) {
     return donor;
@@ -68,20 +65,24 @@ export const emptyDonorDocument = (overrides?: object) => {
   return _.merge(donor, overrides);
 };
 
+export const createDonorDoc = async (dburl: string, donorDoc: Donor) => {
+  await insertData(dburl, 'donors', donorDoc);
+  return donorDoc;
+};
+
 export const generateDonor = async (
   dburl: string,
   programId: string,
   submitterDonorId?: string,
 ) => {
-  const submitterId = submitterDonorId || Date.now();
+  const submitterId = submitterDonorId || `${Date.now()}`;
 
   const doc = emptyDonorDocument({
     submitterId,
     programId,
-    donorId: submitterId,
+    donorId: Date.now(),
   });
-  await insertData(dburl, 'donors', doc);
-  return doc;
+  return createDonorDoc(dburl, doc);
 };
 
 export async function assertDbCollectionEmpty(dburl: string, collection: string) {

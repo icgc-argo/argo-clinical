@@ -4,7 +4,7 @@ import {
   SubmissionValidationError,
   RecordValidationResult,
   SubmittedClinicalRecordsMap,
-  ClinicalEntityType,
+  ClinicalEntitySchemaNames,
   SpecimenFieldsEnum,
   DonorFieldsEnum,
 } from '../submission-entities';
@@ -20,7 +20,7 @@ export const validate = async (
 ): Promise<RecordValidationResult> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
   const submittedDonorClinicalRecord = ClinicalSubmissionRecordsOperations.getSingleRecord(
-    ClinicalEntityType.DONOR,
+    ClinicalEntitySchemaNames.DONOR,
     submittedRecords,
   );
 
@@ -66,7 +66,7 @@ function checkTimeConflictWithSpecimens(
     let specimenAcqusitionInterval: number = 0;
     // specimenAcqusitionInterval comes from either registered specimen in new record or specimen.clincalInfo
     const specimenRecord = ClinicalSubmissionRecordsOperations.getRecordBySubmitterId(
-      ClinicalEntityType.SPECIMEN,
+      ClinicalEntitySchemaNames.SPECIMEN,
       specimen.submitterId,
       submittedRecords,
     );
