@@ -243,6 +243,13 @@ const TreatmentSchema = new mongoose.Schema(
   { _id: false },
 );
 
+const FollowUpSchema = new mongoose.Schema(
+  {
+    clinicalInfo: {},
+  },
+  { _id: false },
+);
+
 const DonorSchema = new mongoose.Schema(
   {
     donorId: { type: Number, index: true, unique: true, get: prefixDonorId },
@@ -252,7 +259,7 @@ const DonorSchema = new mongoose.Schema(
     specimens: [SpecimenSchema],
     clinicalInfo: {},
     primaryDiagnosis: {},
-    followUps: Array,
+    followUps: [FollowUpSchema],
     treatments: [TreatmentSchema],
     schemaMetadata: {},
   },

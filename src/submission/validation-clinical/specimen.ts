@@ -1,7 +1,7 @@
 import {
   SubmissionValidationError,
   DataValidationErrors,
-  FieldsEnum,
+  SampleRegistrationFieldsEnum,
   SubmittedClinicalRecord,
   RecordValidationResult,
   SubmittedClinicalRecordsMap,
@@ -69,7 +69,7 @@ function getSpecimenFromDonor(
 ) {
   const specimen = _.find(existentDonor.specimens, [
     'submitterId',
-    specimenRecord[FieldsEnum.submitter_specimen_id],
+    specimenRecord[SampleRegistrationFieldsEnum.submitter_specimen_id],
   ]);
   if (!specimen) {
     validationResults.push(
@@ -78,7 +78,7 @@ function getSpecimenFromDonor(
         utils.buildSubmissionError(
           specimenRecord,
           DataValidationErrors.ID_NOT_REGISTERED,
-          FieldsEnum.submitter_specimen_id,
+          SampleRegistrationFieldsEnum.submitter_specimen_id,
         ),
       ),
     );

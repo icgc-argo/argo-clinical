@@ -2,7 +2,7 @@ import { DeepReadonly } from 'deep-freeze';
 import { Donor, Treatment } from '../../clinical/clinical-entities';
 import {
   ActiveClinicalSubmission,
-  FieldsEnum,
+  SampleRegistrationFieldsEnum,
   ClinicalEntitySchemaNames,
   TreatmentFieldsEnum,
   SubmittedClinicalRecordsMap,
@@ -28,7 +28,7 @@ export const mergeActiveSubmissionWithDonors = async (
 
     // Find the donor that matches each record, and update the entity within that donor
     entityData.records.forEach(record => {
-      const donorId = record[FieldsEnum.submitter_donor_id];
+      const donorId = record[SampleRegistrationFieldsEnum.submitter_donor_id];
       const donor = _.find(updatedDonors, ['submitterId', donorId]);
       if (!donor) {
         throw new Errors.StateConflict(
@@ -107,7 +107,7 @@ const updatePrimaryDiagnosisInfo = (donor: Donor, record: any) => {
   return donor.primaryDiagnosis;
 };
 const updateSpecimenInfo = (donor: Donor, record: any) => {
-  const specimen = findSpecimen(donor, record[FieldsEnum.submitter_specimen_id]);
+  const specimen = findSpecimen(donor, record[SampleRegistrationFieldsEnum.submitter_specimen_id]);
   if (!specimen) return;
   specimen.clinicalInfo = record;
   return specimen;

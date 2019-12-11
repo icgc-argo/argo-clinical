@@ -1,5 +1,5 @@
 import {
-  FieldsEnum,
+  SampleRegistrationFieldsEnum,
   SubmittedClinicalRecord,
   DataValidationErrors,
   SubmissionValidationError,
@@ -11,6 +11,8 @@ import {
   ClinicalUniqueIndentifier,
   DonorFieldsEnum,
   SpecimenFieldsEnum,
+  FollowupFieldsEnum,
+  TreatmentFieldsEnum,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { validationErrorMessage } from '../submission-error-messages';
@@ -19,8 +21,13 @@ import { DataRecord } from '../../lectern-client/schema-entities';
 
 export const buildSubmissionError = (
   newRecord: SubmittedClinicalRecord,
-  type: any, // will type later
-  fieldName: string, // generalized, will type later
+  type: DataValidationErrors,
+  fieldName:
+    | SampleRegistrationFieldsEnum
+    | DonorFieldsEnum
+    | SpecimenFieldsEnum
+    | TreatmentFieldsEnum
+    | FollowupFieldsEnum,
   info: object = {},
 ): SubmissionValidationError => {
   // typescript refused to take this directly
@@ -31,7 +38,7 @@ export const buildSubmissionError = (
     index,
     info: {
       ...info,
-      donorSubmitterId: newRecord[FieldsEnum.submitter_donor_id],
+      donorSubmitterId: newRecord[SampleRegistrationFieldsEnum.submitter_donor_id],
       value: newRecord[fieldName],
     },
   };
@@ -44,7 +51,7 @@ export const buildSubmissionError = (
 export const buildSubmissionUpdate = (
   newRecord: SubmittedClinicalRecord,
   oldValue: string,
-  fieldName: FieldsEnum | string,
+  fieldName: SampleRegistrationFieldsEnum | string,
 ): SubmissionValidationUpdate => {
   // typescript refused to take this directly
   const index: number = newRecord.index;
@@ -52,7 +59,7 @@ export const buildSubmissionUpdate = (
     fieldName,
     index,
     info: {
-      donorSubmitterId: newRecord[FieldsEnum.submitter_donor_id],
+      donorSubmitterId: newRecord[SampleRegistrationFieldsEnum.submitter_donor_id],
       newValue: `${newRecord[fieldName]}`, // we convert the value to string since lectern may converted it to non string (integer, boolean)
       oldValue: `${oldValue}`,
     },
@@ -143,7 +150,7 @@ export const buildMultipleRecordValidationResults = (
   records: ReadonlyArray<SubmittedClinicalRecord>,
   commonErrorProperties: {
     type: DataValidationErrors;
-    fieldName: FieldsEnum | DonorFieldsEnum | SpecimenFieldsEnum;
+    fieldName: SampleRegistrationFieldsEnum | DonorFieldsEnum | SpecimenFieldsEnum;
     info?: any;
   },
 ): RecordValidationResult[] => {
@@ -227,12 +234,12 @@ export const usingInvalidProgramId = (
   expectedProgram: string,
 ) => {
   const errors: SubmissionValidationError[] = [];
-  const programId = record[FieldsEnum.program_id];
+  const programId = record[SampleRegistrationFieldsEnum.program_id];
   if (programId) {
     if (expectedProgram !== programId) {
       errors.push({
         type: DataValidationErrors.INVALID_PROGRAM_ID,
-        fieldName: FieldsEnum.program_id,
+        fieldName: SampleRegistrationFieldsEnum.program_id,
         index: newDonorIndex,
         info: getSubmissionErrorInfoObject(type, record, expectedProgram),
         message: validationErrorMessage(DataValidationErrors.INVALID_PROGRAM_ID),
@@ -251,17 +258,17 @@ const getSubmissionErrorInfoObject = (
   switch (type) {
     case ClinicalEntitySchemaNames.REGISTRATION: {
       return {
-        value: record[FieldsEnum.program_id],
-        sampleSubmitterId: record[FieldsEnum.submitter_sample_id],
-        specimenSubmitterId: record[FieldsEnum.submitter_specimen_id],
-        donorSubmitterId: record[FieldsEnum.submitter_donor_id],
+        value: record[SampleRegistrationFieldsEnum.program_id],
+        sampleSubmitterId: record[SampleRegistrationFieldsEnum.submitter_sample_id],
+        specimenSubmitterId: record[SampleRegistrationFieldsEnum.submitter_specimen_id],
+        donorSubmitterId: record[SampleRegistrationFieldsEnum.submitter_donor_id],
         expectedProgram,
       };
     }
     default: {
       return {
-        value: record[FieldsEnum.program_id],
-        donorSubmitterId: record[FieldsEnum.submitter_donor_id],
+        value: record[SampleRegistrationFieldsEnum.program_id],
+        donorSubmitterId: record[SampleRegistrationFieldsEnum.submitter_donor_id],
         expectedProgram,
       };
     }

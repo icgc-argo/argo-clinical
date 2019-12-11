@@ -4,7 +4,7 @@ import {
   SubmissionValidationError,
   CreateRegistrationRecord,
   ValidationResult,
-  FieldsEnum,
+  SampleRegistrationFieldsEnum,
   RegistrationToCreateRegistrationFieldsMap,
   RecordValidationResult,
   ClinicalTypeValidateResult,
@@ -138,7 +138,7 @@ function addErrorsForNoDonor(
     );
     const multipleRecordValidationResults = buildMultipleRecordValidationResults(records, {
       type: DataValidationErrors.ID_NOT_REGISTERED,
-      fieldName: FieldsEnum.submitter_donor_id,
+      fieldName: SampleRegistrationFieldsEnum.submitter_donor_id,
     });
     recordValidationResultMap[clinicalType].push(...multipleRecordValidationResults);
   }
@@ -236,7 +236,7 @@ const conflictingNewSpecimen = (
       buildError(
         newDonor,
         DataValidationErrors.NEW_SPECIMEN_ID_CONFLICT,
-        FieldsEnum.submitter_specimen_id,
+        SampleRegistrationFieldsEnum.submitter_specimen_id,
         newDonorIndex,
         {
           conflictingRows: conflictingSpecimensIndices,
@@ -250,7 +250,7 @@ const conflictingNewSpecimen = (
       buildError(
         newDonor,
         DataValidationErrors.NEW_SPECIMEN_ATTR_CONFLICT,
-        FieldsEnum.specimen_tissue_source,
+        SampleRegistrationFieldsEnum.specimen_tissue_source,
         newDonorIndex,
         {
           conflictingRows: conflictingSpecimenTypesIndices,
@@ -264,7 +264,7 @@ const conflictingNewSpecimen = (
       buildError(
         newDonor,
         DataValidationErrors.NEW_SPECIMEN_ATTR_CONFLICT,
-        FieldsEnum.tumour_normal_designation,
+        SampleRegistrationFieldsEnum.tumour_normal_designation,
         newDonorIndex,
         {
           conflictingRows: conflictingSpecimenTumourDesignationIndices,
@@ -303,7 +303,7 @@ const conflictingNewDonor = (
     const err = buildError(
       newDonor,
       DataValidationErrors.NEW_DONOR_CONFLICT,
-      FieldsEnum.gender,
+      SampleRegistrationFieldsEnum.gender,
       newDonorIndex,
       {
         conflictingRows: conflictingGendersIndexes,
@@ -354,7 +354,7 @@ const conflictingNewSample = (
     const err = buildError(
       newDonor,
       DataValidationErrors.NEW_SAMPLE_ID_CONFLICT,
-      FieldsEnum.submitter_sample_id,
+      SampleRegistrationFieldsEnum.submitter_sample_id,
       newDonorIndex,
       {
         conflictingRows: conflictingSamplesIndices,
@@ -367,7 +367,7 @@ const conflictingNewSample = (
     const err = buildError(
       newDonor,
       DataValidationErrors.NEW_SAMPLE_ATTR_CONFLICT,
-      FieldsEnum.sample_type,
+      SampleRegistrationFieldsEnum.sample_type,
       newDonorIndex,
       {
         conflictingRows: conflictingSampleTypesIndices,
@@ -486,7 +486,7 @@ const specimenBelongsToOtherDonor = async (
       buildError(
         newDonor,
         DataValidationErrors.SPECIMEN_BELONGS_TO_OTHER_DONOR,
-        FieldsEnum.submitter_specimen_id,
+        SampleRegistrationFieldsEnum.submitter_specimen_id,
         index,
         // Value check is to deal with undefined case, which should never occur due to
         { otherDonorSubmitterId: existingDonor ? existingDonor.submitterId : '' },
@@ -515,7 +515,7 @@ const sampleBelongsToAnotherSpecimen = async (
         buildError(
           newDonor,
           DataValidationErrors.SAMPLE_BELONGS_TO_OTHER_SPECIMEN,
-          FieldsEnum.submitter_sample_id,
+          SampleRegistrationFieldsEnum.submitter_sample_id,
           index,
           { otherSpecimenSubmitterId: existingSpecimen.submitterId },
         ),
@@ -529,7 +529,7 @@ const sampleBelongsToAnotherSpecimen = async (
 const buildError = (
   newDonor: CreateRegistrationRecord,
   type: DataValidationErrors,
-  fieldName: FieldsEnum,
+  fieldName: SampleRegistrationFieldsEnum,
   index: number,
   info: object = {},
 ): SubmissionValidationError => {
@@ -563,7 +563,7 @@ function checkSampleMutations(
       buildError(
         newDonor,
         DataValidationErrors.MUTATING_EXISTING_DATA,
-        FieldsEnum.sample_type,
+        SampleRegistrationFieldsEnum.sample_type,
         index,
         { originalValue: existingSample.sampleType },
       ),
@@ -579,9 +579,15 @@ function checkDonorMutations(
 ) {
   if (newDonor.gender != existingDonor.gender) {
     errors.push(
-      buildError(newDonor, DataValidationErrors.MUTATING_EXISTING_DATA, FieldsEnum.gender, index, {
-        originalValue: existingDonor.gender,
-      }),
+      buildError(
+        newDonor,
+        DataValidationErrors.MUTATING_EXISTING_DATA,
+        SampleRegistrationFieldsEnum.gender,
+        index,
+        {
+          originalValue: existingDonor.gender,
+        },
+      ),
     );
   }
 }
@@ -611,7 +617,7 @@ function checkSpecimenMutations(
       buildError(
         newDonor,
         DataValidationErrors.MUTATING_EXISTING_DATA,
-        FieldsEnum.specimen_tissue_source,
+        SampleRegistrationFieldsEnum.specimen_tissue_source,
         index,
         { originalValue: existingSpecimen.specimenTissueSource },
       ),
@@ -622,7 +628,7 @@ function checkSpecimenMutations(
       buildError(
         newDonor,
         DataValidationErrors.MUTATING_EXISTING_DATA,
-        FieldsEnum.tumour_normal_designation,
+        SampleRegistrationFieldsEnum.tumour_normal_designation,
         index,
         { originalValue: existingSpecimen.tumourNormalDesignation },
       ),

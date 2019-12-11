@@ -5,7 +5,7 @@ import {
   ClinicalEntitySchemaNames,
   TreatmentFieldsEnum,
   SubmittedClinicalRecord,
-  TreatmentDataValidationErrors,
+  DataValidationErrors,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, Treatment } from '../../clinical/clinical-entities';
@@ -59,7 +59,7 @@ function checkTreatementHasCorrectType(
     errors.push(
       utils.buildSubmissionError(
         chemoRecord,
-        TreatmentDataValidationErrors.CONFLICTING_TREATMENT_DATA,
+        DataValidationErrors.CONFLICTING_TREATMENT_DATA,
         TreatmentFieldsEnum.submitter_treatment_id,
         {
           [TreatmentFieldsEnum.treatment_type]: treatmentType,
@@ -82,7 +82,7 @@ function getTreatment(
         chemoRecord,
         utils.buildSubmissionError(
           chemoRecord,
-          TreatmentDataValidationErrors.TREATMENT_ID_NOT_FOUND,
+          DataValidationErrors.TREATMENT_ID_NOT_FOUND,
           TreatmentFieldsEnum.submitter_treatment_id,
         ),
       ),

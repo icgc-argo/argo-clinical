@@ -5,7 +5,7 @@ import {
   ClinicalEntitySchemaNames,
   TreatmentFieldsEnum,
   SubmittedClinicalRecord,
-  TreatmentDataValidationErrors,
+  DataValidationErrors,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
@@ -78,7 +78,7 @@ function checkChemoFileNeeded(
     errors.push(
       utils.buildSubmissionError(
         treatmentRecord,
-        TreatmentDataValidationErrors.MISSING_THERAPY_DATA,
+        DataValidationErrors.MISSING_THERAPY_DATA,
         TreatmentFieldsEnum.treatment_type,
         {
           therapyType: ClinicalEntitySchemaNames.CHEMOTHERAPY,
