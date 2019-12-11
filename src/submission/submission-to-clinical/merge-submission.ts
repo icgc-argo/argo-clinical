@@ -6,6 +6,7 @@ import {
   ClinicalEntitySchemaNames,
   TreatmentFieldsEnum,
   SubmittedClinicalRecordsMap,
+  ClinicalUniqueIndentifier,
 } from '../submission-entities';
 import _ from 'lodash';
 import { loggerFor } from '../../logger';
@@ -50,7 +51,7 @@ export const mergeActiveSubmissionWithDonors = async (
           addOrUpdateTreatementInfo(donor, record);
           break;
         case ClinicalEntitySchemaNames.CHEMOTHERAPY: // other therapies here e.g. HormoneTherapy
-          addTherapyInfoToTretament(donor, record, entityType, true);
+          addOrUpdateTherapyInfoInDonor(donor, record, entityType, true);
           break;
         default:
           addOrUpdateClinicalEntity(donor, entityType, record);
@@ -91,7 +92,7 @@ export const mergeRecordsMapIntoDonor = (
   }
   if (submittedClinicalTypes.has(ClinicalEntitySchemaNames.CHEMOTHERAPY)) {
     submittedRecordsMap[ClinicalEntitySchemaNames.CHEMOTHERAPY].forEach(r =>
-      addTherapyInfoToTretament(mergedDonor, r, ClinicalEntitySchemaNames.CHEMOTHERAPY),
+      addOrUpdateTherapyInfoInDonor(mergedDonor, r, ClinicalEntitySchemaNames.CHEMOTHERAPY),
     );
   }
   return mergedDonor;
@@ -102,10 +103,12 @@ const updateDonorInfo = (donor: Donor, record: any) => {
   donor.clinicalInfo = record;
   return donor.clinicalInfo;
 };
+
 const updatePrimaryDiagnosisInfo = (donor: Donor, record: any) => {
   donor.primaryDiagnosis = record;
   return donor.primaryDiagnosis;
 };
+
 const updateSpecimenInfo = (donor: Donor, record: any) => {
   const specimen = findSpecimen(donor, record[SampleRegistrationFieldsEnum.submitter_specimen_id]);
   if (!specimen) return;
@@ -126,7 +129,7 @@ const addOrUpdateTreatementInfo = (donor: Donor, record: any): Treatment => {
   return donor.treatments[0];
 };
 
-const addTherapyInfoToTretament = (
+const addOrUpdateTherapyInfoInDonor = (
   donor: Donor,
   record: any,
   therapyType: ClinicalEntitySchemaNames,
@@ -140,8 +143,22 @@ const addTherapyInfoToTretament = (
       [TreatmentFieldsEnum.submitter_treatment_id]: submitterTreatementId,
     });
   }
-  treatment.therapies.push({ clinicalInfo: record, therapyType });
+  addOrUpdateTherapyInfoInTreatment(treatment, record, therapyType);
 };
+function addOrUpdateTherapyInfoInTreatment(
+  treatment: Treatment,
+  record: any,
+  therapyType: ClinicalEntitySchemaNames,
+) {
+  const idName = ClinicalUniqueIndentifier[therapyType];
+  const idVal = record[idName];
+  const therapy = findTherapyWithIdentifier(treatment, therapyType, idName, idVal);
+  if (therapy) {
+    therapy.clinicalInfo = record;
+    return;
+  }
+  treatment.therapies.push({ clinicalInfo: record, therapyType });
+}
 
 const addOrUpdateClinicalEntity = (
   donor: any,
@@ -173,4 +190,15 @@ export const findTreatment = (donor: Donor, treatmentId: string): Treatment | un
     );
   }
   return treatment;
+};
+
+const findTherapyWithIdentifier = (
+  treatment: Treatment,
+  therapyType: ClinicalEntitySchemaNames,
+  identiferName: string,
+  identiferValue: any,
+) => {
+  return (treatment.therapies || []).find(
+    th => th.clinicalInfo[identiferName] === identiferValue && th.therapyType === therapyType,
+  );
 };

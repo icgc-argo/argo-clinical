@@ -40,7 +40,7 @@ export interface Treatment {
 }
 
 export interface Therapy {
-  clinicalInfo?: ClinicalInfo;
+  clinicalInfo: ClinicalInfo;
   therapyType: string;
 }
 
