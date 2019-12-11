@@ -71,14 +71,16 @@ function checkChemoFileNeeded(
 
   if (
     treatment.therapies.length === 0 ||
-    !treatment.therapies.every(th => th.therapyType === ClinicalEntityType.CHEMOTHERAPY)
+    !treatment.therapies.some(th => th.therapyType === ClinicalEntityType.CHEMOTHERAPY)
   ) {
     errors.push(
       utils.buildSubmissionError(
         treatmentRecord,
-        TreatmentDataValidationErrors.INVALID_CHEMOTHERAPY_DATA,
+        TreatmentDataValidationErrors.MISSING_THERAPY_DATA,
         TreatmentFieldsEnum.treatment_type,
-        {},
+        {
+          therapyType: ClinicalEntityType.CHEMOTHERAPY,
+        },
       ),
     );
   }

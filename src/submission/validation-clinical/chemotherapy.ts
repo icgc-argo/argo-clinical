@@ -60,9 +60,11 @@ function checkTreatementHasCorrectType(
     errors.push(
       utils.buildSubmissionError(
         chemoRecord,
-        TreatmentDataValidationErrors.CONFLICTING_THERAPY_TREATMENT_DATA,
-        TreatmentFieldsEnum.treatment_type,
-        {},
+        TreatmentDataValidationErrors.CONFLICTING_TREATMENT_DATA,
+        TreatmentFieldsEnum.submitter_treatment_id,
+        {
+          [TreatmentFieldsEnum.treatment_type]: treatmentType,
+        },
       ),
     );
   }
@@ -81,7 +83,7 @@ function getTreatment(
         chemoRecord,
         utils.buildSubmissionError(
           chemoRecord,
-          DataValidationErrors.ID_NOT_REGISTERED,
+          TreatmentDataValidationErrors.TREATMENT_ID_NOT_FOUND,
           TreatmentFieldsEnum.submitter_treatment_id,
         ),
       ),

@@ -53,7 +53,7 @@ export enum FieldsEnum {
 }
 
 export type SubmissionValidationError = {
-  type: DataValidationErrors | SchemaValidationErrorTypes;
+  type: DataValidationErrors | TreatmentDataValidationErrors | SchemaValidationErrorTypes;
   fieldName: string;
   info: any;
   index: number;
@@ -98,11 +98,17 @@ export enum DataValidationErrors {
   CONFLICTING_TIME_INTERVAL = 'CONFLICTING_TIME_INTERVAL',
   NOT_ENOUGH_INFO_TO_VALIDATE = 'NOT_ENOUGH_INFO_TO_VALIDATE',
   FOUND_IDENTICAL_IDS = 'FOUND_IDENTICAL_IDS',
+
+  // ** treatement validation errors **
+  INVALID_THERAPY_DATA = 'INVALID_THERAPY_DATA',
+  CONFLICTING_THERAPY_TREATMENT_DATA = 'CONFLICTING_THERAPY_TREATMENT_DATA',
+  TREATMENT_ID_NOT_FOUND = 'TREATMENT_ID_NOT_FOUND',
 }
 
 export enum TreatmentDataValidationErrors {
-  INVALID_CHEMOTHERAPY_DATA = 'INVALID_CHEMOTHERAPY_DATA',
-  CONFLICTING_THERAPY_TREATMENT_DATA = 'CONFLICTING_THERAPY_TREATMENT_DATA',
+  MISSING_THERAPY_DATA = 'MISSING_THERAPY_DATA',
+  INVALID_THERAPY_DATA = 'INVALID_THERAPY_DATA',
+  CONFLICTING_TREATMENT_DATA = 'CONFLICTING_TREATMENT_DATA',
   TREATMENT_ID_NOT_FOUND = 'TREATMENT_ID_NOT_FOUND',
 }
 
