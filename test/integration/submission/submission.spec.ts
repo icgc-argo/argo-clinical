@@ -24,7 +24,7 @@ import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN, JWT_ABCDEF, JWT_WXYZEF } from '../t
 import {
   ActiveRegistration,
   ActiveClinicalSubmission,
-  FieldsEnum,
+  SampleRegistrationFieldsEnum,
   SUBMISSION_STATE,
   DataValidationErrors,
   SubmissionBatchErrorTypes,
@@ -52,10 +52,10 @@ const expectedErrors = [
       sampleSubmitterId: 'sam123',
       specimenSubmitterId: 'sp123',
     },
-    fieldName: FieldsEnum.tumour_normal_designation,
+    fieldName: SampleRegistrationFieldsEnum.tumour_normal_designation,
   },
   {
-    fieldName: FieldsEnum.submitter_specimen_id,
+    fieldName: SampleRegistrationFieldsEnum.submitter_specimen_id,
     index: 0,
     info: {
       donorSubmitterId: 'abcd123',
@@ -66,7 +66,7 @@ const expectedErrors = [
     type: 'INVALID_BY_REGEX',
   },
   {
-    fieldName: FieldsEnum.submitter_sample_id,
+    fieldName: SampleRegistrationFieldsEnum.submitter_sample_id,
     index: 0,
     info: {
       donorSubmitterId: 'abcd123',
@@ -77,7 +77,7 @@ const expectedErrors = [
     type: 'INVALID_BY_REGEX',
   },
   {
-    fieldName: FieldsEnum.gender,
+    fieldName: SampleRegistrationFieldsEnum.gender,
     index: 0,
     info: {
       donorSubmitterId: 'abcd123',
@@ -88,7 +88,7 @@ const expectedErrors = [
     type: 'INVALID_ENUM_VALUE',
   },
   {
-    fieldName: FieldsEnum.sample_type,
+    fieldName: SampleRegistrationFieldsEnum.sample_type,
     index: 0,
     info: {
       donorSubmitterId: 'abcd123',
@@ -139,14 +139,14 @@ const expectedResponse1 = {
     },
     records: [
       {
-        [FieldsEnum.program_id]: 'ABCD-EF',
-        [FieldsEnum.submitter_donor_id]: 'abcd123',
-        [FieldsEnum.gender]: 'Male',
-        [FieldsEnum.submitter_specimen_id]: 'ss123',
-        [FieldsEnum.specimen_tissue_source]: 'Other',
-        [FieldsEnum.tumour_normal_designation]: 'Normal',
-        [FieldsEnum.submitter_sample_id]: 'sm123',
-        [FieldsEnum.sample_type]: 'ctDNA',
+        [SampleRegistrationFieldsEnum.program_id]: 'ABCD-EF',
+        [SampleRegistrationFieldsEnum.submitter_donor_id]: 'abcd123',
+        [SampleRegistrationFieldsEnum.gender]: 'Male',
+        [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'ss123',
+        [SampleRegistrationFieldsEnum.specimen_tissue_source]: 'Other',
+        [SampleRegistrationFieldsEnum.tumour_normal_designation]: 'Normal',
+        [SampleRegistrationFieldsEnum.submitter_sample_id]: 'sm123',
+        [SampleRegistrationFieldsEnum.sample_type]: 'ctDNA',
       },
     ],
     __v: 0,
@@ -182,14 +182,14 @@ const ABCD_REGISTRATION_DOC: ActiveRegistration = {
   },
   records: [
     {
-      [FieldsEnum.program_id]: 'ABCD-EF',
-      [FieldsEnum.submitter_donor_id]: 'abcd123',
-      [FieldsEnum.gender]: 'Male',
-      [FieldsEnum.submitter_specimen_id]: 'ss123',
-      [FieldsEnum.specimen_tissue_source]: 'Other',
-      [FieldsEnum.tumour_normal_designation]: 'Normal',
-      [FieldsEnum.submitter_sample_id]: 'sm123',
-      [FieldsEnum.sample_type]: 'ctDNA',
+      [SampleRegistrationFieldsEnum.program_id]: 'ABCD-EF',
+      [SampleRegistrationFieldsEnum.submitter_donor_id]: 'abcd123',
+      [SampleRegistrationFieldsEnum.gender]: 'Male',
+      [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'ss123',
+      [SampleRegistrationFieldsEnum.specimen_tissue_source]: 'Other',
+      [SampleRegistrationFieldsEnum.tumour_normal_designation]: 'Normal',
+      [SampleRegistrationFieldsEnum.submitter_sample_id]: 'sm123',
+      [SampleRegistrationFieldsEnum.sample_type]: 'ctDNA',
     },
   ],
 };
@@ -204,7 +204,7 @@ const expectedDonorErrors = [
     },
     message:
       'You are trying to submit the same [submitter_donor_id] in multiple rows. [submitter_donor_id] can only be submitted once per file.',
-    fieldName: FieldsEnum.submitter_donor_id,
+    fieldName: SampleRegistrationFieldsEnum.submitter_donor_id,
   },
   {
     index: 2,
@@ -216,7 +216,7 @@ const expectedDonorErrors = [
     },
     message:
       'You are trying to submit the same [submitter_donor_id] in multiple rows. [submitter_donor_id] can only be submitted once per file.',
-    fieldName: FieldsEnum.submitter_donor_id,
+    fieldName: SampleRegistrationFieldsEnum.submitter_donor_id,
   },
   {
     index: 0,
@@ -778,7 +778,7 @@ describe('Submission Api', () => {
               code: 'INVALID_FILE_NAME',
             },
             {
-              message: `Missing required headers: [${FieldsEnum.submitter_donor_id}], [${FieldsEnum.submitter_specimen_id}]`,
+              message: `Missing required headers: [${SampleRegistrationFieldsEnum.submitter_donor_id}], [${SampleRegistrationFieldsEnum.submitter_specimen_id}]`,
               batchNames: ['specimen-invalid-headers.tsv'],
               code: SubmissionBatchErrorTypes.MISSING_REQUIRED_HEADER,
             },
@@ -847,7 +847,7 @@ describe('Submission Api', () => {
                   res.body.submission.clinicalEntities.donor.dataErrors.should.deep.eq([
                     {
                       type: DataValidationErrors.ID_NOT_REGISTERED,
-                      fieldName: FieldsEnum.submitter_donor_id,
+                      fieldName: SampleRegistrationFieldsEnum.submitter_donor_id,
                       info: {
                         donorSubmitterId: 'ICGC_0001',
                         value: 'ICGC_0001',
@@ -1637,9 +1637,9 @@ describe('Submission Api', () => {
         .end((err: any, res: any) => {
           res.should.have.status(200);
           res.text.should.equal(
-            `${FieldsEnum.program_id}\t${FieldsEnum.submitter_donor_id}\t${FieldsEnum.gender}\t` +
-              `${FieldsEnum.submitter_specimen_id}\t${FieldsEnum.specimen_tissue_source}\t${FieldsEnum.tumour_normal_designation}\t` +
-              `${FieldsEnum.submitter_sample_id}\t${FieldsEnum.sample_type}\n`,
+            `${SampleRegistrationFieldsEnum.program_id}\t${SampleRegistrationFieldsEnum.submitter_donor_id}\t${SampleRegistrationFieldsEnum.gender}\t` +
+              `${SampleRegistrationFieldsEnum.submitter_specimen_id}\t${SampleRegistrationFieldsEnum.specimen_tissue_source}\t${SampleRegistrationFieldsEnum.tumour_normal_designation}\t` +
+              `${SampleRegistrationFieldsEnum.submitter_sample_id}\t${SampleRegistrationFieldsEnum.sample_type}\n`,
           );
           res.should.header('Content-type', 'text/tab-separated-values;' + ' charset=utf-8');
           done();
@@ -1868,20 +1868,20 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dburl: 
     donorRows.push(
       emptyDonorDocument({
         donorId: i,
-        gender: r[FieldsEnum.gender],
-        submitterId: r[FieldsEnum.submitter_donor_id],
-        programId: r[FieldsEnum.program_id],
+        gender: r[SampleRegistrationFieldsEnum.gender],
+        submitterId: r[SampleRegistrationFieldsEnum.submitter_donor_id],
+        programId: r[SampleRegistrationFieldsEnum.program_id],
         specimens: [
           {
             specimenId: i,
-            submitterId: r[FieldsEnum.submitter_specimen_id],
-            specimenTissueSource: r[FieldsEnum.specimen_tissue_source],
-            tumourNormalDesignation: r[FieldsEnum.tumour_normal_designation],
+            submitterId: r[SampleRegistrationFieldsEnum.submitter_specimen_id],
+            specimenTissueSource: r[SampleRegistrationFieldsEnum.specimen_tissue_source],
+            tumourNormalDesignation: r[SampleRegistrationFieldsEnum.tumour_normal_designation],
             samples: [
               {
                 sampleId: i,
-                sampleType: r[FieldsEnum.sample_type],
-                submitterId: r[FieldsEnum.submitter_sample_id],
+                sampleType: r[SampleRegistrationFieldsEnum.sample_type],
+                submitterId: r[SampleRegistrationFieldsEnum.submitter_sample_id],
               },
             ],
           },
