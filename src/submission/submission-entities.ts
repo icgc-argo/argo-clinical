@@ -256,6 +256,13 @@ export enum SampleRegistrationFieldsEnum {
   sample_type = 'sample_type',
 }
 
+export type ClinicalSubmissionEnumTypesUnion =
+  | DonorFieldsEnum
+  | SpecimenFieldsEnum
+  | FollowupFieldsEnum
+  | TreatmentFieldsEnum
+  | TherapyFieldsEnum;
+
 export enum DonorFieldsEnum {
   submitter_donor_id = 'submitter_donor_id',
   vital_status = 'vital_status',
@@ -316,7 +323,9 @@ export const BatchNameRegex: Record<ClinicalEntitySchemaNames, RegExp[]> = {
 };
 
 // assumption: one field uniquely identifies a clinical type record in a batch of records
-export const ClinicalUniqueIndentifier: { [clinicalType: string]: any } = {
+export const ClinicalUniqueIndentifier: {
+  [clinicalType: string]: ClinicalSubmissionEnumTypesUnion;
+} = {
   [ClinicalEntitySchemaNames.DONOR]: DonorFieldsEnum.submitter_donor_id,
   [ClinicalEntitySchemaNames.SPECIMEN]: SpecimenFieldsEnum.submitter_specimen_id,
   [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: DonorFieldsEnum.submitter_donor_id,

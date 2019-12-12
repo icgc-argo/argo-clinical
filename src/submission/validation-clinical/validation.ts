@@ -12,6 +12,7 @@ import {
   ClinicalUniqueIndentifier,
   ClinicalSubmissionRecordsByDonorIdMap,
   SubmittedClinicalRecordsMap,
+  DonorFieldsEnum,
 } from '../submission-entities';
 import { donorDao, DONOR_FIELDS } from '../../clinical/donor-repo';
 import { DeepReadonly } from 'deep-freeze';
@@ -138,7 +139,7 @@ function addErrorsForNoDonor(
     );
     const multipleRecordValidationResults = buildMultipleRecordValidationResults(records, {
       type: DataValidationErrors.ID_NOT_REGISTERED,
-      fieldName: SampleRegistrationFieldsEnum.submitter_donor_id,
+      fieldName: DonorFieldsEnum.submitter_donor_id,
     });
     recordValidationResultMap[clinicalType].push(...multipleRecordValidationResults);
   }

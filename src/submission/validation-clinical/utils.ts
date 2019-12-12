@@ -10,9 +10,7 @@ import {
   SubmittedClinicalRecordsMap,
   ClinicalUniqueIndentifier,
   DonorFieldsEnum,
-  SpecimenFieldsEnum,
-  FollowupFieldsEnum,
-  TreatmentFieldsEnum,
+  ClinicalSubmissionEnumTypesUnion,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { validationErrorMessage } from '../submission-error-messages';
@@ -22,12 +20,7 @@ import { DataRecord } from '../../lectern-client/schema-entities';
 export const buildSubmissionError = (
   newRecord: SubmittedClinicalRecord,
   type: DataValidationErrors,
-  fieldName:
-    | SampleRegistrationFieldsEnum
-    | DonorFieldsEnum
-    | SpecimenFieldsEnum
-    | TreatmentFieldsEnum
-    | FollowupFieldsEnum,
+  fieldName: ClinicalSubmissionEnumTypesUnion,
   info: object = {},
 ): SubmissionValidationError => {
   // typescript refused to take this directly
@@ -59,7 +52,7 @@ export const buildSubmissionUpdate = (
     fieldName,
     index,
     info: {
-      donorSubmitterId: newRecord[SampleRegistrationFieldsEnum.submitter_donor_id],
+      donorSubmitterId: newRecord[DonorFieldsEnum.submitter_donor_id],
       newValue: `${newRecord[fieldName]}`, // we convert the value to string since lectern may converted it to non string (integer, boolean)
       oldValue: `${oldValue}`,
     },
@@ -150,7 +143,7 @@ export const buildMultipleRecordValidationResults = (
   records: ReadonlyArray<SubmittedClinicalRecord>,
   commonErrorProperties: {
     type: DataValidationErrors;
-    fieldName: SampleRegistrationFieldsEnum | DonorFieldsEnum | SpecimenFieldsEnum;
+    fieldName: ClinicalSubmissionEnumTypesUnion;
     info?: any;
   },
 ): RecordValidationResult[] => {
