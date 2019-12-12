@@ -1,9 +1,12 @@
 import { DeepReadonly } from 'deep-freeze';
-import { Donor } from '../../clinical/clinical-entities';
+import { Donor, Treatment } from '../../clinical/clinical-entities';
 import {
   ActiveClinicalSubmission,
   SampleRegistrationFieldsEnum,
   ClinicalEntitySchemaNames,
+  TreatmentFieldsEnum,
+  SubmittedClinicalRecordsMap,
+  ClinicalUniqueIndentifier,
 } from '../submission-entities';
 import _ from 'lodash';
 import { loggerFor } from '../../logger';
@@ -36,13 +39,19 @@ export const mergeActiveSubmissionWithDonors = async (
 
       switch (entityType) {
         case ClinicalEntitySchemaNames.DONOR:
-          donor.clinicalInfo = record;
+          updateDonorInfo(donor, record);
           break;
         case ClinicalEntitySchemaNames.SPECIMEN:
-          updateSpecimenRecord(donor, record);
+          updateSpecimenInfo(donor, record);
           break;
         case ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS:
-          donor.primaryDiagnosis = record;
+          updatePrimaryDiagnosisInfo(donor, record);
+          break;
+        case ClinicalEntitySchemaNames.TREATMENT:
+          addOrUpdateTreatementInfo(donor, record);
+          break;
+        case ClinicalEntitySchemaNames.CHEMOTHERAPY: // other therapies here e.g. HormoneTherapy
+          addOrUpdateTherapyInfoInDonor(donor, record, entityType, true);
           break;
         default:
           addOrUpdateClinicalEntity(donor, entityType, record);
@@ -54,11 +63,102 @@ export const mergeActiveSubmissionWithDonors = async (
   return updatedDonors;
 };
 
-const updateSpecimenRecord = (donor: Donor, record: ClinicalEnitityRecord) => {
-  // Find specimen in donor
-  const specimen = findSpecimen(donor, record[SampleRegistrationFieldsEnum.submitter_specimen_id]);
-  specimen.clinicalInfo = record;
+// This function will return a merged donor of records mapped by clinical type and the DB exsistentDonor
+export const mergeRecordsMapIntoDonor = (
+  submittedRecordsMap: DeepReadonly<SubmittedClinicalRecordsMap>,
+  exsistentDonor: DeepReadonly<Donor>,
+) => {
+  const submittedClinicalTypes: Set<String> = new Set(Object.keys(submittedRecordsMap));
+  const mergedDonor: any = _.cloneDeep(exsistentDonor);
+
+  if (submittedClinicalTypes.has(ClinicalEntitySchemaNames.DONOR)) {
+    updateDonorInfo(mergedDonor, submittedRecordsMap[ClinicalEntitySchemaNames.DONOR][0]);
+  }
+  if (submittedClinicalTypes.has(ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS)) {
+    updatePrimaryDiagnosisInfo(
+      mergedDonor,
+      submittedRecordsMap[ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS][0],
+    );
+  }
+  if (submittedClinicalTypes.has(ClinicalEntitySchemaNames.SPECIMEN)) {
+    submittedRecordsMap[ClinicalEntitySchemaNames.SPECIMEN].forEach(r =>
+      updateSpecimenInfo(mergedDonor, r),
+    );
+  }
+  if (submittedClinicalTypes.has(ClinicalEntitySchemaNames.TREATMENT)) {
+    submittedRecordsMap[ClinicalEntitySchemaNames.TREATMENT].forEach(r =>
+      addOrUpdateTreatementInfo(mergedDonor, r),
+    );
+  }
+  if (submittedClinicalTypes.has(ClinicalEntitySchemaNames.CHEMOTHERAPY)) {
+    submittedRecordsMap[ClinicalEntitySchemaNames.CHEMOTHERAPY].forEach(r =>
+      addOrUpdateTherapyInfoInDonor(mergedDonor, r, ClinicalEntitySchemaNames.CHEMOTHERAPY),
+    );
+  }
+  return mergedDonor;
 };
+
+// *** Info Update functions ***
+const updateDonorInfo = (donor: Donor, record: any) => {
+  donor.clinicalInfo = record;
+  return donor.clinicalInfo;
+};
+
+const updatePrimaryDiagnosisInfo = (donor: Donor, record: any) => {
+  donor.primaryDiagnosis = record;
+  return donor.primaryDiagnosis;
+};
+
+const updateSpecimenInfo = (donor: Donor, record: any) => {
+  const specimen = findSpecimen(donor, record[SampleRegistrationFieldsEnum.submitter_specimen_id]);
+  if (!specimen) return;
+  specimen.clinicalInfo = record;
+  return specimen;
+};
+
+const addOrUpdateTreatementInfo = (donor: Donor, record: any): Treatment => {
+  const submitterTreatementId = record[TreatmentFieldsEnum.submitter_treatment_id];
+  // Find treatment in donor and update
+  const treatment = findTreatment(donor, submitterTreatementId);
+  if (treatment) {
+    treatment.clinicalInfo = record;
+    return treatment;
+  }
+  // no treatment, so just add
+  donor.treatments = [{ clinicalInfo: record, therapies: [] }];
+  return donor.treatments[0];
+};
+
+const addOrUpdateTherapyInfoInDonor = (
+  donor: Donor,
+  record: any,
+  therapyType: ClinicalEntitySchemaNames,
+  createDummyTreatmentIfMissing: boolean = false, // use this if treatment record exists and will be added later
+) => {
+  const submitterTreatementId = record[TreatmentFieldsEnum.submitter_treatment_id];
+  let treatment = findTreatment(donor, submitterTreatementId);
+  if (!treatment) {
+    if (!createDummyTreatmentIfMissing) return;
+    treatment = addOrUpdateTreatementInfo(donor, {
+      [TreatmentFieldsEnum.submitter_treatment_id]: submitterTreatementId,
+    });
+  }
+  addOrUpdateTherapyInfoInTreatment(treatment, record, therapyType);
+};
+function addOrUpdateTherapyInfoInTreatment(
+  treatment: Treatment,
+  record: any,
+  therapyType: ClinicalEntitySchemaNames,
+) {
+  const idName = ClinicalUniqueIndentifier[therapyType];
+  const idVal = record[idName];
+  const therapy = findTherapyWithIdentifier(treatment, therapyType, idName, idVal);
+  if (therapy) {
+    therapy.clinicalInfo = record;
+    return;
+  }
+  treatment.therapies.push({ clinicalInfo: record, therapyType });
+}
 
 const addOrUpdateClinicalEntity = (
   donor: any,
@@ -76,15 +176,29 @@ const addOrUpdateClinicalEntity = (
 };
 
 /* ********************************* *
- * Some repeated convenience methods *
+ * Convenient private methods        *
  * ********************************* */
 const findSpecimen = (donor: Donor, specimenId: string) => {
-  const specimen = _.find(donor.specimens, ['submitterId', specimenId]);
-  if (!specimen) {
-    throw new Errors.StateConflict(
-      `Specimen ${specimenId} has not been registeredbut is part of the activeSubmission, merge cannot be completed.`,
+  return _.find(donor.specimens, ['submitterId', specimenId]);
+};
+
+const findTreatment = (donor: Donor, treatmentId: string): Treatment | undefined => {
+  let treatment = undefined;
+  if (donor.treatments) {
+    treatment = donor.treatments.find(
+      tr => tr.clinicalInfo[TreatmentFieldsEnum.submitter_treatment_id] === treatmentId,
     );
   }
+  return treatment;
+};
 
-  return specimen;
+const findTherapyWithIdentifier = (
+  treatment: Treatment,
+  therapyType: ClinicalEntitySchemaNames,
+  identiferName: string,
+  identiferValue: any,
+) => {
+  return (treatment.therapies || []).find(
+    th => th.clinicalInfo[identiferName] === identiferValue && th.therapyType === therapyType,
+  );
 };

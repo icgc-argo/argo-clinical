@@ -318,6 +318,52 @@ const getDonorSpecimen = (record: SubmittedRegistrationRecord) => {
   };
 };
 
+export function getSingleClinicalObjectFromDonor(
+  donor: DeepReadonly<Donor>,
+  clinicalEntitySchemaName: ClinicalEntitySchemaNames,
+  constraints: object, // similar to mongo filters, e.g. {submitted_donor_id: 'DR_01'}
+) {
+  const entities = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName);
+  return _.find(entities, constraints);
+}
+
+export function getClinicalObjectsFromDonor(
+  donor: DeepReadonly<Donor>,
+  clinicalEntitySchemaName: ClinicalEntitySchemaNames,
+): DeepReadonly<any[]> {
+  if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.DONOR) {
+    return [donor];
+  }
+
+  if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.SPECIMEN) {
+    return donor.specimens;
+  }
+
+  if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS) {
+    if (donor.primaryDiagnosis) {
+      return [donor.primaryDiagnosis];
+    }
+  }
+
+  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.TREATMENT) {
+    if (donor.treatments) {
+      return donor.treatments;
+    }
+  }
+
+  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.CHEMOTHERAPY) {
+    if (donor.treatments) {
+      return donor.treatments
+        .map(tr =>
+          tr.therapies.filter(th => th.therapyType === ClinicalEntitySchemaNames.CHEMOTHERAPY),
+        )
+        .flat()
+        .filter(notEmpty);
+    }
+  }
+  return [];
+}
+
 export function getClinicalEntitiesFromDonorBySchemaName(
   donor: DeepReadonly<Donor>,
   clinicalEntitySchemaName: ClinicalEntitySchemaNames,
@@ -345,6 +391,27 @@ export function getClinicalEntitiesFromDonorBySchemaName(
       return [donor.primaryDiagnosis];
     }
   }
+
+  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.TREATMENT) {
+    if (donor.treatments) {
+      return donor.treatments.map(tr => tr.clinicalInfo).filter(notEmpty);
+    }
+  }
+
+  // this should work for other therapies
+  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.CHEMOTHERAPY) {
+    if (donor.treatments) {
+      return donor.treatments
+        .map(tr =>
+          tr.therapies
+            .filter(th => th.therapyType === ClinicalEntitySchemaNames.CHEMOTHERAPY)
+            .map(th => th.clinicalInfo),
+        )
+        .flat()
+        .filter(notEmpty);
+    }
+  }
+
   return [];
 }
 

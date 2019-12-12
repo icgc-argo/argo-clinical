@@ -12,6 +12,7 @@ import {
   ClinicalUniqueIndentifier,
   ClinicalSubmissionRecordsByDonorIdMap,
   SubmittedClinicalRecordsMap,
+  DonorFieldsEnum,
 } from '../submission-entities';
 import { donorDao, DONOR_FIELDS } from '../../clinical/donor-repo';
 import { DeepReadonly } from 'deep-freeze';
@@ -25,6 +26,7 @@ import {
 } from './utils';
 import _ from 'lodash';
 import { ClinicalSubmissionRecordsOperations } from './utils';
+import { mergeRecordsMapIntoDonor } from '../submission-to-clinical/merge-submission';
 
 export const validateRegistrationData = async (
   expectedProgram: string,
@@ -101,11 +103,14 @@ export const validateSubmissionData = async (
       continue;
     }
 
+    const mergedDonor = mergeRecordsMapIntoDonor(submittedRecords, existentDonor);
+
     // call submission validator or each clinical type
     for (const clinicalType in submittedRecords) {
-      const results = await submissionValidator[clinicalType].validate(
+      const results = await submissionValidator(clinicalType).validate(
         submittedRecords,
         existentDonor,
+        mergedDonor,
       );
 
       recordValidationResultMap[clinicalType] = _.concat(
@@ -134,7 +139,7 @@ function addErrorsForNoDonor(
     );
     const multipleRecordValidationResults = buildMultipleRecordValidationResults(records, {
       type: DataValidationErrors.ID_NOT_REGISTERED,
-      fieldName: SampleRegistrationFieldsEnum.submitter_donor_id,
+      fieldName: DonorFieldsEnum.submitter_donor_id,
     });
     recordValidationResultMap[clinicalType].push(...multipleRecordValidationResults);
   }
@@ -143,13 +148,15 @@ function addErrorsForNoDonor(
 export const checkUniqueRecords = (
   clinicalType: ClinicalEntitySchemaNames,
   newRecords: DeepReadonly<DataRecord[]>,
-  useAllRecordValues?: boolean, // use all record properties so it behaves like duplicate check
+  useAllRecordValues: boolean = false, // use all record properties so it behaves like duplicate check
 ): SubmissionValidationError[] => {
   if (clinicalType === ClinicalEntitySchemaNames.REGISTRATION) {
     throw new Error('cannot check unique records for registration here.');
   }
 
   const uniqueIdName = ClinicalUniqueIndentifier[clinicalType];
+  if (!uniqueIdName) useAllRecordValues = true;
+
   const identifierToIndexMap: { [k: string]: number[] } = {};
   const indexToErrorMap: { [index: number]: SubmissionValidationError } = {};
 
@@ -174,7 +181,10 @@ export const checkUniqueRecords = (
         { ...record, index: recordIndex },
         DataValidationErrors.FOUND_IDENTICAL_IDS,
         uniqueIdName,
-        { conflictingRows: sameIdentifiedRecordIndecies.filter(i => i !== recordIndex) },
+        {
+          conflictingRows: sameIdentifiedRecordIndecies.filter(i => i !== recordIndex),
+          useAllRecordValues,
+        },
       );
     });
   });
