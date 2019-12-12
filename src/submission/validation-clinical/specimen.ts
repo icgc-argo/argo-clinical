@@ -7,6 +7,7 @@ import {
   ClinicalEntitySchemaNames,
   DonorFieldsEnum,
   SpecimenFieldsEnum,
+  ClinicalUniqueIndentifier,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, Specimen } from '../../clinical/clinical-entities';
@@ -71,7 +72,7 @@ function getSpecimenFromDonor(
     existentDonor,
     ClinicalEntitySchemaNames.SPECIMEN,
     {
-      submitterId: specimenRecord[SpecimenFieldsEnum.submitter_specimen_id],
+      submitterId: specimenRecord[ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.SPECIMEN]],
     },
   ) as DeepReadonly<Specimen>;
 
