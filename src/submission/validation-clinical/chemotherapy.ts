@@ -51,15 +51,11 @@ function checkTreatementHasCorrectType(
   errors: SubmissionValidationError[],
 ) {
   const treatmentType = treatment.clinicalInfo[TreatmentFieldsEnum.treatment_type] as string;
-  if (
-    treatmentType.toString().toLowerCase() !== 'combined chemo+immunotherapy' &&
-    treatmentType.toString().toLowerCase() !== 'combined chemo+radiation therapy' &&
-    treatmentType.toString().toLowerCase() !== 'combined chemo-radiotherapy and surgery'
-  ) {
+  if (utils.treatmentTypeIsNotChemo(treatmentType)) {
     errors.push(
       utils.buildSubmissionError(
         chemoRecord,
-        DataValidationErrors.CONFLICTING_TREATMENT_DATA,
+        DataValidationErrors.INCOMPATIBLE_PARENT_TREATMENT_TYPE,
         TreatmentFieldsEnum.submitter_treatment_id,
         {
           [TreatmentFieldsEnum.treatment_type]: treatmentType,

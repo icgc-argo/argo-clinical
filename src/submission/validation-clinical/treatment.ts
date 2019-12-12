@@ -6,6 +6,7 @@ import {
   TreatmentFieldsEnum,
   SubmittedClinicalRecord,
   DataValidationErrors,
+  ClinicalUniqueIndentifier,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, Treatment } from '../../clinical/clinical-entities';
@@ -49,7 +50,7 @@ function getTreatmentClinicalInfo(
   existentDonor: DeepReadonly<Donor>,
   treatmentRecord: SubmittedClinicalRecord,
 ) {
-  const idFieldName = TreatmentFieldsEnum.submitter_treatment_id;
+  const idFieldName = ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.TREATMENT];
   const treatment_id = treatmentRecord[idFieldName];
   return (existentDonor.treatments || []).find(tr => tr.clinicalInfo[idFieldName] === treatment_id);
 }
@@ -59,12 +60,8 @@ function checkChemoFileNeeded(
   mergedDonor: Donor,
   errors: SubmissionValidationError[],
 ) {
-  const treatmentType = treatmentRecord[TreatmentFieldsEnum.treatment_type];
-  if (
-    treatmentType.toString().toLowerCase() !== 'combined chemo+immunotherapy' &&
-    treatmentType.toString().toLowerCase() !== 'combined chemo+radiation therapy' &&
-    treatmentType.toString().toLowerCase() !== 'combined chemo-radiotherapy and surgery'
-  ) {
+  const treatmentType = treatmentRecord[TreatmentFieldsEnum.treatment_type] as string;
+  if (utils.treatmentTypeIsNotChemo(treatmentType)) {
     return;
   }
 

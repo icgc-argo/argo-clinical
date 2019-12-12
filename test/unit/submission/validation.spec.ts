@@ -1427,8 +1427,8 @@ describe('data-validator', () => {
       };
       const chemoTretmentInvalidErr: SubmissionValidationError = {
         fieldName: TreatmentFieldsEnum.submitter_treatment_id,
-        message: `CONFLICTING_TREATMENT_DATA`,
-        type: DataValidationErrors.CONFLICTING_TREATMENT_DATA,
+        message: `INCOMPATIBLE_PARENT_TREATMENT_TYPE`,
+        type: DataValidationErrors.INCOMPATIBLE_PARENT_TREATMENT_TYPE,
         index: 1,
         info: {
           donorSubmitterId: 'AB1',

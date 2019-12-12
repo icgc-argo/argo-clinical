@@ -10,7 +10,7 @@ import {
   SubmittedClinicalRecordsMap,
   ClinicalUniqueIndentifier,
   DonorFieldsEnum,
-  ClinicalSubmissionEnumTypesUnion,
+  ClinicalFields,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { validationErrorMessage } from '../submission-error-messages';
@@ -20,7 +20,7 @@ import { DataRecord } from '../../lectern-client/schema-entities';
 export const buildSubmissionError = (
   newRecord: SubmittedClinicalRecord,
   type: DataValidationErrors,
-  fieldName: ClinicalSubmissionEnumTypesUnion,
+  fieldName: ClinicalFields,
   info: object = {},
 ): SubmissionValidationError => {
   // typescript refused to take this directly
@@ -143,7 +143,7 @@ export const buildMultipleRecordValidationResults = (
   records: ReadonlyArray<SubmittedClinicalRecord>,
   commonErrorProperties: {
     type: DataValidationErrors;
-    fieldName: ClinicalSubmissionEnumTypesUnion;
+    fieldName: ClinicalFields;
     info?: any;
   },
 ): RecordValidationResult[] => {
@@ -268,8 +268,17 @@ const getSubmissionErrorInfoObject = (
   }
 };
 
+// ******* common resued  funcitons *******
+export function treatmentTypeIsNotChemo(treatmentType: string) {
+  return (
+    treatmentType.toString().toLowerCase() !== 'combined chemo+immunotherapy' &&
+    treatmentType.toString().toLowerCase() !== 'combined chemo+radiation therapy' &&
+    treatmentType.toString().toLowerCase() !== 'combined chemo-radiotherapy and surgery'
+  );
+}
+
 // how to use example:
-// existentDonor.specimens[submitterId === specimenRecord[submitter_specimen_id]].clinicalInfo
+// for - existentDonor.specimens[submitterId === specimenRecord[submitter_specimen_id]].clinicalInfo
 // const specimenClinicalInfo = utils.getAtPath(existentDonor, [
 //   'specimens',
 //   {

@@ -86,7 +86,7 @@ export enum DataValidationErrors {
   FOUND_IDENTICAL_IDS = 'FOUND_IDENTICAL_IDS',
   MISSING_THERAPY_DATA = 'MISSING_THERAPY_DATA',
   INVALID_THERAPY_DATA = 'INVALID_THERAPY_DATA',
-  CONFLICTING_TREATMENT_DATA = 'CONFLICTING_TREATMENT_DATA',
+  INCOMPATIBLE_PARENT_TREATMENT_TYPE = 'INCOMPATIBLE_PARENT_TREATMENT_TYPE',
   TREATMENT_ID_NOT_FOUND = 'TREATMENT_ID_NOT_FOUND',
 }
 
@@ -256,7 +256,7 @@ export enum SampleRegistrationFieldsEnum {
   sample_type = 'sample_type',
 }
 
-export type ClinicalSubmissionEnumTypesUnion =
+export type ClinicalFields =
   | DonorFieldsEnum
   | SpecimenFieldsEnum
   | FollowupFieldsEnum
@@ -316,15 +316,15 @@ export const BatchNameRegex: Record<ClinicalEntitySchemaNames, RegExp[]> = {
   [ClinicalEntitySchemaNames.REGISTRATION]: [/^sample_registration.*\.tsv$/],
   [ClinicalEntitySchemaNames.DONOR]: [/^donor.*\.tsv$/],
   [ClinicalEntitySchemaNames.SPECIMEN]: [/^specimen.*\.tsv$/],
-  [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: [/^primary_diagnosis.*\.tsv/],
-  [ClinicalEntitySchemaNames.FOLLOW_UP]: [/^follow_up.*\.tsv/],
-  [ClinicalEntitySchemaNames.TREATMENT]: [/^treatment.*\.tsv/],
-  [ClinicalEntitySchemaNames.CHEMOTHERAPY]: [/^chemotherapy.*\.tsv/],
+  [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: [/^primary_diagnosis.*\.tsv$/],
+  [ClinicalEntitySchemaNames.FOLLOW_UP]: [/^follow_up.*\.tsv$/],
+  [ClinicalEntitySchemaNames.TREATMENT]: [/^treatment.*\.tsv$/],
+  [ClinicalEntitySchemaNames.CHEMOTHERAPY]: [/^chemotherapy.*\.tsv$/],
 };
 
 // assumption: one field uniquely identifies a clinical type record in a batch of records
 export const ClinicalUniqueIndentifier: {
-  [clinicalType: string]: ClinicalSubmissionEnumTypesUnion;
+  [clinicalType: string]: ClinicalFields;
 } = {
   [ClinicalEntitySchemaNames.DONOR]: DonorFieldsEnum.submitter_donor_id,
   [ClinicalEntitySchemaNames.SPECIMEN]: SpecimenFieldsEnum.submitter_specimen_id,
