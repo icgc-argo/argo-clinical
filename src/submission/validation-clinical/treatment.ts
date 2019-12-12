@@ -60,16 +60,17 @@ function checkChemoFileNeeded(
   mergedDonor: Donor,
   errors: SubmissionValidationError[],
 ) {
+  const idFieldName = ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.TREATMENT];
   const treatmentType = treatmentRecord[TreatmentFieldsEnum.treatment_type] as string;
   if (utils.treatmentTypeIsNotChemo(treatmentType)) {
     return;
   }
 
-  const treatmentId = treatmentRecord[TreatmentFieldsEnum.submitter_treatment_id];
+  const treatmentId = treatmentRecord[idFieldName];
   const treatment = getSingleClinicalObjectFromDonor(
     mergedDonor,
     ClinicalEntitySchemaNames.TREATMENT,
-    { clinicalInfo: { [TreatmentFieldsEnum.submitter_treatment_id]: treatmentId as string } },
+    { clinicalInfo: { [idFieldName]: treatmentId as string } },
   ) as DeepReadonly<Treatment>;
   if (!treatment) throw new Error('Missing treatment, shouldnt be possible');
 

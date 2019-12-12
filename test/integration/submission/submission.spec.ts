@@ -1400,7 +1400,7 @@ describe('Submission Api', () => {
         });
     });
 
-    it.only('should return 200 when commit is completed', async () => {
+    it('should return 200 when commit is completed', async () => {
       // To get submission into correct state (pending approval) we need to already have a completed submission...
       await uploadSubmission(['donor.tsv', 'primary_diagnosis.tsv', 'follow_up.tsv']);
       await validateSubmission();

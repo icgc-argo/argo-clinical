@@ -1,5 +1,5 @@
 import { DeepReadonly } from 'deep-freeze';
-import { Donor, Treatment } from '../../clinical/clinical-entities';
+import { Donor, Treatment, ClinicalInfo, FollowUp } from '../../clinical/clinical-entities';
 import {
   ActiveClinicalSubmission,
   SampleRegistrationFieldsEnum,
@@ -10,8 +10,11 @@ import {
 } from '../submission-entities';
 import _ from 'lodash';
 import { loggerFor } from '../../logger';
-import { Errors, F, mergeAndDeleteRemoved } from '../../utils';
-import { getClinicalEntitiesFromDonorBySchemaName } from './submission-to-clinical';
+import { Errors, mergeAndDeleteRemoved } from '../../utils';
+import {
+  getClinicalEntitiesFromDonorBySchemaName,
+  getSingleClinicalObjectFromDonor,
+} from './submission-to-clinical';
 const L = loggerFor(__filename);
 
 type ClinicalEnitityRecord = DeepReadonly<
@@ -98,6 +101,13 @@ export const mergeRecordsMapIntoDonor = (
       addOrUpdateTherapyInfoInDonor(mergedDonor, r, ClinicalEntitySchemaNames.CHEMOTHERAPY),
     );
   }
+
+  if (submittedClinicalTypes.has(ClinicalEntitySchemaNames.FOLLOW_UP)) {
+    submittedRecordsMap[ClinicalEntitySchemaNames.FOLLOW_UP].forEach(r =>
+      addOrUpdateFollowUpInfoInDonor(mergedDonor, r),
+    );
+  }
+
   return mergedDonor;
 };
 
@@ -120,13 +130,13 @@ const updateSpecimenInfo = (donor: Donor, record: any) => {
 };
 
 const updateFollowUp = (donor: Donor, record: ClinicalEnitityRecord) => {
-  const followUpClinicalInfo = getFollowUp(
+  const followUp = findFollowUp(
     donor,
     record[ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.FOLLOW_UP]],
   );
 
-  if (followUpClinicalInfo) {
-    mergeAndDeleteRemoved(followUpClinicalInfo, record);
+  if (followUp) {
+    followUp.clinicalInfo = record;
     return;
   }
 
@@ -139,8 +149,25 @@ const updateFollowUp = (donor: Donor, record: ClinicalEnitityRecord) => {
   });
 };
 
-const addOrUpdateTreatementInfo = (donor: Donor, record: any): Treatment => {
-  const submitterTreatementId = record[TreatmentFieldsEnum.submitter_treatment_id];
+const addOrUpdateFollowUpInfoInDonor = (donor: Donor, record: ClinicalInfo) => {
+  const followUpId = record[
+    ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.FOLLOW_UP]
+  ] as string;
+  // Find treatment in donor and update
+  const followUp = findFollowUp(donor, followUpId);
+  if (followUp) {
+    followUp.clinicalInfo = record;
+    return followUp;
+  }
+  // no treatment, so just add
+  donor.treatments = [{ clinicalInfo: record, therapies: [] }];
+  return donor.treatments[0];
+};
+
+const addOrUpdateTreatementInfo = (donor: Donor, record: ClinicalInfo): Treatment => {
+  const submitterTreatementId = record[
+    ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.TREATMENT]
+  ] as string;
   // Find treatment in donor and update
   const treatment = findTreatment(donor, submitterTreatementId);
   if (treatment) {
@@ -154,16 +181,18 @@ const addOrUpdateTreatementInfo = (donor: Donor, record: any): Treatment => {
 
 const addOrUpdateTherapyInfoInDonor = (
   donor: Donor,
-  record: any,
+  record: ClinicalInfo,
   therapyType: ClinicalEntitySchemaNames,
   createDummyTreatmentIfMissing: boolean = false, // use this if treatment record exists and will be added later
 ) => {
-  const submitterTreatementId = record[TreatmentFieldsEnum.submitter_treatment_id];
-  let treatment = findTreatment(donor, submitterTreatementId);
+  const treatementId = record[
+    ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.TREATMENT]
+  ] as string;
+  let treatment = findTreatment(donor, treatementId);
   if (!treatment) {
     if (!createDummyTreatmentIfMissing) return;
     treatment = addOrUpdateTreatementInfo(donor, {
-      [TreatmentFieldsEnum.submitter_treatment_id]: submitterTreatementId,
+      [ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.TREATMENT]]: treatementId,
     });
   }
   addOrUpdateTherapyInfoInTreatment(treatment, record, therapyType);
@@ -171,7 +200,7 @@ const addOrUpdateTherapyInfoInDonor = (
 
 function addOrUpdateTherapyInfoInTreatment(
   treatment: Treatment,
-  record: any,
+  record: ClinicalInfo,
   therapyType: ClinicalEntitySchemaNames,
 ) {
   const idName = ClinicalUniqueIndentifier[therapyType];
@@ -195,10 +224,24 @@ const findTreatment = (donor: Donor, treatmentId: string): Treatment | undefined
   let treatment = undefined;
   if (donor.treatments) {
     treatment = donor.treatments.find(
-      tr => tr.clinicalInfo[TreatmentFieldsEnum.submitter_treatment_id] === treatmentId,
+      tr =>
+        tr.clinicalInfo[ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.TREATMENT]] ===
+        treatmentId,
     );
   }
   return treatment;
+};
+
+const findFollowUp = (donor: Donor, followUpId: string): FollowUp | undefined => {
+  let followUp: FollowUp | undefined = undefined;
+  if (donor.followUps) {
+    followUp = getSingleClinicalObjectFromDonor(donor, ClinicalEntitySchemaNames.FOLLOW_UP, {
+      clinicalInfo: {
+        [ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.FOLLOW_UP]]: followUpId,
+      },
+    }) as FollowUp;
+  }
+  return followUp;
 };
 
 const findTherapyWithIdentifier = (
@@ -211,11 +254,3 @@ const findTherapyWithIdentifier = (
     th => th.clinicalInfo[identiferName] === identiferValue && th.therapyType === therapyType,
   );
 };
-
-function getFollowUp(donor: Donor, followUpId: string) {
-  const followUp = getClinicalEntitiesFromDonorBySchemaName(
-    donor,
-    ClinicalEntitySchemaNames.FOLLOW_UP,
-  ).find(f => f[ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.FOLLOW_UP]] === followUpId);
-  return followUp;
-}

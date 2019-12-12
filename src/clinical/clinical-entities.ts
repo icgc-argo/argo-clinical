@@ -19,6 +19,11 @@ export interface SchemaMetadata {
   isValid: boolean;
 }
 
+export type ClinicalEntity = {
+  clinicalInfo?: ClinicalInfo;
+  [k: string]: any;
+};
+
 export interface Specimen {
   samples: Array<Sample>;
   specimenTissueSource: string;

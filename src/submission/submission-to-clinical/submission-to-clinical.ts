@@ -9,6 +9,9 @@ import {
   Sample,
   SchemaMetadata,
   ClinicalInfo,
+  FollowUp,
+  Treatment,
+  ClinicalEntity,
 } from '../../clinical/clinical-entities';
 import {
   ActiveClinicalSubmission,
@@ -336,7 +339,7 @@ export function getSingleClinicalObjectFromDonor(
 export function getClinicalObjectsFromDonor(
   donor: DeepReadonly<Donor>,
   clinicalEntitySchemaName: ClinicalEntitySchemaNames,
-): DeepReadonly<any[]> {
+) {
   if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.DONOR) {
     return [donor];
   }
@@ -357,6 +360,12 @@ export function getClinicalObjectsFromDonor(
     }
   }
 
+  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.FOLLOW_UP) {
+    if (donor.followUps) {
+      return donor.followUps;
+    }
+  }
+
   if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.CHEMOTHERAPY) {
     if (donor.treatments) {
       return donor.treatments
@@ -374,64 +383,22 @@ export function getClinicalEntitiesFromDonorBySchemaName(
   donor: DeepReadonly<Donor>,
   clinicalEntitySchemaName: ClinicalEntitySchemaNames,
 ): ClinicalInfo[] {
-  if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.DONOR) {
-    if (donor.clinicalInfo) {
-      return [donor.clinicalInfo];
-    }
-    return [];
-  }
-
-  if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.SPECIMEN) {
-    const clinicalRecords = donor.specimens
-      .map(sp => {
-        if (sp.clinicalInfo) {
-          return sp.clinicalInfo;
-        }
-      })
-      .filter(notEmpty);
-    return clinicalRecords;
-  }
-
   if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS) {
     if (donor.primaryDiagnosis) {
       return [donor.primaryDiagnosis];
     }
   }
 
-  if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.FOLLOW_UP) {
-    if (donor.followUps) {
-      const clinicalRecords = donor.followUps
-        .map(f => {
-          if (f.clinicalInfo) {
-            return f.clinicalInfo;
-          }
-        })
-        .filter(notEmpty);
-      return clinicalRecords;
-    }
-    return [];
-  }
-  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.TREATMENT) {
-    if (donor.treatments) {
-      return donor.treatments.map(tr => tr.clinicalInfo).filter(notEmpty);
-    }
-  }
+  const result = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName) as any[];
 
-  // this should work for other therapies
-  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.CHEMOTHERAPY) {
-    if (donor.treatments) {
-      return donor.treatments
-        .map(tr =>
-          tr.therapies
-            .filter(th => th.therapyType === ClinicalEntitySchemaNames.CHEMOTHERAPY)
-            .map(th => th.clinicalInfo),
-        )
-        .flat()
-        .filter(notEmpty);
-    }
-  }
-
-  return [];
+  const clinicalRecords = result
+    .map((e: any) => {
+      if (e.clinicalInfo) {
+        return e.clinicalInfo as ClinicalInfo;
+      }
+    })
+    .filter(notEmpty);
+  return clinicalRecords;
 }
 
 export interface CreateDonorSampleDto {
