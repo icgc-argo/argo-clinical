@@ -318,6 +318,15 @@ const getDonorSpecimen = (record: SubmittedRegistrationRecord) => {
   };
 };
 
+export function getClinicalEntityFromDonorBySchemaNameAndConstraint(
+  donor: DeepReadonly<Donor>,
+  clinicalEntitySchemaName: ClinicalEntitySchemaNames,
+  constraints: object, // similar to mongo filters, e.g. {submitted_donor_id: 'DR_01'}
+) {
+  const entities = getClinicalEntitiesFromDonorBySchemaName(donor, clinicalEntitySchemaName);
+  return _.find(entities, constraints);
+}
+
 export function getClinicalEntitiesFromDonorBySchemaName(
   donor: DeepReadonly<Donor>,
   clinicalEntitySchemaName: ClinicalEntitySchemaNames,
@@ -352,7 +361,7 @@ export function getClinicalEntitiesFromDonorBySchemaName(
     }
   }
 
-  // this would work for other therapies
+  // this should work for other therapies
   if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.CHEMOTHERAPY) {
     if (donor.treatments) {
       return donor.treatments

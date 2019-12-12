@@ -14,6 +14,7 @@ import * as utils from './utils';
 import _ from 'lodash';
 import { isEmptyString } from '../../utils';
 import { ClinicalSubmissionRecordsOperations } from './utils';
+import { getClinicalEntityFromDonorBySchemaNameAndConstraint } from '../submission-to-clinical/submission-to-clinical';
 
 export const validate = async (
   submittedRecords: DeepReadonly<SubmittedClinicalRecordsMap>,
@@ -66,10 +67,15 @@ function getSpecimenFromDonor(
   specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
   validationResults: RecordValidationResult[],
 ) {
-  const specimen = _.find(existentDonor.specimens, [
-    'submitterId',
-    specimenRecord[SpecimenFieldsEnum.submitter_specimen_id],
-  ]);
+  const specimen = getClinicalEntityFromDonorBySchemaNameAndConstraint(
+    existentDonor,
+    ClinicalEntitySchemaNames.SPECIMEN,
+    {
+      [SpecimenFieldsEnum.submitter_specimen_id]:
+        specimenRecord[SpecimenFieldsEnum.submitter_specimen_id],
+    },
+  );
+
   if (!specimen) {
     validationResults.push(
       utils.buildRecordValidationResult(

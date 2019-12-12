@@ -176,13 +176,13 @@ const addOrUpdateClinicalEntity = (
 };
 
 /* ********************************* *
- * Some repeated convenience methods *
+ * Convenient private methods        *
  * ********************************* */
 const findSpecimen = (donor: Donor, specimenId: string) => {
   return _.find(donor.specimens, ['submitterId', specimenId]);
 };
 
-export const findTreatment = (donor: Donor, treatmentId: string): Treatment | undefined => {
+const findTreatment = (donor: Donor, treatmentId: string): Treatment | undefined => {
   let treatment = undefined;
   if (donor.treatments) {
     treatment = donor.treatments.find(

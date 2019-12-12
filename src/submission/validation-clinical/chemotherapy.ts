@@ -12,7 +12,7 @@ import { Donor, Treatment } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
 import { ClinicalSubmissionRecordsOperations } from './utils';
-import { findTreatment } from '../submission-to-clinical/merge-submission';
+import { getClinicalEntityFromDonorBySchemaNameAndConstraint } from '../submission-to-clinical/submission-to-clinical';
 
 export const validate = async (
   submittedRecords: DeepReadonly<SubmittedClinicalRecordsMap>,
@@ -75,7 +75,11 @@ function getTreatment(
   validationResults: RecordValidationResult[],
 ) {
   const treatmentId = chemoRecord[TreatmentFieldsEnum.submitter_treatment_id];
-  const treatment = findTreatment(mergedDonor, treatmentId as string);
+  const treatment = getClinicalEntityFromDonorBySchemaNameAndConstraint(
+    mergedDonor,
+    ClinicalEntitySchemaNames.TREATMENT,
+    { [TreatmentFieldsEnum.submitter_treatment_id]: treatmentId as string },
+  ) as Treatment;
   if (!treatment) {
     validationResults.push(
       utils.buildRecordValidationResult(
