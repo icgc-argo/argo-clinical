@@ -9,12 +9,12 @@ import {
   SpecimenFieldsEnum,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
-import { Donor } from '../../clinical/clinical-entities';
+import { Donor, Specimen } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
 import { isEmptyString } from '../../utils';
 import { ClinicalSubmissionRecordsOperations } from './utils';
-import { getClinicalEntityFromDonorBySchemaNameAndConstraint } from '../submission-to-clinical/submission-to-clinical';
+import { getSingleClinicalObjectFromDonor } from '../submission-to-clinical/submission-to-clinical';
 
 export const validate = async (
   submittedRecords: DeepReadonly<SubmittedClinicalRecordsMap>,
@@ -67,14 +67,13 @@ function getSpecimenFromDonor(
   specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
   validationResults: RecordValidationResult[],
 ) {
-  const specimen = getClinicalEntityFromDonorBySchemaNameAndConstraint(
+  const specimen = getSingleClinicalObjectFromDonor(
     existentDonor,
     ClinicalEntitySchemaNames.SPECIMEN,
     {
-      [SpecimenFieldsEnum.submitter_specimen_id]:
-        specimenRecord[SpecimenFieldsEnum.submitter_specimen_id],
+      submitterId: specimenRecord[SpecimenFieldsEnum.submitter_specimen_id],
     },
-  );
+  ) as DeepReadonly<Specimen>;
 
   if (!specimen) {
     validationResults.push(

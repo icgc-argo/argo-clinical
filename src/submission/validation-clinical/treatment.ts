@@ -12,7 +12,7 @@ import { Donor, Treatment } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
 import { ClinicalSubmissionRecordsOperations } from './utils';
-import { getClinicalEntityFromDonorBySchemaNameAndConstraint } from '../submission-to-clinical/submission-to-clinical';
+import { getSingleClinicalObjectFromDonor } from '../submission-to-clinical/submission-to-clinical';
 
 export const validate = async (
   submittedRecords: DeepReadonly<SubmittedClinicalRecordsMap>,
@@ -69,11 +69,11 @@ function checkChemoFileNeeded(
   }
 
   const treatmentId = treatmentRecord[TreatmentFieldsEnum.submitter_treatment_id];
-  const treatment = getClinicalEntityFromDonorBySchemaNameAndConstraint(
+  const treatment = getSingleClinicalObjectFromDonor(
     mergedDonor,
     ClinicalEntitySchemaNames.TREATMENT,
-    { [TreatmentFieldsEnum.submitter_treatment_id]: treatmentId as string },
-  ) as Treatment;
+    { clinicalInfo: { [TreatmentFieldsEnum.submitter_treatment_id]: treatmentId as string } },
+  ) as DeepReadonly<Treatment>;
   if (!treatment) throw new Error('Missing treatment, shouldnt be possible');
 
   if (
