@@ -10,24 +10,17 @@ import {
   SubmittedClinicalRecordsMap,
   ClinicalUniqueIndentifier,
   DonorFieldsEnum,
-  SpecimenFieldsEnum,
-  FollowupFieldsEnum,
+  ClinicalFields,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { validationErrorMessage } from '../submission-error-messages';
 import _ from 'lodash';
 import { DataRecord } from '../../lectern-client/schema-entities';
-import { SchemaValidationError } from '../../lectern-client/schema-entities';
-import { F } from '../../utils';
 
 export const buildSubmissionError = (
   newRecord: SubmittedClinicalRecord,
   type: DataValidationErrors,
-  fieldName:
-    | SampleRegistrationFieldsEnum
-    | DonorFieldsEnum
-    | SpecimenFieldsEnum
-    | FollowupFieldsEnum,
+  fieldName: ClinicalFields,
   info: object = {},
 ): SubmissionValidationError => {
   // typescript refused to take this directly
@@ -59,7 +52,7 @@ export const buildSubmissionUpdate = (
     fieldName,
     index,
     info: {
-      donorSubmitterId: newRecord[SampleRegistrationFieldsEnum.submitter_donor_id],
+      donorSubmitterId: newRecord[DonorFieldsEnum.submitter_donor_id],
       newValue: `${newRecord[fieldName]}`, // we convert the value to string since lectern may converted it to non string (integer, boolean)
       oldValue: `${oldValue}`,
     },
@@ -150,7 +143,7 @@ export const buildMultipleRecordValidationResults = (
   records: ReadonlyArray<SubmittedClinicalRecord>,
   commonErrorProperties: {
     type: DataValidationErrors;
-    fieldName: SampleRegistrationFieldsEnum | DonorFieldsEnum | SpecimenFieldsEnum;
+    fieldName: ClinicalFields;
     info?: any;
   },
 ): RecordValidationResult[] => {
@@ -274,3 +267,59 @@ const getSubmissionErrorInfoObject = (
     }
   }
 };
+
+// ******* common resued  funcitons *******
+export function treatmentTypeIsNotChemo(treatmentType: string) {
+  return (
+    treatmentType.toString().toLowerCase() !== 'combined chemo+immunotherapy' &&
+    treatmentType.toString().toLowerCase() !== 'combined chemo+radiation therapy' &&
+    treatmentType.toString().toLowerCase() !== 'combined chemo-radiotherapy and surgery'
+  );
+}
+
+// how to use example:
+// for - existentDonor.specimens[submitterId === specimenRecord[submitter_specimen_id]].clinicalInfo
+// const specimenClinicalInfo = utils.getAtPath(existentDonor, [
+//   'specimens',
+//   {
+//     submitterId: specimenRecord[FieldsEnum.submitter_specimen_id],
+//   },
+//   'clinicalInfo',
+// ]);
+export function getAtPath(object: any, nodes: any[]) {
+  let objectAtNode: any = { ...object };
+
+  nodes.forEach((n: any) => {
+    if (!objectAtNode) return undefined; // no object so stop
+
+    if (typeof n === 'object') {
+      if (!Array.isArray(objectAtNode)) throw new Error("Can't apply object node with out array");
+      objectAtNode = _.find(objectAtNode, n) || undefined;
+    } else if (typeof n === 'string' || typeof n === 'number') {
+      objectAtNode = objectAtNode[n] || undefined;
+    }
+  });
+
+  return objectAtNode || {};
+}
+
+export function getValuesFromRecordOrClinicalInfo(
+  record: any,
+  clinicalInfo: any,
+  desiredValueNames: string[],
+) {
+  const sourceObj = { ...clinicalInfo, ...record };
+
+  const desiredValuesMap: { [valueName: string]: any } = {};
+  const missingFields: string[] = [];
+
+  desiredValueNames.forEach(vn => {
+    if (sourceObj[vn]) {
+      desiredValuesMap[vn] = sourceObj[vn];
+    } else {
+      missingFields.push(vn);
+    }
+  });
+
+  return { desiredValuesMap, missingFields };
+}

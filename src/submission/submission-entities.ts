@@ -84,6 +84,10 @@ export enum DataValidationErrors {
   CONFLICTING_TIME_INTERVAL = 'CONFLICTING_TIME_INTERVAL',
   NOT_ENOUGH_INFO_TO_VALIDATE = 'NOT_ENOUGH_INFO_TO_VALIDATE',
   FOUND_IDENTICAL_IDS = 'FOUND_IDENTICAL_IDS',
+  MISSING_THERAPY_DATA = 'MISSING_THERAPY_DATA',
+  INVALID_THERAPY_DATA = 'INVALID_THERAPY_DATA',
+  INCOMPATIBLE_PARENT_TREATMENT_TYPE = 'INCOMPATIBLE_PARENT_TREATMENT_TYPE',
+  TREATMENT_ID_NOT_FOUND = 'TREATMENT_ID_NOT_FOUND',
 }
 
 export type RegistrationStat = Array<{
@@ -252,6 +256,13 @@ export enum SampleRegistrationFieldsEnum {
   sample_type = 'sample_type',
 }
 
+export type ClinicalFields =
+  | DonorFieldsEnum
+  | SpecimenFieldsEnum
+  | FollowupFieldsEnum
+  | TreatmentFieldsEnum
+  | TherapyFieldsEnum;
+
 export enum DonorFieldsEnum {
   submitter_donor_id = 'submitter_donor_id',
   vital_status = 'vital_status',
@@ -261,7 +272,13 @@ export enum SpecimenFieldsEnum {
   submitter_specimen_id = 'submitter_specimen_id',
   acquisition_interval = 'acquisition_interval',
 }
-
+export enum TreatmentFieldsEnum {
+  submitter_treatment_id = 'submitter_treatment_id',
+  treatment_type = 'treatment_type',
+}
+export enum TherapyFieldsEnum {
+  chemotherapy_drug_name = 'chemotherapy_drug_name',
+}
 export enum FollowupFieldsEnum {
   submitter_follow_up_id = 'submitter_follow_up_id',
 }
@@ -288,6 +305,8 @@ export enum ClinicalEntitySchemaNames {
   DONOR = 'donor',
   SPECIMEN = 'specimen',
   PRIMARY_DIAGNOSIS = 'primary_diagnosis',
+  TREATMENT = 'treatment',
+  CHEMOTHERAPY = 'chemotherapy',
   FOLLOW_UP = 'follow_up',
 }
 
@@ -299,14 +318,20 @@ export const BatchNameRegex: Record<ClinicalEntitySchemaNames, RegExp[]> = {
   [ClinicalEntitySchemaNames.SPECIMEN]: [/^specimen.*\.tsv$/],
   [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: [/^primary_diagnosis.*\.tsv$/],
   [ClinicalEntitySchemaNames.FOLLOW_UP]: [/^follow_up.*\.tsv$/],
+  [ClinicalEntitySchemaNames.TREATMENT]: [/^treatment.*\.tsv$/],
+  [ClinicalEntitySchemaNames.CHEMOTHERAPY]: [/^chemotherapy.*\.tsv$/],
 };
 
 // assumption: one field uniquely identifies a clinical type record in a batch of records
-export const ClinicalUniqueIndentifier = {
+export const ClinicalUniqueIndentifier: {
+  [clinicalType: string]: ClinicalFields;
+} = {
   [ClinicalEntitySchemaNames.DONOR]: DonorFieldsEnum.submitter_donor_id,
   [ClinicalEntitySchemaNames.SPECIMEN]: SpecimenFieldsEnum.submitter_specimen_id,
   [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: DonorFieldsEnum.submitter_donor_id,
   [ClinicalEntitySchemaNames.FOLLOW_UP]: FollowupFieldsEnum.submitter_follow_up_id,
+  [ClinicalEntitySchemaNames.TREATMENT]: TreatmentFieldsEnum.submitter_treatment_id,
+  [ClinicalEntitySchemaNames.CHEMOTHERAPY]: TherapyFieldsEnum.chemotherapy_drug_name,
 };
 
 export interface ClinicalSubmissionRecordsByDonorIdMap {

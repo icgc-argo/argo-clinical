@@ -35,12 +35,12 @@ export interface Sample {
 }
 
 export interface Treatment {
-  clinicalInfo?: ClinicalInfo;
+  clinicalInfo: ClinicalInfo;
   therapies: Array<Therapy>;
 }
 
 export interface Therapy {
-  clinicalInfo?: ClinicalInfo;
+  clinicalInfo: ClinicalInfo;
   therapyType: string;
 }
 
