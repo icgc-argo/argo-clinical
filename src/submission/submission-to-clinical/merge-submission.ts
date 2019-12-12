@@ -4,12 +4,11 @@ import {
   ActiveClinicalSubmission,
   SampleRegistrationFieldsEnum,
   ClinicalEntitySchemaNames,
-  FollowupFieldsEnum,
   ClinicalUniqueIndentifier,
 } from '../submission-entities';
 import _ from 'lodash';
 import { loggerFor } from '../../logger';
-import { Errors, F } from '../../utils';
+import { Errors, F, mergeAndDeleteRemoved } from '../../utils';
 import { getClinicalEntitiesFromDonorBySchemaName } from './submission-to-clinical';
 const L = loggerFor(__filename);
 
@@ -49,9 +48,9 @@ export const mergeActiveSubmissionWithDonors = async (
           break;
         case ClinicalEntitySchemaNames.FOLLOW_UP:
           updateFollowUp(donor, record);
-        default:
-          addOrUpdateClinicalEntity(donor, entityType, record);
           break;
+        default:
+          throw new Error(`Entity ${entityType} not implemented yet`);
       }
     });
   }
@@ -66,12 +65,13 @@ const updateSpecimenRecord = (donor: Donor, record: ClinicalEnitityRecord) => {
 };
 
 const updateFollowUp = (donor: Donor, record: ClinicalEnitityRecord) => {
-  let followUpClinicalInfo = getFollowUp(
+  const followUpClinicalInfo = getFollowUp(
     donor,
     record[ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.FOLLOW_UP]],
   );
+
   if (followUpClinicalInfo) {
-    followUpClinicalInfo = { ...record };
+    mergeAndDeleteRemoved(followUpClinicalInfo, record);
     return;
   }
 
@@ -82,21 +82,6 @@ const updateFollowUp = (donor: Donor, record: ClinicalEnitityRecord) => {
   donor.followUps.push({
     clinicalInfo: record,
   });
-};
-
-const addOrUpdateClinicalEntity = (
-  donor: any,
-  clinicalEntitySnakeCase: string,
-  record: ClinicalEnitityRecord,
-) => {
-  const clinicalEntityName = _.camelCase(clinicalEntitySnakeCase);
-  if (donor[clinicalEntityName] == undefined) {
-    donor[clinicalEntityName] = new Array<object>();
-  }
-  if (!_.isArray(donor[clinicalEntityName])) {
-    throw new Error('expecting an array for generic clinical entity');
-  }
-  donor[clinicalEntityName].push(record);
 };
 
 /* ********************************* *
@@ -115,8 +100,8 @@ const findSpecimen = (donor: Donor, specimenId: string) => {
 
 function getFollowUp(donor: Donor, followUpId: string) {
   const followUp = getClinicalEntitiesFromDonorBySchemaName(
-    F(_.clone(donor)),
+    donor,
     ClinicalEntitySchemaNames.FOLLOW_UP,
   ).find(f => f[ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.FOLLOW_UP]] === followUpId);
-  return _.cloneDeep(followUp);
+  return followUp;
 }

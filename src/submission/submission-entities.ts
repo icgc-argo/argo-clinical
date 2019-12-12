@@ -297,8 +297,8 @@ export const BatchNameRegex: Record<ClinicalEntitySchemaNames, RegExp[]> = {
   [ClinicalEntitySchemaNames.REGISTRATION]: [/^sample_registration.*\.tsv$/],
   [ClinicalEntitySchemaNames.DONOR]: [/^donor.*\.tsv$/],
   [ClinicalEntitySchemaNames.SPECIMEN]: [/^specimen.*\.tsv$/],
-  [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: [/^primary_diagnosis.*\.tsv/],
-  [ClinicalEntitySchemaNames.FOLLOW_UP]: [/^follow_up.*\.tsv/],
+  [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: [/^primary_diagnosis.*\.tsv$/],
+  [ClinicalEntitySchemaNames.FOLLOW_UP]: [/^follow_up.*\.tsv$/],
 };
 
 // assumption: one field uniquely identifies a clinical type record in a batch of records
