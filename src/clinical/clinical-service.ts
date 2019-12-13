@@ -47,24 +47,6 @@ export async function getDonorsByMigrationId(migrationId: string, limit: number)
   );
 }
 
-export async function adminAddDonors(donors: Donor[]) {
-  const schemaMetadata: SchemaMetadata = {
-    isValid: true,
-    lastValidSchemaVersion: schmeaManager.instance().getCurrent().version,
-    originalSchemaVersion: schmeaManager.instance().getCurrent().version,
-  };
-
-  donors.forEach((d: any) => {
-    d.createdAt = `${new Date()}`;
-    d.__v = 1;
-    d.updatedAt = `${new Date()}`;
-    d.createBy = 'dcc-admin';
-    d.schemaMetadata = schemaMetadata;
-  });
-
-  return await donorDao.insertDonors(donors);
-}
-
 export async function getDonors(programId: string) {
   if (programId) {
     return await donorDao.findByProgramId(programId);

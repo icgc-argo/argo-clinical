@@ -2,7 +2,7 @@ import * as dataValidator from './validation-clinical/validation';
 import { donorDao, FindByProgramAndSubmitterFilter } from '../clinical/donor-repo';
 import _ from 'lodash';
 import { registrationRepository } from './registration-repo';
-import { Donor, DonorMap, Specimen, Sample } from '../clinical/clinical-entities';
+import { Donor, DonorMap, Specimen, Sample, SchemaMetadata } from '../clinical/clinical-entities';
 import {
   ActiveRegistration,
   SubmittedRegistrationRecord,
@@ -949,13 +949,31 @@ export namespace operations {
     clinicalData.donors.forEach((d: any) => {
       result.push({
         donorId: d.icgc_donor_id,
-        gender: d.donor_sex,
+        gender: d.donor_sex, // needs normalization with sample_registration schema
         programId,
         specimens: getIcgcDonorSpecimens(clinicalData, d),
         submitterId: d.submitted_donor_id,
       } as any);
     });
     return result;
+  }
+
+  export async function adminAddDonors(donors: Donor[]) {
+    const schemaMetadata: SchemaMetadata = {
+      isValid: true,
+      lastValidSchemaVersion: schemaManager.instance().getCurrent().version,
+      originalSchemaVersion: schemaManager.instance().getCurrent().version,
+    };
+
+    donors.forEach((d: any) => {
+      d.createdAt = `${new Date()}`;
+      d.__v = 1;
+      d.updatedAt = `${new Date()}`;
+      d.createBy = 'dcc-admin';
+      d.schemaMetadata = schemaMetadata;
+    });
+
+    return await donorDao.insertDonors(donors);
   }
 }
 
@@ -968,9 +986,9 @@ function getIcgcDonorSpecimens(clinicalData: any, donor: any) {
     sps.push({
       specimenId: s.icgc_specimen_id,
       submitterId: s.submitted_specimen_id,
-      tumourNormalDesignation: s.specimen_type,
+      tumourNormalDesignation: s.specimen_type, // needs normalization with sample_registration schema
       samples: getIcgcSpecimenSamples(clinicalData, s, donor),
-      specimenTissueSource: s.specimen_type,
+      specimenTissueSource: s.specimen_type, // needs normalization with sample_registration schema
     });
   });
   return sps;
@@ -988,7 +1006,7 @@ function getIcgcSpecimenSamples(clinicalData: any, speciemn: any, donor: any) {
     sps.push({
       sampleId: s.icgc_sample_id,
       submitterId: s.submitted_sample_id,
-      sampleType: 'N/A',
+      sampleType: 'N/A', // ask about this
     });
   });
   return sps;

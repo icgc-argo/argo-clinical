@@ -12,11 +12,6 @@ class ClinicalController {
     return res.status(200).send(await service.deleteDonors(req.query.programId));
   }
 
-  @HasFullWriteAccess()
-  async addDonors(req: Request, res: Response) {
-    return res.status(200).send(await service.adminAddDonors(req.body.donors));
-  }
-
   async findDonorId(req: Request, res: Response) {
     const id = await service.findDonorId(req.query.submitterId, req.query.programId);
     return res
