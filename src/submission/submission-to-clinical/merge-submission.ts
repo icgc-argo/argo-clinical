@@ -17,12 +17,6 @@ import {
 } from './submission-to-clinical';
 const L = loggerFor(__filename);
 
-type ClinicalEnitityRecord = DeepReadonly<
-  Readonly<{
-    [key: string]: string;
-  }>
->;
-
 export const mergeActiveSubmissionWithDonors = async (
   activeSubmission: DeepReadonly<ActiveClinicalSubmission>,
   donors: readonly DeepReadonly<Donor>[],
@@ -58,7 +52,7 @@ export const mergeActiveSubmissionWithDonors = async (
           addOrUpdateTherapyInfoInDonor(donor, record, entityType, true);
           break;
         case ClinicalEntitySchemaNames.FOLLOW_UP:
-          updateFollowUp(donor, record);
+          updateOrAddFollowUp(donor, record);
           break;
         default:
           throw new Error(`Entity ${entityType} not implemented yet`);
@@ -104,7 +98,7 @@ export const mergeRecordsMapIntoDonor = (
 
   if (submittedClinicalTypes.has(ClinicalEntitySchemaNames.FOLLOW_UP)) {
     submittedRecordsMap[ClinicalEntitySchemaNames.FOLLOW_UP].forEach(r =>
-      addOrUpdateFollowUpInfoInDonor(mergedDonor, r),
+      updateOrAddFollowUp(mergedDonor, r),
     );
   }
 
@@ -129,11 +123,10 @@ const updateSpecimenInfo = (donor: Donor, record: any) => {
   return specimen;
 };
 
-const updateFollowUp = (donor: Donor, record: ClinicalEnitityRecord) => {
-  const followUp = findFollowUp(
-    donor,
-    record[ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.FOLLOW_UP]],
-  );
+const updateOrAddFollowUp = (donor: Donor, record: ClinicalInfo) => {
+  const followUp = findFollowUp(donor, record[
+    ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.FOLLOW_UP]
+  ] as string);
 
   if (followUp) {
     followUp.clinicalInfo = record;
@@ -147,21 +140,6 @@ const updateFollowUp = (donor: Donor, record: ClinicalEnitityRecord) => {
   donor.followUps.push({
     clinicalInfo: record,
   });
-};
-
-const addOrUpdateFollowUpInfoInDonor = (donor: Donor, record: ClinicalInfo) => {
-  const followUpId = record[
-    ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.FOLLOW_UP]
-  ] as string;
-  // Find treatment in donor and update
-  const followUp = findFollowUp(donor, followUpId);
-  if (followUp) {
-    followUp.clinicalInfo = record;
-    return followUp;
-  }
-  // no treatment, so just add
-  donor.treatments = [{ clinicalInfo: record, therapies: [] }];
-  return donor.treatments[0];
 };
 
 const addOrUpdateTreatementInfo = (donor: Donor, record: ClinicalInfo): Treatment => {
