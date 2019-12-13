@@ -216,6 +216,31 @@ class SubmissionController {
     });
     return res.status(200).send(activeSubmission);
   }
+
+  @HasFullWriteAccess()
+  async processLegacyIcgcData(req: Request, res: Response) {
+    const clinicalFiles = req.files as Express.Multer.File[];
+    const programId = req.params.programId;
+    const clinicalData = {
+      donors: new Array<any>(),
+      specimens: new Array<any>(),
+      samples: new Array<any>(),
+    };
+
+    for (const file of clinicalFiles) {
+      if (file.originalname == 'donor.tsv') {
+        clinicalData.donors = (await TsvUtils.tsvToJson(file.path)) as any;
+      }
+      if (file.originalname == 'specimen.tsv') {
+        clinicalData.specimens = (await TsvUtils.tsvToJson(file.path)) as any;
+      }
+      if (file.originalname == 'sample.tsv') {
+        clinicalData.samples = (await TsvUtils.tsvToJson(file.path)) as any;
+      }
+    }
+
+    return submission.operations.mergeIcgcLegacyData(clinicalData, programId);
+  }
 }
 
 const submissionSystemIsDisabled = async (res: Response) => {

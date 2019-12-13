@@ -5,7 +5,7 @@
 ## Requirements:
 
 - node 12+
-- Mongo 4.0 + (transaction support)
+- Mongo 4.0
 
 ## How to:
 

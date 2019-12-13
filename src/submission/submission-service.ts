@@ -2,7 +2,7 @@ import * as dataValidator from './validation-clinical/validation';
 import { donorDao, FindByProgramAndSubmitterFilter } from '../clinical/donor-repo';
 import _ from 'lodash';
 import { registrationRepository } from './registration-repo';
-import { Donor, DonorMap } from '../clinical/clinical-entities';
+import { Donor, DonorMap, Specimen, Sample } from '../clinical/clinical-entities';
 import {
   ActiveRegistration,
   SubmittedRegistrationRecord,
@@ -942,6 +942,56 @@ export namespace operations {
     }
     return undefined;
   };
+
+  export function mergeIcgcLegacyData(clinicalData: any, programId: string) {
+    const result: Donor[] = [];
+
+    clinicalData.donors.forEach((d: any) => {
+      result.push({
+        donorId: d.icgc_donor_id,
+        gender: d.donor_sex,
+        programId,
+        specimens: getIcgcDonorSpecimens(clinicalData, d),
+        submitterId: d.submitted_donor_id,
+      } as any);
+    });
+    return result;
+  }
+}
+
+function getIcgcDonorSpecimens(clinicalData: any, donor: any) {
+  const sps: Specimen[] = [];
+  clinicalData.specimens.forEach((s: any) => {
+    if (s.icgc_donor_id !== donor.icgc_donor_id) {
+      return;
+    }
+    sps.push({
+      specimenId: s.icgc_specimen_id,
+      submitterId: s.submitted_specimen_id,
+      tumourNormalDesignation: s.specimen_type,
+      samples: getIcgcSpecimenSamples(clinicalData, s, donor),
+      specimenTissueSource: s.specimen_type,
+    });
+  });
+  return sps;
+}
+
+function getIcgcSpecimenSamples(clinicalData: any, speciemn: any, donor: any) {
+  const sps: Sample[] = [];
+  clinicalData.samples.forEach((s: any) => {
+    if (
+      s.icgc_donor_id !== donor.icgc_donor_id ||
+      s.icgc_specimen_id !== speciemn.icgc_specimen_id
+    ) {
+      return;
+    }
+    sps.push({
+      sampleId: s.icgc_sample_id,
+      submitterId: s.submitted_sample_id,
+      sampleType: 'N/A',
+    });
+  });
+  return sps;
 }
 
 function prepareForSchemaReProcessing(record: object) {

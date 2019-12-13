@@ -1,7 +1,8 @@
 import { donorDao, DONOR_FIELDS } from './donor-repo';
 import { Errors } from '../utils';
-import { Sample, Donor } from './clinical-entities';
+import { Sample, Donor, SchemaMetadata } from './clinical-entities';
 import { DeepReadonly } from 'deep-freeze';
+import * as schmeaManager from '../submission/schema/schema-manager';
 import _ from 'lodash';
 
 export async function updateDonorSchemaMetadata(
@@ -44,6 +45,24 @@ export async function getDonorsByMigrationId(migrationId: string, limit: number)
     },
     limit,
   );
+}
+
+export async function adminAddDonors(donors: Donor[]) {
+  const schemaMetadata: SchemaMetadata = {
+    isValid: true,
+    lastValidSchemaVersion: schmeaManager.instance().getCurrent().version,
+    originalSchemaVersion: schmeaManager.instance().getCurrent().version,
+  };
+
+  donors.forEach((d: any) => {
+    d.createdAt = `${new Date()}`;
+    d.__v = 1;
+    d.updatedAt = `${new Date()}`;
+    d.createBy = 'dcc-admin';
+    d.schemaMetadata = schemaMetadata;
+  });
+
+  return await donorDao.insertDonors(donors);
 }
 
 export async function getDonors(programId: string) {

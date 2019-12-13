@@ -24,6 +24,7 @@ export type FindByProgramAndSubmitterFilter = DeepReadonly<{
   submitterId: string;
 }>;
 export interface DonorRepository {
+  insertDonors(donors: Donor[]): Promise<void>;
   findBy(criteria: any, limit: number): Promise<DeepReadonly<Donor[]>>;
   findByProgramId(programId: string): Promise<DeepReadonly<Donor[]>>;
   deleteByProgramId(programId: string): Promise<void>;
@@ -48,6 +49,9 @@ export interface DonorRepository {
 
 // Mongoose implementation of the DonorRepository
 export const donorDao: DonorRepository = {
+  async insertDonors(donors: Donor[]) {
+    await mongoose.connection.db.collection('donors').insertMany(donors);
+  },
   async countBy(filter: any) {
     return await DonorModel.count(filter).exec();
   },
