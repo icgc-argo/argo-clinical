@@ -1,6 +1,7 @@
 import * as donor from './donor';
 import * as specimen from './specimen';
 import * as primary_diagnosis from './primary_diagnosis';
+import * as follow_up from './followUp';
 import * as treatment from './treatment';
 import * as chemotherapy from './chemotherapy';
 
@@ -9,6 +10,7 @@ const availableValidators: { [k: string]: any } = {
   donor,
   primary_diagnosis,
   specimen,
+  follow_up,
   treatment,
   chemotherapy,
 };

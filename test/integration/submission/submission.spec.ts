@@ -697,6 +697,7 @@ describe('Submission Api', () => {
           done();
         });
     });
+
     it('should return 422 if try to upload invalid tsv files', done => {
       let file: Buffer;
       try {
@@ -1277,53 +1278,34 @@ describe('Submission Api', () => {
     let donor: any;
     let submissionVersion: string;
 
-    const uploadSubmission = async (
-      donorFileName: string = 'donor.tsv',
-      primaryDiagnosisFileName: string = '',
-    ) => {
-      let donorFile: Buffer;
-      let primaryDiagFile: Buffer | undefined = undefined;
-      try {
-        donorFile = fs.readFileSync(__dirname + `/${donorFileName}`);
-        if (primaryDiagnosisFileName != '') {
-          primaryDiagFile = fs.readFileSync(__dirname + `/${primaryDiagnosisFileName}`);
-        }
-      } catch (err) {
-        return err;
-      }
-
+    const uploadSubmission = async (fileNames: string[] = ['donor.tsv']) => {
+      const files: Buffer[] = [];
       let req = chai
         .request(app)
         .post(`/submission/program/${programId}/clinical/upload`)
-        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-        .attach('clinicalFiles', donorFile, 'donor.tsv');
+        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' });
 
-      if (primaryDiagFile) {
-        req = req.attach('clinicalFiles', primaryDiagFile, 'primary_diagnosis.tsv');
-      }
+      fileNames.forEach(fn => {
+        try {
+          const file = fs.readFileSync(__dirname + `/${fn}`);
+          req = req.attach('clinicalFiles', file, fn);
+        } catch (err) {
+          return err;
+        }
+      });
 
       return req.then((res: any) => {
+        res.body.successful.should.be.true;
         submissionVersion = res.body.submission.version;
       });
     };
 
-    const uploadSubmissionWithUpdates = async () => {
-      let file: Buffer;
-      try {
-        file = fs.readFileSync(__dirname + '/donor-with-updates.tsv');
-      } catch (err) {
-        return err;
-      }
-
-      return await chai
-        .request(app)
-        .post(`/submission/program/${programId}/clinical/upload`)
-        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-        .attach('clinicalFiles', file, 'donor.tsv')
-        .then((res: any) => {
-          submissionVersion = res.body.submission.version;
-        });
+    const uploadSubmissionWithUpdates = async (
+      fileNames: string[] = ['donor-with-updates.tsv'],
+    ) => {
+      return await uploadSubmission(fileNames);
     };
+
     const validateSubmission = async () => {
       return await chai
         .request(app)
@@ -1333,6 +1315,7 @@ describe('Submission Api', () => {
           submissionVersion = res.body.submission.version;
         });
     };
+
     const commitActiveSubmission = async () => {
       return await chai
         .request(app)
@@ -1419,17 +1402,49 @@ describe('Submission Api', () => {
 
     it('should return 200 when commit is completed', async () => {
       // To get submission into correct state (pending approval) we need to already have a completed submission...
-      await uploadSubmission();
+      await uploadSubmission(['donor.tsv', 'primary_diagnosis.tsv', 'follow_up.tsv']);
       await validateSubmission();
       await commitActiveSubmission();
+      const [DonorBeforeUpdate] = await findInDb(dburl, 'donors', {
+        programId: programId,
+        submitterId: 'ICGC_0001',
+      });
+
+      const primary_diagnosis = {
+        program_id: programId,
+        number_lymph_nodes_examined: 2,
+        submitter_donor_id: 'ICGC_0001',
+        age_at_diagnosis: 96,
+        cancer_type_code: 'A11.1A',
+        tumour_staging_system: 'Murphy',
+      };
+
+      const donor = {
+        program_id: programId,
+        submitter_donor_id: 'ICGC_0001',
+        vital_status: 'Deceased',
+        cause_of_death: 'Died of cancer',
+        survival_time: 522,
+      };
+
+      // data from primary_diagnosis.tsv
+      DonorBeforeUpdate.primaryDiagnosis.should.deep.eq(primary_diagnosis);
+      DonorBeforeUpdate.clinicalInfo.should.deep.eq(donor);
+
       // Now we need to have a submission with updates, and validate to get it into the correct state
-      await uploadSubmissionWithUpdates();
+      await uploadSubmissionWithUpdates(['donor-with-updates.tsv', 'follow_up_update.tsv']);
       await validateSubmission();
       await commitActiveSubmission();
       const [donorBeforeApproveCommit] = await findInDb(dburl, 'donors', {
         programId: programId,
         submitterId: 'ICGC_0001',
       });
+
+      // data from primary_diagnosis.tsv
+      donorBeforeApproveCommit.primaryDiagnosis.should.deep.eq(primary_diagnosis);
+
+      DonorBeforeUpdate.clinicalInfo.should.include(donor);
+
       return chai
         .request(app)
         .post(`/submission/program/${programId}/clinical/approve/${submissionVersion}`)
@@ -1442,15 +1457,27 @@ describe('Submission Api', () => {
             programId: programId,
             submitterId: 'ICGC_0001',
           });
+
           // merge shouldn't have mutated donor except for donor.clinicalInfo
-          chai
-            .expect(updatedDonor)
-            .to.deep.include(
-              _.omit(donorBeforeApproveCommit, ['__v', 'updatedAt', 'clinicalInfo']),
-            );
-          chai
-            .expect(updatedDonor.clinicalInfo)
-            .to.deep.include({ [DonorFieldsEnum.vital_status]: 'Alive' });
+          const omitted = _.omit(donorBeforeApproveCommit, ['__v', 'updatedAt', 'clinicalInfo']);
+          const donorBeforeFollowUpUpdated = _.cloneDeep(updatedDonor);
+          donorBeforeFollowUpUpdated.followUps[0] = omitted.followUps[0];
+          chai.expect(donorBeforeFollowUpUpdated).to.deep.include(omitted);
+
+          const updatedDonorExpectedInfo = {
+            program_id: programId,
+            submitter_donor_id: 'ICGC_0001',
+            cause_of_death: null, // tslint:disable-line
+            survival_time: null, // tslint:disable-line
+            vital_status: 'Alive',
+          };
+
+          chai.expect(updatedDonor.clinicalInfo).to.deep.eq(updatedDonorExpectedInfo);
+
+          updatedDonor.followUps[0].clinicalInfo['interval_of_followup'].should.eq(13);
+          donorBeforeApproveCommit.followUps[0].clinicalInfo.should.deep.include(
+            _.omit(updatedDonor.followUps[0].clinicalInfo, ['interval_of_followup']),
+          );
         });
     });
 
@@ -1501,7 +1528,7 @@ describe('Submission Api', () => {
           },
         }),
       );
-      await uploadSubmission('donor_TC-SMUIDAV.tsv', 'primary_diagnosis_TC-SMUIDAV.tsv');
+      await uploadSubmission(['donor_TC-SMUIDAV.tsv', 'primary_diagnosis_TC-SMUIDAV.tsv']);
       await validateSubmission();
       await commitActiveSubmission();
 
