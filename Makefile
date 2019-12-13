@@ -3,6 +3,9 @@ debug:
 	docker-compose up --force-recreate -d
 	npm run debug
 
+compose:
+	docker-compose -f docker-compose.all.yaml up -d
+
 verify:
 	npm run test
 
