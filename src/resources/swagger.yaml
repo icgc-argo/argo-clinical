@@ -596,20 +596,6 @@ paths:
         '500':
           $ref: '#/components/responses/ServerError'
 
-  /submission/icgc-import/:
-    post:
-      tags:
-        - ICGC Import
-      summary: Upload registration file
-      description: This will validate and save the new registration file overwriting any existing registration
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                type: object
-
   /submission/icgc-import/preprocess/{programId}:
     parameters:
       - name: programId
@@ -621,7 +607,7 @@ paths:
     post:
       tags:
         - ICGC Import
-      summary: transform icgc clinical donor data to argo format
+      summary: transform icgc clinical donor data to argo format donor
       responses:
         '200':
           description: transformed donors array in argo format
@@ -649,6 +635,19 @@ paths:
                   required: true
                   type: string
                   format: binary
+  /submission/icgc-import/:
+    post:
+      tags:
+        - ICGC Import
+      summary: imports the json body (donors) to the clinical donors collection
+      description:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
 
   /clinical/donors:
     get:
