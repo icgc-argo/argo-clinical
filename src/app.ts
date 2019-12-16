@@ -14,7 +14,7 @@ import registrationRouter from './routes/registration';
 import submissionRouter from './routes/submission';
 import schemaRouter from './routes/schema';
 import configRouter from './routes/config';
-
+import icgcImport from './routes/icgc-import';
 const L = loggerFor(__filename);
 
 process.title = 'clinical';
@@ -58,6 +58,8 @@ app.use('/submission/configs', configRouter);
 app.use('/submission/program/:programId/registration', registrationRouter);
 app.use('/submission/program/:programId/clinical', submissionRouter);
 app.use('/submission/schema', schemaRouter);
+app.use('/submission/icgc-import', icgcImport);
+
 app.use('/clinical', dataRouter);
 
 // this has to be defined after all routes for it to work

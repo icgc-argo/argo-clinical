@@ -2,7 +2,9 @@ import * as express from 'express';
 
 import { wrapAsync } from '../middleware';
 import clinicalApi from '../clinical/clinical-api';
+import multer = require('multer');
 
+const upload = multer({ dest: '/tmp' });
 const router = express.Router();
 
 router.get('/donors', wrapAsync(clinicalApi.findDonors));

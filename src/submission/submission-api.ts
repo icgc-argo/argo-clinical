@@ -2,7 +2,7 @@ import * as submission from './submission-service';
 import * as persistedConfig from './persisted-config/service';
 import * as submission2Clinical from './submission-to-clinical/submission-to-clinical';
 import { Request, Response } from 'express';
-import { TsvUtils, ControllerUtils } from '../utils';
+import { TsvUtils, ControllerUtils, Errors } from '../utils';
 import { loggerFor } from '../logger';
 import {
   CreateRegistrationCommand,
@@ -215,6 +215,36 @@ class SubmissionController {
       updater,
     });
     return res.status(200).send(activeSubmission);
+  }
+
+  @HasFullWriteAccess()
+  async processLegacyIcgcData(req: Request, res: Response) {
+    const clinicalFiles = req.files as { [k: string]: [Express.Multer.File] };
+    const programId = req.params.programId;
+    const clinicalData = {
+      donors: new Array<any>(),
+      specimens: new Array<any>(),
+      samples: new Array<any>(),
+    };
+
+    const donorFile = clinicalFiles['donor'][0];
+    const specimenFile = clinicalFiles['specimen'][0];
+    const sampleFile = clinicalFiles['sample'][0];
+
+    if (!(donorFile && specimenFile && sampleFile)) {
+      return res.status(400).send('you should submit three files, donor specimen sample');
+    }
+
+    clinicalData.donors = (await TsvUtils.tsvToJson(donorFile.path)) as any;
+    clinicalData.specimens = (await TsvUtils.tsvToJson(specimenFile.path)) as any;
+    clinicalData.samples = (await TsvUtils.tsvToJson(sampleFile.path)) as any;
+
+    return res.status(200).send(submission.operations.mergeIcgcLegacyData(clinicalData, programId));
+  }
+
+  @HasFullWriteAccess()
+  async addDonors(req: Request, res: Response) {
+    return res.status(200).send(await submission.operations.adminAddDonors(req.body.donors));
   }
 }
 
