@@ -1028,6 +1028,216 @@
               }
             }
           ]
+        },
+        {
+          "name": "treatment",
+          "description": "The collection of data elements related to a donor's treatment at a specific point in the clinical record.",
+          "fields": [
+            {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "restrictions": {
+                "required": true
+              }
+            },
+            {
+              "name": "submitter_donor_id",
+              "valueType": "string",
+              "description": "Unique identifier of the donor, assigned by the data provider.",
+              "restrictions": {
+                "required": true,
+                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_treatment_id",
+              "valueType": "string",
+              "description": "Unique identifier of the treatment, as assigned by the data provider.",
+              "restrictions": {
+                "required": true,
+                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "treatment_type",
+              "description": "Type of the treatment that the donor completed.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true,
+                "codeList": [
+                  "Chemotherapy",
+                  "Ablation",
+                  "Bone marrow transplant",
+                  "Combined chemo+immunotherapy",
+                  "Combined chemo+radiation therapy",
+                  "Combined chemo-radiotherapy and surgery",
+                  "Endoscopic therapy",
+                  "Hormonal therapy",
+                  "Immunotherapy",
+                  "Monoclonal antibodies (for liquid tumours)",
+                  "No treatment",
+                  "Other targeting molecular therapy",
+                  "Photodynamic therapy",
+                  "Radiation therapy",
+                  "Stem cell transplant",
+                  "Surgical resection"
+                ]
+              },
+              "meta": {
+                "core": true
+              }
+            },
+            {
+              "name": "age_at_consent_for_treatment",
+              "description": "Age of patient when he/she gave their consent for the treatment.",
+              "valueType": "integer",
+              "restrictions": {
+                "units": "years"
+              }
+            },
+            {
+              "name": "is_primary_treatment",
+              "description": "Was this is the primary treatment following the initial diagnosis?",
+              "valueType": "string",
+              "restrictions": {
+                "required": true,
+                "codeList": ["Yes", "No"]
+              },
+              "meta": {
+                "core": true
+              }
+            },
+            {
+              "name": "treatment_start_interval",
+              "description": "The interval between primary diagnosis and initiation of treatment, in days.",
+              "valueType": "integer",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "core": true,
+                "units": "days"
+              }
+            },
+            {
+              "name": "treatment_duration",
+              "description": "The duration of treatment regimen, in days",
+              "valueType": "integer",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "core": true,
+                "units": "days"
+              }
+            },
+            {
+              "name": "therapeutic_intent",
+              "description": "The therapeutic intent, the reason behind the choice of a therapy, of the treatment.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true,
+                "codeList": [
+                  "Adjuvant",
+                  "Concurrent",
+                  "Curative",
+                  "Neoadjuvant",
+                  "Not applicable",
+                  "Palliative",
+                  "Unknown"
+                ]
+              },
+              "meta": {
+                "core": true
+              }
+            },
+            {
+              "name": "response_to_therapy",
+              "description": "Donors's response to treatment.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true,
+                "codeList": [
+                  "Complete response",
+                  "Disease progression",
+                  "NED",
+                  "Partial response",
+                  "Stable disease"
+                ]
+              },
+              "meta": {
+                "core": true
+              }
+            }
+          ]
+        },
+        {
+          "name": "chemotherapy",
+          "description": "The collection of data elements describing the details of a chemotherapy treatment completed by a donor.",
+          "fields": [
+            {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "restrictions": {
+                "required": true
+              }
+            },
+            {
+              "name": "submitter_donor_id",
+              "valueType": "string",
+              "description": "Unique identifier of the donor, assigned by the data provider.",
+              "restrictions": {
+                "required": true,
+                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_treatment_id",
+              "valueType": "string",
+              "description": "Unique identifier of the treatment, as assigned by the data provider.",
+              "restrictions": {
+                "required": true,
+                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "chemotherapy_drug_name",
+              "description": "Name of agent or drug administered to patient as part of the chemotherapy treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true,
+                "codeList": ["Allopurinol", "Dronabinol", "Sucralfate", "Lapatinib"]
+              },
+              "meta": {
+                "core": true
+              }
+            },
+            {
+              "name": "chemotherapy_dosage_units",
+              "description": "Indicate units used to record chemotherapy drug dosage.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true,
+                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg"]
+              },
+              "meta": {
+                "core": true
+              }
+            },
+            {
+              "name": "cumulative_drug_dosage",
+              "description": "Indicate total drug dose in units specified in drug_dosage_units.",
+              "valueType": "integer",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "core": true
+              }
+            }
+          ]
         }
       ],
       "name": "ARGO Clinical Submission",
