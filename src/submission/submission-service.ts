@@ -949,7 +949,7 @@ export namespace operations {
     clinicalData.donors.forEach((d: any) => {
       result.push({
         donorId: d.icgc_donor_id,
-        gender: d.donor_sex, // needs normalization with sample_registration schema
+        gender: d.donor_sex == '' ? 'Other' : _.startCase(d.donor_sex), // needs normalization with sample_registration schema
         programId,
         specimens: getIcgcDonorSpecimens(clinicalData, d),
         submitterId: d.submitted_donor_id,

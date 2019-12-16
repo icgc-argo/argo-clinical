@@ -306,7 +306,4 @@ SampleSchema.plugin(AutoIncrement, {
   start_seq: process.env.SAMPLE_ID_SEED || 1,
 });
 
-export let DonorModel: Model<DonorDocument, {}> = mongoose.model<DonorDocument>(
-  'Donor',
-  DonorSchema,
-);
+export let DonorModel = mongoose.model<DonorDocument>('Donor', DonorSchema);
