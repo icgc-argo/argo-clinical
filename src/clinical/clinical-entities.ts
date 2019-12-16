@@ -10,6 +10,8 @@ export interface Donor {
   primaryDiagnosis?: ClinicalInfo;
   followUps?: Array<FollowUp>;
   treatments?: Array<Treatment>;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface SchemaMetadata {

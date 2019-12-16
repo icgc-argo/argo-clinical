@@ -2,7 +2,7 @@ import * as dataValidator from './validation-clinical/validation';
 import { donorDao, FindByProgramAndSubmitterFilter } from '../clinical/donor-repo';
 import _ from 'lodash';
 import { registrationRepository } from './registration-repo';
-import { Donor, DonorMap } from '../clinical/clinical-entities';
+import { Donor, DonorMap, Specimen, Sample, SchemaMetadata } from '../clinical/clinical-entities';
 import {
   ActiveRegistration,
   SubmittedRegistrationRecord,
@@ -942,6 +942,74 @@ export namespace operations {
     }
     return undefined;
   };
+
+  export function mergeIcgcLegacyData(clinicalData: any, programId: string) {
+    const result: Donor[] = [];
+
+    clinicalData.donors.forEach((d: any) => {
+      result.push({
+        donorId: d.icgc_donor_id,
+        gender: d.donor_sex == '' ? 'Other' : _.startCase(d.donor_sex), // needs normalization with sample_registration schema
+        programId,
+        specimens: getIcgcDonorSpecimens(clinicalData, d),
+        submitterId: d.submitted_donor_id,
+      } as any);
+    });
+    return result;
+  }
+
+  export async function adminAddDonors(donors: Donor[]) {
+    const schemaMetadata: SchemaMetadata = {
+      isValid: true,
+      lastValidSchemaVersion: schemaManager.instance().getCurrent().version,
+      originalSchemaVersion: schemaManager.instance().getCurrent().version,
+    };
+
+    donors.forEach((d: any) => {
+      d.createdAt = `${new Date()}`;
+      d.__v = 1;
+      d.updatedAt = `${new Date()}`;
+      d.createBy = 'dcc-admin';
+      d.schemaMetadata = schemaMetadata;
+    });
+
+    return await donorDao.insertDonors(donors);
+  }
+}
+
+function getIcgcDonorSpecimens(clinicalData: any, donor: any) {
+  const sps: Specimen[] = [];
+  clinicalData.specimens.forEach((s: any) => {
+    if (s.icgc_donor_id !== donor.icgc_donor_id) {
+      return;
+    }
+    sps.push({
+      specimenId: s.icgc_specimen_id,
+      submitterId: s.submitted_specimen_id,
+      tumourNormalDesignation: s.specimen_type, // needs normalization with sample_registration schema
+      samples: getIcgcSpecimenSamples(clinicalData, s, donor),
+      specimenTissueSource: s.specimen_type, // needs normalization with sample_registration schema
+    });
+  });
+  return sps;
+}
+
+function getIcgcSpecimenSamples(clinicalData: any, speciemn: any, donor: any) {
+  const sps: Sample[] = [];
+  clinicalData.samples.forEach((s: any) => {
+    if (
+      s.icgc_donor_id !== donor.icgc_donor_id ||
+      s.icgc_specimen_id !== speciemn.icgc_specimen_id
+    ) {
+      return;
+    }
+    sps.push({
+      sampleId: s.icgc_sample_id,
+      submitterId: s.submitted_sample_id,
+      sampleType: 'N/A', // ask about this
+    });
+  });
+  return sps;
 }
 
 function prepareForSchemaReProcessing(record: object) {

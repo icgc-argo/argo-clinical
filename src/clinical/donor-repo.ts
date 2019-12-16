@@ -1,13 +1,13 @@
 import { Donor, Sample, Specimen } from './clinical-entities';
-import mongoose from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { DeepReadonly } from 'deep-freeze';
 import { F, MongooseUtils, notEmpty } from '../utils';
 import { loggerFor } from '../logger';
+
 export const SUBMITTER_ID = 'submitterId';
 export const SPECIMEN_SUBMITTER_ID = 'specimen.submitterId';
 export const SPECIMEN_SAMPLE_SUBMITTER_ID = 'specimen.sample.submitterId';
 const L = loggerFor(__filename);
-
 const AutoIncrement = require('mongoose-sequence')(mongoose);
 
 export enum DONOR_FIELDS {
@@ -24,6 +24,7 @@ export type FindByProgramAndSubmitterFilter = DeepReadonly<{
   submitterId: string;
 }>;
 export interface DonorRepository {
+  insertDonors(donors: Donor[]): Promise<void>;
   findBy(criteria: any, limit: number): Promise<DeepReadonly<Donor[]>>;
   findByProgramId(programId: string): Promise<DeepReadonly<Donor[]>>;
   deleteByProgramId(programId: string): Promise<void>;
@@ -48,6 +49,9 @@ export interface DonorRepository {
 
 // Mongoose implementation of the DonorRepository
 export const donorDao: DonorRepository = {
+  async insertDonors(donors: Donor[]) {
+    await mongoose.connection.db.collection('donors').insertMany(donors);
+  },
   async countBy(filter: any) {
     return await DonorModel.count(filter).exec();
   },
@@ -211,8 +215,6 @@ const SampleSchema = new mongoose.Schema(
   { _id: false },
 );
 
-SampleSchema.plugin(AutoIncrement, { inc_field: 'sampleId' });
-
 const SpecimenSchema = new mongoose.Schema(
   {
     specimenId: { type: Number, index: true, unique: true, get: prefixSpecimenId },
@@ -224,7 +226,6 @@ const SpecimenSchema = new mongoose.Schema(
   },
   { _id: false },
 );
-SpecimenSchema.plugin(AutoIncrement, { inc_field: 'specimenId' });
 
 const TherapySchema = new mongoose.Schema(
   {
@@ -280,10 +281,29 @@ function prefixSampleId(id: any) {
   return `SA${id}`;
 }
 
-DonorSchema.plugin(AutoIncrement, { inc_field: 'donorId' });
-
 DonorSchema.index({ submitterId: 1, programId: 1 }, { unique: true });
 DonorSchema.index({ 'specimens.submitterId': 1, programId: 1 }, { unique: true });
 DonorSchema.index({ 'specimens.samples.submitterId': 1, programId: 1 }, { unique: true });
 
-export const DonorModel = mongoose.model<DonorDocument>('Donor', DonorSchema);
+/**
+ * These had to read from process env and not use the AppConfig
+ * because these are global mongoose variables, they can't be called
+ * multiple times, and that makes them hard to test because tests depend
+ * on resetting the config and bootstraping but global variables keep their state.
+ */
+DonorSchema.plugin(AutoIncrement, {
+  inc_field: 'donorId',
+  start_seq: process.env.DONOR_ID_SEED || 1,
+});
+
+SpecimenSchema.plugin(AutoIncrement, {
+  inc_field: 'specimenId',
+  start_seq: process.env.SPECIMEN_ID_SEED || 1,
+});
+
+SampleSchema.plugin(AutoIncrement, {
+  inc_field: 'sampleId',
+  start_seq: process.env.SAMPLE_ID_SEED || 1,
+});
+
+export let DonorModel = mongoose.model<DonorDocument>('Donor', DonorSchema);

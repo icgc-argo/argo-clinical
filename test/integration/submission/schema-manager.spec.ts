@@ -10,7 +10,6 @@ import _ from 'lodash';
 import * as manager from '../../../src/submission/schema/schema-manager';
 import { promisify } from 'bluebird';
 import { SchemasDictionary } from '../../../src/lectern-client/schema-entities';
-import { schemaClient } from '../../../src/lectern-client/schema-rest-client';
 const ServerMock: any = require('mock-http-server') as any;
 
 chai.use(require('chai-http'));
