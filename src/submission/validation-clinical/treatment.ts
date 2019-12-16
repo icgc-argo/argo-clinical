@@ -1,7 +1,6 @@
 import {
   SubmissionValidationError,
   RecordValidationResult,
-  SubmittedClinicalRecordsMap,
   ClinicalEntitySchemaNames,
   TreatmentFieldsEnum,
   SubmittedClinicalRecord,
@@ -12,37 +11,25 @@ import { DeepReadonly } from 'deep-freeze';
 import { Donor, Treatment } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
-import { ClinicalSubmissionRecordsOperations } from './utils';
 import { getSingleClinicalObjectFromDonor } from '../submission-to-clinical/submission-to-clinical';
 
 export const validate = async (
-  submittedRecords: DeepReadonly<SubmittedClinicalRecordsMap>,
+  treatmentRecord: DeepReadonly<SubmittedClinicalRecord>,
   existentDonor: DeepReadonly<Donor>,
   mergedDonor: Donor,
-): Promise<RecordValidationResult[]> => {
+): Promise<RecordValidationResult> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
-  const submittedTreatmentRecords = ClinicalSubmissionRecordsOperations.getArrayRecords(
-    ClinicalEntitySchemaNames.TREATMENT,
-    submittedRecords,
-  );
-  if (!submittedTreatmentRecords || !existentDonor) {
+  if (!treatmentRecord || !existentDonor || !mergedDonor) {
     throw new Error("Can't call this function without a registerd donor & treatment record");
   }
 
-  const recordValidationResults: RecordValidationResult[] = [];
-  for (const treatmentRecord of submittedTreatmentRecords) {
-    const errors: SubmissionValidationError[] = [];
+  const errors: SubmissionValidationError[] = [];
 
-    checkChemoFileNeeded(treatmentRecord, mergedDonor, errors);
+  checkChemoFileNeeded(treatmentRecord, mergedDonor, errors);
 
-    // leaving this for now, stats will me moved out of validate so this won't be needed
-    const treatmentClinicalInfo = getTreatmentClinicalInfo(existentDonor, treatmentRecord);
-    recordValidationResults.push(
-      utils.buildRecordValidationResult(treatmentRecord, errors, treatmentClinicalInfo),
-    );
-  }
-
-  return recordValidationResults;
+  // leaving this for now, stats will me moved out of validate so this won't be needed
+  const treatmentClinicalInfo = getTreatmentClinicalInfo(existentDonor, treatmentRecord);
+  return utils.buildRecordValidationResult(treatmentRecord, errors, treatmentClinicalInfo);
 };
 
 // same here

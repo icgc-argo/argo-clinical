@@ -107,16 +107,19 @@ export const validateSubmissionData = async (
 
     // call submission validator or each clinical type
     for (const clinicalType in submittedRecords) {
-      const results = await submissionValidator(clinicalType).validate(
-        submittedRecords,
-        existentDonor,
-        mergedDonor,
-      );
+      const clinicalRecords = submittedRecords[clinicalType];
+      for (const record of clinicalRecords) {
+        const results = await submissionValidator(clinicalType).validate(
+          record,
+          existentDonor,
+          mergedDonor,
+        );
 
-      recordValidationResultMap[clinicalType] = _.concat(
-        recordValidationResultMap[clinicalType],
-        results,
-      );
+        recordValidationResultMap[clinicalType] = _.concat(
+          recordValidationResultMap[clinicalType],
+          results,
+        );
+      }
     }
   }
 
