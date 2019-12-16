@@ -152,8 +152,8 @@ const addOrUpdateTreatementInfo = (donor: Donor, record: ClinicalInfo): Treatmen
     treatment.clinicalInfo = record;
     return treatment;
   }
-  // no treatment, so just add
-  donor.treatments = [{ clinicalInfo: record, therapies: [] }];
+  // treatment doesn't exsist, so add it
+  donor.treatments = _.concat(donor.treatments || [], { clinicalInfo: record, therapies: [] });
   return donor.treatments[0];
 };
 
