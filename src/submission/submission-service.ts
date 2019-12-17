@@ -946,10 +946,10 @@ export namespace operations {
   export function mergeIcgcLegacyData(clinicalData: any, programId: string) {
     const result: Donor[] = [];
 
-    clinicalData.donors.forEach((d: any) => {
-      validateRequiredColumns(d, ['icgc_donor_id', 'submitted_donor_id']);
+    clinicalData.donors.forEach((d: { [k: string]: string }, i: number) => {
+      validateRequiredColumns(i, d, ['icgc_donor_id', 'submitted_donor_id']);
       result.push({
-        donorId: d.icgc_donor_id,
+        donorId: parseInt(d.icgc_donor_id.substring(2), 10),
         gender: d.donor_sex == '' ? 'Other' : _.startCase(d.donor_sex),
         programId,
         specimens: getIcgcDonorSpecimens(clinicalData, d),
@@ -980,8 +980,8 @@ export namespace operations {
 
 function getIcgcDonorSpecimens(clinicalData: any, donor: any) {
   const sps: Specimen[] = [];
-  clinicalData.specimens.forEach((s: any) => {
-    validateRequiredColumns(s, [
+  clinicalData.specimens.forEach((s: any, i: number) => {
+    validateRequiredColumns(i, s, [
       'icgc_donor_id',
       'icgc_specimen_id',
       'submitted_specimen_id',
@@ -991,7 +991,7 @@ function getIcgcDonorSpecimens(clinicalData: any, donor: any) {
       return;
     }
     sps.push({
-      specimenId: s.icgc_specimen_id,
+      specimenId: parseInt(s.icgc_specimen_id.substring(2), 10),
       submitterId: s.submitted_specimen_id,
       tumourNormalDesignation: getMappedTumorNormalDesignation(s.specimen_type),
       samples: getIcgcSpecimenSamples(clinicalData, s, donor),
@@ -1019,8 +1019,8 @@ function getMappedTissueSource(specimenType: string): string {
 
 function getIcgcSpecimenSamples(clinicalData: any, speciemn: any, donor: any) {
   const sps: Sample[] = [];
-  clinicalData.samples.forEach((s: any) => {
-    validateRequiredColumns(s, ['icgc_donor_id', 'icgc_specimen_id', 'submitted_sample_id']);
+  clinicalData.samples.forEach((s: any, i: number) => {
+    validateRequiredColumns(i, s, ['icgc_donor_id', 'icgc_specimen_id', 'submitted_sample_id']);
     if (
       s.icgc_donor_id !== donor.icgc_donor_id ||
       s.icgc_specimen_id !== speciemn.icgc_specimen_id
@@ -1028,18 +1028,18 @@ function getIcgcSpecimenSamples(clinicalData: any, speciemn: any, donor: any) {
       return;
     }
     sps.push({
-      sampleId: s.icgc_sample_id,
+      sampleId: parseInt(s.icgc_sample_id.substring(2), 10),
       submitterId: s.submitted_sample_id,
-      sampleType: 'SAMPLE_TYPE_PLACEHOLDER', // ask about this
+      sampleType: 'SAMPLE_TYPE_PLACEHOLDER',
     });
   });
   return sps;
 }
 
-function validateRequiredColumns(obj: any, cols: string[]) {
+function validateRequiredColumns(index: number, obj: any, cols: string[]) {
   for (const c of cols) {
     if (isEmptyString(obj[c])) {
-      throw new Error(`row ${obj} is missing field:${c}`);
+      throw new Error(`row ${JSON.stringify(obj)} is missing field:${c}`);
     }
   }
 }

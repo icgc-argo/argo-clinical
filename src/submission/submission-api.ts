@@ -244,7 +244,7 @@ class SubmissionController {
 
   @HasFullWriteAccess()
   async addDonors(req: Request, res: Response) {
-    return res.status(200).send(await submission.operations.adminAddDonors(req.body.donors));
+    return res.status(200).send(await submission.operations.adminAddDonors(req.body));
   }
 }
 
