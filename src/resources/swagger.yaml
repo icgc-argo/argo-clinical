@@ -746,8 +746,6 @@ paths:
 servers:
   - url: /
 tags:
-  - name: ICGC Import
-    description: APIs to do the icgc import
   - name: Health
     description: Service status monitoring
   - name: Submission Configurations
@@ -760,7 +758,8 @@ tags:
     description: Uploading, Validating, and Committing clinical data
   - name: Clinical Data
     description: ''
-
+  - name: ICGC Import
+    description: APIs to do the icgc import
 components:
   parameters:
     QueryProgramId:

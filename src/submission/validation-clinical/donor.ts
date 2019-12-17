@@ -3,8 +3,6 @@ import {
   SubmittedClinicalRecord,
   SubmissionValidationError,
   RecordValidationResult,
-  SubmittedClinicalRecordsMap,
-  ClinicalEntitySchemaNames,
   SpecimenFieldsEnum,
   DonorFieldsEnum,
 } from '../submission-entities';
@@ -12,31 +10,22 @@ import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
-import { ClinicalSubmissionRecordsOperations } from './utils';
 
 export const validate = async (
-  submittedRecords: DeepReadonly<SubmittedClinicalRecordsMap>,
+  submittedDonorClinicalRecord: DeepReadonly<SubmittedClinicalRecord>,
   existentDonor: DeepReadonly<Donor>,
+  mergedDonor: Donor,
 ): Promise<RecordValidationResult> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
-  const submittedDonorClinicalRecord = ClinicalSubmissionRecordsOperations.getSingleRecord(
-    ClinicalEntitySchemaNames.DONOR,
-    submittedRecords,
-  );
 
-  if (!existentDonor || !submittedDonorClinicalRecord) {
+  if (!existentDonor || !mergedDonor || !submittedDonorClinicalRecord) {
     throw new Error("Can't call this function without donor & donor record");
   }
 
   // ***Submission Validation checks***
   const errors: SubmissionValidationError[] = []; // all errors for record
   // cross entity donor-specimen record validation
-  checkTimeConflictWithSpecimens(
-    existentDonor,
-    submittedDonorClinicalRecord,
-    submittedRecords,
-    errors,
-  );
+  checkTimeConflictWithSpecimens(submittedDonorClinicalRecord, mergedDonor, errors);
 
   // other checks here and add to `errors`
 
@@ -48,9 +37,8 @@ export const validate = async (
 };
 
 function checkTimeConflictWithSpecimens(
-  donor: DeepReadonly<Donor>,
   donorRecord: DeepReadonly<SubmittedClinicalRecord>,
-  submittedRecords: DeepReadonly<SubmittedClinicalRecordsMap>,
+  mergedDonor: DeepReadonly<Donor>,
   errors: SubmissionValidationError[],
 ) {
   if (
@@ -62,17 +50,9 @@ function checkTimeConflictWithSpecimens(
   const specimenIdsWithTimeConflicts: string[] = [];
   const donoSurvivalTime: number = Number(donorRecord[DonorFieldsEnum.survival_time]);
 
-  donor.specimens.forEach(specimen => {
+  mergedDonor.specimens.forEach(specimen => {
     let specimenAcqusitionInterval: number = 0;
-    // specimenAcqusitionInterval comes from either registered specimen in new record or specimen.clincalInfo
-    const specimenRecord = ClinicalSubmissionRecordsOperations.getRecordBySubmitterId(
-      ClinicalEntitySchemaNames.SPECIMEN,
-      specimen.submitterId,
-      submittedRecords,
-    );
-    if (specimenRecord) {
-      specimenAcqusitionInterval = Number(specimenRecord[SpecimenFieldsEnum.acquisition_interval]);
-    } else if (specimen.clinicalInfo) {
+    if (specimen.clinicalInfo) {
       specimenAcqusitionInterval = Number(
         specimen.clinicalInfo[SpecimenFieldsEnum.acquisition_interval],
       );

@@ -1,5 +1,5 @@
 import { Donor } from '../../../src/clinical/clinical-entities';
-import { DonorFieldsEnum } from '../../../src/submission/submission-entities';
+import { DonorFieldsEnum, FollowupFieldsEnum } from '../../../src/submission/submission-entities';
 
 /**
  * strongly typed stubs file!!
@@ -129,6 +129,58 @@ export const stubs = {
               submitterId: 'AM2',
             },
           ],
+        },
+      ],
+    }),
+
+    existingDonor05: (): Donor => ({
+      schemaMetadata: {
+        isValid: true,
+        lastValidSchemaVersion: '1.0',
+        originalSchemaVersion: '1.0',
+      },
+      _id: 'c2f23r23f',
+      submitterId: 'AB2',
+      programId: 'PEME-CA',
+      donorId: 10,
+      clinicalInfo: {
+        [DonorFieldsEnum.vital_status]: 'deceased',
+        [DonorFieldsEnum.survival_time]: 522,
+      },
+      gender: 'Female',
+      specimens: [
+        {
+          submitterId: 'SP13',
+          specimenTissueSource: 'Other',
+          clinicalInfo: {},
+          tumourNormalDesignation: 'Normal',
+          samples: [
+            {
+              sampleType: 'ST10',
+              submitterId: 'AM1',
+            },
+          ],
+        },
+        {
+          submitterId: 'SP14',
+          specimenTissueSource: 'Other',
+          clinicalInfo: {},
+          tumourNormalDesignation: 'Normal',
+          samples: [
+            {
+              sampleType: 'ST10',
+              submitterId: 'AM2',
+            },
+          ],
+        },
+      ],
+      followUps: [
+        {
+          clinicalInfo: {
+            [FollowupFieldsEnum.submitter_follow_up_id]: 'FF123',
+            some_field: 1,
+            another_field: 'abcd',
+          },
         },
       ],
     }),

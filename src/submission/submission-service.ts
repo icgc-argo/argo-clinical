@@ -42,7 +42,7 @@ import {
   SchemasDictionary,
 } from '../lectern-client/schema-entities';
 import { loggerFor } from '../logger';
-import { Errors, F, isStringMatchRegex, toString } from '../utils';
+import { Errors, F, isStringMatchRegex, toString, isEmptyString } from '../utils';
 import { DeepReadonly } from 'deep-freeze';
 import { submissionRepository } from './submission-repo';
 import { v1 as uuid } from 'uuid';
@@ -946,10 +946,11 @@ export namespace operations {
   export function mergeIcgcLegacyData(clinicalData: any, programId: string) {
     const result: Donor[] = [];
 
-    clinicalData.donors.forEach((d: any) => {
+    clinicalData.donors.forEach((d: { [k: string]: string }, i: number) => {
+      validateRequiredColumns(i, d, ['icgc_donor_id', 'submitted_donor_id']);
       result.push({
-        donorId: d.icgc_donor_id,
-        gender: d.donor_sex == '' ? 'Other' : _.startCase(d.donor_sex), // needs normalization with sample_registration schema
+        donorId: parseInt(d.icgc_donor_id.substring(2), 10),
+        gender: d.donor_sex == '' ? 'Other' : _.startCase(d.donor_sex),
         programId,
         specimens: getIcgcDonorSpecimens(clinicalData, d),
         submitterId: d.submitted_donor_id,
@@ -979,24 +980,47 @@ export namespace operations {
 
 function getIcgcDonorSpecimens(clinicalData: any, donor: any) {
   const sps: Specimen[] = [];
-  clinicalData.specimens.forEach((s: any) => {
+  clinicalData.specimens.forEach((s: any, i: number) => {
+    validateRequiredColumns(i, s, [
+      'icgc_donor_id',
+      'icgc_specimen_id',
+      'submitted_specimen_id',
+      'specimen_type',
+    ]);
     if (s.icgc_donor_id !== donor.icgc_donor_id) {
       return;
     }
     sps.push({
-      specimenId: s.icgc_specimen_id,
+      specimenId: parseInt(s.icgc_specimen_id.substring(2), 10),
       submitterId: s.submitted_specimen_id,
-      tumourNormalDesignation: s.specimen_type, // needs normalization with sample_registration schema
+      tumourNormalDesignation: getMappedTumorNormalDesignation(s.specimen_type),
       samples: getIcgcSpecimenSamples(clinicalData, s, donor),
-      specimenTissueSource: s.specimen_type, // needs normalization with sample_registration schema
+      specimenTissueSource: getMappedTissueSource(s.specimen_type),
     });
   });
   return sps;
 }
 
+function getMappedTumorNormalDesignation(specimenType: string): string {
+  const mapping = ICGC_SPECIMEN_TYPE_MAP[specimenType];
+  if (mapping) {
+    return mapping.tumour_normal_designation;
+  }
+  throw new Error('found unknow specimen type: ' + specimenType);
+}
+
+function getMappedTissueSource(specimenType: string): string {
+  const mapping = ICGC_SPECIMEN_TYPE_MAP[specimenType];
+  if (mapping) {
+    return mapping.tissue_source;
+  }
+  throw new Error('found unknow specimen type: ' + specimenType);
+}
+
 function getIcgcSpecimenSamples(clinicalData: any, speciemn: any, donor: any) {
   const sps: Sample[] = [];
-  clinicalData.samples.forEach((s: any) => {
+  clinicalData.samples.forEach((s: any, i: number) => {
+    validateRequiredColumns(i, s, ['icgc_donor_id', 'icgc_specimen_id', 'submitted_sample_id']);
     if (
       s.icgc_donor_id !== donor.icgc_donor_id ||
       s.icgc_specimen_id !== speciemn.icgc_specimen_id
@@ -1004,12 +1028,20 @@ function getIcgcSpecimenSamples(clinicalData: any, speciemn: any, donor: any) {
       return;
     }
     sps.push({
-      sampleId: s.icgc_sample_id,
+      sampleId: parseInt(s.icgc_sample_id.substring(2), 10),
       submitterId: s.submitted_sample_id,
-      sampleType: 'N/A', // ask about this
+      sampleType: 'SAMPLE_TYPE_PLACEHOLDER',
     });
   });
   return sps;
+}
+
+function validateRequiredColumns(index: number, obj: any, cols: string[]) {
+  for (const c of cols) {
+    if (isEmptyString(obj[c])) {
+      throw new Error(`row ${JSON.stringify(obj)} is missing field:${c}`);
+    }
+  }
 }
 
 function prepareForSchemaReProcessing(record: object) {
@@ -1059,4 +1091,124 @@ const getSchemaValidationErrorInfoObject = (
       });
     }
   }
+};
+
+const ICGC_SPECIMEN_TYPE_MAP: {
+  [k: string]: {
+    tumour_normal_designation: string;
+    tissue_source: string;
+  };
+} = {
+  'Normal - solid tissue': {
+    tumour_normal_designation: 'Normal',
+    tissue_source: 'Solid tissue',
+  },
+  'Normal - blood derived': {
+    tumour_normal_designation: 'Normal',
+    tissue_source: 'Blood derived',
+  },
+  'Normal - bone marrow': {
+    tumour_normal_designation: 'Normal',
+    tissue_source: 'Bone marrow',
+  },
+  'Normal - tissue adjacent to primary': {
+    tumour_normal_designation: 'Normal - tissue adjacent to primary tumour',
+    tissue_source: 'Solid tissue',
+  },
+  'Normal - buccal cell': {
+    tumour_normal_designation: 'Normal',
+    tissue_source: 'Buccal cell',
+  },
+  'Normal - EBV immortalized': {
+    tumour_normal_designation: 'Normal',
+    tissue_source: 'Other',
+  },
+  'Normal - lymph node': {
+    tumour_normal_designation: 'Normal',
+    tissue_source: 'Lymph node',
+  },
+  'Normal - other': {
+    tumour_normal_designation: 'Normal',
+    tissue_source: 'Other',
+  },
+  'Primary tumour - solid tissue': {
+    tumour_normal_designation: 'Primary tumour',
+    tissue_source: 'Solid Tissue',
+  },
+  'Primary tumour - blood derived (peripheral blood)': {
+    tumour_normal_designation: 'Primary tumour',
+    tissue_source: 'Blood derived - peripheral blood',
+  },
+  'Primary tumour - blood derived (bone marrow)': {
+    tumour_normal_designation: 'Primary tumour',
+    tissue_source: 'Blood derived - bone marrow',
+  },
+  'Primary tumour - additional new primary': {
+    tumour_normal_designation: 'Primary tumour',
+    tissue_source: 'Other',
+  },
+  'Primary tumour - other': {
+    tumour_normal_designation: 'Primary tumour',
+    tissue_source: 'Other',
+  },
+  'Recurrent tumour - solid tissue': {
+    tumour_normal_designation: 'Recurrent tumour',
+    tissue_source: 'Solid tissue',
+  },
+  'Recurrent tumour - blood derived (peripheral blood)': {
+    tumour_normal_designation: 'Recurrent tumour',
+    tissue_source: 'Blood derived - peripheral blood',
+  },
+  'Recurrent tumour - blood derived (bone marrow)': {
+    tumour_normal_designation: 'Recurrent tumour',
+    tissue_source: 'Blood derived - bone marrow',
+  },
+  'Recurrent tumour - other': {
+    tumour_normal_designation: 'Recurrent tumour',
+    tissue_source: 'Other',
+  },
+  'Metastatic tumour - NOS': {
+    tumour_normal_designation: 'Metastatic tumour',
+    tissue_source: 'Other',
+  },
+  'Metastatic tumour - lymph node': {
+    tumour_normal_designation: 'Metastatic tumour',
+    tissue_source: 'Lymph node',
+  },
+  'Metastatic tumour - metastasis local to lymph node': {
+    tumour_normal_designation: 'Metastatic tumour - metastasis local to lymph node',
+    tissue_source: 'Lymph node',
+  },
+  'Metastatic tumour - metastasis to distant location': {
+    tumour_normal_designation: 'Metastatic tumour - metastasis to distant location',
+    tissue_source: 'Other',
+  },
+  'Metastatic tumour - additional metastatic': {
+    tumour_normal_designation: 'Metastatic tumour - additional metastatic',
+    tissue_source: 'Other',
+  },
+  'Xenograft - derived from primary tumour': {
+    tumour_normal_designation: 'Xenograft - derived from primary tumour',
+    tissue_source: 'Other',
+  },
+  'Xenograft - derived from tumour cell line': {
+    tumour_normal_designation: 'Xenograft - derived from tumour cell line',
+    tissue_source: 'Other',
+  },
+  'Cell line - derived from tumour': {
+    tumour_normal_designation: 'Cell line - derived from tumour',
+    tissue_source: 'Other',
+  },
+  'Primary tumour - lymph node': {
+    tumour_normal_designation: 'Primary tumour',
+    tissue_source: 'Lymph node',
+  },
+  'Metastatic tumour - other': {
+    tumour_normal_designation: 'Metastatic tumour',
+    tissue_source: 'Other',
+  },
+  'Cell line - derived from xenograft tumour': {
+    tumour_normal_designation: 'Cell line - derived from xenograft tumour',
+    tissue_source: 'Other',
+  },
 };
