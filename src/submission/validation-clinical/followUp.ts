@@ -1,41 +1,61 @@
+// this file will be deleted after stats are refactored out of validate
 import {
   SubmissionValidationError,
   RecordValidationResult,
-  SubmittedClinicalRecordsMap,
   ClinicalEntitySchemaNames,
   SubmittedClinicalRecord,
   FollowupFieldsEnum,
+  ClinicalUniqueIndentifier,
+  DataValidationErrors,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
-import { Donor, FollowUp } from '../../clinical/clinical-entities';
+import { Donor } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
-import { ClinicalSubmissionRecordsOperations } from './utils';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../submission-to-clinical/submission-to-clinical';
+import { donorDao } from '../../clinical/donor-repo';
 
 export const validate = async (
-  submittedRecords: DeepReadonly<SubmittedClinicalRecordsMap>,
+  followUpRecord: DeepReadonly<SubmittedClinicalRecord>,
   existentDonor: DeepReadonly<Donor>,
 ): Promise<RecordValidationResult[]> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
-  const followUpRecords = ClinicalSubmissionRecordsOperations.getArrayRecords(
-    ClinicalEntitySchemaNames.FOLLOW_UP,
-    submittedRecords,
-  );
-
-  if (followUpRecords.length === 0 || !existentDonor) {
+  if (!followUpRecord || !existentDonor) {
     throw new Error("Can't call this function without followup records");
   }
 
   const recordValidationResults: RecordValidationResult[] = [];
 
-  for (const followUpRecord of followUpRecords) {
-    const errors: SubmissionValidationError[] = [];
-    const followUpClinicalInfo = getExistingFollowUp(existentDonor, followUpRecord);
-    recordValidationResults.push(
-      utils.buildRecordValidationResult(followUpRecord, errors, followUpClinicalInfo),
-    );
+  const errors: SubmissionValidationError[] = [];
+  const followUpClinicalInfo = getExistingFollowUp(existentDonor, followUpRecord);
+
+  // adding new follow up to this donor ?
+  if (!followUpClinicalInfo) {
+    // check it is unique in this program
+    const alreadyAssociatedDonor = await donorDao.findByFollowUpSubmitterIdAndProgramId({
+      programId: existentDonor.programId,
+      submitterId: followUpRecord[
+        ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.FOLLOW_UP]
+      ] as string,
+    });
+
+    if (alreadyAssociatedDonor) {
+      errors.push(
+        utils.buildSubmissionError(
+          followUpRecord,
+          DataValidationErrors.FOLLOWUP_BELONGS_TO_OTHER_DONOR,
+          FollowupFieldsEnum.submitter_follow_up_id,
+          {
+            otherDonorSubmitterId: alreadyAssociatedDonor.submitterId,
+          },
+        ),
+      );
+    }
   }
+
+  recordValidationResults.push(
+    utils.buildRecordValidationResult(followUpRecord, errors, followUpClinicalInfo),
+  );
 
   return recordValidationResults;
 };

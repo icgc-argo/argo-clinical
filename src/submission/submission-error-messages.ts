@@ -33,6 +33,9 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
     if (errorData.info.useAllRecordValues === true) return `This row is identical to another row`;
     return `You are trying to submit the same [${errorData.fieldName}] in multiple rows. [${errorData.fieldName}] can only be submitted once per file.`;
   },
+  FOLLOWUP_BELONGS_TO_OTHER_DONOR: errorData => {
+    return `This follow up has already been associated to donor ${errorData.info.otherDonorSubmitterId}. Please correct your file.`;
+  },
 };
 
 const BATCH_ERROR_MESSAGES: Record<SubmissionBatchErrorTypes, (errorData: any) => string> = {

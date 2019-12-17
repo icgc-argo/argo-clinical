@@ -3,7 +3,6 @@ import {
   DataValidationErrors,
   SubmittedClinicalRecord,
   RecordValidationResult,
-  SubmittedClinicalRecordsMap,
   ClinicalEntitySchemaNames,
   DonorFieldsEnum,
   SpecimenFieldsEnum,
@@ -14,51 +13,45 @@ import { Donor, Specimen } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
 import { isEmptyString } from '../../utils';
-import { ClinicalSubmissionRecordsOperations } from './utils';
 import { getSingleClinicalObjectFromDonor } from '../submission-to-clinical/submission-to-clinical';
 
 export const validate = async (
-  submittedRecords: DeepReadonly<SubmittedClinicalRecordsMap>,
+  specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
   existentDonor: DeepReadonly<Donor>,
+  mergedDonor: Donor,
 ): Promise<RecordValidationResult[]> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
-  const specimenRecords = ClinicalSubmissionRecordsOperations.getArrayRecords(
-    ClinicalEntitySchemaNames.SPECIMEN,
-    submittedRecords,
-  );
-  if (specimenRecords.length === 0 || !existentDonor) {
-    throw new Error("Can't call this function without donor & specimen records");
+
+  if (!specimenRecord || !existentDonor || !mergedDonor) {
+    throw new Error("Can't call this function without donor & donor record");
   }
 
   const recordValidationResults: RecordValidationResult[] = [];
 
   const donorDataToValidateWith = getDataFromDonorRecordOrDonor(
-    existentDonor,
-    submittedRecords,
+    specimenRecord,
+    mergedDonor,
     recordValidationResults,
   );
   if (!donorDataToValidateWith) {
     return recordValidationResults;
   }
 
-  for (const specimenRecord of specimenRecords) {
-    // ***Precondition for each specimenRecord checks***
-    const specimen = getSpecimenFromDonor(existentDonor, specimenRecord, recordValidationResults);
-    if (!specimen) {
-      continue;
-    }
-
-    // ***Submission Validation checks***
-    const errors: SubmissionValidationError[] = []; // all errors for record
-    // cross entity donor-sepecimen record validation
-    checkTimeConflictWithDonor(donorDataToValidateWith, specimenRecord, errors);
-
-    // other checks here and add to `errors`
-
-    recordValidationResults.push(
-      utils.buildRecordValidationResult(specimenRecord, errors, specimen.clinicalInfo),
-    );
+  const specimen = getSpecimenFromDonor(existentDonor, specimenRecord, recordValidationResults);
+  if (!specimen) {
+    return recordValidationResults;
   }
+
+  // ***Submission Validation checks***
+  const errors: SubmissionValidationError[] = []; // all errors for record
+  // cross entity donor-sepecimen record validation
+  checkTimeConflictWithDonor(donorDataToValidateWith, specimenRecord, errors);
+
+  // other checks here and add to `errors`
+
+  recordValidationResults.push(
+    utils.buildRecordValidationResult(specimenRecord, errors, specimen.clinicalInfo),
+  );
 
   return recordValidationResults;
 };
@@ -115,18 +108,14 @@ function checkTimeConflictWithDonor(
 }
 
 const getDataFromDonorRecordOrDonor = (
+  specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
   donor: DeepReadonly<Donor>,
-  submittedRecords: DeepReadonly<SubmittedClinicalRecordsMap>,
   validationResults: RecordValidationResult[],
 ) => {
   let missingDonorFields: string[] = [];
   let donorVitalStatus: string = '';
   let donorSurvivalTime: number = NaN;
-  const donorDataSource =
-    ClinicalSubmissionRecordsOperations.getSingleRecord(
-      ClinicalEntitySchemaNames.DONOR,
-      submittedRecords,
-    ) || donor.clinicalInfo;
+  const donorDataSource = donor.clinicalInfo;
 
   if (!donorDataSource) {
     missingDonorFields = [DonorFieldsEnum.vital_status, DonorFieldsEnum.survival_time];
@@ -140,10 +129,7 @@ const getDataFromDonorRecordOrDonor = (
 
   if (missingDonorFields.length > 0) {
     const multipleRecordValidationResults = utils.buildMultipleRecordValidationResults(
-      ClinicalSubmissionRecordsOperations.getArrayRecords(
-        ClinicalEntitySchemaNames.SPECIMEN,
-        submittedRecords,
-      ),
+      [specimenRecord],
       {
         type: DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
         fieldName: SpecimenFieldsEnum.acquisition_interval,

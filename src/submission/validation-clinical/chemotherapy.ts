@@ -1,7 +1,6 @@
 import {
   SubmissionValidationError,
   RecordValidationResult,
-  SubmittedClinicalRecordsMap,
   ClinicalEntitySchemaNames,
   TreatmentFieldsEnum,
   SubmittedClinicalRecord,
@@ -11,36 +10,30 @@ import { DeepReadonly } from 'deep-freeze';
 import { Donor, Treatment } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
-import { ClinicalSubmissionRecordsOperations } from './utils';
 import { getSingleClinicalObjectFromDonor } from '../submission-to-clinical/submission-to-clinical';
 
 export const validate = async (
-  submittedRecords: DeepReadonly<SubmittedClinicalRecordsMap>,
+  chemoRecord: DeepReadonly<SubmittedClinicalRecord>,
   existentDonor: DeepReadonly<Donor>,
   mergedDonor: Donor,
 ): Promise<RecordValidationResult[]> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
-  const submittedChemotherapyRecords = ClinicalSubmissionRecordsOperations.getArrayRecords(
-    ClinicalEntitySchemaNames.CHEMOTHERAPY,
-    submittedRecords,
-  );
-  if (!submittedChemotherapyRecords || !existentDonor) {
+  if (!chemoRecord || !mergedDonor || !existentDonor) {
     throw new Error("Can't call this function without a registerd donor & treatment record");
   }
 
   const recordValidationResults: RecordValidationResult[] = [];
-  for (const chemoRecord of submittedChemotherapyRecords) {
-    const treatment = getTreatment(chemoRecord, mergedDonor, recordValidationResults);
-    if (!treatment) continue;
 
-    const errors: SubmissionValidationError[] = [];
+  const treatment = getTreatment(chemoRecord, mergedDonor, recordValidationResults);
+  if (!treatment) return recordValidationResults;
 
-    checkTreatementHasCorrectType(chemoRecord, treatment, errors);
+  const errors: SubmissionValidationError[] = [];
 
-    recordValidationResults.push(
-      utils.buildRecordValidationResult(chemoRecord, errors, existentDonor.primaryDiagnosis),
-    );
-  }
+  checkTreatementHasCorrectType(chemoRecord, treatment, errors);
+
+  recordValidationResults.push(
+    utils.buildRecordValidationResult(chemoRecord, errors, existentDonor.primaryDiagnosis),
+  );
 
   return recordValidationResults;
 };
@@ -76,7 +69,7 @@ function getTreatment(
     ClinicalEntitySchemaNames.TREATMENT,
     { clinicalInfo: { [TreatmentFieldsEnum.submitter_treatment_id]: treatmentId as string } },
   ) as DeepReadonly<Treatment>;
-  if (!treatment) {
+  if (!treatment || treatment.clinicalInfo === {}) {
     validationResults.push(
       utils.buildRecordValidationResult(
         chemoRecord,
