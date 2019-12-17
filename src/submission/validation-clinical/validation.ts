@@ -23,6 +23,7 @@ import {
   buildSubmissionError,
   buildClinicalValidationResult,
   buildMultipleRecordValidationResults,
+  buildRecordValidationResult,
 } from './utils';
 import _ from 'lodash';
 import { ClinicalSubmissionRecordsOperations } from './utils';
@@ -109,15 +110,22 @@ export const validateSubmissionData = async (
     for (const clinicalType in submittedRecords) {
       const clinicalRecords = submittedRecords[clinicalType];
       for (const record of clinicalRecords) {
-        const results = await submissionValidator(clinicalType).validate(
+        const errors = await submissionValidator(clinicalType).validate(
           record,
           existentDonor,
           mergedDonor,
         );
 
+        const result = buildRecordValidationResult(
+          record,
+          errors,
+          existentDonor,
+          clinicalType as ClinicalEntitySchemaNames,
+        );
+
         recordValidationResultMap[clinicalType] = _.concat(
           recordValidationResultMap[clinicalType],
-          results,
+          result,
         );
       }
     }

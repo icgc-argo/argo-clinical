@@ -16,6 +16,8 @@ import { DeepReadonly } from 'deep-freeze';
 import { validationErrorMessage } from '../submission-error-messages';
 import _ from 'lodash';
 import { DataRecord } from '../../lectern-client/schema-entities';
+import { Donor } from '../../clinical/clinical-entities';
+import { getSingleClinicalEntityFromDonorBySchemanName } from '../submission-to-clinical/submission-to-clinical';
 
 export const buildSubmissionError = (
   newRecord: SubmittedClinicalRecord,
@@ -59,15 +61,30 @@ export const buildSubmissionUpdate = (
   };
 };
 
+export const buildRecordValidationError = (
+  record: SubmittedClinicalRecord,
+  errors: SubmissionValidationError | SubmissionValidationError[],
+): RecordValidationResult => {
+  errors = _.concat([], errors); // make sure errors is array
+  return { type: ModificationType.ERRORSFOUND, index: record.index, resultArray: errors };
+};
+
 export const buildRecordValidationResult = (
   record: SubmittedClinicalRecord,
   errors: SubmissionValidationError | SubmissionValidationError[],
-  clinicalInfo: DeepReadonly<{ [field: string]: string | number } | object> | undefined = {},
+  existentDonor: DeepReadonly<Donor>,
+  clinicalEntitySchemaName: ClinicalEntitySchemaNames,
 ): RecordValidationResult => {
   errors = _.concat([], errors); // make sure errors is array
   if (errors.length > 0) {
     return { type: ModificationType.ERRORSFOUND, index: record.index, resultArray: errors };
   }
+  const uniqueIdValue = record[ClinicalUniqueIndentifier[clinicalEntitySchemaName]];
+  const clinicalInfo = getSingleClinicalEntityFromDonorBySchemanName(
+    existentDonor,
+    clinicalEntitySchemaName,
+    uniqueIdValue as string,
+  );
   return checkForUpdates(record, clinicalInfo);
 };
 
@@ -148,7 +165,7 @@ export const buildMultipleRecordValidationResults = (
   },
 ): RecordValidationResult[] => {
   const validationResults = records.map(record => {
-    return buildRecordValidationResult(
+    return buildRecordValidationError(
       record,
       buildSubmissionError(
         record,
@@ -156,7 +173,6 @@ export const buildMultipleRecordValidationResults = (
         commonErrorProperties.fieldName,
         commonErrorProperties.info,
       ),
-      {},
     );
   });
 
