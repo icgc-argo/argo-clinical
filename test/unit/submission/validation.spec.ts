@@ -11,6 +11,8 @@ import {
   SpecimenFieldsEnum,
   DonorFieldsEnum,
   TreatmentFieldsEnum,
+  FollowupFieldsEnum,
+  ClinicalUniqueIndentifier,
 } from '../../../src/submission/submission-entities';
 import { Donor } from '../../../src/clinical/clinical-entities';
 import { stubs } from './stubs';
@@ -147,6 +149,7 @@ describe('data-validator', () => {
   let donorDaoCountByStub: sinon.SinonStub;
   let donorDaoFindBySpecimenSubmitterIdAndProgramIdStub: sinon.SinonStub;
   let donorDaoFindBySampleSubmitterIdAndProgramIdStub: sinon.SinonStub;
+  let donorDaoFindByFollowUpSubmitterIdAndProgramIdStub: sinon.SinonStub;
   beforeEach(done => {
     donorDaoCountByStub = sinon.stub(donorDao, 'countBy');
     donorDaoFindBySpecimenSubmitterIdAndProgramIdStub = sinon.stub(
@@ -157,6 +160,11 @@ describe('data-validator', () => {
       donorDao,
       'findBySampleSubmitterIdAndProgramId',
     );
+
+    donorDaoFindByFollowUpSubmitterIdAndProgramIdStub = sinon.stub(
+      donorDao,
+      'findByFollowUpSubmitterIdAndProgramId',
+    );
     done();
   });
 
@@ -164,6 +172,7 @@ describe('data-validator', () => {
     donorDaoCountByStub.restore();
     donorDaoFindBySpecimenSubmitterIdAndProgramIdStub.restore();
     donorDaoFindBySampleSubmitterIdAndProgramIdStub.restore();
+    donorDaoFindByFollowUpSubmitterIdAndProgramIdStub.restore();
     done();
   });
   describe('registration-validation', () => {
@@ -1439,6 +1448,48 @@ describe('data-validator', () => {
       chai.expect(result.chemotherapy.dataErrors.length).to.eq(2);
       chai.expect(result.chemotherapy.dataErrors).to.deep.include(chemoTretmentIdErr);
       chai.expect(result.chemotherapy.dataErrors).to.deep.include(chemoTretmentInvalidErr);
+    });
+  });
+
+  describe('follow up validation', () => {
+    it('should detect follow up belongs to other donor', async () => {
+      const donorOwnsTheFollowupAlready = stubs.validation.existingDonor05();
+      donorDaoFindByFollowUpSubmitterIdAndProgramIdStub.returns(
+        Promise.resolve<Donor>(donorOwnsTheFollowupAlready),
+      );
+      const donorToAddFollowupTo: Donor = stubs.validation.existingDonor01();
+
+      const submissionRecordsMap = {};
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.FOLLOW_UP,
+        submissionRecordsMap,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.FOLLOW_UP]]: 'FF123',
+          some_field: 'asdasd',
+          index: 0,
+        },
+      );
+
+      const result = await dv
+        .validateSubmissionData({ AB1: submissionRecordsMap }, { AB1: donorToAddFollowupTo })
+        .catch((err: any) => fail(err));
+
+      chai.expect(result[ClinicalEntitySchemaNames.FOLLOW_UP].dataErrors.length).to.eq(1);
+      const followUpError: SubmissionValidationError = {
+        fieldName: FollowupFieldsEnum.submitter_follow_up_id,
+        message: `This follow up has already been associated to donor AB2. Please correct your file.`,
+        type: DataValidationErrors.FOLLOWUP_BELONGS_TO_OTHER_DONOR,
+        index: 0,
+        info: {
+          donorSubmitterId: 'AB1',
+          value: 'FF123',
+          otherDonorSubmitterId: 'AB2',
+        },
+      };
+      chai
+        .expect(result[ClinicalEntitySchemaNames.FOLLOW_UP].dataErrors[0])
+        .to.deep.eq(followUpError);
     });
   });
 });
