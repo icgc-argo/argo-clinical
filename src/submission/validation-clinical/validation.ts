@@ -22,7 +22,7 @@ import { validationErrorMessage } from '../submission-error-messages';
 import {
   buildSubmissionError,
   buildClinicalValidationResult,
-  buildMultipleRecordValidationResults,
+  buildMultipleRecordValidationErrors,
   buildRecordValidationResult,
 } from './utils';
 import _ from 'lodash';
@@ -148,7 +148,7 @@ function addErrorsForNoDonor(
       clinicalType as ClinicalEntitySchemaNames,
       submittedRecords,
     );
-    const multipleRecordValidationResults = buildMultipleRecordValidationResults(records, {
+    const multipleRecordValidationResults = buildMultipleRecordValidationErrors(records, {
       type: DataValidationErrors.ID_NOT_REGISTERED,
       fieldName: DonorFieldsEnum.submitter_donor_id,
     });

@@ -61,14 +61,6 @@ export const buildSubmissionUpdate = (
   };
 };
 
-export const buildRecordValidationError = (
-  record: SubmittedClinicalRecord,
-  errors: SubmissionValidationError | SubmissionValidationError[],
-): RecordValidationResult => {
-  errors = _.concat([], errors); // make sure errors is array
-  return { type: ModificationType.ERRORSFOUND, index: record.index, resultArray: errors };
-};
-
 export const buildRecordValidationResult = (
   record: SubmittedClinicalRecord,
   errors: SubmissionValidationError | SubmissionValidationError[],
@@ -156,7 +148,15 @@ export const buildClinicalValidationResult = (results: RecordValidationResult[])
   };
 };
 
-export const buildMultipleRecordValidationResults = (
+export const buildRecordValidationError = (
+  record: SubmittedClinicalRecord,
+  errors: SubmissionValidationError | SubmissionValidationError[],
+): RecordValidationResult => {
+  errors = _.concat([], errors); // make sure errors is array
+  return { type: ModificationType.ERRORSFOUND, index: record.index, resultArray: errors };
+};
+
+export const buildMultipleRecordValidationErrors = (
   records: ReadonlyArray<SubmittedClinicalRecord>,
   commonErrorProperties: {
     type: DataValidationErrors;
