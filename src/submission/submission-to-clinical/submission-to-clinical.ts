@@ -3,7 +3,16 @@
  * to the clinical model, somehow as set of ETL operations.
  */
 import { DeepReadonly } from 'deep-freeze';
-import { Donor, Specimen, Sample, SchemaMetadata } from '../../clinical/clinical-entities';
+import {
+  Donor,
+  Specimen,
+  Sample,
+  SchemaMetadata,
+  ClinicalInfo,
+  FollowUp,
+  Treatment,
+  ClinicalEntity,
+} from '../../clinical/clinical-entities';
 import {
   ActiveClinicalSubmission,
   ActiveSubmissionIdentifier,
@@ -11,7 +20,7 @@ import {
   CommitRegistrationCommand,
   ActiveRegistration,
   SubmittedRegistrationRecord,
-  FieldsEnum,
+  SampleRegistrationFieldsEnum,
   SUBMISSION_STATE,
   ClinicalEntitySchemaNames,
 } from '../submission-entities';
@@ -238,12 +247,14 @@ const mapToCreateDonorSampleDto = (registration: DeepReadonly<ActiveRegistration
   const donors: CreateDonorSampleDto[] = [];
   registration.records.forEach(rec => {
     // if the donor doesn't exist add it
-    let donor = donors.find(d => d.submitterId === rec[FieldsEnum.submitter_donor_id]);
+    let donor = donors.find(
+      d => d.submitterId === rec[SampleRegistrationFieldsEnum.submitter_donor_id],
+    );
     if (!donor) {
       const firstSpecimen = getDonorSpecimen(rec);
       donor = {
-        submitterId: rec[FieldsEnum.submitter_donor_id],
-        gender: rec[FieldsEnum.gender],
+        submitterId: rec[SampleRegistrationFieldsEnum.submitter_donor_id],
+        gender: rec[SampleRegistrationFieldsEnum.gender],
         programId: registration.programId,
         specimens: [firstSpecimen],
         schemaMetadata: {
@@ -259,15 +270,15 @@ const mapToCreateDonorSampleDto = (registration: DeepReadonly<ActiveRegistration
 
     // if the specimen doesn't exist add it
     let specimen = donor.specimens.find(
-      s => s.submitterId === rec[FieldsEnum.submitter_specimen_id],
+      s => s.submitterId === rec[SampleRegistrationFieldsEnum.submitter_specimen_id],
     );
     if (!specimen) {
       specimen = getDonorSpecimen(rec);
       donor.specimens.push(specimen);
     } else {
       specimen.samples.push({
-        sampleType: rec[FieldsEnum.sample_type],
-        submitterId: rec[FieldsEnum.submitter_sample_id],
+        sampleType: rec[SampleRegistrationFieldsEnum.sample_type],
+        submitterId: rec[SampleRegistrationFieldsEnum.submitter_sample_id],
       });
     }
   });
@@ -304,38 +315,37 @@ const getDonorDTOsForActiveSubmission = async (
 
 const getDonorSpecimen = (record: SubmittedRegistrationRecord) => {
   return {
-    specimenTissueSource: record[FieldsEnum.specimen_tissue_source],
-    tumourNormalDesignation: record[FieldsEnum.tumour_normal_designation],
-    submitterId: record[FieldsEnum.submitter_specimen_id],
+    specimenTissueSource: record[SampleRegistrationFieldsEnum.specimen_tissue_source],
+    tumourNormalDesignation: record[SampleRegistrationFieldsEnum.tumour_normal_designation],
+    submitterId: record[SampleRegistrationFieldsEnum.submitter_specimen_id],
     samples: [
       {
-        sampleType: record[FieldsEnum.sample_type],
-        submitterId: record[FieldsEnum.submitter_sample_id],
+        sampleType: record[SampleRegistrationFieldsEnum.sample_type],
+        submitterId: record[SampleRegistrationFieldsEnum.submitter_sample_id],
       },
     ],
   };
 };
 
-export function getClinicalEntitiesFromDonorBySchemaName(
+export function getSingleClinicalObjectFromDonor(
   donor: DeepReadonly<Donor>,
   clinicalEntitySchemaName: ClinicalEntitySchemaNames,
-): any[] {
+  constraints: object, // similar to mongo filters, e.g. {submitted_donor_id: 'DR_01'}
+) {
+  const entities = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName);
+  return _.find(entities, constraints);
+}
+
+export function getClinicalObjectsFromDonor(
+  donor: DeepReadonly<Donor>,
+  clinicalEntitySchemaName: ClinicalEntitySchemaNames,
+) {
   if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.DONOR) {
-    if (donor.clinicalInfo) {
-      return [donor.clinicalInfo];
-    }
-    return [];
+    return [donor];
   }
 
   if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.SPECIMEN) {
-    const clinicalRecords = donor.specimens
-      .map(sp => {
-        if (sp.clinicalInfo) {
-          return sp.clinicalInfo;
-        }
-      })
-      .filter(notEmpty);
-    return clinicalRecords;
+    return donor.specimens;
   }
 
   if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS) {
@@ -343,7 +353,52 @@ export function getClinicalEntitiesFromDonorBySchemaName(
       return [donor.primaryDiagnosis];
     }
   }
+
+  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.TREATMENT) {
+    if (donor.treatments) {
+      return donor.treatments;
+    }
+  }
+
+  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.FOLLOW_UP) {
+    if (donor.followUps) {
+      return donor.followUps;
+    }
+  }
+
+  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.CHEMOTHERAPY) {
+    if (donor.treatments) {
+      return donor.treatments
+        .map(tr =>
+          tr.therapies.filter(th => th.therapyType === ClinicalEntitySchemaNames.CHEMOTHERAPY),
+        )
+        .flat()
+        .filter(notEmpty);
+    }
+  }
   return [];
+}
+
+export function getClinicalEntitiesFromDonorBySchemaName(
+  donor: DeepReadonly<Donor>,
+  clinicalEntitySchemaName: ClinicalEntitySchemaNames,
+): ClinicalInfo[] {
+  if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS) {
+    if (donor.primaryDiagnosis) {
+      return [donor.primaryDiagnosis];
+    }
+  }
+
+  const result = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName) as any[];
+
+  const clinicalRecords = result
+    .map((e: any) => {
+      if (e.clinicalInfo) {
+        return e.clinicalInfo as ClinicalInfo;
+      }
+    })
+    .filter(notEmpty);
+  return clinicalRecords;
 }
 
 export interface CreateDonorSampleDto {

@@ -1,6 +1,6 @@
 {
   "name": "argo-clinical",
-  "version": "0.17.0",
+  "version": "0.18.0",
   "description": "Clinical submission system and repo",
   "scripts": {
     "start": "npm run serve",
@@ -99,7 +99,7 @@
     "lodash": "^4.17.14",
     "mock-http-server": "^1.4.1",
     "mongoose": "5.7.7",
-    "mongoose-sequence": "^5.1.0",
+    "mongoose-sequence": "^5.2.2",
     "multer": "^1.4.1",
     "node-fetch": "^2.6.0",
     "node-vault": "^0.9.11",

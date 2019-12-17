@@ -1,20 +1,21 @@
 import {
   SubmissionValidationError,
   DataValidationErrors,
-  FieldsEnum,
   SubmittedClinicalRecord,
   RecordValidationResult,
   SubmittedClinicalRecordsMap,
   ClinicalEntitySchemaNames,
   DonorFieldsEnum,
   SpecimenFieldsEnum,
+  ClinicalUniqueIndentifier,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
-import { Donor } from '../../clinical/clinical-entities';
+import { Donor, Specimen } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
 import { isEmptyString } from '../../utils';
 import { ClinicalSubmissionRecordsOperations } from './utils';
+import { getSingleClinicalObjectFromDonor } from '../submission-to-clinical/submission-to-clinical';
 
 export const validate = async (
   submittedRecords: DeepReadonly<SubmittedClinicalRecordsMap>,
@@ -67,10 +68,14 @@ function getSpecimenFromDonor(
   specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
   validationResults: RecordValidationResult[],
 ) {
-  const specimen = _.find(existentDonor.specimens, [
-    'submitterId',
-    specimenRecord[FieldsEnum.submitter_specimen_id],
-  ]);
+  const specimen = getSingleClinicalObjectFromDonor(
+    existentDonor,
+    ClinicalEntitySchemaNames.SPECIMEN,
+    {
+      submitterId: specimenRecord[ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.SPECIMEN]],
+    },
+  ) as DeepReadonly<Specimen>;
+
   if (!specimen) {
     validationResults.push(
       utils.buildRecordValidationResult(
@@ -78,7 +83,7 @@ function getSpecimenFromDonor(
         utils.buildSubmissionError(
           specimenRecord,
           DataValidationErrors.ID_NOT_REGISTERED,
-          FieldsEnum.submitter_specimen_id,
+          SpecimenFieldsEnum.submitter_specimen_id,
         ),
       ),
     );

@@ -2,7 +2,7 @@ import * as dataValidator from './validation-clinical/validation';
 import { donorDao, FindByProgramAndSubmitterFilter } from '../clinical/donor-repo';
 import _ from 'lodash';
 import { registrationRepository } from './registration-repo';
-import { Donor, DonorMap } from '../clinical/clinical-entities';
+import { Donor, DonorMap, Specimen, Sample, SchemaMetadata } from '../clinical/clinical-entities';
 import {
   ActiveRegistration,
   SubmittedRegistrationRecord,
@@ -12,7 +12,7 @@ import {
   CreateRegistrationCommand,
   CreateRegistrationResult,
   ClearSubmissionCommand,
-  FieldsEnum,
+  SampleRegistrationFieldsEnum,
   ClinicalSubmissionCommand,
   MultiClinicalSubmissionCommand,
   CreateSubmissionResult,
@@ -486,7 +486,7 @@ export namespace operations {
     for (const clinicalType in exsistingActiveSubmission.clinicalEntities) {
       const clinicalEnity = exsistingActiveSubmission.clinicalEntities[clinicalType];
       clinicalEnity.records.forEach((rc, index) => {
-        const donorId = rc[FieldsEnum.submitter_donor_id];
+        const donorId = rc[SampleRegistrationFieldsEnum.submitter_donor_id];
         filters.push({
           programId: command.programId,
           submitterId: donorId,
@@ -718,14 +718,14 @@ export namespace operations {
       schemaVersion: schemaVersion,
       records: registrationRecords.map(r => {
         const record: Readonly<SubmittedRegistrationRecord> = {
-          [FieldsEnum.program_id]: command.programId,
-          [FieldsEnum.submitter_donor_id]: r.donorSubmitterId,
-          [FieldsEnum.gender]: r.gender,
-          [FieldsEnum.submitter_specimen_id]: r.specimenSubmitterId,
-          [FieldsEnum.specimen_tissue_source]: r.specimenTissueSource,
-          [FieldsEnum.tumour_normal_designation]: r.tumourNormalDesignation,
-          [FieldsEnum.submitter_sample_id]: r.sampleSubmitterId,
-          [FieldsEnum.sample_type]: r.sampleType,
+          [SampleRegistrationFieldsEnum.program_id]: command.programId,
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: r.donorSubmitterId,
+          [SampleRegistrationFieldsEnum.gender]: r.gender,
+          [SampleRegistrationFieldsEnum.submitter_specimen_id]: r.specimenSubmitterId,
+          [SampleRegistrationFieldsEnum.specimen_tissue_source]: r.specimenTissueSource,
+          [SampleRegistrationFieldsEnum.tumour_normal_designation]: r.tumourNormalDesignation,
+          [SampleRegistrationFieldsEnum.submitter_sample_id]: r.sampleSubmitterId,
+          [SampleRegistrationFieldsEnum.sample_type]: r.sampleType,
         };
         return record;
       }),
@@ -740,14 +740,16 @@ export namespace operations {
     return F(
       records.map(r => {
         const rec: CreateRegistrationRecord = {
-          programId: r[FieldsEnum.program_id] as string,
-          donorSubmitterId: r[FieldsEnum.submitter_donor_id] as string,
-          gender: r[FieldsEnum.gender] as string,
-          specimenSubmitterId: r[FieldsEnum.submitter_specimen_id] as string,
-          specimenTissueSource: r[FieldsEnum.specimen_tissue_source] as string,
-          tumourNormalDesignation: r[FieldsEnum.tumour_normal_designation] as string,
-          sampleSubmitterId: r[FieldsEnum.submitter_sample_id] as string,
-          sampleType: r[FieldsEnum.sample_type] as string,
+          programId: r[SampleRegistrationFieldsEnum.program_id] as string,
+          donorSubmitterId: r[SampleRegistrationFieldsEnum.submitter_donor_id] as string,
+          gender: r[SampleRegistrationFieldsEnum.gender] as string,
+          specimenSubmitterId: r[SampleRegistrationFieldsEnum.submitter_specimen_id] as string,
+          specimenTissueSource: r[SampleRegistrationFieldsEnum.specimen_tissue_source] as string,
+          tumourNormalDesignation: r[
+            SampleRegistrationFieldsEnum.tumour_normal_designation
+          ] as string,
+          sampleSubmitterId: r[SampleRegistrationFieldsEnum.submitter_sample_id] as string,
+          sampleType: r[SampleRegistrationFieldsEnum.sample_type] as string,
         };
         return rec;
       }),
@@ -940,6 +942,74 @@ export namespace operations {
     }
     return undefined;
   };
+
+  export function mergeIcgcLegacyData(clinicalData: any, programId: string) {
+    const result: Donor[] = [];
+
+    clinicalData.donors.forEach((d: any) => {
+      result.push({
+        donorId: d.icgc_donor_id,
+        gender: d.donor_sex == '' ? 'Other' : _.startCase(d.donor_sex), // needs normalization with sample_registration schema
+        programId,
+        specimens: getIcgcDonorSpecimens(clinicalData, d),
+        submitterId: d.submitted_donor_id,
+      } as any);
+    });
+    return result;
+  }
+
+  export async function adminAddDonors(donors: Donor[]) {
+    const schemaMetadata: SchemaMetadata = {
+      isValid: true,
+      lastValidSchemaVersion: schemaManager.instance().getCurrent().version,
+      originalSchemaVersion: schemaManager.instance().getCurrent().version,
+    };
+
+    donors.forEach((d: any) => {
+      d.createdAt = `${new Date()}`;
+      d.__v = 1;
+      d.updatedAt = `${new Date()}`;
+      d.createBy = 'dcc-admin';
+      d.schemaMetadata = schemaMetadata;
+    });
+
+    return await donorDao.insertDonors(donors);
+  }
+}
+
+function getIcgcDonorSpecimens(clinicalData: any, donor: any) {
+  const sps: Specimen[] = [];
+  clinicalData.specimens.forEach((s: any) => {
+    if (s.icgc_donor_id !== donor.icgc_donor_id) {
+      return;
+    }
+    sps.push({
+      specimenId: s.icgc_specimen_id,
+      submitterId: s.submitted_specimen_id,
+      tumourNormalDesignation: s.specimen_type, // needs normalization with sample_registration schema
+      samples: getIcgcSpecimenSamples(clinicalData, s, donor),
+      specimenTissueSource: s.specimen_type, // needs normalization with sample_registration schema
+    });
+  });
+  return sps;
+}
+
+function getIcgcSpecimenSamples(clinicalData: any, speciemn: any, donor: any) {
+  const sps: Sample[] = [];
+  clinicalData.samples.forEach((s: any) => {
+    if (
+      s.icgc_donor_id !== donor.icgc_donor_id ||
+      s.icgc_specimen_id !== speciemn.icgc_specimen_id
+    ) {
+      return;
+    }
+    sps.push({
+      sampleId: s.icgc_sample_id,
+      submitterId: s.submitted_sample_id,
+      sampleType: 'N/A', // ask about this
+    });
+  });
+  return sps;
 }
 
 function prepareForSchemaReProcessing(record: object) {
@@ -976,16 +1046,16 @@ const getSchemaValidationErrorInfoObject = (
       return F({
         ...schemaErr.info,
         value: record[schemaErr.fieldName],
-        donorSubmitterId: record[FieldsEnum.submitter_donor_id],
-        specimenSubmitterId: record[FieldsEnum.submitter_specimen_id],
-        sampleSubmitterId: record[FieldsEnum.submitter_sample_id],
+        donorSubmitterId: record[SampleRegistrationFieldsEnum.submitter_donor_id],
+        specimenSubmitterId: record[SampleRegistrationFieldsEnum.submitter_specimen_id],
+        sampleSubmitterId: record[SampleRegistrationFieldsEnum.submitter_sample_id],
       });
     }
     default: {
       return F({
         ...schemaErr.info,
         value: record[schemaErr.fieldName],
-        donorSubmitterId: record[FieldsEnum.submitter_donor_id],
+        donorSubmitterId: record[SampleRegistrationFieldsEnum.submitter_donor_id],
       });
     }
   }

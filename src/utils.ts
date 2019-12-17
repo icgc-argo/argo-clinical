@@ -147,6 +147,18 @@ export const sleep = async (milliSeconds: number = 2000) => {
   return new Promise(resolve => setTimeout(resolve, milliSeconds));
 };
 
+export function mergeAndDeleteRemoved(obj: { [k: string]: any }, override: { [k: string]: any }) {
+  const keys = new Set(Object.keys(override));
+  _.merge(obj, override);
+  for (const key in obj) {
+    const exists = keys.has(key);
+    if (!exists) {
+      delete obj[key];
+    }
+  }
+  return;
+}
+
 export function toString(obj: any) {
   if (!obj) {
     return undefined;

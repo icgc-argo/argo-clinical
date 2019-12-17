@@ -24,7 +24,7 @@ import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN, JWT_ABCDEF, JWT_WXYZEF } from '../t
 import {
   ActiveRegistration,
   ActiveClinicalSubmission,
-  FieldsEnum,
+  SampleRegistrationFieldsEnum,
   SUBMISSION_STATE,
   DataValidationErrors,
   SubmissionBatchErrorTypes,
@@ -52,10 +52,10 @@ const expectedErrors = [
       sampleSubmitterId: 'sam123',
       specimenSubmitterId: 'sp123',
     },
-    fieldName: FieldsEnum.tumour_normal_designation,
+    fieldName: SampleRegistrationFieldsEnum.tumour_normal_designation,
   },
   {
-    fieldName: FieldsEnum.submitter_specimen_id,
+    fieldName: SampleRegistrationFieldsEnum.submitter_specimen_id,
     index: 0,
     info: {
       donorSubmitterId: 'abcd123',
@@ -66,7 +66,7 @@ const expectedErrors = [
     type: 'INVALID_BY_REGEX',
   },
   {
-    fieldName: FieldsEnum.submitter_sample_id,
+    fieldName: SampleRegistrationFieldsEnum.submitter_sample_id,
     index: 0,
     info: {
       donorSubmitterId: 'abcd123',
@@ -77,7 +77,7 @@ const expectedErrors = [
     type: 'INVALID_BY_REGEX',
   },
   {
-    fieldName: FieldsEnum.gender,
+    fieldName: SampleRegistrationFieldsEnum.gender,
     index: 0,
     info: {
       donorSubmitterId: 'abcd123',
@@ -88,7 +88,7 @@ const expectedErrors = [
     type: 'INVALID_ENUM_VALUE',
   },
   {
-    fieldName: FieldsEnum.sample_type,
+    fieldName: SampleRegistrationFieldsEnum.sample_type,
     index: 0,
     info: {
       donorSubmitterId: 'abcd123',
@@ -139,14 +139,14 @@ const expectedResponse1 = {
     },
     records: [
       {
-        [FieldsEnum.program_id]: 'ABCD-EF',
-        [FieldsEnum.submitter_donor_id]: 'abcd123',
-        [FieldsEnum.gender]: 'Male',
-        [FieldsEnum.submitter_specimen_id]: 'ss123',
-        [FieldsEnum.specimen_tissue_source]: 'Other',
-        [FieldsEnum.tumour_normal_designation]: 'Normal',
-        [FieldsEnum.submitter_sample_id]: 'sm123',
-        [FieldsEnum.sample_type]: 'ctDNA',
+        [SampleRegistrationFieldsEnum.program_id]: 'ABCD-EF',
+        [SampleRegistrationFieldsEnum.submitter_donor_id]: 'abcd123',
+        [SampleRegistrationFieldsEnum.gender]: 'Male',
+        [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'ss123',
+        [SampleRegistrationFieldsEnum.specimen_tissue_source]: 'Other',
+        [SampleRegistrationFieldsEnum.tumour_normal_designation]: 'Normal',
+        [SampleRegistrationFieldsEnum.submitter_sample_id]: 'sm123',
+        [SampleRegistrationFieldsEnum.sample_type]: 'ctDNA',
       },
     ],
     __v: 0,
@@ -182,14 +182,14 @@ const ABCD_REGISTRATION_DOC: ActiveRegistration = {
   },
   records: [
     {
-      [FieldsEnum.program_id]: 'ABCD-EF',
-      [FieldsEnum.submitter_donor_id]: 'abcd123',
-      [FieldsEnum.gender]: 'Male',
-      [FieldsEnum.submitter_specimen_id]: 'ss123',
-      [FieldsEnum.specimen_tissue_source]: 'Other',
-      [FieldsEnum.tumour_normal_designation]: 'Normal',
-      [FieldsEnum.submitter_sample_id]: 'sm123',
-      [FieldsEnum.sample_type]: 'ctDNA',
+      [SampleRegistrationFieldsEnum.program_id]: 'ABCD-EF',
+      [SampleRegistrationFieldsEnum.submitter_donor_id]: 'abcd123',
+      [SampleRegistrationFieldsEnum.gender]: 'Male',
+      [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'ss123',
+      [SampleRegistrationFieldsEnum.specimen_tissue_source]: 'Other',
+      [SampleRegistrationFieldsEnum.tumour_normal_designation]: 'Normal',
+      [SampleRegistrationFieldsEnum.submitter_sample_id]: 'sm123',
+      [SampleRegistrationFieldsEnum.sample_type]: 'ctDNA',
     },
   ],
 };
@@ -200,11 +200,12 @@ const expectedDonorErrors = [
     info: {
       value: 'ICGC_0001',
       donorSubmitterId: 'ICGC_0001',
+      useAllRecordValues: false,
       conflictingRows: [2],
     },
     message:
       'You are trying to submit the same [submitter_donor_id] in multiple rows. [submitter_donor_id] can only be submitted once per file.',
-    fieldName: FieldsEnum.submitter_donor_id,
+    fieldName: SampleRegistrationFieldsEnum.submitter_donor_id,
   },
   {
     index: 2,
@@ -212,11 +213,12 @@ const expectedDonorErrors = [
     info: {
       value: 'ICGC_0001',
       donorSubmitterId: 'ICGC_0001',
+      useAllRecordValues: false,
       conflictingRows: [1],
     },
     message:
       'You are trying to submit the same [submitter_donor_id] in multiple rows. [submitter_donor_id] can only be submitted once per file.',
-    fieldName: FieldsEnum.submitter_donor_id,
+    fieldName: SampleRegistrationFieldsEnum.submitter_donor_id,
   },
   {
     index: 0,
@@ -695,6 +697,7 @@ describe('Submission Api', () => {
           done();
         });
     });
+
     it('should return 422 if try to upload invalid tsv files', done => {
       let file: Buffer;
       try {
@@ -778,7 +781,7 @@ describe('Submission Api', () => {
               code: 'INVALID_FILE_NAME',
             },
             {
-              message: `Missing required headers: [${FieldsEnum.submitter_donor_id}], [${FieldsEnum.submitter_specimen_id}]`,
+              message: `Missing required headers: [${SampleRegistrationFieldsEnum.submitter_donor_id}], [${SampleRegistrationFieldsEnum.submitter_specimen_id}]`,
               batchNames: ['specimen-invalid-headers.tsv'],
               code: SubmissionBatchErrorTypes.MISSING_REQUIRED_HEADER,
             },
@@ -847,7 +850,7 @@ describe('Submission Api', () => {
                   res.body.submission.clinicalEntities.donor.dataErrors.should.deep.eq([
                     {
                       type: DataValidationErrors.ID_NOT_REGISTERED,
-                      fieldName: FieldsEnum.submitter_donor_id,
+                      fieldName: SampleRegistrationFieldsEnum.submitter_donor_id,
                       info: {
                         donorSubmitterId: 'ICGC_0001',
                         value: 'ICGC_0001',
@@ -1275,53 +1278,34 @@ describe('Submission Api', () => {
     let donor: any;
     let submissionVersion: string;
 
-    const uploadSubmission = async (
-      donorFileName: string = 'donor.tsv',
-      primaryDiagnosisFileName: string = '',
-    ) => {
-      let donorFile: Buffer;
-      let primaryDiagFile: Buffer | undefined = undefined;
-      try {
-        donorFile = fs.readFileSync(__dirname + `/${donorFileName}`);
-        if (primaryDiagnosisFileName != '') {
-          primaryDiagFile = fs.readFileSync(__dirname + `/${primaryDiagnosisFileName}`);
-        }
-      } catch (err) {
-        return err;
-      }
-
+    const uploadSubmission = async (fileNames: string[] = ['donor.tsv']) => {
+      const files: Buffer[] = [];
       let req = chai
         .request(app)
         .post(`/submission/program/${programId}/clinical/upload`)
-        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-        .attach('clinicalFiles', donorFile, 'donor.tsv');
+        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' });
 
-      if (primaryDiagFile) {
-        req = req.attach('clinicalFiles', primaryDiagFile, 'primary_diagnosis.tsv');
-      }
+      fileNames.forEach(fn => {
+        try {
+          const file = fs.readFileSync(__dirname + `/${fn}`);
+          req = req.attach('clinicalFiles', file, fn);
+        } catch (err) {
+          return err;
+        }
+      });
 
       return req.then((res: any) => {
+        res.body.successful.should.be.true;
         submissionVersion = res.body.submission.version;
       });
     };
 
-    const uploadSubmissionWithUpdates = async () => {
-      let file: Buffer;
-      try {
-        file = fs.readFileSync(__dirname + '/donor-with-updates.tsv');
-      } catch (err) {
-        return err;
-      }
-
-      return await chai
-        .request(app)
-        .post(`/submission/program/${programId}/clinical/upload`)
-        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-        .attach('clinicalFiles', file, 'donor.tsv')
-        .then((res: any) => {
-          submissionVersion = res.body.submission.version;
-        });
+    const uploadSubmissionWithUpdates = async (
+      fileNames: string[] = ['donor-with-updates.tsv'],
+    ) => {
+      return await uploadSubmission(fileNames);
     };
+
     const validateSubmission = async () => {
       return await chai
         .request(app)
@@ -1331,6 +1315,7 @@ describe('Submission Api', () => {
           submissionVersion = res.body.submission.version;
         });
     };
+
     const commitActiveSubmission = async () => {
       return await chai
         .request(app)
@@ -1417,17 +1402,60 @@ describe('Submission Api', () => {
 
     it('should return 200 when commit is completed', async () => {
       // To get submission into correct state (pending approval) we need to already have a completed submission...
-      await uploadSubmission();
+      await uploadSubmission([
+        'donor.tsv',
+        'primary_diagnosis.tsv',
+        'follow_up.tsv',
+        'treatment.tsv',
+        'chemotherapy.tsv',
+      ]);
       await validateSubmission();
       await commitActiveSubmission();
+      const [DonorBeforeUpdate] = await findInDb(dburl, 'donors', {
+        programId: programId,
+        submitterId: 'ICGC_0001',
+      });
+
+      const entityBase = { program_id: programId, submitter_donor_id: 'ICGC_0001' };
+
+      const primary_diagnosis = {
+        ...entityBase,
+        number_lymph_nodes_examined: 2,
+        age_at_diagnosis: 96,
+        cancer_type_code: 'A11.1A',
+        tumour_staging_system: 'Murphy',
+      };
+
+      const donor = {
+        ...entityBase,
+        vital_status: 'Deceased',
+        cause_of_death: 'Died of cancer',
+        survival_time: 522,
+      };
+
+      DonorBeforeUpdate.primaryDiagnosis.should.deep.eq(primary_diagnosis);
+      DonorBeforeUpdate.clinicalInfo.should.deep.eq(donor);
+
       // Now we need to have a submission with updates, and validate to get it into the correct state
-      await uploadSubmissionWithUpdates();
+      await uploadSubmissionWithUpdates([
+        'donor-with-updates.tsv',
+        'follow_up_update.tsv',
+        'treatment_update.tsv',
+        'chemotherapy_update.tsv',
+      ]);
       await validateSubmission();
       await commitActiveSubmission();
+
       const [donorBeforeApproveCommit] = await findInDb(dburl, 'donors', {
         programId: programId,
         submitterId: 'ICGC_0001',
       });
+
+      // data from primary_diagnosis.tsv
+      donorBeforeApproveCommit.primaryDiagnosis.should.deep.eq(primary_diagnosis);
+
+      DonorBeforeUpdate.clinicalInfo.should.include(donor);
+
       return chai
         .request(app)
         .post(`/submission/program/${programId}/clinical/approve/${submissionVersion}`)
@@ -1440,15 +1468,42 @@ describe('Submission Api', () => {
             programId: programId,
             submitterId: 'ICGC_0001',
           });
-          // merge shouldn't have mutated donor except for donor.clinicalInfo
-          chai
-            .expect(updatedDonor)
-            .to.deep.include(
-              _.omit(donorBeforeApproveCommit, ['__v', 'updatedAt', 'clinicalInfo']),
-            );
-          chai
-            .expect(updatedDonor.clinicalInfo)
-            .to.deep.include({ [DonorFieldsEnum.vital_status]: 'Alive' });
+
+          // ** merge shouldn't have mutated clinical entities except for the ones being updated **
+          const donorBeforeUpdates = _.omit(donorBeforeApproveCommit, [
+            '__v', // ignore mongodb field
+            'updatedAt', // ignore mongodb field
+            'clinicalInfo', // donor clinicalInfo is being updated
+            'treatments[0]', // this treatment & chemotherapy inside it is being updated
+            'followUps[0]', // this followUp is being updated
+          ]);
+          // these are set becuase they were updated and can be ignored in this chai.expect assert
+          donorBeforeUpdates.followUps[0] = updatedDonor.followUps[0];
+          donorBeforeUpdates.treatments[0] = updatedDonor.treatments[0];
+          // check nothing else in updatedDonor has changed from before update
+          chai.expect(updatedDonor).to.deep.include(donorBeforeUpdates);
+
+          // ** check donor clinicalInfo updates **
+          const updatedDonorExpectedInfo = {
+            program_id: programId,
+            submitter_donor_id: 'ICGC_0001',
+            cause_of_death: null, // tslint:disable-line
+            survival_time: null, // tslint:disable-line
+            vital_status: 'Alive',
+          };
+          chai.expect(updatedDonor.clinicalInfo).to.deep.eq(updatedDonorExpectedInfo);
+
+          // ** check followUps clinicalInfo updates **
+          updatedDonor.followUps[0].clinicalInfo['interval_of_followup'].should.eq(13);
+          donorBeforeApproveCommit.followUps[0].clinicalInfo.should.deep.include(
+            _.omit(updatedDonor.followUps[0].clinicalInfo, ['interval_of_followup']),
+          );
+
+          // ** check treatment & therapy clinicalInfo updates **
+          updatedDonor.treatments[0].clinicalInfo['therapeutic_intent'].should.eq('Curative');
+          updatedDonor.treatments[0].therapies[0].clinicalInfo['cumulative_drug_dosage'].should.eq(
+            15,
+          );
         });
     });
 
@@ -1499,7 +1554,7 @@ describe('Submission Api', () => {
           },
         }),
       );
-      await uploadSubmission('donor_TC-SMUIDAV.tsv', 'primary_diagnosis_TC-SMUIDAV.tsv');
+      await uploadSubmission(['donor_TC-SMUIDAV.tsv', 'primary_diagnosis_TC-SMUIDAV.tsv']);
       await validateSubmission();
       await commitActiveSubmission();
 
@@ -1637,9 +1692,9 @@ describe('Submission Api', () => {
         .end((err: any, res: any) => {
           res.should.have.status(200);
           res.text.should.equal(
-            `${FieldsEnum.program_id}\t${FieldsEnum.submitter_donor_id}\t${FieldsEnum.gender}\t` +
-              `${FieldsEnum.submitter_specimen_id}\t${FieldsEnum.specimen_tissue_source}\t${FieldsEnum.tumour_normal_designation}\t` +
-              `${FieldsEnum.submitter_sample_id}\t${FieldsEnum.sample_type}\n`,
+            `${SampleRegistrationFieldsEnum.program_id}\t${SampleRegistrationFieldsEnum.submitter_donor_id}\t${SampleRegistrationFieldsEnum.gender}\t` +
+              `${SampleRegistrationFieldsEnum.submitter_specimen_id}\t${SampleRegistrationFieldsEnum.specimen_tissue_source}\t${SampleRegistrationFieldsEnum.tumour_normal_designation}\t` +
+              `${SampleRegistrationFieldsEnum.submitter_sample_id}\t${SampleRegistrationFieldsEnum.sample_type}\n`,
           );
           res.should.header('Content-type', 'text/tab-separated-values;' + ' charset=utf-8');
           done();
@@ -1868,20 +1923,20 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dburl: 
     donorRows.push(
       emptyDonorDocument({
         donorId: i,
-        gender: r[FieldsEnum.gender],
-        submitterId: r[FieldsEnum.submitter_donor_id],
-        programId: r[FieldsEnum.program_id],
+        gender: r[SampleRegistrationFieldsEnum.gender],
+        submitterId: r[SampleRegistrationFieldsEnum.submitter_donor_id],
+        programId: r[SampleRegistrationFieldsEnum.program_id],
         specimens: [
           {
             specimenId: i,
-            submitterId: r[FieldsEnum.submitter_specimen_id],
-            specimenTissueSource: r[FieldsEnum.specimen_tissue_source],
-            tumourNormalDesignation: r[FieldsEnum.tumour_normal_designation],
+            submitterId: r[SampleRegistrationFieldsEnum.submitter_specimen_id],
+            specimenTissueSource: r[SampleRegistrationFieldsEnum.specimen_tissue_source],
+            tumourNormalDesignation: r[SampleRegistrationFieldsEnum.tumour_normal_designation],
             samples: [
               {
                 sampleId: i,
-                sampleType: r[FieldsEnum.sample_type],
-                submitterId: r[FieldsEnum.submitter_sample_id],
+                sampleType: r[SampleRegistrationFieldsEnum.sample_type],
+                submitterId: r[SampleRegistrationFieldsEnum.submitter_sample_id],
               },
             ],
           },

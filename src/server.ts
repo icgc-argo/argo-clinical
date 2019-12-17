@@ -1,9 +1,10 @@
 // Has to import config before any other import uses the configurations
 import { AppConfig } from './config';
-import * as bootstrap from './bootstrap';
-import app from './app';
 import * as vault from './vault-k8s';
 import { Server } from 'http';
+// we import here to allow configs to fully load
+import * as bootstrap from './bootstrap';
+import app from './app';
 
 let secrets: any = {};
 let server: Server;
@@ -53,7 +54,6 @@ let server: Server;
   };
 
   await bootstrap.run(defaultAppConfigImpl);
-
   /**
    * Start Express server.
    */
@@ -66,5 +66,3 @@ let server: Server;
     console.log('  Press CTRL-C to stop\n');
   });
 })();
-
-// export default server;

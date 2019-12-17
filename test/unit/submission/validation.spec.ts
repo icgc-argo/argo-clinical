@@ -6,10 +6,11 @@ import {
   SubmissionValidationError,
   DataValidationErrors,
   CreateRegistrationRecord,
-  FieldsEnum,
+  SampleRegistrationFieldsEnum,
   ClinicalEntitySchemaNames,
   SpecimenFieldsEnum,
   DonorFieldsEnum,
+  TreatmentFieldsEnum,
 } from '../../../src/submission/submission-entities';
 import { Donor } from '../../../src/clinical/clinical-entities';
 import { stubs } from './stubs';
@@ -34,7 +35,7 @@ const genderMutatedErr: SubmissionValidationError = {
   type: DataValidationErrors.MUTATING_EXISTING_DATA,
 };
 const programInvalidErr: SubmissionValidationError = {
-  fieldName: FieldsEnum.program_id,
+  fieldName: SampleRegistrationFieldsEnum.program_id,
   index: 0,
   info: {
     expectedProgram: 'PEME-CA',
@@ -47,7 +48,7 @@ const programInvalidErr: SubmissionValidationError = {
   type: DataValidationErrors.INVALID_PROGRAM_ID,
 };
 const specimenMutatedErr: SubmissionValidationError = {
-  fieldName: FieldsEnum.specimen_tissue_source,
+  fieldName: SampleRegistrationFieldsEnum.specimen_tissue_source,
   index: 0,
   info: {
     originalValue: 'XYZ',
@@ -61,7 +62,7 @@ const specimenMutatedErr: SubmissionValidationError = {
   type: DataValidationErrors.MUTATING_EXISTING_DATA,
 };
 const tndError: SubmissionValidationError = {
-  fieldName: FieldsEnum.tumour_normal_designation,
+  fieldName: SampleRegistrationFieldsEnum.tumour_normal_designation,
   index: 0,
   info: {
     donorSubmitterId: 'AB1',
@@ -76,7 +77,7 @@ const tndError: SubmissionValidationError = {
 };
 
 const sampleTypeMutatedError: SubmissionValidationError = {
-  fieldName: FieldsEnum.sample_type,
+  fieldName: SampleRegistrationFieldsEnum.sample_type,
   index: 0,
   info: {
     donorSubmitterId: 'AB1',
@@ -91,7 +92,7 @@ const sampleTypeMutatedError: SubmissionValidationError = {
 };
 
 const specimenBelongsToOtherDonor: SubmissionValidationError = {
-  fieldName: FieldsEnum.submitter_specimen_id,
+  fieldName: SampleRegistrationFieldsEnum.submitter_specimen_id,
   index: 0,
   info: {
     donorSubmitterId: 'AB2',
@@ -106,7 +107,7 @@ const specimenBelongsToOtherDonor: SubmissionValidationError = {
 };
 
 const sampleBelongsToOtherSpecimenAB2: SubmissionValidationError = {
-  fieldName: FieldsEnum.submitter_sample_id,
+  fieldName: SampleRegistrationFieldsEnum.submitter_sample_id,
   index: 0,
   info: {
     donorSubmitterId: 'AB2',
@@ -121,7 +122,7 @@ const sampleBelongsToOtherSpecimenAB2: SubmissionValidationError = {
 };
 
 const sampleBelongsToOtherSpecimenAB1: SubmissionValidationError = {
-  fieldName: FieldsEnum.submitter_sample_id,
+  fieldName: SampleRegistrationFieldsEnum.submitter_sample_id,
   index: 0,
   info: {
     donorSubmitterId: 'AB1',
@@ -173,14 +174,14 @@ describe('data-validator', () => {
         ClinicalEntitySchemaNames.REGISTRATION,
         0,
         {
-          [FieldsEnum.submitter_donor_id]: 'AB1',
-          [FieldsEnum.gender]: 'Male',
-          [FieldsEnum.program_id]: 'PEM-CA',
-          [FieldsEnum.submitter_sample_id]: 'AM1',
-          [FieldsEnum.specimen_tissue_source]: 'XYZ',
-          [FieldsEnum.sample_type]: 'ST1',
-          [FieldsEnum.submitter_specimen_id]: 'SP1',
-          [FieldsEnum.tumour_normal_designation]: 'Normal',
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [SampleRegistrationFieldsEnum.gender]: 'Male',
+          [SampleRegistrationFieldsEnum.program_id]: 'PEM-CA',
+          [SampleRegistrationFieldsEnum.submitter_sample_id]: 'AM1',
+          [SampleRegistrationFieldsEnum.specimen_tissue_source]: 'XYZ',
+          [SampleRegistrationFieldsEnum.sample_type]: 'ST1',
+          [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP1',
+          [SampleRegistrationFieldsEnum.tumour_normal_designation]: 'Normal',
         },
         'PEME-CA',
       );
@@ -334,7 +335,7 @@ describe('data-validator', () => {
       chai.expect(result.errors.length).to.eq(4);
       chai.expect(result.errors).to.deep.include(sampleTypeMutatedError);
       const specimenMutatedError: SubmissionValidationError = {
-        fieldName: FieldsEnum.specimen_tissue_source,
+        fieldName: SampleRegistrationFieldsEnum.specimen_tissue_source,
         index: 0,
         info: {
           donorSubmitterId: 'AB1',
@@ -412,7 +413,7 @@ describe('data-validator', () => {
       );
 
       const specimenTypeMutatedErr: SubmissionValidationError = {
-        fieldName: FieldsEnum.specimen_tissue_source,
+        fieldName: SampleRegistrationFieldsEnum.specimen_tissue_source,
         index: 0,
         info: {
           donorSubmitterId: 'AB2',
@@ -525,7 +526,7 @@ describe('data-validator', () => {
 
       // assertions
       const row0Err = {
-        fieldName: FieldsEnum.submitter_sample_id,
+        fieldName: SampleRegistrationFieldsEnum.submitter_sample_id,
         index: 0,
         info: {
           conflictingRows: [1],
@@ -539,7 +540,7 @@ describe('data-validator', () => {
       };
 
       const row1Err = {
-        fieldName: FieldsEnum.submitter_sample_id,
+        fieldName: SampleRegistrationFieldsEnum.submitter_sample_id,
         index: 1,
         info: {
           conflictingRows: [0],
@@ -601,7 +602,7 @@ describe('data-validator', () => {
 
       // assertions
       const row0Err = {
-        fieldName: FieldsEnum.submitter_specimen_id,
+        fieldName: SampleRegistrationFieldsEnum.submitter_specimen_id,
         index: 0,
         info: {
           conflictingRows: [2],
@@ -616,7 +617,7 @@ describe('data-validator', () => {
       };
 
       const row2Err = {
-        fieldName: FieldsEnum.submitter_specimen_id,
+        fieldName: SampleRegistrationFieldsEnum.submitter_specimen_id,
         index: 2,
         info: {
           conflictingRows: [0],
@@ -679,7 +680,7 @@ describe('data-validator', () => {
 
       // assertions
       const row0Err: SubmissionValidationError = {
-        fieldName: FieldsEnum.specimen_tissue_source,
+        fieldName: SampleRegistrationFieldsEnum.specimen_tissue_source,
         index: 0,
         info: {
           donorSubmitterId: 'AB1',
@@ -693,7 +694,7 @@ describe('data-validator', () => {
       };
 
       const row2Err: SubmissionValidationError = {
-        fieldName: FieldsEnum.specimen_tissue_source,
+        fieldName: SampleRegistrationFieldsEnum.specimen_tissue_source,
         index: 2,
         info: {
           donorSubmitterId: 'AB1',
@@ -755,7 +756,7 @@ describe('data-validator', () => {
 
       // assertions
       const row0Err: SubmissionValidationError = {
-        fieldName: FieldsEnum.sample_type,
+        fieldName: SampleRegistrationFieldsEnum.sample_type,
         index: 0,
         info: {
           donorSubmitterId: 'AB1',
@@ -769,7 +770,7 @@ describe('data-validator', () => {
       };
 
       const row2Err: SubmissionValidationError = {
-        fieldName: FieldsEnum.sample_type,
+        fieldName: SampleRegistrationFieldsEnum.sample_type,
         index: 2,
         info: {
           donorSubmitterId: 'AB1',
@@ -830,7 +831,7 @@ describe('data-validator', () => {
 
       // assertions
       const row0Err: SubmissionValidationError = {
-        fieldName: FieldsEnum.gender,
+        fieldName: SampleRegistrationFieldsEnum.gender,
         index: 0,
         info: {
           donorSubmitterId: 'AB1',
@@ -844,7 +845,7 @@ describe('data-validator', () => {
       };
 
       const row2Err: SubmissionValidationError = {
-        fieldName: FieldsEnum.gender,
+        fieldName: SampleRegistrationFieldsEnum.gender,
         index: 2,
         info: {
           donorSubmitterId: 'AB1',
@@ -905,7 +906,7 @@ describe('data-validator', () => {
 
       // assertions
       const row0Err: SubmissionValidationError = {
-        fieldName: FieldsEnum.submitter_sample_id,
+        fieldName: SampleRegistrationFieldsEnum.submitter_sample_id,
         index: 0,
         info: {
           donorSubmitterId: 'AB1',
@@ -919,7 +920,7 @@ describe('data-validator', () => {
       };
 
       const row2Err: SubmissionValidationError = {
-        fieldName: FieldsEnum.submitter_sample_id,
+        fieldName: SampleRegistrationFieldsEnum.submitter_sample_id,
         index: 2,
         info: {
           donorSubmitterId: 'AB1',
@@ -980,7 +981,7 @@ describe('data-validator', () => {
 
       // assertions
       const row0Err: SubmissionValidationError = {
-        fieldName: FieldsEnum.sample_type,
+        fieldName: SampleRegistrationFieldsEnum.sample_type,
         index: 0,
         info: {
           donorSubmitterId: 'AB1',
@@ -994,7 +995,7 @@ describe('data-validator', () => {
       };
 
       const row2Err = {
-        fieldName: FieldsEnum.sample_type,
+        fieldName: SampleRegistrationFieldsEnum.sample_type,
         index: 2,
         info: {
           donorSubmitterId: 'AB1',
@@ -1054,7 +1055,7 @@ describe('data-validator', () => {
 
       // assertions
       const row0Err: SubmissionValidationError = {
-        fieldName: FieldsEnum.submitter_sample_id,
+        fieldName: SampleRegistrationFieldsEnum.submitter_sample_id,
         index: 0,
         info: {
           donorSubmitterId: 'AB1',
@@ -1067,7 +1068,7 @@ describe('data-validator', () => {
         type: DataValidationErrors.NEW_SAMPLE_ID_CONFLICT,
       };
       const row1Err = {
-        fieldName: FieldsEnum.submitter_sample_id,
+        fieldName: SampleRegistrationFieldsEnum.submitter_sample_id,
         index: 1,
         info: {
           donorSubmitterId: 'AB1',
@@ -1080,7 +1081,7 @@ describe('data-validator', () => {
         type: DataValidationErrors.NEW_SAMPLE_ID_CONFLICT,
       };
       const row2Err = {
-        fieldName: FieldsEnum.submitter_sample_id,
+        fieldName: SampleRegistrationFieldsEnum.submitter_sample_id,
         index: 2,
         info: {
           donorSubmitterId: 'AB1',
@@ -1100,7 +1101,7 @@ describe('data-validator', () => {
     });
   });
 
-  describe('submission-validations', () => {
+  describe('submission-validations: donor & specimen', () => {
     it('should validate donor and specimen ids for specimen submissions', async () => {
       const existingDonorAB2Mock: Donor = stubs.validation.existingDonor04();
       const newDonorAB1Records = {};
@@ -1108,8 +1109,8 @@ describe('data-validator', () => {
         ClinicalEntitySchemaNames.SPECIMEN,
         newDonorAB1Records,
         {
-          [FieldsEnum.submitter_donor_id]: 'AB1',
-          [FieldsEnum.submitter_specimen_id]: 'SP1',
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP1',
           index: 2,
         },
       );
@@ -1118,8 +1119,8 @@ describe('data-validator', () => {
         ClinicalEntitySchemaNames.SPECIMEN,
         newDonorAB2Records,
         {
-          [FieldsEnum.submitter_donor_id]: 'AB2',
-          [FieldsEnum.submitter_specimen_id]: 'SP2',
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
+          [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP2',
           index: 0,
         },
       );
@@ -1127,8 +1128,8 @@ describe('data-validator', () => {
         ClinicalEntitySchemaNames.SPECIMEN,
         newDonorAB2Records,
         {
-          [FieldsEnum.submitter_donor_id]: 'AB2',
-          [FieldsEnum.submitter_specimen_id]: 'SP3',
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
+          [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP3',
           index: 1,
         },
       );
@@ -1140,7 +1141,7 @@ describe('data-validator', () => {
         )
         .catch((err: any) => fail(err));
       const specimenIdErr1: SubmissionValidationError = {
-        fieldName: FieldsEnum.submitter_specimen_id,
+        fieldName: SampleRegistrationFieldsEnum.submitter_specimen_id,
         message: `SP2 has not yet been registered. Please register samples before submitting clinical data for this identifier.`,
         type: DataValidationErrors.ID_NOT_REGISTERED,
         index: 0,
@@ -1150,7 +1151,7 @@ describe('data-validator', () => {
         },
       };
       const specimenIdErr2: SubmissionValidationError = {
-        fieldName: FieldsEnum.submitter_specimen_id,
+        fieldName: SampleRegistrationFieldsEnum.submitter_specimen_id,
         message: `SP3 has not yet been registered. Please register samples before submitting clinical data for this identifier.`,
         type: DataValidationErrors.ID_NOT_REGISTERED,
         index: 1,
@@ -1160,7 +1161,7 @@ describe('data-validator', () => {
         },
       };
       const donorIdErr: SubmissionValidationError = {
-        fieldName: FieldsEnum.submitter_donor_id,
+        fieldName: SampleRegistrationFieldsEnum.submitter_donor_id,
         message:
           'AB1 has not yet been registered. Please register samples before submitting clinical data for this identifier.',
         type: DataValidationErrors.ID_NOT_REGISTERED,
@@ -1185,9 +1186,9 @@ describe('data-validator', () => {
         ClinicalEntitySchemaNames.SPECIMEN,
         newDonorAB2Records,
         {
-          [FieldsEnum.submitter_donor_id]: 'AB2',
-          [FieldsEnum.program_id]: 'PEME-CA',
-          [FieldsEnum.submitter_specimen_id]: 'SP13',
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
+          [SampleRegistrationFieldsEnum.program_id]: 'PEME-CA',
+          [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP13',
           [SpecimenFieldsEnum.acquisition_interval]: 5020,
           index: 0,
         },
@@ -1196,9 +1197,9 @@ describe('data-validator', () => {
         ClinicalEntitySchemaNames.SPECIMEN,
         newDonorAB2Records,
         {
-          [FieldsEnum.submitter_donor_id]: 'AB2',
-          [FieldsEnum.program_id]: 'PEME-CA',
-          [FieldsEnum.submitter_specimen_id]: 'SP14',
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
+          [SampleRegistrationFieldsEnum.program_id]: 'PEME-CA',
+          [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP14',
           [SpecimenFieldsEnum.acquisition_interval]: 9000,
           index: 1,
         },
@@ -1208,9 +1209,9 @@ describe('data-validator', () => {
         ClinicalEntitySchemaNames.SPECIMEN,
         newDonorAB3Records,
         {
-          [FieldsEnum.submitter_donor_id]: 'AB3',
-          [FieldsEnum.program_id]: 'PEME-CA',
-          [FieldsEnum.submitter_specimen_id]: 'SP12',
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB3',
+          [SampleRegistrationFieldsEnum.program_id]: 'PEME-CA',
+          [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP12',
           [SpecimenFieldsEnum.acquisition_interval]: 2000,
           index: 0,
         },
@@ -1219,8 +1220,8 @@ describe('data-validator', () => {
         ClinicalEntitySchemaNames.DONOR,
         newDonorAB3Records,
         {
-          [FieldsEnum.submitter_donor_id]: 'AB3',
-          [FieldsEnum.program_id]: 'PEME-CA',
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB3',
+          [SampleRegistrationFieldsEnum.program_id]: 'PEME-CA',
           [DonorFieldsEnum.vital_status]: 'deceased',
           [DonorFieldsEnum.survival_time]: 522,
           index: 0,
@@ -1290,8 +1291,8 @@ describe('data-validator', () => {
         ClinicalEntitySchemaNames.SPECIMEN,
         newDonorAB1Records,
         {
-          [FieldsEnum.submitter_donor_id]: 'AB1',
-          [FieldsEnum.submitter_specimen_id]: 'SP13',
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP13',
           [SpecimenFieldsEnum.acquisition_interval]: 200,
           index: 0,
         },
@@ -1300,8 +1301,8 @@ describe('data-validator', () => {
         ClinicalEntitySchemaNames.SPECIMEN,
         newDonorAB1Records,
         {
-          [FieldsEnum.submitter_donor_id]: 'AB1',
-          [FieldsEnum.submitter_specimen_id]: 'SP14',
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP14',
           [SpecimenFieldsEnum.acquisition_interval]: 200,
           index: 1,
         },
@@ -1343,6 +1344,101 @@ describe('data-validator', () => {
       chai.expect(result.specimen.dataErrors.length).to.eq(2);
       chai.expect(result.specimen.dataErrors).to.deep.include(specimenIdErr1);
       chai.expect(result.specimen.dataErrors).to.deep.include(specimenIdErr2);
+    });
+  });
+  describe('submission-validations: treatment & therapies', () => {
+    it('should detect treatment and missing chemotherapy data', async () => {
+      const existingDonorMock: Donor = stubs.validation.existingDonor01();
+      const newDonorAB1Records = {};
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.TREATMENT,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
+          [TreatmentFieldsEnum.treatment_type]: 'Combined chemo+immunotherapy',
+          index: 0,
+        },
+      );
+
+      const result = await dv
+        .validateSubmissionData({ AB1: newDonorAB1Records }, { AB1: existingDonorMock })
+        .catch((err: any) => fail(err));
+
+      const treatmentTherapyErr: SubmissionValidationError = {
+        fieldName: TreatmentFieldsEnum.treatment_type,
+        message: `MISSING_THERAPY_DATA`,
+        type: DataValidationErrors.MISSING_THERAPY_DATA,
+        index: 0,
+        info: {
+          donorSubmitterId: 'AB1',
+          value: 'Combined chemo+immunotherapy',
+          therapyType: ClinicalEntitySchemaNames.CHEMOTHERAPY,
+        },
+      };
+      chai.expect(result.treatment.dataErrors.length).to.eq(1);
+      chai.expect(result.treatment.dataErrors).to.deep.include(treatmentTherapyErr);
+    });
+    it('should detect missing or invalid treatment for chemotherapy', async () => {
+      const existingDonorMock: Donor = stubs.validation.existingDonor01();
+      const newDonorAB1Records = {};
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.TREATMENT,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
+          [TreatmentFieldsEnum.treatment_type]: 'Ablation',
+          index: 0,
+        },
+      );
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.CHEMOTHERAPY,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+          index: 0,
+        },
+      );
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.CHEMOTHERAPY,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
+          index: 1,
+        },
+      );
+
+      const result = await dv
+        .validateSubmissionData({ AB1: newDonorAB1Records }, { AB1: existingDonorMock })
+        .catch((err: any) => fail(err));
+
+      const chemoTretmentIdErr: SubmissionValidationError = {
+        fieldName: TreatmentFieldsEnum.submitter_treatment_id,
+        message: `TREATMENT_ID_NOT_FOUND`,
+        type: DataValidationErrors.TREATMENT_ID_NOT_FOUND,
+        index: 0,
+        info: {
+          donorSubmitterId: 'AB1',
+          value: 'T_03',
+        },
+      };
+      const chemoTretmentInvalidErr: SubmissionValidationError = {
+        fieldName: TreatmentFieldsEnum.submitter_treatment_id,
+        message: `INCOMPATIBLE_PARENT_TREATMENT_TYPE`,
+        type: DataValidationErrors.INCOMPATIBLE_PARENT_TREATMENT_TYPE,
+        index: 1,
+        info: {
+          donorSubmitterId: 'AB1',
+          value: 'T_02',
+          treatment_type: 'Ablation',
+        },
+      };
+      chai.expect(result.chemotherapy.dataErrors.length).to.eq(2);
+      chai.expect(result.chemotherapy.dataErrors).to.deep.include(chemoTretmentIdErr);
+      chai.expect(result.chemotherapy.dataErrors).to.deep.include(chemoTretmentInvalidErr);
     });
   });
 });
