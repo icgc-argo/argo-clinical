@@ -19,47 +19,40 @@ export const validate = async (
   specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
   existentDonor: DeepReadonly<Donor>,
   mergedDonor: Donor,
-): Promise<RecordValidationResult[]> => {
+): Promise<SubmissionValidationError[]> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
 
   if (!specimenRecord || !existentDonor || !mergedDonor) {
     throw new Error("Can't call this function without donor & donor record");
   }
 
-  const recordValidationResults: RecordValidationResult[] = [];
+  const errors: SubmissionValidationError[] = []; // all errors for record
 
   const donorDataToValidateWith = getDataFromDonorRecordOrDonor(
     specimenRecord,
     mergedDonor,
-    recordValidationResults,
+    errors,
   );
   if (!donorDataToValidateWith) {
-    return recordValidationResults;
+    return errors;
   }
 
-  const specimen = getSpecimenFromDonor(existentDonor, specimenRecord, recordValidationResults);
+  const specimen = getSpecimenFromDonor(existentDonor, specimenRecord, errors);
   if (!specimen) {
-    return recordValidationResults;
+    return errors;
   }
 
-  // ***Submission Validation checks***
-  const errors: SubmissionValidationError[] = []; // all errors for record
-  // cross entity donor-sepecimen record validation
   checkTimeConflictWithDonor(donorDataToValidateWith, specimenRecord, errors);
 
   // other checks here and add to `errors`
 
-  recordValidationResults.push(
-    utils.buildRecordValidationResult(specimenRecord, errors, specimen.clinicalInfo),
-  );
-
-  return recordValidationResults;
+  return errors;
 };
 
 function getSpecimenFromDonor(
   existentDonor: DeepReadonly<Donor>,
   specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
-  validationResults: RecordValidationResult[],
+  errors: SubmissionValidationError[],
 ) {
   const specimen = getSingleClinicalObjectFromDonor(
     existentDonor,
@@ -70,14 +63,11 @@ function getSpecimenFromDonor(
   ) as DeepReadonly<Specimen>;
 
   if (!specimen) {
-    validationResults.push(
-      utils.buildRecordValidationResult(
+    errors.push(
+      utils.buildSubmissionError(
         specimenRecord,
-        utils.buildSubmissionError(
-          specimenRecord,
-          DataValidationErrors.ID_NOT_REGISTERED,
-          SpecimenFieldsEnum.submitter_specimen_id,
-        ),
+        DataValidationErrors.ID_NOT_REGISTERED,
+        SpecimenFieldsEnum.submitter_specimen_id,
       ),
     );
     return undefined;
@@ -110,7 +100,7 @@ function checkTimeConflictWithDonor(
 const getDataFromDonorRecordOrDonor = (
   specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
   donor: DeepReadonly<Donor>,
-  validationResults: RecordValidationResult[],
+  errors: SubmissionValidationError[],
 ) => {
   let missingDonorFields: string[] = [];
   let donorVitalStatus: string = '';
@@ -128,17 +118,16 @@ const getDataFromDonorRecordOrDonor = (
   }
 
   if (missingDonorFields.length > 0) {
-    const multipleRecordValidationResults = utils.buildMultipleRecordValidationResults(
-      [specimenRecord],
-      {
-        type: DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
-        fieldName: SpecimenFieldsEnum.acquisition_interval,
-        info: {
+    errors.push(
+      utils.buildSubmissionError(
+        specimenRecord,
+        DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
+        SpecimenFieldsEnum.acquisition_interval,
+        {
           missingField: missingDonorFields.map(s => ClinicalEntitySchemaNames.DONOR + '.' + s),
         },
-      },
+      ),
     );
-    validationResults.push(...multipleRecordValidationResults);
     return undefined;
   }
 

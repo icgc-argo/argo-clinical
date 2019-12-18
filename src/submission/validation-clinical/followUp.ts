@@ -1,7 +1,5 @@
-// this file will be deleted after stats are refactored out of validate
 import {
   SubmissionValidationError,
-  RecordValidationResult,
   ClinicalEntitySchemaNames,
   SubmittedClinicalRecord,
   FollowupFieldsEnum,
@@ -18,13 +16,11 @@ import { donorDao } from '../../clinical/donor-repo';
 export const validate = async (
   followUpRecord: DeepReadonly<SubmittedClinicalRecord>,
   existentDonor: DeepReadonly<Donor>,
-): Promise<RecordValidationResult[]> => {
+): Promise<SubmissionValidationError[]> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
   if (!followUpRecord || !existentDonor) {
     throw new Error("Can't call this function without followup records");
   }
-
-  const recordValidationResults: RecordValidationResult[] = [];
 
   const errors: SubmissionValidationError[] = [];
   const followUpClinicalInfo = getExistingFollowUp(existentDonor, followUpRecord);
@@ -53,11 +49,7 @@ export const validate = async (
     }
   }
 
-  recordValidationResults.push(
-    utils.buildRecordValidationResult(followUpRecord, errors, followUpClinicalInfo),
-  );
-
-  return recordValidationResults;
+  return errors;
 };
 
 function getExistingFollowUp(

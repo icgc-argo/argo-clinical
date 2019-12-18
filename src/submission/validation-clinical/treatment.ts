@@ -17,7 +17,7 @@ export const validate = async (
   treatmentRecord: DeepReadonly<SubmittedClinicalRecord>,
   existentDonor: DeepReadonly<Donor>,
   mergedDonor: Donor,
-): Promise<RecordValidationResult> => {
+): Promise<SubmissionValidationError[]> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
   if (!treatmentRecord || !existentDonor || !mergedDonor) {
     throw new Error("Can't call this function without a registerd donor & treatment record");
@@ -27,20 +27,8 @@ export const validate = async (
 
   checkChemoFileNeeded(treatmentRecord, mergedDonor, errors);
 
-  // leaving this for now, stats will me moved out of validate so this won't be needed
-  const treatmentClinicalInfo = getTreatmentClinicalInfo(existentDonor, treatmentRecord);
-  return utils.buildRecordValidationResult(treatmentRecord, errors, treatmentClinicalInfo);
+  return errors;
 };
-
-// same here
-function getTreatmentClinicalInfo(
-  existentDonor: DeepReadonly<Donor>,
-  treatmentRecord: SubmittedClinicalRecord,
-) {
-  const idFieldName = ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.TREATMENT];
-  const treatment_id = treatmentRecord[idFieldName];
-  return (existentDonor.treatments || []).find(tr => tr.clinicalInfo[idFieldName] === treatment_id);
-}
 
 function checkChemoFileNeeded(
   treatmentRecord: SubmittedClinicalRecord,

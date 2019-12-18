@@ -22,7 +22,8 @@ import { validationErrorMessage } from '../submission-error-messages';
 import {
   buildSubmissionError,
   buildClinicalValidationResult,
-  buildMultipleRecordValidationResults,
+  buildMultipleRecordValidationErrors,
+  buildRecordValidationResult,
 } from './utils';
 import _ from 'lodash';
 import { ClinicalSubmissionRecordsOperations } from './utils';
@@ -109,15 +110,22 @@ export const validateSubmissionData = async (
     for (const clinicalType in submittedRecords) {
       const clinicalRecords = submittedRecords[clinicalType];
       for (const record of clinicalRecords) {
-        const results = await submissionValidator(clinicalType).validate(
+        const errors = await submissionValidator(clinicalType).validate(
           record,
           existentDonor,
           mergedDonor,
         );
 
+        const result = buildRecordValidationResult(
+          record,
+          errors,
+          existentDonor,
+          clinicalType as ClinicalEntitySchemaNames,
+        );
+
         recordValidationResultMap[clinicalType] = _.concat(
           recordValidationResultMap[clinicalType],
-          results,
+          result,
         );
       }
     }
@@ -140,7 +148,7 @@ function addErrorsForNoDonor(
       clinicalType as ClinicalEntitySchemaNames,
       submittedRecords,
     );
-    const multipleRecordValidationResults = buildMultipleRecordValidationResults(records, {
+    const multipleRecordValidationResults = buildMultipleRecordValidationErrors(records, {
       type: DataValidationErrors.ID_NOT_REGISTERED,
       fieldName: DonorFieldsEnum.submitter_donor_id,
     });
