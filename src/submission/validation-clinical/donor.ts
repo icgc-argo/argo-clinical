@@ -15,7 +15,7 @@ export const validate = async (
   submittedDonorClinicalRecord: DeepReadonly<SubmittedClinicalRecord>,
   existentDonor: DeepReadonly<Donor>,
   mergedDonor: Donor,
-): Promise<RecordValidationResult> => {
+): Promise<SubmissionValidationError[]> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
 
   if (!existentDonor || !mergedDonor || !submittedDonorClinicalRecord) {
@@ -29,11 +29,7 @@ export const validate = async (
 
   // other checks here and add to `errors`
 
-  return utils.buildRecordValidationResult(
-    submittedDonorClinicalRecord,
-    errors,
-    existentDonor.clinicalInfo,
-  );
+  return errors;
 };
 
 function checkTimeConflictWithSpecimens(

@@ -9,9 +9,6 @@ import {
   Sample,
   SchemaMetadata,
   ClinicalInfo,
-  FollowUp,
-  Treatment,
-  ClinicalEntity,
 } from '../../clinical/clinical-entities';
 import {
   ActiveClinicalSubmission,
@@ -23,6 +20,7 @@ import {
   SampleRegistrationFieldsEnum,
   SUBMISSION_STATE,
   ClinicalEntitySchemaNames,
+  ClinicalUniqueIndentifier,
 } from '../submission-entities';
 
 import { Errors, notEmpty, deepFind } from '../../utils';
@@ -399,6 +397,17 @@ export function getClinicalEntitiesFromDonorBySchemaName(
     })
     .filter(notEmpty);
   return clinicalRecords;
+}
+
+export function getSingleClinicalEntityFromDonorBySchemanName(
+  donor: DeepReadonly<Donor>,
+  clinicalEntityType: ClinicalEntitySchemaNames,
+  uniqueIdValue: string, // expected value of ClinicalInfo[ClinicalUniqueIndentifier[clinicalType]]
+): ClinicalInfo | undefined {
+  const clinicalInfos = getClinicalEntitiesFromDonorBySchemaName(donor, clinicalEntityType);
+  return clinicalInfos.find(
+    ci => ci[ClinicalUniqueIndentifier[clinicalEntityType]] === uniqueIdValue,
+  );
 }
 
 export interface CreateDonorSampleDto {
