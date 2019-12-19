@@ -169,10 +169,10 @@ export const commitRegisteration = async (command: Readonly<CommitRegistrationCo
     ]);
     if (existingDonor && existingDonor.length > 0) {
       const mergedDonor = addSamplesToDonor(existingDonor[0], dto);
-      const saved = await donorDao.update(mergedDonor);
+      const updatedDonor = await donorDao.update(mergedDonor);
       continue;
     }
-    const saved = await donorDao.create(fromCreateDonorDtoToDonor(dto));
+    await donorDao.create(fromCreateDonorDtoToDonor(dto));
   }
 
   registrationRepository.delete(command.registrationId);
@@ -192,7 +192,7 @@ const fromCreateDonorDtoToDonor = (createDonorDto: DeepReadonly<CreateDonorSampl
     programId: createDonorDto.programId,
     specimens: createDonorDto.specimens.map(toSpecimen),
     clinicalInfo: {},
-    primaryDiagnosis: {},
+    primaryDiagnosis: undefined,
     followUps: [],
     treatments: [],
   };
@@ -258,7 +258,6 @@ const mapToCreateDonorSampleDto = (registration: DeepReadonly<ActiveRegistration
         schemaMetadata: {
           lastValidSchemaVersion: registration.schemaVersion,
           isValid: true,
-          lastMigrationId: undefined,
           originalSchemaVersion: registration.schemaVersion,
         },
       };
@@ -381,12 +380,6 @@ export function getClinicalEntitiesFromDonorBySchemaName(
   donor: DeepReadonly<Donor>,
   clinicalEntitySchemaName: ClinicalEntitySchemaNames,
 ): ClinicalInfo[] {
-  if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS) {
-    if (donor.primaryDiagnosis) {
-      return [donor.primaryDiagnosis];
-    }
-  }
-
   const result = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName) as any[];
 
   const clinicalRecords = result
@@ -402,7 +395,7 @@ export function getClinicalEntitiesFromDonorBySchemaName(
 export function getSingleClinicalEntityFromDonorBySchemanName(
   donor: DeepReadonly<Donor>,
   clinicalEntityType: ClinicalEntitySchemaNames,
-  uniqueIdValue: string, // expected value of ClinicalInfo[ClinicalUniqueIndentifier[clinicalType]]
+  uniqueIdValue: string,
 ): ClinicalInfo | undefined {
   const clinicalInfos = getClinicalEntitiesFromDonorBySchemaName(donor, clinicalEntityType);
   return clinicalInfos.find(
