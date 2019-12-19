@@ -25,7 +25,7 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
   ID_NOT_REGISTERED: errorData =>
     `${errorData.info.value} has not yet been registered. Please register samples before submitting clinical data for this identifier.`,
   CONFLICTING_TIME_INTERVAL: () =>
-    'survival_time cannot be less than Specimen acquisition_interval.',
+    'survival_time cannot be less than Specimen specimen_acquisition_interval.',
   NOT_ENOUGH_INFO_TO_VALIDATE: errorData =>
     `[${errorData.fieldName}] requires [${errorData.info.missingField.join(
       '], [',

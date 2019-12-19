@@ -1198,7 +1198,7 @@ describe('data-validator', () => {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
           [SampleRegistrationFieldsEnum.program_id]: 'PEME-CA',
           [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP13',
-          [SpecimenFieldsEnum.acquisition_interval]: 5020,
+          [SpecimenFieldsEnum.specimen_acquisition_interval]: 5020,
           index: 0,
         },
       );
@@ -1209,7 +1209,7 @@ describe('data-validator', () => {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
           [SampleRegistrationFieldsEnum.program_id]: 'PEME-CA',
           [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP14',
-          [SpecimenFieldsEnum.acquisition_interval]: 9000,
+          [SpecimenFieldsEnum.specimen_acquisition_interval]: 9000,
           index: 1,
         },
       );
@@ -1221,7 +1221,7 @@ describe('data-validator', () => {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB3',
           [SampleRegistrationFieldsEnum.program_id]: 'PEME-CA',
           [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP12',
-          [SpecimenFieldsEnum.acquisition_interval]: 2000,
+          [SpecimenFieldsEnum.specimen_acquisition_interval]: 2000,
           index: 0,
         },
       );
@@ -1248,8 +1248,8 @@ describe('data-validator', () => {
         )
         .catch(err => fail(err));
       const specimenIntervalErr: SubmissionValidationError = {
-        fieldName: SpecimenFieldsEnum.acquisition_interval,
-        message: 'survival_time cannot be less than Specimen acquisition_interval.',
+        fieldName: SpecimenFieldsEnum.specimen_acquisition_interval,
+        message: 'survival_time cannot be less than Specimen specimen_acquisition_interval.',
         type: DataValidationErrors.CONFLICTING_TIME_INTERVAL,
         index: 0,
         info: {
@@ -1258,7 +1258,7 @@ describe('data-validator', () => {
         },
       };
       const specimenIntervalErr2 = {
-        fieldName: SpecimenFieldsEnum.acquisition_interval,
+        fieldName: SpecimenFieldsEnum.specimen_acquisition_interval,
         type: DataValidationErrors.CONFLICTING_TIME_INTERVAL,
         index: 1,
         info: {
@@ -1267,7 +1267,7 @@ describe('data-validator', () => {
         },
       };
       const specimenIntervalErr3 = {
-        fieldName: SpecimenFieldsEnum.acquisition_interval,
+        fieldName: SpecimenFieldsEnum.specimen_acquisition_interval,
         type: DataValidationErrors.CONFLICTING_TIME_INTERVAL,
         index: 0,
         info: {
@@ -1302,7 +1302,7 @@ describe('data-validator', () => {
         {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
           [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP13',
-          [SpecimenFieldsEnum.acquisition_interval]: 200,
+          [SpecimenFieldsEnum.specimen_acquisition_interval]: 200,
           index: 0,
         },
       );
@@ -1312,7 +1312,7 @@ describe('data-validator', () => {
         {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
           [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP14',
-          [SpecimenFieldsEnum.acquisition_interval]: 200,
+          [SpecimenFieldsEnum.specimen_acquisition_interval]: 200,
           index: 1,
         },
       );
@@ -1322,8 +1322,8 @@ describe('data-validator', () => {
         .catch((err: any) => fail(err));
 
       const specimenIdErr1: SubmissionValidationError = {
-        fieldName: SpecimenFieldsEnum.acquisition_interval,
-        message: `[acquisition_interval] requires [donor.vital_status], [donor.survival_time] in order to complete validation.  Please upload data for all fields in this clinical data submission.`,
+        fieldName: SpecimenFieldsEnum.specimen_acquisition_interval,
+        message: `[specimen_acquisition_interval] requires [donor.vital_status], [donor.survival_time] in order to complete validation.  Please upload data for all fields in this clinical data submission.`,
         type: DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
         index: 0,
         info: {
@@ -1337,8 +1337,8 @@ describe('data-validator', () => {
       };
 
       const specimenIdErr2: SubmissionValidationError = {
-        fieldName: SpecimenFieldsEnum.acquisition_interval,
-        message: `[acquisition_interval] requires [donor.vital_status], [donor.survival_time] in order to complete validation.  Please upload data for all fields in this clinical data submission.`,
+        fieldName: SpecimenFieldsEnum.specimen_acquisition_interval,
+        message: `[specimen_acquisition_interval] requires [donor.vital_status], [donor.survival_time] in order to complete validation.  Please upload data for all fields in this clinical data submission.`,
         type: DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
         index: 1,
         info: {
