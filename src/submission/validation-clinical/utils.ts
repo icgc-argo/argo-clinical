@@ -18,6 +18,7 @@ import _ from 'lodash';
 import { DataRecord } from '../../lectern-client/schema-entities';
 import { Donor } from '../../clinical/clinical-entities';
 import { getSingleClinicalEntityFromDonorBySchemanName } from '../submission-to-clinical/submission-to-clinical';
+import { donorDao } from '../../clinical/donor-repo';
 
 export const buildSubmissionError = (
   newRecord: SubmittedClinicalRecord,
@@ -287,10 +288,41 @@ const getSubmissionErrorInfoObject = (
 // ******* common resued  funcitons *******
 export function treatmentTypeIsNotChemo(treatmentType: string) {
   return (
+    treatmentType.toString().toLowerCase() !== 'chemotherapy' &&
     treatmentType.toString().toLowerCase() !== 'combined chemo+immunotherapy' &&
     treatmentType.toString().toLowerCase() !== 'combined chemo+radiation therapy' &&
     treatmentType.toString().toLowerCase() !== 'combined chemo-radiotherapy and surgery'
   );
+}
+
+// check that a donor is not found with the same clinical entity unique identifier
+export async function checkClinicalEntityDoesntBelongToOtherDonor(
+  clinicalType: ClinicalEntitySchemaNames,
+  record: SubmittedClinicalRecord,
+  existentDonor: DeepReadonly<Donor>,
+  errors: SubmissionValidationError[],
+) {
+  const expectedSubmitterDonorId = record[SampleRegistrationFieldsEnum.submitter_donor_id];
+  const alreadyAssociatedDonor = await donorDao.findByClinicalEntitySubmitterIdAndProgramId(
+    {
+      programId: existentDonor.programId,
+      submitterId: record[ClinicalUniqueIndentifier[clinicalType]] as string,
+    },
+    clinicalType,
+  );
+  if (alreadyAssociatedDonor && alreadyAssociatedDonor.submitterId !== expectedSubmitterDonorId) {
+    errors.push(
+      buildSubmissionError(
+        record,
+        DataValidationErrors.CLINICAL_ENTITY_BELONGS_TO_OTHER_DONOR,
+        ClinicalUniqueIndentifier[clinicalType],
+        {
+          otherDonorSubmitterId: alreadyAssociatedDonor.submitterId,
+          clinicalType: clinicalType,
+        },
+      ),
+    );
+  }
 }
 
 // how to use example:

@@ -1,5 +1,9 @@
 import { Donor } from '../../../src/clinical/clinical-entities';
-import { DonorFieldsEnum, FollowupFieldsEnum } from '../../../src/submission/submission-entities';
+import {
+  DonorFieldsEnum,
+  FollowupFieldsEnum,
+  TreatmentFieldsEnum,
+} from '../../../src/submission/submission-entities';
 
 /**
  * strongly typed stubs file!!
@@ -181,6 +185,44 @@ export const stubs = {
             some_field: 1,
             another_field: 'abcd',
           },
+        },
+      ],
+    }),
+
+    existingDonor06: (): Donor => ({
+      schemaMetadata: {
+        isValid: true,
+        lastValidSchemaVersion: '1.0',
+        originalSchemaVersion: '1.0',
+      },
+      _id: '22f23223f',
+      submitterId: 'AB2',
+      programId: 'PEME-CA',
+      donorId: 10,
+      clinicalInfo: {},
+      gender: 'Female',
+      specimens: [
+        {
+          submitterId: 'SPID1',
+          specimenTissueSource: 'Other',
+          clinicalInfo: {},
+          tumourNormalDesignation: 'Other',
+          samples: [
+            {
+              sampleType: 'Other',
+              submitterId: 'SID1',
+            },
+          ],
+        },
+      ],
+      followUps: [],
+      treatments: [
+        {
+          clinicalInfo: {
+            [TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+            fieldOne: 'field1',
+          },
+          therapies: [],
         },
       ],
     }),

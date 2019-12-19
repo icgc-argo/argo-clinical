@@ -146,10 +146,10 @@ const NEW_SPEC_ATTR_CONFLICT =
   'You are trying to register the same specimen with different values.';
 
 describe('data-validator', () => {
-  let donorDaoCountByStub: sinon.SinonStub;
-  let donorDaoFindBySpecimenSubmitterIdAndProgramIdStub: sinon.SinonStub;
-  let donorDaoFindBySampleSubmitterIdAndProgramIdStub: sinon.SinonStub;
-  let donorDaoFindByFollowUpSubmitterIdAndProgramIdStub: sinon.SinonStub;
+  let donorDaoCountByStub: sinon.SinonStub<[any], any>;
+  let donorDaoFindBySpecimenSubmitterIdAndProgramIdStub: sinon.SinonStub<[any], any>;
+  let donorDaoFindBySampleSubmitterIdAndProgramIdStub: sinon.SinonStub<[any], any>;
+  let donorDaoFindByClinicalEntitySubmitterIdAndProgramIdStub: sinon.SinonStub<[any, any], any>;
   beforeEach(done => {
     donorDaoCountByStub = sinon.stub(donorDao, 'countBy');
     donorDaoFindBySpecimenSubmitterIdAndProgramIdStub = sinon.stub(
@@ -161,9 +161,9 @@ describe('data-validator', () => {
       'findBySampleSubmitterIdAndProgramId',
     );
 
-    donorDaoFindByFollowUpSubmitterIdAndProgramIdStub = sinon.stub(
+    donorDaoFindByClinicalEntitySubmitterIdAndProgramIdStub = sinon.stub(
       donorDao,
-      'findByFollowUpSubmitterIdAndProgramId',
+      'findByClinicalEntitySubmitterIdAndProgramId',
     );
     done();
   });
@@ -172,7 +172,7 @@ describe('data-validator', () => {
     donorDaoCountByStub.restore();
     donorDaoFindBySpecimenSubmitterIdAndProgramIdStub.restore();
     donorDaoFindBySampleSubmitterIdAndProgramIdStub.restore();
-    donorDaoFindByFollowUpSubmitterIdAndProgramIdStub.restore();
+    donorDaoFindByClinicalEntitySubmitterIdAndProgramIdStub.restore();
     done();
   });
   describe('registration-validation', () => {
@@ -1356,6 +1356,43 @@ describe('data-validator', () => {
     });
   });
   describe('submission-validations: treatment & therapies', () => {
+    it('should detect mutating existing treatment', async () => {
+      const donorAB2WithExsistingTreatment = stubs.validation.existingDonor06();
+      donorDaoFindByClinicalEntitySubmitterIdAndProgramIdStub.returns(
+        Promise.resolve<Donor>(donorAB2WithExsistingTreatment),
+      );
+      const donorAB1WithNoTreatments: Donor = stubs.validation.existingDonor01();
+      const submissionRecordsMap = {};
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.TREATMENT,
+        submissionRecordsMap,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.TREATMENT]]: 'T_03',
+          index: 0,
+        },
+      );
+      const result = await dv
+        .validateSubmissionData({ AB1: submissionRecordsMap }, { AB1: donorAB1WithNoTreatments })
+        .catch((err: any) => fail(err));
+
+      chai.expect(result[ClinicalEntitySchemaNames.TREATMENT].dataErrors.length).to.eq(1);
+      const treatmentError: SubmissionValidationError = {
+        fieldName: TreatmentFieldsEnum.submitter_treatment_id,
+        message: `This treatment has already been associated to donor AB2. Please correct your file.`,
+        type: DataValidationErrors.CLINICAL_ENTITY_BELONGS_TO_OTHER_DONOR,
+        index: 0,
+        info: {
+          donorSubmitterId: 'AB1',
+          value: 'T_03',
+          otherDonorSubmitterId: 'AB2',
+          clinicalType: ClinicalEntitySchemaNames.TREATMENT,
+        },
+      };
+      chai
+        .expect(result[ClinicalEntitySchemaNames.TREATMENT].dataErrors[0])
+        .to.deep.eq(treatmentError);
+    });
     it('should detect treatment and missing chemotherapy data', async () => {
       const existingDonorMock: Donor = stubs.validation.existingDonor01();
       const newDonorAB1Records = {};
@@ -1454,7 +1491,7 @@ describe('data-validator', () => {
   describe('follow up validation', () => {
     it('should detect follow up belongs to other donor', async () => {
       const donorOwnsTheFollowupAlready = stubs.validation.existingDonor05();
-      donorDaoFindByFollowUpSubmitterIdAndProgramIdStub.returns(
+      donorDaoFindByClinicalEntitySubmitterIdAndProgramIdStub.returns(
         Promise.resolve<Donor>(donorOwnsTheFollowupAlready),
       );
       const donorToAddFollowupTo: Donor = stubs.validation.existingDonor01();
@@ -1479,9 +1516,10 @@ describe('data-validator', () => {
       const followUpError: SubmissionValidationError = {
         fieldName: FollowupFieldsEnum.submitter_follow_up_id,
         message: `This follow up has already been associated to donor AB2. Please correct your file.`,
-        type: DataValidationErrors.FOLLOWUP_BELONGS_TO_OTHER_DONOR,
+        type: DataValidationErrors.CLINICAL_ENTITY_BELONGS_TO_OTHER_DONOR,
         index: 0,
         info: {
+          clinicalType: ClinicalEntitySchemaNames.FOLLOW_UP,
           donorSubmitterId: 'AB1',
           value: 'FF123',
           otherDonorSubmitterId: 'AB2',
