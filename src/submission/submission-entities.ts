@@ -88,7 +88,7 @@ export enum DataValidationErrors {
   INVALID_THERAPY_DATA = 'INVALID_THERAPY_DATA',
   INCOMPATIBLE_PARENT_TREATMENT_TYPE = 'INCOMPATIBLE_PARENT_TREATMENT_TYPE',
   TREATMENT_ID_NOT_FOUND = 'TREATMENT_ID_NOT_FOUND',
-  FOLLOWUP_BELONGS_TO_OTHER_DONOR = 'FOLLOWUP_BELONGS_TO_OTHER_DONOR',
+  CLINICAL_ENTITY_BELONGS_TO_OTHER_DONOR = 'CLINICAL_ENTITY_BELONGS_TO_OTHER_DONOR',
 }
 
 export type RegistrationStat = Array<{
@@ -271,7 +271,7 @@ export enum DonorFieldsEnum {
 }
 export enum SpecimenFieldsEnum {
   submitter_specimen_id = 'submitter_specimen_id',
-  acquisition_interval = 'acquisition_interval',
+  specimen_acquisition_interval = 'specimen_acquisition_interval',
 }
 export enum TreatmentFieldsEnum {
   submitter_treatment_id = 'submitter_treatment_id',

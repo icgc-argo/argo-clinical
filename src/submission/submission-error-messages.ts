@@ -1,4 +1,5 @@
-import { SubmissionBatchErrorTypes, ClinicalEntitySchemaNames } from './submission-entities';
+import { SubmissionBatchErrorTypes } from './submission-entities';
+import _ from 'lodash';
 
 const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
   /* ***************** *
@@ -24,7 +25,7 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
   ID_NOT_REGISTERED: errorData =>
     `${errorData.info.value} has not yet been registered. Please register samples before submitting clinical data for this identifier.`,
   CONFLICTING_TIME_INTERVAL: () =>
-    'survival_time cannot be less than Specimen acquisition_interval.',
+    'survival_time cannot be less than Specimen specimen_acquisition_interval.',
   NOT_ENOUGH_INFO_TO_VALIDATE: errorData =>
     `[${errorData.fieldName}] requires [${errorData.info.missingField.join(
       '], [',
@@ -33,8 +34,10 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
     if (errorData.info.useAllRecordValues === true) return `This row is identical to another row`;
     return `You are trying to submit the same [${errorData.fieldName}] in multiple rows. [${errorData.fieldName}] can only be submitted once per file.`;
   },
-  FOLLOWUP_BELONGS_TO_OTHER_DONOR: errorData => {
-    return `This follow up has already been associated to donor ${errorData.info.otherDonorSubmitterId}. Please correct your file.`;
+  CLINICAL_ENTITY_BELONGS_TO_OTHER_DONOR: errorData => {
+    const clinicalType = _.lowerCase(errorData.info.clinicalType);
+    const donorId = errorData.info.otherDonorSubmitterId;
+    return `This ${clinicalType} has already been associated to donor ${donorId}. Please correct your file.`;
   },
 };
 

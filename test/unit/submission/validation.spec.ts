@@ -146,10 +146,10 @@ const NEW_SPEC_ATTR_CONFLICT =
   'You are trying to register the same specimen with different values.';
 
 describe('data-validator', () => {
-  let donorDaoCountByStub: sinon.SinonStub;
-  let donorDaoFindBySpecimenSubmitterIdAndProgramIdStub: sinon.SinonStub;
-  let donorDaoFindBySampleSubmitterIdAndProgramIdStub: sinon.SinonStub;
-  let donorDaoFindByFollowUpSubmitterIdAndProgramIdStub: sinon.SinonStub;
+  let donorDaoCountByStub: sinon.SinonStub<[any], any>;
+  let donorDaoFindBySpecimenSubmitterIdAndProgramIdStub: sinon.SinonStub<[any], any>;
+  let donorDaoFindBySampleSubmitterIdAndProgramIdStub: sinon.SinonStub<[any], any>;
+  let donorDaoFindByClinicalEntitySubmitterIdAndProgramIdStub: sinon.SinonStub<[any, any], any>;
   beforeEach(done => {
     donorDaoCountByStub = sinon.stub(donorDao, 'countBy');
     donorDaoFindBySpecimenSubmitterIdAndProgramIdStub = sinon.stub(
@@ -161,9 +161,9 @@ describe('data-validator', () => {
       'findBySampleSubmitterIdAndProgramId',
     );
 
-    donorDaoFindByFollowUpSubmitterIdAndProgramIdStub = sinon.stub(
+    donorDaoFindByClinicalEntitySubmitterIdAndProgramIdStub = sinon.stub(
       donorDao,
-      'findByFollowUpSubmitterIdAndProgramId',
+      'findByClinicalEntitySubmitterIdAndProgramId',
     );
     done();
   });
@@ -172,7 +172,7 @@ describe('data-validator', () => {
     donorDaoCountByStub.restore();
     donorDaoFindBySpecimenSubmitterIdAndProgramIdStub.restore();
     donorDaoFindBySampleSubmitterIdAndProgramIdStub.restore();
-    donorDaoFindByFollowUpSubmitterIdAndProgramIdStub.restore();
+    donorDaoFindByClinicalEntitySubmitterIdAndProgramIdStub.restore();
     done();
   });
   describe('registration-validation', () => {
@@ -1198,7 +1198,7 @@ describe('data-validator', () => {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
           [SampleRegistrationFieldsEnum.program_id]: 'PEME-CA',
           [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP13',
-          [SpecimenFieldsEnum.acquisition_interval]: 5020,
+          [SpecimenFieldsEnum.specimen_acquisition_interval]: 5020,
           index: 0,
         },
       );
@@ -1209,7 +1209,7 @@ describe('data-validator', () => {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
           [SampleRegistrationFieldsEnum.program_id]: 'PEME-CA',
           [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP14',
-          [SpecimenFieldsEnum.acquisition_interval]: 9000,
+          [SpecimenFieldsEnum.specimen_acquisition_interval]: 9000,
           index: 1,
         },
       );
@@ -1221,7 +1221,7 @@ describe('data-validator', () => {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB3',
           [SampleRegistrationFieldsEnum.program_id]: 'PEME-CA',
           [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP12',
-          [SpecimenFieldsEnum.acquisition_interval]: 2000,
+          [SpecimenFieldsEnum.specimen_acquisition_interval]: 2000,
           index: 0,
         },
       );
@@ -1248,8 +1248,8 @@ describe('data-validator', () => {
         )
         .catch(err => fail(err));
       const specimenIntervalErr: SubmissionValidationError = {
-        fieldName: SpecimenFieldsEnum.acquisition_interval,
-        message: 'survival_time cannot be less than Specimen acquisition_interval.',
+        fieldName: SpecimenFieldsEnum.specimen_acquisition_interval,
+        message: 'survival_time cannot be less than Specimen specimen_acquisition_interval.',
         type: DataValidationErrors.CONFLICTING_TIME_INTERVAL,
         index: 0,
         info: {
@@ -1258,7 +1258,7 @@ describe('data-validator', () => {
         },
       };
       const specimenIntervalErr2 = {
-        fieldName: SpecimenFieldsEnum.acquisition_interval,
+        fieldName: SpecimenFieldsEnum.specimen_acquisition_interval,
         type: DataValidationErrors.CONFLICTING_TIME_INTERVAL,
         index: 1,
         info: {
@@ -1267,7 +1267,7 @@ describe('data-validator', () => {
         },
       };
       const specimenIntervalErr3 = {
-        fieldName: SpecimenFieldsEnum.acquisition_interval,
+        fieldName: SpecimenFieldsEnum.specimen_acquisition_interval,
         type: DataValidationErrors.CONFLICTING_TIME_INTERVAL,
         index: 0,
         info: {
@@ -1302,7 +1302,7 @@ describe('data-validator', () => {
         {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
           [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP13',
-          [SpecimenFieldsEnum.acquisition_interval]: 200,
+          [SpecimenFieldsEnum.specimen_acquisition_interval]: 200,
           index: 0,
         },
       );
@@ -1312,7 +1312,7 @@ describe('data-validator', () => {
         {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
           [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP14',
-          [SpecimenFieldsEnum.acquisition_interval]: 200,
+          [SpecimenFieldsEnum.specimen_acquisition_interval]: 200,
           index: 1,
         },
       );
@@ -1322,8 +1322,8 @@ describe('data-validator', () => {
         .catch((err: any) => fail(err));
 
       const specimenIdErr1: SubmissionValidationError = {
-        fieldName: SpecimenFieldsEnum.acquisition_interval,
-        message: `[acquisition_interval] requires [donor.vital_status], [donor.survival_time] in order to complete validation.  Please upload data for all fields in this clinical data submission.`,
+        fieldName: SpecimenFieldsEnum.specimen_acquisition_interval,
+        message: `[specimen_acquisition_interval] requires [donor.vital_status], [donor.survival_time] in order to complete validation.  Please upload data for all fields in this clinical data submission.`,
         type: DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
         index: 0,
         info: {
@@ -1337,8 +1337,8 @@ describe('data-validator', () => {
       };
 
       const specimenIdErr2: SubmissionValidationError = {
-        fieldName: SpecimenFieldsEnum.acquisition_interval,
-        message: `[acquisition_interval] requires [donor.vital_status], [donor.survival_time] in order to complete validation.  Please upload data for all fields in this clinical data submission.`,
+        fieldName: SpecimenFieldsEnum.specimen_acquisition_interval,
+        message: `[specimen_acquisition_interval] requires [donor.vital_status], [donor.survival_time] in order to complete validation.  Please upload data for all fields in this clinical data submission.`,
         type: DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
         index: 1,
         info: {
@@ -1356,6 +1356,43 @@ describe('data-validator', () => {
     });
   });
   describe('submission-validations: treatment & therapies', () => {
+    it('should detect mutating existing treatment', async () => {
+      const donorAB2WithExsistingTreatment = stubs.validation.existingDonor06();
+      donorDaoFindByClinicalEntitySubmitterIdAndProgramIdStub.returns(
+        Promise.resolve<Donor>(donorAB2WithExsistingTreatment),
+      );
+      const donorAB1WithNoTreatments: Donor = stubs.validation.existingDonor01();
+      const submissionRecordsMap = {};
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.TREATMENT,
+        submissionRecordsMap,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.TREATMENT]]: 'T_03',
+          index: 0,
+        },
+      );
+      const result = await dv
+        .validateSubmissionData({ AB1: submissionRecordsMap }, { AB1: donorAB1WithNoTreatments })
+        .catch((err: any) => fail(err));
+
+      chai.expect(result[ClinicalEntitySchemaNames.TREATMENT].dataErrors.length).to.eq(1);
+      const treatmentError: SubmissionValidationError = {
+        fieldName: TreatmentFieldsEnum.submitter_treatment_id,
+        message: `This treatment has already been associated to donor AB2. Please correct your file.`,
+        type: DataValidationErrors.CLINICAL_ENTITY_BELONGS_TO_OTHER_DONOR,
+        index: 0,
+        info: {
+          donorSubmitterId: 'AB1',
+          value: 'T_03',
+          otherDonorSubmitterId: 'AB2',
+          clinicalType: ClinicalEntitySchemaNames.TREATMENT,
+        },
+      };
+      chai
+        .expect(result[ClinicalEntitySchemaNames.TREATMENT].dataErrors[0])
+        .to.deep.eq(treatmentError);
+    });
     it('should detect treatment and missing chemotherapy data', async () => {
       const existingDonorMock: Donor = stubs.validation.existingDonor01();
       const newDonorAB1Records = {};
@@ -1454,7 +1491,7 @@ describe('data-validator', () => {
   describe('follow up validation', () => {
     it('should detect follow up belongs to other donor', async () => {
       const donorOwnsTheFollowupAlready = stubs.validation.existingDonor05();
-      donorDaoFindByFollowUpSubmitterIdAndProgramIdStub.returns(
+      donorDaoFindByClinicalEntitySubmitterIdAndProgramIdStub.returns(
         Promise.resolve<Donor>(donorOwnsTheFollowupAlready),
       );
       const donorToAddFollowupTo: Donor = stubs.validation.existingDonor01();
@@ -1479,9 +1516,10 @@ describe('data-validator', () => {
       const followUpError: SubmissionValidationError = {
         fieldName: FollowupFieldsEnum.submitter_follow_up_id,
         message: `This follow up has already been associated to donor AB2. Please correct your file.`,
-        type: DataValidationErrors.FOLLOWUP_BELONGS_TO_OTHER_DONOR,
+        type: DataValidationErrors.CLINICAL_ENTITY_BELONGS_TO_OTHER_DONOR,
         index: 0,
         info: {
+          clinicalType: ClinicalEntitySchemaNames.FOLLOW_UP,
           donorSubmitterId: 'AB1',
           value: 'FF123',
           otherDonorSubmitterId: 'AB2',

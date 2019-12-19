@@ -643,12 +643,17 @@ paths:
       description:
       requestBody:
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              type: array
-              items:
-                type: object
-
+              type: object
+              properties:
+                donors:
+                  required: true
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: imported successfully
   /clinical/donors:
     get:
       tags:

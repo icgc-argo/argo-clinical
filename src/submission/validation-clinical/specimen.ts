@@ -84,13 +84,13 @@ function checkTimeConflictWithDonor(
   if (
     donorDataToValidateWith.donorVitalStatus.toString().toLowerCase() === 'deceased' &&
     donorDataToValidateWith.donorSurvivalTime <
-      specimenRecord[SpecimenFieldsEnum.acquisition_interval]
+      specimenRecord[SpecimenFieldsEnum.specimen_acquisition_interval]
   ) {
     errors.push(
       utils.buildSubmissionError(
         specimenRecord,
         DataValidationErrors.CONFLICTING_TIME_INTERVAL,
-        SpecimenFieldsEnum.acquisition_interval,
+        SpecimenFieldsEnum.specimen_acquisition_interval,
         {},
       ),
     );
@@ -122,7 +122,7 @@ const getDataFromDonorRecordOrDonor = (
       utils.buildSubmissionError(
         specimenRecord,
         DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
-        SpecimenFieldsEnum.acquisition_interval,
+        SpecimenFieldsEnum.specimen_acquisition_interval,
         {
           missingField: missingDonorFields.map(s => ClinicalEntitySchemaNames.DONOR + '.' + s),
         },
