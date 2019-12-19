@@ -105,6 +105,10 @@ export const mergeRecordsMapIntoDonor = (
   return mergedDonor;
 };
 
+/* ********************************* *
+ * Private methods                   *
+ * ********************************* */
+
 // *** Info Update functions ***
 const updateDonorInfo = (donor: Donor, record: any) => {
   donor.clinicalInfo = record;
@@ -112,7 +116,7 @@ const updateDonorInfo = (donor: Donor, record: any) => {
 };
 
 const updatePrimaryDiagnosisInfo = (donor: Donor, record: any) => {
-  donor.primaryDiagnosis = record;
+  donor.primaryDiagnosis = { clinicalInfo: record };
   return donor.primaryDiagnosis;
 };
 
@@ -191,9 +195,6 @@ function addOrUpdateTherapyInfoInTreatment(
   treatment.therapies.push({ clinicalInfo: record, therapyType });
 }
 
-/* ********************************* *
- * Convenient private methods        *
- * ********************************* */
 const findSpecimen = (donor: Donor, specimenId: string) => {
   return _.find(donor.specimens, ['submitterId', specimenId]);
 };

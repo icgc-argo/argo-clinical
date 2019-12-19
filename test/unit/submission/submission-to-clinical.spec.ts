@@ -142,7 +142,7 @@ describe('submission-to-clinical', () => {
           },
         ],
         clinicalInfo: {},
-        primaryDiagnosis: {},
+        primaryDiagnosis: undefined,
         followUps: [],
         treatments: [],
       };
@@ -179,6 +179,7 @@ describe('submission-to-clinical', () => {
             specimenId: 320,
             specimenTissueSource: 'Other',
             submitterId: 'ss330',
+            clinicalInfo: {},
             tumourNormalDesignation: 'Normal',
             samples: [
               {
@@ -207,6 +208,7 @@ describe('submission-to-clinical', () => {
             specimenId: 320,
             specimenTissueSource: 'Other',
             submitterId: 'ss330',
+            clinicalInfo: {},
             tumourNormalDesignation: 'Normal',
             samples: [
               {

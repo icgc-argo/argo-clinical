@@ -1433,7 +1433,7 @@ describe('Submission Api', () => {
         survival_time: 522,
       };
 
-      DonorBeforeUpdate.primaryDiagnosis.should.deep.eq(primary_diagnosis);
+      DonorBeforeUpdate.primaryDiagnosis.clinicalInfo.should.deep.eq(primary_diagnosis);
       DonorBeforeUpdate.clinicalInfo.should.deep.eq(donor);
 
       // Now we need to have a submission with updates, and validate to get it into the correct state
@@ -1452,7 +1452,7 @@ describe('Submission Api', () => {
       });
 
       // data from primary_diagnosis.tsv
-      donorBeforeApproveCommit.primaryDiagnosis.should.deep.eq(primary_diagnosis);
+      donorBeforeApproveCommit.primaryDiagnosis.clinicalInfo.should.deep.eq(primary_diagnosis);
 
       DonorBeforeUpdate.clinicalInfo.should.include(donor);
 
@@ -1545,12 +1545,14 @@ describe('Submission Api', () => {
             survival_time: 23,
           },
           primaryDiagnosis: {
-            program_id: programId,
-            number_lymph_nodes_positive: 1,
-            submitter_donor_id: 'ICGC_0003',
-            age_at_diagnosis: 96,
-            cancer_type_code: 'A11.1A',
-            tumour_staging_system: 'Binet', // this will be updated to Murphy
+            clinicalInfo: {
+              program_id: programId,
+              number_lymph_nodes_positive: 1,
+              submitter_donor_id: 'ICGC_0003',
+              age_at_diagnosis: 96,
+              cancer_type_code: 'A11.1A',
+              tumour_staging_system: 'Binet', // this will be updated to Murphy
+            },
           },
         }),
       );
@@ -1593,7 +1595,14 @@ describe('Submission Api', () => {
           // we expect the other invalid donor to be updated even that it remained invalid
           // due to not updating the invalid clinical file (donor.clinicalInfo)
           chai.expect(updatedDonor2.primaryDiagnosis).to.deep.include({
-            tumour_staging_system: 'Murphy',
+            clinicalInfo: {
+              age_at_diagnosis: 96,
+              cancer_type_code: 'A11.1A',
+              number_lymph_nodes_examined: 2,
+              program_id: 'ABCD-EF',
+              submitter_donor_id: 'ICGC_0003',
+              tumour_staging_system: 'Murphy',
+            },
           });
         });
     });
@@ -1929,6 +1938,7 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dburl: 
         specimens: [
           {
             specimenId: i,
+            clinicalInfo: {},
             submitterId: r[SampleRegistrationFieldsEnum.submitter_specimen_id],
             specimenTissueSource: r[SampleRegistrationFieldsEnum.specimen_tissue_source],
             tumourNormalDesignation: r[SampleRegistrationFieldsEnum.tumour_normal_designation],
@@ -2002,6 +2012,7 @@ const comittedDonors2: Donor[] = [
         tumourNormalDesignation: 'Xenograft - derived from primary tumour',
         submitterId: 'ss123-jdjr-ak',
         specimenId: 1,
+        clinicalInfo: {},
       },
     ],
     donorId: 1,
@@ -2030,6 +2041,7 @@ const comittedDonors2: Donor[] = [
         tumourNormalDesignation: 'Xenograft - derived from primary tumour',
         submitterId: 'ss123-sjdm',
         specimenId: 2,
+        clinicalInfo: {},
       },
       {
         samples: [
@@ -2043,6 +2055,7 @@ const comittedDonors2: Donor[] = [
         tumourNormalDesignation: 'Normal',
         submitterId: 'ss123-sjdm-2',
         specimenId: 5,
+        clinicalInfo: {},
       },
     ],
     donorId: 2,
@@ -2071,6 +2084,7 @@ const comittedDonors2: Donor[] = [
         tumourNormalDesignation: 'Primary tumour - adjacent to normal',
         submitterId: 'ss123-1123',
         specimenId: 3,
+        clinicalInfo: {},
       },
     ],
     donorId: 3,
@@ -2099,6 +2113,7 @@ const comittedDonors2: Donor[] = [
         tumourNormalDesignation: 'Metastatic tumour',
         submitterId: 'ss123-abnc',
         specimenId: 4,
+        clinicalInfo: {},
       },
       {
         samples: [
@@ -2112,6 +2127,7 @@ const comittedDonors2: Donor[] = [
         tumourNormalDesignation: 'Metastatic tumour',
         submitterId: 'ss123-abnc0',
         specimenId: 7,
+        clinicalInfo: {},
       },
     ],
     donorId: 4,
@@ -2141,6 +2157,7 @@ const comittedDonors2: Donor[] = [
         tumourNormalDesignation: 'Metastatic tumour',
         submitterId: 'ss123-129',
         specimenId: 6,
+        clinicalInfo: {},
       },
     ],
     donorId: 5,
@@ -2169,6 +2186,7 @@ const comittedDonors2: Donor[] = [
         tumourNormalDesignation: 'Recurrent tumour',
         submitterId: 'ss200-1',
         specimenId: 8,
+        clinicalInfo: {},
       },
     ],
     donorId: 6,
