@@ -1295,7 +1295,7 @@ describe('data-validator', () => {
       chai.expect(errors.donor.dataErrors.length).to.eq(1);
       chai.expect(errors.donor.dataErrors[0]).to.deep.include(donorSurvivalTimeErr);
     });
-    it.only('should validate time intervals between alive donor and specimen', async () => {
+    it('should validate time intervals between alive donor and specimen', async () => {
       const existingDonorAB1Mock: Donor = stubs.validation.existingDonor01();
       const submittedAB1Records = {};
       ClinicalSubmissionRecordsOperations.addRecord(
