@@ -114,7 +114,8 @@ const getDataFromDonorRecordOrDonor = (
     donorSurvivalTime = Number(donorDataSource[DonorFieldsEnum.survival_time]) || NaN;
 
     if (isEmptyString(donorVitalStatus)) missingDonorFields.push(DonorFieldsEnum.vital_status);
-    if (isNaN(donorSurvivalTime)) missingDonorFields.push(DonorFieldsEnum.survival_time);
+    if (donorVitalStatus.toString().toLowerCase() === 'deceased' && isNaN(donorSurvivalTime))
+      missingDonorFields.push(DonorFieldsEnum.survival_time);
   }
 
   if (missingDonorFields.length > 0) {

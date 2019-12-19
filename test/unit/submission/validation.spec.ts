@@ -150,6 +150,7 @@ describe('data-validator', () => {
   let donorDaoFindBySpecimenSubmitterIdAndProgramIdStub: sinon.SinonStub<[any], any>;
   let donorDaoFindBySampleSubmitterIdAndProgramIdStub: sinon.SinonStub<[any], any>;
   let donorDaoFindByClinicalEntitySubmitterIdAndProgramIdStub: sinon.SinonStub<[any, any], any>;
+
   beforeEach(done => {
     donorDaoCountByStub = sinon.stub(donorDao, 'countBy');
     donorDaoFindBySpecimenSubmitterIdAndProgramIdStub = sinon.stub(
@@ -175,6 +176,7 @@ describe('data-validator', () => {
     donorDaoFindByClinicalEntitySubmitterIdAndProgramIdStub.restore();
     done();
   });
+
   describe('registration-validation', () => {
     it('should detect invalid program id', async () => {
       donorDaoCountByStub.returns(Promise.resolve(0));
@@ -1293,6 +1295,38 @@ describe('data-validator', () => {
       chai.expect(errors.donor.dataErrors.length).to.eq(1);
       chai.expect(errors.donor.dataErrors[0]).to.deep.include(donorSurvivalTimeErr);
     });
+    it.only('should validate time intervals between alive donor and specimen', async () => {
+      const existingDonorAB1Mock: Donor = stubs.validation.existingDonor01();
+      const submittedAB1Records = {};
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.DONOR,
+        submittedAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
+          [SampleRegistrationFieldsEnum.program_id]: 'PEME-CA',
+          [DonorFieldsEnum.vital_status]: 'alive',
+          index: 0,
+        },
+      );
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.SPECIMEN,
+        submittedAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
+          [SampleRegistrationFieldsEnum.program_id]: 'PEME-CA',
+          [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP13',
+          [SpecimenFieldsEnum.specimen_acquisition_interval]: 5020,
+          index: 0,
+        },
+      );
+
+      const result = await dv
+        .validateSubmissionData({ AB1: submittedAB1Records }, { AB1: existingDonorAB1Mock })
+        .catch(err => fail(err));
+
+      // donor is alive so should skip time interval validation
+      chai.expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors.length).to.eq(0);
+    });
     it('should detect not enough info to validate specimen file', async () => {
       const existingDonorMock: Donor = stubs.validation.existingDonor01();
       const newDonorAB1Records = {};
@@ -1355,6 +1389,7 @@ describe('data-validator', () => {
       chai.expect(result.specimen.dataErrors).to.deep.include(specimenIdErr2);
     });
   });
+
   describe('submission-validations: treatment & therapies', () => {
     it('should detect mutating existing treatment', async () => {
       const donorAB2WithExsistingTreatment = stubs.validation.existingDonor06();
