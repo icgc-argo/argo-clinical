@@ -225,7 +225,7 @@ export const donorDao: DonorRepository = {
 
   async create(donor: DeepReadonly<Donor>) {
     const newDonor = new DonorModel(donor);
-    await newDonor.save();
+    const doc = await newDonor.save();
     return F(MongooseUtils.toPojo(newDonor));
   },
 };
@@ -250,7 +250,7 @@ const SpecimenSchema = new mongoose.Schema(
     submitterId: { type: String, required: true },
     samples: [SampleSchema],
   },
-  { _id: false },
+  { _id: false, minimize: false }, // minimize false is to avoid omitting clinicalInfo:{}
 );
 
 const TherapySchema = new mongoose.Schema(
@@ -276,6 +276,13 @@ const FollowUpSchema = new mongoose.Schema(
   { _id: false },
 );
 
+const PrimaryDiagnosisSchema = new mongoose.Schema(
+  {
+    clinicalInfo: {},
+  },
+  { _id: false },
+);
+
 const DonorSchema = new mongoose.Schema(
   {
     donorId: { type: Number, index: true, unique: true, get: prefixDonorId },
@@ -284,12 +291,12 @@ const DonorSchema = new mongoose.Schema(
     programId: { type: String, required: true },
     specimens: [SpecimenSchema],
     clinicalInfo: {},
-    primaryDiagnosis: {},
+    primaryDiagnosis: PrimaryDiagnosisSchema,
     followUps: [FollowUpSchema],
     treatments: [TreatmentSchema],
     schemaMetadata: {},
   },
-  { timestamps: true },
+  { timestamps: true, minimize: false }, // minimize false is to avoid omitting clinicalInfo:{}
 );
 
 function prefixDonorId(id: any) {
