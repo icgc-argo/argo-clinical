@@ -6,6 +6,7 @@ import { registrationRepository } from '../../../src/submission/registration-rep
 import { donorDao, FindByProgramAndSubmitterFilter } from '../../../src/clinical/donor-repo';
 import { ActiveRegistration } from '../../../src/submission/submission-entities';
 import { Donor } from '../../../src/clinical/clinical-entities';
+import deepFreeze from 'deep-freeze';
 
 const id1 = '04042314bacas';
 const id2 = 'lafdksaf92149123';
@@ -90,11 +91,30 @@ describe('submission-to-clinical', () => {
   console.log('mocha is here');
 
   describe('commit registration', () => {
-    let registrationRepoFindByIdStub: sinon.SinonStub;
-    let findByProgramAndSubmitterIdStub: sinon.SinonStub;
-    let deleteRegStub: sinon.SinonStub;
-    let createDonorStub: sinon.SinonStub;
-    let updateDonorStub: sinon.SinonStub;
+    let registrationRepoFindByIdStub: sinon.SinonStub<
+      [string],
+      Promise<deepFreeze.DeepReadonly<ActiveRegistration> | undefined>
+    >;
+    let findByProgramAndSubmitterIdStub: sinon.SinonStub<
+      [
+        readonly deepFreeze.DeepReadonly<
+          deepFreeze.DeepReadonly<{
+            programId: string;
+            submitterId: string;
+          }>
+        >[],
+      ],
+      Promise<readonly deepFreeze.DeepReadonly<Donor>[] | undefined>
+    >;
+    let deleteRegStub: sinon.SinonStub<[string], Promise<void>>;
+    let createDonorStub: sinon.SinonStub<
+      [deepFreeze.DeepReadonly<Donor>],
+      Promise<deepFreeze.DeepReadonly<Donor>>
+    >;
+    let updateDonorStub: sinon.SinonStub<
+      [deepFreeze.DeepReadonly<Donor>],
+      Promise<deepFreeze.DeepReadonly<Donor>>
+    >;
     const sandBox = sinon.createSandbox();
 
     beforeEach(done => {
