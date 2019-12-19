@@ -295,7 +295,8 @@ export function treatmentTypeIsNotChemo(treatmentType: string) {
   );
 }
 
-export async function checkNotMutatingExistingEntity(
+// check that a donor is not found with the same clinical entity unique identifier
+export async function checkClinicalEntityDoesntBelongsToOtherDonor(
   clinicalType: ClinicalEntitySchemaNames,
   record: SubmittedClinicalRecord,
   existentDonor: DeepReadonly<Donor>,

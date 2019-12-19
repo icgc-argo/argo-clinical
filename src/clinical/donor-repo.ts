@@ -22,7 +22,7 @@ export enum DONOR_FIELDS {
   LAST_MIGRATION_ID = 'schemaMetadata.lastMigrationId',
 }
 
-const ClinicalEntityTypeToDonoFieldsMap: { [clinicalType: string]: DONOR_FIELDS } = {
+const ClinicalEntitySchemaNameToDonoFieldsMap: { [clinicalType: string]: DONOR_FIELDS } = {
   [ClinicalEntitySchemaNames.TREATMENT]: DONOR_FIELDS.TREATMENT_SUBMITTER_ID,
   [ClinicalEntitySchemaNames.FOLLOW_UP]: DONOR_FIELDS.FOLLOWUP_SUBMITTER_ID,
 };
@@ -150,7 +150,7 @@ export const donorDao: DonorRepository = {
     clinicalEntityType: ClinicalEntitySchemaNames,
   ): Promise<DeepReadonly<Donor> | undefined> {
     const result = await DonorModel.find({
-      [ClinicalEntityTypeToDonoFieldsMap[clinicalEntityType]]: filter.submitterId,
+      [ClinicalEntitySchemaNameToDonoFieldsMap[clinicalEntityType]]: filter.submitterId,
       [DONOR_FIELDS.PROGRAM_ID]: filter.programId,
     }).exec();
 

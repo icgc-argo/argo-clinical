@@ -11,7 +11,7 @@ import { Donor, Treatment } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
 import { getSingleClinicalObjectFromDonor } from '../submission-to-clinical/submission-to-clinical';
-import { checkNotMutatingExistingEntity } from './utils';
+import { checkClinicalEntityDoesntBelongsToOtherDonor } from './utils';
 
 export const validate = async (
   treatmentRecord: DeepReadonly<SubmittedClinicalRecord>,
@@ -25,7 +25,7 @@ export const validate = async (
 
   const errors: SubmissionValidationError[] = [];
 
-  await checkNotMutatingExistingTreatment(treatmentRecord, existentDonor, errors);
+  await checkTreatmentDoesntBelongToOtherDonor(treatmentRecord, existentDonor, errors);
 
   if (errors.length > 0) return errors;
 
@@ -34,14 +34,15 @@ export const validate = async (
   return errors;
 };
 
-async function checkNotMutatingExistingTreatment(
+async function checkTreatmentDoesntBelongToOtherDonor(
   treatmentRecord: SubmittedClinicalRecord,
   existentDonor: DeepReadonly<Donor>,
   errors: SubmissionValidationError[],
 ) {
   const treatment = getTreatment(treatmentRecord, existentDonor);
+  // if treatment isn't present in this existentDonor, it could exist in another donor
   if (!treatment) {
-    await checkNotMutatingExistingEntity(
+    await checkClinicalEntityDoesntBelongsToOtherDonor(
       ClinicalEntitySchemaNames.TREATMENT,
       treatmentRecord,
       existentDonor,
