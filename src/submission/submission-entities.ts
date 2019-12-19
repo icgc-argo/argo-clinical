@@ -271,7 +271,7 @@ export enum DonorFieldsEnum {
 }
 export enum SpecimenFieldsEnum {
   submitter_specimen_id = 'submitter_specimen_id',
-  acquisition_interval = 'acquisition_interval',
+  specimen_acquisition_interval = 'specimen_acquisition_interval',
 }
 export enum TreatmentFieldsEnum {
   submitter_treatment_id = 'submitter_treatment_id',

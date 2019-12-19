@@ -50,7 +50,7 @@ function checkTimeConflictWithSpecimens(
     let specimenAcqusitionInterval: number = 0;
     if (specimen.clinicalInfo) {
       specimenAcqusitionInterval = Number(
-        specimen.clinicalInfo[SpecimenFieldsEnum.acquisition_interval],
+        specimen.clinicalInfo[SpecimenFieldsEnum.specimen_acquisition_interval],
       );
     } else {
       return; // no specimenAcqusitionInterval so move on to next specimen

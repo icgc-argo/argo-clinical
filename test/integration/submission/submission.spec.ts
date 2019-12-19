@@ -945,7 +945,7 @@ describe('Submission Api', () => {
               program_id: 'ABCD-EF',
               submitter_donor_id: 'ICGC_0001',
               submitter_specimen_id: '8013861',
-              acquisition_interval: 200,
+              specimen_acquisition_interval: 200,
               anatomic_location_of_specimen_collection: 'Other',
               central_pathology_confirmed: 'No',
               tumour_histological_type: 'M-1111/22',
@@ -1742,7 +1742,9 @@ describe('Submission Api', () => {
           console.log(`Ref data is: [${refFiles}]`);
           console.log(`Downloaded data is: [${downloadedFiles}]`);
 
-          chai.expect(refFiles).to.eql(downloadedFiles);
+          refFiles.forEach(file => {
+            chai.expect(downloadedFiles).to.contain(file);
+          });
           return done();
         });
     });

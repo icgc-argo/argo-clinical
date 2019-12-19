@@ -342,7 +342,7 @@
               }
             },
             {
-              "name": "acquisition_interval",
+              "name": "specimen_acquisition_interval",
               "description": "Interval between primary diagnosis and specimen acquisition, in days.",
               "valueType": "integer",
               "restrictions": {
@@ -1543,7 +1543,7 @@
               }
             },
             {
-              "name": "acquisition_interval",
+              "name": "specimen_acquisition_interval",
               "description": "Interval between primary diagnosis and specimen acquisition, in days.",
               "valueType": "integer",
               "restrictions": {
