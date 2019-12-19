@@ -14,8 +14,9 @@ import {
 import { HasFullWriteAccess, HasProgramWriteAccess } from '../auth-decorators';
 import _ from 'lodash';
 import { batchErrorMessage } from './submission-error-messages';
+import * as fs from 'fs';
 const L = loggerFor(__filename);
-
+const fsPromises = fs.promises;
 class SubmissionController {
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async getRegistrationByProgramId(req: Request, res: Response) {
@@ -244,7 +245,11 @@ class SubmissionController {
 
   @HasFullWriteAccess()
   async addDonors(req: Request, res: Response) {
-    return res.status(200).send(await submission.operations.adminAddDonors(req.body));
+    if (!req.file) {
+      return res.status(400).send('need donors json file, get one by using preprocess endpoint');
+    }
+    const donorsJson = await fsPromises.readFile(req.file.path, 'utf-8');
+    return res.status(200).send(await submission.operations.adminAddDonors(JSON.parse(donorsJson)));
   }
 }
 
