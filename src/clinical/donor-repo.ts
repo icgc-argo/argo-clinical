@@ -1,8 +1,9 @@
-import { Donor, Sample, Specimen } from './clinical-entities';
-import mongoose, { Model } from 'mongoose';
+import { Donor } from './clinical-entities';
+import mongoose from 'mongoose';
 import { DeepReadonly } from 'deep-freeze';
 import { F, MongooseUtils, notEmpty } from '../utils';
 import { loggerFor } from '../logger';
+import { ClinicalEntitySchemaNames } from '../../src/submission/submission-entities';
 
 export const SUBMITTER_ID = 'submitterId';
 export const SPECIMEN_SUBMITTER_ID = 'specimen.submitterId';
@@ -16,17 +17,24 @@ export enum DONOR_FIELDS {
   SPECIMEN_SUBMITTER_ID = 'specimens.submitterId',
   SPECIMEN_SAMPLE_SUBMITTER_ID = 'specimens.samples.submitterId',
   FOLLOWUP_SUBMITTER_ID = 'followUps.clinicalInfo.submitter_follow_up_id',
+  TREATMENT_SUBMITTER_ID = 'treatments.clinicalInfo.submitter_treatment_id',
   PROGRAM_ID = 'programId',
   LAST_MIGRATION_ID = 'schemaMetadata.lastMigrationId',
 }
+
+const ClinicalEntityTypeToDonoFieldsMap: { [clinicalType: string]: DONOR_FIELDS } = {
+  [ClinicalEntitySchemaNames.TREATMENT]: DONOR_FIELDS.TREATMENT_SUBMITTER_ID,
+  [ClinicalEntitySchemaNames.FOLLOW_UP]: DONOR_FIELDS.FOLLOWUP_SUBMITTER_ID,
+};
 
 export type FindByProgramAndSubmitterFilter = DeepReadonly<{
   programId: string;
   submitterId: string;
 }>;
 export interface DonorRepository {
-  findByFollowUpSubmitterIdAndProgramId(
+  findByClinicalEntitySubmitterIdAndProgramId(
     filters: DeepReadonly<FindByProgramAndSubmitterFilter>,
+    clinicalEntityType: ClinicalEntitySchemaNames,
   ): Promise<DeepReadonly<Donor> | undefined>;
   insertDonors(donors: Donor[]): Promise<void>;
   findBy(criteria: any, limit: number): Promise<DeepReadonly<Donor[]>>;
@@ -137,11 +145,12 @@ export const donorDao: DonorRepository = {
     return F(mapped[0]);
   },
 
-  async findByFollowUpSubmitterIdAndProgramId(
+  async findByClinicalEntitySubmitterIdAndProgramId(
     filter: DeepReadonly<FindByProgramAndSubmitterFilter>,
+    clinicalEntityType: ClinicalEntitySchemaNames,
   ): Promise<DeepReadonly<Donor> | undefined> {
     const result = await DonorModel.find({
-      [DONOR_FIELDS.FOLLOWUP_SUBMITTER_ID]: filter.submitterId,
+      [ClinicalEntityTypeToDonoFieldsMap[clinicalEntityType]]: filter.submitterId,
       [DONOR_FIELDS.PROGRAM_ID]: filter.programId,
     }).exec();
 

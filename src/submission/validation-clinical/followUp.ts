@@ -3,15 +3,12 @@ import {
   ClinicalEntitySchemaNames,
   SubmittedClinicalRecord,
   FollowupFieldsEnum,
-  ClinicalUniqueIndentifier,
-  DataValidationErrors,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
-import * as utils from './utils';
 import _ from 'lodash';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../submission-to-clinical/submission-to-clinical';
-import { donorDao } from '../../clinical/donor-repo';
+import { checkNotMutatingExistingEntity } from './utils';
 
 export const validate = async (
   followUpRecord: DeepReadonly<SubmittedClinicalRecord>,
@@ -28,25 +25,12 @@ export const validate = async (
   // adding new follow up to this donor ?
   if (!followUpClinicalInfo) {
     // check it is unique in this program
-    const alreadyAssociatedDonor = await donorDao.findByFollowUpSubmitterIdAndProgramId({
-      programId: existentDonor.programId,
-      submitterId: followUpRecord[
-        ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.FOLLOW_UP]
-      ] as string,
-    });
-
-    if (alreadyAssociatedDonor) {
-      errors.push(
-        utils.buildSubmissionError(
-          followUpRecord,
-          DataValidationErrors.FOLLOWUP_BELONGS_TO_OTHER_DONOR,
-          FollowupFieldsEnum.submitter_follow_up_id,
-          {
-            otherDonorSubmitterId: alreadyAssociatedDonor.submitterId,
-          },
-        ),
-      );
-    }
+    await checkNotMutatingExistingEntity(
+      ClinicalEntitySchemaNames.FOLLOW_UP,
+      followUpRecord,
+      existentDonor,
+      errors,
+    );
   }
 
   return errors;

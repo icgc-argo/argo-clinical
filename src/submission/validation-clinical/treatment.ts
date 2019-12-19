@@ -1,6 +1,5 @@
 import {
   SubmissionValidationError,
-  RecordValidationResult,
   ClinicalEntitySchemaNames,
   TreatmentFieldsEnum,
   SubmittedClinicalRecord,
@@ -12,6 +11,7 @@ import { Donor, Treatment } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
 import { getSingleClinicalObjectFromDonor } from '../submission-to-clinical/submission-to-clinical';
+import { checkNotMutatingExistingEntity } from './utils';
 
 export const validate = async (
   treatmentRecord: DeepReadonly<SubmittedClinicalRecord>,
@@ -25,28 +25,40 @@ export const validate = async (
 
   const errors: SubmissionValidationError[] = [];
 
+  await checkNotMutatingExistingTreatment(treatmentRecord, existentDonor, errors);
+
+  if (errors.length > 0) return errors;
+
   checkChemoFileNeeded(treatmentRecord, mergedDonor, errors);
 
   return errors;
 };
+
+async function checkNotMutatingExistingTreatment(
+  treatmentRecord: SubmittedClinicalRecord,
+  existentDonor: DeepReadonly<Donor>,
+  errors: SubmissionValidationError[],
+) {
+  const treatment = getTreatment(treatmentRecord, existentDonor);
+  if (!treatment) {
+    await checkNotMutatingExistingEntity(
+      ClinicalEntitySchemaNames.TREATMENT,
+      treatmentRecord,
+      existentDonor,
+      errors,
+    );
+  }
+}
 
 function checkChemoFileNeeded(
   treatmentRecord: SubmittedClinicalRecord,
   mergedDonor: Donor,
   errors: SubmissionValidationError[],
 ) {
-  const idFieldName = ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.TREATMENT];
   const treatmentType = treatmentRecord[TreatmentFieldsEnum.treatment_type] as string;
-  if (utils.treatmentTypeIsNotChemo(treatmentType)) {
-    return;
-  }
+  if (utils.treatmentTypeIsNotChemo(treatmentType)) return;
 
-  const treatmentId = treatmentRecord[idFieldName];
-  const treatment = getSingleClinicalObjectFromDonor(
-    mergedDonor,
-    ClinicalEntitySchemaNames.TREATMENT,
-    { clinicalInfo: { [idFieldName]: treatmentId as string } },
-  ) as DeepReadonly<Treatment>;
+  const treatment = getTreatment(treatmentRecord, mergedDonor);
   if (!treatment) throw new Error('Missing treatment, shouldnt be possible');
 
   if (
@@ -64,4 +76,13 @@ function checkChemoFileNeeded(
       ),
     );
   }
+}
+
+function getTreatment(treatmentRecord: SubmittedClinicalRecord, donor: DeepReadonly<Donor>) {
+  const idFieldName = ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.TREATMENT];
+  const treatmentId = treatmentRecord[idFieldName];
+
+  return getSingleClinicalObjectFromDonor(donor, ClinicalEntitySchemaNames.TREATMENT, {
+    clinicalInfo: { [idFieldName]: treatmentId as string },
+  }) as DeepReadonly<Treatment>;
 }
