@@ -11,7 +11,7 @@ import { Donor, Treatment } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
 import { getSingleClinicalObjectFromDonor } from '../submission-to-clinical/submission-to-clinical';
-import { checkClinicalEntityDoesntBelongsToOtherDonor } from './utils';
+import { checkClinicalEntityDoesntBelongToOtherDonor } from './utils';
 
 export const validate = async (
   treatmentRecord: DeepReadonly<SubmittedClinicalRecord>,
@@ -42,7 +42,7 @@ async function checkTreatmentDoesntBelongToOtherDonor(
   const treatment = getTreatment(treatmentRecord, existentDonor);
   // if treatment isn't present in this existentDonor, it could exist in another donor
   if (!treatment) {
-    await checkClinicalEntityDoesntBelongsToOtherDonor(
+    await checkClinicalEntityDoesntBelongToOtherDonor(
       ClinicalEntitySchemaNames.TREATMENT,
       treatmentRecord,
       existentDonor,

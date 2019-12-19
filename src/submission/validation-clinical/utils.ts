@@ -296,7 +296,7 @@ export function treatmentTypeIsNotChemo(treatmentType: string) {
 }
 
 // check that a donor is not found with the same clinical entity unique identifier
-export async function checkClinicalEntityDoesntBelongsToOtherDonor(
+export async function checkClinicalEntityDoesntBelongToOtherDonor(
   clinicalType: ClinicalEntitySchemaNames,
   record: SubmittedClinicalRecord,
   existentDonor: DeepReadonly<Donor>,

@@ -993,6 +993,7 @@ function getIcgcDonorSpecimens(clinicalData: any, donor: any) {
     sps.push({
       specimenId: parseInt(s.icgc_specimen_id.substring(2), 10),
       submitterId: s.submitted_specimen_id,
+      clinicalInfo: {},
       tumourNormalDesignation: getMappedTumorNormalDesignation(s.specimen_type),
       samples: getIcgcSpecimenSamples(clinicalData, s, donor),
       specimenTissueSource: getMappedTissueSource(s.specimen_type),

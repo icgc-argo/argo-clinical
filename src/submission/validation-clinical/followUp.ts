@@ -8,7 +8,7 @@ import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
 import _ from 'lodash';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../submission-to-clinical/submission-to-clinical';
-import { checkClinicalEntityDoesntBelongsToOtherDonor } from './utils';
+import { checkClinicalEntityDoesntBelongToOtherDonor } from './utils';
 
 export const validate = async (
   followUpRecord: DeepReadonly<SubmittedClinicalRecord>,
@@ -25,7 +25,7 @@ export const validate = async (
   // adding new follow up to this donor ?
   if (!followUpClinicalInfo) {
     // check it is unique in this program
-    await checkClinicalEntityDoesntBelongsToOtherDonor(
+    await checkClinicalEntityDoesntBelongToOtherDonor(
       ClinicalEntitySchemaNames.FOLLOW_UP,
       followUpRecord,
       existentDonor,
