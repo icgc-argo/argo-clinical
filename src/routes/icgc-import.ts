@@ -12,6 +12,6 @@ router.post(
   wrapAsync(submissionAPI.processLegacyIcgcData),
 );
 
-router.post('/', wrapAsync(submissionAPI.addDonors));
+router.post('/', upload.single('donors'), wrapAsync(submissionAPI.addDonors));
 
 export default router;
