@@ -32,16 +32,19 @@ import {
   DonorFieldsEnum,
 } from '../../../src/submission/submission-entities';
 import { TsvUtils } from '../../../src/utils';
-import { donorDao } from '../../../src/clinical/donor-repo';
+import { donorDao, DonorModel } from '../../../src/clinical/donor-repo';
 import { Donor } from '../../../src/clinical/clinical-entities';
 import AdmZip from 'adm-zip';
-
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { SchemasDictionary } from '../../../src/lectern-client/schema-entities';
 import { DictionaryMigration } from '../../../src/submission/schema/migration-entities';
-
+import * as util from 'util';
 chai.use(require('chai-http'));
 chai.should();
+
+const baseDonorId = 234474;
+const baseSampleId = 607869;
+const baseSpecimenId = 203799;
 
 const expectedErrors = [
   {
@@ -311,7 +314,9 @@ describe('Submission Api', () => {
   });
 
   describe('registration', function() {
-    this.beforeEach(async () => await clearCollections(dburl, ['donors', 'activeregistrations']));
+    this.beforeEach(async () => {
+      await clearCollections(dburl, ['donors', 'activeregistrations', 'counters']);
+    });
 
     it('should return 200 and empty json if no registration found', function(done) {
       chai
@@ -1930,23 +1935,25 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dburl: 
   res.should.have.status(200);
   const donorRows: any[] = [];
   rows.forEach((r, idx) => {
-    const i = idx + 1;
+    const donorIdCounter = idx + baseDonorId;
+    const sampleIdCounter = idx + baseSampleId;
+    const specimenIdCounter = idx + baseSpecimenId;
     donorRows.push(
       emptyDonorDocument({
-        donorId: i,
+        donorId: donorIdCounter,
         gender: r[SampleRegistrationFieldsEnum.gender],
         submitterId: r[SampleRegistrationFieldsEnum.submitter_donor_id],
         programId: r[SampleRegistrationFieldsEnum.program_id],
         specimens: [
           {
-            specimenId: i,
+            specimenId: specimenIdCounter,
             clinicalInfo: {},
             submitterId: r[SampleRegistrationFieldsEnum.submitter_specimen_id],
             specimenTissueSource: r[SampleRegistrationFieldsEnum.specimen_tissue_source],
             tumourNormalDesignation: r[SampleRegistrationFieldsEnum.tumour_normal_designation],
             samples: [
               {
-                sampleId: i,
+                sampleId: sampleIdCounter,
                 sampleType: r[SampleRegistrationFieldsEnum.sample_type],
                 submitterId: r[SampleRegistrationFieldsEnum.submitter_sample_id],
               },
@@ -2007,17 +2014,17 @@ const comittedDonors2: Donor[] = [
           {
             sampleType: 'polyA+ RNA',
             submitterId: 'sm123-4',
-            sampleId: 1,
+            sampleId: baseSampleId,
           },
         ],
         specimenTissueSource: 'Bone marrow',
         tumourNormalDesignation: 'Xenograft - derived from primary tumour',
         submitterId: 'ss123-jdjr-ak',
-        specimenId: 1,
+        specimenId: baseSpecimenId,
         clinicalInfo: {},
       },
     ],
-    donorId: 1,
+    donorId: baseDonorId,
   },
   {
     schemaMetadata: {
@@ -2036,13 +2043,13 @@ const comittedDonors2: Donor[] = [
           {
             sampleType: 'Ribo-Zero RNA',
             submitterId: 'sm123-5',
-            sampleId: 2,
+            sampleId: baseSampleId + 1,
           },
         ],
         specimenTissueSource: 'Serum',
         tumourNormalDesignation: 'Xenograft - derived from primary tumour',
         submitterId: 'ss123-sjdm',
-        specimenId: 2,
+        specimenId: baseSpecimenId + 1,
         clinicalInfo: {},
       },
       {
@@ -2050,7 +2057,7 @@ const comittedDonors2: Donor[] = [
           {
             sampleType: 'ctDNA',
             submitterId: 'sm123-00-1',
-            sampleId: 5,
+            sampleId: baseSampleId + 4,
           },
         ],
         specimenTissueSource: 'Other',
@@ -2060,7 +2067,7 @@ const comittedDonors2: Donor[] = [
         clinicalInfo: {},
       },
     ],
-    donorId: 2,
+    donorId: baseDonorId + 1,
   },
   {
     schemaMetadata: {
@@ -2079,17 +2086,17 @@ const comittedDonors2: Donor[] = [
           {
             sampleType: 'polyA+ RNA',
             submitterId: 'sm123-6',
-            sampleId: 3,
+            sampleId: baseSampleId + 2,
           },
         ],
         specimenTissueSource: 'Pleural effusion',
         tumourNormalDesignation: 'Primary tumour - adjacent to normal',
         submitterId: 'ss123-1123',
-        specimenId: 3,
+        specimenId: baseSpecimenId + 2,
         clinicalInfo: {},
       },
     ],
-    donorId: 3,
+    donorId: baseDonorId + 2,
   },
   {
     schemaMetadata: {
@@ -2108,13 +2115,13 @@ const comittedDonors2: Donor[] = [
           {
             sampleType: 'ctDNA',
             submitterId: 'sm123-7',
-            sampleId: 4,
+            sampleId: baseSampleId + 3,
           },
         ],
         specimenTissueSource: 'Other',
         tumourNormalDesignation: 'Metastatic tumour',
         submitterId: 'ss123-abnc',
-        specimenId: 4,
+        specimenId: baseSpecimenId + 3,
         clinicalInfo: {},
       },
       {
@@ -2122,17 +2129,17 @@ const comittedDonors2: Donor[] = [
           {
             sampleType: 'ctDNA',
             submitterId: 'sm128-1',
-            sampleId: 7,
+            sampleId: baseSampleId + 6,
           },
         ],
         specimenTissueSource: 'Other',
         tumourNormalDesignation: 'Metastatic tumour',
         submitterId: 'ss123-abnc0',
-        specimenId: 7,
+        specimenId: baseSpecimenId + 6,
         clinicalInfo: {},
       },
     ],
-    donorId: 4,
+    donorId: baseDonorId + 3,
   },
   {
     schemaMetadata: {
@@ -2152,17 +2159,17 @@ const comittedDonors2: Donor[] = [
           {
             sampleType: 'polyA+ RNA',
             submitterId: 'sm123-129',
-            sampleId: 6,
+            sampleId: baseSampleId + 5,
           },
         ],
         specimenTissueSource: 'Pleural effusion',
         tumourNormalDesignation: 'Metastatic tumour',
         submitterId: 'ss123-129',
-        specimenId: 6,
+        specimenId: baseSpecimenId + 5,
         clinicalInfo: {},
       },
     ],
-    donorId: 5,
+    donorId: baseDonorId + 4,
   },
   {
     schemaMetadata: {
@@ -2181,16 +2188,16 @@ const comittedDonors2: Donor[] = [
           {
             sampleType: 'Amplified DNA',
             submitterId: 'sm200-1',
-            sampleId: 8,
+            sampleId: baseSampleId + 7,
           },
         ],
         specimenTissueSource: 'Blood derived',
         tumourNormalDesignation: 'Recurrent tumour',
         submitterId: 'ss200-1',
-        specimenId: 8,
+        specimenId: baseSpecimenId + 7,
         clinicalInfo: {},
       },
     ],
-    donorId: 6,
+    donorId: baseDonorId + 5,
   },
 ];
