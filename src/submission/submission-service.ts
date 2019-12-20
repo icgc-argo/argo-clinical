@@ -967,9 +967,9 @@ export namespace operations {
     };
 
     donors.forEach((d: any) => {
-      d.createdAt = `${new Date()}`;
+      d.createdAt = new Date();
       d.__v = 1;
-      d.updatedAt = `${new Date()}`;
+      d.updatedAt = new Date();
       d.createBy = 'dcc-admin';
       d.schemaMetadata = schemaMetadata;
     });
