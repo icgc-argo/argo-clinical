@@ -38,7 +38,6 @@ import AdmZip from 'adm-zip';
 import _ from 'lodash';
 import { SchemasDictionary } from '../../../src/lectern-client/schema-entities';
 import { DictionaryMigration } from '../../../src/submission/schema/migration-entities';
-import * as util from 'util';
 chai.use(require('chai-http'));
 chai.should();
 

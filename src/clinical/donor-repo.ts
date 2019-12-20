@@ -340,12 +340,12 @@ DonorSchema.plugin(AutoIncrement, {
 
 SpecimenSchema.plugin(AutoIncrement, {
   inc_field: 'specimenId',
-  start_seq: process.env.SPECIMEN_ID_SEED || 610000,
+  start_seq: process.env.SPECIMEN_ID_SEED || 210000,
 });
 
 SampleSchema.plugin(AutoIncrement, {
   inc_field: 'sampleId',
-  start_seq: process.env.SAMPLE_ID_SEED || 210000,
+  start_seq: process.env.SAMPLE_ID_SEED || 610000,
 });
 
 export let DonorModel = mongoose.model<DonorDocument>('Donor', DonorSchema);
