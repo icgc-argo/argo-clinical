@@ -1314,7 +1314,7 @@ describe('data-validator', () => {
         {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
           [SampleRegistrationFieldsEnum.program_id]: 'PEME-CA',
-          [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP13',
+          [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP1',
           [SpecimenFieldsEnum.specimen_acquisition_interval]: 5020,
           index: 0,
         },
@@ -1324,11 +1324,14 @@ describe('data-validator', () => {
         .validateSubmissionData({ AB1: submittedAB1Records }, { AB1: existingDonorAB1Mock })
         .catch(err => fail(err));
 
-      // donor is alive so should skip time interval validation
+      // donor is alive so should have no time interval validation errors
       chai.expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors.length).to.eq(0);
+      chai.expect(result[ClinicalEntitySchemaNames.SPECIMEN].dataErrors.length).to.eq(0);
     });
     it('should detect not enough info to validate specimen file', async () => {
-      const existingDonorMock: Donor = stubs.validation.existingDonor01();
+      const existingDonorAB1Mock: Donor = stubs.validation.existingDonor01();
+      const existingDonorAB2Mock: Donor = stubs.validation.existingDonor06();
+      // Donor AB1 has no clinical info
       const newDonorAB1Records = {};
       ClinicalSubmissionRecordsOperations.addRecord(
         ClinicalEntitySchemaNames.SPECIMEN,
@@ -1350,12 +1353,27 @@ describe('data-validator', () => {
           index: 1,
         },
       );
+      // Donor AB2 here has clinicalInfo where vital_status===deceased but no survival_time is given
+      const newDonorAB2Records = {};
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.SPECIMEN,
+        newDonorAB2Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
+          [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP1',
+          [SpecimenFieldsEnum.specimen_acquisition_interval]: 200,
+          index: 2,
+        },
+      );
 
       const result = await dv
-        .validateSubmissionData({ AB1: newDonorAB1Records }, { AB1: existingDonorMock })
+        .validateSubmissionData(
+          { AB1: newDonorAB1Records, AB2: newDonorAB2Records },
+          { AB1: existingDonorAB1Mock, AB2: existingDonorAB2Mock },
+        )
         .catch((err: any) => fail(err));
 
-      const specimenIdErr1: SubmissionValidationError = {
+      const specimenMisisngDonorAB1FieldsErr: SubmissionValidationError = {
         fieldName: SpecimenFieldsEnum.specimen_acquisition_interval,
         message: `[specimen_acquisition_interval] requires [donor.vital_status], [donor.survival_time] in order to complete validation.  Please upload data for all fields in this clinical data submission.`,
         type: DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
@@ -1370,23 +1388,28 @@ describe('data-validator', () => {
         },
       };
 
-      const specimenIdErr2: SubmissionValidationError = {
+      const specimenMissingDonorAB2FieldErr: SubmissionValidationError = {
         fieldName: SpecimenFieldsEnum.specimen_acquisition_interval,
-        message: `[specimen_acquisition_interval] requires [donor.vital_status], [donor.survival_time] in order to complete validation.  Please upload data for all fields in this clinical data submission.`,
+        message: `[specimen_acquisition_interval] requires [donor.survival_time] in order to complete validation.  Please upload data for all fields in this clinical data submission.`,
         type: DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
-        index: 1,
+        index: 2,
         info: {
-          donorSubmitterId: 'AB1',
+          donorSubmitterId: 'AB2',
           value: 200,
-          missingField: [
-            ClinicalEntitySchemaNames.DONOR + '.' + DonorFieldsEnum.vital_status,
-            ClinicalEntitySchemaNames.DONOR + '.' + DonorFieldsEnum.survival_time,
-          ],
+          missingField: [ClinicalEntitySchemaNames.DONOR + '.' + DonorFieldsEnum.survival_time],
         },
       };
-      chai.expect(result.specimen.dataErrors.length).to.eq(2);
-      chai.expect(result.specimen.dataErrors).to.deep.include(specimenIdErr1);
-      chai.expect(result.specimen.dataErrors).to.deep.include(specimenIdErr2);
+
+      chai.expect(result.specimen.dataErrors.length).to.eq(3);
+
+      chai
+        .expect(result.specimen.dataErrors)
+        .to.deep.include({ ...specimenMisisngDonorAB1FieldsErr, index: 0 });
+      chai
+        .expect(result.specimen.dataErrors)
+        .to.deep.include({ ...specimenMisisngDonorAB1FieldsErr, index: 1 });
+
+      chai.expect(result.specimen.dataErrors).to.deep.include(specimenMissingDonorAB2FieldErr);
     });
   });
 

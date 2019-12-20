@@ -105,17 +105,20 @@ const getDataFromDonorRecordOrDonor = (
   let missingDonorFields: string[] = [];
   let donorVitalStatus: string = '';
   let donorSurvivalTime: number = NaN;
-  const donorDataSource = donor.clinicalInfo;
+  const donorDataSource = donor.clinicalInfo || {};
 
-  if (!donorDataSource) {
+  if (_.isEmpty(donorDataSource)) {
     missingDonorFields = [DonorFieldsEnum.vital_status, DonorFieldsEnum.survival_time];
   } else {
-    donorVitalStatus = donorDataSource[DonorFieldsEnum.vital_status] as string;
+    donorVitalStatus = (donorDataSource[DonorFieldsEnum.vital_status] as string) || '';
     donorSurvivalTime = Number(donorDataSource[DonorFieldsEnum.survival_time]) || NaN;
 
-    if (isEmptyString(donorVitalStatus)) missingDonorFields.push(DonorFieldsEnum.vital_status);
-    if (donorVitalStatus.toString().toLowerCase() === 'deceased' && isNaN(donorSurvivalTime))
+    if (isEmptyString(donorVitalStatus)) {
+      missingDonorFields.push(DonorFieldsEnum.vital_status);
+    }
+    if (donorVitalStatus.toString().toLowerCase() === 'deceased' && isNaN(donorSurvivalTime)) {
       missingDonorFields.push(DonorFieldsEnum.survival_time);
+    }
   }
 
   if (missingDonorFields.length > 0) {

@@ -199,7 +199,9 @@ export const stubs = {
       submitterId: 'AB2',
       programId: 'PEME-CA',
       donorId: 10,
-      clinicalInfo: {},
+      clinicalInfo: {
+        [DonorFieldsEnum.vital_status]: 'deceased',
+      },
       gender: 'Female',
       specimens: [
         {
