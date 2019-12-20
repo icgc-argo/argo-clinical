@@ -32,7 +32,7 @@ import {
   DonorFieldsEnum,
 } from '../../../src/submission/submission-entities';
 import { TsvUtils } from '../../../src/utils';
-import { donorDao, DonorModel } from '../../../src/clinical/donor-repo';
+import { donorDao } from '../../../src/clinical/donor-repo';
 import { Donor } from '../../../src/clinical/clinical-entities';
 import AdmZip from 'adm-zip';
 import _ from 'lodash';
@@ -42,9 +42,9 @@ import * as util from 'util';
 chai.use(require('chai-http'));
 chai.should();
 
-const baseDonorId = 234474;
-const baseSampleId = 607869;
-const baseSpecimenId = 203799;
+const baseDonorId = 250000;
+const baseSampleId = 610000;
+const baseSpecimenId = 210000;
 
 const expectedErrors = [
   {
