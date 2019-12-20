@@ -335,17 +335,17 @@ DonorSchema.index({ 'specimens.samples.submitterId': 1, programId: 1 }, { unique
  */
 DonorSchema.plugin(AutoIncrement, {
   inc_field: 'donorId',
-  start_seq: process.env.DONOR_ID_SEED || 1,
+  start_seq: process.env.DONOR_ID_SEED || 250000,
 });
 
 SpecimenSchema.plugin(AutoIncrement, {
   inc_field: 'specimenId',
-  start_seq: process.env.SPECIMEN_ID_SEED || 1,
+  start_seq: process.env.SPECIMEN_ID_SEED || 210000,
 });
 
 SampleSchema.plugin(AutoIncrement, {
   inc_field: 'sampleId',
-  start_seq: process.env.SAMPLE_ID_SEED || 1,
+  start_seq: process.env.SAMPLE_ID_SEED || 610000,
 });
 
 export let DonorModel = mongoose.model<DonorDocument>('Donor', DonorSchema);
