@@ -286,23 +286,26 @@ const getSubmissionErrorInfoObject = (
 };
 
 // ******* common resued functions *******
-export function treatmentTypeIsNotTherapyType(
+export function treatmentTypeNotMatchTherapyType(
   treatmentType: string,
   therapyType: ClinicalEntitySchemaNames,
 ): boolean {
+  treatmentType = treatmentType.toString().toLowerCase();
+
   if (therapyType === ClinicalEntitySchemaNames.CHEMOTHERAPY) {
     return (
-      treatmentType.toString().toLowerCase() !== 'chemotherapy' &&
-      treatmentType.toString().toLowerCase() !== 'combined chemo+immunotherapy' &&
-      treatmentType.toString().toLowerCase() !== 'combined chemo+radiation therapy' &&
-      treatmentType.toString().toLowerCase() !== 'combined chemo-radiotherapy and surgery'
+      treatmentType !== 'chemotherapy' &&
+      treatmentType !== 'combined chemo+immunotherapy' &&
+      treatmentType !== 'combined chemo+radiation therapy' &&
+      treatmentType !== 'combined chemo-radiotherapy and surgery'
     );
   }
+
   if (therapyType === ClinicalEntitySchemaNames.RADIATION) {
     return (
-      treatmentType.toString().toLowerCase() !== 'radiation therapy' &&
-      treatmentType.toString().toLowerCase() !== 'combined chemo+radiation therapy' &&
-      treatmentType.toString().toLowerCase() !== 'photodynamic therapy'
+      treatmentType !== 'radiation therapy' &&
+      treatmentType !== 'combined chemo+radiation therapy' &&
+      treatmentType !== 'photodynamic therapy'
     );
   }
   return false;

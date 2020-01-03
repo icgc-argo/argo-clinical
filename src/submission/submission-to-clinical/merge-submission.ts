@@ -69,43 +69,35 @@ export const mergeRecordsMapIntoDonor = (
   submittedRecordsMap: DeepReadonly<SubmittedClinicalRecordsMap>,
   exsistentDonor: DeepReadonly<Donor>,
 ) => {
-  const submittedClinicalTypes: Set<String> = new Set(Object.keys(submittedRecordsMap));
   const mergedDonor: any = _.cloneDeep(exsistentDonor);
 
-  if (submittedClinicalTypes.has(ClinicalEntitySchemaNames.DONOR)) {
-    updateDonorInfo(mergedDonor, submittedRecordsMap[ClinicalEntitySchemaNames.DONOR][0]);
-  }
-  if (submittedClinicalTypes.has(ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS)) {
-    updatePrimaryDiagnosisInfo(
-      mergedDonor,
-      submittedRecordsMap[ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS][0],
-    );
-  }
-  if (submittedClinicalTypes.has(ClinicalEntitySchemaNames.SPECIMEN)) {
-    submittedRecordsMap[ClinicalEntitySchemaNames.SPECIMEN].forEach(r =>
-      updateSpecimenInfo(mergedDonor, r),
-    );
-  }
-  if (submittedClinicalTypes.has(ClinicalEntitySchemaNames.TREATMENT)) {
-    submittedRecordsMap[ClinicalEntitySchemaNames.TREATMENT].forEach(r =>
-      addOrUpdateTreatementInfo(mergedDonor, r),
-    );
-  }
-  if (submittedClinicalTypes.has(ClinicalEntitySchemaNames.CHEMOTHERAPY)) {
-    submittedRecordsMap[ClinicalEntitySchemaNames.CHEMOTHERAPY].forEach(r =>
-      addOrUpdateTherapyInfoInDonor(mergedDonor, r, ClinicalEntitySchemaNames.CHEMOTHERAPY),
-    );
-  }
-  if (submittedClinicalTypes.has(ClinicalEntitySchemaNames.RADIATION)) {
-    submittedRecordsMap[ClinicalEntitySchemaNames.RADIATION].forEach(r =>
-      addOrUpdateTherapyInfoInDonor(mergedDonor, r, ClinicalEntitySchemaNames.RADIATION),
-    );
-  }
-  if (submittedClinicalTypes.has(ClinicalEntitySchemaNames.FOLLOW_UP)) {
-    submittedRecordsMap[ClinicalEntitySchemaNames.FOLLOW_UP].forEach(r =>
-      updateOrAddFollowUp(mergedDonor, r),
-    );
-  }
+  submittedRecordsMap[ClinicalEntitySchemaNames.DONOR]?.forEach(r =>
+    updateDonorInfo(mergedDonor, r),
+  );
+
+  submittedRecordsMap[ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]?.forEach(r =>
+    updatePrimaryDiagnosisInfo(mergedDonor, r),
+  );
+
+  submittedRecordsMap[ClinicalEntitySchemaNames.SPECIMEN]?.forEach(r =>
+    updateSpecimenInfo(mergedDonor, r),
+  );
+
+  submittedRecordsMap[ClinicalEntitySchemaNames.TREATMENT]?.forEach(r =>
+    addOrUpdateTreatementInfo(mergedDonor, r),
+  );
+
+  submittedRecordsMap[ClinicalEntitySchemaNames.CHEMOTHERAPY]?.forEach(r =>
+    addOrUpdateTherapyInfoInDonor(mergedDonor, r, ClinicalEntitySchemaNames.CHEMOTHERAPY),
+  );
+
+  submittedRecordsMap[ClinicalEntitySchemaNames.RADIATION]?.forEach(r =>
+    addOrUpdateTherapyInfoInDonor(mergedDonor, r, ClinicalEntitySchemaNames.RADIATION),
+  );
+
+  submittedRecordsMap[ClinicalEntitySchemaNames.FOLLOW_UP]?.forEach(r =>
+    updateOrAddFollowUp(mergedDonor, r),
+  );
 
   return mergedDonor;
 };

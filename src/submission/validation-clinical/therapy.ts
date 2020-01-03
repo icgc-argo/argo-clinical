@@ -41,7 +41,7 @@ function checkTreatementHasCorrectTypeForTherapy(
     ?.therapyType;
 
   if (
-    utils.treatmentTypeIsNotTherapyType(treatmentType, therapyType as ClinicalEntitySchemaNames)
+    utils.treatmentTypeNotMatchTherapyType(treatmentType, therapyType as ClinicalEntitySchemaNames)
   ) {
     errors.push(
       utils.buildSubmissionError(

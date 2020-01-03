@@ -65,7 +65,7 @@ function checkTherapyFileNeeded(
   errors: SubmissionValidationError[],
 ) {
   const treatmentType = treatmentRecord[TreatmentFieldsEnum.treatment_type] as string;
-  if (utils.treatmentTypeIsNotTherapyType(treatmentType, therapyType)) return;
+  if (utils.treatmentTypeNotMatchTherapyType(treatmentType, therapyType)) return;
 
   const treatment = getTreatment(treatmentRecord, mergedDonor);
   if (!treatment) throw new Error('Missing treatment, shouldnt be possible');
