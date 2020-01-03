@@ -48,7 +48,8 @@ export const mergeActiveSubmissionWithDonors = async (
         case ClinicalEntitySchemaNames.TREATMENT:
           addOrUpdateTreatementInfo(donor, record);
           break;
-        case ClinicalEntitySchemaNames.CHEMOTHERAPY: // other therapies here e.g. HormoneTherapy
+        case ClinicalEntitySchemaNames.CHEMOTHERAPY:
+        case ClinicalEntitySchemaNames.RADIATION: // other therapies here e.g. HormoneTherapy
           addOrUpdateTherapyInfoInDonor(donor, record, entityType, true);
           break;
         case ClinicalEntitySchemaNames.FOLLOW_UP:
