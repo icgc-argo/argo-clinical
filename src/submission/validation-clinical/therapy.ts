@@ -1,6 +1,5 @@
 import {
   SubmissionValidationError,
-  RecordValidationResult,
   ClinicalEntitySchemaNames,
   TreatmentFieldsEnum,
   SubmittedClinicalRecord,
@@ -13,35 +12,38 @@ import _ from 'lodash';
 import { getSingleClinicalObjectFromDonor } from '../submission-to-clinical/submission-to-clinical';
 
 export const validate = async (
-  chemoRecord: DeepReadonly<SubmittedClinicalRecord>,
+  therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
   existentDonor: DeepReadonly<Donor>,
   mergedDonor: Donor,
 ): Promise<SubmissionValidationError[]> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
-  if (!chemoRecord || !mergedDonor || !existentDonor) {
+  if (!therapyRecord || !mergedDonor || !existentDonor) {
     throw new Error("Can't call this function without a registerd donor & therapy record");
   }
 
   const errors: SubmissionValidationError[] = [];
 
-  const treatment = getTreatment(chemoRecord, mergedDonor, errors);
+  const treatment = getTreatment(therapyRecord, mergedDonor, errors);
   if (!treatment) return errors;
 
-  checkTreatementHasCorrectType(chemoRecord, treatment, errors);
+  checkTreatementHasCorrectTypeForTherapy(therapyRecord, treatment, errors);
 
   return errors;
 };
 
-function checkTreatementHasCorrectType(
-  chemoRecord: SubmittedClinicalRecord,
+function checkTreatementHasCorrectTypeForTherapy(
+  therapyRecord: SubmittedClinicalRecord,
   treatment: DeepReadonly<Treatment>,
   errors: SubmissionValidationError[],
 ) {
   const treatmentType = treatment.clinicalInfo[TreatmentFieldsEnum.treatment_type] as string;
-  if (utils.treatmentTypeIsNotChemo(treatmentType)) {
+  const therapyType = treatment.therapies.find(therapy => therapy.clinicalInfo === therapyRecord)
+    ?.therapyType;
+
+  if (utils.treatmentTypeIsNotTherapy(treatmentType, therapyType as ClinicalEntitySchemaNames)) {
     errors.push(
       utils.buildSubmissionError(
-        chemoRecord,
+        therapyRecord,
         DataValidationErrors.INCOMPATIBLE_PARENT_TREATMENT_TYPE,
         TreatmentFieldsEnum.submitter_treatment_id,
         {

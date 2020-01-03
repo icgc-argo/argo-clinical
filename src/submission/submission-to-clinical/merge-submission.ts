@@ -95,7 +95,11 @@ export const mergeRecordsMapIntoDonor = (
       addOrUpdateTherapyInfoInDonor(mergedDonor, r, ClinicalEntitySchemaNames.CHEMOTHERAPY),
     );
   }
-
+  if (submittedClinicalTypes.has(ClinicalEntitySchemaNames.RADIATION)) {
+    submittedRecordsMap[ClinicalEntitySchemaNames.CHEMOTHERAPY].forEach(r =>
+      addOrUpdateTherapyInfoInDonor(mergedDonor, r, ClinicalEntitySchemaNames.RADIATION),
+    );
+  }
   if (submittedClinicalTypes.has(ClinicalEntitySchemaNames.FOLLOW_UP)) {
     submittedRecordsMap[ClinicalEntitySchemaNames.FOLLOW_UP].forEach(r =>
       updateOrAddFollowUp(mergedDonor, r),
@@ -128,9 +132,10 @@ const updateSpecimenInfo = (donor: Donor, record: any) => {
 };
 
 const updateOrAddFollowUp = (donor: Donor, record: ClinicalInfo) => {
-  const followUp = findFollowUp(donor, record[
-    ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.FOLLOW_UP]
-  ] as string);
+  const followUp = findFollowUp(
+    donor,
+    record[ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.FOLLOW_UP]] as string,
+  );
 
   if (followUp) {
     followUp.clinicalInfo = record;

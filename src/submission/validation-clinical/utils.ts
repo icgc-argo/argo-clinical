@@ -286,18 +286,9 @@ const getSubmissionErrorInfoObject = (
 };
 
 // ******* common resued functions *******
-export function treatmentTypeIsNotChemo(treatmentType: string) {
-  return (
-    treatmentType.toString().toLowerCase() !== 'chemotherapy' &&
-    treatmentType.toString().toLowerCase() !== 'combined chemo+immunotherapy' &&
-    treatmentType.toString().toLowerCase() !== 'combined chemo+radiation therapy' &&
-    treatmentType.toString().toLowerCase() !== 'combined chemo-radiotherapy and surgery'
-  );
-}
-
 export function treatmentTypeIsNotTherapy(
   treatmentType: string,
-  therapyType: ClinicalEntitySchemaNames.RADIATION | ClinicalEntitySchemaNames.CHEMOTHERAPY,
+  therapyType: ClinicalEntitySchemaNames,
 ) {
   if (therapyType === ClinicalEntitySchemaNames.CHEMOTHERAPY) {
     return (

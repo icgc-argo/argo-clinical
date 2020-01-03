@@ -1268,7 +1268,7 @@
               },
               "restrictions": {
                 "required": true,
-                "regex": "#/regex/submitter_id"
+                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
               }
             },
             {
@@ -1281,7 +1281,7 @@
               },
               "restrictions": {
                 "required": true,
-                "regex": "#/regex/submitter_id"
+                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
               }
             },
             {

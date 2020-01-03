@@ -2,15 +2,18 @@ import * as donor from './donor';
 import * as specimen from './specimen';
 import * as follow_up from './followUp';
 import * as treatment from './treatment';
-import * as chemotherapy from './chemotherapy';
+import * as therapy from './therapy';
+import { ClinicalEntitySchemaNames } from '../submission-entities';
 
 // this done because typescript doesn't allow mapping with string index signature for default export
 const availableValidators: { [k: string]: any } = {
-  donor,
-  specimen,
-  follow_up,
-  treatment,
-  chemotherapy,
+  [ClinicalEntitySchemaNames.DONOR]: donor,
+  [ClinicalEntitySchemaNames.SPECIMEN]: specimen,
+  [ClinicalEntitySchemaNames.FOLLOW_UP]: follow_up,
+  [ClinicalEntitySchemaNames.TREATMENT]: treatment,
+  // all therapies follow the same validation
+  [ClinicalEntitySchemaNames.CHEMOTHERAPY]: therapy,
+  [ClinicalEntitySchemaNames.RADIATION]: therapy,
 };
 
 export const submissionValidator = (clinicalType: string): any => {
