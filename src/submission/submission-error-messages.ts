@@ -42,7 +42,14 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
   MISSING_THERAPY_DATA: errorData => {
     const therapyType = errorData.info.therapyType;
     const treatmentType = errorData.info.value;
-    return `Treatments of type [${treatmentType}] need a [${therapyType}] file.`;
+    return `Treatments of type [${treatmentType}] need a corresponding [${therapyType}] record.`;
+  },
+  INCOMPATIBLE_PARENT_TREATMENT_TYPE: errorData => {
+    const therapyType: string = errorData.info.therapyType;
+    const treatmentType = errorData.info.treatment_type;
+    return `[${_.startCase(
+      therapyType,
+    )}] records can not be submitted for treatment types of [${treatmentType}].`;
   },
 };
 

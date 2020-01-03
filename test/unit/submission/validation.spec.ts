@@ -1451,7 +1451,7 @@ describe('data-validator', () => {
         .expect(result[ClinicalEntitySchemaNames.TREATMENT].dataErrors[0])
         .to.deep.eq(treatmentError);
     });
-    it('should detect treatment and missing chemotherapy data', async () => {
+    it('should detect treatment and missing therapy data', async () => {
       const existingDonorMock: Donor = stubs.validation.existingDonor01();
       const newDonorAB1Records = {};
       ClinicalSubmissionRecordsOperations.addRecord(
@@ -1460,7 +1460,7 @@ describe('data-validator', () => {
         {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
           [TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
-          [TreatmentFieldsEnum.treatment_type]: 'Combined chemo+immunotherapy',
+          [TreatmentFieldsEnum.treatment_type]: 'Combined chemo+radiation therapy',
           index: 0,
         },
       );
@@ -1471,17 +1471,29 @@ describe('data-validator', () => {
 
       const treatmentTherapyErr: SubmissionValidationError = {
         fieldName: TreatmentFieldsEnum.treatment_type,
-        message: `Treatments of type [Combined chemo+immunotherapy] need a [chemotherapy] file.`,
+        message: `Treatments of type [Combined chemo+radiation therapy] need a corresponding [chemotherapy] record.`,
         type: DataValidationErrors.MISSING_THERAPY_DATA,
         index: 0,
         info: {
           donorSubmitterId: 'AB1',
-          value: 'Combined chemo+immunotherapy',
+          value: 'Combined chemo+radiation therapy',
           therapyType: ClinicalEntitySchemaNames.CHEMOTHERAPY,
         },
       };
-      chai.expect(result.treatment.dataErrors.length).to.eq(1);
+      const treatmentTherapyErr2: SubmissionValidationError = {
+        fieldName: TreatmentFieldsEnum.treatment_type,
+        message: `Treatments of type [Combined chemo+radiation therapy] need a corresponding [radiation] record.`,
+        type: DataValidationErrors.MISSING_THERAPY_DATA,
+        index: 0,
+        info: {
+          donorSubmitterId: 'AB1',
+          value: 'Combined chemo+radiation therapy',
+          therapyType: ClinicalEntitySchemaNames.RADIATION,
+        },
+      };
+      chai.expect(result.treatment.dataErrors.length).to.eq(2);
       chai.expect(result.treatment.dataErrors).to.deep.include(treatmentTherapyErr);
+      chai.expect(result.treatment.dataErrors).to.deep.include(treatmentTherapyErr2);
     });
     it('should detect missing or invalid treatment for chemotherapy', async () => {
       const existingDonorMock: Donor = stubs.validation.existingDonor01();
@@ -1531,18 +1543,61 @@ describe('data-validator', () => {
       };
       const chemoTretmentInvalidErr: SubmissionValidationError = {
         fieldName: TreatmentFieldsEnum.submitter_treatment_id,
-        message: `INCOMPATIBLE_PARENT_TREATMENT_TYPE`,
+        message: `[Chemotherapy] records can not be submitted for treatment types of [Ablation].`,
         type: DataValidationErrors.INCOMPATIBLE_PARENT_TREATMENT_TYPE,
         index: 1,
         info: {
           donorSubmitterId: 'AB1',
           value: 'T_02',
           treatment_type: 'Ablation',
+          therapyType: ClinicalEntitySchemaNames.CHEMOTHERAPY,
         },
       };
       chai.expect(result.chemotherapy.dataErrors.length).to.eq(2);
       chai.expect(result.chemotherapy.dataErrors).to.deep.include(chemoTretmentIdErr);
       chai.expect(result.chemotherapy.dataErrors).to.deep.include(chemoTretmentInvalidErr);
+    });
+    it('should detect invalid treatment for radiation', async () => {
+      const existingDonorMock: Donor = stubs.validation.existingDonor01();
+      const newDonorAB1Records = {};
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.TREATMENT,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
+          [TreatmentFieldsEnum.treatment_type]: 'Ablation',
+          index: 0,
+        },
+      );
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.RADIATION,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
+          index: 0,
+        },
+      );
+
+      const result = await dv
+        .validateSubmissionData({ AB1: newDonorAB1Records }, { AB1: existingDonorMock })
+        .catch((err: any) => fail(err));
+
+      const chemoTretmentInvalidErr: SubmissionValidationError = {
+        fieldName: TreatmentFieldsEnum.submitter_treatment_id,
+        message: `[Radiation] records can not be submitted for treatment types of [Ablation].`,
+        type: DataValidationErrors.INCOMPATIBLE_PARENT_TREATMENT_TYPE,
+        index: 0,
+        info: {
+          donorSubmitterId: 'AB1',
+          value: 'T_02',
+          treatment_type: 'Ablation',
+          therapyType: ClinicalEntitySchemaNames.RADIATION,
+        },
+      };
+      chai.expect(result.radiation.dataErrors.length).to.eq(1);
+      chai.expect(result.radiation.dataErrors).to.deep.include(chemoTretmentInvalidErr);
     });
   });
 

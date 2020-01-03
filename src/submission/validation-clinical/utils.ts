@@ -286,10 +286,10 @@ const getSubmissionErrorInfoObject = (
 };
 
 // ******* common resued functions *******
-export function treatmentTypeIsNotTherapy(
+export function treatmentTypeIsNotTherapyType(
   treatmentType: string,
   therapyType: ClinicalEntitySchemaNames,
-) {
+): boolean {
   if (therapyType === ClinicalEntitySchemaNames.CHEMOTHERAPY) {
     return (
       treatmentType.toString().toLowerCase() !== 'chemotherapy' &&
@@ -305,6 +305,7 @@ export function treatmentTypeIsNotTherapy(
       treatmentType.toString().toLowerCase() !== 'photodynamic therapy'
     );
   }
+  return false;
 }
 
 // check that a donor is not found with the same clinical entity unique identifier

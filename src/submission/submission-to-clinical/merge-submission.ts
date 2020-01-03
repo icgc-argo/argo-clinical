@@ -96,7 +96,7 @@ export const mergeRecordsMapIntoDonor = (
     );
   }
   if (submittedClinicalTypes.has(ClinicalEntitySchemaNames.RADIATION)) {
-    submittedRecordsMap[ClinicalEntitySchemaNames.CHEMOTHERAPY].forEach(r =>
+    submittedRecordsMap[ClinicalEntitySchemaNames.RADIATION].forEach(r =>
       addOrUpdateTherapyInfoInDonor(mergedDonor, r, ClinicalEntitySchemaNames.RADIATION),
     );
   }

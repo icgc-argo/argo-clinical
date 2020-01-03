@@ -40,7 +40,9 @@ function checkTreatementHasCorrectTypeForTherapy(
   const therapyType = treatment.therapies.find(therapy => therapy.clinicalInfo === therapyRecord)
     ?.therapyType;
 
-  if (utils.treatmentTypeIsNotTherapy(treatmentType, therapyType as ClinicalEntitySchemaNames)) {
+  if (
+    utils.treatmentTypeIsNotTherapyType(treatmentType, therapyType as ClinicalEntitySchemaNames)
+  ) {
     errors.push(
       utils.buildSubmissionError(
         therapyRecord,
@@ -48,6 +50,7 @@ function checkTreatementHasCorrectTypeForTherapy(
         TreatmentFieldsEnum.submitter_treatment_id,
         {
           [TreatmentFieldsEnum.treatment_type]: treatmentType,
+          therapyType,
         },
       ),
     );
