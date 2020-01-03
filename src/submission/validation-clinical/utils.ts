@@ -285,7 +285,7 @@ const getSubmissionErrorInfoObject = (
   }
 };
 
-// ******* common resued  funcitons *******
+// ******* common resued functions *******
 export function treatmentTypeIsNotChemo(treatmentType: string) {
   return (
     treatmentType.toString().toLowerCase() !== 'chemotherapy' &&
@@ -293,6 +293,27 @@ export function treatmentTypeIsNotChemo(treatmentType: string) {
     treatmentType.toString().toLowerCase() !== 'combined chemo+radiation therapy' &&
     treatmentType.toString().toLowerCase() !== 'combined chemo-radiotherapy and surgery'
   );
+}
+
+export function treatmentTypeIsNotTherapy(
+  treatmentType: string,
+  therapyType: ClinicalEntitySchemaNames.RADIATION | ClinicalEntitySchemaNames.CHEMOTHERAPY,
+) {
+  if (therapyType === ClinicalEntitySchemaNames.CHEMOTHERAPY) {
+    return (
+      treatmentType.toString().toLowerCase() !== 'chemotherapy' &&
+      treatmentType.toString().toLowerCase() !== 'combined chemo+immunotherapy' &&
+      treatmentType.toString().toLowerCase() !== 'combined chemo+radiation therapy' &&
+      treatmentType.toString().toLowerCase() !== 'combined chemo-radiotherapy and surgery'
+    );
+  }
+  if (therapyType === ClinicalEntitySchemaNames.RADIATION) {
+    return (
+      treatmentType.toString().toLowerCase() !== 'radiation therapy' &&
+      treatmentType.toString().toLowerCase() !== 'combined chemo+radiation therapy' &&
+      treatmentType.toString().toLowerCase() !== 'photodynamic therapy'
+    );
+  }
 }
 
 // check that a donor is not found with the same clinical entity unique identifier

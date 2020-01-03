@@ -39,6 +39,11 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
     const donorId = errorData.info.otherDonorSubmitterId;
     return `This ${clinicalType} has already been associated to donor ${donorId}. Please correct your file.`;
   },
+  MISSING_THERAPY_DATA: errorData => {
+    const therapyType = errorData.info.therapyType;
+    const treatmentType = errorData.info.value;
+    return `Treatments of type [${treatmentType}] need a [${therapyType}] file.`;
+  },
 };
 
 const BATCH_ERROR_MESSAGES: Record<SubmissionBatchErrorTypes, (errorData: any) => string> = {

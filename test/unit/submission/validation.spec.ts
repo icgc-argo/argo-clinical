@@ -1471,7 +1471,7 @@ describe('data-validator', () => {
 
       const treatmentTherapyErr: SubmissionValidationError = {
         fieldName: TreatmentFieldsEnum.treatment_type,
-        message: `MISSING_THERAPY_DATA`,
+        message: `Treatments of type [Combined chemo+immunotherapy] need a [chemotherapy] file.`,
         type: DataValidationErrors.MISSING_THERAPY_DATA,
         index: 0,
         info: {
