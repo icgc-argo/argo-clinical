@@ -1,4 +1,4 @@
-program_id	submitter_donor_id	gender	submitter_specimen_id	specimen_tissue_source	tumour_normal_designation	submitter_sample_id	sample_type
-PACA-AU	abcd-124	Female	ss123-ooo	Saliva	Primary tumour	sm123-124-1	Amplified DNA
-PACA-AU	abcd-300	Male	ss123-jdjr-ak	Saliva	Xenograft - derived from primary tumour	sm123-300	polyA+ RNA	
-PACA-AU	abcd-301	Female	ss123-jdjr-ak2	Other	Metastatic tumour	sm123-6	ctDNA
+program_id	submitter_donor_id	gender	submitter_specimen_id	specimen_tissue_source	tumour_normal_designation	specimen_type	submitter_sample_id	sample_type
+PACA-AU	abcd-124	Female	ss123-ooo	Saliva	Tumour	Primary tumour	sm123-124-1	Amplified DNA
+PACA-AU	abcd-300	Male	ss123-jdjr-ak	Saliva	Tumour	Xenograft - derived from primary tumour	sm123-300	polyA+ RNA	
+PACA-AU	abcd-301	Female	ss123-jdjr-ak2	Other	Tumour	Metastatic tumour	sm123-6	ctDNA

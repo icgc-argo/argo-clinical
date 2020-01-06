@@ -114,6 +114,18 @@
             {
               "name": "tumour_normal_designation",
               "valueType": "string",
+              "description": "Description of specimens tumour/normal status for data processing.",
+              "restrictions": {
+                "required": true,
+                "codeList": ["Normal", "Tumour"]
+              },
+              "meta": {
+                "core": true
+              }
+            },
+            {
+              "name": "specimen_type",
+              "valueType": "string",
               "description": "Description of the kind of specimen that was collected with respect to tumour/normal tissue origin.",
               "restrictions": {
                 "required": true,

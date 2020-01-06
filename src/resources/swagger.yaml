@@ -1053,6 +1053,7 @@ components:
         - submitter_specimen_id
         - specimen_tissue_source
         - tumour_normal_designation
+        - specimen_type
         - submitter_sample_id
         - sample_type
       properties:
@@ -1067,6 +1068,8 @@ components:
         specimen_tissue_source:
           type: string
         tumour_normal_designation:
+          type: string
+        specimen_type:
           type: string
         submitter_sample_id:
           type: string
