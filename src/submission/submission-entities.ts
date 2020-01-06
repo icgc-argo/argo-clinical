@@ -20,6 +20,7 @@ export interface SubmittedRegistrationRecord {
   readonly gender: string;
   readonly submitter_specimen_id: string;
   readonly specimen_tissue_source: string;
+  readonly tumour_normal_designation: string;
   readonly specimen_type: string;
   readonly submitter_sample_id: string;
   readonly sample_type: string;
@@ -33,6 +34,7 @@ export const RegistrationToCreateRegistrationFieldsMap: x = {
   gender: 'gender',
   submitter_specimen_id: 'specimenSubmitterId',
   specimen_tissue_source: 'specimenTissueSource',
+  tumour_normal_designation: 'tumourNormalDesignation',
   specimen_type: 'specimenType',
   submitter_sample_id: 'sampleSubmitterId',
   sample_type: 'sampleType',
@@ -109,6 +111,7 @@ export interface CreateRegistrationRecord {
   readonly gender: string;
   readonly specimenSubmitterId: string;
   readonly specimenTissueSource: string;
+  readonly tumourNormalDesignation: string;
   readonly specimenType: string;
   readonly sampleSubmitterId: string;
   readonly sampleType: string;
@@ -252,6 +255,7 @@ export enum SampleRegistrationFieldsEnum {
   gender = 'gender',
   submitter_specimen_id = 'submitter_specimen_id',
   specimen_tissue_source = 'specimen_tissue_source',
+  tumour_normal_designation = 'tumour_normal_designation',
   specimen_type = 'specimen_type',
   submitter_sample_id = 'submitter_sample_id',
   sample_type = 'sample_type',

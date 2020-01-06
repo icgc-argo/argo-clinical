@@ -723,6 +723,7 @@ export namespace operations {
           [SampleRegistrationFieldsEnum.gender]: r.gender,
           [SampleRegistrationFieldsEnum.submitter_specimen_id]: r.specimenSubmitterId,
           [SampleRegistrationFieldsEnum.specimen_tissue_source]: r.specimenTissueSource,
+          [SampleRegistrationFieldsEnum.tumour_normal_designation]: r.tumourNormalDesignation,
           [SampleRegistrationFieldsEnum.specimen_type]: r.specimenType,
           [SampleRegistrationFieldsEnum.submitter_sample_id]: r.sampleSubmitterId,
           [SampleRegistrationFieldsEnum.sample_type]: r.sampleType,
@@ -745,6 +746,9 @@ export namespace operations {
           gender: r[SampleRegistrationFieldsEnum.gender] as string,
           specimenSubmitterId: r[SampleRegistrationFieldsEnum.submitter_specimen_id] as string,
           specimenTissueSource: r[SampleRegistrationFieldsEnum.specimen_tissue_source] as string,
+          tumourNormalDesignation: r[
+            SampleRegistrationFieldsEnum.tumour_normal_designation
+          ] as string,
           specimenType: r[SampleRegistrationFieldsEnum.specimen_type] as string,
           sampleSubmitterId: r[SampleRegistrationFieldsEnum.submitter_sample_id] as string,
           sampleType: r[SampleRegistrationFieldsEnum.sample_type] as string,
@@ -992,6 +996,7 @@ function getIcgcDonorSpecimens(clinicalData: any, donor: any) {
       specimenId: parseInt(s.icgc_specimen_id.substring(2), 10),
       submitterId: s.submitted_specimen_id,
       clinicalInfo: {},
+      tumourNormalDesignation: 'TODO',
       specimenType: getMappedTumorNormalDesignation(s.specimen_type),
       samples: getIcgcSpecimenSamples(clinicalData, s, donor),
       specimenTissueSource: getMappedTissueSource(s.specimen_type),

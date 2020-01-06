@@ -27,6 +27,7 @@ export const stubs = {
           submitterId: 'SP1',
           specimenTissueSource: 'XYZ',
           clinicalInfo: {},
+          tumourNormalDesignation: 'Normal',
           specimenType: 'Normal',
           samples: [
             {
@@ -55,6 +56,7 @@ export const stubs = {
           submitterId: 'SP1',
           specimenTissueSource: 'XYZZ',
           clinicalInfo: {},
+          tumourNormalDesignation: 'Normal',
           specimenType: 'Normal',
           samples: [
             {
@@ -83,6 +85,7 @@ export const stubs = {
           submitterId: 'SP12',
           specimenTissueSource: 'XYZZ',
           clinicalInfo: {},
+          tumourNormalDesignation: 'Normal',
           specimenType: 'Normal',
           samples: [
             {
@@ -114,6 +117,7 @@ export const stubs = {
           submitterId: 'SP13',
           specimenTissueSource: 'Other',
           clinicalInfo: {},
+          tumourNormalDesignation: 'Normal',
           specimenType: 'Normal',
           samples: [
             {
@@ -126,6 +130,7 @@ export const stubs = {
           submitterId: 'SP14',
           specimenTissueSource: 'Other',
           clinicalInfo: {},
+          tumourNormalDesignation: 'Normal',
           specimenType: 'Normal',
           samples: [
             {
@@ -157,6 +162,7 @@ export const stubs = {
           submitterId: 'SP13',
           specimenTissueSource: 'Other',
           clinicalInfo: {},
+          tumourNormalDesignation: 'Normal',
           specimenType: 'Normal',
           samples: [
             {
@@ -169,6 +175,7 @@ export const stubs = {
           submitterId: 'SP14',
           specimenTissueSource: 'Other',
           clinicalInfo: {},
+          tumourNormalDesignation: 'Normal',
           specimenType: 'Normal',
           samples: [
             {
@@ -208,7 +215,8 @@ export const stubs = {
           submitterId: 'SPID1',
           specimenTissueSource: 'Other',
           clinicalInfo: {},
-          specimenType: 'Other',
+          tumourNormalDesignation: 'Normal',
+          specimenType: 'Normal',
           samples: [
             {
               sampleType: 'Other',

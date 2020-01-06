@@ -31,6 +31,7 @@ export interface Specimen extends ClinicalEntity {
   specimenTissueSource: string;
   submitterId: string;
   specimenId?: number;
+  tumourNormalDesignation: string;
   specimenType: string;
 }
 
