@@ -1,3 +1,3 @@
-prgram_id	submitter_donor_id	gender	submittr_specimen_id	specimen_tissue_source	tumour_normal_designation	submitter_sample_id	sample_type
+prgram_id	submitter_donor_id	gender	submittr_specimen_id	specimen_tissue_source	tumour_normal_designation	specimen_type	submitter_sample_id	sample_type
 ABCD-EF	abcd123	Male	ss123	Other	Normal	sm123	ctDNA	
  

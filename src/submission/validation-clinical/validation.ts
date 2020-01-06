@@ -229,7 +229,7 @@ const conflictingNewSpecimen = (
         conflictingSpecimenTypesIndices.push(index);
       }
 
-      if (newDonor.tumourNormalDesignation !== rec.tumourNormalDesignation) {
+      if (newDonor.specimenType !== rec.specimenType) {
         conflictingSpecimenTumourDesignationIndices.push(index);
       }
 
@@ -276,7 +276,7 @@ const conflictingNewSpecimen = (
       buildError(
         newDonor,
         DataValidationErrors.NEW_SPECIMEN_ATTR_CONFLICT,
-        SampleRegistrationFieldsEnum.tumour_normal_designation,
+        SampleRegistrationFieldsEnum.specimen_type,
         newDonorIndex,
         {
           conflictingRows: conflictingSpecimenTumourDesignationIndices,
@@ -635,14 +635,14 @@ function checkSpecimenMutations(
       ),
     );
   }
-  if (newDonor.tumourNormalDesignation !== existingSpecimen.tumourNormalDesignation) {
+  if (newDonor.specimenType !== existingSpecimen.specimenType) {
     errors.push(
       buildError(
         newDonor,
         DataValidationErrors.MUTATING_EXISTING_DATA,
-        SampleRegistrationFieldsEnum.tumour_normal_designation,
+        SampleRegistrationFieldsEnum.specimen_type,
         index,
-        { originalValue: existingSpecimen.tumourNormalDesignation },
+        { originalValue: existingSpecimen.specimenType },
       ),
     );
   }

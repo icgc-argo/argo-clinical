@@ -64,7 +64,7 @@ const specimenMutatedErr: SubmissionValidationError = {
   type: DataValidationErrors.MUTATING_EXISTING_DATA,
 };
 const tndError: SubmissionValidationError = {
-  fieldName: SampleRegistrationFieldsEnum.tumour_normal_designation,
+  fieldName: SampleRegistrationFieldsEnum.specimen_type,
   index: 0,
   info: {
     donorSubmitterId: 'AB1',
@@ -192,7 +192,7 @@ describe('data-validator', () => {
           [SampleRegistrationFieldsEnum.specimen_tissue_source]: 'XYZ',
           [SampleRegistrationFieldsEnum.sample_type]: 'ST1',
           [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP1',
-          [SampleRegistrationFieldsEnum.tumour_normal_designation]: 'Normal',
+          [SampleRegistrationFieldsEnum.specimen_type]: 'Normal',
         },
         'PEME-CA',
       );
@@ -218,7 +218,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST1',
             specimenSubmitterId: 'SP1',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         { AB1: existingDonorMock },
@@ -245,7 +245,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ1',
             sampleType: 'ST1',
             specimenSubmitterId: 'SP1',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         { AB1: existingDonorMock },
@@ -272,7 +272,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST1',
             specimenSubmitterId: 'SP1',
-            tumourNormalDesignation: 'Normal2',
+            specimenType: 'Normal2',
           },
         ],
         { AB1: existingDonorMock },
@@ -299,7 +299,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST11',
             specimenSubmitterId: 'SP1',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         { AB1: existingDonorMock },
@@ -321,7 +321,7 @@ describe('data-validator', () => {
         specimenTissueSource: 'XYZ1',
         sampleType: 'S',
         specimenSubmitterId: 'RR',
-        tumourNormalDesignation: 'Normal',
+        specimenType: 'Normal',
       };
       // test call
       const result = await dv.validateRegistrationData(
@@ -335,7 +335,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZQ',
             sampleType: 'ST11',
             specimenSubmitterId: 'SP1',
-            tumourNormalDesignation: 'Normal2',
+            specimenType: 'Normal2',
           },
           valid2ndRecord,
         ],
@@ -384,7 +384,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST11',
             specimenSubmitterId: 'SP1',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         {},
@@ -417,7 +417,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST11',
             specimenSubmitterId: 'SP1',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         {},
@@ -463,7 +463,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST11',
             specimenSubmitterId: 'SP2',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         { AB1: existingDonorMock },
@@ -493,7 +493,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST11',
             specimenSubmitterId: 'SP2',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         {},
@@ -519,7 +519,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST11',
             specimenSubmitterId: 'SP2',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           {
             donorSubmitterId: 'AB2',
@@ -529,7 +529,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST11',
             specimenSubmitterId: 'SP1',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         {},
@@ -584,7 +584,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST11',
             specimenSubmitterId: 'SP1',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           // dummy ok row to make sure indexes detected correctly
           {
@@ -595,7 +595,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST11',
             specimenSubmitterId: 'SP4',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           {
             donorSubmitterId: 'AB2',
@@ -605,7 +605,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST11',
             specimenSubmitterId: 'SP1',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         {},
@@ -662,7 +662,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYX',
             sampleType: 'ST11',
             specimenSubmitterId: 'SP1',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           // dummy ok row to make sure indexes detected correctly
           {
@@ -673,7 +673,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST11',
             specimenSubmitterId: 'SP4',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           {
             donorSubmitterId: 'AB1',
@@ -683,7 +683,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYz',
             sampleType: 'ST11',
             specimenSubmitterId: 'SP1',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         {},
@@ -738,7 +738,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST-2',
             specimenSubmitterId: 'SP1',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           // dummy ok row to make sure indexes detected correctly
           {
@@ -749,7 +749,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST11',
             specimenSubmitterId: 'SP4',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           {
             donorSubmitterId: 'AB1',
@@ -759,7 +759,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST2',
             specimenSubmitterId: 'SP1',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         {},
@@ -813,7 +813,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST-2',
             specimenSubmitterId: 'SP1',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           // dummy ok row to make sure indexes detected correctly
           {
@@ -824,7 +824,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST11',
             specimenSubmitterId: 'SP4',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           {
             donorSubmitterId: 'AB1',
@@ -834,7 +834,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST-2',
             specimenSubmitterId: 'SP1',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         {},
@@ -888,7 +888,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST2',
             specimenSubmitterId: 'SP1',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           // dummy ok row to make sure indexes detected correctly
           {
@@ -899,7 +899,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST11',
             specimenSubmitterId: 'SP4',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           {
             donorSubmitterId: 'AB1',
@@ -909,7 +909,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST2',
             specimenSubmitterId: 'SP2',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         {},
@@ -963,7 +963,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST-2',
             specimenSubmitterId: 'SP1',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           // dummy ok row to make sure indexes detected correctly
           {
@@ -974,7 +974,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST11',
             specimenSubmitterId: 'SP4',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           {
             donorSubmitterId: 'AB1',
@@ -984,7 +984,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST2',
             specimenSubmitterId: 'SP1',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         {},
@@ -1038,7 +1038,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST-2',
             specimenSubmitterId: 'SP1',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           {
             donorSubmitterId: 'AB1',
@@ -1048,7 +1048,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST-2',
             specimenSubmitterId: 'SP1',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           {
             donorSubmitterId: 'AB1',
@@ -1058,7 +1058,7 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST-2',
             specimenSubmitterId: 'SP1',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         {},

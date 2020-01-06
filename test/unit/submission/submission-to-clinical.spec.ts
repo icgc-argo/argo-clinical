@@ -44,7 +44,7 @@ const reg1: ActiveRegistration = {
       gender: 'Male',
       submitter_specimen_id: 'ss123',
       specimen_tissue_source: 'Other',
-      tumour_normal_designation: 'Normal',
+      specimen_type: 'Normal',
       submitter_sample_id: 'sm123',
       sample_type: 'ctDNA',
     },
@@ -80,7 +80,7 @@ const reg2: ActiveRegistration = {
       gender: 'Male',
       submitter_specimen_id: 'ss123',
       specimen_tissue_source: 'Other',
-      tumour_normal_designation: 'Normal',
+      specimen_type: 'Normal',
       submitter_sample_id: 'sm123',
       sample_type: 'ctDNA',
     },
@@ -157,7 +157,7 @@ describe('submission-to-clinical', () => {
             ],
             clinicalInfo: {},
             specimenTissueSource: 'Other',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
             submitterId: 'ss123',
           },
         ],
@@ -200,7 +200,7 @@ describe('submission-to-clinical', () => {
             specimenTissueSource: 'Other',
             submitterId: 'ss330',
             clinicalInfo: {},
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
             samples: [
               {
                 sampleId: 39,
@@ -229,7 +229,7 @@ describe('submission-to-clinical', () => {
             specimenTissueSource: 'Other',
             submitterId: 'ss330',
             clinicalInfo: {},
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
             samples: [
               {
                 sampleId: 39,
@@ -247,7 +247,7 @@ describe('submission-to-clinical', () => {
             ],
             clinicalInfo: {},
             specimenTissueSource: 'Other',
-            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
             submitterId: 'ss123',
           },
         ],
