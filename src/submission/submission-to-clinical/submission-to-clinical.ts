@@ -363,12 +363,13 @@ export function getClinicalObjectsFromDonor(
     }
   }
 
-  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.CHEMOTHERAPY) {
+  if (
+    clinicalEntitySchemaName === ClinicalEntitySchemaNames.CHEMOTHERAPY ||
+    clinicalEntitySchemaName === ClinicalEntitySchemaNames.RADIATION
+  ) {
     if (donor.treatments) {
       return donor.treatments
-        .map(tr =>
-          tr.therapies.filter(th => th.therapyType === ClinicalEntitySchemaNames.CHEMOTHERAPY),
-        )
+        .map(tr => tr.therapies.filter(th => th.therapyType === clinicalEntitySchemaName))
         .flat()
         .filter(notEmpty);
     }

@@ -1238,6 +1238,124 @@
               }
             }
           ]
+        },
+        {
+          "name": "radiation",
+          "description": "The collection of data elements describing the details of a radiation treatment completed by a donor.",
+          "meta": {
+            "parent": "treatment"
+          },
+          "fields": [
+            {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "meta": {
+                "primaryId": true,
+                "foreignKey": "sample_registration.program_id"
+              },
+              "restrictions": {
+                "required": true
+              }
+            },
+            {
+              "name": "submitter_donor_id",
+              "valueType": "string",
+              "description": "Unique identifier of the donor, assigned by the data provider.",
+              "meta": {
+                "primaryId": true,
+                "foreignKey": "sample_registration.submitter_donor_id"
+              },
+              "restrictions": {
+                "required": true,
+                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_treatment_id",
+              "valueType": "string",
+              "description": "Unique identifier of the treatment, as assigned by the data provider.",
+              "meta": {
+                "primaryId": true,
+                "foreignKey": "treatment.submitter_treatment_id"
+              },
+              "restrictions": {
+                "required": true,
+                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "radiation_therapy_modality",
+              "description": "Indicate the method of radiation treatment or modality.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true,
+                "codeList": ["Electron", "Heavy Ions", "Photon", "Proton"]
+              },
+              "meta": {
+                "core": true
+              }
+            },
+            {
+              "name": "application_form",
+              "description": "Indicate type of radiation therapy administered.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true,
+                "codeList": ["External", "Internal (including Brachytherapy)"]
+              },
+              "meta": {
+                "core": true
+              }
+            },
+            {
+              "name": "radiation_therapy_fractions",
+              "description": "Indicate the number of total fractions delivered as part of treatment.",
+              "valueType": "integer",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "core": true
+              }
+            },
+            {
+              "name": "radiation_therapy_dosage",
+              "description": "Indicate the total dose given in units of Gray (Gy).",
+              "valueType": "integer",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "core": true
+              }
+            },
+            {
+              "name": "anatomical_site_irradiated",
+              "description": "Indicate localization site where radiation therapy was administered.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true,
+                "codeList": [
+                  "Abdomen",
+                  "Bone",
+                  "Brain",
+                  "Extremities",
+                  "Head",
+                  "Head-Neck",
+                  "Liver",
+                  "Lung",
+                  "Pelvis",
+                  "Peritoneum",
+                  "Spine",
+                  "Thorax"
+                ]
+              },
+              "meta": {
+                "core": true
+              }
+            }
+          ]
         }
       ],
       "name": "ARGO Clinical Submission",

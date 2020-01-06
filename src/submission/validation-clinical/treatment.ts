@@ -5,6 +5,7 @@ import {
   SubmittedClinicalRecord,
   DataValidationErrors,
   ClinicalUniqueIndentifier,
+  ClinicalTherapyTypes,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, Treatment } from '../../clinical/clinical-entities';
@@ -29,7 +30,14 @@ export const validate = async (
 
   if (errors.length > 0) return errors;
 
-  checkChemoFileNeeded(treatmentRecord, mergedDonor, errors);
+  checkTherapyFileNeeded(
+    treatmentRecord,
+    mergedDonor,
+    ClinicalEntitySchemaNames.CHEMOTHERAPY,
+    errors,
+  );
+
+  checkTherapyFileNeeded(treatmentRecord, mergedDonor, ClinicalEntitySchemaNames.RADIATION, errors);
 
   return errors;
 };
@@ -51,29 +59,28 @@ async function checkTreatmentDoesntBelongToOtherDonor(
   }
 }
 
-function checkChemoFileNeeded(
+function checkTherapyFileNeeded(
   treatmentRecord: SubmittedClinicalRecord,
   mergedDonor: Donor,
+  therapyType: ClinicalTherapyTypes,
   errors: SubmissionValidationError[],
 ) {
   const treatmentType = treatmentRecord[TreatmentFieldsEnum.treatment_type] as string;
-  if (utils.treatmentTypeIsNotChemo(treatmentType)) return;
+  if (utils.treatmentTypeNotMatchTherapyType(treatmentType, therapyType)) return;
 
   const treatment = getTreatment(treatmentRecord, mergedDonor);
   if (!treatment) throw new Error('Missing treatment, shouldnt be possible');
 
   if (
     treatment.therapies.length === 0 ||
-    !treatment.therapies.some(th => th.therapyType === ClinicalEntitySchemaNames.CHEMOTHERAPY)
+    !treatment.therapies.some(th => th.therapyType === therapyType)
   ) {
     errors.push(
       utils.buildSubmissionError(
         treatmentRecord,
         DataValidationErrors.MISSING_THERAPY_DATA,
         TreatmentFieldsEnum.treatment_type,
-        {
-          therapyType: ClinicalEntitySchemaNames.CHEMOTHERAPY,
-        },
+        { therapyType },
       ),
     );
   }
