@@ -1013,12 +1013,12 @@ function getMappedTumorNormalDesignation(specimenType: string): string {
   throw new Error('found unknow specimen type: ' + specimenType);
 }
 
-function getMappedSpecimenType(specimenType: string): string {
-  const mapping = ICGC_SPECIMEN_TYPE_MAP[specimenType];
+function getMappedSpecimenType(icgcSpecimenType: string): string {
+  const mapping = ICGC_SPECIMEN_TYPE_MAP[icgcSpecimenType];
   if (mapping) {
     return mapping.specimen_type;
   }
-  throw new Error('found unknow specimen type: ' + specimenType);
+  throw new Error('found unknow specimen type: ' + icgcSpecimenType);
 }
 
 function getMappedTissueSource(specimenType: string): string {
