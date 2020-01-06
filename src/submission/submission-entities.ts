@@ -313,6 +313,10 @@ export enum ClinicalEntitySchemaNames {
   FOLLOW_UP = 'follow_up',
 }
 
+export type ClinicalTherapyTypes =
+  | ClinicalEntitySchemaNames.CHEMOTHERAPY
+  | ClinicalEntitySchemaNames.RADIATION;
+
 // batchNameRegex are arrays, so we can just add new file name regex when needed
 // also we should check file extensions at api level for each file type upload function
 export const BatchNameRegex: Record<ClinicalEntitySchemaNames, RegExp[]> = {
