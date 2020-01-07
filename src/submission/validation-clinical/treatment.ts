@@ -39,6 +39,13 @@ export const validate = async (
 
   checkTherapyFileNeeded(treatmentRecord, mergedDonor, ClinicalEntitySchemaNames.RADIATION, errors);
 
+  checkTherapyFileNeeded(
+    treatmentRecord,
+    mergedDonor,
+    ClinicalEntitySchemaNames.HORMONE_THERAPY,
+    errors,
+  );
+
   return errors;
 };
 

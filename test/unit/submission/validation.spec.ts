@@ -1632,6 +1632,38 @@ describe('data-validator', () => {
       chai.expect(result.radiation.dataErrors.length).to.eq(1);
       chai.expect(result.radiation.dataErrors).to.deep.include(chemoTretmentInvalidErr);
     });
+    it('should detect hormone therapy record for treatment', async () => {
+      const existingDonorMock: Donor = stubs.validation.existingDonor01();
+      const newDonorAB1Records = {};
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.TREATMENT,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
+          [TreatmentFieldsEnum.treatment_type]: 'Hormonal Therapy',
+          index: 0,
+        },
+      );
+
+      const result = await dv
+        .validateSubmissionData({ AB1: newDonorAB1Records }, { AB1: existingDonorMock })
+        .catch((err: any) => fail(err));
+
+      const hormoneTreatmentInvalidErr: SubmissionValidationError = {
+        fieldName: TreatmentFieldsEnum.treatment_type,
+        message: `Treatments of type [Hormonal Therapy] need a corresponding [hormone_therapy] record.`,
+        type: DataValidationErrors.MISSING_THERAPY_DATA,
+        index: 0,
+        info: {
+          donorSubmitterId: 'AB1',
+          value: 'Hormonal Therapy',
+          therapyType: ClinicalEntitySchemaNames.HORMONE_THERAPY,
+        },
+      };
+      chai.expect(result.treatment.dataErrors.length).to.eq(1);
+      chai.expect(result.treatment.dataErrors).to.deep.include(hormoneTreatmentInvalidErr);
+    });
   });
 
   describe('follow up validation', () => {
