@@ -87,14 +87,6 @@ export const mergeRecordsMapIntoDonor = (
     submittedRecordsMap[tsn]?.forEach(r => addOrUpdateTherapyInfoInDonor(mergedDonor, r, tsn)),
   );
 
-  submittedRecordsMap[ClinicalEntitySchemaNames.RADIATION]?.forEach(r =>
-    addOrUpdateTherapyInfoInDonor(mergedDonor, r, ClinicalEntitySchemaNames.RADIATION),
-  );
-
-  submittedRecordsMap[ClinicalEntitySchemaNames.HORMONE_THERAPY]?.forEach(r =>
-    addOrUpdateTherapyInfoInDonor(mergedDonor, r, ClinicalEntitySchemaNames.HORMONE_THERAPY),
-  );
-
   submittedRecordsMap[ClinicalEntitySchemaNames.FOLLOW_UP]?.forEach(r =>
     updateOrAddFollowUp(mergedDonor, r),
   );
