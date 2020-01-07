@@ -367,7 +367,8 @@ export function getClinicalObjectsFromDonor(
 
   if (
     clinicalEntitySchemaName === ClinicalEntitySchemaNames.CHEMOTHERAPY ||
-    clinicalEntitySchemaName === ClinicalEntitySchemaNames.RADIATION
+    clinicalEntitySchemaName === ClinicalEntitySchemaNames.RADIATION ||
+    clinicalEntitySchemaName === ClinicalEntitySchemaNames.HORMONE_THERAPY
   ) {
     if (donor.treatments) {
       return donor.treatments

@@ -49,7 +49,8 @@ export const mergeActiveSubmissionWithDonors = async (
           addOrUpdateTreatementInfo(donor, record);
           break;
         case ClinicalEntitySchemaNames.CHEMOTHERAPY:
-        case ClinicalEntitySchemaNames.RADIATION: // other therapies here e.g. HormoneTherapy
+        case ClinicalEntitySchemaNames.RADIATION:
+        case ClinicalEntitySchemaNames.HORMONE_THERAPY:
           addOrUpdateTherapyInfoInDonor(donor, record, entityType, true);
           break;
         case ClinicalEntitySchemaNames.FOLLOW_UP:
@@ -93,6 +94,10 @@ export const mergeRecordsMapIntoDonor = (
 
   submittedRecordsMap[ClinicalEntitySchemaNames.RADIATION]?.forEach(r =>
     addOrUpdateTherapyInfoInDonor(mergedDonor, r, ClinicalEntitySchemaNames.RADIATION),
+  );
+
+  submittedRecordsMap[ClinicalEntitySchemaNames.HORMONE_THERAPY]?.forEach(r =>
+    addOrUpdateTherapyInfoInDonor(mergedDonor, r, ClinicalEntitySchemaNames.HORMONE_THERAPY),
   );
 
   submittedRecordsMap[ClinicalEntitySchemaNames.FOLLOW_UP]?.forEach(r =>

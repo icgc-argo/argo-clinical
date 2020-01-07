@@ -14,6 +14,7 @@ const availableValidators: { [k: string]: any } = {
   // all therapies follow the same validation
   [ClinicalEntitySchemaNames.CHEMOTHERAPY]: therapy,
   [ClinicalEntitySchemaNames.RADIATION]: therapy,
+  [ClinicalEntitySchemaNames.HORMONE_THERAPY]: therapy,
 };
 
 export const submissionValidator = (clinicalType: string): any => {

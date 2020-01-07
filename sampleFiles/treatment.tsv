@@ -1,3 +1,4 @@
 program_id	submitter_donor_id	submitter_treatment_id	treatment_type	age_at_consent_for_treatment	is_primary_treatment	treatment_start_interval	treatment_duration	therapeutic_intent	response_to_therapy
+PACA-AU	ICGC_0001.1	T_01	Hormonal therapy	99	Yes	5	6	Unknown	NED
 PACA-AU	ICGC_0002	T_02	Combined chemo+immunotherapy	99	Yes	5	6	Unknown	NED
 PACA-AU	ICGC_0003	T_03	Combined chemo+radiation therapy	01	No	12	10	Curative	Partial response
