@@ -1413,6 +1413,7 @@ describe('Submission Api', () => {
         'treatment.tsv',
         'chemotherapy.tsv',
         'radiation.tsv',
+        'hormone_therapy.tsv',
       ]);
       await validateSubmission();
       await commitActiveSubmission();
@@ -1448,6 +1449,7 @@ describe('Submission Api', () => {
         'treatment_update.tsv',
         'chemotherapy_update.tsv',
         'radiation_update.tsv',
+        'hormone_therapy_update.tsv',
       ]);
       await validateSubmission();
       await commitActiveSubmission();
@@ -1480,12 +1482,12 @@ describe('Submission Api', () => {
             '__v', // ignore mongodb field
             'updatedAt', // ignore mongodb field
             'clinicalInfo', // donor clinicalInfo is being updated
-            'treatments[0]', // this treatment & chemotherapy inside it is being updated
+            'treatments', // this treatments are being updated
             'followUps[0]', // this followUp is being updated
           ]);
           // these are set becuase they were updated and can be ignored in this chai.expect assert
           donorBeforeUpdates.followUps[0] = updatedDonor.followUps[0];
-          donorBeforeUpdates.treatments[0] = updatedDonor.treatments[0];
+          donorBeforeUpdates.treatments = updatedDonor.treatments;
           // check nothing else in updatedDonor has changed from before update
           chai.expect(updatedDonor).to.deep.include(donorBeforeUpdates);
 
@@ -1515,6 +1517,10 @@ describe('Submission Api', () => {
           updatedDonor.treatments[0].therapies[1].clinicalInfo[
             'radiation_therapy_dosage'
           ].should.eq(90);
+          // hormone therapy
+          updatedDonor.treatments[1].therapies[0].clinicalInfo['cumulative_drug_dosage'].should.eq(
+            44,
+          );
         });
     });
 
