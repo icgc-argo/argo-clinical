@@ -5,7 +5,8 @@ import {
   SubmittedClinicalRecord,
   DataValidationErrors,
   ClinicalUniqueIndentifier,
-  ClinicalTherapyTypes,
+  ClinicalTherapyType,
+  ClinicalTherapySchemaNames,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, Treatment } from '../../clinical/clinical-entities';
@@ -30,21 +31,9 @@ export const validate = async (
 
   if (errors.length > 0) return errors;
 
-  checkTherapyFileNeeded(
-    treatmentRecord,
-    mergedDonor,
-    ClinicalEntitySchemaNames.CHEMOTHERAPY,
-    errors,
-  );
-
-  checkTherapyFileNeeded(treatmentRecord, mergedDonor, ClinicalEntitySchemaNames.RADIATION, errors);
-
-  checkTherapyFileNeeded(
-    treatmentRecord,
-    mergedDonor,
-    ClinicalEntitySchemaNames.HORMONE_THERAPY,
-    errors,
-  );
+  for (const therapyName of ClinicalTherapySchemaNames) {
+    checkTherapyFileNeeded(treatmentRecord, mergedDonor, therapyName, errors);
+  }
 
   return errors;
 };
@@ -69,7 +58,7 @@ async function checkTreatmentDoesntBelongToOtherDonor(
 function checkTherapyFileNeeded(
   treatmentRecord: SubmittedClinicalRecord,
   mergedDonor: Donor,
-  therapyType: ClinicalTherapyTypes,
+  therapyType: ClinicalTherapyType,
   errors: SubmissionValidationError[],
 ) {
   const treatmentType = treatmentRecord[TreatmentFieldsEnum.treatment_type] as string;

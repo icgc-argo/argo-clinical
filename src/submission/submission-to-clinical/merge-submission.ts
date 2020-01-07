@@ -4,17 +4,14 @@ import {
   ActiveClinicalSubmission,
   SampleRegistrationFieldsEnum,
   ClinicalEntitySchemaNames,
-  TreatmentFieldsEnum,
   SubmittedClinicalRecordsMap,
   ClinicalUniqueIndentifier,
+  ClinicalTherapySchemaNames,
 } from '../submission-entities';
 import _ from 'lodash';
 import { loggerFor } from '../../logger';
-import { Errors, mergeAndDeleteRemoved } from '../../utils';
-import {
-  getClinicalEntitiesFromDonorBySchemaName,
-  getSingleClinicalObjectFromDonor,
-} from './submission-to-clinical';
+import { Errors } from '../../utils';
+import { getSingleClinicalObjectFromDonor } from './submission-to-clinical';
 const L = loggerFor(__filename);
 
 export const mergeActiveSubmissionWithDonors = async (
@@ -48,9 +45,7 @@ export const mergeActiveSubmissionWithDonors = async (
         case ClinicalEntitySchemaNames.TREATMENT:
           addOrUpdateTreatementInfo(donor, record);
           break;
-        case ClinicalEntitySchemaNames.CHEMOTHERAPY:
-        case ClinicalEntitySchemaNames.RADIATION:
-        case ClinicalEntitySchemaNames.HORMONE_THERAPY:
+        case ClinicalTherapySchemaNames.find(tsn => tsn === entityType):
           addOrUpdateTherapyInfoInDonor(donor, record, entityType, true);
           break;
         case ClinicalEntitySchemaNames.FOLLOW_UP:
@@ -88,8 +83,8 @@ export const mergeRecordsMapIntoDonor = (
     addOrUpdateTreatementInfo(mergedDonor, r),
   );
 
-  submittedRecordsMap[ClinicalEntitySchemaNames.CHEMOTHERAPY]?.forEach(r =>
-    addOrUpdateTherapyInfoInDonor(mergedDonor, r, ClinicalEntitySchemaNames.CHEMOTHERAPY),
+  ClinicalTherapySchemaNames.forEach(tsn =>
+    submittedRecordsMap[tsn]?.forEach(r => addOrUpdateTherapyInfoInDonor(mergedDonor, r, tsn)),
   );
 
   submittedRecordsMap[ClinicalEntitySchemaNames.RADIATION]?.forEach(r =>

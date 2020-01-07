@@ -21,6 +21,7 @@ import {
   SUBMISSION_STATE,
   ClinicalEntitySchemaNames,
   ClinicalUniqueIndentifier,
+  ClinicalTherapySchemaNames,
 } from '../submission-entities';
 
 import { Errors, notEmpty, deepFind } from '../../utils';
@@ -365,11 +366,7 @@ export function getClinicalObjectsFromDonor(
     }
   }
 
-  if (
-    clinicalEntitySchemaName === ClinicalEntitySchemaNames.CHEMOTHERAPY ||
-    clinicalEntitySchemaName === ClinicalEntitySchemaNames.RADIATION ||
-    clinicalEntitySchemaName === ClinicalEntitySchemaNames.HORMONE_THERAPY
-  ) {
+  if (ClinicalTherapySchemaNames.find(tsn => tsn === clinicalEntitySchemaName)) {
     if (donor.treatments) {
       return donor.treatments
         .map(tr => tr.therapies.filter(th => th.therapyType === clinicalEntitySchemaName))
