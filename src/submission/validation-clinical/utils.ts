@@ -308,6 +308,10 @@ export function treatmentTypeNotMatchTherapyType(
       treatmentType !== 'photodynamic therapy'
     );
   }
+
+  if (therapyType === ClinicalEntitySchemaNames.HORMONE_THERAPY) {
+    return treatmentType !== 'hormonal therapy';
+  }
   return false;
 }
 

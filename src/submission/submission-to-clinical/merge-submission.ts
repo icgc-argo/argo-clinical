@@ -4,17 +4,14 @@ import {
   ActiveClinicalSubmission,
   SampleRegistrationFieldsEnum,
   ClinicalEntitySchemaNames,
-  TreatmentFieldsEnum,
   SubmittedClinicalRecordsMap,
   ClinicalUniqueIndentifier,
+  ClinicalTherapySchemaNames,
 } from '../submission-entities';
 import _ from 'lodash';
 import { loggerFor } from '../../logger';
-import { Errors, mergeAndDeleteRemoved } from '../../utils';
-import {
-  getClinicalEntitiesFromDonorBySchemaName,
-  getSingleClinicalObjectFromDonor,
-} from './submission-to-clinical';
+import { Errors } from '../../utils';
+import { getSingleClinicalObjectFromDonor } from './submission-to-clinical';
 const L = loggerFor(__filename);
 
 export const mergeActiveSubmissionWithDonors = async (
@@ -48,12 +45,11 @@ export const mergeActiveSubmissionWithDonors = async (
         case ClinicalEntitySchemaNames.TREATMENT:
           addOrUpdateTreatementInfo(donor, record);
           break;
-        case ClinicalEntitySchemaNames.CHEMOTHERAPY:
-        case ClinicalEntitySchemaNames.RADIATION: // other therapies here e.g. HormoneTherapy
-          addOrUpdateTherapyInfoInDonor(donor, record, entityType, true);
-          break;
         case ClinicalEntitySchemaNames.FOLLOW_UP:
           updateOrAddFollowUp(donor, record);
+          break;
+        case ClinicalTherapySchemaNames.find(tsn => tsn === entityType):
+          addOrUpdateTherapyInfoInDonor(donor, record, entityType, true);
           break;
         default:
           throw new Error(`Entity ${entityType} not implemented yet`);
@@ -87,12 +83,8 @@ export const mergeRecordsMapIntoDonor = (
     addOrUpdateTreatementInfo(mergedDonor, r),
   );
 
-  submittedRecordsMap[ClinicalEntitySchemaNames.CHEMOTHERAPY]?.forEach(r =>
-    addOrUpdateTherapyInfoInDonor(mergedDonor, r, ClinicalEntitySchemaNames.CHEMOTHERAPY),
-  );
-
-  submittedRecordsMap[ClinicalEntitySchemaNames.RADIATION]?.forEach(r =>
-    addOrUpdateTherapyInfoInDonor(mergedDonor, r, ClinicalEntitySchemaNames.RADIATION),
+  ClinicalTherapySchemaNames.forEach(tsn =>
+    submittedRecordsMap[tsn]?.forEach(r => addOrUpdateTherapyInfoInDonor(mergedDonor, r, tsn)),
   );
 
   submittedRecordsMap[ClinicalEntitySchemaNames.FOLLOW_UP]?.forEach(r =>
