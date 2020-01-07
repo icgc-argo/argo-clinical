@@ -45,11 +45,11 @@ export const mergeActiveSubmissionWithDonors = async (
         case ClinicalEntitySchemaNames.TREATMENT:
           addOrUpdateTreatementInfo(donor, record);
           break;
-        case ClinicalTherapySchemaNames.find(tsn => tsn === entityType):
-          addOrUpdateTherapyInfoInDonor(donor, record, entityType, true);
-          break;
         case ClinicalEntitySchemaNames.FOLLOW_UP:
           updateOrAddFollowUp(donor, record);
+          break;
+        case ClinicalTherapySchemaNames.find(tsn => tsn === entityType):
+          addOrUpdateTherapyInfoInDonor(donor, record, entityType, true);
           break;
         default:
           throw new Error(`Entity ${entityType} not implemented yet`);

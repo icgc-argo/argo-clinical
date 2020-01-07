@@ -1482,7 +1482,7 @@ describe('Submission Api', () => {
             '__v', // ignore mongodb field
             'updatedAt', // ignore mongodb field
             'clinicalInfo', // donor clinicalInfo is being updated
-            'treatments', // this treatments are being updated
+            'treatments', // the treatments are being updated
             'followUps[0]', // this followUp is being updated
           ]);
           // these are set becuase they were updated and can be ignored in this chai.expect assert
