@@ -269,11 +269,14 @@ export type ClinicalFields =
   | TherapyFieldsEnum;
 
 export enum DonorFieldsEnum {
+  program_id = 'program_id',
   submitter_donor_id = 'submitter_donor_id',
   vital_status = 'vital_status',
   survival_time = 'survival_time',
 }
 export enum SpecimenFieldsEnum {
+  program_id = 'program_id',
+  submitter_donor_id = 'submitter_donor_id',
   submitter_specimen_id = 'submitter_specimen_id',
   specimen_acquisition_interval = 'specimen_acquisition_interval',
 }
@@ -342,6 +345,12 @@ export const BatchNameRegex: Record<ClinicalEntitySchemaNames, RegExp[]> = {
   [ClinicalEntitySchemaNames.CHEMOTHERAPY]: [/^chemotherapy.*\.tsv$/],
   [ClinicalEntitySchemaNames.RADIATION]: [/^radiation.*\.tsv$/],
   [ClinicalEntitySchemaNames.HORMONE_THERAPY]: [/^hormone_therapy.*\.tsv$/],
+};
+
+export const ClinicalEntityToEnumMap = {
+  [ClinicalEntitySchemaNames.REGISTRATION]: SampleRegistrationFieldsEnum,
+  [ClinicalEntitySchemaNames.DONOR]: DonorFieldsEnum,
+  [ClinicalEntitySchemaNames.SPECIMEN]: SpecimenFieldsEnum,
 };
 
 // assumption: one field uniquely identifies a clinical type record in a batch of records
