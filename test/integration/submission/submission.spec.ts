@@ -1890,6 +1890,7 @@ describe('Submission Api', () => {
                 },
               ],
             });
+            res.body.analysis.newSchemaAnalysis.missingDataValidationFields.length.should.eq(7);
             res.body.analysis.newSchemaAnalysis.missingDataValidationFields.should.deep.include({
               clinicalEntity: 'specimen',
               fields: [

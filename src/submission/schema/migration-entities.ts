@@ -1,8 +1,7 @@
 import {
   DonorFieldsEnum,
   ClinicalEntitySchemaNames,
-  SpecimenFieldsEnum,
-  SampleRegistrationFieldsEnum,
+  TreatmentFieldsEnum,
 } from '../submission-entities';
 
 export type MigrationStage = 'SUBMITTED' | 'ANALYZED' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
@@ -27,33 +26,17 @@ export interface DictionaryMigration {
   createdBy: string;
 }
 
-const commonFields = ['program_id', 'submitter_donor_id'];
-
-export const ClinicalSchemaSpecs: ClinicalEntitySchemaSpecForDataValidation[] = [
-  {
-    name: ClinicalEntitySchemaNames.REGISTRATION,
-    fieldsRequired: Object.values(SampleRegistrationFieldsEnum),
-  },
-  {
-    name: ClinicalEntitySchemaNames.DONOR,
-    fieldsRequired: Object.values(DonorFieldsEnum),
-    fieldsRestrictions: [{ name: DonorFieldsEnum.vital_status, codeList: ['Deceased'] }],
-  },
-  {
-    name: ClinicalEntitySchemaNames.SPECIMEN,
-    fieldsRequired: Object.values(SpecimenFieldsEnum),
-  },
-];
-
-type ClinicalEntitySchemaSpecForDataValidation = {
-  name: ClinicalEntitySchemaNames;
-  fieldsRequired: string[];
-  fieldsRestrictions?: ClinicalFieldRestrictionSpec[];
+export const ClinicalEntityFieldRestrictions: { [k: string]: ClinicalFieldRestrictionSpec[] } = {
+  [ClinicalEntitySchemaNames.DONOR]: [
+    { fieldName: DonorFieldsEnum.vital_status, codeList: ['Deceased'] },
+  ],
+  [ClinicalEntitySchemaNames.TREATMENT]: [
+    { fieldName: TreatmentFieldsEnum.treatment_type, codeList: [] },
+  ],
 };
 
-type ClinicalFieldRestrictionSpec = {
-  name: string;
+export type ClinicalFieldRestrictionSpec = {
+  fieldName: string;
   codeList?: string[];
-  // regex?: RegExp;
-  // others here?
+  regex?: RegExp;
 };

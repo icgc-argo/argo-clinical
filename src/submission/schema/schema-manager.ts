@@ -12,7 +12,11 @@ import { schemaClient as schemaServiceAdapter } from '../../lectern-client/schem
 import { schemaRepo } from './schema-repo';
 import { loggerFor } from '../../logger';
 import { migrationRepo } from './migration-repo';
-import { DictionaryMigration, ClinicalSchemaSpecs } from './migration-entities';
+import {
+  DictionaryMigration,
+  ClinicalEntityFieldRestrictions,
+  ClinicalFieldRestrictionSpec,
+} from './migration-entities';
 import { Donor, ClinicalInfo } from '../../clinical/clinical-entities';
 import { DeepReadonly } from 'deep-freeze';
 import * as clinicalService from '../../clinical/clinical-service';
@@ -22,6 +26,7 @@ import {
   ClinicalEntitySchemaNames,
   RevalidateClinicalSubmissionCommand,
   SUBMISSION_STATE,
+  ClinicalEntityToEnumFieldsMap,
 } from '../submission-entities';
 import { notEmpty, Errors, sleep } from '../../utils';
 import _ from 'lodash';
@@ -369,19 +374,19 @@ namespace MigrationManager {
     const invalidDataValidationFields: any = [];
     const missingDataValidationFields: any = [];
 
-    ClinicalSchemaSpecs.forEach(clinicalEntitySchemaSpec => {
+    Object.values(ClinicalEntitySchemaNames).forEach(clinicalEntityName => {
       const clinicalEntityNewSchemaDef = newSchemaDictionary.schemas.find(
-        s => s.name === clinicalEntitySchemaSpec.name,
+        s => s.name === clinicalEntityName,
       );
 
       checkClinicalEntityNewSchemaHasRequiredFields(
-        clinicalEntitySchemaSpec,
+        clinicalEntityName as ClinicalEntitySchemaNames,
         clinicalEntityNewSchemaDef,
         missingDataValidationFields,
       );
 
       checkClinicalEntityNewSchemaHasFieldRequirements(
-        clinicalEntitySchemaSpec,
+        clinicalEntityName as ClinicalEntitySchemaNames,
         clinicalEntityNewSchemaDef,
         invalidDataValidationFields,
       );
@@ -394,46 +399,51 @@ namespace MigrationManager {
   };
 
   function checkClinicalEntityNewSchemaHasRequiredFields(
-    clinicalEntitySchemaSpec: any,
+    clinicalEntityName: ClinicalEntitySchemaNames,
     clinicalEntityNewSchemaDef: SchemaDefinition | undefined,
     missingDataValidationFields: any,
   ) {
     // check clinical enitty schema has requried fields e.g. program_id, submitter_donor_id etc...
     const missingEntityRequiredFields = _.difference(
-      clinicalEntitySchemaSpec.fieldsRequired,
+      ClinicalEntityToEnumFieldsMap[clinicalEntityName],
       clinicalEntityNewSchemaDef?.fields.map(f => f.name) || [],
     );
     if (missingEntityRequiredFields.length !== 0) {
       missingDataValidationFields.push({
-        clinicalEntity: clinicalEntitySchemaSpec.name,
+        clinicalEntity: clinicalEntityName,
         fields: missingEntityRequiredFields,
       });
     }
   }
 
   function checkClinicalEntityNewSchemaHasFieldRequirements(
-    clinicalEntitySchemaSpec: any,
+    clinicalSchemaName: ClinicalEntitySchemaNames,
     clinicalEntityNewSchemaDef: SchemaDefinition | undefined,
     invalidDataValidationFields: any,
   ) {
     // check clinical entity schema has field requirements, e.g. codelist contains values
     const invalidFields: any = [];
-    clinicalEntitySchemaSpec.fieldsRestrictions?.forEach((field: any) => {
-      // find field definition
-      const clinicalEntityNewSchemaFieldDef = clinicalEntityNewSchemaDef?.fields.find(
-        nfd => nfd.name === field.name,
-      );
-      const missingCodeListValues = _.difference(
-        field.codeList,
-        clinicalEntityNewSchemaFieldDef?.restrictions?.codeList || [],
-      );
-      if (missingCodeListValues.length !== 0) {
-        invalidFields.push({ name: field.name, missingCodeListValues });
-      }
-    });
+    ClinicalEntityFieldRestrictions[clinicalSchemaName]?.forEach(
+      (field: ClinicalFieldRestrictionSpec) => {
+        // find field definition
+        const clinicalEntityNewSchemaFieldDef = clinicalEntityNewSchemaDef?.fields.find(
+          nfd => nfd.name === field.fieldName,
+        );
+        // check code lists
+        const missingCodeListValues = _.difference(
+          field.codeList,
+          clinicalEntityNewSchemaFieldDef?.restrictions?.codeList || [],
+        );
+        if (missingCodeListValues.length !== 0) {
+          invalidFields.push({ name: field.fieldName, missingCodeListValues });
+        }
+
+        // check regex and other here if needed...
+      },
+    );
     if (invalidFields.length !== 0) {
       invalidDataValidationFields.push({
-        clinicalEntity: clinicalEntitySchemaSpec.name,
+        clinicalEntity: clinicalSchemaName,
         fields: invalidFields,
       });
     }
