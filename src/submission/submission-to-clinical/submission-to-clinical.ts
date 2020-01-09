@@ -21,6 +21,7 @@ import {
   SUBMISSION_STATE,
   ClinicalEntitySchemaNames,
   ClinicalUniqueIndentifier,
+  ClinicalTherapySchemaNames,
 } from '../submission-entities';
 
 import { Errors, notEmpty, deepFind } from '../../utils';
@@ -205,6 +206,7 @@ const toSpecimen = (s: DeepReadonly<CreateSpecimenDto>) => {
     clinicalInfo: {},
     specimenTissueSource: s.specimenTissueSource,
     tumourNormalDesignation: s.tumourNormalDesignation,
+    specimenType: s.specimenType,
     submitterId: s.submitterId,
   };
   return spec;
@@ -314,6 +316,7 @@ const getDonorSpecimen = (record: SubmittedRegistrationRecord) => {
   return {
     specimenTissueSource: record[SampleRegistrationFieldsEnum.specimen_tissue_source],
     tumourNormalDesignation: record[SampleRegistrationFieldsEnum.tumour_normal_designation],
+    specimenType: record[SampleRegistrationFieldsEnum.specimen_type],
     submitterId: record[SampleRegistrationFieldsEnum.submitter_specimen_id],
     samples: [
       {
@@ -363,12 +366,10 @@ export function getClinicalObjectsFromDonor(
     }
   }
 
-  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.CHEMOTHERAPY) {
+  if (ClinicalTherapySchemaNames.find(tsn => tsn === clinicalEntitySchemaName)) {
     if (donor.treatments) {
       return donor.treatments
-        .map(tr =>
-          tr.therapies.filter(th => th.therapyType === ClinicalEntitySchemaNames.CHEMOTHERAPY),
-        )
+        .map(tr => tr.therapies.filter(th => th.therapyType === clinicalEntitySchemaName))
         .flat()
         .filter(notEmpty);
     }
@@ -415,6 +416,7 @@ export interface CreateSpecimenDto {
   samples: Array<CreateSampleDto>;
   specimenTissueSource: string;
   tumourNormalDesignation: string;
+  specimenType: string;
   submitterId: string;
 }
 

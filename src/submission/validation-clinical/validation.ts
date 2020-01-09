@@ -211,8 +211,9 @@ const conflictingNewSpecimen = (
 
   // these arrays to store the indices of rows that conflict with the current record we validate
   const conflictingSpecimensIndices: number[] = [];
-  const conflictingSpecimenTypesIndices: number[] = [];
+  const conflictingSpecimenTissueSourceIndices: number[] = [];
   const conflictingSpecimenTumourDesignationIndices: number[] = [];
+  const conflictingSpecimenTypeIndices: number[] = [];
 
   newRecords.forEach((rec, index) => {
     // if same record skip
@@ -226,11 +227,15 @@ const conflictingNewSpecimen = (
       newDonor.specimenSubmitterId === rec.specimenSubmitterId
     ) {
       if (newDonor.specimenTissueSource !== rec.specimenTissueSource) {
-        conflictingSpecimenTypesIndices.push(index);
+        conflictingSpecimenTissueSourceIndices.push(index);
       }
 
       if (newDonor.tumourNormalDesignation !== rec.tumourNormalDesignation) {
         conflictingSpecimenTumourDesignationIndices.push(index);
+      }
+
+      if (newDonor.specimenType !== rec.specimenType) {
+        conflictingSpecimenTypeIndices.push(index);
       }
 
       return;
@@ -257,7 +262,7 @@ const conflictingNewSpecimen = (
     );
   }
 
-  if (conflictingSpecimenTypesIndices.length !== 0) {
+  if (conflictingSpecimenTissueSourceIndices.length !== 0) {
     errors.push(
       buildError(
         newDonor,
@@ -265,7 +270,7 @@ const conflictingNewSpecimen = (
         SampleRegistrationFieldsEnum.specimen_tissue_source,
         newDonorIndex,
         {
-          conflictingRows: conflictingSpecimenTypesIndices,
+          conflictingRows: conflictingSpecimenTissueSourceIndices,
         },
       ),
     );
@@ -280,6 +285,20 @@ const conflictingNewSpecimen = (
         newDonorIndex,
         {
           conflictingRows: conflictingSpecimenTumourDesignationIndices,
+        },
+      ),
+    );
+  }
+
+  if (conflictingSpecimenTypeIndices.length !== 0) {
+    errors.push(
+      buildError(
+        newDonor,
+        DataValidationErrors.NEW_SPECIMEN_ATTR_CONFLICT,
+        SampleRegistrationFieldsEnum.specimen_type,
+        newDonorIndex,
+        {
+          conflictingRows: conflictingSpecimenTypeIndices,
         },
       ),
     );
@@ -643,6 +662,17 @@ function checkSpecimenMutations(
         SampleRegistrationFieldsEnum.tumour_normal_designation,
         index,
         { originalValue: existingSpecimen.tumourNormalDesignation },
+      ),
+    );
+  }
+  if (newDonor.specimenType !== existingSpecimen.specimenType) {
+    errors.push(
+      buildError(
+        newDonor,
+        DataValidationErrors.MUTATING_EXISTING_DATA,
+        SampleRegistrationFieldsEnum.specimen_type,
+        index,
+        { originalValue: existingSpecimen.specimenType },
       ),
     );
   }

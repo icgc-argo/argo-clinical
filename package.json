@@ -1,6 +1,6 @@
 {
   "name": "argo-clinical",
-  "version": "0.22.0",
+  "version": "0.23.0",
   "description": "Clinical submission system and repo",
   "scripts": {
     "start": "npm run serve",
@@ -71,7 +71,7 @@
     "husky": "^3.0.0",
     "mocha": "^6.1.4",
     "nodemon": "^1.19.1",
-    "prettier": "1.18.2",
+    "prettier": "^1.19.1",
     "pretty-quick": "^1.11.1",
     "shelljs": "^0.8.3",
     "sinon": "^7.3.2",

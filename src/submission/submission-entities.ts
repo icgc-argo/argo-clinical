@@ -21,6 +21,7 @@ export interface SubmittedRegistrationRecord {
   readonly submitter_specimen_id: string;
   readonly specimen_tissue_source: string;
   readonly tumour_normal_designation: string;
+  readonly specimen_type: string;
   readonly submitter_sample_id: string;
   readonly sample_type: string;
 }
@@ -34,6 +35,7 @@ export const RegistrationToCreateRegistrationFieldsMap: x = {
   submitter_specimen_id: 'specimenSubmitterId',
   specimen_tissue_source: 'specimenTissueSource',
   tumour_normal_designation: 'tumourNormalDesignation',
+  specimen_type: 'specimenType',
   submitter_sample_id: 'sampleSubmitterId',
   sample_type: 'sampleType',
 };
@@ -110,6 +112,7 @@ export interface CreateRegistrationRecord {
   readonly specimenSubmitterId: string;
   readonly specimenTissueSource: string;
   readonly tumourNormalDesignation: string;
+  readonly specimenType: string;
   readonly sampleSubmitterId: string;
   readonly sampleType: string;
 }
@@ -253,6 +256,7 @@ export enum SampleRegistrationFieldsEnum {
   submitter_specimen_id = 'submitter_specimen_id',
   specimen_tissue_source = 'specimen_tissue_source',
   tumour_normal_designation = 'tumour_normal_designation',
+  specimen_type = 'specimen_type',
   submitter_sample_id = 'submitter_sample_id',
   sample_type = 'sample_type',
 }
@@ -279,6 +283,8 @@ export enum TreatmentFieldsEnum {
 }
 export enum TherapyFieldsEnum {
   chemotherapy_drug_name = 'chemotherapy_drug_name',
+  radiation_therapy_modality = 'radiation_therapy_modality',
+  hormone_therapy_drug_name = 'hormone_therapy_drug_name',
 }
 export enum FollowupFieldsEnum {
   submitter_follow_up_id = 'submitter_follow_up_id',
@@ -308,8 +314,21 @@ export enum ClinicalEntitySchemaNames {
   PRIMARY_DIAGNOSIS = 'primary_diagnosis',
   TREATMENT = 'treatment',
   CHEMOTHERAPY = 'chemotherapy',
+  RADIATION = 'radiation',
   FOLLOW_UP = 'follow_up',
+  HORMONE_THERAPY = 'hormone_therapy',
 }
+
+export type ClinicalTherapyType =
+  | ClinicalEntitySchemaNames.CHEMOTHERAPY
+  | ClinicalEntitySchemaNames.RADIATION
+  | ClinicalEntitySchemaNames.HORMONE_THERAPY;
+
+export const ClinicalTherapySchemaNames: ClinicalTherapyType[] = [
+  ClinicalEntitySchemaNames.CHEMOTHERAPY,
+  ClinicalEntitySchemaNames.HORMONE_THERAPY,
+  ClinicalEntitySchemaNames.RADIATION,
+];
 
 // batchNameRegex are arrays, so we can just add new file name regex when needed
 // also we should check file extensions at api level for each file type upload function
@@ -321,6 +340,8 @@ export const BatchNameRegex: Record<ClinicalEntitySchemaNames, RegExp[]> = {
   [ClinicalEntitySchemaNames.FOLLOW_UP]: [/^follow_up.*\.tsv$/],
   [ClinicalEntitySchemaNames.TREATMENT]: [/^treatment.*\.tsv$/],
   [ClinicalEntitySchemaNames.CHEMOTHERAPY]: [/^chemotherapy.*\.tsv$/],
+  [ClinicalEntitySchemaNames.RADIATION]: [/^radiation.*\.tsv$/],
+  [ClinicalEntitySchemaNames.HORMONE_THERAPY]: [/^hormone_therapy.*\.tsv$/],
 };
 
 // assumption: one field uniquely identifies a clinical type record in a batch of records
@@ -333,6 +354,8 @@ export const ClinicalUniqueIndentifier: {
   [ClinicalEntitySchemaNames.FOLLOW_UP]: FollowupFieldsEnum.submitter_follow_up_id,
   [ClinicalEntitySchemaNames.TREATMENT]: TreatmentFieldsEnum.submitter_treatment_id,
   [ClinicalEntitySchemaNames.CHEMOTHERAPY]: TherapyFieldsEnum.chemotherapy_drug_name,
+  [ClinicalEntitySchemaNames.RADIATION]: TherapyFieldsEnum.radiation_therapy_modality,
+  [ClinicalEntitySchemaNames.HORMONE_THERAPY]: TherapyFieldsEnum.hormone_therapy_drug_name,
 };
 
 export interface ClinicalSubmissionRecordsByDonorIdMap {

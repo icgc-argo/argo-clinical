@@ -256,6 +256,7 @@ const SpecimenSchema = new mongoose.Schema(
     specimenTissueSource: { type: String },
     clinicalInfo: {},
     tumourNormalDesignation: String,
+    specimenType: String,
     submitterId: { type: String, required: true },
     samples: [SampleSchema],
   },

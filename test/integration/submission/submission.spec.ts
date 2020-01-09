@@ -54,7 +54,7 @@ const expectedErrors = [
       sampleSubmitterId: 'sam123',
       specimenSubmitterId: 'sp123',
     },
-    fieldName: SampleRegistrationFieldsEnum.tumour_normal_designation,
+    fieldName: SampleRegistrationFieldsEnum.specimen_type,
   },
   {
     fieldName: SampleRegistrationFieldsEnum.submitter_specimen_id,
@@ -147,6 +147,7 @@ const expectedResponse1 = {
         [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'ss123',
         [SampleRegistrationFieldsEnum.specimen_tissue_source]: 'Other',
         [SampleRegistrationFieldsEnum.tumour_normal_designation]: 'Normal',
+        [SampleRegistrationFieldsEnum.specimen_type]: 'Normal',
         [SampleRegistrationFieldsEnum.submitter_sample_id]: 'sm123',
         [SampleRegistrationFieldsEnum.sample_type]: 'ctDNA',
       },
@@ -190,6 +191,7 @@ const ABCD_REGISTRATION_DOC: ActiveRegistration = {
       [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'ss123',
       [SampleRegistrationFieldsEnum.specimen_tissue_source]: 'Other',
       [SampleRegistrationFieldsEnum.tumour_normal_designation]: 'Normal',
+      [SampleRegistrationFieldsEnum.specimen_type]: 'Normal',
       [SampleRegistrationFieldsEnum.submitter_sample_id]: 'sm123',
       [SampleRegistrationFieldsEnum.sample_type]: 'ctDNA',
     },
@@ -470,14 +472,12 @@ describe('Submission Api', () => {
         .end(async (err: any, res: any) => {
           try {
             await assertUploadOKRegistrationCreated(res, dburl);
-            chai
-              .expect(res.body.registration.stats.newSampleIds)
-              .to.deep.eq([
-                { submitterId: 'sm123-4', rowNumbers: [0] },
-                { submitterId: 'sm123-5', rowNumbers: [1] },
-                { submitterId: 'sm123-6', rowNumbers: [2] },
-                { submitterId: 'sm123-7', rowNumbers: [3] },
-              ]);
+            chai.expect(res.body.registration.stats.newSampleIds).to.deep.eq([
+              { submitterId: 'sm123-4', rowNumbers: [0] },
+              { submitterId: 'sm123-5', rowNumbers: [1] },
+              { submitterId: 'sm123-6', rowNumbers: [2] },
+              { submitterId: 'sm123-7', rowNumbers: [3] },
+            ]);
             const reg1Id = res.body.registration._id;
             chai
               .request(app)
@@ -1412,6 +1412,8 @@ describe('Submission Api', () => {
         'follow_up.tsv',
         'treatment.tsv',
         'chemotherapy.tsv',
+        'radiation.tsv',
+        'hormone_therapy.tsv',
       ]);
       await validateSubmission();
       await commitActiveSubmission();
@@ -1446,6 +1448,8 @@ describe('Submission Api', () => {
         'follow_up_update.tsv',
         'treatment_update.tsv',
         'chemotherapy_update.tsv',
+        'radiation_update.tsv',
+        'hormone_therapy_update.tsv',
       ]);
       await validateSubmission();
       await commitActiveSubmission();
@@ -1478,12 +1482,12 @@ describe('Submission Api', () => {
             '__v', // ignore mongodb field
             'updatedAt', // ignore mongodb field
             'clinicalInfo', // donor clinicalInfo is being updated
-            'treatments[0]', // this treatment & chemotherapy inside it is being updated
+            'treatments', // the treatments are being updated
             'followUps[0]', // this followUp is being updated
           ]);
           // these are set becuase they were updated and can be ignored in this chai.expect assert
           donorBeforeUpdates.followUps[0] = updatedDonor.followUps[0];
-          donorBeforeUpdates.treatments[0] = updatedDonor.treatments[0];
+          donorBeforeUpdates.treatments = updatedDonor.treatments;
           // check nothing else in updatedDonor has changed from before update
           chai.expect(updatedDonor).to.deep.include(donorBeforeUpdates);
 
@@ -1505,8 +1509,17 @@ describe('Submission Api', () => {
 
           // ** check treatment & therapy clinicalInfo updates **
           updatedDonor.treatments[0].clinicalInfo['therapeutic_intent'].should.eq('Curative');
+          // chemotherapy therapy
           updatedDonor.treatments[0].therapies[0].clinicalInfo['cumulative_drug_dosage'].should.eq(
             15,
+          );
+          // radiation therapy
+          updatedDonor.treatments[0].therapies[1].clinicalInfo[
+            'radiation_therapy_dosage'
+          ].should.eq(90);
+          // hormone therapy
+          updatedDonor.treatments[1].therapies[0].clinicalInfo['cumulative_drug_dosage'].should.eq(
+            44,
           );
         });
     });
@@ -1706,7 +1719,8 @@ describe('Submission Api', () => {
           res.should.have.status(200);
           res.text.should.equal(
             `${SampleRegistrationFieldsEnum.program_id}\t${SampleRegistrationFieldsEnum.submitter_donor_id}\t${SampleRegistrationFieldsEnum.gender}\t` +
-              `${SampleRegistrationFieldsEnum.submitter_specimen_id}\t${SampleRegistrationFieldsEnum.specimen_tissue_source}\t${SampleRegistrationFieldsEnum.tumour_normal_designation}\t` +
+              `${SampleRegistrationFieldsEnum.submitter_specimen_id}\t${SampleRegistrationFieldsEnum.specimen_tissue_source}\t` +
+              `${SampleRegistrationFieldsEnum.tumour_normal_designation}\t${SampleRegistrationFieldsEnum.specimen_type}\t` +
               `${SampleRegistrationFieldsEnum.submitter_sample_id}\t${SampleRegistrationFieldsEnum.sample_type}\n`,
           );
           res.should.header('Content-type', 'text/tab-separated-values;' + ' charset=utf-8');
@@ -1950,6 +1964,7 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dburl: 
             submitterId: r[SampleRegistrationFieldsEnum.submitter_specimen_id],
             specimenTissueSource: r[SampleRegistrationFieldsEnum.specimen_tissue_source],
             tumourNormalDesignation: r[SampleRegistrationFieldsEnum.tumour_normal_designation],
+            specimenType: r[SampleRegistrationFieldsEnum.specimen_type],
             samples: [
               {
                 sampleId: sampleIdCounter,
@@ -2017,7 +2032,8 @@ const comittedDonors2: Donor[] = [
           },
         ],
         specimenTissueSource: 'Bone marrow',
-        tumourNormalDesignation: 'Xenograft - derived from primary tumour',
+        tumourNormalDesignation: 'Tumour',
+        specimenType: 'Xenograft - derived from primary tumour',
         submitterId: 'ss123-jdjr-ak',
         specimenId: baseSpecimenId,
         clinicalInfo: {},
@@ -2046,7 +2062,8 @@ const comittedDonors2: Donor[] = [
           },
         ],
         specimenTissueSource: 'Serum',
-        tumourNormalDesignation: 'Xenograft - derived from primary tumour',
+        tumourNormalDesignation: 'Tumour',
+        specimenType: 'Xenograft - derived from primary tumour',
         submitterId: 'ss123-sjdm',
         specimenId: baseSpecimenId + 1,
         clinicalInfo: {},
@@ -2061,6 +2078,7 @@ const comittedDonors2: Donor[] = [
         ],
         specimenTissueSource: 'Other',
         tumourNormalDesignation: 'Normal',
+        specimenType: 'Normal',
         submitterId: 'ss123-sjdm-2',
         specimenId: 5,
         clinicalInfo: {},
@@ -2089,7 +2107,8 @@ const comittedDonors2: Donor[] = [
           },
         ],
         specimenTissueSource: 'Pleural effusion',
-        tumourNormalDesignation: 'Primary tumour - adjacent to normal',
+        tumourNormalDesignation: 'Tumour',
+        specimenType: 'Primary tumour - adjacent to normal',
         submitterId: 'ss123-1123',
         specimenId: baseSpecimenId + 2,
         clinicalInfo: {},
@@ -2118,7 +2137,8 @@ const comittedDonors2: Donor[] = [
           },
         ],
         specimenTissueSource: 'Other',
-        tumourNormalDesignation: 'Metastatic tumour',
+        tumourNormalDesignation: 'Tumour',
+        specimenType: 'Metastatic tumour',
         submitterId: 'ss123-abnc',
         specimenId: baseSpecimenId + 3,
         clinicalInfo: {},
@@ -2132,7 +2152,8 @@ const comittedDonors2: Donor[] = [
           },
         ],
         specimenTissueSource: 'Other',
-        tumourNormalDesignation: 'Metastatic tumour',
+        tumourNormalDesignation: 'Tumour',
+        specimenType: 'Metastatic tumour',
         submitterId: 'ss123-abnc0',
         specimenId: baseSpecimenId + 6,
         clinicalInfo: {},
@@ -2162,7 +2183,8 @@ const comittedDonors2: Donor[] = [
           },
         ],
         specimenTissueSource: 'Pleural effusion',
-        tumourNormalDesignation: 'Metastatic tumour',
+        tumourNormalDesignation: 'Tumour',
+        specimenType: 'Metastatic tumour',
         submitterId: 'ss123-129',
         specimenId: baseSpecimenId + 5,
         clinicalInfo: {},
@@ -2191,7 +2213,8 @@ const comittedDonors2: Donor[] = [
           },
         ],
         specimenTissueSource: 'Blood derived',
-        tumourNormalDesignation: 'Recurrent tumour',
+        tumourNormalDesignation: 'Tumour',
+        specimenType: 'Recurrent tumour',
         submitterId: 'ss200-1',
         specimenId: baseSpecimenId + 7,
         clinicalInfo: {},

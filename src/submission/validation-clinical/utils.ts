@@ -285,14 +285,34 @@ const getSubmissionErrorInfoObject = (
   }
 };
 
-// ******* common resued  funcitons *******
-export function treatmentTypeIsNotChemo(treatmentType: string) {
-  return (
-    treatmentType.toString().toLowerCase() !== 'chemotherapy' &&
-    treatmentType.toString().toLowerCase() !== 'combined chemo+immunotherapy' &&
-    treatmentType.toString().toLowerCase() !== 'combined chemo+radiation therapy' &&
-    treatmentType.toString().toLowerCase() !== 'combined chemo-radiotherapy and surgery'
-  );
+// ******* common resued functions *******
+export function treatmentTypeNotMatchTherapyType(
+  treatmentType: string,
+  therapyType: ClinicalEntitySchemaNames,
+): boolean {
+  treatmentType = treatmentType.toString().toLowerCase();
+
+  if (therapyType === ClinicalEntitySchemaNames.CHEMOTHERAPY) {
+    return (
+      treatmentType !== 'chemotherapy' &&
+      treatmentType !== 'combined chemo+immunotherapy' &&
+      treatmentType !== 'combined chemo+radiation therapy' &&
+      treatmentType !== 'combined chemo-radiotherapy and surgery'
+    );
+  }
+
+  if (therapyType === ClinicalEntitySchemaNames.RADIATION) {
+    return (
+      treatmentType !== 'radiation therapy' &&
+      treatmentType !== 'combined chemo+radiation therapy' &&
+      treatmentType !== 'photodynamic therapy'
+    );
+  }
+
+  if (therapyType === ClinicalEntitySchemaNames.HORMONE_THERAPY) {
+    return treatmentType !== 'hormonal therapy';
+  }
+  return false;
 }
 
 // check that a donor is not found with the same clinical entity unique identifier

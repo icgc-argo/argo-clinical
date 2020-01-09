@@ -64,7 +64,7 @@ const specimenMutatedErr: SubmissionValidationError = {
   type: DataValidationErrors.MUTATING_EXISTING_DATA,
 };
 const tndError: SubmissionValidationError = {
-  fieldName: SampleRegistrationFieldsEnum.tumour_normal_designation,
+  fieldName: SampleRegistrationFieldsEnum.specimen_type,
   index: 0,
   info: {
     donorSubmitterId: 'AB1',
@@ -192,7 +192,7 @@ describe('data-validator', () => {
           [SampleRegistrationFieldsEnum.specimen_tissue_source]: 'XYZ',
           [SampleRegistrationFieldsEnum.sample_type]: 'ST1',
           [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP1',
-          [SampleRegistrationFieldsEnum.tumour_normal_designation]: 'Normal',
+          [SampleRegistrationFieldsEnum.specimen_type]: 'Normal',
         },
         'PEME-CA',
       );
@@ -219,6 +219,7 @@ describe('data-validator', () => {
             sampleType: 'ST1',
             specimenSubmitterId: 'SP1',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         { AB1: existingDonorMock },
@@ -246,6 +247,7 @@ describe('data-validator', () => {
             sampleType: 'ST1',
             specimenSubmitterId: 'SP1',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         { AB1: existingDonorMock },
@@ -272,7 +274,8 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZ',
             sampleType: 'ST1',
             specimenSubmitterId: 'SP1',
-            tumourNormalDesignation: 'Normal2',
+            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal2',
           },
         ],
         { AB1: existingDonorMock },
@@ -300,6 +303,7 @@ describe('data-validator', () => {
             sampleType: 'ST11',
             specimenSubmitterId: 'SP1',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         { AB1: existingDonorMock },
@@ -322,6 +326,7 @@ describe('data-validator', () => {
         sampleType: 'S',
         specimenSubmitterId: 'RR',
         tumourNormalDesignation: 'Normal',
+        specimenType: 'Normal',
       };
       // test call
       const result = await dv.validateRegistrationData(
@@ -335,7 +340,8 @@ describe('data-validator', () => {
             specimenTissueSource: 'XYZQ',
             sampleType: 'ST11',
             specimenSubmitterId: 'SP1',
-            tumourNormalDesignation: 'Normal2',
+            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal2',
           },
           valid2ndRecord,
         ],
@@ -385,6 +391,7 @@ describe('data-validator', () => {
             sampleType: 'ST11',
             specimenSubmitterId: 'SP1',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         {},
@@ -418,6 +425,7 @@ describe('data-validator', () => {
             sampleType: 'ST11',
             specimenSubmitterId: 'SP1',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         {},
@@ -464,6 +472,7 @@ describe('data-validator', () => {
             sampleType: 'ST11',
             specimenSubmitterId: 'SP2',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         { AB1: existingDonorMock },
@@ -494,6 +503,7 @@ describe('data-validator', () => {
             sampleType: 'ST11',
             specimenSubmitterId: 'SP2',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         {},
@@ -520,6 +530,7 @@ describe('data-validator', () => {
             sampleType: 'ST11',
             specimenSubmitterId: 'SP2',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           {
             donorSubmitterId: 'AB2',
@@ -530,6 +541,7 @@ describe('data-validator', () => {
             sampleType: 'ST11',
             specimenSubmitterId: 'SP1',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         {},
@@ -585,6 +597,7 @@ describe('data-validator', () => {
             sampleType: 'ST11',
             specimenSubmitterId: 'SP1',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           // dummy ok row to make sure indexes detected correctly
           {
@@ -596,6 +609,7 @@ describe('data-validator', () => {
             sampleType: 'ST11',
             specimenSubmitterId: 'SP4',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           {
             donorSubmitterId: 'AB2',
@@ -606,6 +620,7 @@ describe('data-validator', () => {
             sampleType: 'ST11',
             specimenSubmitterId: 'SP1',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         {},
@@ -663,6 +678,7 @@ describe('data-validator', () => {
             sampleType: 'ST11',
             specimenSubmitterId: 'SP1',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           // dummy ok row to make sure indexes detected correctly
           {
@@ -674,6 +690,7 @@ describe('data-validator', () => {
             sampleType: 'ST11',
             specimenSubmitterId: 'SP4',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           {
             donorSubmitterId: 'AB1',
@@ -684,6 +701,7 @@ describe('data-validator', () => {
             sampleType: 'ST11',
             specimenSubmitterId: 'SP1',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         {},
@@ -739,6 +757,7 @@ describe('data-validator', () => {
             sampleType: 'ST-2',
             specimenSubmitterId: 'SP1',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           // dummy ok row to make sure indexes detected correctly
           {
@@ -750,6 +769,7 @@ describe('data-validator', () => {
             sampleType: 'ST11',
             specimenSubmitterId: 'SP4',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           {
             donorSubmitterId: 'AB1',
@@ -760,6 +780,7 @@ describe('data-validator', () => {
             sampleType: 'ST2',
             specimenSubmitterId: 'SP1',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         {},
@@ -814,6 +835,7 @@ describe('data-validator', () => {
             sampleType: 'ST-2',
             specimenSubmitterId: 'SP1',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           // dummy ok row to make sure indexes detected correctly
           {
@@ -825,6 +847,7 @@ describe('data-validator', () => {
             sampleType: 'ST11',
             specimenSubmitterId: 'SP4',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           {
             donorSubmitterId: 'AB1',
@@ -835,6 +858,7 @@ describe('data-validator', () => {
             sampleType: 'ST-2',
             specimenSubmitterId: 'SP1',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         {},
@@ -889,6 +913,7 @@ describe('data-validator', () => {
             sampleType: 'ST2',
             specimenSubmitterId: 'SP1',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           // dummy ok row to make sure indexes detected correctly
           {
@@ -900,6 +925,7 @@ describe('data-validator', () => {
             sampleType: 'ST11',
             specimenSubmitterId: 'SP4',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           {
             donorSubmitterId: 'AB1',
@@ -910,6 +936,7 @@ describe('data-validator', () => {
             sampleType: 'ST2',
             specimenSubmitterId: 'SP2',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         {},
@@ -964,6 +991,7 @@ describe('data-validator', () => {
             sampleType: 'ST-2',
             specimenSubmitterId: 'SP1',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           // dummy ok row to make sure indexes detected correctly
           {
@@ -975,6 +1003,7 @@ describe('data-validator', () => {
             sampleType: 'ST11',
             specimenSubmitterId: 'SP4',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           {
             donorSubmitterId: 'AB1',
@@ -985,6 +1014,7 @@ describe('data-validator', () => {
             sampleType: 'ST2',
             specimenSubmitterId: 'SP1',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         {},
@@ -1039,6 +1069,7 @@ describe('data-validator', () => {
             sampleType: 'ST-2',
             specimenSubmitterId: 'SP1',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           {
             donorSubmitterId: 'AB1',
@@ -1049,6 +1080,7 @@ describe('data-validator', () => {
             sampleType: 'ST-2',
             specimenSubmitterId: 'SP1',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
           {
             donorSubmitterId: 'AB1',
@@ -1059,6 +1091,7 @@ describe('data-validator', () => {
             sampleType: 'ST-2',
             specimenSubmitterId: 'SP1',
             tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
           },
         ],
         {},
@@ -1451,7 +1484,7 @@ describe('data-validator', () => {
         .expect(result[ClinicalEntitySchemaNames.TREATMENT].dataErrors[0])
         .to.deep.eq(treatmentError);
     });
-    it('should detect treatment and missing chemotherapy data', async () => {
+    it('should detect treatment and missing therapy data', async () => {
       const existingDonorMock: Donor = stubs.validation.existingDonor01();
       const newDonorAB1Records = {};
       ClinicalSubmissionRecordsOperations.addRecord(
@@ -1460,7 +1493,7 @@ describe('data-validator', () => {
         {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
           [TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
-          [TreatmentFieldsEnum.treatment_type]: 'Combined chemo+immunotherapy',
+          [TreatmentFieldsEnum.treatment_type]: 'Combined chemo+radiation therapy',
           index: 0,
         },
       );
@@ -1471,17 +1504,29 @@ describe('data-validator', () => {
 
       const treatmentTherapyErr: SubmissionValidationError = {
         fieldName: TreatmentFieldsEnum.treatment_type,
-        message: `MISSING_THERAPY_DATA`,
+        message: `Treatments of type [Combined chemo+radiation therapy] need a corresponding [chemotherapy] record.`,
         type: DataValidationErrors.MISSING_THERAPY_DATA,
         index: 0,
         info: {
           donorSubmitterId: 'AB1',
-          value: 'Combined chemo+immunotherapy',
+          value: 'Combined chemo+radiation therapy',
           therapyType: ClinicalEntitySchemaNames.CHEMOTHERAPY,
         },
       };
-      chai.expect(result.treatment.dataErrors.length).to.eq(1);
+      const treatmentTherapyErr2: SubmissionValidationError = {
+        fieldName: TreatmentFieldsEnum.treatment_type,
+        message: `Treatments of type [Combined chemo+radiation therapy] need a corresponding [radiation] record.`,
+        type: DataValidationErrors.MISSING_THERAPY_DATA,
+        index: 0,
+        info: {
+          donorSubmitterId: 'AB1',
+          value: 'Combined chemo+radiation therapy',
+          therapyType: ClinicalEntitySchemaNames.RADIATION,
+        },
+      };
+      chai.expect(result.treatment.dataErrors.length).to.eq(2);
       chai.expect(result.treatment.dataErrors).to.deep.include(treatmentTherapyErr);
+      chai.expect(result.treatment.dataErrors).to.deep.include(treatmentTherapyErr2);
     });
     it('should detect missing or invalid treatment for chemotherapy', async () => {
       const existingDonorMock: Donor = stubs.validation.existingDonor01();
@@ -1531,18 +1576,93 @@ describe('data-validator', () => {
       };
       const chemoTretmentInvalidErr: SubmissionValidationError = {
         fieldName: TreatmentFieldsEnum.submitter_treatment_id,
-        message: `INCOMPATIBLE_PARENT_TREATMENT_TYPE`,
+        message: `[Chemotherapy] records can not be submitted for treatment types of [Ablation].`,
         type: DataValidationErrors.INCOMPATIBLE_PARENT_TREATMENT_TYPE,
         index: 1,
         info: {
           donorSubmitterId: 'AB1',
           value: 'T_02',
           treatment_type: 'Ablation',
+          therapyType: ClinicalEntitySchemaNames.CHEMOTHERAPY,
         },
       };
       chai.expect(result.chemotherapy.dataErrors.length).to.eq(2);
       chai.expect(result.chemotherapy.dataErrors).to.deep.include(chemoTretmentIdErr);
       chai.expect(result.chemotherapy.dataErrors).to.deep.include(chemoTretmentInvalidErr);
+    });
+    it('should detect invalid treatment for radiation', async () => {
+      const existingDonorMock: Donor = stubs.validation.existingDonor01();
+      const newDonorAB1Records = {};
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.TREATMENT,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
+          [TreatmentFieldsEnum.treatment_type]: 'Ablation',
+          index: 0,
+        },
+      );
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.RADIATION,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
+          index: 0,
+        },
+      );
+
+      const result = await dv
+        .validateSubmissionData({ AB1: newDonorAB1Records }, { AB1: existingDonorMock })
+        .catch((err: any) => fail(err));
+
+      const chemoTretmentInvalidErr: SubmissionValidationError = {
+        fieldName: TreatmentFieldsEnum.submitter_treatment_id,
+        message: `[Radiation] records can not be submitted for treatment types of [Ablation].`,
+        type: DataValidationErrors.INCOMPATIBLE_PARENT_TREATMENT_TYPE,
+        index: 0,
+        info: {
+          donorSubmitterId: 'AB1',
+          value: 'T_02',
+          treatment_type: 'Ablation',
+          therapyType: ClinicalEntitySchemaNames.RADIATION,
+        },
+      };
+      chai.expect(result.radiation.dataErrors.length).to.eq(1);
+      chai.expect(result.radiation.dataErrors).to.deep.include(chemoTretmentInvalidErr);
+    });
+    it('should detect hormone therapy record for treatment', async () => {
+      const existingDonorMock: Donor = stubs.validation.existingDonor01();
+      const newDonorAB1Records = {};
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.TREATMENT,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
+          [TreatmentFieldsEnum.treatment_type]: 'Hormonal Therapy',
+          index: 0,
+        },
+      );
+
+      const result = await dv
+        .validateSubmissionData({ AB1: newDonorAB1Records }, { AB1: existingDonorMock })
+        .catch((err: any) => fail(err));
+
+      const hormoneTreatmentInvalidErr: SubmissionValidationError = {
+        fieldName: TreatmentFieldsEnum.treatment_type,
+        message: `Treatments of type [Hormonal Therapy] need a corresponding [hormone_therapy] record.`,
+        type: DataValidationErrors.MISSING_THERAPY_DATA,
+        index: 0,
+        info: {
+          donorSubmitterId: 'AB1',
+          value: 'Hormonal Therapy',
+          therapyType: ClinicalEntitySchemaNames.HORMONE_THERAPY,
+        },
+      };
+      chai.expect(result.treatment.dataErrors.length).to.eq(1);
+      chai.expect(result.treatment.dataErrors).to.deep.include(hormoneTreatmentInvalidErr);
     });
   });
 

@@ -1,6 +1,6 @@
-program_id	submitter_donor_id	gender	submitter_specimen_id	specimen_tissue_source	tumour_normal_designation	submitter_sample_id	sample_type
-ABCD-EF	abcd-125	Male	ss123-jdjr-ak	Bone marrow	Xenograft - derived from primary tumour	sm123-4	polyA+ RNA	
-ABCD-EF	abcd-126	Female	ss123-sjdm-2	Other	Normal	sm123-00-1	ctDNA	
-ABCD-EF	abcd-129	Female	ss123-129	Pleural effusion	Metastatic tumour	sm123-129	polyA+ RNA	
-ABCD-EF	abcd-128	Female	ss123-abnc0	Other	Metastatic tumour	sm128-1	ctDNA
-ABCD-EF	abcd-200	Male	ss200-1	Blood derived	Recurrent tumour	sm200-1	Amplified DNA
+program_id	submitter_donor_id	gender	submitter_specimen_id	specimen_tissue_source	tumour_normal_designation	specimen_type	submitter_sample_id	sample_type
+ABCD-EF	abcd-125	Male	ss123-jdjr-ak	Bone marrow	Tumour	Xenograft - derived from primary tumour	sm123-4	polyA+ RNA	
+ABCD-EF	abcd-126	Female	ss123-sjdm-2	Other	Normal	Normal	sm123-00-1	ctDNA	
+ABCD-EF	abcd-129	Female	ss123-129	Pleural effusion	Tumour	Metastatic tumour	sm123-129	polyA+ RNA	
+ABCD-EF	abcd-128	Female	ss123-abnc0	Other	Tumour	Metastatic tumour	sm128-1	ctDNA
+ABCD-EF	abcd-200	Male	ss200-1	Blood derived	Tumour	Recurrent tumour	sm200-1	Amplified DNA

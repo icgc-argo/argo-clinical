@@ -4,17 +4,14 @@ import {
   ActiveClinicalSubmission,
   SampleRegistrationFieldsEnum,
   ClinicalEntitySchemaNames,
-  TreatmentFieldsEnum,
   SubmittedClinicalRecordsMap,
   ClinicalUniqueIndentifier,
+  ClinicalTherapySchemaNames,
 } from '../submission-entities';
 import _ from 'lodash';
 import { loggerFor } from '../../logger';
-import { Errors, mergeAndDeleteRemoved } from '../../utils';
-import {
-  getClinicalEntitiesFromDonorBySchemaName,
-  getSingleClinicalObjectFromDonor,
-} from './submission-to-clinical';
+import { Errors } from '../../utils';
+import { getSingleClinicalObjectFromDonor } from './submission-to-clinical';
 const L = loggerFor(__filename);
 
 export const mergeActiveSubmissionWithDonors = async (
@@ -48,11 +45,11 @@ export const mergeActiveSubmissionWithDonors = async (
         case ClinicalEntitySchemaNames.TREATMENT:
           addOrUpdateTreatementInfo(donor, record);
           break;
-        case ClinicalEntitySchemaNames.CHEMOTHERAPY: // other therapies here e.g. HormoneTherapy
-          addOrUpdateTherapyInfoInDonor(donor, record, entityType, true);
-          break;
         case ClinicalEntitySchemaNames.FOLLOW_UP:
           updateOrAddFollowUp(donor, record);
+          break;
+        case ClinicalTherapySchemaNames.find(tsn => tsn === entityType):
+          addOrUpdateTherapyInfoInDonor(donor, record, entityType, true);
           break;
         default:
           throw new Error(`Entity ${entityType} not implemented yet`);
@@ -68,39 +65,31 @@ export const mergeRecordsMapIntoDonor = (
   submittedRecordsMap: DeepReadonly<SubmittedClinicalRecordsMap>,
   exsistentDonor: DeepReadonly<Donor>,
 ) => {
-  const submittedClinicalTypes: Set<String> = new Set(Object.keys(submittedRecordsMap));
   const mergedDonor: any = _.cloneDeep(exsistentDonor);
 
-  if (submittedClinicalTypes.has(ClinicalEntitySchemaNames.DONOR)) {
-    updateDonorInfo(mergedDonor, submittedRecordsMap[ClinicalEntitySchemaNames.DONOR][0]);
-  }
-  if (submittedClinicalTypes.has(ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS)) {
-    updatePrimaryDiagnosisInfo(
-      mergedDonor,
-      submittedRecordsMap[ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS][0],
-    );
-  }
-  if (submittedClinicalTypes.has(ClinicalEntitySchemaNames.SPECIMEN)) {
-    submittedRecordsMap[ClinicalEntitySchemaNames.SPECIMEN].forEach(r =>
-      updateSpecimenInfo(mergedDonor, r),
-    );
-  }
-  if (submittedClinicalTypes.has(ClinicalEntitySchemaNames.TREATMENT)) {
-    submittedRecordsMap[ClinicalEntitySchemaNames.TREATMENT].forEach(r =>
-      addOrUpdateTreatementInfo(mergedDonor, r),
-    );
-  }
-  if (submittedClinicalTypes.has(ClinicalEntitySchemaNames.CHEMOTHERAPY)) {
-    submittedRecordsMap[ClinicalEntitySchemaNames.CHEMOTHERAPY].forEach(r =>
-      addOrUpdateTherapyInfoInDonor(mergedDonor, r, ClinicalEntitySchemaNames.CHEMOTHERAPY),
-    );
-  }
+  submittedRecordsMap[ClinicalEntitySchemaNames.DONOR]?.forEach(r =>
+    updateDonorInfo(mergedDonor, r),
+  );
 
-  if (submittedClinicalTypes.has(ClinicalEntitySchemaNames.FOLLOW_UP)) {
-    submittedRecordsMap[ClinicalEntitySchemaNames.FOLLOW_UP].forEach(r =>
-      updateOrAddFollowUp(mergedDonor, r),
-    );
-  }
+  submittedRecordsMap[ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]?.forEach(r =>
+    updatePrimaryDiagnosisInfo(mergedDonor, r),
+  );
+
+  submittedRecordsMap[ClinicalEntitySchemaNames.SPECIMEN]?.forEach(r =>
+    updateSpecimenInfo(mergedDonor, r),
+  );
+
+  submittedRecordsMap[ClinicalEntitySchemaNames.TREATMENT]?.forEach(r =>
+    addOrUpdateTreatementInfo(mergedDonor, r),
+  );
+
+  ClinicalTherapySchemaNames.forEach(tsn =>
+    submittedRecordsMap[tsn]?.forEach(r => addOrUpdateTherapyInfoInDonor(mergedDonor, r, tsn)),
+  );
+
+  submittedRecordsMap[ClinicalEntitySchemaNames.FOLLOW_UP]?.forEach(r =>
+    updateOrAddFollowUp(mergedDonor, r),
+  );
 
   return mergedDonor;
 };
@@ -128,9 +117,10 @@ const updateSpecimenInfo = (donor: Donor, record: any) => {
 };
 
 const updateOrAddFollowUp = (donor: Donor, record: ClinicalInfo) => {
-  const followUp = findFollowUp(donor, record[
-    ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.FOLLOW_UP]
-  ] as string);
+  const followUp = findFollowUp(
+    donor,
+    record[ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.FOLLOW_UP]] as string,
+  );
 
   if (followUp) {
     followUp.clinicalInfo = record;
