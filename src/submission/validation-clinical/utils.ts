@@ -11,6 +11,9 @@ import {
   ClinicalUniqueIndentifier,
   DonorFieldsEnum,
   ClinicalFields,
+  TreatmentTypeValuesMappedByTherapy,
+  ClinicalTherapyType,
+  DonorVitalStatusTimeSensitiveValues,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { validationErrorMessage } from '../submission-error-messages';
@@ -288,31 +291,17 @@ const getSubmissionErrorInfoObject = (
 // ******* common resued functions *******
 export function treatmentTypeNotMatchTherapyType(
   treatmentType: string,
-  therapyType: ClinicalEntitySchemaNames,
+  therapyType: ClinicalTherapyType,
 ): boolean {
-  treatmentType = treatmentType.toString().toLowerCase();
+  return !TreatmentTypeValuesMappedByTherapy[therapyType].find(
+    ttv => ttv.toString().toLowerCase() === treatmentType.toString().toLowerCase(),
+  );
+}
 
-  if (therapyType === ClinicalEntitySchemaNames.CHEMOTHERAPY) {
-    return (
-      treatmentType !== 'chemotherapy' &&
-      treatmentType !== 'combined chemo+immunotherapy' &&
-      treatmentType !== 'combined chemo+radiation therapy' &&
-      treatmentType !== 'combined chemo-radiotherapy and surgery'
-    );
-  }
-
-  if (therapyType === ClinicalEntitySchemaNames.RADIATION) {
-    return (
-      treatmentType !== 'radiation therapy' &&
-      treatmentType !== 'combined chemo+radiation therapy' &&
-      treatmentType !== 'photodynamic therapy'
-    );
-  }
-
-  if (therapyType === ClinicalEntitySchemaNames.HORMONE_THERAPY) {
-    return treatmentType !== 'hormonal therapy';
-  }
-  return false;
+export function donorVitalStatusIsTimeSensitive(vitalStatus: string | number) {
+  return DonorVitalStatusTimeSensitiveValues.find(
+    v => vitalStatus.toString().toLowerCase() === v.toLowerCase(),
+  );
 }
 
 // check that a donor is not found with the same clinical entity unique identifier

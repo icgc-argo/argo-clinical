@@ -2,7 +2,6 @@ import {
   SubmissionValidationError,
   DataValidationErrors,
   SubmittedClinicalRecord,
-  RecordValidationResult,
   ClinicalEntitySchemaNames,
   DonorFieldsEnum,
   SpecimenFieldsEnum,
@@ -82,7 +81,7 @@ function checkTimeConflictWithDonor(
   errors: SubmissionValidationError[],
 ) {
   if (
-    donorDataToValidateWith.donorVitalStatus.toString().toLowerCase() === 'deceased' &&
+    utils.donorVitalStatusIsTimeSensitive(donorDataToValidateWith.donorVitalStatus) &&
     donorDataToValidateWith.donorSurvivalTime <
       specimenRecord[SpecimenFieldsEnum.specimen_acquisition_interval]
   ) {

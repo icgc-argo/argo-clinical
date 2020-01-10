@@ -385,6 +385,14 @@ export const ClinicalUniqueIndentifier: {
   [ClinicalEntitySchemaNames.HORMONE_THERAPY]: HormoneTherapyFieldsEnum.hormone_therapy_drug_name,
 };
 
+export interface ClinicalSubmissionRecordsByDonorIdMap {
+  [donoSubmitterId: string]: SubmittedClinicalRecordsMap;
+}
+
+export interface SubmittedClinicalRecordsMap {
+  [type: string]: SubmittedClinicalRecord[];
+}
+
 export const ClinicalEntityToEnumFieldsMap: Record<ClinicalEntitySchemaNames, string[]> = {
   [ClinicalEntitySchemaNames.REGISTRATION]: Object.values(SampleRegistrationFieldsEnum),
   [ClinicalEntitySchemaNames.DONOR]: Object.values(DonorFieldsEnum),
@@ -397,10 +405,28 @@ export const ClinicalEntityToEnumFieldsMap: Record<ClinicalEntitySchemaNames, st
   [ClinicalEntitySchemaNames.HORMONE_THERAPY]: Object.values(HormoneTherapyFieldsEnum),
 };
 
-export interface ClinicalSubmissionRecordsByDonorIdMap {
-  [donoSubmitterId: string]: SubmittedClinicalRecordsMap;
-}
+export const TreatmentTypeValuesMappedByTherapy: Record<ClinicalTherapyType, string[]> = {
+  [ClinicalEntitySchemaNames.CHEMOTHERAPY]: [
+    'Chemotherapy',
+    'Combined chemo+immunotherapy',
+    'Combined chemo+radiation therapy',
+    'Combined chemo-radiotherapy and surgery',
+  ],
+  [ClinicalEntitySchemaNames.RADIATION]: [
+    'Radiation therapy',
+    'Combined chemo+radiation therapy',
+    'Photodynamic therapy',
+  ],
+  [ClinicalEntitySchemaNames.HORMONE_THERAPY]: ['Hormonal therapy'],
+};
 
-export interface SubmittedClinicalRecordsMap {
-  [type: string]: SubmittedClinicalRecord[];
-}
+export const DonorVitalStatusTimeSensitiveValues = ['Deceased'];
+
+export const ClinicalEntityKnownFieldCodeLists: { [k: string]: { [k: string]: string[] } } = {
+  [ClinicalEntitySchemaNames.DONOR]: {
+    [DonorFieldsEnum.vital_status]: DonorVitalStatusTimeSensitiveValues,
+  },
+  [ClinicalEntitySchemaNames.TREATMENT]: {
+    [TreatmentFieldsEnum.treatment_type]: Object.values(TreatmentTypeValuesMappedByTherapy).flat(),
+  },
+};

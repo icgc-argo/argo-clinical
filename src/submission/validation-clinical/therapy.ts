@@ -4,6 +4,7 @@ import {
   TreatmentFieldsEnum,
   SubmittedClinicalRecord,
   DataValidationErrors,
+  ClinicalTherapyType,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, Treatment } from '../../clinical/clinical-entities';
@@ -40,9 +41,7 @@ function checkTreatementHasCorrectTypeForTherapy(
   const therapyType = treatment.therapies.find(therapy => therapy.clinicalInfo === therapyRecord)
     ?.therapyType;
 
-  if (
-    utils.treatmentTypeNotMatchTherapyType(treatmentType, therapyType as ClinicalEntitySchemaNames)
-  ) {
+  if (utils.treatmentTypeNotMatchTherapyType(treatmentType, therapyType as ClinicalTherapyType)) {
     errors.push(
       utils.buildSubmissionError(
         therapyRecord,

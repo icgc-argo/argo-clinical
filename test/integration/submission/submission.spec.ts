@@ -1871,7 +1871,7 @@ describe('Submission Api', () => {
           });
       });
 
-      it.only('should check new schema is valid with data vlidation fields', async () => {
+      it('should check new schema is valid with data vlidation fields', async () => {
         await chai
           .request(app)
           .post('/submission/schema/dry-run-update')
