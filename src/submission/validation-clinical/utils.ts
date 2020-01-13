@@ -293,15 +293,11 @@ export function treatmentTypeNotMatchTherapyType(
   treatmentType: string,
   therapyType: ClinicalTherapyType,
 ): boolean {
-  return !TreatmentTypeValuesMappedByTherapy[therapyType].find(
-    ttv => ttv.toString().toLowerCase() === treatmentType.toString().toLowerCase(),
-  );
+  return !TreatmentTypeValuesMappedByTherapy[therapyType].some(ttv => ttv === treatmentType);
 }
 
-export function donorVitalStatusIsTimeSensitive(vitalStatus: string | number) {
-  return DonorVitalStatusTimeSensitiveValues.find(
-    v => vitalStatus.toString().toLowerCase() === v.toLowerCase(),
-  );
+export function donorVitalStatusIsTimeSensitive(vitalStatus: string | number): boolean {
+  return DonorVitalStatusTimeSensitiveValues.some(v => vitalStatus === v);
 }
 
 // check that a donor is not found with the same clinical entity unique identifier

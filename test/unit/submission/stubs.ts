@@ -108,7 +108,7 @@ export const stubs = {
       programId: 'PEME-CA',
       donorId: 10,
       clinicalInfo: {
-        [DonorFieldsEnum.vital_status]: 'deceased',
+        [DonorFieldsEnum.vital_status]: 'Deceased',
         [DonorFieldsEnum.survival_time]: 522,
       },
       gender: 'Female',
@@ -153,7 +153,7 @@ export const stubs = {
       programId: 'PEME-CA',
       donorId: 10,
       clinicalInfo: {
-        [DonorFieldsEnum.vital_status]: 'deceased',
+        [DonorFieldsEnum.vital_status]: 'Deceased',
         [DonorFieldsEnum.survival_time]: 522,
       },
       gender: 'Female',
@@ -207,7 +207,7 @@ export const stubs = {
       programId: 'PEME-CA',
       donorId: 10,
       clinicalInfo: {
-        [DonorFieldsEnum.vital_status]: 'deceased',
+        [DonorFieldsEnum.vital_status]: 'Deceased',
       },
       gender: 'Female',
       specimens: [

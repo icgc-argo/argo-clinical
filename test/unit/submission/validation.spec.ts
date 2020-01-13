@@ -1266,7 +1266,7 @@ describe('data-validator', () => {
         {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB3',
           [SampleRegistrationFieldsEnum.program_id]: 'PEME-CA',
-          [DonorFieldsEnum.vital_status]: 'deceased',
+          [DonorFieldsEnum.vital_status]: 'Deceased',
           [DonorFieldsEnum.survival_time]: 522,
           index: 0,
         },
@@ -1641,7 +1641,7 @@ describe('data-validator', () => {
         {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
           [TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
-          [TreatmentFieldsEnum.treatment_type]: 'Hormonal Therapy',
+          [TreatmentFieldsEnum.treatment_type]: 'Hormonal therapy',
           index: 0,
         },
       );
@@ -1652,12 +1652,12 @@ describe('data-validator', () => {
 
       const hormoneTreatmentInvalidErr: SubmissionValidationError = {
         fieldName: TreatmentFieldsEnum.treatment_type,
-        message: `Treatments of type [Hormonal Therapy] need a corresponding [hormone_therapy] record.`,
+        message: `Treatments of type [Hormonal therapy] need a corresponding [hormone_therapy] record.`,
         type: DataValidationErrors.MISSING_THERAPY_DATA,
         index: 0,
         info: {
           donorSubmitterId: 'AB1',
-          value: 'Hormonal Therapy',
+          value: 'Hormonal therapy',
           therapyType: ClinicalEntitySchemaNames.HORMONE_THERAPY,
         },
       };
