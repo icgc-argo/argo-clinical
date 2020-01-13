@@ -1727,6 +1727,7 @@ describe('Submission Api', () => {
           done();
         });
     });
+
     it('get all templates zip', done => {
       let refZip: AdmZip;
       try {
@@ -1867,6 +1868,31 @@ describe('Submission Api', () => {
               throw new Error('migration in db with no id');
             }
             migrations[0]._id.toString().should.eq(migrationId);
+          });
+      });
+
+      it('should check new schema is valid with data vlidation fields', async () => {
+        await chai
+          .request(app)
+          .post('/submission/schema/dry-run-update')
+          .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+          .send({
+            version: '3.0',
+          })
+          .then((res: any) => {
+            res.should.have.status(200);
+            res.body.newSchemaErrors.should.deep.eq({
+              [ClinicalEntitySchemaNames.DONOR]: {
+                missingFields: [],
+                invalidFieldCodeLists: [
+                  { fieldName: DonorFieldsEnum.vital_status, missingCodeListValues: ['Deceased'] },
+                ],
+              },
+              [ClinicalEntitySchemaNames.REGISTRATION]: {
+                missingFields: [SampleRegistrationFieldsEnum.specimen_type],
+                invalidFieldCodeLists: [],
+              },
+            });
           });
       });
 

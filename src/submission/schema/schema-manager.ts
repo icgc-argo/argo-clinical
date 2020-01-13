@@ -5,13 +5,14 @@ import {
   SchemaProcessingResult,
   FieldNamesByPriorityMap,
   ChangeAnalysis,
+  SchemaDefinition,
 } from '../../lectern-client/schema-entities';
 import * as changeAnalyzer from '../../lectern-client/change-analyzer';
 import { schemaClient as schemaServiceAdapter } from '../../lectern-client/schema-rest-client';
 import { schemaRepo } from './schema-repo';
 import { loggerFor } from '../../logger';
 import { migrationRepo } from './migration-repo';
-import { DictionaryMigration } from './migration-entities';
+import { DictionaryMigration, NewSchemaVerificationResult } from './migration-entities';
 import { Donor, ClinicalInfo } from '../../clinical/clinical-entities';
 import { DeepReadonly } from 'deep-freeze';
 import * as clinicalService from '../../clinical/clinical-service';
@@ -21,10 +22,13 @@ import {
   ClinicalEntitySchemaNames,
   RevalidateClinicalSubmissionCommand,
   SUBMISSION_STATE,
+  ClinicalEntityToEnumFieldsMap,
+  ClinicalEntityKnownFieldCodeLists,
 } from '../submission-entities';
 import { notEmpty, Errors, sleep } from '../../utils';
 import _ from 'lodash';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../submission-to-clinical/submission-to-clinical';
+
 const L = loggerFor(__filename);
 
 let manager: SchemaManager;
@@ -331,6 +335,11 @@ namespace MigrationManager {
       newSchemaVersion,
     );
 
+    const preMigrateVerification = await verifyNewSchemaIsValidWithDataValidation(newTargetSchema);
+    if (!_.isEmpty(preMigrateVerification)) {
+      return await abortMigration(roMigration, preMigrateVerification);
+    }
+
     const migrationAfterDonorCheck = await checkDonorDocuments(migration, newTargetSchema);
 
     const migrationAfterSubmissionsCheck = await revalidateOpenSubmissionsWithNewSchema(
@@ -354,6 +363,85 @@ namespace MigrationManager {
     await persistedConfig.setSubmissionDisabledState(false);
 
     return closedMigration;
+  };
+
+  const verifyNewSchemaIsValidWithDataValidation = async (
+    newSchemaDictionary: SchemasDictionary,
+  ): Promise<NewSchemaVerificationResult> => {
+    const verificationResult: NewSchemaVerificationResult = {};
+
+    Object.values(ClinicalEntitySchemaNames).forEach(clinicalEntityName => {
+      const clinicalEntityNewSchemaDef = newSchemaDictionary.schemas.find(
+        s => s.name === clinicalEntityName,
+      );
+
+      const missingDataValidationFields: string[] = checkClinicalEntityNewSchemaHasRequiredFields(
+        clinicalEntityName as ClinicalEntitySchemaNames,
+        clinicalEntityNewSchemaDef,
+      );
+
+      const invalidDataValidationFields: any[] = checkClinicalEntityNewSchemaHasFieldCodeListValues(
+        clinicalEntityName as ClinicalEntitySchemaNames,
+        clinicalEntityNewSchemaDef,
+      );
+
+      if (missingDataValidationFields.length !== 0 || invalidDataValidationFields.length !== 0) {
+        verificationResult[clinicalEntityName] = {
+          missingFields: missingDataValidationFields,
+          invalidFieldCodeLists: invalidDataValidationFields,
+        };
+      }
+    });
+
+    return verificationResult;
+  };
+
+  function checkClinicalEntityNewSchemaHasRequiredFields(
+    clinicalEntityName: ClinicalEntitySchemaNames,
+    clinicalEntityNewSchemaDef: SchemaDefinition | undefined,
+  ): string[] {
+    return _.difference(
+      ClinicalEntityToEnumFieldsMap[clinicalEntityName],
+      clinicalEntityNewSchemaDef?.fields.map(f => f.name) || [],
+    );
+  }
+
+  function checkClinicalEntityNewSchemaHasFieldCodeListValues(
+    clinicalSchemaName: ClinicalEntitySchemaNames,
+    clinicalEntityNewSchemaDef: SchemaDefinition | undefined,
+  ) {
+    const invalidFields: any = [];
+    Object.entries(ClinicalEntityKnownFieldCodeLists[clinicalSchemaName] || {}).forEach(
+      ([fieldName, codeList]) => {
+        const clinicalEntityNewSchemaFieldDef = clinicalEntityNewSchemaDef?.fields.find(
+          nfd => nfd.name === fieldName,
+        );
+        const missingCodeListValues = _.difference(
+          codeList,
+          clinicalEntityNewSchemaFieldDef?.restrictions?.codeList || [],
+        );
+        if (missingCodeListValues.length !== 0) {
+          invalidFields.push({ fieldName, missingCodeListValues });
+        }
+      },
+    );
+    return invalidFields;
+  }
+
+  const abortMigration = async (
+    migration: DeepReadonly<DictionaryMigration>,
+    newSchemaAnalysis: NewSchemaVerificationResult,
+  ) => {
+    const migrationToFail = _.cloneDeep(migration) as DictionaryMigration;
+    migrationToFail.stage = 'FAILED';
+    migrationToFail.state = 'CLOSED';
+    migrationToFail.newSchemaErrors = newSchemaAnalysis;
+
+    const updatedMigration = await migrationRepo.update(migrationToFail);
+
+    await persistedConfig.setSubmissionDisabledState(false);
+
+    return updatedMigration;
   };
 
   const revalidateOpenSubmissionsWithNewSchema = async (

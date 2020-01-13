@@ -2,9 +2,9 @@ import {
   DataValidationErrors,
   SubmittedClinicalRecord,
   SubmissionValidationError,
-  RecordValidationResult,
   SpecimenFieldsEnum,
   DonorFieldsEnum,
+  DonorVitalStatusValues,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
@@ -38,7 +38,7 @@ function checkTimeConflictWithSpecimens(
   errors: SubmissionValidationError[],
 ) {
   if (
-    donorRecord[DonorFieldsEnum.vital_status].toString().toLowerCase() !== 'deceased' ||
+    donorRecord[DonorFieldsEnum.vital_status] !== DonorVitalStatusValues.deceased ||
     !donorRecord[DonorFieldsEnum.survival_time]
   ) {
     return;
