@@ -18,4 +18,13 @@ export interface DictionaryMigration {
   checkedSubmissions: any[];
   invalidSubmissions: any[];
   createdBy: string;
+  newSchemaErrors?: PreMigrationSchemaVerificationResult;
 }
+
+export type PreMigrationSchemaVerificationResult = {
+  [clinicalEntity: string]: {
+    missingFields?: string[];
+    invalidFieldCodeLists?: { fieldName: string; missingCodeListValue: string[] }[];
+    // invalidFieldRegex?: { name: string; expectedRegex: RegExp };
+  };
+};

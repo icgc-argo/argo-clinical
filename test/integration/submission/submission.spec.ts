@@ -1881,24 +1881,17 @@ describe('Submission Api', () => {
           })
           .then((res: any) => {
             res.should.have.status(200);
-            res.body.analysis.newSchemaAnalysis.invalidDataValidationFields.should.deep.include({
-              clinicalEntity: 'donor',
-              fields: [
-                {
-                  name: 'vital_status',
-                  missingCodeListValues: ['Deceased'],
-                },
-              ],
-            });
-            res.body.analysis.newSchemaAnalysis.missingDataValidationFields.length.should.eq(7);
-            res.body.analysis.newSchemaAnalysis.missingDataValidationFields.should.deep.include({
-              clinicalEntity: 'specimen',
-              fields: [
-                'program_id',
-                'submitter_donor_id',
-                'submitter_specimen_id',
-                'specimen_acquisition_interval',
-              ],
+            res.body.newSchemaErrors.should.deep.eq({
+              [ClinicalEntitySchemaNames.DONOR]: {
+                missingFields: [],
+                invalidFieldCodeLists: [
+                  { fieldName: DonorFieldsEnum.vital_status, missingCodeListValues: ['Deceased'] },
+                ],
+              },
+              [ClinicalEntitySchemaNames.REGISTRATION]: {
+                missingFields: [SampleRegistrationFieldsEnum.specimen_type],
+                invalidFieldCodeLists: [],
+              },
             });
           });
       });
