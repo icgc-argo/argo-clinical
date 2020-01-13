@@ -18,10 +18,10 @@ export interface DictionaryMigration {
   checkedSubmissions: any[];
   invalidSubmissions: any[];
   createdBy: string;
-  newSchemaErrors?: PreMigrationSchemaVerificationResult;
+  newSchemaErrors?: NewSchemaVerificationResult;
 }
 
-export type PreMigrationSchemaVerificationResult = {
+export type NewSchemaVerificationResult = {
   [clinicalEntity: string]: {
     missingFields?: string[];
     invalidFieldCodeLists?: { fieldName: string; missingCodeListValue: string[] }[];

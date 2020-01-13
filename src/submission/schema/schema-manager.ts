@@ -12,7 +12,7 @@ import { schemaClient as schemaServiceAdapter } from '../../lectern-client/schem
 import { schemaRepo } from './schema-repo';
 import { loggerFor } from '../../logger';
 import { migrationRepo } from './migration-repo';
-import { DictionaryMigration, PreMigrationSchemaVerificationResult } from './migration-entities';
+import { DictionaryMigration, NewSchemaVerificationResult } from './migration-entities';
 import { Donor, ClinicalInfo } from '../../clinical/clinical-entities';
 import { DeepReadonly } from 'deep-freeze';
 import * as clinicalService from '../../clinical/clinical-service';
@@ -367,8 +367,8 @@ namespace MigrationManager {
 
   const verifyNewSchemaIsValidWithDataValidation = async (
     newSchemaDictionary: SchemasDictionary,
-  ): Promise<PreMigrationSchemaVerificationResult> => {
-    const verificationResult: PreMigrationSchemaVerificationResult = {};
+  ): Promise<NewSchemaVerificationResult> => {
+    const verificationResult: NewSchemaVerificationResult = {};
 
     Object.values(ClinicalEntitySchemaNames).forEach(clinicalEntityName => {
       const clinicalEntityNewSchemaDef = newSchemaDictionary.schemas.find(
@@ -430,7 +430,7 @@ namespace MigrationManager {
 
   const abortMigration = async (
     migration: DeepReadonly<DictionaryMigration>,
-    newSchemaAnalysis: PreMigrationSchemaVerificationResult,
+    newSchemaAnalysis: NewSchemaVerificationResult,
   ) => {
     const migrationToFail = _.cloneDeep(migration) as DictionaryMigration;
     migrationToFail.stage = 'FAILED';
