@@ -13,7 +13,7 @@ import {
   ClinicalFields,
   TreatmentTypeValuesMappedByTherapy,
   ClinicalTherapyType,
-  DonorVitalStatusTimeSensitiveValues,
+  DonorVitalStatusValues,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { validationErrorMessage } from '../submission-error-messages';
@@ -294,10 +294,6 @@ export function treatmentTypeNotMatchTherapyType(
   therapyType: ClinicalTherapyType,
 ): boolean {
   return !TreatmentTypeValuesMappedByTherapy[therapyType].some(ttv => ttv === treatmentType);
-}
-
-export function donorVitalStatusIsTimeSensitive(vitalStatus: string | number): boolean {
-  return DonorVitalStatusTimeSensitiveValues.some(v => vitalStatus === v);
 }
 
 // check that a donor is not found with the same clinical entity unique identifier

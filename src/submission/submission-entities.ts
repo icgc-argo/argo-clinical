@@ -420,11 +420,11 @@ export const TreatmentTypeValuesMappedByTherapy: Record<ClinicalTherapyType, str
   [ClinicalEntitySchemaNames.HORMONE_THERAPY]: ['Hormonal therapy'],
 };
 
-export const DonorVitalStatusTimeSensitiveValues = ['Deceased'];
+export const DonorVitalStatusValues = { deceased: 'Deceased' };
 
 export const ClinicalEntityKnownFieldCodeLists: { [k: string]: { [k: string]: string[] } } = {
   [ClinicalEntitySchemaNames.DONOR]: {
-    [DonorFieldsEnum.vital_status]: DonorVitalStatusTimeSensitiveValues,
+    [DonorFieldsEnum.vital_status]: Object.values(DonorVitalStatusValues).flat(),
   },
   [ClinicalEntitySchemaNames.TREATMENT]: {
     [TreatmentFieldsEnum.treatment_type]: Object.values(TreatmentTypeValuesMappedByTherapy).flat(),
