@@ -29,6 +29,13 @@ paths:
           description: 'Submissions config object'
 
   /submission/configs/submission-disabled:
+    get:
+      tags:
+        - Submission Configurations
+      summary: Get current state of submission service for sample registration and clinical submission
+      responses:
+        '200':
+          description: 'Boolean value of whether submission system is disabled or enabled'
     patch:
       tags:
         - Submission Configurations
