@@ -4,6 +4,10 @@ import { Request, Response } from 'express';
 import * as service from './service';
 
 class PersistedConfigController {
+  async getSubmissionDisabledState(req: Request, res: Response) {
+    const submissionDisabled = await service.getSubmissionDisabledState();
+    return res.status(200).send(submissionDisabled);
+  }
   @HasFullWriteAccess()
   async setSubmissionDisabledState(req: Request, res: Response) {
     const { submissionDisabled } = req.body;

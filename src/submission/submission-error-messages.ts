@@ -51,6 +51,9 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
       therapyType,
     )}] records can not be submitted for treatment types of [${treatmentType}].`;
   },
+  TREATMENT_ID_NOT_FOUND: () => {
+    return `Treatment and treatment_type files are required to be initialized together. Please upload a corresponding treatment file in this submission.`;
+  },
 };
 
 const BATCH_ERROR_MESSAGES: Record<SubmissionBatchErrorTypes, (errorData: any) => string> = {

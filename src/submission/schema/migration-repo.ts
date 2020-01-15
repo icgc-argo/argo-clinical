@@ -75,6 +75,7 @@ const DictionaryMigrationSchema = new mongoose.Schema(
     dryRun: { type: Boolean, required: false },
     stats: {},
     createdBy: { type: String, required: true },
+    newSchemaErrors: {},
   },
   { timestamps: true, minimize: false },
 );

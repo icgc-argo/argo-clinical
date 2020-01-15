@@ -87,7 +87,7 @@ describe('manager', () => {
     chai.expect(dbSchema.length).to.eq(1);
     chai.expect(dbSchema[0].name).to.eq(schemaName);
     chai.expect(dbSchema[0].version).to.eq('1.0');
-    chai.expect(dbSchema[0].schemas.length).to.eq(4);
+    chai.expect(dbSchema[0].schemas.length).to.eq(9);
     chai.expect(result).to.not.be.undefined;
     // had to convert the id to string from bsonArray before comparison
     dbSchema[0]._id = dbSchema[0]._id.toString();
@@ -133,7 +133,7 @@ describe('manager', () => {
     chai.expect(dbSchema.length).to.eq(1);
     chai.expect(dbSchema[0].name).to.eq(schemaName);
     chai.expect(dbSchema[0].version).to.eq('2.0');
-    chai.expect(dbSchema[0].schemas.length).to.eq(4);
+    chai.expect(dbSchema[0].schemas.length).to.eq(9);
     // had to convert the id to string from bsonArray before comparison
     dbSchema[0]._id = dbSchema[0]._id.toString();
     chai.expect(resultV2).to.deep.eq(dbSchema[0]);
