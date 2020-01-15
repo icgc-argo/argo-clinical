@@ -1566,7 +1566,7 @@ describe('data-validator', () => {
 
       const chemoTretmentIdErr: SubmissionValidationError = {
         fieldName: TreatmentFieldsEnum.submitter_treatment_id,
-        message: `TREATMENT_ID_NOT_FOUND`,
+        message: `Treatment and treatment_type files are required to be initialized together. Please upload a corresponding treatment file in this submission.`,
         type: DataValidationErrors.TREATMENT_ID_NOT_FOUND,
         index: 0,
         info: {
