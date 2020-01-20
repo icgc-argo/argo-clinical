@@ -1,4 +1,4 @@
-import { ProtectTestEndpoint } from '../../../src/auth-decorators/index';
+import { ProtectTestEndpoint } from '../../../src/decorators/index';
 import { initConfigs } from '../../../src/config';
 import chai from 'chai';
 

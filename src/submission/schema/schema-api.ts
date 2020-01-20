@@ -6,7 +6,7 @@ import { setStatus, Status } from '../../app-health';
 import { ControllerUtils } from '../../utils';
 import { ClinicalEntitySchemaNames } from '../submission-entities';
 import AdmZip from 'adm-zip';
-import { HasFullWriteAccess } from '../../auth-decorators';
+import { HasFullWriteAccess } from '../../decorators';
 const L = loggerFor(__filename);
 
 class SchemaController {

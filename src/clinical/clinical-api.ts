@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import * as service from './clinical-service';
-import { HasFullWriteAccess, ProtectTestEndpoint } from '../auth-decorators';
+import { HasFullWriteAccess, ProtectTestEndpoint } from '../decorators';
 
 class ClinicalController {
   @HasFullWriteAccess()

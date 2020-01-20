@@ -75,7 +75,7 @@ describe('clinical Api', () => {
             return `file://${__dirname}/stub-schema.json`;
           },
           testApisDisabled() {
-            return true;
+            return false;
           },
         });
       } catch (err) {
