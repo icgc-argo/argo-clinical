@@ -20,6 +20,7 @@ class SchemaController {
     return res.status(200).send(manager.instance().getCurrent());
   }
 
+  @HasFullWriteAccess()
   async probe(req: Request, res: Response) {
     const from = req.query.from;
     const to = req.query.to;
@@ -35,6 +36,7 @@ class SchemaController {
     return res.status(200).send(migration);
   }
 
+  @HasFullWriteAccess()
   async getMigration(req: Request, res: Response) {
     const id: string | undefined = req.params.id;
     const migration = await manager.instance().getMigration(id);

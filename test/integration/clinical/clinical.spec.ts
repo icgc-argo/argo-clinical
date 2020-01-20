@@ -74,6 +74,9 @@ describe('clinical Api', () => {
           schemaServiceUrl() {
             return `file://${__dirname}/stub-schema.json`;
           },
+          testApisDisabled() {
+            return true;
+          },
         });
       } catch (err) {
         console.error('before >>>>>>>>>>>', err);

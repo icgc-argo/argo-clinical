@@ -76,6 +76,26 @@ const scopeCheckGenerator = (
   };
 };
 
+export const ProtectTestEndpoint = () => {
+  return function(target: any, key: string, descriptor: PropertyDescriptor) {
+    const originalMethod = descriptor.value as RequestHandler;
+    descriptor.value = function() {
+      const request = arguments[0] as Request;
+      const response = arguments[1] as Response;
+      const next = arguments[2] as NextFunction;
+      const testPointsDisabled = config.getConfig().testApisDisabled();
+
+      if (testPointsDisabled) {
+        return response.status(405).send('not allowed');
+      }
+
+      const result = originalMethod.apply(this, [request, response, next]);
+      return result;
+    };
+    return descriptor;
+  };
+};
+
 export function HasProgramWriteAccess(programIdExtractor: Function) {
   return scopeCheckGenerator(
     'HasProgramWriteAccess',

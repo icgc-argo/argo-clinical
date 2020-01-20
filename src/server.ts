@@ -51,6 +51,9 @@ let server: Server;
     schemaServiceUrl(): string {
       return process.env.LECTERN_URL || '';
     },
+    testApisDisabled(): boolean {
+      return process.env.DISABLE_TEST_APIS == 'false' ? false : true || true;
+    },
   };
 
   await bootstrap.run(defaultAppConfigImpl);
