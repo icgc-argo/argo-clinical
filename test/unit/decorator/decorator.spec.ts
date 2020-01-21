@@ -2,7 +2,7 @@ import { ProtectTestEndpoint } from '../../../src/decorators/index';
 import { initConfigs } from '../../../src/config';
 import chai from 'chai';
 
-describe('eventModifier decorator', () => {
+describe('decorator', () => {
   before(() => {
     initConfigs({
       mongoPassword() {
