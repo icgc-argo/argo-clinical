@@ -1,12 +1,14 @@
 import { Request, Response } from 'express';
 import * as service from './clinical-service';
-import { HasFullWriteAccess } from '../auth-decorators';
+import { HasFullWriteAccess, ProtectTestEndpoint } from '../decorators';
 
 class ClinicalController {
+  @HasFullWriteAccess()
   async findDonors(req: Request, res: Response) {
     return res.status(200).send(await service.getDonors(req.query.programId));
   }
 
+  @ProtectTestEndpoint()
   @HasFullWriteAccess()
   async deleteDonors(req: Request, res: Response) {
     return res.status(200).send(await service.deleteDonors(req.query.programId));

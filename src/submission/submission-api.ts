@@ -11,7 +11,7 @@ import {
   SubmissionBatchError,
   SubmissionBatchErrorTypes,
 } from './submission-entities';
-import { HasFullWriteAccess, HasProgramWriteAccess } from '../auth-decorators';
+import { HasFullWriteAccess, HasProgramWriteAccess } from '../decorators';
 import _ from 'lodash';
 import { batchErrorMessage } from './submission-error-messages';
 import * as fs from 'fs';
