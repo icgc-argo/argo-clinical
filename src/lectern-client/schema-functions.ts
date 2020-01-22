@@ -522,7 +522,7 @@ namespace validation {
       console.error(`failed running validation script ${field.name} for record: ${record}`);
       return {
         valid: false,
-        message: 'failed to run script validation, check script and the input',
+        message: `Failed to run script validation, check script and the input. Error: ${err}`,
       };
     }
   };
