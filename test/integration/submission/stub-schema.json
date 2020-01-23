@@ -38,6 +38,40 @@
               }
             }
           }
+        ],
+        [
+          "specimen.anatomic_location_of_specimen_collection",
+          {
+            "left": {
+              "description": "Anatomic location of a specimen when it was collected.",
+              "name": "anatomic_location_of_specimen_collection",
+              "restrictions": {
+                "codeList": ["Muscle", "Other", "Wrist"],
+                "required": true
+              },
+              "valueType": "string"
+            },
+            "right": {
+              "description": "Anatomic location of a specimen when it was collected.",
+              "name": "anatomic_location_of_specimen_collection",
+              "restrictions": {
+                "codeList": ["Muscle", "Wrist"],
+                "required": true
+              },
+              "valueType": "string"
+            },
+            "diff": {
+              "restrictions": {
+                "codeList": {
+                  "type": "updated",
+                  "data": {
+                    "added": [],
+                    "deleted": ["Other"]
+                  }
+                }
+              }
+            }
+          }
         ]
       ]
     }
@@ -1784,7 +1818,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": ["Muscle", "Other", "Wrist"]
+                "codeList": ["Muscle", "Wrist"]
               }
             },
             {
