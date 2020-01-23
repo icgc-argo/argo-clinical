@@ -115,7 +115,7 @@ export namespace MongooseUtils {
 // type gaurd to filter out undefined and null
 // https://stackoverflow.com/questions/43118692/typescript-filter-out-nulls-from-an-array
 export function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
-  return value !== null && value !== undefined;
+  return value !== null && value !== undefined && !_.isEmpty(value);
 }
 
 export function isString(value: any): value is string {
