@@ -1816,13 +1816,13 @@ describe('Submission Api', () => {
       });
 
       const donor2: Donor = emptyDonorDocument({
-        submitterId: 'ICGC_0002',
+        submitterId: 'ICGC_0003',
         programId,
         clinicalInfo: {
           program_id: 'ABCD-EF',
           vital_status: 'Alive',
           cause_of_death: 'Died of cancer',
-          submitter_donor_id: 'ICGC_0002',
+          submitter_donor_id: 'ICGC_0003',
           survival_time: 67,
         },
         specimens: [
@@ -1838,6 +1838,18 @@ describe('Submission Api', () => {
         ],
       });
 
+      const newSchemaInvalidDonor: Donor = emptyDonorDocument({
+        submitterId: 'ICGC_0002',
+        programId,
+        clinicalInfo: {
+          program_id: 'ABCD-EF',
+          vital_status: 'Unknown',
+          cause_of_death: 'Died of cancer',
+          submitter_donor_id: 'ICGC_0002',
+          survival_time: 67,
+        },
+      });
+
       this.beforeEach(async () => {
         await clearCollections(dburl, ['donors', 'dictionarymigrations']);
         await insertData(dburl, 'donors', donor);
@@ -1847,7 +1859,7 @@ describe('Submission Api', () => {
       });
 
       // very simple smoke test of the migration to be expanded along developement
-      it('should update the schema - happy path', async () => {
+      it('should update the schema', async () => {
         await chai
           .request(app)
           .patch('/submission/schema?sync=true')
@@ -1883,6 +1895,7 @@ describe('Submission Api', () => {
             }
             migrations[0]._id.toString().should.eq(migrationId);
             migrations[0].invalidDonorsErrors.length.should.eq(0);
+            migrations[0].stats.validDocumentsCount.should.eq(2);
           });
       });
 
@@ -1913,6 +1926,8 @@ describe('Submission Api', () => {
 
       describe('dry run migration api', () => {
         it('should report donor validation errors', async () => {
+          await insertData(dburl, 'donors', newSchemaInvalidDonor);
+
           await chai
             .request(app)
             .post('/submission/schema/dry-run-update')
@@ -1940,8 +1955,8 @@ describe('Submission Api', () => {
               const normalizedDbMigration = JSON.parse(JSON.stringify(dbMigration));
               normalizedDbMigration.should.deep.include(migration);
               migration.stats.invalidDocumentsCount.should.eq(1);
-              migration.stats.validDocumentsCount.should.eq(1);
-              migration.stats.totalProcessed.should.eq(2);
+              migration.stats.validDocumentsCount.should.eq(2);
+              migration.stats.totalProcessed.should.eq(3);
               migration.invalidDonorsErrors[0].should.deep.eq({
                 donorId: 1,
                 submitterDonorId: 'ICGC_0002',
