@@ -505,6 +505,7 @@ namespace validation {
       const sandbox = {
         $row: record,
         $field: record[field.name],
+        $name: field.name
       };
 
       if (!field.restrictions || !field.restrictions.script) {
