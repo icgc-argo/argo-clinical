@@ -520,7 +520,7 @@ namespace validation {
         message: result.message || '',
       };
     } catch (err) {
-      console.error(`failed running validation script ${field.name} for record: ${record}`);
+      console.error(`failed running validation script ${field.name} for record: ${record}. Error message: ${err}`);
       return {
         valid: false,
         message: 'failed to run script validation, check script and the input',
