@@ -201,14 +201,14 @@ describe('schema-functions', () => {
       fieldName: 'postal_code',
       index: 0,
       info: { message: 'invalid postal code for US' },
-      message: VALUE_NOT_ALLOWED,
+      message: 'invalid postal code for US',
     });
     chai.expect(result.validationErrors).to.deep.include({
       errorType: SchemaValidationErrorTypes.INVALID_BY_SCRIPT,
       fieldName: 'postal_code',
       index: 1,
       info: { message: 'invalid postal code for CANADA' },
-      message: VALUE_NOT_ALLOWED,
+      message: 'invalid postal code for CANADA',
     });
   });
 
