@@ -505,6 +505,7 @@ namespace validation {
       const sandbox = {
         $row: record,
         $field: record[field.name],
+        $name: field.name
       };
 
       if (!field.restrictions || !field.restrictions.script) {
@@ -519,7 +520,7 @@ namespace validation {
         message: result.message || '',
       };
     } catch (err) {
-      console.error(`failed running validation script ${field.name} for record: ${record}`);
+      console.error(`failed running validation script ${field.name} for record: ${record}. Error message: ${err}`);
       return {
         valid: false,
         message: 'failed to run script validation, check script and the input',

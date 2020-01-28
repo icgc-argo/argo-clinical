@@ -475,14 +475,12 @@ describe('Submission Api', () => {
         .end(async (err: any, res: any) => {
           try {
             await assertUploadOKRegistrationCreated(res, dburl);
-            chai
-              .expect(res.body.registration.stats.newSampleIds)
-              .to.deep.eq([
-                { submitterId: 'sm123-4', rowNumbers: [0] },
-                { submitterId: 'sm123-5', rowNumbers: [1] },
-                { submitterId: 'sm123-6', rowNumbers: [2] },
-                { submitterId: 'sm123-7', rowNumbers: [3] },
-              ]);
+            chai.expect(res.body.registration.stats.newSampleIds).to.deep.eq([
+              { submitterId: 'sm123-4', rowNumbers: [0] },
+              { submitterId: 'sm123-5', rowNumbers: [1] },
+              { submitterId: 'sm123-6', rowNumbers: [2] },
+              { submitterId: 'sm123-7', rowNumbers: [3] },
+            ]);
             const reg1Id = res.body.registration._id;
             chai
               .request(app)
@@ -1818,6 +1816,29 @@ describe('Submission Api', () => {
       });
 
       const donor2: Donor = emptyDonorDocument({
+        submitterId: 'ICGC_0003',
+        programId,
+        clinicalInfo: {
+          program_id: 'ABCD-EF',
+          vital_status: 'Alive',
+          cause_of_death: 'Died of cancer',
+          submitter_donor_id: 'ICGC_0003',
+          survival_time: 67,
+        },
+        specimens: [
+          {
+            samples: [{ sampleType: 'Total RNA', submitterId: 'sm123-2', sampleId: 610001 }],
+            clinicalInfo: {},
+            specimenTissueSource: 'Saliva',
+            tumourNormalDesignation: 'Tumour',
+            specimenType: 'Primary tumour',
+            submitterId: 'sub-sp-pacaau-124',
+            specimenId: 210001,
+          },
+        ],
+      });
+
+      const newSchemaInvalidDonor: Donor = emptyDonorDocument({
         submitterId: 'ICGC_0002',
         programId,
         clinicalInfo: {
@@ -1838,7 +1859,7 @@ describe('Submission Api', () => {
       });
 
       // very simple smoke test of the migration to be expanded along developement
-      it('should update the schema ', async () => {
+      it('should update the schema', async () => {
         await chai
           .request(app)
           .patch('/submission/schema?sync=true')
@@ -1873,6 +1894,8 @@ describe('Submission Api', () => {
               throw new Error('migration in db with no id');
             }
             migrations[0]._id.toString().should.eq(migrationId);
+            migrations[0].invalidDonorsErrors.length.should.eq(0);
+            migrations[0].stats.validDocumentsCount.should.eq(2);
           });
       });
 
@@ -1903,6 +1926,8 @@ describe('Submission Api', () => {
 
       describe('dry run migration api', () => {
         it('should report donor validation errors', async () => {
+          await insertData(dburl, 'donors', newSchemaInvalidDonor);
+
           await chai
             .request(app)
             .post('/submission/schema/dry-run-update')
@@ -1930,8 +1955,8 @@ describe('Submission Api', () => {
               const normalizedDbMigration = JSON.parse(JSON.stringify(dbMigration));
               normalizedDbMigration.should.deep.include(migration);
               migration.stats.invalidDocumentsCount.should.eq(1);
-              migration.stats.validDocumentsCount.should.eq(1);
-              migration.stats.totalProcessed.should.eq(2);
+              migration.stats.validDocumentsCount.should.eq(2);
+              migration.stats.totalProcessed.should.eq(3);
               migration.invalidDonorsErrors[0].should.deep.eq({
                 donorId: 1,
                 submitterDonorId: 'ICGC_0002',

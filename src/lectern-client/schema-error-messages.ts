@@ -3,7 +3,7 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
   INVALID_FIELD_VALUE_TYPE: () => INVALID_VALUE_ERROR_MESSAGE,
   INVALID_BY_REGEX: () => INVALID_VALUE_ERROR_MESSAGE,
   INVALID_BY_RANGE: () => 'Value is out of permissible range',
-  INVALID_BY_SCRIPT: () => INVALID_VALUE_ERROR_MESSAGE,
+  INVALID_BY_SCRIPT: (error) => error.info.message,
   INVALID_ENUM_VALUE: () => INVALID_VALUE_ERROR_MESSAGE,
   MISSING_REQUIRED_FIELD: errorData => `${errorData.fieldName} is a required field.`,
 };
