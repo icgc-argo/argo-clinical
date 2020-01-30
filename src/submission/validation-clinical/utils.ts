@@ -59,8 +59,8 @@ export const buildSubmissionUpdate = (
     index,
     info: {
       donorSubmitterId: newRecord[DonorFieldsEnum.submitter_donor_id],
-      newValue: `${newRecord[fieldName]}`, // we convert the value to string since lectern may converted it to non string (integer, boolean)
-      oldValue: `${oldValue}`,
+      newValue: `${newRecord[fieldName] || ''}`, // we convert the value to string since lectern may converted it to non string (integer, boolean)
+      oldValue: `${oldValue || ''}`,
     },
   };
 };
@@ -112,14 +112,11 @@ const getSubmissionUpdates = (clinicalObject: any, record: SubmittedClinicalReco
     for (const fieldName in record) {
       // skip the index field
       if (fieldName == 'index') continue;
-      // new field added not in the old object
-      if (!clinicalObject[fieldName]) {
-        submissionUpdates.push(buildSubmissionUpdate(record, '', fieldName));
-        continue;
-      }
-      // this is assuming that the field name record and clinicalInfo both have snake casing
+
       if (clinicalObject[fieldName] !== record[fieldName]) {
-        submissionUpdates.push(buildSubmissionUpdate(record, clinicalObject[fieldName], fieldName));
+        submissionUpdates.push(
+          buildSubmissionUpdate(record, clinicalObject[fieldName] || '', fieldName || ''),
+        );
       }
     }
   }
