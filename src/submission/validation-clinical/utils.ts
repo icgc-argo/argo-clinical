@@ -111,11 +111,11 @@ const getSubmissionUpdates = (clinicalObject: any, record: SubmittedClinicalReco
   if (clinicalObject) {
     for (const fieldName in record) {
       // skip the index field
-      if (fieldName == 'index') continue;
+      if (fieldName == 'index' || (!clinicalObject[fieldName] && !record[fieldName])) continue;
 
       if (clinicalObject[fieldName] !== record[fieldName]) {
         submissionUpdates.push(
-          buildSubmissionUpdate(record, clinicalObject[fieldName] || '', fieldName || ''),
+          buildSubmissionUpdate(record, clinicalObject[fieldName] || '', fieldName),
         );
       }
     }
