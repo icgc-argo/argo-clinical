@@ -930,6 +930,7 @@ describe('Submission Api', () => {
       try {
         files.push(fs.readFileSync(__dirname + '/donor.tsv'));
         files.push(fs.readFileSync(__dirname + '/specimen.tsv'));
+        files.push(fs.readFileSync(__dirname + '/primary_diagnosis.tsv'));
       } catch (err) {
         return err;
       }
@@ -968,6 +969,17 @@ describe('Submission Api', () => {
             },
           },
         ],
+        primaryDiagnosis: {
+          clinicalInfo: {
+            program_id: 'ABCD-EF',
+            number_lymph_nodes_examined: 2,
+            submitter_donor_id: 'ICGC_0001',
+            age_at_diagnosis: 96,
+            cancer_type_code: 'A11.1A',
+            tumour_staging_system: 'Murphy',
+            presenting_symptoms: null, // tslint:disable-line
+          },
+        },
         donorId: 1,
       });
       return chai
@@ -976,6 +988,7 @@ describe('Submission Api', () => {
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .attach('clinicalFiles', files[0], 'donor.tsv')
         .attach('clinicalFiles', files[1], 'specimen.tsv')
+        .attach('clinicalFiles', files[2], 'primary_diagnosis.tsv')
         .then(async (res: any) => {
           try {
             res.should.have.status(200);
@@ -989,9 +1002,10 @@ describe('Submission Api', () => {
                 try {
                   res.should.have.status(200);
                   res.body.submission.state.should.eq(SUBMISSION_STATE.VALID);
-                  res.body.submission.clinicalEntities.donor.stats.new.should.deep.eq([0]);
-                  res.body.submission.clinicalEntities.specimen.stats.updated.should.deep.eq([0]);
-                  res.body.submission.clinicalEntities.specimen.dataUpdates.should.deep.eq([
+                  const clinicalEntities = res.body.submission.clinicalEntities;
+                  clinicalEntities.donor.stats.new.should.deep.eq([0]);
+                  clinicalEntities.specimen.stats.updated.should.deep.eq([0]);
+                  clinicalEntities.specimen.dataUpdates.should.deep.eq([
                     {
                       fieldName: 'percent_tumour_cells',
                       index: 0,
@@ -1002,6 +1016,7 @@ describe('Submission Api', () => {
                       },
                     },
                   ]);
+                  clinicalEntities.primary_diagnosis.stats.noUpdate.should.deep.eq([0]);
                 } catch (err) {
                   throw err;
                 }
@@ -1433,6 +1448,7 @@ describe('Submission Api', () => {
         age_at_diagnosis: 96,
         cancer_type_code: 'A11.1A',
         tumour_staging_system: 'Murphy',
+        presenting_symptoms: null, // tslint:disable-line
       };
 
       const donor = {
