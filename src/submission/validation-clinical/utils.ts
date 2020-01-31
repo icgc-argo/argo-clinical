@@ -13,13 +13,12 @@ import {
   ClinicalFields,
   TreatmentTypeValuesMappedByTherapy,
   ClinicalTherapyType,
-  DonorVitalStatusValues,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { validationErrorMessage } from '../submission-error-messages';
 import _ from 'lodash';
 import { DataRecord } from '../../lectern-client/schema-entities';
-import { Donor } from '../../clinical/clinical-entities';
+import { Donor, ClinicalInfo } from '../../clinical/clinical-entities';
 import { getSingleClinicalEntityFromDonorBySchemanName } from '../submission-to-clinical/submission-to-clinical';
 import { donorDao } from '../../clinical/donor-repo';
 
@@ -90,7 +89,7 @@ export const buildRecordValidationResult = (
 // 3 not new or update <=> noUpdate
 const checkForUpdates = (
   record: DeepReadonly<SubmittedClinicalRecord>,
-  clinicalInfo: DeepReadonly<{ [field: string]: string | number } | object> | undefined,
+  clinicalInfo: DeepReadonly<ClinicalInfo> | undefined,
 ): RecordValidationResult => {
   // clinicalInfo empty so new
   if (_.isEmpty(clinicalInfo)) {
@@ -106,7 +105,10 @@ const checkForUpdates = (
     : { type: ModificationType.UPDATED, index: record.index, resultArray: submissionUpdates };
 };
 
-const getSubmissionUpdates = (clinicalObject: any, record: SubmittedClinicalRecord) => {
+const getSubmissionUpdates = (
+  clinicalObject: DeepReadonly<ClinicalInfo> | undefined,
+  record: SubmittedClinicalRecord,
+) => {
   const submissionUpdates: SubmissionValidationUpdate[] = [];
   if (clinicalObject) {
     for (const fieldName in record) {
@@ -115,7 +117,7 @@ const getSubmissionUpdates = (clinicalObject: any, record: SubmittedClinicalReco
 
       if (clinicalObject[fieldName] !== record[fieldName]) {
         submissionUpdates.push(
-          buildSubmissionUpdate(record, clinicalObject[fieldName] || '', fieldName),
+          buildSubmissionUpdate(record, `${clinicalObject[fieldName] || ''}`, fieldName),
         );
       }
     }
