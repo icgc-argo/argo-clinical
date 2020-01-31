@@ -112,9 +112,10 @@ const getSubmissionUpdates = (
   const submissionUpdates: SubmissionValidationUpdate[] = [];
   if (clinicalObject) {
     for (const fieldName in record) {
-      // skip the index field
+      // continue since field is index of record or field has no value in both clinicalObject & record
       if (fieldName == 'index' || (!clinicalObject[fieldName] && !record[fieldName])) continue;
 
+      // field's value is different in clinicalObject and in record, so mark it as update
       if (clinicalObject[fieldName] !== record[fieldName]) {
         submissionUpdates.push(
           buildSubmissionUpdate(record, `${clinicalObject[fieldName] || ''}`, fieldName),
