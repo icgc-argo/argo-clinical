@@ -475,12 +475,14 @@ describe('Submission Api', () => {
         .end(async (err: any, res: any) => {
           try {
             await assertUploadOKRegistrationCreated(res, dburl);
-            chai.expect(res.body.registration.stats.newSampleIds).to.deep.eq([
-              { submitterId: 'sm123-4', rowNumbers: [0] },
-              { submitterId: 'sm123-5', rowNumbers: [1] },
-              { submitterId: 'sm123-6', rowNumbers: [2] },
-              { submitterId: 'sm123-7', rowNumbers: [3] },
-            ]);
+            chai
+              .expect(res.body.registration.stats.newSampleIds)
+              .to.deep.eq([
+                { submitterId: 'sm123-4', rowNumbers: [0] },
+                { submitterId: 'sm123-5', rowNumbers: [1] },
+                { submitterId: 'sm123-6', rowNumbers: [2] },
+                { submitterId: 'sm123-7', rowNumbers: [3] },
+              ]);
             const reg1Id = res.body.registration._id;
             chai
               .request(app)
@@ -505,6 +507,14 @@ describe('Submission Api', () => {
                         const reg2Id = res.body.registration._id;
                         chai.expect(reg2Id).to.not.eq(reg1Id);
                         chai.expect(res.body.registration.stats.newSampleIds).to.deep.eq([]);
+                        chai
+                          .expect(res.body.registration.stats.alreadyRegistered)
+                          .to.deep.eq([
+                            { submitterId: 'sm123-4', rowNumbers: [0] },
+                            { submitterId: 'sm123-5', rowNumbers: [1] },
+                            { submitterId: 'sm123-6', rowNumbers: [2] },
+                            { submitterId: 'sm123-7', rowNumbers: [3] },
+                          ]);
                         chai
                           .request(app)
                           .post(`/submission/program/ABCD-EF/registration/${reg2Id}/commit`)
