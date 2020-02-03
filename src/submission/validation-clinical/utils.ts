@@ -13,13 +13,12 @@ import {
   ClinicalFields,
   TreatmentTypeValuesMappedByTherapy,
   ClinicalTherapyType,
-  DonorVitalStatusValues,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { validationErrorMessage } from '../submission-error-messages';
 import _ from 'lodash';
 import { DataRecord } from '../../lectern-client/schema-entities';
-import { Donor } from '../../clinical/clinical-entities';
+import { Donor, ClinicalInfo } from '../../clinical/clinical-entities';
 import { getSingleClinicalEntityFromDonorBySchemanName } from '../submission-to-clinical/submission-to-clinical';
 import { donorDao } from '../../clinical/donor-repo';
 
@@ -59,8 +58,8 @@ export const buildSubmissionUpdate = (
     index,
     info: {
       donorSubmitterId: newRecord[DonorFieldsEnum.submitter_donor_id],
-      newValue: `${newRecord[fieldName]}`, // we convert the value to string since lectern may converted it to non string (integer, boolean)
-      oldValue: `${oldValue}`,
+      newValue: `${newRecord[fieldName] || ''}`, // we convert the value to string since lectern may converted it to non string (integer, boolean)
+      oldValue: `${oldValue || ''}`,
     },
   };
 };
@@ -90,7 +89,7 @@ export const buildRecordValidationResult = (
 // 3 not new or update <=> noUpdate
 const checkForUpdates = (
   record: DeepReadonly<SubmittedClinicalRecord>,
-  clinicalInfo: DeepReadonly<{ [field: string]: string | number } | object> | undefined,
+  clinicalInfo: DeepReadonly<ClinicalInfo> | undefined,
 ): RecordValidationResult => {
   // clinicalInfo empty so new
   if (_.isEmpty(clinicalInfo)) {
@@ -106,20 +105,21 @@ const checkForUpdates = (
     : { type: ModificationType.UPDATED, index: record.index, resultArray: submissionUpdates };
 };
 
-const getSubmissionUpdates = (clinicalObject: any, record: SubmittedClinicalRecord) => {
+const getSubmissionUpdates = (
+  clinicalObject: DeepReadonly<ClinicalInfo> | undefined,
+  record: SubmittedClinicalRecord,
+) => {
   const submissionUpdates: SubmissionValidationUpdate[] = [];
   if (clinicalObject) {
     for (const fieldName in record) {
-      // skip the index field
-      if (fieldName == 'index') continue;
-      // new field added not in the old object
-      if (!clinicalObject[fieldName]) {
-        submissionUpdates.push(buildSubmissionUpdate(record, '', fieldName));
-        continue;
-      }
-      // this is assuming that the field name record and clinicalInfo both have snake casing
+      // continue since field is index of record or field has no value in both clinicalObject & record
+      if (fieldName == 'index' || (!clinicalObject[fieldName] && !record[fieldName])) continue;
+
+      // field's value is different in clinicalObject and in record, so mark it as update
       if (clinicalObject[fieldName] !== record[fieldName]) {
-        submissionUpdates.push(buildSubmissionUpdate(record, clinicalObject[fieldName], fieldName));
+        submissionUpdates.push(
+          buildSubmissionUpdate(record, `${clinicalObject[fieldName] || ''}`, fieldName),
+        );
       }
     }
   }
