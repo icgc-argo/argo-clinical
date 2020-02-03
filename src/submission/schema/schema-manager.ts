@@ -39,20 +39,28 @@ class SchemaManager {
     name: '',
     version: '',
   };
+
+  private clinicalCoreFields: { [k: string]: string[] } = {};
+
   constructor(private schemaServiceUrl: string) {}
 
   getCurrent = (): SchemasDictionary => {
     return this.currentSchemaDictionary;
   };
 
-  getSchemasWithFields = (): {
+  getSchemasWithFields = (
+    fieldConstraints: object = {}, // k-v FieldDefinition property constraints
+  ): {
     name: string;
     fields: string[];
   }[] => {
     return this.currentSchemaDictionary.schemas.map(s => {
       return {
         name: s.name,
-        fields: s.fields.map(f => f.name),
+        fields: _(s.fields)
+          .filter(fieldConstraints)
+          .map(f => f.name)
+          .value(),
       };
     });
   };
@@ -63,6 +71,23 @@ class SchemaManager {
 
   getSchemaFieldNamesWithPriority = (definition: string): FieldNamesByPriorityMap => {
     return service.getSchemaFieldNamesWithPriority(this.currentSchemaDictionary, definition);
+  };
+
+  // TODO - remove clinical specific info
+  getClinicalCoreFields = () => {
+    if (!notEmpty(this.clinicalCoreFields)) {
+      console.log('Extracting core fields.');
+      this.currentSchemaDictionary.schemas.forEach(schema => {
+        this.clinicalCoreFields[schema.name] = schema.fields
+          .map(field => {
+            if (field.meta?.core) return field.name;
+            return undefined;
+          })
+          .filter(notEmpty);
+      });
+    }
+    // return this.getSchemasWithFields({ meta: { core: true } });
+    return this.clinicalCoreFields;
   };
 
   /**

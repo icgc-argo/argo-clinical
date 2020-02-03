@@ -24,7 +24,7 @@ import {
   ClinicalTherapySchemaNames,
 } from '../submission-entities';
 
-import { Errors, notEmpty, deepFind } from '../../utils';
+import { Errors, notEmpty } from '../../utils';
 import { donorDao } from '../../clinical/donor-repo';
 import _ from 'lodash';
 import { F } from '../../utils';
@@ -121,8 +121,8 @@ const performCommitSubmission = async (
   // Update with all relevant records
   const updatedDonorDTOs = await mergeActiveSubmissionWithDonors(activeSubmission, donorDTOs);
 
-  // check donor if was invalid against latest schema
   updatedDonorDTOs.forEach(ud => {
+    // check donor if was invalid against latest schema
     if (ud.schemaMetadata.isValid === false) {
       L.debug('Donor is invalid, revalidating if valid now');
       const isValid = schemaManager.revalidateAllDonorClinicalEntitiesAgainstSchema(

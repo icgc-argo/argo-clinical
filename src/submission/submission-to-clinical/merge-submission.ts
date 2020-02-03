@@ -12,6 +12,8 @@ import _ from 'lodash';
 import { loggerFor } from '../../logger';
 import { Errors } from '../../utils';
 import { getSingleClinicalObjectFromDonor } from './submission-to-clinical';
+import { updateClinicalEntityAndDonorStats } from './stat-calculator';
+
 const L = loggerFor(__filename);
 
 export const mergeActiveSubmissionWithDonors = async (
@@ -101,11 +103,17 @@ export const mergeRecordsMapIntoDonor = (
 // *** Info Update functions ***
 const updateDonorInfo = (donor: Donor, record: any) => {
   donor.clinicalInfo = record;
+  updateClinicalEntityAndDonorStats(donor, donor, ClinicalEntitySchemaNames.DONOR);
   return donor.clinicalInfo;
 };
 
 const updatePrimaryDiagnosisInfo = (donor: Donor, record: any) => {
   donor.primaryDiagnosis = { clinicalInfo: record };
+  updateClinicalEntityAndDonorStats(
+    donor.primaryDiagnosis,
+    donor,
+    ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+  );
   return donor.primaryDiagnosis;
 };
 
@@ -113,6 +121,7 @@ const updateSpecimenInfo = (donor: Donor, record: any) => {
   const specimen = findSpecimen(donor, record[SampleRegistrationFieldsEnum.submitter_specimen_id]);
   if (!specimen) return;
   specimen.clinicalInfo = record;
+  updateClinicalEntityAndDonorStats(specimen, donor, ClinicalEntitySchemaNames.SPECIMEN);
   return specimen;
 };
 
@@ -124,16 +133,16 @@ const updateOrAddFollowUp = (donor: Donor, record: ClinicalInfo) => {
 
   if (followUp) {
     followUp.clinicalInfo = record;
+    updateClinicalEntityAndDonorStats(followUp, donor, ClinicalEntitySchemaNames.FOLLOW_UP);
     return;
   }
 
   if (!donor.followUps) {
     donor.followUps = [];
   }
-
-  donor.followUps.push({
-    clinicalInfo: record,
-  });
+  const newFollowUp = { clinicalInfo: record };
+  updateClinicalEntityAndDonorStats(newFollowUp, donor, ClinicalEntitySchemaNames.FOLLOW_UP);
+  donor.followUps.push(newFollowUp);
 };
 
 const addOrUpdateTreatementInfo = (donor: Donor, record: ClinicalInfo): Treatment => {
@@ -144,10 +153,13 @@ const addOrUpdateTreatementInfo = (donor: Donor, record: ClinicalInfo): Treatmen
   const treatment = findTreatment(donor, submitterTreatementId);
   if (treatment) {
     treatment.clinicalInfo = record;
+    updateClinicalEntityAndDonorStats(treatment, donor, ClinicalEntitySchemaNames.TREATMENT);
     return treatment;
   }
   // treatment doesn't exsist, so add it
-  donor.treatments = _.concat(donor.treatments || [], { clinicalInfo: record, therapies: [] });
+  const newTreatement = { clinicalInfo: record, therapies: [] };
+  updateClinicalEntityAndDonorStats(newTreatement, donor, ClinicalEntitySchemaNames.TREATMENT);
+  donor.treatments = _.concat(donor.treatments || [], newTreatement);
   return donor.treatments[0];
 };
 
@@ -167,13 +179,14 @@ const addOrUpdateTherapyInfoInDonor = (
       [ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.TREATMENT]]: treatementId,
     });
   }
-  addOrUpdateTherapyInfoInTreatment(treatment, record, therapyType);
+  addOrUpdateTherapyInfoInTreatment(donor, record, therapyType, treatment);
 };
 
 function addOrUpdateTherapyInfoInTreatment(
-  treatment: Treatment,
+  donor: Donor,
   record: ClinicalInfo,
   therapyType: ClinicalEntitySchemaNames,
+  treatment: Treatment,
 ) {
   const idName = ClinicalUniqueIndentifier[therapyType];
   const idVal = record[idName];
@@ -182,7 +195,9 @@ function addOrUpdateTherapyInfoInTreatment(
     therapy.clinicalInfo = record;
     return;
   }
-  treatment.therapies.push({ clinicalInfo: record, therapyType });
+  const newTherapy = { clinicalInfo: record, therapyType };
+  updateClinicalEntityAndDonorStats(newTherapy, donor, therapyType);
+  treatment.therapies.push(newTherapy);
 }
 
 const findSpecimen = (donor: Donor, specimenId: string) => {
