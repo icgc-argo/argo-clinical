@@ -694,10 +694,10 @@ export namespace operations {
       const existingSample = existingSpecimen.samples.find(
         sa => sa.submitterId === nd.sampleSubmitterId,
       );
-      if (!existingSample) return addNewSampleToStats(stats, nd, index);
 
+      if (!existingSample) return addNewSampleToStats(stats, nd, index);
       // otherwise it's already registered record
-      addRowNumberToStats(stats.alreadyRegistered, nd.donorSubmitterId, index);
+      addRowNumberToStats(stats.alreadyRegistered, nd.sampleSubmitterId, index);
       return;
     });
 
