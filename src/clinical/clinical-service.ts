@@ -2,7 +2,6 @@ import { donorDao, DONOR_FIELDS } from './donor-repo';
 import { Errors } from '../utils';
 import { Sample, Donor, SchemaMetadata } from './clinical-entities';
 import { DeepReadonly } from 'deep-freeze';
-import * as schmeaManager from '../submission/schema/schema-manager';
 import _ from 'lodash';
 
 export async function updateDonorSchemaMetadata(
