@@ -475,14 +475,12 @@ describe('Submission Api', () => {
         .end(async (err: any, res: any) => {
           try {
             await assertUploadOKRegistrationCreated(res, dburl);
-            chai
-              .expect(res.body.registration.stats.newSampleIds)
-              .to.deep.eq([
-                { submitterId: 'sm123-4', rowNumbers: [0] },
-                { submitterId: 'sm123-5', rowNumbers: [1] },
-                { submitterId: 'sm123-6', rowNumbers: [2] },
-                { submitterId: 'sm123-7', rowNumbers: [3] },
-              ]);
+            chai.expect(res.body.registration.stats.newSampleIds).to.deep.eq([
+              { submitterId: 'sm123-4', rowNumbers: [0] },
+              { submitterId: 'sm123-5', rowNumbers: [1] },
+              { submitterId: 'sm123-6', rowNumbers: [2] },
+              { submitterId: 'sm123-7', rowNumbers: [3] },
+            ]);
             const reg1Id = res.body.registration._id;
             chai
               .request(app)
@@ -507,14 +505,12 @@ describe('Submission Api', () => {
                         const reg2Id = res.body.registration._id;
                         chai.expect(reg2Id).to.not.eq(reg1Id);
                         chai.expect(res.body.registration.stats.newSampleIds).to.deep.eq([]);
-                        chai
-                          .expect(res.body.registration.stats.alreadyRegistered)
-                          .to.deep.eq([
-                            { submitterId: 'sm123-4', rowNumbers: [0] },
-                            { submitterId: 'sm123-5', rowNumbers: [1] },
-                            { submitterId: 'sm123-6', rowNumbers: [2] },
-                            { submitterId: 'sm123-7', rowNumbers: [3] },
-                          ]);
+                        chai.expect(res.body.registration.stats.alreadyRegistered).to.deep.eq([
+                          { submitterId: 'sm123-4', rowNumbers: [0] },
+                          { submitterId: 'sm123-5', rowNumbers: [1] },
+                          { submitterId: 'sm123-6', rowNumbers: [2] },
+                          { submitterId: 'sm123-7', rowNumbers: [3] },
+                        ]);
                         chai
                           .request(app)
                           .post(`/submission/program/ABCD-EF/registration/${reg2Id}/commit`)
@@ -1511,8 +1507,10 @@ describe('Submission Api', () => {
             '__v', // ignore mongodb field
             'updatedAt', // ignore mongodb field
             'clinicalInfo', // donor clinicalInfo is being updated
+            'clinicalStats', // donor stats are being updated
             'treatments', // the treatments are being updated
             'followUps[0]', // this followUp is being updated
+            'aggregatedStats', // aggregatedStats are being updated
           ]);
           // these are set becuase they were updated and can be ignored in this chai.expect assert
           donorBeforeUpdates.followUps[0] = updatedDonor.followUps[0];
@@ -1550,6 +1548,95 @@ describe('Submission Api', () => {
           updatedDonor.treatments[1].therapies[0].clinicalInfo['cumulative_drug_dosage'].should.eq(
             44,
           );
+        });
+    });
+
+    it('should return 200 when commit is completed - clinical stats', async () => {
+      // To get submission into correct state (pending approval) we need to already have a completed submission...
+      await uploadSubmission([
+        'donor.tsv',
+        'primary_diagnosis.tsv',
+        // 'follow_up.tsv',
+        'treatment.tsv',
+        'chemotherapy.tsv',
+        'radiation.tsv',
+        'hormone_therapy.tsv',
+      ]);
+      await validateSubmission();
+      await commitActiveSubmission();
+      const [DonorBeforeUpdate] = await findInDb(dburl, 'donors', {
+        programId: programId,
+        submitterId: 'ICGC_0001',
+      });
+      DonorBeforeUpdate.clinicalStats.should.deep.include({
+        submittedCoreFields: 3,
+        availableCoreFields: 3,
+      });
+      DonorBeforeUpdate.primaryDiagnosis.clinicalStats.should.deep.include({
+        submittedCoreFields: 2,
+        availableCoreFields: 7,
+      });
+      DonorBeforeUpdate.treatments[0].clinicalStats.should.deep.include({
+        submittedCoreFields: 6,
+        availableCoreFields: 6,
+      });
+      // chemo_therapy stats
+      DonorBeforeUpdate.treatments[0].therapies[0].clinicalStats.should.deep.include({
+        submittedCoreFields: 3,
+        availableCoreFields: 3,
+      });
+      // radiation_therapy stats
+      DonorBeforeUpdate.treatments[0].therapies[1].clinicalStats.should.deep.include({
+        submittedCoreFields: 5,
+        availableCoreFields: 5,
+      });
+      DonorBeforeUpdate.treatments[1].clinicalStats.should.deep.include({
+        submittedCoreFields: 6,
+        availableCoreFields: 6,
+      });
+      // hormone_therapy stats
+      DonorBeforeUpdate.treatments[1].therapies[0].clinicalStats.should.deep.include({
+        submittedCoreFields: 3,
+        availableCoreFields: 3,
+      });
+      // Total of all clinical entities above should add up below
+      DonorBeforeUpdate.aggregatedStats.should.deep.include({
+        submittedCoreFields: 28,
+        availableCoreFields: 33,
+      });
+
+      await uploadSubmissionWithUpdates(['donor-with-updates.tsv', 'follow_up.tsv']);
+      await validateSubmission();
+      await commitActiveSubmission();
+      return chai
+        .request(app)
+        .post(`/submission/program/${programId}/clinical/approve/${submissionVersion}`)
+        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+        .then(async (res: any) => {
+          res.should.have.status(200);
+          res.body.should.be.empty;
+          await assertDbCollectionEmpty(dburl, 'activesubmissions');
+          const [UpdatedDonor] = await findInDb(dburl, 'donors', {
+            programId: programId,
+            submitterId: 'ICGC_0001',
+          });
+          UpdatedDonor.clinicalStats.should.deep.include({
+            submittedCoreFields: 1,
+            availableCoreFields: 3,
+          });
+          UpdatedDonor.followUps[0].clinicalStats.should.deep.include({
+            submittedCoreFields: 6,
+            availableCoreFields: 11,
+          });
+          UpdatedDonor.followUps[1].clinicalStats.should.deep.include({
+            submittedCoreFields: 6,
+            availableCoreFields: 11,
+          });
+          // Total of all clinical entities should add to previous aggregated values up below
+          UpdatedDonor.aggregatedStats.should.deep.include({
+            submittedCoreFields: 38,
+            availableCoreFields: 55,
+          });
         });
     });
 
