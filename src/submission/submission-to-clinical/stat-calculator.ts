@@ -1,48 +1,82 @@
-import { ClinicalEntity, Donor, ClinicalInfo } from '../../../src/clinical/clinical-entities';
+import {
+  ClinicalObject,
+  Donor,
+  ClinicalInfo,
+  ClinicalStats,
+  AggregateDonorStats,
+} from '../../../src/clinical/clinical-entities';
 import { ClinicalEntitySchemaNames } from '../submission-entities';
 import { isNotAbsent } from '../../../src/utils';
 
 import * as schemaManager from '../schema/schema-manager';
 
-const extendedFields = 101;
-const emptyStats = { coreFields: 0, extendedFields };
+const emptyStats: ClinicalStats = {
+  submittedCoreFields: 0,
+  submittedExtendedFields: 0,
+  availableCoreFields: 0,
+  availableExtendedFields: 0,
+};
 
-export const updateClinicalEntityAndDonorStats = (
-  entity: ClinicalEntity | Donor,
+export const updateClinicalStatsAndDonorStats = (
+  entity: ClinicalObject | Donor | undefined,
   donor: Donor,
   clinicalType: ClinicalEntitySchemaNames,
 ) => {
-  if (!entity.clinicalInfo) return;
+  if (!entity?.clinicalInfo) return;
 
-  const originalStat = entity.clinicalInfoStats || emptyStats;
-  const newStats = calculateNewStats(entity.clinicalInfo, clinicalType);
+  const originalStats: ClinicalStats = entity.clinicalStats || emptyStats;
+  const newStats = calcNewStats(entity.clinicalInfo, clinicalType);
 
-  // update stats in entity
-  entity.clinicalInfoStats = newStats;
+  entity.clinicalStats = newStats;
+  donor.aggregatedStats = calcAggregateStats(donor.aggregatedStats, newStats, originalStats);
+};
 
-  // calculate new total stats
-  const currentTotalCoreFields = donor.totalStats?.totalCoreFields;
-  const currentTotalExtendedFields = donor.totalStats?.totalExtendedFields;
+const calcNewStats = (
+  entityInfo: ClinicalInfo,
+  clinicalType: ClinicalEntitySchemaNames,
+): ClinicalStats => {
+  const expectedCoreFields = schemaManager.instance().getClinicalCoreFields()[clinicalType];
 
-  const updatedTotalCoreFields: number = currentTotalCoreFields
-    ? currentTotalCoreFields - originalStat.coreFields + newStats.coreFields
-    : newStats.coreFields;
-  const updatedTotalExtendedFields: number = currentTotalExtendedFields
-    ? currentTotalExtendedFields - originalStat.extendedFields + newStats.extendedFields
-    : newStats.extendedFields;
+  let submittedCoreFields = 0;
+  expectedCoreFields.forEach(
+    field => (submittedCoreFields += isNotAbsent(entityInfo[field]) ? 1 : 0),
+  );
 
-  // update donor global stats
-  donor.totalStats = {
-    totalCoreFields: updatedTotalCoreFields,
-    totalExtendedFields: updatedTotalExtendedFields,
+  return {
+    submittedCoreFields,
+    submittedExtendedFields: 0,
+    availableCoreFields: expectedCoreFields.length,
+    availableExtendedFields: 0,
   };
 };
 
-const calculateNewStats = (entityInfo: ClinicalInfo, clinicalType: ClinicalEntitySchemaNames) => {
-  const expectedCoreFields = schemaManager.instance().getClinicalCoreFields()[clinicalType];
+function calcAggregateStats(
+  aggregatedStats: AggregateDonorStats | undefined,
+  newStats: ClinicalStats,
+  originalStats: ClinicalStats,
+): AggregateDonorStats {
+  const allSubmittedCoreFields = aggregatedStats?.submittedCoreFields || 0;
+  const allSubmittedExtendedFields = aggregatedStats?.submittedExtendedFields || 0;
+  const allAvailableCoreFields = aggregatedStats?.availableCoreFields || 0;
+  const allAvailableExtendedFields = aggregatedStats?.availableExtendedFields || 0;
 
-  let coreFieldsCount = 0;
-  expectedCoreFields.forEach(field => (coreFieldsCount += isNotAbsent(entityInfo[field]) ? 1 : 0));
+  const allSubmittedCoreFieldsUpdate: number =
+    allSubmittedCoreFields - originalStats.submittedCoreFields + newStats.submittedCoreFields;
+  const allSubmittedExtendedFieldsUpdate: number =
+    allSubmittedExtendedFields -
+    originalStats.submittedExtendedFields +
+    newStats.submittedExtendedFields;
+  const allAvailableCoreFieldsUpdate: number =
+    allAvailableCoreFields - originalStats.availableCoreFields + newStats.availableCoreFields;
+  const allAvailableExtendedFieldsUpdate: number =
+    allAvailableExtendedFields -
+    originalStats.availableExtendedFields +
+    newStats.availableExtendedFields;
 
-  return { coreFields: coreFieldsCount, extendedFields };
-};
+  return {
+    submittedCoreFields: allSubmittedCoreFieldsUpdate,
+    submittedExtendedFields: allSubmittedExtendedFieldsUpdate,
+    availableCoreFields: allAvailableCoreFieldsUpdate,
+    availableExtendedFields: allAvailableExtendedFieldsUpdate,
+  };
+}

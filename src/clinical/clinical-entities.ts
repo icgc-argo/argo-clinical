@@ -7,25 +7,29 @@ export interface Donor {
   programId: string;
   specimens: Array<Specimen>;
   clinicalInfo?: ClinicalInfo;
-  clinicalInfoStats?: ClinicalEntityStats;
-  primaryDiagnosis?: ClinicalEntity | undefined;
+  clinicalStats?: ClinicalStats;
+  primaryDiagnosis?: ClinicalObject | undefined;
   followUps?: Array<FollowUp>;
   treatments?: Array<Treatment>;
   createdAt?: string;
   updatedAt?: string;
-  totalStats?: DonorStats;
+  aggregatedStats?: AggregateDonorStats;
 }
 
-export interface DonorStats {
-  totalCoreFields: number;
-  totalExtendedFields: number;
+export interface AggregateDonorStats {
+  submittedCoreFields: number;
+  submittedExtendedFields: number;
+  availableCoreFields: number;
+  availableExtendedFields: number;
   // normalSamples: number;
   // tumourSamples: number;
 }
 
-export interface ClinicalEntityStats {
-  coreFields: number;
-  extendedFields: number;
+export interface ClinicalStats {
+  submittedCoreFields: number;
+  submittedExtendedFields: number;
+  availableCoreFields: number;
+  availableExtendedFields: number;
 }
 
 export interface SchemaMetadata {
@@ -35,13 +39,13 @@ export interface SchemaMetadata {
   isValid: boolean;
 }
 
-export type ClinicalEntity = {
+export type ClinicalObject = {
   clinicalInfo: ClinicalInfo;
-  clinicalInfoStats?: ClinicalEntityStats;
+  clinicalStats?: ClinicalStats;
   [k: string]: any;
 };
 
-export interface Specimen extends ClinicalEntity {
+export interface Specimen extends ClinicalObject {
   samples: Array<Sample>;
   specimenTissueSource: string;
   submitterId: string;
@@ -56,15 +60,15 @@ export interface Sample {
   submitterId: string;
 }
 
-export interface Treatment extends ClinicalEntity {
+export interface Treatment extends ClinicalObject {
   therapies: Array<Therapy>;
 }
 
-export interface Therapy extends ClinicalEntity {
+export interface Therapy extends ClinicalObject {
   therapyType: string;
 }
 
-export interface FollowUp extends ClinicalEntity {}
+export interface FollowUp extends ClinicalObject {}
 
 export interface ClinicalInfo {
   [field: string]: string | number | boolean | undefined;
