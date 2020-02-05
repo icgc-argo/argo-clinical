@@ -3,7 +3,7 @@ import {
   Donor,
   ClinicalInfo,
   ClinicalInfoStats,
-  AggregateDonorStats,
+  AggregateClinicalInfoStats,
 } from '../../../src/clinical/clinical-entities';
 import { ClinicalEntitySchemaNames } from '../submission-entities';
 import { isNotAbsent } from '../../../src/utils';
@@ -13,8 +13,8 @@ import * as schemaManager from '../schema/schema-manager';
 const emptyStats: ClinicalInfoStats = {
   submittedCoreFields: 0,
   submittedExtendedFields: 0,
-  availableCoreFields: 0,
-  availableExtendedFields: 0,
+  expectedCoreFields: 0,
+  expectedExtendedFields: 0,
 };
 
 export const updateClinicalStatsAndDonorStats = (
@@ -28,7 +28,11 @@ export const updateClinicalStatsAndDonorStats = (
   const newStats = calcNewStats(entity.clinicalInfo, clinicalType);
 
   entity.clinicalInfoStats = newStats;
-  donor.aggregatedStats = calcAggregateStats(donor.aggregatedStats, newStats, originalStats);
+  donor.aggregatedInfoStats = calcAggregateStats(
+    donor.aggregatedInfoStats,
+    newStats,
+    originalStats,
+  );
 };
 
 const calcNewStats = (
@@ -45,20 +49,20 @@ const calcNewStats = (
   return {
     submittedCoreFields,
     submittedExtendedFields: 0,
-    availableCoreFields: expectedCoreFields.length,
-    availableExtendedFields: 0,
+    expectedCoreFields: expectedCoreFields.length,
+    expectedExtendedFields: 0,
   };
 };
 
 function calcAggregateStats(
-  aggregatedStats: AggregateDonorStats | undefined,
+  aggregatedStats: AggregateClinicalInfoStats | undefined,
   newStats: ClinicalInfoStats,
   originalStats: ClinicalInfoStats,
-): AggregateDonorStats {
+): AggregateClinicalInfoStats {
   const allSubmittedCoreFields = aggregatedStats?.submittedCoreFields || 0;
   const allSubmittedExtendedFields = aggregatedStats?.submittedExtendedFields || 0;
-  const allAvailableCoreFields = aggregatedStats?.availableCoreFields || 0;
-  const allAvailableExtendedFields = aggregatedStats?.availableExtendedFields || 0;
+  const allAvailableCoreFields = aggregatedStats?.expectedCoreFields || 0;
+  const allAvailableExtendedFields = aggregatedStats?.expectedExtendedFields || 0;
 
   const allSubmittedCoreFieldsUpdate: number =
     allSubmittedCoreFields - originalStats.submittedCoreFields + newStats.submittedCoreFields;
@@ -67,17 +71,17 @@ function calcAggregateStats(
     originalStats.submittedExtendedFields +
     newStats.submittedExtendedFields;
   const allAvailableCoreFieldsUpdate: number =
-    allAvailableCoreFields - originalStats.availableCoreFields + newStats.availableCoreFields;
+    allAvailableCoreFields - originalStats.expectedCoreFields + newStats.expectedCoreFields;
   const allAvailableExtendedFieldsUpdate: number =
     allAvailableExtendedFields -
-    originalStats.availableExtendedFields +
-    newStats.availableExtendedFields;
+    originalStats.expectedExtendedFields +
+    newStats.expectedExtendedFields;
 
   return {
     submittedCoreFields: allSubmittedCoreFieldsUpdate,
     submittedExtendedFields: allSubmittedExtendedFieldsUpdate,
-    availableCoreFields: allAvailableCoreFieldsUpdate,
-    availableExtendedFields: allAvailableExtendedFieldsUpdate,
+    expectedCoreFields: allAvailableCoreFieldsUpdate,
+    expectedExtendedFields: allAvailableExtendedFieldsUpdate,
   };
 }
 

@@ -13,14 +13,14 @@ export interface Donor {
   treatments?: Array<Treatment>;
   createdAt?: string;
   updatedAt?: string;
-  aggregatedStats?: AggregateDonorStats;
+  aggregatedInfoStats?: AggregateClinicalInfoStats;
 }
 
-export interface AggregateDonorStats {
+export interface AggregateClinicalInfoStats {
   submittedCoreFields: number;
   submittedExtendedFields: number;
-  availableCoreFields: number;
-  availableExtendedFields: number;
+  expectedCoreFields: number;
+  expectedExtendedFields: number;
   // normalSamples: number;
   // tumourSamples: number;
 }
@@ -28,8 +28,8 @@ export interface AggregateDonorStats {
 export interface ClinicalInfoStats {
   submittedCoreFields: number;
   submittedExtendedFields: number;
-  availableCoreFields: number;
-  availableExtendedFields: number;
+  expectedCoreFields: number;
+  expectedExtendedFields: number;
 }
 
 export interface SchemaMetadata {

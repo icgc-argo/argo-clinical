@@ -1507,10 +1507,10 @@ describe('Submission Api', () => {
             '__v', // ignore mongodb field
             'updatedAt', // ignore mongodb field
             'clinicalInfo', // donor clinicalInfo is being updated
-            'clinicalInfoStats', // donor stats are being updated
+            'clinicalInfoStats', // donor clinicalInfoStats are being updated
             'treatments', // the treatments are being updated
             'followUps[0]', // this followUp is being updated
-            'aggregatedStats', // aggregatedStats are being updated
+            'aggregatedInfoStats', // aggregatedInfoStats are being updated
           ]);
           // these are set becuase they were updated and can be ignored in this chai.expect assert
           donorBeforeUpdates.followUps[0] = updatedDonor.followUps[0];
@@ -1570,39 +1570,39 @@ describe('Submission Api', () => {
       });
       DonorBeforeUpdate.clinicalInfoStats.should.deep.include({
         submittedCoreFields: 3,
-        availableCoreFields: 3,
+        expectedCoreFields: 3,
       });
       DonorBeforeUpdate.primaryDiagnosis.clinicalInfoStats.should.deep.include({
         submittedCoreFields: 2,
-        availableCoreFields: 7,
+        expectedCoreFields: 7,
       });
       DonorBeforeUpdate.treatments[0].clinicalInfoStats.should.deep.include({
         submittedCoreFields: 6,
-        availableCoreFields: 6,
+        expectedCoreFields: 6,
       });
       // chemo_therapy stats
       DonorBeforeUpdate.treatments[0].therapies[0].clinicalInfoStats.should.deep.include({
         submittedCoreFields: 3,
-        availableCoreFields: 3,
+        expectedCoreFields: 3,
       });
       // radiation_therapy stats
       DonorBeforeUpdate.treatments[0].therapies[1].clinicalInfoStats.should.deep.include({
         submittedCoreFields: 5,
-        availableCoreFields: 5,
+        expectedCoreFields: 5,
       });
       DonorBeforeUpdate.treatments[1].clinicalInfoStats.should.deep.include({
         submittedCoreFields: 6,
-        availableCoreFields: 6,
+        expectedCoreFields: 6,
       });
       // hormone_therapy stats
       DonorBeforeUpdate.treatments[1].therapies[0].clinicalInfoStats.should.deep.include({
         submittedCoreFields: 3,
-        availableCoreFields: 3,
+        expectedCoreFields: 3,
       });
       // Total of all clinical entities above should add up below
-      DonorBeforeUpdate.aggregatedStats.should.deep.include({
+      DonorBeforeUpdate.aggregatedInfoStats.should.deep.include({
         submittedCoreFields: 28,
-        availableCoreFields: 33,
+        expectedCoreFields: 33,
       });
 
       await uploadSubmissionWithUpdates(['donor-with-updates.tsv', 'follow_up.tsv']);
@@ -1622,20 +1622,20 @@ describe('Submission Api', () => {
           });
           UpdatedDonor.clinicalInfoStats.should.deep.include({
             submittedCoreFields: 1,
-            availableCoreFields: 3,
+            expectedCoreFields: 3,
           });
           UpdatedDonor.followUps[0].clinicalInfoStats.should.deep.include({
             submittedCoreFields: 6,
-            availableCoreFields: 11,
+            expectedCoreFields: 11,
           });
           UpdatedDonor.followUps[1].clinicalInfoStats.should.deep.include({
             submittedCoreFields: 6,
-            availableCoreFields: 11,
+            expectedCoreFields: 11,
           });
           // Total of all clinical entities should add to previous aggregated values up below
-          UpdatedDonor.aggregatedStats.should.deep.include({
+          UpdatedDonor.aggregatedInfoStats.should.deep.include({
             submittedCoreFields: 38,
-            availableCoreFields: 55,
+            expectedCoreFields: 55,
           });
         });
     });
