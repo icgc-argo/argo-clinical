@@ -40,8 +40,6 @@ class SchemaManager {
     version: '',
   };
 
-  private clinicalCoreFields: { [k: string]: string[] } = {};
-
   constructor(private schemaServiceUrl: string) {}
 
   getCurrent = (): SchemasDictionary => {
@@ -49,20 +47,24 @@ class SchemaManager {
   };
 
   getSchemasWithFields = (
-    fieldConstraints: object = {}, // k-v FieldDefinition property constraints
+    schemaDefConstratint: object = {}, // k-v SchemaDefinition property constraints; e.g. { name: 'donor' }
+    fieldDefConstraint: object = {}, // k-v FieldDefinition property constraints; e.g. { restrictions: { required: true } }
   ): {
     name: string;
     fields: string[];
   }[] => {
-    return this.currentSchemaDictionary.schemas.map(s => {
-      return {
-        name: s.name,
-        fields: _(s.fields)
-          .filter(fieldConstraints)
-          .map(f => f.name)
-          .value(),
-      };
-    });
+    return _(this.currentSchemaDictionary.schemas)
+      .filter(schemaDefConstratint)
+      .map(s => {
+        return {
+          name: s.name,
+          fields: _(s.fields)
+            .filter(fieldDefConstraint)
+            .map(f => f.name)
+            .value(),
+        };
+      })
+      .value();
   };
 
   getSchemas = (): string[] => {
@@ -71,23 +73,6 @@ class SchemaManager {
 
   getSchemaFieldNamesWithPriority = (definition: string): FieldNamesByPriorityMap => {
     return service.getSchemaFieldNamesWithPriority(this.currentSchemaDictionary, definition);
-  };
-
-  // TODO - remove clinical specific info
-  getClinicalCoreFields = () => {
-    if (!notEmpty(this.clinicalCoreFields)) {
-      console.log('Extracting core fields.');
-      this.currentSchemaDictionary.schemas.forEach(schema => {
-        this.clinicalCoreFields[schema.name] = schema.fields
-          .map(field => {
-            if (field.meta?.core) return field.name;
-            return undefined;
-          })
-          .filter(notEmpty);
-      });
-    }
-    // return this.getSchemasWithFields({ meta: { core: true } });
-    return this.clinicalCoreFields;
   };
 
   /**

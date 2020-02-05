@@ -5,7 +5,7 @@ import {
   ClinicalInfo,
   FollowUp,
   Therapy,
-  ClinicalObject,
+  ClinicalEntity,
 } from '../../clinical/clinical-entities';
 import {
   ActiveClinicalSubmission,
@@ -42,7 +42,7 @@ export const mergeActiveSubmissionWithDonors = async (
         );
       }
       // update clinical info in clinical object
-      let clinicalObjWithUpdatedInfo: ClinicalObject | Donor | undefined = { clinicalInfo: {} };
+      let clinicalObjWithUpdatedInfo: ClinicalEntity | Donor | undefined = { clinicalInfo: {} };
       switch (entityType) {
         case ClinicalEntitySchemaNames.DONOR:
           clinicalObjWithUpdatedInfo = updateDonorInfo(donor, record);
@@ -212,12 +212,12 @@ function findClinicalObject(
   donor: Donor,
   newRecord: ClinicalInfo,
   entityType: Exclude<ClinicalEntitySchemaNames, ClinicalTherapyType>,
-): ClinicalObject | undefined {
+): ClinicalEntity | undefined {
   const uniqueIdName = ClinicalUniqueIndentifier[entityType];
   const uniqueIdValue = newRecord[uniqueIdName];
   return getSingleClinicalObjectFromDonor(donor, entityType, {
     clinicalInfo: { [uniqueIdName]: uniqueIdValue },
-  }) as ClinicalObject | undefined;
+  }) as ClinicalEntity | undefined;
 }
 
 const findTherapy = (

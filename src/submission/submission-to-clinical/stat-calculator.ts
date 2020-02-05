@@ -1,5 +1,5 @@
 import {
-  ClinicalObject,
+  ClinicalEntity,
   Donor,
   ClinicalInfo,
   ClinicalStats,
@@ -18,7 +18,7 @@ const emptyStats: ClinicalStats = {
 };
 
 export const updateClinicalStatsAndDonorStats = (
-  entity: ClinicalObject | Donor | undefined,
+  entity: ClinicalEntity | Donor | undefined,
   donor: Donor,
   clinicalType: ClinicalEntitySchemaNames,
 ) => {
@@ -35,7 +35,7 @@ const calcNewStats = (
   entityInfo: ClinicalInfo,
   clinicalType: ClinicalEntitySchemaNames,
 ): ClinicalStats => {
-  const expectedCoreFields = schemaManager.instance().getClinicalCoreFields()[clinicalType];
+  const expectedCoreFields = getCoreFields(clinicalType);
 
   let submittedCoreFields = 0;
   expectedCoreFields.forEach(
@@ -79,4 +79,11 @@ function calcAggregateStats(
     availableCoreFields: allAvailableCoreFieldsUpdate,
     availableExtendedFields: allAvailableExtendedFieldsUpdate,
   };
+}
+
+function getCoreFields(clinicalType: ClinicalEntitySchemaNames): string[] {
+  const clinicalSchemaDef = schemaManager
+    .instance()
+    .getSchemasWithFields({ name: clinicalType }, { meta: { core: true } })[0];
+  return clinicalSchemaDef.fields;
 }

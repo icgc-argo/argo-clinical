@@ -82,7 +82,9 @@ export const getClinicalEntities = async (req: Request, res: Response) => {
 };
 
 export const getCoreFields = async (req: Request, res: Response) => {
-  return res.status(200).send(manager.instance().getClinicalCoreFields());
+  return res
+    .status(200)
+    .send(manager.instance().getSchemasWithFields({}, { meta: { core: true } }));
 };
 
 export const getTemplate = async (req: Request, res: Response) => {

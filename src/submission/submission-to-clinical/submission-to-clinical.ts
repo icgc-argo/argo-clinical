@@ -121,6 +121,7 @@ const performCommitSubmission = async (
   // Update with all relevant records
   const updatedDonorDTOs = await mergeActiveSubmissionWithDonors(activeSubmission, donorDTOs);
 
+  // check donor if was invalid against latest schema
   updatedDonorDTOs.forEach(ud => {
     // check donor if was invalid against latest schema
     if (ud.schemaMetadata.isValid === false) {
