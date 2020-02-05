@@ -1507,7 +1507,7 @@ describe('Submission Api', () => {
             '__v', // ignore mongodb field
             'updatedAt', // ignore mongodb field
             'clinicalInfo', // donor clinicalInfo is being updated
-            'clinicalStats', // donor stats are being updated
+            'clinicalInfoStats', // donor stats are being updated
             'treatments', // the treatments are being updated
             'followUps[0]', // this followUp is being updated
             'aggregatedStats', // aggregatedStats are being updated
@@ -1568,34 +1568,34 @@ describe('Submission Api', () => {
         programId: programId,
         submitterId: 'ICGC_0001',
       });
-      DonorBeforeUpdate.clinicalStats.should.deep.include({
+      DonorBeforeUpdate.clinicalInfoStats.should.deep.include({
         submittedCoreFields: 3,
         availableCoreFields: 3,
       });
-      DonorBeforeUpdate.primaryDiagnosis.clinicalStats.should.deep.include({
+      DonorBeforeUpdate.primaryDiagnosis.clinicalInfoStats.should.deep.include({
         submittedCoreFields: 2,
         availableCoreFields: 7,
       });
-      DonorBeforeUpdate.treatments[0].clinicalStats.should.deep.include({
+      DonorBeforeUpdate.treatments[0].clinicalInfoStats.should.deep.include({
         submittedCoreFields: 6,
         availableCoreFields: 6,
       });
       // chemo_therapy stats
-      DonorBeforeUpdate.treatments[0].therapies[0].clinicalStats.should.deep.include({
+      DonorBeforeUpdate.treatments[0].therapies[0].clinicalInfoStats.should.deep.include({
         submittedCoreFields: 3,
         availableCoreFields: 3,
       });
       // radiation_therapy stats
-      DonorBeforeUpdate.treatments[0].therapies[1].clinicalStats.should.deep.include({
+      DonorBeforeUpdate.treatments[0].therapies[1].clinicalInfoStats.should.deep.include({
         submittedCoreFields: 5,
         availableCoreFields: 5,
       });
-      DonorBeforeUpdate.treatments[1].clinicalStats.should.deep.include({
+      DonorBeforeUpdate.treatments[1].clinicalInfoStats.should.deep.include({
         submittedCoreFields: 6,
         availableCoreFields: 6,
       });
       // hormone_therapy stats
-      DonorBeforeUpdate.treatments[1].therapies[0].clinicalStats.should.deep.include({
+      DonorBeforeUpdate.treatments[1].therapies[0].clinicalInfoStats.should.deep.include({
         submittedCoreFields: 3,
         availableCoreFields: 3,
       });
@@ -1620,15 +1620,15 @@ describe('Submission Api', () => {
             programId: programId,
             submitterId: 'ICGC_0001',
           });
-          UpdatedDonor.clinicalStats.should.deep.include({
+          UpdatedDonor.clinicalInfoStats.should.deep.include({
             submittedCoreFields: 1,
             availableCoreFields: 3,
           });
-          UpdatedDonor.followUps[0].clinicalStats.should.deep.include({
+          UpdatedDonor.followUps[0].clinicalInfoStats.should.deep.include({
             submittedCoreFields: 6,
             availableCoreFields: 11,
           });
-          UpdatedDonor.followUps[1].clinicalStats.should.deep.include({
+          UpdatedDonor.followUps[1].clinicalInfoStats.should.deep.include({
             submittedCoreFields: 6,
             availableCoreFields: 11,
           });

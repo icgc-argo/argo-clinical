@@ -123,7 +123,6 @@ const performCommitSubmission = async (
 
   // check donor if was invalid against latest schema
   updatedDonorDTOs.forEach(ud => {
-    // check donor if was invalid against latest schema
     if (ud.schemaMetadata.isValid === false) {
       L.debug('Donor is invalid, revalidating if valid now');
       const isValid = schemaManager.revalidateAllDonorClinicalEntitiesAgainstSchema(

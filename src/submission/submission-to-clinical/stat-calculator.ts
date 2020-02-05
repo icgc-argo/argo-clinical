@@ -2,7 +2,7 @@ import {
   ClinicalEntity,
   Donor,
   ClinicalInfo,
-  ClinicalStats,
+  ClinicalInfoStats,
   AggregateDonorStats,
 } from '../../../src/clinical/clinical-entities';
 import { ClinicalEntitySchemaNames } from '../submission-entities';
@@ -10,7 +10,7 @@ import { isNotAbsent } from '../../../src/utils';
 
 import * as schemaManager from '../schema/schema-manager';
 
-const emptyStats: ClinicalStats = {
+const emptyStats: ClinicalInfoStats = {
   submittedCoreFields: 0,
   submittedExtendedFields: 0,
   availableCoreFields: 0,
@@ -24,17 +24,17 @@ export const updateClinicalStatsAndDonorStats = (
 ) => {
   if (!entity?.clinicalInfo) return;
 
-  const originalStats: ClinicalStats = entity.clinicalStats || emptyStats;
+  const originalStats: ClinicalInfoStats = entity.clinicalInfoStats || emptyStats;
   const newStats = calcNewStats(entity.clinicalInfo, clinicalType);
 
-  entity.clinicalStats = newStats;
+  entity.clinicalInfoStats = newStats;
   donor.aggregatedStats = calcAggregateStats(donor.aggregatedStats, newStats, originalStats);
 };
 
 const calcNewStats = (
   entityInfo: ClinicalInfo,
   clinicalType: ClinicalEntitySchemaNames,
-): ClinicalStats => {
+): ClinicalInfoStats => {
   const expectedCoreFields = getCoreFields(clinicalType);
 
   let submittedCoreFields = 0;
@@ -52,8 +52,8 @@ const calcNewStats = (
 
 function calcAggregateStats(
   aggregatedStats: AggregateDonorStats | undefined,
-  newStats: ClinicalStats,
-  originalStats: ClinicalStats,
+  newStats: ClinicalInfoStats,
+  originalStats: ClinicalInfoStats,
 ): AggregateDonorStats {
   const allSubmittedCoreFields = aggregatedStats?.submittedCoreFields || 0;
   const allSubmittedExtendedFields = aggregatedStats?.submittedExtendedFields || 0;

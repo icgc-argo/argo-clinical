@@ -7,7 +7,7 @@ export interface Donor {
   programId: string;
   specimens: Array<Specimen>;
   clinicalInfo?: ClinicalInfo;
-  clinicalStats?: ClinicalStats;
+  clinicalInfoStats?: ClinicalInfoStats;
   primaryDiagnosis?: ClinicalEntity | undefined;
   followUps?: Array<FollowUp>;
   treatments?: Array<Treatment>;
@@ -25,7 +25,7 @@ export interface AggregateDonorStats {
   // tumourSamples: number;
 }
 
-export interface ClinicalStats {
+export interface ClinicalInfoStats {
   submittedCoreFields: number;
   submittedExtendedFields: number;
   availableCoreFields: number;
@@ -41,7 +41,7 @@ export interface SchemaMetadata {
 
 export type ClinicalEntity = {
   clinicalInfo: ClinicalInfo;
-  clinicalStats?: ClinicalStats;
+  clinicalInfoStats?: ClinicalInfoStats;
   [k: string]: any;
 };
 
