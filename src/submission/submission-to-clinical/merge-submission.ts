@@ -42,32 +42,32 @@ export const mergeActiveSubmissionWithDonors = async (
         );
       }
       // update clinical info in clinical object
-      let clinicalObjWithUpdatedInfo: ClinicalEntity | Donor | undefined = { clinicalInfo: {} };
+      let entityWithUpdatedInfo: ClinicalEntity | Donor | undefined = { clinicalInfo: {} };
       switch (entityType) {
         case ClinicalEntitySchemaNames.DONOR:
-          clinicalObjWithUpdatedInfo = updateDonorInfo(donor, record);
+          entityWithUpdatedInfo = updateDonorInfo(donor, record);
           break;
         case ClinicalEntitySchemaNames.SPECIMEN:
-          clinicalObjWithUpdatedInfo = updateSpecimenInfo(donor, record);
+          entityWithUpdatedInfo = updateSpecimenInfo(donor, record);
           break;
         case ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS:
-          clinicalObjWithUpdatedInfo = updatePrimaryDiagnosisInfo(donor, record);
+          entityWithUpdatedInfo = updatePrimaryDiagnosisInfo(donor, record);
           break;
         case ClinicalEntitySchemaNames.TREATMENT:
-          clinicalObjWithUpdatedInfo = updateTreatementInfo(donor, record);
+          entityWithUpdatedInfo = updateOrAddTreatementInfo(donor, record);
           break;
         case ClinicalEntitySchemaNames.FOLLOW_UP:
-          clinicalObjWithUpdatedInfo = updateFollowUpInfo(donor, record);
+          entityWithUpdatedInfo = updateOrAddFollowUpInfo(donor, record);
           break;
         case ClinicalTherapySchemaNames.find(tsn => tsn === entityType):
-          clinicalObjWithUpdatedInfo = updateTherapyInfoInDonor(donor, record, entityType, true);
+          entityWithUpdatedInfo = updateOrAddTherapyInfoInDonor(donor, record, entityType, true);
           break;
         default:
           throw new Error(`Entity ${entityType} not implemented yet`);
       }
 
-      // update clinical objects stats and aggregate donor stats
-      updateClinicalStatsAndDonorStats(clinicalObjWithUpdatedInfo, donor, entityType);
+      // update clinical entity stats and aggregate donor stats
+      updateClinicalStatsAndDonorStats(entityWithUpdatedInfo, donor, entityType);
     });
   }
 
@@ -94,15 +94,15 @@ export const mergeRecordsMapIntoDonor = (
   );
 
   submittedRecordsMap[ClinicalEntitySchemaNames.TREATMENT]?.forEach(r =>
-    updateTreatementInfo(mergedDonor, r),
+    updateOrAddTreatementInfo(mergedDonor, r),
   );
 
   ClinicalTherapySchemaNames.forEach(tsn =>
-    submittedRecordsMap[tsn]?.forEach(r => updateTherapyInfoInDonor(mergedDonor, r, tsn)),
+    submittedRecordsMap[tsn]?.forEach(r => updateOrAddTherapyInfoInDonor(mergedDonor, r, tsn)),
   );
 
   submittedRecordsMap[ClinicalEntitySchemaNames.FOLLOW_UP]?.forEach(r =>
-    updateFollowUpInfo(mergedDonor, r),
+    updateOrAddFollowUpInfo(mergedDonor, r),
   );
 
   return mergedDonor;
@@ -130,7 +130,7 @@ const updateSpecimenInfo = (donor: Donor, record: ClinicalInfo) => {
   return specimen;
 };
 
-const updateFollowUpInfo = (donor: Donor, record: ClinicalInfo): FollowUp => {
+const updateOrAddFollowUpInfo = (donor: Donor, record: ClinicalInfo) => {
   let followUp = findFollowUp(donor, record);
   if (!followUp) {
     followUp = addNewFollowUpObj(donor);
@@ -139,7 +139,7 @@ const updateFollowUpInfo = (donor: Donor, record: ClinicalInfo): FollowUp => {
   return followUp;
 };
 
-const updateTreatementInfo = (donor: Donor, record: ClinicalInfo): Treatment => {
+const updateOrAddTreatementInfo = (donor: Donor, record: ClinicalInfo): Treatment => {
   let treatment = findTreatment(donor, record);
   if (!treatment) {
     treatment = addNewTreatmentObj(donor);
@@ -148,7 +148,7 @@ const updateTreatementInfo = (donor: Donor, record: ClinicalInfo): Treatment => 
   return treatment;
 };
 
-const updateTherapyInfoInDonor = (
+const updateOrAddTherapyInfoInDonor = (
   donor: Donor,
   record: ClinicalInfo,
   therapyType: ClinicalEntitySchemaNames,
@@ -159,10 +159,10 @@ const updateTherapyInfoInDonor = (
     if (!createDummyTreatmentIfMissing) return;
     treatment = addNewTreatmentObj(donor);
   }
-  return updateTherapyInfoInTreatment(treatment, record, therapyType as ClinicalTherapyType);
+  return updateOrAddTherapyInfoInTreatment(treatment, record, therapyType as ClinicalTherapyType);
 };
 
-const updateTherapyInfoInTreatment = (
+const updateOrAddTherapyInfoInTreatment = (
   treatment: Treatment,
   record: ClinicalInfo,
   therapyType: ClinicalTherapyType,
@@ -173,6 +173,44 @@ const updateTherapyInfoInTreatment = (
   }
   therapy.clinicalInfo = record;
   return therapy;
+};
+
+/*** Clinical object finders ***/
+const findSpecimen = (donor: Donor, record: ClinicalInfo) => {
+  const specimenId = record[ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.SPECIMEN]];
+  return _.find(donor.specimens, ['submitterId', specimenId]);
+};
+
+const findTreatment = (donor: Donor, record: ClinicalInfo) => {
+  return findClinicalObject(donor, record, ClinicalEntitySchemaNames.TREATMENT) as Treatment;
+};
+
+const findFollowUp = (donor: Donor, record: ClinicalInfo) => {
+  return findClinicalObject(donor, record, ClinicalEntitySchemaNames.FOLLOW_UP) as FollowUp;
+};
+
+const findClinicalObject = (
+  donor: Donor,
+  newRecord: ClinicalInfo,
+  entityType: Exclude<ClinicalEntitySchemaNames, ClinicalTherapyType>,
+): ClinicalEntity | undefined => {
+  const uniqueIdName = ClinicalUniqueIndentifier[entityType];
+  const uniqueIdValue = newRecord[uniqueIdName];
+  return getSingleClinicalObjectFromDonor(donor, entityType, {
+    clinicalInfo: { [uniqueIdName]: uniqueIdValue },
+  }) as ClinicalEntity | undefined;
+};
+
+const findTherapy = (
+  treatment: Treatment,
+  record: ClinicalInfo,
+  therapyType: ClinicalTherapyType,
+): Therapy | undefined => {
+  const identiferName = ClinicalUniqueIndentifier[therapyType];
+  const identiferValue = record[identiferName];
+  return (treatment.therapies || []).find(
+    th => th.clinicalInfo[identiferName] === identiferValue && th.therapyType === therapyType,
+  );
 };
 
 /*** Empty clinical object adders ***/
@@ -192,42 +230,4 @@ const addNewTherapyObj = (treatment: Treatment, therapyType: ClinicalTherapyType
   const newTherapy = { clinicalInfo: {}, therapyType };
   treatment.therapies.push(newTherapy);
   return _.last(treatment.therapies) as Therapy;
-};
-
-/*** Clinical object finders ***/
-const findSpecimen = (donor: Donor, record: ClinicalInfo) => {
-  const specimenId = record[ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.SPECIMEN]];
-  return _.find(donor.specimens, ['submitterId', specimenId]);
-};
-
-const findTreatment = (donor: Donor, record: ClinicalInfo) => {
-  return findClinicalObject(donor, record, ClinicalEntitySchemaNames.TREATMENT) as Treatment;
-};
-
-const findFollowUp = (donor: Donor, record: ClinicalInfo) => {
-  return findClinicalObject(donor, record, ClinicalEntitySchemaNames.FOLLOW_UP) as FollowUp;
-};
-
-function findClinicalObject(
-  donor: Donor,
-  newRecord: ClinicalInfo,
-  entityType: Exclude<ClinicalEntitySchemaNames, ClinicalTherapyType>,
-): ClinicalEntity | undefined {
-  const uniqueIdName = ClinicalUniqueIndentifier[entityType];
-  const uniqueIdValue = newRecord[uniqueIdName];
-  return getSingleClinicalObjectFromDonor(donor, entityType, {
-    clinicalInfo: { [uniqueIdName]: uniqueIdValue },
-  }) as ClinicalEntity | undefined;
-}
-
-const findTherapy = (
-  treatment: Treatment,
-  record: ClinicalInfo,
-  therapyType: ClinicalTherapyType,
-): Therapy | undefined => {
-  const identiferName = ClinicalUniqueIndentifier[therapyType];
-  const identiferValue = record[identiferName];
-  return (treatment.therapies || []).find(
-    th => th.clinicalInfo[identiferName] === identiferValue && th.therapyType === therapyType,
-  );
 };
