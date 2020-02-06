@@ -60,7 +60,7 @@ spec:
             steps {
                 container('node') {
                     sh "npm ci"
-                    sh "npm run test"
+                    sh "DEBUG=testcontainers npm run test"
                 }
             }
         }
