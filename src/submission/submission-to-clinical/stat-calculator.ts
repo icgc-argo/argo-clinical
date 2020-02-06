@@ -59,29 +59,29 @@ function calcAggregateStats(
   newStats: ClinicalInfoStats,
   originalStats: ClinicalInfoStats,
 ): AggregateClinicalInfoStats {
-  const allSubmittedCoreFields = aggregatedStats?.submittedCoreFields || 0;
-  const allSubmittedExtendedFields = aggregatedStats?.submittedExtendedFields || 0;
-  const allAvailableCoreFields = aggregatedStats?.expectedCoreFields || 0;
-  const allAvailableExtendedFields = aggregatedStats?.expectedExtendedFields || 0;
+  const currentSubmittedCoreFields = aggregatedStats?.submittedCoreFields || 0;
+  const currentSubmittedExtendedFields = aggregatedStats?.submittedExtendedFields || 0;
+  const currentAvailableCoreFields = aggregatedStats?.expectedCoreFields || 0;
+  const currentAvailableExtendedFields = aggregatedStats?.expectedExtendedFields || 0;
 
-  const allSubmittedCoreFieldsUpdate: number =
-    allSubmittedCoreFields - originalStats.submittedCoreFields + newStats.submittedCoreFields;
-  const allSubmittedExtendedFieldsUpdate: number =
-    allSubmittedExtendedFields -
+  const updatedSubmittedCoreFields: number =
+    currentSubmittedCoreFields - originalStats.submittedCoreFields + newStats.submittedCoreFields;
+  const updatedSubmittedExtendedFields: number =
+    currentSubmittedExtendedFields -
     originalStats.submittedExtendedFields +
     newStats.submittedExtendedFields;
-  const allAvailableCoreFieldsUpdate: number =
-    allAvailableCoreFields - originalStats.expectedCoreFields + newStats.expectedCoreFields;
-  const allAvailableExtendedFieldsUpdate: number =
-    allAvailableExtendedFields -
+  const updatedAvailableCoreFields: number =
+    currentAvailableCoreFields - originalStats.expectedCoreFields + newStats.expectedCoreFields;
+  const updatedAvailableExtendedFields: number =
+    currentAvailableExtendedFields -
     originalStats.expectedExtendedFields +
     newStats.expectedExtendedFields;
 
   return {
-    submittedCoreFields: allSubmittedCoreFieldsUpdate,
-    submittedExtendedFields: allSubmittedExtendedFieldsUpdate,
-    expectedCoreFields: allAvailableCoreFieldsUpdate,
-    expectedExtendedFields: allAvailableExtendedFieldsUpdate,
+    submittedCoreFields: updatedSubmittedCoreFields,
+    submittedExtendedFields: updatedSubmittedExtendedFields,
+    expectedCoreFields: updatedAvailableCoreFields,
+    expectedExtendedFields: updatedAvailableExtendedFields,
   };
 }
 
@@ -89,5 +89,5 @@ function getCoreFields(clinicalType: ClinicalEntitySchemaNames): string[] {
   const clinicalSchemaDef = schemaManager
     .instance()
     .getSchemasWithFields({ name: clinicalType }, { meta: { core: true } })[0];
-  return clinicalSchemaDef.fields;
+  return clinicalSchemaDef.fields || [];
 }

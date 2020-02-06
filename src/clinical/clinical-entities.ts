@@ -21,8 +21,6 @@ export interface AggregateClinicalInfoStats {
   submittedExtendedFields: number;
   expectedCoreFields: number;
   expectedExtendedFields: number;
-  // normalSamples: number;
-  // tumourSamples: number;
 }
 
 export interface ClinicalInfoStats {
