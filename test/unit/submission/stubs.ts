@@ -236,5 +236,30 @@ export const stubs = {
         },
       ],
     }),
+
+    existingDonor07: (): Donor => ({
+      schemaMetadata: {
+        isValid: true,
+        lastValidSchemaVersion: '1.0',
+        originalSchemaVersion: '1.0',
+      },
+      _id: '22f23223f',
+      submitterId: 'AB2',
+      programId: 'PEME-CA',
+      donorId: 20,
+      clinicalInfo: {
+        [DonorFieldsEnum.vital_status]: 'Alive',
+      },
+      gender: 'Female',
+      specimens: [],
+      followUps: [],
+      treatments: [],
+      aggregatedInfoStats: {
+        submittedCoreFields: 1,
+        expectedCoreFields: 3,
+        submittedExtendedFields: 0,
+        expectedExtendedFields: 0,
+      },
+    }),
   },
 };

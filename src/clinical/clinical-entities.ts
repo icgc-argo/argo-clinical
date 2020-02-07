@@ -7,11 +7,27 @@ export interface Donor {
   programId: string;
   specimens: Array<Specimen>;
   clinicalInfo?: ClinicalInfo;
+  clinicalInfoStats?: ClinicalInfoStats;
   primaryDiagnosis?: ClinicalEntity | undefined;
   followUps?: Array<FollowUp>;
   treatments?: Array<Treatment>;
   createdAt?: string;
   updatedAt?: string;
+  aggregatedInfoStats?: AggregateClinicalInfoStats;
+}
+
+export interface AggregateClinicalInfoStats {
+  submittedCoreFields: number;
+  submittedExtendedFields: number;
+  expectedCoreFields: number;
+  expectedExtendedFields: number;
+}
+
+export interface ClinicalInfoStats {
+  submittedCoreFields: number;
+  submittedExtendedFields: number;
+  expectedCoreFields: number;
+  expectedExtendedFields: number;
 }
 
 export interface SchemaMetadata {
@@ -23,6 +39,7 @@ export interface SchemaMetadata {
 
 export type ClinicalEntity = {
   clinicalInfo: ClinicalInfo;
+  clinicalInfoStats?: ClinicalInfoStats;
   [k: string]: any;
 };
 

@@ -81,7 +81,6 @@
       "schemas": [
         {
           "name": "sample_registration",
-          "description": "Collection of elements required to register the required Donor-Specimen-Sample data to the ARGO Platform. Registration of samples is required before genomic and clinical data submission can proceed.",
           "fields": [
             {
               "name": "program_id",
@@ -107,6 +106,9 @@
               "restrictions": {
                 "required": true,
                 "codeList": ["Male", "Female", "Other"]
+              },
+              "meta": {
+                "core": true
               }
             },
             {
@@ -143,6 +145,9 @@
                   "Saliva",
                   "Skin"
                 ]
+              },
+              "meta": {
+                "core": true
               }
             },
             {
@@ -180,6 +185,9 @@
                   "Cell line - derived from tumour",
                   "Cell line - derived from normal"
                 ]
+              },
+              "meta": {
+                "core": true
               }
             },
             {
@@ -207,13 +215,15 @@
                   "polyA+ RNA",
                   "Other RNA fractions"
                 ]
+              },
+              "meta": {
+                "core": true
               }
             }
           ]
         },
         {
           "name": "donor",
-          "description": "The collection of data elements related to a specific donor in a specific ICGC-ARGO program.",
           "fields": [
             {
               "name": "program_id",
@@ -239,7 +249,10 @@
                 "codeList": ["Alive", "Deceased", "Not reported", "Unknown"],
                 "required": true
               },
-              "valueType": "string"
+              "valueType": "string",
+              "meta": {
+                "core": true
+              }
             },
             {
               "description": "Description of the cause of a donor's death.",
@@ -247,12 +260,16 @@
               "restrictions": {
                 "codeList": ["Died of cancer", "Died of other reasons", "Not reported", "Unknown"]
               },
-              "valueType": "string"
+              "valueType": "string",
+              "meta": {
+                "core": true
+              }
             },
             {
               "description": "Interval of how long the donor has survived since primary diagnosis, in days.",
               "meta": {
-                "units": "days"
+                "units": "days",
+                "core": true
               },
               "name": "survival_time",
               "valueType": "integer"
@@ -261,7 +278,6 @@
         },
         {
           "name": "primary_diagnosis",
-          "description": "The collection of data elements related to a donor's primary diagnosis. The primary diagnosis is the first diagnosed case of cancer in a donor.",
           "fields": [
             {
               "name": "program_id",
@@ -288,7 +304,8 @@
                 "required": true
               },
               "meta": {
-                "units": "years"
+                "units": "years",
+                "core": true
               }
             },
             {
@@ -298,6 +315,9 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Z]{1}[0-9]{2}.[0-9]{0,3}[A-Z]{0,1}$"
+              },
+              "meta": {
+                "core": true
               }
             },
             {
@@ -312,27 +332,42 @@
             {
               "name": "clinical_stage_group",
               "description": "Stage group of the tumour, as assigned by the reporting tumour_staging_system, that indicates the overall prognostic tumour stage (ie. Stage I, Stage II, Stage III etc.).",
-              "valueType": "string"
+              "valueType": "string",
+              "meta": {
+                "core": true
+              }
             },
             {
               "name": "stage_suffix",
               "description": "If necessary, use this field to add any applicable stage suffixes. Stage suffixes may apply to certain staging systems such as Ann Arbour staging system where the four stages are divided into 4 categories (A, B, X and E).",
-              "valueType": "string"
+              "valueType": "string",
+              "meta": {
+                "core": true
+              }
             },
             {
               "name": "clinical_t_category",
               "description": "The code to represent the extent of the primary tumour (T) based on evidence obtained from clinical assessment parameters determined at time of primary diagnosis and prior to treatment, according to criteria based on multiple editions of the AJCC's Cancer Staging Manual.",
-              "valueType": "string"
+              "valueType": "string",
+              "meta": {
+                "core": true
+              }
             },
             {
               "name": "clinical_n_category",
               "description": "The code to represent the stage of cancer defined by which is the extent of the regional lymph node (N) involvement for the cancer based on evidence obtained from clinical assessment parameters determined at time of primary diagnosis and prior to treatment, according to criteria based on multiple editions of the AJCC's Cancer Staging Manual.",
-              "valueType": "string"
+              "valueType": "string",
+              "meta": {
+                "core": true
+              }
             },
             {
               "name": "clinical_m_category",
               "description": "The code to represent the stage of cancer defined bythe extent of the distant metastasis (M) for the cancer based on evidence obtained from clinical assessment parameters determined at time of primary diagnosis and prior to treatment, according to criteria based on multiple editions of the AJCC's Cancer Staging Manual. MX is NOT a valid category and cannot be assigned.",
-              "valueType": "string"
+              "valueType": "string",
+              "meta": {
+                "core": true
+              }
             },
             {
               "name": "number_lymph_nodes_examined",
@@ -359,7 +394,6 @@
         },
         {
           "name": "specimen",
-          "description": "The collection of data elements related to a donor's specimen. A specimen is any material sample taken for testing, diagnostic or research purposes.",
           "fields": [
             {
               "name": "program_id",
@@ -395,7 +429,8 @@
                 "required": true
               },
               "meta": {
-                "units": "days"
+                "units": "days",
+                "core": true
               }
             },
             {
@@ -414,6 +449,9 @@
               "restrictions": {
                 "required": true,
                 "codeList": ["Yes", "No", "Unknown", "Not reported"]
+              },
+              "meta": {
+                "core": true
               }
             },
             {
@@ -423,6 +461,9 @@
               "restrictions": {
                 "required": true,
                 "regex": "M-[0-9]{4}/[0-9]{2}$"
+              },
+              "meta": {
+                "core": true
               }
             },
             {
@@ -439,6 +480,9 @@
                   "ISUP",
                   "Lymphoid neoplasms"
                 ]
+              },
+              "meta": {
+                "core": true
               }
             },
             {
@@ -447,6 +491,9 @@
               "valueType": "string",
               "restrictions": {
                 "required": true
+              },
+              "meta": {
+                "core": true
               }
             },
             {
@@ -464,22 +511,34 @@
               "valueType": "string",
               "restrictions": {
                 "required": true
+              },
+              "meta": {
+                "core": true
               }
             },
             {
               "name": "pathological_t_category",
               "description": "The code to represent the stage of cancer defined by the size or contiguous extension of the primary tumour (T), according to criteria based on multiple editions of the AJCC's Cancer Staging Manual.",
-              "valueType": "string"
+              "valueType": "string",
+              "meta": {
+                "core": true
+              }
             },
             {
               "name": "pathological_n_category",
               "description": "The code to represent the stage of cancer defined by whether or not the cancer has reached nearby lymph nodes (N), according to criteria based on multiple editions of the AJCC's Cancer Staging Manual.",
-              "valueType": "string"
+              "valueType": "string",
+              "meta": {
+                "core": true
+              }
             },
             {
               "name": "pathological_m_category",
               "description": "The code to represent the stage of cancer defined by whether there are distant metastases (M), meaning spread of cancer to other parts of the body, according to criteria based on multiple editions of the AJCC's Cancer Staging Manual.",
-              "valueType": "string"
+              "valueType": "string",
+              "meta": {
+                "core": true
+              }
             },
             {
               "name": "percent_tumour_cells",
@@ -487,6 +546,9 @@
               "valueType": "number",
               "restrictions": {
                 "required": true
+              },
+              "meta": {
+                "core": true
               }
             },
             {
@@ -495,6 +557,9 @@
               "valueType": "number",
               "restrictions": {
                 "required": true
+              },
+              "meta": {
+                "core": true
               }
             },
             {
@@ -503,6 +568,9 @@
               "valueType": "number",
               "restrictions": {
                 "required": true
+              },
+              "meta": {
+                "core": true
               }
             },
             {
@@ -511,6 +579,9 @@
               "valueType": "number",
               "restrictions": {
                 "required": true
+              },
+              "meta": {
+                "core": true
               }
             },
             {
@@ -519,13 +590,15 @@
               "valueType": "number",
               "restrictions": {
                 "required": true
+              },
+              "meta": {
+                "core": true
               }
             }
           ]
         },
         {
           "name": "follow_up",
-          "description": "The collection of data elements related to a specific follow up visit to a donor. A follow up is defined as any point of contact with a patient after diagnosis.",
           "fields": [
             {
               "name": "program_id",
@@ -1077,7 +1150,6 @@
         },
         {
           "name": "treatment",
-          "description": "The collection of data elements related to a donor's treatment at a specific point in the clinical record.",
           "fields": [
             {
               "name": "program_id",
@@ -1220,7 +1292,6 @@
         },
         {
           "name": "chemotherapy",
-          "description": "The collection of data elements describing the details of a chemotherapy treatment completed by a donor.",
           "fields": [
             {
               "name": "program_id",
@@ -1287,10 +1358,6 @@
         },
         {
           "name": "radiation",
-          "description": "The collection of data elements describing the details of a radiation treatment completed by a donor.",
-          "meta": {
-            "parent": "treatment"
-          },
           "fields": [
             {
               "name": "program_id",
@@ -1405,10 +1472,6 @@
         },
         {
           "name": "hormone_therapy",
-          "description": "The collection of data elements describing the details of a hormone treatment therapy completed by a donor.",
-          "meta": {
-            "parent": "treatment"
-          },
           "fields": [
             {
               "name": "program_id",

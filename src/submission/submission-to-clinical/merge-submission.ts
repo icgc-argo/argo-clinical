@@ -1,17 +1,27 @@
 import { DeepReadonly } from 'deep-freeze';
-import { Donor, Treatment, ClinicalInfo, FollowUp } from '../../clinical/clinical-entities';
+import {
+  Donor,
+  Treatment,
+  ClinicalInfo,
+  FollowUp,
+  Therapy,
+  ClinicalEntity,
+} from '../../clinical/clinical-entities';
 import {
   ActiveClinicalSubmission,
-  SampleRegistrationFieldsEnum,
   ClinicalEntitySchemaNames,
   SubmittedClinicalRecordsMap,
   ClinicalUniqueIndentifier,
   ClinicalTherapySchemaNames,
+  DonorFieldsEnum,
+  ClinicalTherapyType,
 } from '../submission-entities';
 import _ from 'lodash';
 import { loggerFor } from '../../logger';
 import { Errors } from '../../utils';
 import { getSingleClinicalObjectFromDonor } from './submission-to-clinical';
+import { updateClinicalStatsAndDonorStats } from './stat-calculator';
+
 const L = loggerFor(__filename);
 
 export const mergeActiveSubmissionWithDonors = async (
@@ -24,36 +34,40 @@ export const mergeActiveSubmissionWithDonors = async (
 
     // Find the donor that matches each record, and update the entity within that donor
     entityData.records.forEach(record => {
-      const donorId = record[SampleRegistrationFieldsEnum.submitter_donor_id];
+      const donorId = record[DonorFieldsEnum.submitter_donor_id];
       const donor = _.find(updatedDonors, ['submitterId', donorId]);
       if (!donor) {
         throw new Errors.StateConflict(
           `Donor ${donorId} has not been registered but is part of the activeSubmission, merge cannot be completed.`,
         );
       }
-
+      // update clinical info in clinical object
+      let entityWithUpdatedInfo: ClinicalEntity | Donor | undefined = { clinicalInfo: {} };
       switch (entityType) {
         case ClinicalEntitySchemaNames.DONOR:
-          updateDonorInfo(donor, record);
+          entityWithUpdatedInfo = updateDonorInfo(donor, record);
           break;
         case ClinicalEntitySchemaNames.SPECIMEN:
-          updateSpecimenInfo(donor, record);
+          entityWithUpdatedInfo = updateSpecimenInfo(donor, record);
           break;
         case ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS:
-          updatePrimaryDiagnosisInfo(donor, record);
+          entityWithUpdatedInfo = updatePrimaryDiagnosisInfo(donor, record);
           break;
         case ClinicalEntitySchemaNames.TREATMENT:
-          addOrUpdateTreatementInfo(donor, record);
+          entityWithUpdatedInfo = updateOrAddTreatementInfo(donor, record);
           break;
         case ClinicalEntitySchemaNames.FOLLOW_UP:
-          updateOrAddFollowUp(donor, record);
+          entityWithUpdatedInfo = updateOrAddFollowUpInfo(donor, record);
           break;
         case ClinicalTherapySchemaNames.find(tsn => tsn === entityType):
-          addOrUpdateTherapyInfoInDonor(donor, record, entityType, true);
+          entityWithUpdatedInfo = updateOrAddTherapyInfoInDonor(donor, record, entityType, true);
           break;
         default:
           throw new Error(`Entity ${entityType} not implemented yet`);
       }
+
+      // update clinical entity stats and aggregate donor stats
+      updateClinicalStatsAndDonorStats(entityWithUpdatedInfo, donor, entityType);
     });
   }
 
@@ -80,15 +94,15 @@ export const mergeRecordsMapIntoDonor = (
   );
 
   submittedRecordsMap[ClinicalEntitySchemaNames.TREATMENT]?.forEach(r =>
-    addOrUpdateTreatementInfo(mergedDonor, r),
+    updateOrAddTreatementInfo(mergedDonor, r),
   );
 
   ClinicalTherapySchemaNames.forEach(tsn =>
-    submittedRecordsMap[tsn]?.forEach(r => addOrUpdateTherapyInfoInDonor(mergedDonor, r, tsn)),
+    submittedRecordsMap[tsn]?.forEach(r => updateOrAddTherapyInfoInDonor(mergedDonor, r, tsn)),
   );
 
   submittedRecordsMap[ClinicalEntitySchemaNames.FOLLOW_UP]?.forEach(r =>
-    updateOrAddFollowUp(mergedDonor, r),
+    updateOrAddFollowUpInfo(mergedDonor, r),
   );
 
   return mergedDonor;
@@ -99,127 +113,121 @@ export const mergeRecordsMapIntoDonor = (
  * ********************************* */
 
 // *** Info Update functions ***
-const updateDonorInfo = (donor: Donor, record: any) => {
+const updateDonorInfo = (donor: Donor, record: ClinicalInfo) => {
   donor.clinicalInfo = record;
-  return donor.clinicalInfo;
+  return donor;
 };
 
-const updatePrimaryDiagnosisInfo = (donor: Donor, record: any) => {
+const updatePrimaryDiagnosisInfo = (donor: Donor, record: ClinicalInfo) => {
   donor.primaryDiagnosis = { clinicalInfo: record };
   return donor.primaryDiagnosis;
 };
 
-const updateSpecimenInfo = (donor: Donor, record: any) => {
-  const specimen = findSpecimen(donor, record[SampleRegistrationFieldsEnum.submitter_specimen_id]);
+const updateSpecimenInfo = (donor: Donor, record: ClinicalInfo) => {
+  const specimen = findSpecimen(donor, record);
   if (!specimen) return;
   specimen.clinicalInfo = record;
   return specimen;
 };
 
-const updateOrAddFollowUp = (donor: Donor, record: ClinicalInfo) => {
-  const followUp = findFollowUp(
-    donor,
-    record[ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.FOLLOW_UP]] as string,
-  );
-
-  if (followUp) {
-    followUp.clinicalInfo = record;
-    return;
+const updateOrAddFollowUpInfo = (donor: Donor, record: ClinicalInfo) => {
+  let followUp = findFollowUp(donor, record);
+  if (!followUp) {
+    followUp = addNewFollowUpObj(donor);
   }
-
-  if (!donor.followUps) {
-    donor.followUps = [];
-  }
-
-  donor.followUps.push({
-    clinicalInfo: record,
-  });
+  followUp.clinicalInfo = record;
+  return followUp;
 };
 
-const addOrUpdateTreatementInfo = (donor: Donor, record: ClinicalInfo): Treatment => {
-  const submitterTreatementId = record[
-    ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.TREATMENT]
-  ] as string;
-  // Find treatment in donor and update
-  const treatment = findTreatment(donor, submitterTreatementId);
-  if (treatment) {
-    treatment.clinicalInfo = record;
-    return treatment;
+const updateOrAddTreatementInfo = (donor: Donor, record: ClinicalInfo): Treatment => {
+  let treatment = findTreatment(donor, record);
+  if (!treatment) {
+    treatment = addNewTreatmentObj(donor);
   }
-  // treatment doesn't exsist, so add it
-  donor.treatments = _.concat(donor.treatments || [], { clinicalInfo: record, therapies: [] });
-  return donor.treatments[0];
+  treatment.clinicalInfo = record;
+  return treatment;
 };
 
-const addOrUpdateTherapyInfoInDonor = (
+const updateOrAddTherapyInfoInDonor = (
   donor: Donor,
   record: ClinicalInfo,
   therapyType: ClinicalEntitySchemaNames,
   createDummyTreatmentIfMissing: boolean = false, // use this if treatment record exists and will be added later
-) => {
-  const treatementId = record[
-    ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.TREATMENT]
-  ] as string;
-  let treatment = findTreatment(donor, treatementId);
+): Therapy | undefined => {
+  let treatment = findTreatment(donor, record);
   if (!treatment) {
     if (!createDummyTreatmentIfMissing) return;
-    treatment = addOrUpdateTreatementInfo(donor, {
-      [ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.TREATMENT]]: treatementId,
-    });
+    treatment = addNewTreatmentObj(donor);
   }
-  addOrUpdateTherapyInfoInTreatment(treatment, record, therapyType);
+  return updateOrAddTherapyInfoInTreatment(treatment, record, therapyType as ClinicalTherapyType);
 };
 
-function addOrUpdateTherapyInfoInTreatment(
+const updateOrAddTherapyInfoInTreatment = (
   treatment: Treatment,
   record: ClinicalInfo,
-  therapyType: ClinicalEntitySchemaNames,
-) {
-  const idName = ClinicalUniqueIndentifier[therapyType];
-  const idVal = record[idName];
-  const therapy = findTherapyWithIdentifier(treatment, therapyType, idName, idVal);
-  if (therapy) {
-    therapy.clinicalInfo = record;
-    return;
+  therapyType: ClinicalTherapyType,
+): Therapy => {
+  let therapy = findTherapy(treatment, record, therapyType);
+  if (!therapy) {
+    therapy = addNewTherapyObj(treatment, therapyType);
   }
-  treatment.therapies.push({ clinicalInfo: record, therapyType });
-}
+  therapy.clinicalInfo = record;
+  return therapy;
+};
 
-const findSpecimen = (donor: Donor, specimenId: string) => {
+/*** Clinical object finders ***/
+const findSpecimen = (donor: Donor, record: ClinicalInfo) => {
+  const specimenId = record[ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.SPECIMEN]];
   return _.find(donor.specimens, ['submitterId', specimenId]);
 };
 
-const findTreatment = (donor: Donor, treatmentId: string): Treatment | undefined => {
-  let treatment = undefined;
-  if (donor.treatments) {
-    treatment = donor.treatments.find(
-      tr =>
-        tr.clinicalInfo[ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.TREATMENT]] ===
-        treatmentId,
-    );
-  }
-  return treatment;
+const findTreatment = (donor: Donor, record: ClinicalInfo) => {
+  return findClinicalObject(donor, record, ClinicalEntitySchemaNames.TREATMENT) as Treatment;
 };
 
-const findFollowUp = (donor: Donor, followUpId: string): FollowUp | undefined => {
-  let followUp: FollowUp | undefined = undefined;
-  if (donor.followUps) {
-    followUp = getSingleClinicalObjectFromDonor(donor, ClinicalEntitySchemaNames.FOLLOW_UP, {
-      clinicalInfo: {
-        [ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.FOLLOW_UP]]: followUpId,
-      },
-    }) as FollowUp;
-  }
-  return followUp;
+const findFollowUp = (donor: Donor, record: ClinicalInfo) => {
+  return findClinicalObject(donor, record, ClinicalEntitySchemaNames.FOLLOW_UP) as FollowUp;
 };
 
-const findTherapyWithIdentifier = (
+const findClinicalObject = (
+  donor: Donor,
+  newRecord: ClinicalInfo,
+  entityType: Exclude<ClinicalEntitySchemaNames, ClinicalTherapyType>,
+): ClinicalEntity | undefined => {
+  const uniqueIdName = ClinicalUniqueIndentifier[entityType];
+  const uniqueIdValue = newRecord[uniqueIdName];
+  return getSingleClinicalObjectFromDonor(donor, entityType, {
+    clinicalInfo: { [uniqueIdName]: uniqueIdValue },
+  }) as ClinicalEntity | undefined;
+};
+
+const findTherapy = (
   treatment: Treatment,
-  therapyType: ClinicalEntitySchemaNames,
-  identiferName: string,
-  identiferValue: any,
-) => {
+  record: ClinicalInfo,
+  therapyType: ClinicalTherapyType,
+): Therapy | undefined => {
+  const identiferName = ClinicalUniqueIndentifier[therapyType];
+  const identiferValue = record[identiferName];
   return (treatment.therapies || []).find(
     th => th.clinicalInfo[identiferName] === identiferValue && th.therapyType === therapyType,
   );
+};
+
+/*** Empty clinical object adders ***/
+const addNewTreatmentObj = (donor: Donor): Treatment => {
+  const newTreatement = { clinicalInfo: {}, therapies: [] };
+  donor.treatments = _.concat(donor.treatments || [], newTreatement);
+  return _.last(donor.treatments) as Treatment;
+};
+
+const addNewFollowUpObj = (donor: Donor): FollowUp => {
+  const newFollowUp = { clinicalInfo: {} };
+  donor.followUps = _.concat(donor.followUps || [], newFollowUp);
+  return _.last(donor.followUps) as FollowUp;
+};
+
+const addNewTherapyObj = (treatment: Treatment, therapyType: ClinicalTherapyType): Therapy => {
+  const newTherapy = { clinicalInfo: {}, therapyType };
+  treatment.therapies.push(newTherapy);
+  return _.last(treatment.therapies) as Therapy;
 };

@@ -39,22 +39,32 @@ class SchemaManager {
     name: '',
     version: '',
   };
+
   constructor(private schemaServiceUrl: string) {}
 
   getCurrent = (): SchemasDictionary => {
     return this.currentSchemaDictionary;
   };
 
-  getSchemasWithFields = (): {
+  getSchemasWithFields = (
+    schemaDefConstratint: object = {}, // k-v SchemaDefinition property constraints; e.g. { name: 'donor' }
+    fieldDefConstraint: object = {}, // k-v FieldDefinition property constraints; e.g. { restrictions: { required: true } }
+  ): {
     name: string;
     fields: string[];
   }[] => {
-    return this.currentSchemaDictionary.schemas.map(s => {
-      return {
-        name: s.name,
-        fields: s.fields.map(f => f.name),
-      };
-    });
+    return _(this.currentSchemaDictionary.schemas)
+      .filter(schemaDefConstratint)
+      .map(s => {
+        return {
+          name: s.name,
+          fields: _(s.fields)
+            .filter(fieldDefConstraint)
+            .map(f => f.name)
+            .value(),
+        };
+      })
+      .value();
   };
 
   getSchemas = (): string[] => {

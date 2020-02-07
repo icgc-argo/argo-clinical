@@ -24,7 +24,7 @@ import {
   ClinicalTherapySchemaNames,
 } from '../submission-entities';
 
-import { Errors, notEmpty, deepFind } from '../../utils';
+import { Errors, notEmpty } from '../../utils';
 import { donorDao } from '../../clinical/donor-repo';
 import _ from 'lodash';
 import { F } from '../../utils';

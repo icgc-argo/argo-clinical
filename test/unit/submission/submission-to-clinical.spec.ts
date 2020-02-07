@@ -4,9 +4,14 @@ import * as s2c from '../../../src/submission/submission-to-clinical/submission-
 
 import { registrationRepository } from '../../../src/submission/registration-repo';
 import { donorDao, FindByProgramAndSubmitterFilter } from '../../../src/clinical/donor-repo';
-import { ActiveRegistration } from '../../../src/submission/submission-entities';
-import { Donor } from '../../../src/clinical/clinical-entities';
+import {
+  ActiveRegistration,
+  ClinicalEntitySchemaNames,
+} from '../../../src/submission/submission-entities';
+import { Donor, ClinicalEntity } from '../../../src/clinical/clinical-entities';
 import deepFreeze from 'deep-freeze';
+import * as schemaManager from '../../../src/submission/schema/schema-manager';
+import { updateClinicalStatsAndDonorStats } from '../../../src/submission/submission-to-clinical/stat-calculator';
 
 const id1 = '04042314bacas';
 const id2 = 'lafdksaf92149123';
@@ -269,6 +274,172 @@ describe('submission-to-clinical', () => {
       });
       chai.expect(updateDonorStub.calledOnceWith(sinon.match(expectedDonorDto))).to.eq(true);
       chai.expect(deleteRegStub.calledOnceWithExactly(id2)).to.eq(true);
+    });
+  });
+
+  describe('stats-calculator', () => {
+    const sandBox = sinon.createSandbox();
+    // dummy stubs
+    let donor: Donor;
+    let treatment: ClinicalEntity;
+    let followUp: ClinicalEntity;
+    let coreFieldsStub: any = {};
+
+    beforeEach(done => {
+      coreFieldsStub = {
+        [ClinicalEntitySchemaNames.DONOR]: { fields: ['donorField1', 'donorField2'] },
+        [ClinicalEntitySchemaNames.FOLLOW_UP]: { fields: ['followUpField1'] },
+        [ClinicalEntitySchemaNames.TREATMENT]: { fields: ['treatmentField1', 'treatmentField2'] },
+      };
+
+      // bare minimum schema manager stub to get core fields
+      sandBox.stub(schemaManager, 'instance').value(() => {
+        return {
+          getSchemasWithFields: (schemaConstraint: any) => [coreFieldsStub[schemaConstraint.name]],
+        };
+      });
+
+      donor = {
+        schemaMetadata: {
+          isValid: true,
+          lastValidSchemaVersion: '1.0',
+          originalSchemaVersion: '1.0',
+        },
+        _id: '22f23223f',
+        submitterId: 'AB2',
+        programId: 'PEME-CA',
+        donorId: 20,
+        clinicalInfo: {},
+        gender: 'Female',
+        specimens: [],
+        followUps: [{ clinicalInfo: {} }],
+        treatments: [{ clinicalInfo: {}, therapies: [] }],
+        aggregatedInfoStats: {
+          submittedCoreFields: 0,
+          expectedCoreFields: 0,
+          submittedExtendedFields: 0,
+          expectedExtendedFields: 0,
+        },
+      };
+      followUp = (donor.followUps || [])[0];
+      treatment = (donor.treatments || [])[0];
+
+      done();
+    });
+
+    afterEach(done => {
+      sandBox.restore();
+      done();
+    });
+
+    it('should calculate stats correctly when changing clinical entity info', () => {
+      chai.expect(donor.aggregatedInfoStats).to.deep.eq({
+        submittedCoreFields: 0,
+        expectedCoreFields: 0,
+        submittedExtendedFields: 0,
+        expectedExtendedFields: 0,
+      });
+      donor.clinicalInfo = { donorField1: 1, donorField2: 2 }; // expected 2; submitted 2
+      updateClinicalStatsAndDonorStats(donor, donor, ClinicalEntitySchemaNames.DONOR);
+
+      followUp.clinicalInfo = { followUpField1: 0 }; // expected 1; submitted 1
+      updateClinicalStatsAndDonorStats(followUp, donor, ClinicalEntitySchemaNames.FOLLOW_UP);
+
+      treatment.clinicalInfo = { treatmentField1: 0 }; // expected 2; submitted 1
+      updateClinicalStatsAndDonorStats(treatment, donor, ClinicalEntitySchemaNames.TREATMENT);
+
+      chai.expect(donor.aggregatedInfoStats).to.deep.include({
+        submittedCoreFields: 4,
+        expectedCoreFields: 5,
+      });
+
+      // remove a field
+      donor.clinicalInfo = { donorField1: 1, donorField2: undefined }; // expected 2; submitted 1 (undefined is ingnored)
+      updateClinicalStatsAndDonorStats(donor, donor, ClinicalEntitySchemaNames.DONOR);
+
+      chai.expect(donor.aggregatedInfoStats).to.deep.include({
+        submittedCoreFields: 3,
+        expectedCoreFields: 5,
+      });
+    });
+
+    it('should calculate stats correctly when changing core fields', () => {
+      chai.expect(donor.aggregatedInfoStats).to.deep.eq({
+        submittedCoreFields: 0,
+        expectedCoreFields: 0,
+        submittedExtendedFields: 0,
+        expectedExtendedFields: 0,
+      });
+      donor.clinicalInfo = { donorField1: 1, donorField2: 2 }; // expected 2; submitted 2
+      updateClinicalStatsAndDonorStats(donor, donor, ClinicalEntitySchemaNames.DONOR);
+
+      treatment.clinicalInfo = { treatmentField1: 0 }; // expected 2; submitted 1
+      updateClinicalStatsAndDonorStats(treatment, donor, ClinicalEntitySchemaNames.TREATMENT);
+
+      chai.expect(donor.aggregatedInfoStats).to.deep.include({
+        submittedCoreFields: 3,
+        expectedCoreFields: 4,
+      });
+
+      // remove a core field in treatment (assume its optional field so donor remains valid )
+      coreFieldsStub[ClinicalEntitySchemaNames.TREATMENT].fields.pop();
+      updateClinicalStatsAndDonorStats(treatment, donor, ClinicalEntitySchemaNames.TREATMENT);
+      chai.expect(donor.aggregatedInfoStats).to.deep.include({
+        submittedCoreFields: 3,
+        expectedCoreFields: 3,
+      });
+
+      // add a new core field to donor
+      coreFieldsStub[ClinicalEntitySchemaNames.DONOR].fields.push('donorField3');
+      updateClinicalStatsAndDonorStats(donor, donor, ClinicalEntitySchemaNames.DONOR);
+      chai.expect(donor.aggregatedInfoStats).to.deep.include({
+        submittedCoreFields: 3,
+        expectedCoreFields: 4,
+      });
+    });
+
+    it('should calculate stats correctly when changing clinical entity info & core fields', () => {
+      chai.expect(donor.aggregatedInfoStats).to.deep.eq({
+        submittedCoreFields: 0,
+        expectedCoreFields: 0,
+        submittedExtendedFields: 0,
+        expectedExtendedFields: 0,
+      });
+
+      donor.clinicalInfo = { donorField1: '1', donorField2: 'asdf' }; // expected 2; submitted 2
+      updateClinicalStatsAndDonorStats(donor, donor, ClinicalEntitySchemaNames.DONOR);
+
+      treatment.clinicalInfo = { treatmentField1: 0 }; // expected 2; submitted 1
+      updateClinicalStatsAndDonorStats(treatment, donor, ClinicalEntitySchemaNames.TREATMENT);
+
+      chai.expect(donor.aggregatedInfoStats).to.deep.include({
+        submittedCoreFields: 3,
+        expectedCoreFields: 4,
+      });
+
+      // remove a core field in treatment (assume its an optional field so donor remains valid )
+      coreFieldsStub[ClinicalEntitySchemaNames.TREATMENT].fields.pop();
+      updateClinicalStatsAndDonorStats(treatment, donor, ClinicalEntitySchemaNames.TREATMENT);
+      chai.expect(donor.aggregatedInfoStats).to.deep.include({
+        submittedCoreFields: 3,
+        expectedCoreFields: 3,
+      });
+
+      // remove field value in donor clincialInfo
+      donor.clinicalInfo = { donorField1: 1, donorField2: undefined }; // expected 2; submitted 1 (undefined should be ignored)
+      updateClinicalStatsAndDonorStats(donor, donor, ClinicalEntitySchemaNames.DONOR);
+      chai.expect(donor.aggregatedInfoStats).to.deep.include({
+        submittedCoreFields: 2,
+        expectedCoreFields: 3,
+      });
+
+      // add new core field in donor
+      coreFieldsStub[ClinicalEntitySchemaNames.DONOR].fields.push('donorField3');
+      updateClinicalStatsAndDonorStats(donor, donor, ClinicalEntitySchemaNames.DONOR);
+      chai.expect(donor.aggregatedInfoStats).to.deep.include({
+        submittedCoreFields: 2,
+        expectedCoreFields: 4,
+      });
     });
   });
 });
