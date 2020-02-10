@@ -474,8 +474,8 @@ namespace validation {
       (range.min !== undefined && value < range.min) ||
       (range.exclusiveMin !== undefined && value <= range.exclusiveMin) ||
       // bigger than max if defined ?
-      ((range.max !== undefined && value > range.max) ||
-        (range.exclusiveMax !== undefined && value >= range.exclusiveMax));
+      (range.max !== undefined && value > range.max) ||
+        (range.exclusiveMax !== undefined && value >= range.exclusiveMax);
     return invalidRange;
   };
   const isInvalidEnumValue = (
@@ -505,22 +505,36 @@ namespace validation {
       const sandbox = {
         $row: record,
         $field: record[field.name],
-        $name: field.name
+        $name: field.name,
       };
 
       if (!field.restrictions || !field.restrictions.script) {
         throw new Error('called validation by script without script provided');
       }
-
-      const script = new vm.Script(field.restrictions.script);
       const ctx = vm.createContext(sandbox);
-      const result = script.runInContext(ctx);
-      return {
-        valid: result.valid,
-        message: result.message || '',
+
+      let result: {
+        valid: boolean;
+        message: string;
+      } = {
+        valid: false,
+        message: '',
       };
+
+      for (const scriptString of field.restrictions.script) {
+        const script = new vm.Script(scriptString);
+        result = script.runInContext(ctx);
+        /* Return the first script that's invalid. Otherwise result will be valid with message: 'ok'*/
+        if (!result.valid) break;
+      }
+
+      return result;
     } catch (err) {
-      console.error(`failed running validation script ${field.name} for record: ${record}. Error message: ${err}`);
+      console.error(
+        `failed running validation script ${field.name} for record: ${JSON.stringify(
+          record,
+        )}. Error message: ${err}`,
+      );
       return {
         valid: false,
         message: 'failed to run script validation, check script and the input',
