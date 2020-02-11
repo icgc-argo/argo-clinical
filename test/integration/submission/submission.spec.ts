@@ -768,6 +768,7 @@ describe('Submission Api', () => {
         files.push(fs.readFileSync(__dirname + '/thisissample.tsv'));
         files.push(fs.readFileSync(__dirname + '/donor.invalid.tsv'));
         files.push(fs.readFileSync(__dirname + '/specimen-invalid-headers.tsv'));
+        files.push(fs.readFileSync(__dirname + '/sample_registration.tsv'));
       } catch (err) {
         return done(err);
       }
@@ -780,6 +781,7 @@ describe('Submission Api', () => {
         .attach('clinicalFiles', files[1], 'thisissample.tsv')
         .attach('clinicalFiles', files[2], 'donor.invalid.tsv')
         .attach('clinicalFiles', files[3], 'specimen-invalid-headers.tsv')
+        .attach('clinicalFiles', files[4], 'sample_registration.tsv')
         .end((err: any, res: any) => {
           res.should.have.status(207);
           res.body.batchErrors.should.deep.eq([
@@ -802,6 +804,11 @@ describe('Submission Api', () => {
               message: 'Found unknown headers: [submitter_id], [submitter_specmen_id]',
               batchNames: ['specimen-invalid-headers.tsv'],
               code: SubmissionBatchErrorTypes.UNRECOGNIZED_HEADER,
+            },
+            {
+              message: 'Please upload this file in the Register Samples section.',
+              batchNames: ['sample_registration.tsv'],
+              code: SubmissionBatchErrorTypes.INCORRECT_SECTION,
             },
           ]);
           done();

@@ -851,11 +851,26 @@ export namespace operations {
     });
 
     if (mutableClinicalData.length > 0) {
-      dataToEntityMapErrors.push({
-        message: batchErrorMessage(SubmissionBatchErrorTypes.INVALID_FILE_NAME),
-        batchNames: mutableClinicalData.map(data => data.batchName),
-        code: SubmissionBatchErrorTypes.INVALID_FILE_NAME,
-      });
+      // Check to see if a sample registration file was mistakenly uploaded in this section
+      const wrongUploadSection = mutableClinicalData.filter(clinicalData =>
+        isStringMatchRegex(
+          BatchNameRegex[ClinicalEntitySchemaNames.REGISTRATION],
+          clinicalData.batchName,
+        ),
+      );
+      if (wrongUploadSection.length) {
+        dataToEntityMapErrors.push({
+          message: batchErrorMessage(SubmissionBatchErrorTypes.INCORRECT_SECTION),
+          batchNames: mutableClinicalData.map(data => data.batchName),
+          code: SubmissionBatchErrorTypes.INCORRECT_SECTION,
+        });
+      } else {
+        dataToEntityMapErrors.push({
+          message: batchErrorMessage(SubmissionBatchErrorTypes.INVALID_FILE_NAME),
+          batchNames: mutableClinicalData.map(data => data.batchName),
+          code: SubmissionBatchErrorTypes.INVALID_FILE_NAME,
+        });
+      }
     }
 
     return F({ newClinicalEntitesMap, dataToEntityMapErrors });

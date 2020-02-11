@@ -850,6 +850,7 @@ components:
           enum:
             - TSV_PARSING_FAILED
             - INVALID_FILE_NAME
+            - INCORRECT_SECTION
             - MULTIPLE_TYPED_FILES
             - UNRECOGNIZED_HEADER
             - MISSING_REQUIRED_HEADER
