@@ -118,6 +118,7 @@ export interface ChangeAnalysis {
     deletedFields: string[];
   };
   restrictionsChanges: RestrictionChanges;
+  metaChanges?: MetaChanges;
 }
 
 export type RestrictionChanges = {
@@ -132,11 +133,22 @@ export type RestrictionChanges = {
   script: ScriptChanges;
 };
 
+export type MetaChanges = {
+  core: {
+    addedFields: string[]; // changed to core
+    removedFields: string[]; // removed core designation
+  };
+};
+
 export type RegexChanges = {
   [key in ChangeTypeName]: StringAttributeChange[];
 };
 
 export type RequiredChanges = {
+  [key in ChangeTypeName]: BooleanAttributeChange[];
+};
+
+export type PropertyCoreChanges = {
   [key in ChangeTypeName]: BooleanAttributeChange[];
 };
 

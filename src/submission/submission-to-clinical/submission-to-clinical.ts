@@ -33,6 +33,7 @@ import { submissionRepository } from '../submission-repo';
 import { mergeActiveSubmissionWithDonors } from './merge-submission';
 import * as schemaManager from '../schema/schema-manager';
 import { loggerFor } from '../../logger';
+import { recalculateDonorAggregatedStats } from './stat-calculator';
 const L = loggerFor(__filename);
 /**
  * This method will move the current submitted clinical data to
@@ -133,6 +134,8 @@ const performCommitSubmission = async (
         L.info(`donor ${ud._id} is now valid`);
         ud.schemaMetadata.isValid = true;
         ud.schemaMetadata.lastValidSchemaVersion = schemaManager.instance().getCurrent().version;
+        // recalculate the donors stats
+        recalculateDonorAggregatedStats(ud);
       }
     }
   });

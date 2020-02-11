@@ -3,11 +3,8 @@ import {
   SchemasDictionaryDiffs,
   FieldChanges,
   FieldDiff,
-  FieldDefinition,
   Change,
   ChangeAnalysis,
-  StringAttributeChange,
-  RegexChanges,
   ChangeTypeName,
   RestrictionChanges,
 } from './schema-entities';
@@ -31,6 +28,7 @@ export const fetchDiffAndAnalyze = async (
   toVersion: string,
 ) => {
   const changes = await schemaClient.fetchDiff(serviceUrl, name, fromVersion, toVersion);
+  console.log(changes);
   return analyzeChanges(changes);
 };
 
@@ -68,21 +66,28 @@ export const analyzeChanges = (schemasDiff: SchemasDictionaryDiffs): ChangeAnaly
         deleted: [],
       },
     },
+    metaChanges: {
+      core: {
+        addedFields: [],
+        removedFields: [],
+      },
+    },
   };
 
   for (const field of Object.keys(schemasDiff)) {
     const fieldChange: FieldDiff = schemasDiff[field];
     if (fieldChange) {
       console.log(`field : ${field} has changes`);
+      console.log(`fieldChange : ${fieldChange}`);
       const fieldDiff = fieldChange.diff;
       // if we have type at first level then it's a field add/delete
       if (isFieldChange(fieldDiff)) {
         categorizeFieldChanges(analysis, field, fieldDiff);
       }
-
       if (isNestedChange(fieldDiff)) {
         if (fieldDiff.meta) {
           console.log('meta change found');
+          categorizeMetaChagnes(analysis, field, fieldDiff.meta);
         }
 
         if (fieldDiff.restrictions) {
@@ -167,5 +172,23 @@ const categorizeFieldChanges = (analysis: ChangeAnalysis, field: string, changes
     });
   } else if (changeType == 'deleted') {
     analysis.fields.deletedFields.push(field);
+  }
+};
+
+const categorizeMetaChagnes = (
+  analysis: ChangeAnalysis,
+  field: string,
+  metaChanges: { [field: string]: FieldChanges } | Change,
+) => {
+  // const metasToCheck = ['core'];
+  const changeType = metaChanges.type;
+
+  if (metaChanges?.data?.core === true) {
+    console.log(`metachange data : ${JSON.stringify(metaChanges?.data)}`);
+    if (changeType === 'created') {
+      analysis.metaChanges?.core.addedFields.push(field);
+    } else if (changeType === 'deleted') {
+      analysis.metaChanges?.core.removedFields.push(field);
+    }
   }
 };
