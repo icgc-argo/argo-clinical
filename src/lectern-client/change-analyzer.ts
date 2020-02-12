@@ -28,7 +28,6 @@ export const fetchDiffAndAnalyze = async (
   toVersion: string,
 ) => {
   const changes = await schemaClient.fetchDiff(serviceUrl, name, fromVersion, toVersion);
-  console.log(changes);
   return analyzeChanges(changes);
 };
 
@@ -83,6 +82,7 @@ export const analyzeChanges = (schemasDiff: SchemasDictionaryDiffs): ChangeAnaly
       if (isFieldChange(fieldDiff)) {
         categorizeFieldChanges(analysis, field, fieldDiff);
       }
+
       if (isNestedChange(fieldDiff)) {
         if (fieldDiff.meta) {
           console.log('meta change found');

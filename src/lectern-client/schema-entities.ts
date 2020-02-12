@@ -148,10 +148,6 @@ export type RequiredChanges = {
   [key in ChangeTypeName]: BooleanAttributeChange[];
 };
 
-export type PropertyCoreChanges = {
-  [key in ChangeTypeName]: BooleanAttributeChange[];
-};
-
 export type ScriptChanges = {
   [key in ChangeTypeName]: StringAttributeChange[];
 };
