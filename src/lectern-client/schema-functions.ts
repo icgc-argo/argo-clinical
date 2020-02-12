@@ -475,7 +475,7 @@ namespace validation {
       (range.exclusiveMin !== undefined && value <= range.exclusiveMin) ||
       // bigger than max if defined ?
       (range.max !== undefined && value > range.max) ||
-        (range.exclusiveMax !== undefined && value >= range.exclusiveMax);
+      (range.exclusiveMax !== undefined && value >= range.exclusiveMax);
     return invalidRange;
   };
   const isInvalidEnumValue = (
@@ -511,6 +511,14 @@ namespace validation {
       if (!field.restrictions || !field.restrictions.script) {
         throw new Error('called validation by script without script provided');
       }
+
+      // scripts should already be strings inside arrays, but ensure that they are to help transition between lectern versions
+      // checking for this can be removed in future versions of lectern (feb 2020)
+      const scripts =
+        typeof field.restrictions.script === 'string'
+          ? [field.restrictions.script]
+          : field.restrictions.script;
+
       const ctx = vm.createContext(sandbox);
 
       let result: {
@@ -521,7 +529,7 @@ namespace validation {
         message: '',
       };
 
-      for (const scriptString of field.restrictions.script) {
+      for (const scriptString of scripts) {
         const script = new vm.Script(scriptString);
         result = script.runInContext(ctx);
         /* Return the first script that's invalid. Otherwise result will be valid with message: 'ok'*/
