@@ -475,7 +475,7 @@ namespace validation {
       (range.exclusiveMin !== undefined && value <= range.exclusiveMin) ||
       // bigger than max if defined ?
       (range.max !== undefined && value > range.max) ||
-      (range.exclusiveMax !== undefined && value >= range.exclusiveMax);
+        (range.exclusiveMax !== undefined && value >= range.exclusiveMax);
     return invalidRange;
   };
   const isInvalidEnumValue = (
