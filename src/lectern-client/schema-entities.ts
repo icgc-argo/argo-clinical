@@ -60,7 +60,7 @@ export interface FieldDefinition {
   restrictions?: {
     codeList?: Array<string | number>;
     regex?: string;
-    script?: string;
+    script?: Array<string> | string;
     required?: boolean;
     range: {
       min?: number;

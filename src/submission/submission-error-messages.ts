@@ -60,6 +60,8 @@ const BATCH_ERROR_MESSAGES: Record<SubmissionBatchErrorTypes, (errorData: any) =
   [SubmissionBatchErrorTypes.TSV_PARSING_FAILED]: () => `Failed to parse the tsv file`,
   [SubmissionBatchErrorTypes.INVALID_FILE_NAME]: () =>
     `Please retain the template file name and only append characters to the end. For example, sample_registration<_optional_extension>.tsv`,
+  [SubmissionBatchErrorTypes.INCORRECT_SECTION]: () =>
+    `Please upload this file in the Register Samples section.`,
   [SubmissionBatchErrorTypes.MULTIPLE_TYPED_FILES]: errorData =>
     `Found multiple files of ${errorData.clinicalType} type`,
   [SubmissionBatchErrorTypes.MISSING_REQUIRED_HEADER]: errorData =>
