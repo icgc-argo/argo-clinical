@@ -33,7 +33,7 @@ import { submissionRepository } from '../submission-repo';
 import { mergeActiveSubmissionWithDonors } from './merge-submission';
 import * as schemaManager from '../schema/schema-manager';
 import { loggerFor } from '../../logger';
-import { recalculateDonorAggregatedStats } from './stat-calculator';
+import { recalculateAllClincalInfoStats } from './stat-calculator';
 const L = loggerFor(__filename);
 /**
  * This method will move the current submitted clinical data to
@@ -122,6 +122,7 @@ const performCommitSubmission = async (
   // Update with all relevant records
   const updatedDonorDTOs = await mergeActiveSubmissionWithDonors(activeSubmission, donorDTOs);
 
+  const verifiedDonorDTOs: Donor[] = [];
   // check donor if was invalid against latest schema
   updatedDonorDTOs.forEach(ud => {
     if (ud.schemaMetadata.isValid === false) {
@@ -135,14 +136,16 @@ const performCommitSubmission = async (
         ud.schemaMetadata.isValid = true;
         ud.schemaMetadata.lastValidSchemaVersion = schemaManager.instance().getCurrent().version;
         // recalculate the donors stats
-        recalculateDonorAggregatedStats(ud);
+        verifiedDonorDTOs.push(recalculateAllClincalInfoStats(ud));
+        return;
       }
     }
+    verifiedDonorDTOs.push(ud);
   });
 
   try {
     // write each updated donor to the db
-    await donorDao.updateAll(updatedDonorDTOs.map(dto => F(dto)));
+    await donorDao.updateAll(verifiedDonorDTOs.map(dto => F(dto)));
 
     // If the save completed without error, we can delete the active registration
     submissionRepository.deleteByProgramId(activeSubmission.programId);

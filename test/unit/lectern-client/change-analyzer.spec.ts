@@ -30,8 +30,8 @@ const expectedResult: ChangeAnalysis = {
   },
   metaChanges: {
     core: {
-      addedFields: [],
-      removedFields: [],
+      changedToCore: [],
+      changedFromCore: [],
     },
   },
   restrictionsChanges: {

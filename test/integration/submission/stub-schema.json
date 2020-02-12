@@ -111,7 +111,7 @@
           }
         ],
         [
-          "primary_diagnosis.clinical_stage_group",
+          "primary_diagnosis.tumour_staging_system",
           {
             "left": {
               "name": "tumour_staging_system",

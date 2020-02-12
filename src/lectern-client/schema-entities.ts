@@ -135,8 +135,8 @@ export type RestrictionChanges = {
 
 export type MetaChanges = {
   core: {
-    addedFields: string[]; // changed to core
-    removedFields: string[]; // removed core designation
+    changedToCore: string[]; // fields that are core now
+    changedFromCore: string[]; // fields that are not core now
   };
 };
 

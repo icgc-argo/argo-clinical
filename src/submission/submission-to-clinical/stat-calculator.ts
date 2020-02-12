@@ -11,6 +11,8 @@ import { isNotAbsent, isEmpty, notEmpty } from '../../../src/utils';
 import * as schemaManager from '../schema/schema-manager';
 import { getClinicalObjectsFromDonor } from './submission-to-clinical';
 import { SchemasDictionary } from '../../../src/lectern-client/schema-entities';
+import { DeepReadonly } from 'deep-freeze';
+import _ from 'lodash';
 
 const emptyStats: ClinicalInfoStats = {
   submittedCoreFields: 0,
@@ -20,44 +22,49 @@ const emptyStats: ClinicalInfoStats = {
 };
 
 // this function will reset stats and recalculate
-export const recalculateDonorAggregatedStats = (
-  donor: Donor,
+export const recalculateAllClincalInfoStats = (
+  donor: DeepReadonly<Donor>,
   overrideSchema?: SchemasDictionary,
 ) => {
   if (!donor.schemaMetadata.isValid) {
     throw new Error("Can't recalculate stats for donor that are invalid!");
   }
+  const mutableDonor = _.cloneDeep(donor) as Donor;
 
-  donor.aggregatedInfoStats = emptyStats;
+  mutableDonor.aggregatedInfoStats = emptyStats;
 
   Object.values(ClinicalEntitySchemaNames)
     .filter(s => s !== ClinicalEntitySchemaNames.REGISTRATION)
     .forEach(s => {
-      const clinicalEntities = getClinicalObjectsFromDonor(donor, s);
+      const clinicalEntities = getClinicalObjectsFromDonor(mutableDonor, s);
       clinicalEntities.forEach((clinicalEntity: any) => {
         if (isEmpty(clinicalEntity.clinicalInfo)) return;
         clinicalEntity.clinicalInfoStats = emptyStats;
-        updateClinicalStatsAndDonorStats(clinicalEntity, donor, s, overrideSchema);
+        updateClinicalStatsAndDonorStats(clinicalEntity, mutableDonor, s, overrideSchema);
       });
     });
 
-  return donor;
+  return mutableDonor;
 };
 
-export const recalculateClinicalInfoStats = (
-  donor: Donor,
+export const recalculateEntitiesClinicalInfoStats = (
+  donor: DeepReadonly<Donor>,
   clinicalEntitestToRecalclate: ClinicalEntitySchemaNames[],
   overrideSchema?: SchemasDictionary,
 ) => {
+  const mutableDonor = _.cloneDeep(donor) as Donor;
+
   Object.values(clinicalEntitestToRecalclate).forEach(s => {
-    const clinicalEntities = getClinicalObjectsFromDonor(donor, s);
+    const clinicalEntities = getClinicalObjectsFromDonor(mutableDonor, s);
     clinicalEntities.forEach((clinicalEntity: any) => {
-      updateClinicalStatsAndDonorStats(clinicalEntity, donor, s, overrideSchema);
+      updateClinicalStatsAndDonorStats(clinicalEntity, mutableDonor, s, overrideSchema);
     });
   });
-  return donor;
+
+  return mutableDonor;
 };
 
+// this function will mutate the entity
 export const updateClinicalStatsAndDonorStats = (
   entity: ClinicalEntity | Donor | undefined,
   donor: Donor,

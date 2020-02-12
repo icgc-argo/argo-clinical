@@ -67,7 +67,7 @@ export const mergeActiveSubmissionWithDonors = async (
       }
 
       // update clinical entity stats and aggregate donor stats if donor is already valid, if donor is invalid it needs full recalculation
-      if (donor.schemaMetadata.isValid) {
+      if (donor.schemaMetadata.isValid === true) {
         updateClinicalStatsAndDonorStats(entityWithUpdatedInfo, donor, entityType);
       }
     });

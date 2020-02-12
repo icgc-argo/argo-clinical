@@ -68,8 +68,8 @@ export const analyzeChanges = (schemasDiff: SchemasDictionaryDiffs): ChangeAnaly
     },
     metaChanges: {
       core: {
-        addedFields: [],
-        removedFields: [],
+        changedToCore: [],
+        changedFromCore: [],
       },
     },
   };
@@ -78,7 +78,6 @@ export const analyzeChanges = (schemasDiff: SchemasDictionaryDiffs): ChangeAnaly
     const fieldChange: FieldDiff = schemasDiff[field];
     if (fieldChange) {
       console.log(`field : ${field} has changes`);
-      console.log(`fieldChange : ${fieldChange}`);
       const fieldDiff = fieldChange.diff;
       // if we have type at first level then it's a field add/delete
       if (isFieldChange(fieldDiff)) {
@@ -180,15 +179,13 @@ const categorizeMetaChagnes = (
   field: string,
   metaChanges: { [field: string]: FieldChanges } | Change,
 ) => {
-  // const metasToCheck = ['core'];
-  const changeType = metaChanges.type;
-
+  // **** meta changes - core ***
   if (metaChanges?.data?.core === true) {
-    console.log(`metachange data : ${JSON.stringify(metaChanges?.data)}`);
-    if (changeType === 'created') {
-      analysis.metaChanges?.core.addedFields.push(field);
+    const changeType = metaChanges.type;
+    if (changeType === 'created' || changeType === 'updated') {
+      analysis.metaChanges?.core.changedToCore.push(field);
     } else if (changeType === 'deleted') {
-      analysis.metaChanges?.core.removedFields.push(field);
+      analysis.metaChanges?.core.changedFromCore.push(field);
     }
   }
 };
