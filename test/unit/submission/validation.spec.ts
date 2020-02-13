@@ -12,7 +12,7 @@ import {
   DonorFieldsEnum,
   TreatmentFieldsEnum,
   FollowupFieldsEnum,
-  ClinicalUniqueIndentifier,
+  ClinicalUniqueIdentifier,
 } from '../../../src/submission/submission-entities';
 import { Donor } from '../../../src/clinical/clinical-entities';
 import { stubs } from './stubs';
@@ -1459,7 +1459,7 @@ describe('data-validator', () => {
         submissionRecordsMap,
         {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
-          [ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.TREATMENT]]: 'T_03',
+          [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.TREATMENT]]: 'T_03',
           index: 0,
         },
       );
@@ -1680,7 +1680,7 @@ describe('data-validator', () => {
         submissionRecordsMap,
         {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
-          [ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.FOLLOW_UP]]: 'FF123',
+          [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.FOLLOW_UP]]: 'FF123',
           some_field: 'asdasd',
           index: 0,
         },

@@ -373,7 +373,7 @@ export const BatchNameRegex: Record<ClinicalEntitySchemaNames, RegExp[]> = {
 };
 
 // assumption: one field uniquely identifies a clinical type record in a batch of records
-export const ClinicalUniqueIndentifier: {
+export const ClinicalUniqueIdentifier: {
   [clinicalType: string]: ClinicalFields;
 } = {
   [ClinicalEntitySchemaNames.DONOR]: DonorFieldsEnum.submitter_donor_id,
@@ -384,6 +384,15 @@ export const ClinicalUniqueIndentifier: {
   [ClinicalEntitySchemaNames.CHEMOTHERAPY]: ChemotherapyFieldsEnum.chemotherapy_drug_name,
   [ClinicalEntitySchemaNames.RADIATION]: RadiationFieldsEnum.radiation_therapy_modality,
   [ClinicalEntitySchemaNames.HORMONE_THERAPY]: HormoneTherapyFieldsEnum.hormone_therapy_drug_name,
+};
+
+export const SubmissionUniqueIdentifier: {
+  [clinicalType: string]: ClinicalFields | ClinicalFields[];
+} = {
+  ...ClinicalUniqueIdentifier,
+  [ClinicalEntitySchemaNames.CHEMOTHERAPY]: Object.values(ChemotherapyFieldsEnum),
+  [ClinicalEntitySchemaNames.RADIATION]: Object.values(RadiationFieldsEnum),
+  [ClinicalEntitySchemaNames.HORMONE_THERAPY]: Object.values(HormoneTherapyFieldsEnum),
 };
 
 export interface ClinicalSubmissionRecordsByDonorIdMap {

@@ -20,7 +20,7 @@ import {
   SampleRegistrationFieldsEnum,
   SUBMISSION_STATE,
   ClinicalEntitySchemaNames,
-  ClinicalUniqueIndentifier,
+  ClinicalUniqueIdentifier,
   ClinicalTherapySchemaNames,
 } from '../submission-entities';
 
@@ -406,7 +406,7 @@ export function getSingleClinicalEntityFromDonorBySchemanName(
 ): ClinicalInfo | undefined {
   const clinicalInfos = getClinicalEntitiesFromDonorBySchemaName(donor, clinicalEntityType);
   return clinicalInfos.find(
-    ci => ci[ClinicalUniqueIndentifier[clinicalEntityType]] === uniqueIdValue,
+    ci => ci[ClinicalUniqueIdentifier[clinicalEntityType]] === uniqueIdValue,
   );
 }
 

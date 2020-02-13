@@ -11,7 +11,7 @@ import {
   ActiveClinicalSubmission,
   ClinicalEntitySchemaNames,
   SubmittedClinicalRecordsMap,
-  ClinicalUniqueIndentifier,
+  ClinicalUniqueIdentifier,
   ClinicalTherapySchemaNames,
   DonorFieldsEnum,
   ClinicalTherapyType,
@@ -179,7 +179,7 @@ const updateOrAddTherapyInfoInTreatment = (
 
 /*** Clinical object finders ***/
 const findSpecimen = (donor: Donor, record: ClinicalInfo) => {
-  const specimenId = record[ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.SPECIMEN]];
+  const specimenId = record[ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.SPECIMEN]];
   return _.find(donor.specimens, ['submitterId', specimenId]);
 };
 
@@ -196,7 +196,7 @@ const findClinicalObject = (
   newRecord: ClinicalInfo,
   entityType: Exclude<ClinicalEntitySchemaNames, ClinicalTherapyType>,
 ): ClinicalEntity | undefined => {
-  const uniqueIdName = ClinicalUniqueIndentifier[entityType];
+  const uniqueIdName = ClinicalUniqueIdentifier[entityType];
   const uniqueIdValue = newRecord[uniqueIdName];
   return getSingleClinicalObjectFromDonor(donor, entityType, {
     clinicalInfo: { [uniqueIdName]: uniqueIdValue },
@@ -208,7 +208,7 @@ const findTherapy = (
   record: ClinicalInfo,
   therapyType: ClinicalTherapyType,
 ): Therapy | undefined => {
-  const identiferName = ClinicalUniqueIndentifier[therapyType];
+  const identiferName = ClinicalUniqueIdentifier[therapyType];
   const identiferValue = record[identiferName];
   return (treatment.therapies || []).find(
     th => th.clinicalInfo[identiferName] === identiferValue && th.therapyType === therapyType,

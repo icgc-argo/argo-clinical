@@ -9,10 +9,12 @@ import {
   RecordValidationResult,
   ClinicalTypeValidateResult,
   ClinicalEntitySchemaNames,
-  ClinicalUniqueIndentifier,
+  ClinicalUniqueIdentifier,
   ClinicalSubmissionRecordsByDonorIdMap,
   SubmittedClinicalRecordsMap,
   DonorFieldsEnum,
+  SubmissionUniqueIdentifier,
+  ClinicalFields,
 } from '../submission-entities';
 import { donorDao, DONOR_FIELDS } from '../../clinical/donor-repo';
 import { DeepReadonly } from 'deep-freeze';
@@ -165,14 +167,16 @@ export const checkUniqueRecords = (
     throw new Error('cannot check unique records for registration here.');
   }
 
-  const uniqueIdName = ClinicalUniqueIndentifier[clinicalType];
-  if (!uniqueIdName) useAllRecordValues = true;
+  const uniqueIdNames = _.concat([], SubmissionUniqueIdentifier[clinicalType]) as string[];
+  if (!uniqueIdNames) useAllRecordValues = true;
 
   const identifierToIndexMap: { [k: string]: number[] } = {};
   const indexToErrorMap: { [index: number]: SubmissionValidationError } = {};
 
   newRecords.forEach((record: any, index) => {
-    const uniqueIdentiferValue = useAllRecordValues ? JSON.stringify(record) : record[uniqueIdName];
+    const uniqueIdentiferValue = useAllRecordValues
+      ? JSON.stringify(record)
+      : uniqueIdNames.reduce((acc, curr) => acc + record[curr], '');
 
     // only one index so not duplicate
     if (!identifierToIndexMap[uniqueIdentiferValue]) {
@@ -191,7 +195,7 @@ export const checkUniqueRecords = (
       indexToErrorMap[recordIndex] = buildSubmissionError(
         { ...record, index: recordIndex },
         DataValidationErrors.FOUND_IDENTICAL_IDS,
-        uniqueIdName,
+        ClinicalUniqueIdentifier[clinicalType],
         {
           conflictingRows: sameIdentifiedRecordIndecies.filter(i => i !== recordIndex),
           useAllRecordValues,

@@ -8,7 +8,7 @@ import {
   RecordValidationResult,
   ClinicalEntitySchemaNames,
   SubmittedClinicalRecordsMap,
-  ClinicalUniqueIndentifier,
+  ClinicalUniqueIdentifier,
   DonorFieldsEnum,
   ClinicalFields,
   TreatmentTypeValuesMappedByTherapy,
@@ -74,7 +74,7 @@ export const buildRecordValidationResult = (
   if (errors.length > 0) {
     return { type: ModificationType.ERRORSFOUND, index: record.index, resultArray: errors };
   }
-  const uniqueIdValue = record[ClinicalUniqueIndentifier[clinicalEntitySchemaName]];
+  const uniqueIdValue = record[ClinicalUniqueIdentifier[clinicalEntitySchemaName]];
   const clinicalInfo = getSingleClinicalEntityFromDonorBySchemanName(
     existentDonor,
     clinicalEntitySchemaName,
@@ -228,7 +228,7 @@ export namespace ClinicalSubmissionRecordsOperations {
       throw new Error(`Invalid clinical type: ${type}`);
     }
     return _.find(records[type], [
-      ClinicalUniqueIndentifier[type],
+      ClinicalUniqueIdentifier[type],
       submitter_id,
     ]) as SubmittedClinicalRecord;
   }
@@ -307,7 +307,7 @@ export async function checkClinicalEntityDoesntBelongToOtherDonor(
   const alreadyAssociatedDonor = await donorDao.findByClinicalEntitySubmitterIdAndProgramId(
     {
       programId: existentDonor.programId,
-      submitterId: record[ClinicalUniqueIndentifier[clinicalType]] as string,
+      submitterId: record[ClinicalUniqueIdentifier[clinicalType]] as string,
     },
     clinicalType,
   );
@@ -316,7 +316,7 @@ export async function checkClinicalEntityDoesntBelongToOtherDonor(
       buildSubmissionError(
         record,
         DataValidationErrors.CLINICAL_ENTITY_BELONGS_TO_OTHER_DONOR,
-        ClinicalUniqueIndentifier[clinicalType],
+        ClinicalUniqueIdentifier[clinicalType],
         {
           otherDonorSubmitterId: alreadyAssociatedDonor.submitterId,
           clinicalType: clinicalType,
