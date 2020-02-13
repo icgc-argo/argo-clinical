@@ -25,9 +25,13 @@ import {
   ClinicalEntityToEnumFieldsMap,
   ClinicalEntityKnownFieldCodeLists,
 } from '../submission-entities';
-import { notEmpty, Errors, sleep } from '../../utils';
+import { notEmpty, Errors, sleep, isEmpty } from '../../utils';
 import _ from 'lodash';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../submission-to-clinical/submission-to-clinical';
+import {
+  recalculateEntitiesClinicalInfoStats,
+  recalculateAllClincalInfoStats,
+} from '../submission-to-clinical/stat-calculator';
 
 const L = loggerFor(__filename);
 
@@ -521,6 +525,7 @@ namespace MigrationManager {
     const migrationId = migration._id;
     const dryRun = migration.dryRun;
     const breakingChangesEntitesCache: { [versions: string]: ClinicalEntitySchemaNames[] } = {};
+    const coreFieldChangesEntitiesCache: { [versions: string]: ClinicalEntitySchemaNames[] } = {};
 
     while (!migrationDone) {
       let invalidCount = 0;
@@ -535,6 +540,13 @@ namespace MigrationManager {
 
       // check invalidation criteria against each one
       for (const donor of donors) {
+        await updateCaches(
+          donor,
+          newSchema,
+          coreFieldChangesEntitiesCache,
+          breakingChangesEntitesCache,
+        );
+
         const result = await revalidateDonorClinicalEntities(
           donor,
           newSchema,
@@ -560,7 +572,13 @@ namespace MigrationManager {
         }
 
         if (!dryRun) {
-          await markDonorAsValid(donor, migrationId, newSchema.version);
+          // update stats if donor is valid
+          const updatedDonor = await updateEntitiesClinicalInfoStats(
+            donor,
+            newSchema,
+            coreFieldChangesEntitiesCache,
+          );
+          await markDonorAsValid(updatedDonor, migrationId, newSchema.version);
         } else {
           await updateMigrationIdOnly(donor, migrationId);
         }
@@ -579,24 +597,26 @@ namespace MigrationManager {
     return await clinicalService.getDonorsByMigrationId(migrationId, limit);
   };
 
-  const revalidateDonorClinicalEntities = async (
+  const updateCaches = async (
     donor: DeepReadonly<Donor>,
     newSchema: SchemasDictionary,
-    breakingChangesEntitesCache: { [versions: string]: ClinicalEntitySchemaNames[] },
+    coreFieldUpdatedSchemaNamesCache: { [versionsKey: string]: ClinicalEntitySchemaNames[] },
+    breakingChangesEntitesCache: { [versionsKey: string]: ClinicalEntitySchemaNames[] },
   ) => {
-    const donorSchemaErrors: any[] = [];
-    const donorDocSchemaVersion = donor.schemaMetadata.lastValidSchemaVersion;
-    const versionsKey = `${donorDocSchemaVersion}->${newSchema.version}`;
+    const versionsKey = `${donor.schemaMetadata.lastValidSchemaVersion}->${newSchema.version}`;
 
-    if (!breakingChangesEntitesCache[versionsKey]) {
-      L.debug(`didn't find cached changes analysis for versions: ${versionsKey}`);
+    if (
+      !breakingChangesEntitesCache[versionsKey] ||
+      !coreFieldUpdatedSchemaNamesCache[versionsKey]
+    ) {
+      L.debug(`didn't find cached analysis for versions: ${versionsKey}`);
       // analyze changes between the document last valid schema
       const analysis = await instance().analyzeChanges(
         donor.schemaMetadata.lastValidSchemaVersion,
         newSchema.version,
       );
 
-      // check for breaking changes
+      // check for schema names with breaking changes
       const invalidatingFields: any = findInvalidatingChangesFields(analysis);
 
       const schemaNamesWithBreakingChanges = _.uniqBy(
@@ -605,8 +625,24 @@ namespace MigrationManager {
         }),
         (e: string) => e,
       ) as ClinicalEntitySchemaNames[];
+      // update breaking changes cache
       breakingChangesEntitesCache[versionsKey] = schemaNamesWithBreakingChanges;
+
+      // update schema names that require core field recalculations cache
+      coreFieldUpdatedSchemaNamesCache[versionsKey] = findEntitiesWithCoreDesignationChanges(
+        analysis,
+      );
     }
+  };
+
+  const revalidateDonorClinicalEntities = async (
+    donor: DeepReadonly<Donor>,
+    newSchema: SchemasDictionary,
+    breakingChangesEntitesCache: { [versions: string]: ClinicalEntitySchemaNames[] },
+  ) => {
+    const donorSchemaErrors: any[] = [];
+    const donorDocSchemaVersion = donor.schemaMetadata.lastValidSchemaVersion;
+    const versionsKey = `${donorDocSchemaVersion}->${newSchema.version}`;
 
     const schemaNamesWithBreakingChanges = breakingChangesEntitesCache[versionsKey];
     for (const schemaName of schemaNamesWithBreakingChanges) {
@@ -619,6 +655,25 @@ namespace MigrationManager {
       }
     }
     return donorSchemaErrors;
+  };
+
+  const updateEntitiesClinicalInfoStats = async (
+    donor: DeepReadonly<Donor>,
+    newSchema: SchemasDictionary,
+    coreFieldUpdatedEntitiesCache: { [versionsKey: string]: ClinicalEntitySchemaNames[] },
+  ) => {
+    // donor has no aggregated stats or it was previously invalid, so need to calculate for entire donor
+    if (isEmpty(donor.aggregatedInfoStats) || !donor.schemaMetadata.isValid) {
+      return recalculateAllClincalInfoStats(donor, newSchema);
+    }
+
+    // donor has stats, so just update the ones that have changes for
+    const versionsKey = `${donor.schemaMetadata.lastValidSchemaVersion}->${newSchema.version}`;
+    return recalculateEntitiesClinicalInfoStats(
+      donor,
+      coreFieldUpdatedEntitiesCache[versionsKey],
+      newSchema,
+    );
   };
 
   export const validateDonorEntityAgainstNewSchema = (
@@ -800,6 +855,41 @@ namespace MigrationManager {
     });
 
     return invalidatingFields;
+  };
+
+  const findEntitiesWithCoreDesignationChanges = (changeAnalysis: ChangeAnalysis) => {
+    const fieldPathsChangingCoreValue: string[] = [];
+
+    //  schema with added fields that are core need to be recalculated
+    changeAnalysis.fields.addedFields.forEach(f => {
+      if (f.definition.meta?.core) {
+        fieldPathsChangingCoreValue.push(f.name);
+      }
+    });
+
+    //  schema with deleted fields need to be recalculated
+    changeAnalysis.fields.deletedFields.forEach(f => {
+      fieldPathsChangingCoreValue.push(f);
+    });
+
+    //  schema with fields changed to core need to be recalculated
+    changeAnalysis.metaChanges?.core.changedToCore.forEach(f => {
+      fieldPathsChangingCoreValue.push(f);
+    });
+
+    //  schema with fields that are not core anymore need to be recalculated
+    changeAnalysis.metaChanges?.core.changedFromCore.forEach(f => {
+      fieldPathsChangingCoreValue.push(f);
+    });
+
+    const uniqueSchemasWithChangingCoreFields = _.uniqBy(
+      fieldPathsChangingCoreValue.map((fieldPath: any) => {
+        return fieldPath.split('.')[0];
+      }),
+      (e: string) => e,
+    ) as ClinicalEntitySchemaNames[];
+
+    return uniqueSchemasWithChangingCoreFields;
   };
 
   function toString(obj: any) {

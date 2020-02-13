@@ -118,6 +118,10 @@ export function notEmpty<TValue>(value: TValue | null | undefined): value is TVa
   return value !== null && value !== undefined && !_.isEmpty(value);
 }
 
+export function isEmpty<TValue>(value: TValue | null | undefined): value is TValue {
+  return !notEmpty(value);
+}
+
 export function isString(value: any): value is string {
   return value instanceof String;
 }

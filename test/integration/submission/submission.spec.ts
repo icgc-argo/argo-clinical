@@ -1749,6 +1749,83 @@ describe('Submission Api', () => {
           });
         });
     });
+
+    it('should recalculate donor aggregate stats if donor becomes valid', async () => {
+      await clearCollections(dburl, ['donors']);
+      const invalidDonor = emptyDonorDocument({
+        submitterId: 'ICGC_0001',
+        programId,
+        schemaMetadata: {
+          isValid: false, // assume this is a donor that became invalid after a migration
+          lastValidSchemaVersion: '0.1',
+          originalSchemaVersion: '0.1',
+        },
+        clinicalInfo: {
+          program_id: 'ABCD-EF',
+          vital_status: 'DoDa',
+          cause_of_death: 'DaDo',
+          submitter_donor_id: 'ICGC_0001',
+          survival_time: 120,
+        },
+        primaryDiagnosis: {
+          clinicalInfo: {
+            program_id: 'PACA-AU',
+            submitter_donor_id: 'ICGC_0001',
+            number_lymph_nodes_examined: 2,
+            age_at_diagnosis: 96,
+            cancer_type_code: 'A11.1A',
+            tumour_staging_system: 'Murphy',
+          },
+          clinicalInfoStats: {
+            submittedCoreFields: 2,
+            expectedCoreFields: 7,
+            submittedExtendedFields: 0,
+            expectedExtendedFields: 0,
+          },
+        },
+        clinicalInfoStats: {
+          submittedCoreFields: 1,
+          expectedCoreFields: 1,
+          submittedExtendedFields: 0,
+          expectedExtendedFields: 0,
+        },
+        aggregatedInfoStats: {
+          submittedCoreFields: 3,
+          expectedCoreFields: 8,
+          submittedExtendedFields: 0,
+          expectedExtendedFields: 0,
+        },
+      });
+      await insertData(dburl, 'donors', invalidDonor);
+
+      await uploadSubmission(['donor.tsv']);
+      await validateSubmission();
+      await commitActiveSubmission();
+      return chai
+        .request(app)
+        .post(`/submission/program/${programId}/clinical/approve/${submissionVersion}`)
+        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+        .then(async (res: any) => {
+          res.should.have.status(200);
+          res.body.should.be.empty;
+          await assertDbCollectionEmpty(dburl, 'activesubmissions');
+          const [updatedDonor] = await findInDb(dburl, 'donors', {
+            programId: programId,
+            submitterId: 'ICGC_0001',
+          });
+          // donor was invalid but is now valid after submission, so stats should be updated
+          updatedDonor.schemaMetadata.isValid.should.eq(true);
+          updatedDonor.clinicalInfoStats.should.deep.include({
+            submittedCoreFields: 3,
+            expectedCoreFields: 3,
+          });
+          updatedDonor.aggregatedInfoStats.should.deep.include({
+            submittedCoreFields: 5,
+            expectedCoreFields: 10,
+          });
+          // await clearCollections(dburl, ['donors']);
+        });
+    });
   });
 
   describe('clinical-submission: reopen', function() {
@@ -1936,6 +2013,18 @@ describe('Submission Api', () => {
           submitter_donor_id: 'ICGC_0001',
           survival_time: 120,
         },
+        clinicalInfoStats: {
+          submittedCoreFields: 3,
+          expectedCoreFields: 3,
+          submittedExtendedFields: 0,
+          expectedExtendedFields: 0,
+        },
+        aggregatedInfoStats: {
+          submittedCoreFields: 3,
+          expectedCoreFields: 3,
+          submittedExtendedFields: 0,
+          expectedExtendedFields: 0,
+        },
       });
 
       const donor2: Donor = emptyDonorDocument({
@@ -1948,6 +2037,12 @@ describe('Submission Api', () => {
           submitter_donor_id: 'ICGC_0003',
           survival_time: 67,
         },
+        clinicalInfoStats: {
+          submittedCoreFields: 3,
+          expectedCoreFields: 3,
+          submittedExtendedFields: 0,
+          expectedExtendedFields: 0,
+        },
         specimens: [
           {
             samples: [{ sampleType: 'Total RNA', submitterId: 'sm123-2', sampleId: 610001 }],
@@ -1959,6 +2054,28 @@ describe('Submission Api', () => {
             specimenId: 210001,
           },
         ],
+        primaryDiagnosis: {
+          clinicalInfo: {
+            program_id: 'PACA-AU',
+            submitter_donor_id: 'ICGC_0003',
+            number_lymph_nodes_examined: 2,
+            age_at_diagnosis: 96,
+            cancer_type_code: 'A11.1A',
+            tumour_staging_system: 'Murphy',
+          },
+          clinicalInfoStats: {
+            submittedCoreFields: 2,
+            expectedCoreFields: 7,
+            submittedExtendedFields: 0,
+            expectedExtendedFields: 0,
+          },
+        },
+        aggregatedInfoStats: {
+          submittedCoreFields: 5,
+          expectedCoreFields: 10,
+          submittedExtendedFields: 0,
+          expectedExtendedFields: 0,
+        },
       });
 
       const newSchemaInvalidDonor: Donor = emptyDonorDocument({
@@ -2044,6 +2161,75 @@ describe('Submission Api', () => {
                 invalidFieldCodeLists: [],
               },
             });
+          });
+      });
+
+      it('should run migration and update all donor entity clincial info stats', async () => {
+        const donorWithNoStats = emptyDonorDocument({
+          submitterId: 'ICGC_0004',
+          programId,
+          clinicalInfo: {
+            program_id: 'ABCD-EF',
+            submitter_donor_id: 'ICGC_0004',
+            vital_status: 'Deceased',
+            cause_of_death: 'Died of cancer',
+            survival_time: 67,
+          },
+        });
+        await insertData(dburl, 'donors', donorWithNoStats);
+
+        const donors = await findInDb(dburl, 'donors', {});
+
+        // donor 1 stats before migration
+        chai.expect(donors[0].aggregatedInfoStats).to.deep.include({
+          submittedCoreFields: 3,
+          expectedCoreFields: 3,
+        });
+        // donor 2 stats before migration
+        chai.expect(donors[1].aggregatedInfoStats).to.deep.include({
+          submittedCoreFields: 5,
+          expectedCoreFields: 10,
+        });
+        chai.expect(donors[1].primaryDiagnosis.clinicalInfoStats).to.deep.include({
+          submittedCoreFields: 2,
+          expectedCoreFields: 7,
+        });
+        // this donor has no stats currently but it has clinicalInfos (which will remain schema valid), so migration should add them
+        chai.expect(donors[2].aggregatedInfoStats).to.deep.eq(undefined);
+
+        await chai
+          .request(app)
+          .patch('/submission/schema/?sync=true')
+          .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+          .send({
+            version: '4.0',
+          })
+          .then(async (res: any) => {
+            res.should.have.status(200);
+            const updatedDonor = await findInDb(dburl, 'donors', {});
+
+            // donor 1 stats after migraiton
+            chai.expect(updatedDonor[0].aggregatedInfoStats).to.deep.include({
+              submittedCoreFields: 2,
+              expectedCoreFields: 2,
+            });
+            // donor 2 stats after migraiton
+            chai.expect(updatedDonor[1].aggregatedInfoStats).to.deep.include({
+              submittedCoreFields: 5,
+              expectedCoreFields: 10,
+            });
+            // this stub schema has also turned an existing required field to core in primary diagnosis
+            chai.expect(updatedDonor[1].primaryDiagnosis.clinicalInfoStats).to.deep.include({
+              submittedCoreFields: 3,
+              expectedCoreFields: 8,
+            });
+            // donor 3 stats after migraiton, now has recently calculated stats, including the one without any stats
+            chai.expect(updatedDonor[2].aggregatedInfoStats).to.deep.include({
+              submittedCoreFields: 2,
+              expectedCoreFields: 2,
+            });
+
+            console.log(updatedDonor);
           });
       });
 
