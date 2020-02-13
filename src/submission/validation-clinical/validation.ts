@@ -13,8 +13,7 @@ import {
   ClinicalSubmissionRecordsByDonorIdMap,
   SubmittedClinicalRecordsMap,
   DonorFieldsEnum,
-  SubmissionUniqueIdentifier,
-  ClinicalFields,
+  BatchRecordUniqueIdentifier,
 } from '../submission-entities';
 import { donorDao, DONOR_FIELDS } from '../../clinical/donor-repo';
 import { DeepReadonly } from 'deep-freeze';
@@ -27,7 +26,7 @@ import {
   buildMultipleRecordValidationErrors,
   buildRecordValidationResult,
 } from './utils';
-import _ from 'lodash';
+import { concat } from 'lodash';
 import { ClinicalSubmissionRecordsOperations } from './utils';
 import { mergeRecordsMapIntoDonor } from '../submission-to-clinical/merge-submission';
 
@@ -125,7 +124,7 @@ export const validateSubmissionData = async (
           clinicalType as ClinicalEntitySchemaNames,
         );
 
-        recordValidationResultMap[clinicalType] = _.concat(
+        recordValidationResultMap[clinicalType] = concat(
           recordValidationResultMap[clinicalType],
           result,
         );
@@ -167,7 +166,7 @@ export const checkUniqueRecords = (
     throw new Error('cannot check unique records for registration here.');
   }
 
-  const uniqueIdNames = _.concat([], SubmissionUniqueIdentifier[clinicalType]) as string[];
+  const uniqueIdNames = concat([], BatchRecordUniqueIdentifier[clinicalType]) as string[];
   if (!uniqueIdNames) useAllRecordValues = true;
 
   const identifierToIndexMap: { [k: string]: number[] } = {};

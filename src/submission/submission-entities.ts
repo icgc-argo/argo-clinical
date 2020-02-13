@@ -372,7 +372,6 @@ export const BatchNameRegex: Record<ClinicalEntitySchemaNames, RegExp[]> = {
   [ClinicalEntitySchemaNames.HORMONE_THERAPY]: [/^hormone_therapy.*\.tsv$/],
 };
 
-// assumption: one field uniquely identifies a clinical type record in a batch of records
 export const ClinicalUniqueIdentifier: {
   [clinicalType: string]: ClinicalFields;
 } = {
@@ -386,7 +385,7 @@ export const ClinicalUniqueIdentifier: {
   [ClinicalEntitySchemaNames.HORMONE_THERAPY]: HormoneTherapyFieldsEnum.hormone_therapy_drug_name,
 };
 
-export const SubmissionUniqueIdentifier: {
+export const BatchRecordUniqueIdentifier: {
   [clinicalType: string]: ClinicalFields | ClinicalFields[];
 } = {
   ...ClinicalUniqueIdentifier,
