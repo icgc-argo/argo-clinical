@@ -32,7 +32,8 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
     )}] in order to complete validation.  Please upload data for all fields in this clinical data submission.`,
   FOUND_IDENTICAL_IDS: errorData => {
     if (errorData.info.useAllRecordValues === true) return `This row is identical to another row`;
-    return `You are trying to submit the same [${errorData.fieldName}] in multiple rows. [${errorData.fieldName}] can only be submitted once per file.`;
+    const duplicateFieldNames = errorData.info.uniqueIdNames.join(', ') || '';
+    return `You are trying to submit the same [${duplicateFieldNames}] in multiple rows. [${duplicateFieldNames}] can only be submitted once per file.`;
   },
   CLINICAL_ENTITY_BELONGS_TO_OTHER_DONOR: errorData => {
     const clinicalType = _.lowerCase(errorData.info.clinicalType);

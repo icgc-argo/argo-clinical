@@ -198,6 +198,7 @@ export const checkUniqueRecords = (
         {
           conflictingRows: sameIdentifiedRecordIndecies.filter(i => i !== recordIndex),
           useAllRecordValues,
+          uniqueIdNames,
         },
       );
     });
