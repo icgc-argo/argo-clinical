@@ -19,3 +19,21 @@ To run local without engaging the debugger, run `npm run local` . Since this wil
 ## Debugging Notes:
 
 If file upload fails with the error `TypeError: Cannot read property 'readFile' of undefined`, make sure you are running Node 12+
+
+## DB migration
+
+we use tool called migrate-mongo: https://www.npmjs.com/package/migrate-mongo
+
+- create script: `npx migrate-mongo create my-script`
+- run migration: `npx migrate-mongo up`
+- rollback: `npx migrate-mongo down`
+  - With this command, migrate-mongo will revert (only) the last applied migration
+- status: `npx migrate-mongo status`
+
+notes:
+
+- you can't change the the contents after the script ran, it wont run again automatically
+  - if you need to change the script you have to write another script that does what you want
+- the scripts are sorted by date & time
+- a collection in db called changelog will keep track of executed scripts.
+- the docker image will excute the scripts automatically before starting the server and if fails it runs rollback script and exits
