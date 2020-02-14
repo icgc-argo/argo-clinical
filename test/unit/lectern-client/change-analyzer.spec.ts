@@ -28,6 +28,12 @@ const expectedResult: ChangeAnalysis = {
     renamedFields: [],
     deletedFields: ['primary_diagnosis.menopause_status'],
   },
+  metaChanges: {
+    core: {
+      changedToCore: [],
+      changedFromCore: [],
+    },
+  },
   restrictionsChanges: {
     codeList: {
       created: [],

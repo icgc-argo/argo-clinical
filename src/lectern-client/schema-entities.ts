@@ -118,6 +118,7 @@ export interface ChangeAnalysis {
     deletedFields: string[];
   };
   restrictionsChanges: RestrictionChanges;
+  metaChanges?: MetaChanges;
 }
 
 export type RestrictionChanges = {
@@ -130,6 +131,13 @@ export type RestrictionChanges = {
   regex: RegexChanges;
   required: RequiredChanges;
   script: ScriptChanges;
+};
+
+export type MetaChanges = {
+  core: {
+    changedToCore: string[]; // fields that are core now
+    changedFromCore: string[]; // fields that are not core now
+  };
 };
 
 export type RegexChanges = {

@@ -3,11 +3,8 @@ import {
   SchemasDictionaryDiffs,
   FieldChanges,
   FieldDiff,
-  FieldDefinition,
   Change,
   ChangeAnalysis,
-  StringAttributeChange,
-  RegexChanges,
   ChangeTypeName,
   RestrictionChanges,
 } from './schema-entities';
@@ -68,6 +65,12 @@ export const analyzeChanges = (schemasDiff: SchemasDictionaryDiffs): ChangeAnaly
         deleted: [],
       },
     },
+    metaChanges: {
+      core: {
+        changedToCore: [],
+        changedFromCore: [],
+      },
+    },
   };
 
   for (const field of Object.keys(schemasDiff)) {
@@ -83,6 +86,7 @@ export const analyzeChanges = (schemasDiff: SchemasDictionaryDiffs): ChangeAnaly
       if (isNestedChange(fieldDiff)) {
         if (fieldDiff.meta) {
           console.log('meta change found');
+          categorizeMetaChagnes(analysis, field, fieldDiff.meta);
         }
 
         if (fieldDiff.restrictions) {
@@ -167,5 +171,21 @@ const categorizeFieldChanges = (analysis: ChangeAnalysis, field: string, changes
     });
   } else if (changeType == 'deleted') {
     analysis.fields.deletedFields.push(field);
+  }
+};
+
+const categorizeMetaChagnes = (
+  analysis: ChangeAnalysis,
+  field: string,
+  metaChanges: { [field: string]: FieldChanges } | Change,
+) => {
+  // **** meta changes - core ***
+  if (metaChanges?.data?.core === true) {
+    const changeType = metaChanges.type;
+    if (changeType === 'created' || changeType === 'updated') {
+      analysis.metaChanges?.core.changedToCore.push(field);
+    } else if (changeType === 'deleted') {
+      analysis.metaChanges?.core.changedFromCore.push(field);
+    }
   }
 };
