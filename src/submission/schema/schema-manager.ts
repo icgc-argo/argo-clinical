@@ -51,8 +51,8 @@ class SchemaManager {
   };
 
   getSchemasWithFields = (
-    schemaDefConstratint: object = {}, // k-v SchemaDefinition property constraints; e.g. { name: 'donor' }
-    fieldDefConstraint: object = {}, // k-v FieldDefinition property constraints; e.g. { restrictions: { required: true } }
+    schemaDefConstratint: object | Function = {}, // k-v SchemaDefinition property constraints; e.g. { name: 'donor' } or function executed on each schema def
+    fieldDefConstraint: object | Function = {}, // k-v FieldDefinition property constraints; e.g. { restrictions: { required: true } }  or function executed on each field def
   ): {
     name: string;
     fields: string[];

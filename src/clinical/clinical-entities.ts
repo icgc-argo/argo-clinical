@@ -18,16 +18,16 @@ export interface Donor {
 
 export interface AggregateClinicalInfoStats {
   submittedCoreFields: number;
-  submittedExtendedFields: number;
+  submittedExtendedFields?: number;
   expectedCoreFields: number;
-  expectedExtendedFields: number;
+  expectedExtendedFields?: number;
 }
 
 export interface ClinicalInfoStats {
   submittedCoreFields: number;
-  submittedExtendedFields: number;
+  submittedExtendedFields?: number;
   expectedCoreFields: number;
-  expectedExtendedFields: number;
+  expectedExtendedFields?: number;
 }
 
 export interface SchemaMetadata {

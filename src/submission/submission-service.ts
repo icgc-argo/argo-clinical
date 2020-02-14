@@ -868,7 +868,9 @@ export namespace operations {
 
     if (mutableClinicalData.length > 0) {
       dataToEntityMapErrors.push({
-        message: batchErrorMessage(SubmissionBatchErrorTypes.INVALID_FILE_NAME),
+        message: batchErrorMessage(SubmissionBatchErrorTypes.INVALID_FILE_NAME, {
+          isRegistration: expectedClinicalEntites.includes(ClinicalEntitySchemaNames.REGISTRATION),
+        }),
         batchNames: mutableClinicalData.map(data => data.batchName),
         code: SubmissionBatchErrorTypes.INVALID_FILE_NAME,
       });
