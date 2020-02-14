@@ -250,7 +250,7 @@ const expectedDonorErrors = [
 ];
 
 const INVALID_FILENAME_ERROR =
-  'Please retain the template file name and only append characters to the end. For example, sample_registration<_optional_extension>.tsv';
+  'Improperly named files cannot be uploaded or validated. All files must start with the corresponding entity name and have the .tsv extension (e.g. donor<_optional_extension>.tsv).';
 
 const clearCollections = async (dburl: string, collections: string[]) => {
   try {

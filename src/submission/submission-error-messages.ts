@@ -59,7 +59,7 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
 const BATCH_ERROR_MESSAGES: Record<SubmissionBatchErrorTypes, (errorData: any) => string> = {
   [SubmissionBatchErrorTypes.TSV_PARSING_FAILED]: () => `Failed to parse the tsv file`,
   [SubmissionBatchErrorTypes.INVALID_FILE_NAME]: () =>
-    `Please retain the template file name and only append characters to the end. For example, sample_registration<_optional_extension>.tsv`,
+    `Improperly named files cannot be uploaded or validated. All files must start with the corresponding entity name and have the .tsv extension (e.g. donor<_optional_extension>.tsv).`,
   [SubmissionBatchErrorTypes.INCORRECT_SECTION]: () =>
     `Please upload this file in the Register Samples section.`,
   [SubmissionBatchErrorTypes.MULTIPLE_TYPED_FILES]: errorData =>
