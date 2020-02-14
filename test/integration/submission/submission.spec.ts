@@ -250,7 +250,7 @@ const expectedDonorErrors = [
 ];
 
 const INVALID_FILENAME_ERROR =
-  'Improperly named files cannot be uploaded or validated. All files must start with the corresponding entity name and have the .tsv extension (e.g. donor<_optional_extension>.tsv).';
+  'Improperly named files cannot be uploaded or validated. Please retain the template file name and only append characters to the end (e.g. donor<_optional_extension>.tsv).';
 
 const clearCollections = async (dburl: string, collections: string[]) => {
   try {
@@ -627,7 +627,7 @@ describe('Submission Api', () => {
           try {
             res.should.have.status(422);
             res.body.batchErrors.should.deep.include({
-              message: `Improperly named files cannot be uploaded or validated. All files must start with the corresponding entity name and have the .tsv extension (e.g. sample_registration<_optional_extension>.tsv).`,
+              message: `Improperly named files cannot be uploaded or validated. Please retain the template file name and only append characters to the end (e.g. sample_registration<_optional_extension>.tsv).`,
               code: SubmissionBatchErrorTypes.INVALID_FILE_NAME,
               batchNames: ['thisIsARegistration.tsv'],
             });
