@@ -211,10 +211,11 @@ const expectedDonorBatchSubmissionSchemaErrors = [
       donorSubmitterId: 'ICGC_0001',
       useAllRecordValues: false,
       conflictingRows: [2],
+      uniqueIdNames: [BatchRecordUniqueIdentifier[ClinicalEntitySchemaNames.DONOR]],
     },
     message:
       'You are trying to submit the same [submitter_donor_id] in multiple rows. [submitter_donor_id] can only be submitted once per file.',
-    fieldName: SampleRegistrationFieldsEnum.submitter_donor_id,
+    fieldName: DonorFieldsEnum.submitter_donor_id,
   },
   {
     index: 2,
@@ -224,10 +225,11 @@ const expectedDonorBatchSubmissionSchemaErrors = [
       donorSubmitterId: 'ICGC_0001',
       useAllRecordValues: false,
       conflictingRows: [1],
+      uniqueIdNames: [BatchRecordUniqueIdentifier[ClinicalEntitySchemaNames.DONOR]],
     },
     message:
       'You are trying to submit the same [submitter_donor_id] in multiple rows. [submitter_donor_id] can only be submitted once per file.',
-    fieldName: SampleRegistrationFieldsEnum.submitter_donor_id,
+    fieldName: DonorFieldsEnum.submitter_donor_id,
   },
   {
     index: 0,
