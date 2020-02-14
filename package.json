@@ -1,6 +1,6 @@
 {
   "name": "argo-clinical",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Clinical submission system and repo",
   "scripts": {
     "start": "npm run serve",
@@ -88,6 +88,7 @@
     "body-parser": "^1.19.0",
     "compression": "^1.7.4",
     "connect-mongo": "^3.0.0",
+    "deep-equal-in-any-order": "^1.0.21",
     "deep-freeze": "^0.0.1",
     "dotenv": "^8.0.0",
     "errorhandler": "^1.5.1",
