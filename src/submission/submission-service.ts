@@ -867,8 +867,12 @@ export namespace operations {
     }
 
     if (mutableClinicalData.length > 0) {
+      const msg = expectedClinicalEntites.includes(ClinicalEntitySchemaNames.REGISTRATION)
+        ? `Improperly named files cannot be uploaded or validated. All files must start with the corresponding entity name and have the .tsv extension (e.g. sample_registration<_optional_extension>.tsv).`
+        : batchErrorMessage(SubmissionBatchErrorTypes.INVALID_FILE_NAME);
+
       dataToEntityMapErrors.push({
-        message: batchErrorMessage(SubmissionBatchErrorTypes.INVALID_FILE_NAME),
+        message: msg,
         batchNames: mutableClinicalData.map(data => data.batchName),
         code: SubmissionBatchErrorTypes.INVALID_FILE_NAME,
       });

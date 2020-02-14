@@ -627,7 +627,7 @@ describe('Submission Api', () => {
           try {
             res.should.have.status(422);
             res.body.batchErrors.should.deep.include({
-              message: INVALID_FILENAME_ERROR,
+              message: `Improperly named files cannot be uploaded or validated. All files must start with the corresponding entity name and have the .tsv extension (e.g. sample_registration<_optional_extension>.tsv).`,
               code: SubmissionBatchErrorTypes.INVALID_FILE_NAME,
               batchNames: ['thisIsARegistration.tsv'],
             });
