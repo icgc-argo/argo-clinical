@@ -20,5 +20,4 @@ ENV CLINICAL_COMMIT_ID=${COMMIT_ID}
 ARG VERSION
 ENV CLINICAL_VERSION=${VERSION}
 EXPOSE 3000
-# we have to set the user again here
 CMD ["node", "dist/src/server.js"]
