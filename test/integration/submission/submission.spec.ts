@@ -31,7 +31,6 @@ import {
   SubmissionBatchErrorTypes,
   ClinicalEntitySchemaNames,
   DonorFieldsEnum,
-  BatchRecordUniqueIdentifier,
   ClinicalUniqueIdentifier,
 } from '../../../src/submission/submission-entities';
 import { TsvUtils } from '../../../src/utils';
@@ -211,7 +210,7 @@ const expectedDonorBatchSubmissionSchemaErrors = [
       donorSubmitterId: 'ICGC_0001',
       useAllRecordValues: false,
       conflictingRows: [2],
-      uniqueIdNames: [BatchRecordUniqueIdentifier[ClinicalEntitySchemaNames.DONOR]],
+      uniqueIdNames: [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.DONOR]],
     },
     message:
       'You are trying to submit the same [submitter_donor_id] in multiple rows. [submitter_donor_id] can only be submitted once per file.',
@@ -225,7 +224,7 @@ const expectedDonorBatchSubmissionSchemaErrors = [
       donorSubmitterId: 'ICGC_0001',
       useAllRecordValues: false,
       conflictingRows: [1],
-      uniqueIdNames: [BatchRecordUniqueIdentifier[ClinicalEntitySchemaNames.DONOR]],
+      uniqueIdNames: [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.DONOR]],
     },
     message:
       'You are trying to submit the same [submitter_donor_id] in multiple rows. [submitter_donor_id] can only be submitted once per file.',
@@ -257,29 +256,29 @@ const expectedRadiationBatchSubmissionSchemaErrors = [
     index: 0,
     type: 'FOUND_IDENTICAL_IDS',
     info: {
-      value: 'Photon',
+      value: 'ICGC_0001',
       donorSubmitterId: 'ICGC_0001',
       useAllRecordValues: false,
       conflictingRows: [1],
-      uniqueIdNames: BatchRecordUniqueIdentifier[ClinicalEntitySchemaNames.RADIATION],
+      uniqueIdNames: ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.RADIATION],
     },
     message:
-      'You are trying to submit the same [program_id, submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] in multiple rows. [program_id, submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] can only be submitted once per file.',
-    fieldName: ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.RADIATION],
+      'You are trying to submit the same [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] in multiple rows. [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] can only be submitted once per file.',
+    fieldName: DonorFieldsEnum.submitter_donor_id,
   },
   {
     index: 1,
     type: 'FOUND_IDENTICAL_IDS',
     info: {
-      value: 'Photon',
+      value: 'ICGC_0001',
       donorSubmitterId: 'ICGC_0001',
       useAllRecordValues: false,
       conflictingRows: [0],
-      uniqueIdNames: BatchRecordUniqueIdentifier[ClinicalEntitySchemaNames.RADIATION],
+      uniqueIdNames: ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.RADIATION],
     },
     message:
-      'You are trying to submit the same [program_id, submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] in multiple rows. [program_id, submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] can only be submitted once per file.',
-    fieldName: ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.RADIATION],
+      'You are trying to submit the same [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] in multiple rows. [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] can only be submitted once per file.',
+    fieldName: DonorFieldsEnum.submitter_donor_id,
   },
 ];
 

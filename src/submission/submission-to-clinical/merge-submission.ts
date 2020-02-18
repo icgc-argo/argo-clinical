@@ -194,7 +194,10 @@ const findFollowUp = (donor: Donor, record: ClinicalInfo) => {
 const findClinicalObject = (
   donor: Donor,
   newRecord: ClinicalInfo,
-  entityType: Exclude<ClinicalEntitySchemaNames, ClinicalTherapyType>,
+  entityType: Exclude<
+    ClinicalEntitySchemaNames,
+    ClinicalTherapyType | ClinicalEntitySchemaNames.REGISTRATION
+  >,
 ): ClinicalEntity | undefined => {
   const uniqueIdName = ClinicalUniqueIdentifier[entityType];
   const uniqueIdValue = newRecord[uniqueIdName];
@@ -208,11 +211,12 @@ const findTherapy = (
   record: ClinicalInfo,
   therapyType: ClinicalTherapyType,
 ): Therapy | undefined => {
-  const identiferName = ClinicalUniqueIdentifier[therapyType];
-  const identiferValue = record[identiferName];
-  return (treatment.therapies || []).find(
-    th => th.clinicalInfo[identiferName] === identiferValue && th.therapyType === therapyType,
-  );
+  // therapy clinicalinfo have multiple fields needed to find them
+  const uniqueIdNames = ClinicalUniqueIdentifier[therapyType];
+  const constraints: ClinicalInfo = {};
+  uniqueIdNames.forEach(idN => (constraints[idN] = record[idN]));
+
+  return _(treatment.therapies || []).find({ clinicalInfo: constraints, therapyType });
 };
 
 /*** Empty clinical object adders ***/

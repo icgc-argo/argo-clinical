@@ -74,11 +74,10 @@ export const buildRecordValidationResult = (
   if (errors.length > 0) {
     return { type: ModificationType.ERRORSFOUND, index: record.index, resultArray: errors };
   }
-  const uniqueIdValue = record[ClinicalUniqueIdentifier[clinicalEntitySchemaName]];
   const clinicalInfo = getSingleClinicalEntityFromDonorBySchemanName(
     existentDonor,
     clinicalEntitySchemaName,
-    uniqueIdValue as string,
+    record,
   );
   return checkForUpdates(record, clinicalInfo);
 };
@@ -298,7 +297,10 @@ export function treatmentTypeNotMatchTherapyType(
 
 // check that a donor is not found with the same clinical entity unique identifier
 export async function checkClinicalEntityDoesntBelongToOtherDonor(
-  clinicalType: ClinicalEntitySchemaNames,
+  clinicalType: Exclude<
+    ClinicalEntitySchemaNames,
+    ClinicalTherapyType | ClinicalEntitySchemaNames.REGISTRATION
+  >,
   record: SubmittedClinicalRecord,
   existentDonor: DeepReadonly<Donor>,
   errors: SubmissionValidationError[],

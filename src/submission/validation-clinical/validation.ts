@@ -13,7 +13,7 @@ import {
   ClinicalSubmissionRecordsByDonorIdMap,
   SubmittedClinicalRecordsMap,
   DonorFieldsEnum,
-  BatchRecordUniqueIdentifier,
+  ClinicalFields,
 } from '../submission-entities';
 import { donorDao, DONOR_FIELDS } from '../../clinical/donor-repo';
 import { DeepReadonly } from 'deep-freeze';
@@ -166,7 +166,7 @@ export const checkUniqueRecords = (
     throw new Error('cannot check unique records for registration here.');
   }
 
-  const uniqueIdNames = concat([], BatchRecordUniqueIdentifier[clinicalType]) as string[];
+  const uniqueIdNames = concat([], ClinicalUniqueIdentifier[clinicalType]) as ClinicalFields[];
   if (!uniqueIdNames) useAllRecordValues = true;
 
   const identifierToIndexMap: { [k: string]: number[] } = {};
@@ -194,7 +194,7 @@ export const checkUniqueRecords = (
       indexToErrorMap[recordIndex] = buildSubmissionError(
         { ...record, index: recordIndex },
         DataValidationErrors.FOUND_IDENTICAL_IDS,
-        ClinicalUniqueIdentifier[clinicalType],
+        uniqueIdNames.length == 0 ? uniqueIdNames[0] : DonorFieldsEnum.submitter_donor_id, // use donor_id if using many fields
         {
           conflictingRows: sameIdentifiedRecordIndecies.filter(i => i !== recordIndex),
           useAllRecordValues,
