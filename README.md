@@ -32,6 +32,8 @@ we use tool called migrate-mongo: https://www.npmjs.com/package/migrate-mongo
 
 notes:
 
+- make scripts idempotent in case they fail in the middle
+- if a script fails it will stay in pending state
 - you can't change the the contents after the script ran, it wont run again automatically
   - if you need to change the script you have to write another script that does what you want
 - the scripts are sorted by date & time
