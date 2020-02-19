@@ -20,7 +20,7 @@ import {
   SampleRegistrationFieldsEnum,
   SUBMISSION_STATE,
   ClinicalEntitySchemaNames,
-  ClinicalUniqueIndentifier,
+  ClinicalUniqueIdentifier,
   ClinicalTherapySchemaNames,
 } from '../submission-entities';
 
@@ -402,12 +402,17 @@ export function getClinicalEntitiesFromDonorBySchemaName(
 export function getSingleClinicalEntityFromDonorBySchemanName(
   donor: DeepReadonly<Donor>,
   clinicalEntityType: ClinicalEntitySchemaNames,
-  uniqueIdValue: string,
+  clinicalInfoRef: ClinicalInfo, // this function will use the values of the clinicalInfoRef that are needed to uniquely find a clinical info
 ): ClinicalInfo | undefined {
+  if (clinicalEntityType === ClinicalEntitySchemaNames.REGISTRATION) {
+    throw new Error('Sample_registration has no clincal info to return');
+  }
+  const uniqueIdNames: string[] = _.concat([] || ClinicalUniqueIdentifier[clinicalEntityType]);
+  const constraints: ClinicalInfo = {};
+  uniqueIdNames.forEach(idN => (constraints[idN] = clinicalInfoRef[idN]));
+
   const clinicalInfos = getClinicalEntitiesFromDonorBySchemaName(donor, clinicalEntityType);
-  return clinicalInfos.find(
-    ci => ci[ClinicalUniqueIndentifier[clinicalEntityType]] === uniqueIdValue,
-  );
+  return _(clinicalInfos).find(constraints);
 }
 
 export interface CreateDonorSampleDto {

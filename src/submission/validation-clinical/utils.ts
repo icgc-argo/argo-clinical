@@ -8,7 +8,7 @@ import {
   RecordValidationResult,
   ClinicalEntitySchemaNames,
   SubmittedClinicalRecordsMap,
-  ClinicalUniqueIndentifier,
+  ClinicalUniqueIdentifier,
   DonorFieldsEnum,
   ClinicalFields,
   TreatmentTypeValuesMappedByTherapy,
@@ -74,11 +74,10 @@ export const buildRecordValidationResult = (
   if (errors.length > 0) {
     return { type: ModificationType.ERRORSFOUND, index: record.index, resultArray: errors };
   }
-  const uniqueIdValue = record[ClinicalUniqueIndentifier[clinicalEntitySchemaName]];
   const clinicalInfo = getSingleClinicalEntityFromDonorBySchemanName(
     existentDonor,
     clinicalEntitySchemaName,
-    uniqueIdValue as string,
+    record,
   );
   return checkForUpdates(record, clinicalInfo);
 };
@@ -228,7 +227,7 @@ export namespace ClinicalSubmissionRecordsOperations {
       throw new Error(`Invalid clinical type: ${type}`);
     }
     return _.find(records[type], [
-      ClinicalUniqueIndentifier[type],
+      ClinicalUniqueIdentifier[type],
       submitter_id,
     ]) as SubmittedClinicalRecord;
   }
@@ -298,7 +297,10 @@ export function treatmentTypeNotMatchTherapyType(
 
 // check that a donor is not found with the same clinical entity unique identifier
 export async function checkClinicalEntityDoesntBelongToOtherDonor(
-  clinicalType: ClinicalEntitySchemaNames,
+  clinicalType: Exclude<
+    ClinicalEntitySchemaNames,
+    ClinicalTherapyType | ClinicalEntitySchemaNames.REGISTRATION
+  >,
   record: SubmittedClinicalRecord,
   existentDonor: DeepReadonly<Donor>,
   errors: SubmissionValidationError[],
@@ -307,7 +309,7 @@ export async function checkClinicalEntityDoesntBelongToOtherDonor(
   const alreadyAssociatedDonor = await donorDao.findByClinicalEntitySubmitterIdAndProgramId(
     {
       programId: existentDonor.programId,
-      submitterId: record[ClinicalUniqueIndentifier[clinicalType]] as string,
+      submitterId: record[ClinicalUniqueIdentifier[clinicalType]] as string,
     },
     clinicalType,
   );
@@ -316,7 +318,7 @@ export async function checkClinicalEntityDoesntBelongToOtherDonor(
       buildSubmissionError(
         record,
         DataValidationErrors.CLINICAL_ENTITY_BELONGS_TO_OTHER_DONOR,
-        ClinicalUniqueIndentifier[clinicalType],
+        ClinicalUniqueIdentifier[clinicalType],
         {
           otherDonorSubmitterId: alreadyAssociatedDonor.submitterId,
           clinicalType: clinicalType,
