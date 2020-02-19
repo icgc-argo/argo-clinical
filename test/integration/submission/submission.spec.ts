@@ -31,6 +31,7 @@ import {
   SubmissionBatchErrorTypes,
   ClinicalEntitySchemaNames,
   DonorFieldsEnum,
+  ClinicalUniqueIdentifier,
 } from '../../../src/submission/submission-entities';
 import { TsvUtils } from '../../../src/utils';
 import { donorDao } from '../../../src/clinical/donor-repo';
@@ -200,7 +201,7 @@ const ABCD_REGISTRATION_DOC: ActiveRegistration = {
     },
   ],
 };
-const expectedDonorErrors = [
+const expectedDonorBatchSubmissionSchemaErrors = [
   {
     index: 1,
     type: 'FOUND_IDENTICAL_IDS',
@@ -209,10 +210,11 @@ const expectedDonorErrors = [
       donorSubmitterId: 'ICGC_0001',
       useAllRecordValues: false,
       conflictingRows: [2],
+      uniqueIdNames: [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.DONOR]],
     },
     message:
       'You are trying to submit the same [submitter_donor_id] in multiple rows. [submitter_donor_id] can only be submitted once per file.',
-    fieldName: SampleRegistrationFieldsEnum.submitter_donor_id,
+    fieldName: DonorFieldsEnum.submitter_donor_id,
   },
   {
     index: 2,
@@ -222,10 +224,11 @@ const expectedDonorErrors = [
       donorSubmitterId: 'ICGC_0001',
       useAllRecordValues: false,
       conflictingRows: [1],
+      uniqueIdNames: [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.DONOR]],
     },
     message:
       'You are trying to submit the same [submitter_donor_id] in multiple rows. [submitter_donor_id] can only be submitted once per file.',
-    fieldName: SampleRegistrationFieldsEnum.submitter_donor_id,
+    fieldName: DonorFieldsEnum.submitter_donor_id,
   },
   {
     index: 0,
@@ -246,6 +249,36 @@ const expectedDonorErrors = [
     },
     message: 'The value is not permissible for this field.',
     fieldName: DonorFieldsEnum.vital_status,
+  },
+];
+const expectedRadiationBatchSubmissionSchemaErrors = [
+  {
+    index: 0,
+    type: 'FOUND_IDENTICAL_IDS',
+    info: {
+      value: 'ICGC_0001',
+      donorSubmitterId: 'ICGC_0001',
+      useAllRecordValues: false,
+      conflictingRows: [1],
+      uniqueIdNames: ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.RADIATION],
+    },
+    message:
+      'You are trying to submit the same [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] in multiple rows. [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] can only be submitted once per file.',
+    fieldName: DonorFieldsEnum.submitter_donor_id,
+  },
+  {
+    index: 1,
+    type: 'FOUND_IDENTICAL_IDS',
+    info: {
+      value: 'ICGC_0001',
+      donorSubmitterId: 'ICGC_0001',
+      useAllRecordValues: false,
+      conflictingRows: [0],
+      uniqueIdNames: ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.RADIATION],
+    },
+    message:
+      'You are trying to submit the same [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] in multiple rows. [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] can only be submitted once per file.',
+    fieldName: DonorFieldsEnum.submitter_donor_id,
   },
 ];
 
@@ -715,9 +748,10 @@ describe('Submission Api', () => {
     });
 
     it('should return 422 if try to upload invalid tsv files', done => {
-      let file: Buffer;
+      const files: Buffer[] = [];
       try {
-        file = fs.readFileSync(__dirname + '/donor.invalid.tsv');
+        files.push(fs.readFileSync(__dirname + '/donor.invalid.tsv'));
+        files.push(fs.readFileSync(__dirname + '/radiation.invalid.tsv'));
       } catch (err) {
         return done(err);
       }
@@ -726,11 +760,15 @@ describe('Submission Api', () => {
         // data base is empty so ID shouldn't exist
         .post('/submission/program/ABCD-EF/clinical/upload')
         .auth(JWT_ABCDEF, { type: 'bearer' })
-        .attach('clinicalFiles', file, 'donor.invalid.tsv')
+        .attach('clinicalFiles', files[0], 'donor.invalid.tsv')
+        .attach('clinicalFiles', files[1], 'radiation.invalid.tsv')
         .end((err: any, res: any) => {
           res.should.have.status(207);
           res.body.submission.clinicalEntities.donor.schemaErrors.should.deep.eq(
-            expectedDonorErrors,
+            expectedDonorBatchSubmissionSchemaErrors,
+          );
+          res.body.submission.clinicalEntities.radiation.schemaErrors.should.deep.eq(
+            expectedRadiationBatchSubmissionSchemaErrors,
           );
           res.body.successful.should.deep.eq(false);
           done();
