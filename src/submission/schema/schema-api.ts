@@ -93,10 +93,11 @@ export const getTemplate = async (req: Request, res: Response) => {
   }
 
   const template = createTemplate(schema);
+
   return res
     .status(200)
     .contentType('text/tab-separated-values')
-    .attachment(`${schemaName}.tsv`)
+    .attachment(`${schemaName}_dictionary_v${schemasDictionary.version}.tsv`)
     .send(template);
 };
 
@@ -106,7 +107,7 @@ export const getAllTemplates = async (req: Request, res: Response) => {
   res
     .status(200)
     .contentType('application/zip')
-    .attachment('argo_clinical_templates.zip');
+    .attachment(`argo_submission_templates_v${schemasDictionary.version}.zip`);
 
   schemasDictionary.schemas
     .filter(s => s.name !== ClinicalEntitySchemaNames.REGISTRATION)

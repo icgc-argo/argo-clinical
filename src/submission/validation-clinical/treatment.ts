@@ -4,7 +4,7 @@ import {
   TreatmentFieldsEnum,
   SubmittedClinicalRecord,
   DataValidationErrors,
-  ClinicalUniqueIndentifier,
+  ClinicalUniqueIdentifier,
   ClinicalTherapyType,
   ClinicalTherapySchemaNames,
 } from '../submission-entities';
@@ -83,7 +83,7 @@ function checkTherapyFileNeeded(
 }
 
 function getTreatment(treatmentRecord: SubmittedClinicalRecord, donor: DeepReadonly<Donor>) {
-  const idFieldName = ClinicalUniqueIndentifier[ClinicalEntitySchemaNames.TREATMENT];
+  const idFieldName = ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.TREATMENT];
   const treatmentId = treatmentRecord[idFieldName];
 
   return getSingleClinicalObjectFromDonor(donor, ClinicalEntitySchemaNames.TREATMENT, {

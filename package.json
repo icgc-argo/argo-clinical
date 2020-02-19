@@ -1,6 +1,6 @@
 {
   "name": "argo-clinical",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Clinical submission system and repo",
   "scripts": {
     "start": "npm run serve",
@@ -19,7 +19,10 @@
     "resources": "copyfiles -u 1 src/resources/*.* dist/src",
     "serve-debug": "nodemon --inspect dist/src/server.js",
     "watch-debug": "nodemon --watch 'src/**/*.ts' --ignore 'src/**/*.spec.ts' --exec node --inspect-brk -r ts-node/register ./src/server.ts",
-    "watch-local": "nodemon --watch 'src/**/*.ts' --ignore 'src/**/*.spec.ts' --exec node -r ts-node/register ./src/server.ts"
+    "watch-local": "nodemon --watch 'src/**/*.ts' --ignore 'src/**/*.spec.ts' --exec node -r ts-node/register ./src/server.ts",
+    "migrate-up": "migrate-mongo up",
+    "migrate-down": "migrate-mongo down",
+    "migrate-status": "migrate-mongo status"
   },
   "repository": {
     "type": "git",
@@ -48,6 +51,7 @@
     "@types/express": "^4.17.0",
     "@types/jsonwebtoken": "^8.3.2",
     "@types/lodash": "^4.14.134",
+    "@types/migrate-mongo": "^7.0.0",
     "@types/mocha": "^5.2.7",
     "@types/mongodb": "^3.1.28",
     "@types/mongoose": "^5.5.6",
@@ -98,6 +102,7 @@
     "express-validator": "^6.0.1",
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.14",
+    "migrate-mongo": "^7.0.1",
     "mock-http-server": "^1.4.1",
     "mongoose": "5.7.7",
     "mongoose-sequence": "^5.2.2",

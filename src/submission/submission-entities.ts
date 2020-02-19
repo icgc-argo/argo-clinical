@@ -372,18 +372,39 @@ export const BatchNameRegex: Record<ClinicalEntitySchemaNames, RegExp[]> = {
   [ClinicalEntitySchemaNames.HORMONE_THERAPY]: [/^hormone_therapy.*\.tsv$/],
 };
 
-// assumption: one field uniquely identifies a clinical type record in a batch of records
-export const ClinicalUniqueIndentifier: {
-  [clinicalType: string]: ClinicalFields;
-} = {
+// This needed to be added to differentiate between multiple or single fields for identifying
+type TypeEntitySchemaNameToIndenfiterType = {
+  [ClinicalEntitySchemaNames.DONOR]: ClinicalFields;
+  [ClinicalEntitySchemaNames.SPECIMEN]: ClinicalFields;
+  [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: ClinicalFields;
+  [ClinicalEntitySchemaNames.FOLLOW_UP]: ClinicalFields;
+  [ClinicalEntitySchemaNames.TREATMENT]: ClinicalFields;
+  [ClinicalEntitySchemaNames.CHEMOTHERAPY]: ClinicalFields[];
+  [ClinicalEntitySchemaNames.RADIATION]: ClinicalFields[];
+  [ClinicalEntitySchemaNames.HORMONE_THERAPY]: ClinicalFields[];
+};
+
+export const ClinicalUniqueIdentifier: TypeEntitySchemaNameToIndenfiterType = {
   [ClinicalEntitySchemaNames.DONOR]: DonorFieldsEnum.submitter_donor_id,
   [ClinicalEntitySchemaNames.SPECIMEN]: SpecimenFieldsEnum.submitter_specimen_id,
   [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: PrimaryDiagnosisFieldsEnum.submitter_donor_id,
   [ClinicalEntitySchemaNames.FOLLOW_UP]: FollowupFieldsEnum.submitter_follow_up_id,
   [ClinicalEntitySchemaNames.TREATMENT]: TreatmentFieldsEnum.submitter_treatment_id,
-  [ClinicalEntitySchemaNames.CHEMOTHERAPY]: ChemotherapyFieldsEnum.chemotherapy_drug_name,
-  [ClinicalEntitySchemaNames.RADIATION]: RadiationFieldsEnum.radiation_therapy_modality,
-  [ClinicalEntitySchemaNames.HORMONE_THERAPY]: HormoneTherapyFieldsEnum.hormone_therapy_drug_name,
+  [ClinicalEntitySchemaNames.CHEMOTHERAPY]: [
+    ChemotherapyFieldsEnum.submitter_donor_id,
+    ChemotherapyFieldsEnum.submitter_treatment_id,
+    ChemotherapyFieldsEnum.chemotherapy_drug_name,
+  ],
+  [ClinicalEntitySchemaNames.RADIATION]: [
+    RadiationFieldsEnum.submitter_donor_id,
+    RadiationFieldsEnum.submitter_treatment_id,
+    RadiationFieldsEnum.radiation_therapy_modality,
+  ],
+  [ClinicalEntitySchemaNames.HORMONE_THERAPY]: [
+    HormoneTherapyFieldsEnum.submitter_donor_id,
+    HormoneTherapyFieldsEnum.submitter_treatment_id,
+    HormoneTherapyFieldsEnum.hormone_therapy_drug_name,
+  ],
 };
 
 export interface ClinicalSubmissionRecordsByDonorIdMap {
