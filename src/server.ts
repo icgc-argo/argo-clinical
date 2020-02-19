@@ -5,6 +5,8 @@ import { Server } from 'http';
 // we import here to allow configs to fully load
 import * as bootstrap from './bootstrap';
 import app from './app';
+import { init, create, database, config, up, down, status } from 'migrate-mongo';
+import { Db } from 'mongodb';
 
 let secrets: any = {};
 let server: Server;
@@ -26,12 +28,17 @@ let server: Server;
     console.log(`secret keys found ====> ${Object.keys(secrets)}`);
   }
 
+  process.env.CLINICAL_DB_USERNAME =
+    process.env.CLINICAL_DB_USERNAME || secrets.CLINICAL_DB_USERNAME;
+  process.env.CLINICAL_DB_PASSWORD =
+    process.env.CLINICAL_DB_PASSWORD || secrets.CLINICAL_DB_PASSWORD;
+
   const defaultAppConfigImpl: AppConfig = {
     mongoUser(): string {
-      return process.env.CLINICAL_DB_USERNAME || secrets.CLINICAL_DB_USERNAME;
+      return process.env.CLINICAL_DB_USERNAME || '';
     },
     mongoPassword(): string {
-      return process.env.CLINICAL_DB_PASSWORD || secrets.CLINICAL_DB_PASSWORD;
+      return process.env.CLINICAL_DB_PASSWORD || '';
     },
     mongoUrl(): string {
       return process.env.CLINICAL_DB_URL || '';
@@ -56,6 +63,14 @@ let server: Server;
     },
   };
 
+  try {
+    const db: any = await database.connect();
+    const migrated = await up(db.db);
+    migrated.forEach((fileName: string) => console.log('Migrated:', fileName));
+  } catch (err) {
+    console.log('failed to start migration', err);
+    process.exit(-10);
+  }
   await bootstrap.run(defaultAppConfigImpl);
   /**
    * Start Express server.
