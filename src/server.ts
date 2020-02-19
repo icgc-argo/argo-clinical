@@ -5,8 +5,7 @@ import { Server } from 'http';
 // we import here to allow configs to fully load
 import * as bootstrap from './bootstrap';
 import app from './app';
-import { init, create, database, config, up, down, status } from 'migrate-mongo';
-import { Db } from 'mongodb';
+import { database, up } from 'migrate-mongo';
 
 let secrets: any = {};
 let server: Server;
@@ -28,17 +27,25 @@ let server: Server;
     console.log(`secret keys found ====> ${Object.keys(secrets)}`);
   }
 
-  process.env.CLINICAL_DB_USERNAME =
-    process.env.CLINICAL_DB_USERNAME || secrets.CLINICAL_DB_USERNAME;
-  process.env.CLINICAL_DB_PASSWORD =
-    process.env.CLINICAL_DB_PASSWORD || secrets.CLINICAL_DB_PASSWORD;
+  /**
+   * Migrate mongo config requires exact undefined to be able to connect to db without user/password (dev/qa) env
+   * if the value is undefined or empty string we have to avoid setting it in the env because process.env will force string "undefined"
+   */
+  const dbUserName: string = process.env.CLINICAL_DB_USERNAME || secrets.CLINICAL_DB_USERNAME || '';
+  if (dbUserName !== '') {
+    process.env.CLINICAL_DB_USERNAME = dbUserName;
+  }
+  const dbPassword: string = process.env.CLINICAL_DB_PASSWORD || secrets.CLINICAL_DB_PASSWORD || '';
+  if (dbPassword !== '') {
+    process.env.CLINICAL_DB_PASSWORD = dbPassword;
+  }
 
   const defaultAppConfigImpl: AppConfig = {
     mongoUser(): string {
-      return process.env.CLINICAL_DB_USERNAME || '';
+      return dbUserName;
     },
     mongoPassword(): string {
-      return process.env.CLINICAL_DB_PASSWORD || '';
+      return dbPassword;
     },
     mongoUrl(): string {
       return process.env.CLINICAL_DB_URL || '';
@@ -63,9 +70,10 @@ let server: Server;
     },
   };
 
+  let connection: any;
   try {
-    const db: any = await database.connect();
-    const migrated = await up(db.db);
+    connection = await database.connect();
+    const migrated = await up(connection.db);
     migrated.forEach((fileName: string) => console.log('Migrated:', fileName));
   } catch (err) {
     console.log('failed to start migration', err);
