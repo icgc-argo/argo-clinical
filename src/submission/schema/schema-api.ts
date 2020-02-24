@@ -113,7 +113,10 @@ export const getAllTemplates = async (req: Request, res: Response) => {
     .filter(s => s.name !== ClinicalEntitySchemaNames.REGISTRATION)
     .forEach(schema => {
       const template = createTemplate(schema);
-      zip.addFile(`${schema.name}.tsv`, Buffer.alloc(template.length, template));
+      zip.addFile(
+        `${schema.name}_v${schemasDictionary.version}.tsv`,
+        Buffer.alloc(template.length, template),
+      );
     });
 
   return res.send(zip.toBuffer());
