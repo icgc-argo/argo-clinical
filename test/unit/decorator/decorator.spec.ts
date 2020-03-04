@@ -32,6 +32,18 @@ describe('decorator', () => {
       testApisDisabled() {
         return true;
       },
+      kafkaMessagingEnabled() {
+        return false;
+      },
+      kafkaBrokers() {
+        return [''];
+      },
+      kafkaClientId() {
+        return '';
+      },
+      kafkaTopicProgramUpdate() {
+        return '';
+      },
     });
   });
 

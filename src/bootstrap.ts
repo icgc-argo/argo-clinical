@@ -1,11 +1,12 @@
 import mongoose from 'mongoose';
 import { loggerFor } from './logger';
 import { AppConfig, initConfigs, JWT_TOKEN_PUBLIC_KEY } from './config';
-import * as manager from './submission/schema/schema-manager';
+import * as schemaManager from './submission/schema/schema-manager';
 import * as utils from './utils';
 import fetch from 'node-fetch';
 import { setStatus, Status } from './app-health';
 import * as persistedConfig from './submission/persisted-config/service';
+import * as messageManager from './message-manager';
 
 const L = loggerFor(__filename);
 
@@ -42,12 +43,7 @@ const connectToDb = async (
 ) => {
   L.debug('in connectToDb');
   try {
-    await connect(
-      delayMillis,
-      mongoUrl,
-      username,
-      password,
-    );
+    await connect(delayMillis, mongoUrl, username, password);
   } catch (err) {
     L.error('failed to connect', err);
   }
@@ -78,12 +74,7 @@ async function connect(delayMillis: number, mongoUrl: string, username: string, 
     setStatus('db', { status: Status.ERROR });
     setTimeout(() => {
       L.debug('retrying to connect to mongo');
-      connect(
-        delayMillis,
-        mongoUrl,
-        username,
-        password,
-      );
+      connect(delayMillis, mongoUrl, username, password);
     }, delayMillis);
   }
 }
@@ -123,13 +114,23 @@ const setJwtPublicKey = (keyUrl: string) => {
 
 export const run = async (config: AppConfig) => {
   initConfigs(config);
+
+  // setup mongo connection
   await setupDBConnection(config.mongoUrl(), config.mongoUser(), config.mongoPassword());
   if (process.env.LOG_LEVEL === 'debug') {
     mongoose.set('debug', true);
   }
 
+  // setup message manager with kafka configs
+  messageManager.initialize(config.kafkaMessagingEnabled(), {
+    clientId: config.kafkaClientId(),
+    brokers: config.kafkaBrokers(),
+    expectedTopics: { progoramUpdate: config.kafkaTopicProgramUpdate() },
+  });
+
+  // setup schema manager
   try {
-    manager.create(config.schemaServiceUrl());
+    schemaManager.create(config.schemaServiceUrl());
     await loadSchema(config.schemaName(), config.initialSchemaVersion());
   } catch (err) {
     L.error('failed to load schema', err);
@@ -141,6 +142,8 @@ export const run = async (config: AppConfig) => {
       L.debug('Mongoose default connection is disconnected through app termination');
       process.exit(0);
     });
+
+    messageManager.getInstace().closeOpenConnections();
   };
 
   // if the key is set as env var use it, otherwise try the url.
@@ -159,7 +162,7 @@ export const run = async (config: AppConfig) => {
 
 export async function loadSchema(schemaName: string, initialVersion: string) {
   try {
-    await manager.instance().loadSchemaAndSave(schemaName, initialVersion);
+    await schemaManager.instance().loadSchemaAndSave(schemaName, initialVersion);
     setStatus('schema', { status: Status.OK });
   } catch (err) {
     L.error('failed to load the schema', err);

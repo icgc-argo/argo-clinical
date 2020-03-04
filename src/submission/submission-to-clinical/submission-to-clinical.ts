@@ -34,6 +34,8 @@ import { mergeActiveSubmissionWithDonors } from './merge-submission';
 import * as schemaManager from '../schema/schema-manager';
 import { loggerFor } from '../../logger';
 import { recalculateAllClincalInfoStats } from './stat-calculator';
+import * as messageManager from '../../message-manager';
+
 const L = loggerFor(__filename);
 /**
  * This method will move the current submitted clinical data to
@@ -183,6 +185,8 @@ export const commitRegisteration = async (command: Readonly<CommitRegistrationCo
   }
 
   registrationRepository.delete(command.registrationId);
+
+  sendMessageOnUpdates(registration);
   return (
     (registration.stats &&
       registration.stats.newSampleIds &&
@@ -331,6 +335,16 @@ const getDonorSpecimen = (record: SubmittedRegistrationRecord) => {
       },
     ],
   };
+};
+
+const sendMessageOnUpdates = async (registration: DeepReadonly<ActiveRegistration>) => {
+  if (
+    registration.stats.newDonorIds.length === 0 &&
+    registration.stats.newSampleIds.length === 0 &&
+    registration.stats.newSpecimenIds.length === 0
+  ) {
+    await messageManager.getInstace().sendProgramUpdateMessage(registration.programId);
+  }
 };
 
 export function getSingleClinicalObjectFromDonor(

@@ -66,7 +66,19 @@ let server: Server;
       return process.env.LECTERN_URL || '';
     },
     testApisDisabled(): boolean {
-      return process.env.DISABLE_TEST_APIS == 'false' ? false : true;
+      return process.env.DISABLE_TEST_APIS === 'false' ? false : true;
+    },
+    kafkaMessagingEnabled(): boolean {
+      return process.env.KAFKA_MESSAGING_ENABLED === 'true' ? true : false;
+    },
+    kafkaClientId(): string {
+      return process.env.KAFKA_CLIENT_ID || 'clinical-app';
+    },
+    kafkaBrokers(): string[] {
+      return process.env.KAFKA_BROKERS?.split(',') || ['broker'];
+    },
+    kafkaTopicProgramUpdate(): string {
+      return process.env.KAFKA_TOPIC_PROGRAM_UPDATE || 'PROGRAM_UPDATE';
     },
   };
 
