@@ -34,7 +34,7 @@ import { mergeActiveSubmissionWithDonors } from './merge-submission';
 import * as schemaManager from '../schema/schema-manager';
 import { loggerFor } from '../../logger';
 import { recalculateAllClincalInfoStats } from './stat-calculator';
-import * as messageManager from '../../message-manager';
+import * as messenger from '../submission-updates-messenger';
 
 const L = loggerFor(__filename);
 /**
@@ -151,6 +151,8 @@ const performCommitSubmission = async (
 
     // If the save completed without error, we can delete the active registration
     submissionRepository.deleteByProgramId(activeSubmission.programId);
+
+    sendMessageOnUpdatesFromClinicalSubmission(activeSubmission);
   } catch (err) {
     throw new Error(`Failure occured saving clinical data: ${err}`);
   }
@@ -186,7 +188,7 @@ export const commitRegisteration = async (command: Readonly<CommitRegistrationCo
 
   registrationRepository.delete(command.registrationId);
 
-  sendMessageOnUpdates(registration);
+  sendMessageOnUpdatesFromRegistration(registration);
   return (
     (registration.stats &&
       registration.stats.newSampleIds &&
@@ -337,13 +339,37 @@ const getDonorSpecimen = (record: SubmittedRegistrationRecord) => {
   };
 };
 
-const sendMessageOnUpdates = async (registration: DeepReadonly<ActiveRegistration>) => {
+const sendMessageOnUpdatesFromRegistration = async (
+  registration: DeepReadonly<ActiveRegistration>,
+) => {
   if (
-    registration.stats.newDonorIds.length === 0 &&
-    registration.stats.newSampleIds.length === 0 &&
-    registration.stats.newSpecimenIds.length === 0
+    registration.stats.newDonorIds.length > 0 ||
+    registration.stats.newSampleIds.length > 0 ||
+    registration.stats.newSpecimenIds.length > 0
   ) {
-    await messageManager.getInstace().sendProgramUpdateMessage(registration.programId);
+    await messenger.getInstace().sendProgramUpdatedMessage(registration.programId);
+  }
+};
+
+const sendMessageOnUpdatesFromClinicalSubmission = async (
+  submission: DeepReadonly<ActiveClinicalSubmission>,
+) => {
+  // just making sure submission is in correct states
+  if (
+    submission.state !== SUBMISSION_STATE.VALID &&
+    submission.state !== SUBMISSION_STATE.PENDING_APPROVAL
+  ) {
+    return;
+  }
+
+  const submissionHasNoProgramUpdates =
+    submission.state === SUBMISSION_STATE.PENDING_APPROVAL ||
+    Object.entries(submission.clinicalEntities).every(
+      ([_, entity]) => entity.stats.new.length === 0 && entity.stats.updated.length === 0,
+    );
+
+  if (!submissionHasNoProgramUpdates) {
+    await messenger.getInstace().sendProgramUpdatedMessage(submission.programId);
   }
 };
 
