@@ -92,6 +92,8 @@ export enum DataValidationErrors {
   INCOMPATIBLE_PARENT_TREATMENT_TYPE = 'INCOMPATIBLE_PARENT_TREATMENT_TYPE',
   TREATMENT_ID_NOT_FOUND = 'TREATMENT_ID_NOT_FOUND',
   CLINICAL_ENTITY_BELONGS_TO_OTHER_DONOR = 'CLINICAL_ENTITY_BELONGS_TO_OTHER_DONOR',
+  MISSING_VARIABLE_REQUIREMENT = 'MISSING_VARIABLE_REQUIREMENT',
+  FORBIDDEN_PROVIDED_VARIABLE_REQUIREMENT = 'FORBIDDEN_PROVIDED_VARIABLE_REQUIREMENT',
 }
 
 export type RegistrationStat = Array<{
@@ -283,6 +285,17 @@ export enum SpecimenFieldsEnum {
   submitter_donor_id = 'submitter_donor_id',
   submitter_specimen_id = 'submitter_specimen_id',
   specimen_acquisition_interval = 'specimen_acquisition_interval',
+  pathological_tumour_staging_system = 'pathological_tumour_staging_system',
+  pathological_t_category = 'pathological_t_category',
+  pathological_n_category = 'pathological_n_category',
+  pathological_m_category = 'pathological_m_category',
+  pathological_stage_group = 'pathological_stage_group',
+  tumour_grading_system = 'tumour_grading_system',
+  tumour_grade = 'tumour_grade',
+  percent_tumour_cells = 'percent_tumour_cells',
+  percent_proliferating_cells = 'percent_proliferating_cells',
+  percent_stromal_cells = 'percent_stromal_cells',
+  percent_necrosis = 'percent_necrosis',
 }
 export enum PrimaryDiagnosisFieldsEnum {
   program_id = 'program_id',
