@@ -4,7 +4,7 @@ const L = loggerFor(__filename);
 
 let instance: SubmissionUpdatesMessenger;
 
-interface SubmissionUpdatesMessenger {
+export interface SubmissionUpdatesMessenger {
   sendProgramUpdatedMessage(programId: string): Promise<void>;
   closeOpenConnections(): Promise<void>;
 }
@@ -49,7 +49,8 @@ class KafkaMessenger implements SubmissionUpdatesMessenger {
     await this.producer.disconnect().catch(this.producerErrorHandler);
   };
 
-  private producerErrorHandler = (e: any) => L.error('Found producer error in Kafka messenger', e);
+  private producerErrorHandler = (e: any) =>
+    L.error('Found producer error in Kafka messenger: ', e);
 }
 
 type ExpectedTopicsMap = {

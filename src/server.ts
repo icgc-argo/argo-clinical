@@ -72,13 +72,13 @@ let server: Server;
       return process.env.KAFKA_MESSAGING_ENABLED === 'true' ? true : false;
     },
     kafkaClientId(): string {
-      return process.env.KAFKA_CLIENT_ID || 'clinical-app';
+      return process.env.KAFKA_CLIENT_ID || '';
     },
     kafkaBrokers(): string[] {
-      return process.env.KAFKA_BROKERS?.split(',') || ['broker'];
+      return process.env.KAFKA_BROKERS?.split(',') || [''];
     },
     kafkaTopicProgramUpdate(): string {
-      return process.env.KAFKA_TOPIC_PROGRAM_UPDATE || 'PROGRAM_UPDATE';
+      return process.env.KAFKA_TOPIC_PROGRAM_UPDATE || '';
     },
   };
 

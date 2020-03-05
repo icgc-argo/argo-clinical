@@ -354,21 +354,21 @@ const sendMessageOnUpdatesFromRegistration = async (
 const sendMessageOnUpdatesFromClinicalSubmission = async (
   submission: DeepReadonly<ActiveClinicalSubmission>,
 ) => {
-  // just making sure submission is in correct states
+  // just making sure submission is in correct state
   if (
     submission.state !== SUBMISSION_STATE.VALID &&
     submission.state !== SUBMISSION_STATE.PENDING_APPROVAL
   ) {
-    return;
+    throw new Error("Can't send messages for submission which are not valid or pending_approval");
   }
 
-  const submissionHasNoProgramUpdates =
+  const submissionHasProgramUpdates =
     submission.state === SUBMISSION_STATE.PENDING_APPROVAL ||
-    Object.entries(submission.clinicalEntities).every(
-      ([_, entity]) => entity.stats.new.length === 0 && entity.stats.updated.length === 0,
+    Object.entries(submission.clinicalEntities).some(
+      ([_, entity]) => entity.stats.new.length > 0 || entity.stats.updated.length > 0,
     );
 
-  if (!submissionHasNoProgramUpdates) {
+  if (submissionHasProgramUpdates) {
     await messenger.getInstace().sendProgramUpdatedMessage(submission.programId);
   }
 };
