@@ -7,6 +7,7 @@ import {
   SpecimenFieldsEnum,
   ClinicalUniqueIdentifier,
   DonorVitalStatusValues,
+  SampleRegistrationFieldsEnum,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, Specimen } from '../../clinical/clinical-entities';
@@ -165,6 +166,15 @@ const checkRequiredFields = (
   const isValueMissing = (value: string | number | boolean | undefined) =>
     isAbsent(value) || (typeof value === 'string' && isEmptyString(value));
 
+  const errorInfo = {
+    submitter_specimen_id: specimenRecord[SpecimenFieldsEnum.submitter_specimen_id],
+    referenceSchema: ClinicalEntitySchemaNames.REGISTRATION,
+    variableRequirement: {
+      fieldName: SampleRegistrationFieldsEnum.tumour_normal_designation,
+      fieldValue: specimen.tumourNormalDesignation,
+    },
+  };
+
   if (specimen.tumourNormalDesignation === 'Tumour') {
     const missingRequiredFields = requiredFieldsForTumour.filter(field =>
       isValueMissing(specimenRecord[field]),
@@ -175,15 +185,7 @@ const checkRequiredFields = (
           specimenRecord,
           DataValidationErrors.MISSING_VARIABLE_REQUIREMENT,
           SpecimenFieldsEnum[field],
-          {
-            submitter_specimen_id: specimenRecord['submitter_specimen_id'],
-            referenceSchema: ClinicalEntitySchemaNames['REGISTRATION'],
-            missingField: field,
-            variableRequirement: {
-              fieldName: 'tumour_normal_desgination',
-              fieldValue: 'Tumour',
-            },
-          },
+          errorInfo,
         ),
       );
     });
@@ -198,14 +200,7 @@ const checkRequiredFields = (
           specimenRecord,
           DataValidationErrors.FORBIDDEN_PROVIDED_VARIABLE_REQUIREMENT,
           SpecimenFieldsEnum[field],
-          {
-            submitter_specimen_id: specimenRecord['submitter_specimen_id'],
-            referenceSchema: ClinicalEntitySchemaNames['REGISTRATION'],
-            variableRequirement: {
-              fieldName: 'tumour_normal_desgination',
-              fieldValue: 'Normal',
-            },
-          },
+          errorInfo,
         ),
       );
     });

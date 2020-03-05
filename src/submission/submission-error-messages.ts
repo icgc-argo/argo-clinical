@@ -57,11 +57,11 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
   },
   MISSING_VARIABLE_REQUIREMENT: errorData => {
     const info = errorData.info;
-    return `${errorData.fieldName} is a required field because the corresponding record in ${info.referenceSchema}.tsv had ${info.variableRequirement.fieldName} set to ${info.variableRequirement.fieldValue}.`;
+    return `${errorData.fieldName} must be provided when the ${info.variableRequirement.fieldName} is ${info.variableRequirement.fieldValue}.`;
   },
   FORBIDDEN_PROVIDED_VARIABLE_REQUIREMENT: errorData => {
     const info = errorData.info;
-    return `${errorData.fieldName} should not be filled in. This field must be left empty because the corresponding record in ${info.referenceSchema}.tsv had ${info.variableRequirement.fieldName} set to ${info.variableRequirement.fieldValue}.`;
+    return `${errorData.fieldName} should not be provided when the ${info.variableRequirement.fieldName} is ${info.variableRequirement.fieldValue}.`;
   },
 };
 
