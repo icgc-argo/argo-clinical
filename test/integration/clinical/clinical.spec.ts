@@ -81,7 +81,7 @@ describe('clinical Api', () => {
             return false;
           },
           kafkaBrokers() {
-            return [''];
+            return new Array<string>();
           },
           kafkaClientId() {
             return '';
