@@ -296,6 +296,7 @@ export enum SpecimenFieldsEnum {
   percent_proliferating_cells = 'percent_proliferating_cells',
   percent_stromal_cells = 'percent_stromal_cells',
   percent_necrosis = 'percent_necrosis',
+  percent_inflammatory_tissue = 'percent_inflammatory_tissue',
 }
 export enum PrimaryDiagnosisFieldsEnum {
   program_id = 'program_id',
