@@ -503,11 +503,10 @@
               }
             },
             {
-              "name": "anatomic_location_of_specimen_collection",
+              "name": "specimen_anatomic_location",
               "description": "Anatomic location of a specimen when it was collected.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
                 "codeList": ["Muscle", "Other", "Wrist"]
               }
             },
@@ -566,12 +565,26 @@
               }
             },
             {
-              "name": "tumour_staging_system",
+              "name": "pathological_tumour_staging_system",
               "description": "Specify the tumour staging system used to assess the cancer at the time the tumour specimen was resected. Pathological classification is based on the clinical stage information (acquired before treatment) and supplemented/modified by operative findings and pathological evaluation of the resected specimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": ["Binet", "Rai", "FIGO", "Ann Arbor", "Murphy", "Lugano"]
+                "codeList": [
+                  "Binet",
+                  "Rai",
+                  "FIGO",
+                  "Ann Arbor",
+                  "Murphy",
+                  "Lugano",
+                  "AJCC 8th Edition",
+                  "AJCC 7th Edition",
+                  "AJCC 6th Edition",
+                  "AJCC 5th Edition",
+                  "AJCC 4th Edition",
+                  "AJCC 3rd Edition",
+                  "AJCC 2nd Edition",
+                  "AJCC 1st Edition"
+                ]
               }
             },
             {
@@ -1945,7 +1958,7 @@
               }
             },
             {
-              "name": "anatomic_location_of_specimen_collection",
+              "name": "specimen_anatomic_location",
               "description": "Anatomic location of a specimen when it was collected.",
               "valueType": "string",
               "restrictions": {
@@ -1996,7 +2009,7 @@
               }
             },
             {
-              "name": "tumour_staging_system",
+              "name": "pathological_tumour_staging_system",
               "description": "Specify the tumour staging system used to assess the cancer at the time the tumour specimen was resected. Pathological classification is based on the clinical stage information (acquired before treatment) and supplemented/modified by operative findings and pathological evaluation of the resected specimen.",
               "valueType": "string",
               "restrictions": {
@@ -3347,7 +3360,7 @@
               }
             },
             {
-              "name": "anatomic_location_of_specimen_collection",
+              "name": "specimen_anatomic_location",
               "description": "Anatomic location of a specimen when it was collected.",
               "valueType": "string",
               "restrictions": {
@@ -3398,7 +3411,7 @@
               }
             },
             {
-              "name": "tumour_staging_system",
+              "name": "pathological_tumour_staging_system",
               "description": "Specify the tumour staging system used to assess the cancer at the time the tumour specimen was resected. Pathological classification is based on the clinical stage information (acquired before treatment) and supplemented/modified by operative findings and pathological evaluation of the resected specimen.",
               "valueType": "string",
               "restrictions": {
@@ -4799,7 +4812,7 @@
               }
             },
             {
-              "name": "anatomic_location_of_specimen_collection",
+              "name": "specimen_anatomic_location",
               "description": "Anatomic location of a specimen when it was collected.",
               "valueType": "string",
               "restrictions": {
@@ -4862,7 +4875,7 @@
               }
             },
             {
-              "name": "tumour_staging_system",
+              "name": "pathological_tumour_staging_system",
               "description": "Specify the tumour staging system used to assess the cancer at the time the tumour specimen was resected. Pathological classification is based on the clinical stage information (acquired before treatment) and supplemented/modified by operative findings and pathological evaluation of the resected specimen.",
               "valueType": "string",
               "restrictions": {

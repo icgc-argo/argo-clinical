@@ -7,12 +7,13 @@ import {
   SpecimenFieldsEnum,
   ClinicalUniqueIdentifier,
   DonorVitalStatusValues,
+  SampleRegistrationFieldsEnum,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, Specimen } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
-import { isEmptyString } from '../../utils';
+import { isEmptyString, isAbsent } from '../../utils';
 import { getSingleClinicalObjectFromDonor } from '../submission-to-clinical/submission-to-clinical';
 
 export const validate = async (
@@ -28,17 +29,19 @@ export const validate = async (
 
   const errors: SubmissionValidationError[] = []; // all errors for record
 
+  const specimen = getSpecimenFromDonor(existentDonor, specimenRecord, errors);
+  if (!specimen) {
+    return errors;
+  }
+
+  checkRequiredFields(specimen, specimenRecord, errors);
+
   const donorDataToValidateWith = getDataFromDonorRecordOrDonor(
     specimenRecord,
     mergedDonor,
     errors,
   );
   if (!donorDataToValidateWith) {
-    return errors;
-  }
-
-  const specimen = getSpecimenFromDonor(existentDonor, specimenRecord, errors);
-  if (!specimen) {
     return errors;
   }
 
@@ -136,4 +139,70 @@ const getDataFromDonorRecordOrDonor = (
   }
 
   return { donorVitalStatus, donorSurvivalTime };
+};
+
+const checkRequiredFields = (
+  specimen: DeepReadonly<Specimen>,
+  specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
+  errors: SubmissionValidationError[],
+) => {
+  const requiredFieldsForTumour: Array<keyof typeof SpecimenFieldsEnum> = [
+    'pathological_tumour_staging_system',
+    'pathological_stage_group',
+    'tumour_grading_system',
+    'tumour_grade',
+    'percent_tumour_cells',
+    'percent_proliferating_cells',
+    'percent_stromal_cells',
+    'percent_necrosis',
+  ];
+
+  const optionalFieldsForTumour: Array<keyof typeof SpecimenFieldsEnum> = [
+    'pathological_t_category',
+    'pathological_n_category',
+    'pathological_m_category',
+  ];
+
+  const isValueMissing = (value: string | number | boolean | undefined) =>
+    isAbsent(value) || (typeof value === 'string' && isEmptyString(value));
+
+  const errorInfo = {
+    submitter_specimen_id: specimenRecord[SpecimenFieldsEnum.submitter_specimen_id],
+    referenceSchema: ClinicalEntitySchemaNames.REGISTRATION,
+    variableRequirement: {
+      fieldName: SampleRegistrationFieldsEnum.tumour_normal_designation,
+      fieldValue: specimen.tumourNormalDesignation,
+    },
+  };
+
+  if (specimen.tumourNormalDesignation === 'Tumour') {
+    const missingRequiredFields = requiredFieldsForTumour.filter(field =>
+      isValueMissing(specimenRecord[field]),
+    );
+    missingRequiredFields.forEach(field => {
+      errors.push(
+        utils.buildSubmissionError(
+          specimenRecord,
+          DataValidationErrors.MISSING_VARIABLE_REQUIREMENT,
+          SpecimenFieldsEnum[field],
+          errorInfo,
+        ),
+      );
+    });
+  } else if (specimen.tumourNormalDesignation === 'Normal') {
+    const forbiddenFieldsForNormal = [...requiredFieldsForTumour, ...optionalFieldsForTumour];
+    const existingForbiddenFields = forbiddenFieldsForNormal.filter(
+      field => !isValueMissing(specimenRecord[field]),
+    );
+    existingForbiddenFields.forEach(field => {
+      errors.push(
+        utils.buildSubmissionError(
+          specimenRecord,
+          DataValidationErrors.FORBIDDEN_PROVIDED_VARIABLE_REQUIREMENT,
+          SpecimenFieldsEnum[field],
+          errorInfo,
+        ),
+      );
+    });
+  }
 };
