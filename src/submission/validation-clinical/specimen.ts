@@ -155,6 +155,7 @@ const checkRequiredFields = (
     'percent_proliferating_cells',
     'percent_stromal_cells',
     'percent_necrosis',
+    'percent_inflammatory_tissue',
   ];
 
   const optionalFieldsForTumour: Array<keyof typeof SpecimenFieldsEnum> = [
