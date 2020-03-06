@@ -75,7 +75,7 @@ let server: Server;
       return process.env.KAFKA_CLIENT_ID || '';
     },
     kafkaBrokers(): string[] {
-      return process.env.KAFKA_BROKERS?.split(',') || [''];
+      return process.env.KAFKA_BROKERS?.split(',') || new Array<string>();
     },
     kafkaTopicProgramUpdate(): string {
       return process.env.KAFKA_TOPIC_PROGRAM_UPDATE || '';

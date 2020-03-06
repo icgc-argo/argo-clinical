@@ -137,13 +137,14 @@ export const run = async (config: AppConfig) => {
   }
 
   // close app connections on termination
-  const gracefulExit = () => {
-    mongoose.connection.close(function() {
+  const gracefulExit = async () => {
+    await submissionUpdatesMessenger.getInstace().closeOpenConnections();
+
+    await mongoose.connection.close(function() {
       L.debug('Mongoose default connection is disconnected through app termination');
-      process.exit(0);
     });
 
-    submissionUpdatesMessenger.getInstace().closeOpenConnections();
+    process.exit(0);
   };
 
   // if the key is set as env var use it, otherwise try the url.

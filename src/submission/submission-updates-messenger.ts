@@ -15,6 +15,7 @@ class DummyMessenger implements SubmissionUpdatesMessenger {
     return;
   };
   closeOpenConnections = async () => {
+    L.info('Close Dummy connection');
     return;
   };
 }
@@ -46,6 +47,7 @@ class KafkaMessenger implements SubmissionUpdatesMessenger {
   };
 
   closeOpenConnections = async () => {
+    L.info('Closing any open Kafka connections');
     await this.producer.disconnect().catch(this.producerErrorHandler);
   };
 
