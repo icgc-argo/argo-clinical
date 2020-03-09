@@ -297,6 +297,8 @@ export enum SpecimenFieldsEnum {
   percent_stromal_cells = 'percent_stromal_cells',
   percent_necrosis = 'percent_necrosis',
   percent_inflammatory_tissue = 'percent_inflammatory_tissue',
+  central_pathology_confirmed = 'central_pathology_confirmed',
+  tumour_histological_type = 'tumour_histological_type',
 }
 export enum PrimaryDiagnosisFieldsEnum {
   program_id = 'program_id',
