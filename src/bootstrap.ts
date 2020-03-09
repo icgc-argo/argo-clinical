@@ -6,6 +6,7 @@ import * as utils from './utils';
 import fetch from 'node-fetch';
 import { setStatus, Status } from './app-health';
 import * as persistedConfig from './submission/persisted-config/service';
+import * as submissionUpdatesMessenger from './submission/submission-updates-messenger';
 
 const L = loggerFor(__filename);
 
@@ -42,12 +43,7 @@ const connectToDb = async (
 ) => {
   L.debug('in connectToDb');
   try {
-    await connect(
-      delayMillis,
-      mongoUrl,
-      username,
-      password,
-    );
+    await connect(delayMillis, mongoUrl, username, password);
   } catch (err) {
     L.error('failed to connect', err);
   }
@@ -78,12 +74,7 @@ async function connect(delayMillis: number, mongoUrl: string, username: string, 
     setStatus('db', { status: Status.ERROR });
     setTimeout(() => {
       L.debug('retrying to connect to mongo');
-      connect(
-        delayMillis,
-        mongoUrl,
-        username,
-        password,
-      );
+      connect(delayMillis, mongoUrl, username, password);
     }, delayMillis);
   }
 }
@@ -123,11 +114,21 @@ const setJwtPublicKey = (keyUrl: string) => {
 
 export const run = async (config: AppConfig) => {
   initConfigs(config);
+
+  // setup mongo connection
   await setupDBConnection(config.mongoUrl(), config.mongoUser(), config.mongoPassword());
   if (process.env.LOG_LEVEL === 'debug') {
     mongoose.set('debug', true);
   }
 
+  // setup messenger with kafka configs
+  submissionUpdatesMessenger.initialize(config.kafkaMessagingEnabled(), {
+    clientId: config.kafkaClientId(),
+    brokers: config.kafkaBrokers(),
+    expectedTopics: { programUpdate: config.kafkaTopicProgramUpdate() },
+  });
+
+  // setup schema manager
   try {
     manager.create(config.schemaServiceUrl());
     await loadSchema(config.schemaName(), config.initialSchemaVersion());
@@ -136,11 +137,14 @@ export const run = async (config: AppConfig) => {
   }
 
   // close app connections on termination
-  const gracefulExit = () => {
-    mongoose.connection.close(function() {
+  const gracefulExit = async () => {
+    await submissionUpdatesMessenger.getInstace().closeOpenConnections();
+
+    await mongoose.connection.close(function() {
       L.debug('Mongoose default connection is disconnected through app termination');
-      process.exit(0);
     });
+
+    process.exit(0);
   };
 
   // if the key is set as env var use it, otherwise try the url.
@@ -153,7 +157,7 @@ export const run = async (config: AppConfig) => {
 
   await persistedConfig.initSubmissionConfigsIfNoneExist();
 
-  // If the Node process ends, close the Mongoose connection
+  // If the Node process ends, close active connections
   process.on('SIGINT', gracefulExit).on('SIGTERM', gracefulExit);
 };
 
