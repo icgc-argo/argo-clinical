@@ -2179,31 +2179,6 @@ describe('Submission Api', () => {
           });
       });
 
-      it('should check new schema is valid with data vlidation fields', async () => {
-        await chai
-          .request(app)
-          .post('/submission/schema/dry-run-update')
-          .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-          .send({
-            version: '3.0',
-          })
-          .then((res: any) => {
-            res.should.have.status(200);
-            res.body.newSchemaErrors.should.deep.eq({
-              [ClinicalEntitySchemaNames.DONOR]: {
-                missingFields: [],
-                invalidFieldCodeLists: [
-                  { fieldName: DonorFieldsEnum.vital_status, missingCodeListValues: ['Deceased'] },
-                ],
-              },
-              [ClinicalEntitySchemaNames.REGISTRATION]: {
-                missingFields: [SampleRegistrationFieldsEnum.specimen_type],
-                invalidFieldCodeLists: [],
-              },
-            });
-          });
-      });
-
       it('should run migration and update all donor entity clincial info stats', async () => {
         const donorWithNoStats = emptyDonorDocument({
           submitterId: 'ICGC_0004',
