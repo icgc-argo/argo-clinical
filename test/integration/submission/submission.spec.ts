@@ -2242,7 +2242,7 @@ describe('Submission Api', () => {
           .patch('/submission/schema/?sync=true')
           .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
           .send({
-            version: '4.0',
+            version: '2.0',
           })
           .then(async (res: any) => {
             res.should.have.status(200);
