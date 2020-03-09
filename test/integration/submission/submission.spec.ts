@@ -300,6 +300,8 @@ const clearCollections = async (dburl: string, collections: string[]) => {
 const schemaName = 'ARGO Clinical Submission';
 const schemaVersion = '1.0';
 
+const stubFilesDir = __dirname + `/stub_clinical_files`;
+
 describe('Submission Api', () => {
   let mongoContainer: any;
   let dburl = ``;
@@ -394,7 +396,7 @@ describe('Submission Api', () => {
     it("should return 403 requested program doesn't match authorized in token scopes", done => {
       let file: Buffer;
       try {
-        file = fs.readFileSync(__dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.tsv`);
+        file = fs.readFileSync(stubFilesDir + `/${ClinicalEntitySchemaNames.REGISTRATION}.tsv`);
       } catch (err) {
         return done(err);
       }
@@ -417,17 +419,17 @@ describe('Submission Api', () => {
       let rows: any[];
 
       try {
-        file = fs.readFileSync(__dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`);
+        file = fs.readFileSync(stubFilesDir + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`);
         (async () =>
           (rows = (await TsvUtils.tsvToJson(
-            __dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`,
+            stubFilesDir + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`,
           )) as any[]))();
       } catch (err) {
         return done(err);
       }
 
       try {
-        file2 = fs.readFileSync(__dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.2.tsv`);
+        file2 = fs.readFileSync(stubFilesDir + `/${ClinicalEntitySchemaNames.REGISTRATION}.2.tsv`);
       } catch (err) {
         return done(err);
       }
@@ -493,10 +495,10 @@ describe('Submission Api', () => {
       let file: Buffer;
       let rows: any[];
       try {
-        file = fs.readFileSync(__dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`);
+        file = fs.readFileSync(stubFilesDir + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`);
         (async () =>
           (rows = (await TsvUtils.tsvToJson(
-            __dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`,
+            stubFilesDir + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`,
           )) as any[]))();
       } catch (err) {
         return done(err);
@@ -576,7 +578,7 @@ describe('Submission Api', () => {
     it('should accept valid registration tsv', done => {
       let file: Buffer;
       try {
-        file = fs.readFileSync(__dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.tsv`);
+        file = fs.readFileSync(stubFilesDir + `/${ClinicalEntitySchemaNames.REGISTRATION}.tsv`);
       } catch (err) {
         return done(err);
       }
@@ -618,7 +620,7 @@ describe('Submission Api', () => {
       let file: Buffer;
       try {
         file = fs.readFileSync(
-          __dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.invalid.tsv`,
+          stubFilesDir + `/${ClinicalEntitySchemaNames.REGISTRATION}.invalid.tsv`,
         );
       } catch (err) {
         throw err;
@@ -646,7 +648,7 @@ describe('Submission Api', () => {
     it('should not accept invalid file names', done => {
       let file: Buffer;
       try {
-        file = fs.readFileSync(__dirname + '/thisIsARegistration.tsv');
+        file = fs.readFileSync(stubFilesDir + '/thisIsARegistration.tsv');
       } catch (err) {
         return done(err);
       }
@@ -674,7 +676,7 @@ describe('Submission Api', () => {
     it('should not accept tsv files with invalid headers', done => {
       let file: Buffer;
       try {
-        file = fs.readFileSync(__dirname + '/sample_registration-invalidHeaders.tsv');
+        file = fs.readFileSync(stubFilesDir + '/sample_registration-invalidHeaders.tsv');
       } catch (err) {
         return done(err);
       }
@@ -750,8 +752,8 @@ describe('Submission Api', () => {
     it('should return 422 if try to upload invalid tsv files', done => {
       const files: Buffer[] = [];
       try {
-        files.push(fs.readFileSync(__dirname + '/donor.invalid.tsv'));
-        files.push(fs.readFileSync(__dirname + '/radiation.invalid.tsv'));
+        files.push(fs.readFileSync(stubFilesDir + '/donor.invalid.tsv'));
+        files.push(fs.readFileSync(stubFilesDir + '/radiation.invalid.tsv'));
       } catch (err) {
         return done(err);
       }
@@ -777,7 +779,7 @@ describe('Submission Api', () => {
     it('should return 200 if try to upload valid tsv files', done => {
       let file: Buffer;
       try {
-        file = fs.readFileSync(__dirname + '/donor.tsv');
+        file = fs.readFileSync(stubFilesDir + '/donor.tsv');
       } catch (err) {
         return done(err);
       }
@@ -805,11 +807,11 @@ describe('Submission Api', () => {
     it('should return appropriate file errors for clinical upload', done => {
       const files: Buffer[] = [];
       try {
-        files.push(fs.readFileSync(__dirname + '/donor.tsv'));
-        files.push(fs.readFileSync(__dirname + '/thisissample.tsv'));
-        files.push(fs.readFileSync(__dirname + '/donor.invalid.tsv'));
-        files.push(fs.readFileSync(__dirname + '/specimen-invalid-headers.tsv'));
-        files.push(fs.readFileSync(__dirname + '/sample_registration.tsv'));
+        files.push(fs.readFileSync(stubFilesDir + '/donor.tsv'));
+        files.push(fs.readFileSync(stubFilesDir + '/thisissample.tsv'));
+        files.push(fs.readFileSync(stubFilesDir + '/donor.invalid.tsv'));
+        files.push(fs.readFileSync(stubFilesDir + '/specimen-invalid-headers.tsv'));
+        files.push(fs.readFileSync(stubFilesDir + '/sample_registration.tsv'));
       } catch (err) {
         return done(err);
       }
@@ -866,7 +868,7 @@ describe('Submission Api', () => {
       await insertData(dburl, 'activesubmissions', SUBMISSION);
       const files: Buffer[] = [];
       try {
-        files.push(fs.readFileSync(__dirname + '/donor.invalid.tsv'));
+        files.push(fs.readFileSync(stubFilesDir + '/donor.invalid.tsv'));
       } catch (err) {}
       await chai
         .request(app)
@@ -888,7 +890,7 @@ describe('Submission Api', () => {
     it('should return invalid and data errors for validation request of invalid submission', done => {
       let file: Buffer;
       try {
-        file = fs.readFileSync(__dirname + '/donor.tsv');
+        file = fs.readFileSync(stubFilesDir + '/donor.tsv');
       } catch (err) {
         return err;
       }
@@ -934,7 +936,7 @@ describe('Submission Api', () => {
     it('should return valid and no errors for validation request of valid submission', async () => {
       let file: Buffer;
       try {
-        file = fs.readFileSync(__dirname + '/donor.tsv');
+        file = fs.readFileSync(stubFilesDir + '/donor.tsv');
       } catch (err) {
         return err;
       }
@@ -982,9 +984,9 @@ describe('Submission Api', () => {
     it('should return with appropriate stats', async () => {
       const files: Buffer[] = [];
       try {
-        files.push(fs.readFileSync(__dirname + '/donor.tsv'));
-        files.push(fs.readFileSync(__dirname + '/specimen.tsv'));
-        files.push(fs.readFileSync(__dirname + '/primary_diagnosis.tsv'));
+        files.push(fs.readFileSync(stubFilesDir + '/donor.tsv'));
+        files.push(fs.readFileSync(stubFilesDir + '/specimen.tsv'));
+        files.push(fs.readFileSync(stubFilesDir + '/primary_diagnosis.tsv'));
       } catch (err) {
         return err;
       }
@@ -1091,8 +1093,8 @@ describe('Submission Api', () => {
       let donorFile: Buffer;
       let specimenFile: Buffer;
       try {
-        donorFile = fs.readFileSync(__dirname + '/donor.tsv');
-        specimenFile = fs.readFileSync(__dirname + '/specimen.tsv');
+        donorFile = fs.readFileSync(stubFilesDir + '/donor.tsv');
+        specimenFile = fs.readFileSync(stubFilesDir + '/specimen.tsv');
       } catch (err) {
         return err;
       }
@@ -1245,7 +1247,7 @@ describe('Submission Api', () => {
     const uploadSubmission = async (fileName: string = 'donor.tsv') => {
       let file: Buffer;
       try {
-        file = fs.readFileSync(__dirname + `/${fileName}`);
+        file = fs.readFileSync(stubFilesDir + `/${fileName}`);
       } catch (err) {
         return err;
       }
@@ -1363,7 +1365,7 @@ describe('Submission Api', () => {
 
       fileNames.forEach(fn => {
         try {
-          const file = fs.readFileSync(__dirname + `/${fn}`);
+          const file = fs.readFileSync(stubFilesDir + `/${fn}`);
           req = req.attach('clinicalFiles', file, fn);
         } catch (err) {
           return err;
@@ -1972,7 +1974,7 @@ describe('Submission Api', () => {
     it('get all templates zip', done => {
       let refZip: AdmZip;
       try {
-        refZip = new AdmZip(__dirname + '/all.zip');
+        refZip = new AdmZip(stubFilesDir + '/all.zip');
       } catch (err) {
         return done(err);
       }
