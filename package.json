@@ -1,6 +1,6 @@
 {
   "name": "argo-clinical",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Clinical submission system and repo",
   "scripts": {
     "start": "npm run serve",
@@ -101,6 +101,7 @@
     "express-session": "^1.16.2",
     "express-validator": "^6.0.1",
     "jsonwebtoken": "^8.5.1",
+    "kafkajs": "^1.12.0",
     "lodash": "^4.17.14",
     "migrate-mongo": "^7.0.1",
     "mock-http-server": "^1.4.1",

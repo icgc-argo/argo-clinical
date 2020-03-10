@@ -20,6 +20,10 @@ export interface AppConfig {
   jwtPubKey(): string;
   schemaServiceUrl(): string;
   testApisDisabled(): boolean;
+  kafkaMessagingEnabled(): boolean;
+  kafkaClientId(): string;
+  kafkaBrokers(): string[];
+  kafkaTopicProgramUpdate(): string;
 }
 
 class ConfigManager {

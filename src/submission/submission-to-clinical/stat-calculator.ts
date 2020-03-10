@@ -24,9 +24,6 @@ export const recalculateAllClincalInfoStats = (
   donor: DeepReadonly<Donor>,
   overrideSchema?: SchemasDictionary,
 ) => {
-  if (!donor.schemaMetadata.isValid) {
-    throw new Error("Can't recalculate stats for donor that are invalid!");
-  }
   const mutableDonor = _.cloneDeep(donor) as Donor;
 
   mutableDonor.aggregatedInfoStats = emptyStats;
