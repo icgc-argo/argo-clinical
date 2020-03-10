@@ -1,5 +1,6 @@
 import chai from 'chai';
 import sinon from 'sinon';
+import _ from 'lodash';
 import { donorDao } from '../../../src/clinical/donor-repo';
 import * as dv from '../../../src/submission/validation-clinical/validation';
 import {
@@ -1443,6 +1444,98 @@ describe('data-validator', () => {
         .to.deep.include({ ...specimenMisisngDonorAB1FieldsErr, index: 1 });
 
       chai.expect(result.specimen.dataErrors).to.deep.include(specimenMissingDonorAB2FieldErr);
+    });
+    it("should detect forbidden fields in submission record for donor's registered normal specimen", async () => {
+      const existingDonorAB1Mock: Donor = stubs.validation.existingDonor04();
+
+      const forbiddenFields = [
+        SpecimenFieldsEnum.tumour_grading_system,
+        SpecimenFieldsEnum.tumour_grade,
+        SpecimenFieldsEnum.pathological_tumour_staging_system,
+        SpecimenFieldsEnum.pathological_stage_group,
+        SpecimenFieldsEnum.percent_stromal_cells,
+        SpecimenFieldsEnum.percent_tumour_cells,
+        SpecimenFieldsEnum.percent_proliferating_cells,
+        SpecimenFieldsEnum.percent_inflammatory_tissue,
+        SpecimenFieldsEnum.percent_necrosis,
+        SpecimenFieldsEnum.pathological_m_category,
+        SpecimenFieldsEnum.pathological_t_category,
+        SpecimenFieldsEnum.pathological_n_category,
+        SpecimenFieldsEnum.tumour_histological_type,
+        SpecimenFieldsEnum.central_pathology_confirmed,
+      ];
+
+      const newDonorAB1Records = {};
+      const specimenFields = _.fromPairs(
+        forbiddenFields.map(field => [field, 'a forbidden provided value']),
+      );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.SPECIMEN,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
+          [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP13',
+          [SpecimenFieldsEnum.specimen_acquisition_interval]: 400,
+          index: 0,
+          ...specimenFields,
+        },
+      );
+      const result = await dv
+        .validateSubmissionData({ AB1: newDonorAB1Records }, { AB1: existingDonorAB1Mock })
+        .catch((err: any) => fail(err));
+
+      chai.expect(result.specimen.dataErrors.length).to.eq(forbiddenFields.length);
+      result.specimen.dataErrors.forEach(dataError => {
+        chai.expect(forbiddenFields).includes(dataError.fieldName);
+        chai
+          .expect(dataError.type)
+          .to.equal(DataValidationErrors.FORBIDDEN_PROVIDED_VARIABLE_REQUIREMENT);
+      });
+    });
+    it("should detect missing required fields in submitted record for donor's registered tumour specimen", async () => {
+      const existingDonorAB1Mock: Donor = stubs.validation.existingDonor04();
+
+      const requiredFields = [
+        SpecimenFieldsEnum.tumour_grading_system,
+        SpecimenFieldsEnum.tumour_grade,
+        SpecimenFieldsEnum.pathological_tumour_staging_system,
+        SpecimenFieldsEnum.pathological_stage_group,
+        SpecimenFieldsEnum.percent_stromal_cells,
+        SpecimenFieldsEnum.percent_tumour_cells,
+        SpecimenFieldsEnum.percent_proliferating_cells,
+        SpecimenFieldsEnum.percent_inflammatory_tissue,
+        SpecimenFieldsEnum.percent_necrosis,
+        SpecimenFieldsEnum.tumour_histological_type,
+        SpecimenFieldsEnum.central_pathology_confirmed,
+      ];
+
+      const newDonorAB1Records = {};
+      const specimenFields = _.fromPairs(requiredFields.map(field => [field, undefined]));
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.SPECIMEN,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
+          [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP15',
+          [SpecimenFieldsEnum.specimen_acquisition_interval]: 400,
+          index: 0,
+          ...specimenFields,
+          [SpecimenFieldsEnum.pathological_m_category]: 'EM',
+          [SpecimenFieldsEnum.pathological_n_category]: 'EN',
+          [SpecimenFieldsEnum.pathological_t_category]: 'TEE',
+        },
+      );
+      const result = await dv
+        .validateSubmissionData({ AB1: newDonorAB1Records }, { AB1: existingDonorAB1Mock })
+        .catch((err: any) => fail(err));
+
+      chai.expect(result.specimen.dataErrors.length).to.eq(requiredFields.length);
+      result.specimen.dataErrors.forEach(dataError => {
+        chai.expect(requiredFields).includes(dataError.fieldName);
+        chai.expect(dataError.type).to.equal(DataValidationErrors.MISSING_VARIABLE_REQUIREMENT);
+      });
     });
   });
 
