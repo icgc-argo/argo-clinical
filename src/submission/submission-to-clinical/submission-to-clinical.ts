@@ -34,6 +34,8 @@ import { mergeActiveSubmissionWithDonors } from './merge-submission';
 import * as schemaManager from '../schema/schema-manager';
 import { loggerFor } from '../../logger';
 import { recalculateAllClincalInfoStats } from './stat-calculator';
+import * as messenger from '../submission-updates-messenger';
+
 const L = loggerFor(__filename);
 /**
  * This method will move the current submitted clinical data to
@@ -149,6 +151,8 @@ const performCommitSubmission = async (
 
     // If the save completed without error, we can delete the active registration
     submissionRepository.deleteByProgramId(activeSubmission.programId);
+
+    sendMessageOnUpdatesFromClinicalSubmission(activeSubmission);
   } catch (err) {
     throw new Error(`Failure occured saving clinical data: ${err}`);
   }
@@ -183,6 +187,8 @@ export const commitRegisteration = async (command: Readonly<CommitRegistrationCo
   }
 
   registrationRepository.delete(command.registrationId);
+
+  sendMessageOnUpdatesFromRegistration(registration);
   return (
     (registration.stats &&
       registration.stats.newSampleIds &&
@@ -331,6 +337,40 @@ const getDonorSpecimen = (record: SubmittedRegistrationRecord) => {
       },
     ],
   };
+};
+
+const sendMessageOnUpdatesFromRegistration = async (
+  registration: DeepReadonly<ActiveRegistration>,
+) => {
+  if (
+    registration.stats.newDonorIds.length > 0 ||
+    registration.stats.newSampleIds.length > 0 ||
+    registration.stats.newSpecimenIds.length > 0
+  ) {
+    await messenger.getInstace().sendProgramUpdatedMessage(registration.programId);
+  }
+};
+
+const sendMessageOnUpdatesFromClinicalSubmission = async (
+  submission: DeepReadonly<ActiveClinicalSubmission>,
+) => {
+  // just making sure submission is in correct state
+  if (
+    submission.state !== SUBMISSION_STATE.VALID &&
+    submission.state !== SUBMISSION_STATE.PENDING_APPROVAL
+  ) {
+    throw new Error("Can't send messages for submission which are not valid or pending_approval");
+  }
+
+  const submissionHasProgramUpdates =
+    submission.state === SUBMISSION_STATE.PENDING_APPROVAL ||
+    Object.entries(submission.clinicalEntities).some(
+      ([_, entity]) => entity.stats.new.length > 0 || entity.stats.updated.length > 0,
+    );
+
+  if (submissionHasProgramUpdates) {
+    await messenger.getInstace().sendProgramUpdatedMessage(submission.programId);
+  }
 };
 
 export function getSingleClinicalObjectFromDonor(
