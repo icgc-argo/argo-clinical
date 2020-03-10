@@ -3,6 +3,19 @@ import _ from 'lodash';
 import chai from 'chai';
 import { Donor } from '../../src/clinical/clinical-entities';
 
+export const clearCollections = async (dburl: string, collections: string[]) => {
+  try {
+    console.log(`Clearing collections pre-test:`, collections.join(', '));
+    const promises = collections.map(collectionName => cleanCollection(dburl, collectionName));
+    await Promise.all(promises);
+    await resetCounters(dburl);
+    return;
+  } catch (err) {
+    console.error(err);
+    return err;
+  }
+};
+
 export const cleanCollection = async (dburl: string, collection: string): Promise<any> => {
   const conn = await mongo.connect(dburl);
   console.log('cleanCollection connected');
