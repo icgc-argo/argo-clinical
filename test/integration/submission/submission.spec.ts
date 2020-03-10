@@ -342,6 +342,18 @@ describe('Submission Api', () => {
           testApisDisabled() {
             return false;
           },
+          kafkaMessagingEnabled() {
+            return false;
+          },
+          kafkaBrokers() {
+            return new Array<string>();
+          },
+          kafkaClientId() {
+            return '';
+          },
+          kafkaTopicProgramUpdate() {
+            return '';
+          },
         });
       } catch (err) {
         console.error('before >>>>>>>>>>>', err);
