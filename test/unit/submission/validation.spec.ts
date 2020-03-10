@@ -1445,7 +1445,7 @@ describe('data-validator', () => {
 
       chai.expect(result.specimen.dataErrors).to.deep.include(specimenMissingDonorAB2FieldErr);
     });
-    it('should detect forbidden provided fields', async () => {
+    it("should detect forbidden fields in submission record for donor's registered normal specimen", async () => {
       const existingDonorAB1Mock: Donor = stubs.validation.existingDonor04();
 
       const forbiddenFields = [
@@ -1493,7 +1493,7 @@ describe('data-validator', () => {
           .to.equal(DataValidationErrors.FORBIDDEN_PROVIDED_VARIABLE_REQUIREMENT);
       });
     });
-    it('should detect missing required fields', async () => {
+    it("should detect missing required fields in submitted record for donor's registered tumour specimen", async () => {
       const existingDonorAB1Mock: Donor = stubs.validation.existingDonor04();
 
       const requiredFields = [
