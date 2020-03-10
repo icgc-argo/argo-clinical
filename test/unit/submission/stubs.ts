@@ -155,6 +155,19 @@ export const stubs = {
             },
           ],
         },
+        {
+          submitterId: 'SP15',
+          specimenTissueSource: 'Other',
+          clinicalInfo: {},
+          tumourNormalDesignation: 'Tumour',
+          specimenType: 'Recurrent tumour',
+          samples: [
+            {
+              sampleType: 'ST10',
+              submitterId: 'AM2',
+            },
+          ],
+        },
       ],
     }),
 
