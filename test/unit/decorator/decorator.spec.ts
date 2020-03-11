@@ -44,6 +44,12 @@ describe('decorator', () => {
       kafkaTopicProgramUpdate() {
         return '';
       },
+      kafkaTopicProgramUpdateConfigPartitions(): number {
+        return NaN;
+      },
+      kafkaTopicProgramUpdateConfigReplications(): number {
+        return NaN;
+      },
     });
   });
 
