@@ -1,4 +1,4 @@
-import { Kafka, Producer, ITopicConfig } from 'kafkajs';
+import { Kafka } from 'kafkajs';
 import { loggerFor } from '../logger';
 const L = loggerFor(__filename);
 
@@ -20,25 +20,28 @@ class DummyMessenger implements SubmissionUpdatesMessenger {
   };
 }
 
-class KafkaMessenger implements SubmissionUpdatesMessenger {
-  private kafka: Kafka;
-  private programUpdateTopic: TopicConfig;
+const createKafkaMessenger = async (
+  clientId: string,
+  brokers: string[],
+  programUpdateTopic: TopicConfig,
+): Promise<SubmissionUpdatesMessenger> => {
+  const kafka: Kafka = new Kafka({ clientId, brokers });
 
-  constructor(clientId: string, brokers: string[], topics: TopicConfig) {
-    this.kafka = new Kafka({ clientId, brokers });
-    this.programUpdateTopic = topics;
-  }
+  // create topic if not exists
+  const admin = kafka.admin();
+  await admin.connect();
+  await admin.createTopics({
+    topics: [programUpdateTopic],
+  });
+  await admin.disconnect();
 
-  sendProgramUpdatedMessage = async (programId: string) => {
+  const sendProgramUpdatedMessage = async (programId: string) => {
     L.info('KafkaMessenger called to send message to broker for updated program: ' + programId);
-
-    await this.createMissingProgramUpdateTopic().catch(this.errorHandler);
-
-    const producer = this.kafka.producer();
-    await producer.connect().catch(this.errorHandler);
+    const producer = kafka.producer();
+    await producer.connect().catch(errorHandler);
     await producer
       .send({
-        topic: this.programUpdateTopic.topic,
+        topic: programUpdateTopic.topic,
         messages: [
           {
             key: programId,
@@ -46,27 +49,22 @@ class KafkaMessenger implements SubmissionUpdatesMessenger {
           },
         ],
       })
-      .catch(this.errorHandler);
-    await producer.disconnect().catch(this.errorHandler);
+      .catch(errorHandler);
+    await producer.disconnect().catch(errorHandler);
   };
 
-  closeOpenConnections = async () => {
+  const closeOpenConnections = async () => {
     L.info('Closing any open Kafka connections');
-    await this.kafka.admin().disconnect();
-    await this.kafka.producer().disconnect();
+    await kafka.admin().disconnect();
+    await kafka.producer().disconnect();
   };
 
-  private createMissingProgramUpdateTopic = async () => {
-    const admin = this.kafka.admin();
-    await admin.connect();
-    await admin.createTopics({
-      topics: [this.programUpdateTopic],
-    });
-    await admin.disconnect();
+  const errorHandler = (e: any) => L.error('Found error in Kafka messenger: ', e);
+  return {
+    sendProgramUpdatedMessage,
+    closeOpenConnections,
   };
-
-  private errorHandler = (e: any) => L.error('Found error in Kafka messenger: ', e);
-}
+};
 
 type TopicConfig = {
   topic: string;
@@ -87,10 +85,14 @@ export const getInstace = (): SubmissionUpdatesMessenger => {
   return instance;
 };
 
-export const initialize = (kafkaMessagingEnabled: boolean, config: KafkaConfig) => {
+export const initialize = async (kafkaMessagingEnabled: boolean, config: KafkaConfig) => {
   if (kafkaMessagingEnabled) {
     L.info('SubmissionUpdatesMessenger initialized with KafkaMessenger');
-    instance = new KafkaMessenger(config.clientId, config.brokers, config.programUpdateTopic);
+    instance = await createKafkaMessenger(
+      config.clientId,
+      config.brokers,
+      config.programUpdateTopic,
+    );
   } else {
     L.info('SubmissionUpdatesMessenger initialized with DummyMessenger');
     instance = new DummyMessenger();

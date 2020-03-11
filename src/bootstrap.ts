@@ -122,7 +122,7 @@ export const run = async (config: AppConfig) => {
   }
 
   // setup messenger with kafka configs
-  submissionUpdatesMessenger.initialize(config.kafkaMessagingEnabled(), {
+  await submissionUpdatesMessenger.initialize(config.kafkaMessagingEnabled(), {
     clientId: config.kafkaClientId(),
     brokers: config.kafkaBrokers(),
     programUpdateTopic: {
