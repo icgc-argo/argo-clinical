@@ -352,6 +352,12 @@ describe('Submission Api', () => {
           kafkaTopicProgramUpdate() {
             return '';
           },
+          kafkaTopicProgramUpdateConfigPartitions(): number {
+            return NaN;
+          },
+          kafkaTopicProgramUpdateConfigReplications(): number {
+            return NaN;
+          },
         });
       } catch (err) {
         console.error('before >>>>>>>>>>>', err);

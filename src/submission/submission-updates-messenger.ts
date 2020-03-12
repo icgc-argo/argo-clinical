@@ -1,4 +1,4 @@
-import { Kafka, Producer } from 'kafkajs';
+import { Kafka } from 'kafkajs';
 import { loggerFor } from '../logger';
 const L = loggerFor(__filename);
 
@@ -20,21 +20,28 @@ class DummyMessenger implements SubmissionUpdatesMessenger {
   };
 }
 
-class KafkaMessenger implements SubmissionUpdatesMessenger {
-  private producer: Producer;
-  private knownTopics: ExpectedTopicsMap;
+const createKafkaMessenger = async (
+  clientId: string,
+  brokers: string[],
+  programUpdateTopic: TopicConfig,
+): Promise<SubmissionUpdatesMessenger> => {
+  const kafka: Kafka = new Kafka({ clientId, brokers });
 
-  constructor(clientId: string, brokers: string[], topics: ExpectedTopicsMap) {
-    this.producer = new Kafka({ clientId, brokers }).producer();
-    this.knownTopics = topics;
-  }
+  // create topic if not exists
+  const admin = kafka.admin();
+  await admin.connect();
+  await admin.createTopics({
+    topics: [programUpdateTopic],
+  });
+  await admin.disconnect();
 
-  sendProgramUpdatedMessage = async (programId: string) => {
+  const sendProgramUpdatedMessage = async (programId: string) => {
     L.info('KafkaMessenger called to send message to broker for updated program: ' + programId);
-    await this.producer.connect().catch(this.producerErrorHandler);
-    await this.producer
+    const producer = kafka.producer();
+    await producer.connect().catch(errorHandler);
+    await producer
       .send({
-        topic: this.knownTopics.programUpdate,
+        topic: programUpdateTopic.topic,
         messages: [
           {
             key: programId,
@@ -42,27 +49,33 @@ class KafkaMessenger implements SubmissionUpdatesMessenger {
           },
         ],
       })
-      .catch(this.producerErrorHandler);
-    await this.producer.disconnect().catch(this.producerErrorHandler);
+      .catch(errorHandler);
+    await producer.disconnect().catch(errorHandler);
   };
 
-  closeOpenConnections = async () => {
+  const closeOpenConnections = async () => {
     L.info('Closing any open Kafka connections');
-    await this.producer.disconnect().catch(this.producerErrorHandler);
+    await kafka.admin().disconnect();
+    await kafka.producer().disconnect();
   };
 
-  private producerErrorHandler = (e: any) =>
-    L.error('Found producer error in Kafka messenger: ', e);
-}
+  const errorHandler = (e: any) => L.error('Found error in Kafka messenger: ', e);
+  return {
+    sendProgramUpdatedMessage,
+    closeOpenConnections,
+  };
+};
 
-type ExpectedTopicsMap = {
-  programUpdate: string;
+type TopicConfig = {
+  topic: string;
+  numPartitions: number;
+  replicationFactor: number;
 };
 
 export type KafkaConfig = {
   clientId: string;
   brokers: string[];
-  expectedTopics: ExpectedTopicsMap;
+  programUpdateTopic: TopicConfig;
 };
 
 export const getInstace = (): SubmissionUpdatesMessenger => {
@@ -72,10 +85,14 @@ export const getInstace = (): SubmissionUpdatesMessenger => {
   return instance;
 };
 
-export const initialize = (kafkaMessagingEnabled: boolean, config: KafkaConfig) => {
+export const initialize = async (kafkaMessagingEnabled: boolean, config: KafkaConfig) => {
   if (kafkaMessagingEnabled) {
     L.info('SubmissionUpdatesMessenger initialized with KafkaMessenger');
-    instance = new KafkaMessenger(config.clientId, config.brokers, config.expectedTopics);
+    instance = await createKafkaMessenger(
+      config.clientId,
+      config.brokers,
+      config.programUpdateTopic,
+    );
   } else {
     L.info('SubmissionUpdatesMessenger initialized with DummyMessenger');
     instance = new DummyMessenger();
