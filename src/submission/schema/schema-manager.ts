@@ -32,6 +32,7 @@ import {
   recalculateEntitiesClinicalInfoStats,
   recalculateAllClincalInfoStats,
 } from '../submission-to-clinical/stat-calculator';
+import { setStatus, Status } from '../../app-health';
 
 const L = loggerFor(__filename);
 
@@ -176,17 +177,13 @@ class SchemaManager {
 
   updateSchemaVersion = async (toVersion: string, updater: string, sync?: boolean) => {
     // submit the migration request
-    const migration = await MigrationManager.submitMigration(
+    return await MigrationManager.submitMigration(
       this.getCurrent().version,
       toVersion,
       updater,
       false,
       sync,
     );
-
-    // update the existing schema if migration didn't fail to start
-    if (migration?.stage !== 'FAILED')
-      await this.loadAndSaveNewVersion(this.getCurrent().name, toVersion);
   };
 
   probeSchemaUpgrade = async (from: string, to: string) => {
@@ -381,6 +378,9 @@ namespace MigrationManager {
     migrationToClose.state = 'CLOSED';
     migrationToClose.stage = 'COMPLETED';
     const closedMigration = await migrationRepo.update(migrationToClose);
+
+    await manager.loadAndSaveNewVersion(manager.getCurrent().name, newTargetSchema.version);
+    setStatus('schema', { status: Status.OK });
 
     await persistedConfig.setSubmissionDisabledState(false);
 

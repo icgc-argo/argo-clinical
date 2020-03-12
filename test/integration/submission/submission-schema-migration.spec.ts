@@ -184,7 +184,7 @@ describe('schema migration api', () => {
   });
 
   beforeEach(async () => {
-    await clearCollections(dburl, ['donors', 'dictionarymigrations']);
+    await clearCollections(dburl, ['donors', 'dictionarymigrations', 'dataschemas']);
     await insertData(dburl, 'donors', donor);
     await insertData(dburl, 'donors', donor2);
     // reset the base schema since tests can load new one
@@ -195,7 +195,6 @@ describe('schema migration api', () => {
   it('should update the schema', async () => {
     await migrateSyncTo('2.0').then(async (res: any) => {
       res.should.have.status(200);
-      res.body.version.should.eq('2.0');
 
       const schema = (await findInDb(dburl, 'dataschemas', {})) as SchemasDictionary[];
       schema[0].version.should.eq('2.0');
