@@ -80,6 +80,12 @@ let server: Server;
     kafkaTopicProgramUpdate(): string {
       return process.env.KAFKA_TOPIC_PROGRAM_UPDATE || '';
     },
+    kafkaTopicProgramUpdateConfigPartitions(): number {
+      return Number(process.env.KAFKA_TOPIC_PROGRAM_UPDATE_CONFIG_PARTITIONS) || 1;
+    },
+    kafkaTopicProgramUpdateConfigReplications(): number {
+      return Number(process.env.KAFKA_TOPIC_PROGRAM_UPDATE_CONFIG_REPLICATIONS) || 1;
+    },
   };
 
   let connection: any;

@@ -24,6 +24,8 @@ export interface AppConfig {
   kafkaClientId(): string;
   kafkaBrokers(): string[];
   kafkaTopicProgramUpdate(): string;
+  kafkaTopicProgramUpdateConfigPartitions(): number;
+  kafkaTopicProgramUpdateConfigReplications(): number;
 }
 
 class ConfigManager {
