@@ -300,6 +300,8 @@ const clearCollections = async (dburl: string, collections: string[]) => {
 const schemaName = 'ARGO Clinical Submission';
 const schemaVersion = '1.0';
 
+const stubFilesDir = __dirname + `/stub_clinical_files`;
+
 describe('Submission Api', () => {
   let mongoContainer: any;
   let dburl = ``;
@@ -412,7 +414,7 @@ describe('Submission Api', () => {
     it("should return 403 requested program doesn't match authorized in token scopes", done => {
       let file: Buffer;
       try {
-        file = fs.readFileSync(__dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.tsv`);
+        file = fs.readFileSync(stubFilesDir + `/${ClinicalEntitySchemaNames.REGISTRATION}.tsv`);
       } catch (err) {
         return done(err);
       }
@@ -435,17 +437,17 @@ describe('Submission Api', () => {
       let rows: any[];
 
       try {
-        file = fs.readFileSync(__dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`);
+        file = fs.readFileSync(stubFilesDir + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`);
         (async () =>
           (rows = (await TsvUtils.tsvToJson(
-            __dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`,
+            stubFilesDir + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`,
           )) as any[]))();
       } catch (err) {
         return done(err);
       }
 
       try {
-        file2 = fs.readFileSync(__dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.2.tsv`);
+        file2 = fs.readFileSync(stubFilesDir + `/${ClinicalEntitySchemaNames.REGISTRATION}.2.tsv`);
       } catch (err) {
         return done(err);
       }
@@ -511,10 +513,10 @@ describe('Submission Api', () => {
       let file: Buffer;
       let rows: any[];
       try {
-        file = fs.readFileSync(__dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`);
+        file = fs.readFileSync(stubFilesDir + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`);
         (async () =>
           (rows = (await TsvUtils.tsvToJson(
-            __dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`,
+            stubFilesDir + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`,
           )) as any[]))();
       } catch (err) {
         return done(err);
@@ -594,7 +596,7 @@ describe('Submission Api', () => {
     it('should accept valid registration tsv', done => {
       let file: Buffer;
       try {
-        file = fs.readFileSync(__dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.tsv`);
+        file = fs.readFileSync(stubFilesDir + `/${ClinicalEntitySchemaNames.REGISTRATION}.tsv`);
       } catch (err) {
         return done(err);
       }
@@ -636,7 +638,7 @@ describe('Submission Api', () => {
       let file: Buffer;
       try {
         file = fs.readFileSync(
-          __dirname + `/${ClinicalEntitySchemaNames.REGISTRATION}.invalid.tsv`,
+          stubFilesDir + `/${ClinicalEntitySchemaNames.REGISTRATION}.invalid.tsv`,
         );
       } catch (err) {
         throw err;
@@ -664,7 +666,7 @@ describe('Submission Api', () => {
     it('should not accept invalid file names', done => {
       let file: Buffer;
       try {
-        file = fs.readFileSync(__dirname + '/thisIsARegistration.tsv');
+        file = fs.readFileSync(stubFilesDir + '/thisIsARegistration.tsv');
       } catch (err) {
         return done(err);
       }
@@ -692,7 +694,7 @@ describe('Submission Api', () => {
     it('should not accept tsv files with invalid headers', done => {
       let file: Buffer;
       try {
-        file = fs.readFileSync(__dirname + '/sample_registration-invalidHeaders.tsv');
+        file = fs.readFileSync(stubFilesDir + '/sample_registration-invalidHeaders.tsv');
       } catch (err) {
         return done(err);
       }
@@ -768,8 +770,8 @@ describe('Submission Api', () => {
     it('should return 422 if try to upload invalid tsv files', done => {
       const files: Buffer[] = [];
       try {
-        files.push(fs.readFileSync(__dirname + '/donor.invalid.tsv'));
-        files.push(fs.readFileSync(__dirname + '/radiation.invalid.tsv'));
+        files.push(fs.readFileSync(stubFilesDir + '/donor.invalid.tsv'));
+        files.push(fs.readFileSync(stubFilesDir + '/radiation.invalid.tsv'));
       } catch (err) {
         return done(err);
       }
@@ -795,7 +797,7 @@ describe('Submission Api', () => {
     it('should return 200 if try to upload valid tsv files', done => {
       let file: Buffer;
       try {
-        file = fs.readFileSync(__dirname + '/donor.tsv');
+        file = fs.readFileSync(stubFilesDir + '/donor.tsv');
       } catch (err) {
         return done(err);
       }
@@ -823,11 +825,11 @@ describe('Submission Api', () => {
     it('should return appropriate file errors for clinical upload', done => {
       const files: Buffer[] = [];
       try {
-        files.push(fs.readFileSync(__dirname + '/donor.tsv'));
-        files.push(fs.readFileSync(__dirname + '/thisissample.tsv'));
-        files.push(fs.readFileSync(__dirname + '/donor.invalid.tsv'));
-        files.push(fs.readFileSync(__dirname + '/specimen-invalid-headers.tsv'));
-        files.push(fs.readFileSync(__dirname + '/sample_registration.tsv'));
+        files.push(fs.readFileSync(stubFilesDir + '/donor.tsv'));
+        files.push(fs.readFileSync(stubFilesDir + '/thisissample.tsv'));
+        files.push(fs.readFileSync(stubFilesDir + '/donor.invalid.tsv'));
+        files.push(fs.readFileSync(stubFilesDir + '/specimen-invalid-headers.tsv'));
+        files.push(fs.readFileSync(stubFilesDir + '/sample_registration.tsv'));
       } catch (err) {
         return done(err);
       }
@@ -884,7 +886,7 @@ describe('Submission Api', () => {
       await insertData(dburl, 'activesubmissions', SUBMISSION);
       const files: Buffer[] = [];
       try {
-        files.push(fs.readFileSync(__dirname + '/donor.invalid.tsv'));
+        files.push(fs.readFileSync(stubFilesDir + '/donor.invalid.tsv'));
       } catch (err) {}
       await chai
         .request(app)
@@ -906,7 +908,7 @@ describe('Submission Api', () => {
     it('should return invalid and data errors for validation request of invalid submission', done => {
       let file: Buffer;
       try {
-        file = fs.readFileSync(__dirname + '/donor.tsv');
+        file = fs.readFileSync(stubFilesDir + '/donor.tsv');
       } catch (err) {
         return err;
       }
@@ -952,7 +954,7 @@ describe('Submission Api', () => {
     it('should return valid and no errors for validation request of valid submission', async () => {
       let file: Buffer;
       try {
-        file = fs.readFileSync(__dirname + '/donor.tsv');
+        file = fs.readFileSync(stubFilesDir + '/donor.tsv');
       } catch (err) {
         return err;
       }
@@ -1000,9 +1002,9 @@ describe('Submission Api', () => {
     it('should return with appropriate stats', async () => {
       const files: Buffer[] = [];
       try {
-        files.push(fs.readFileSync(__dirname + '/donor.tsv'));
-        files.push(fs.readFileSync(__dirname + '/specimen.tsv'));
-        files.push(fs.readFileSync(__dirname + '/primary_diagnosis.tsv'));
+        files.push(fs.readFileSync(stubFilesDir + '/donor.tsv'));
+        files.push(fs.readFileSync(stubFilesDir + '/specimen.tsv'));
+        files.push(fs.readFileSync(stubFilesDir + '/primary_diagnosis.tsv'));
       } catch (err) {
         return err;
       }
@@ -1109,8 +1111,8 @@ describe('Submission Api', () => {
       let donorFile: Buffer;
       let specimenFile: Buffer;
       try {
-        donorFile = fs.readFileSync(__dirname + '/donor.tsv');
-        specimenFile = fs.readFileSync(__dirname + '/specimen.tsv');
+        donorFile = fs.readFileSync(stubFilesDir + '/donor.tsv');
+        specimenFile = fs.readFileSync(stubFilesDir + '/specimen.tsv');
       } catch (err) {
         return err;
       }
@@ -1263,7 +1265,7 @@ describe('Submission Api', () => {
     const uploadSubmission = async (fileName: string = 'donor.tsv') => {
       let file: Buffer;
       try {
-        file = fs.readFileSync(__dirname + `/${fileName}`);
+        file = fs.readFileSync(stubFilesDir + `/${fileName}`);
       } catch (err) {
         return err;
       }
@@ -1381,7 +1383,7 @@ describe('Submission Api', () => {
 
       fileNames.forEach(fn => {
         try {
-          const file = fs.readFileSync(__dirname + `/${fn}`);
+          const file = fs.readFileSync(stubFilesDir + `/${fn}`);
           req = req.attach('clinicalFiles', file, fn);
         } catch (err) {
           return err;
@@ -1990,7 +1992,7 @@ describe('Submission Api', () => {
     it('get all templates zip', done => {
       let refZip: AdmZip;
       try {
-        refZip = new AdmZip(__dirname + '/all.zip');
+        refZip = new AdmZip(stubFilesDir + '/all.zip');
       } catch (err) {
         return done(err);
       }
@@ -2055,294 +2057,6 @@ describe('Submission Api', () => {
           res.should.header('Content-type', 'application/json; charset=utf-8');
           done();
         });
-    });
-
-    describe('schema migration api', () => {
-      const programId = 'ABCD-EF';
-      const donor: Donor = emptyDonorDocument({
-        submitterId: 'ICGC_0001',
-        programId,
-        clinicalInfo: {
-          program_id: 'ABCD-EF',
-          vital_status: 'Deceased',
-          cause_of_death: 'Unknown',
-          submitter_donor_id: 'ICGC_0001',
-          survival_time: 120,
-        },
-        clinicalInfoStats: {
-          submittedCoreFields: 3,
-          expectedCoreFields: 3,
-          submittedExtendedFields: 0,
-          expectedExtendedFields: 0,
-        },
-        aggregatedInfoStats: {
-          submittedCoreFields: 3,
-          expectedCoreFields: 3,
-          submittedExtendedFields: 0,
-          expectedExtendedFields: 0,
-        },
-      });
-
-      const donor2: Donor = emptyDonorDocument({
-        submitterId: 'ICGC_0003',
-        programId,
-        clinicalInfo: {
-          program_id: 'ABCD-EF',
-          vital_status: 'Alive',
-          cause_of_death: 'Died of cancer',
-          submitter_donor_id: 'ICGC_0003',
-          survival_time: 67,
-        },
-        clinicalInfoStats: {
-          submittedCoreFields: 3,
-          expectedCoreFields: 3,
-          submittedExtendedFields: 0,
-          expectedExtendedFields: 0,
-        },
-        specimens: [
-          {
-            samples: [{ sampleType: 'Total RNA', submitterId: 'sm123-2', sampleId: 610001 }],
-            clinicalInfo: {},
-            specimenTissueSource: 'Saliva',
-            tumourNormalDesignation: 'Tumour',
-            specimenType: 'Primary tumour',
-            submitterId: 'sub-sp-pacaau-124',
-            specimenId: 210001,
-          },
-        ],
-        primaryDiagnosis: {
-          clinicalInfo: {
-            program_id: 'PACA-AU',
-            submitter_donor_id: 'ICGC_0003',
-            number_lymph_nodes_examined: 2,
-            age_at_diagnosis: 96,
-            cancer_type_code: 'A11.1A',
-            tumour_staging_system: 'Murphy',
-          },
-          clinicalInfoStats: {
-            submittedCoreFields: 2,
-            expectedCoreFields: 7,
-            submittedExtendedFields: 0,
-            expectedExtendedFields: 0,
-          },
-        },
-        aggregatedInfoStats: {
-          submittedCoreFields: 5,
-          expectedCoreFields: 10,
-          submittedExtendedFields: 0,
-          expectedExtendedFields: 0,
-        },
-      });
-
-      const newSchemaInvalidDonor: Donor = emptyDonorDocument({
-        submitterId: 'ICGC_0002',
-        programId,
-        clinicalInfo: {
-          program_id: 'ABCD-EF',
-          vital_status: 'Unknown',
-          cause_of_death: 'Died of cancer',
-          submitter_donor_id: 'ICGC_0002',
-          survival_time: 67,
-        },
-      });
-
-      this.beforeEach(async () => {
-        await clearCollections(dburl, ['donors', 'dictionarymigrations']);
-        await insertData(dburl, 'donors', donor);
-        await insertData(dburl, 'donors', donor2);
-        // reset the base schema since tests can load new one
-        await bootstrap.loadSchema(schemaName, schemaVersion);
-      });
-
-      // very simple smoke test of the migration to be expanded along developement
-      it('should update the schema', async () => {
-        await chai
-          .request(app)
-          .patch('/submission/schema?sync=true')
-          .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-          .send({
-            version: '2.0',
-          })
-          .then(async (res: any) => {
-            res.should.have.status(200);
-            res.body.version.should.eq('2.0');
-
-            const schema = (await findInDb(dburl, 'dataschemas', {})) as SchemasDictionary[];
-            schema[0].version.should.eq('2.0');
-          });
-
-        await chai
-          .request(app)
-          .get('/submission/schema/migration/')
-          .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-          .then(async (res: any) => {
-            res.should.have.status(200);
-            res.body.length.should.eq(1);
-            const migrationId = res.body[0]._id;
-            const migrations = (await findInDb(
-              dburl,
-              'dictionarymigrations',
-              {},
-            )) as DictionaryMigration[];
-            migrations.should.not.be.empty;
-            migrations[0].should.not.be.undefined;
-            if (!migrations[0]._id) {
-              throw new Error('migration in db with no id');
-            }
-            migrations[0]._id.toString().should.eq(migrationId);
-            migrations[0].invalidDonorsErrors.length.should.eq(0);
-            migrations[0].stats.validDocumentsCount.should.eq(2);
-          });
-      });
-
-      it('should check new schema is valid with data vlidation fields', async () => {
-        await chai
-          .request(app)
-          .post('/submission/schema/dry-run-update')
-          .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-          .send({
-            version: '3.0',
-          })
-          .then((res: any) => {
-            res.should.have.status(200);
-            res.body.newSchemaErrors.should.deep.eq({
-              [ClinicalEntitySchemaNames.DONOR]: {
-                missingFields: [],
-                invalidFieldCodeLists: [
-                  { fieldName: DonorFieldsEnum.vital_status, missingCodeListValues: ['Deceased'] },
-                ],
-              },
-              [ClinicalEntitySchemaNames.REGISTRATION]: {
-                missingFields: [SampleRegistrationFieldsEnum.specimen_type],
-                invalidFieldCodeLists: [],
-              },
-            });
-          });
-      });
-
-      it('should run migration and update all donor entity clincial info stats', async () => {
-        const donorWithNoStats = emptyDonorDocument({
-          submitterId: 'ICGC_0004',
-          programId,
-          clinicalInfo: {
-            program_id: 'ABCD-EF',
-            submitter_donor_id: 'ICGC_0004',
-            vital_status: 'Deceased',
-            cause_of_death: 'Died of cancer',
-            survival_time: 67,
-          },
-        });
-        await insertData(dburl, 'donors', donorWithNoStats);
-
-        const donors = await findInDb(dburl, 'donors', {});
-
-        // donor 1 stats before migration
-        chai.expect(donors[0].aggregatedInfoStats).to.deep.include({
-          submittedCoreFields: 3,
-          expectedCoreFields: 3,
-        });
-        // donor 2 stats before migration
-        chai.expect(donors[1].aggregatedInfoStats).to.deep.include({
-          submittedCoreFields: 5,
-          expectedCoreFields: 10,
-        });
-        chai.expect(donors[1].primaryDiagnosis.clinicalInfoStats).to.deep.include({
-          submittedCoreFields: 2,
-          expectedCoreFields: 7,
-        });
-        // this donor has no stats currently but it has clinicalInfos (which will remain schema valid), so migration should add them
-        chai.expect(donors[2].aggregatedInfoStats).to.deep.eq(undefined);
-
-        await chai
-          .request(app)
-          .patch('/submission/schema/?sync=true')
-          .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-          .send({
-            version: '4.0',
-          })
-          .then(async (res: any) => {
-            res.should.have.status(200);
-            const updatedDonor = await findInDb(dburl, 'donors', {});
-
-            // donor 1 stats after migraiton
-            chai.expect(updatedDonor[0].aggregatedInfoStats).to.deep.include({
-              submittedCoreFields: 2,
-              expectedCoreFields: 2,
-            });
-            // donor 2 stats after migraiton
-            chai.expect(updatedDonor[1].aggregatedInfoStats).to.deep.include({
-              submittedCoreFields: 5,
-              expectedCoreFields: 10,
-            });
-            // this stub schema has also turned an existing required field to core in primary diagnosis
-            chai.expect(updatedDonor[1].primaryDiagnosis.clinicalInfoStats).to.deep.include({
-              submittedCoreFields: 3,
-              expectedCoreFields: 8,
-            });
-            // donor 3 stats after migraiton, now has recently calculated stats, including the one without any stats
-            chai.expect(updatedDonor[2].aggregatedInfoStats).to.deep.include({
-              submittedCoreFields: 2,
-              expectedCoreFields: 2,
-            });
-
-            console.log(updatedDonor);
-          });
-      });
-
-      describe('dry run migration api', () => {
-        it('should report donor validation errors', async () => {
-          await insertData(dburl, 'donors', newSchemaInvalidDonor);
-
-          await chai
-            .request(app)
-            .post('/submission/schema/dry-run-update')
-            .send({
-              version: '2.0',
-            })
-            .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-            .then(async (res: any) => {
-              res.should.have.status(200);
-              const migration = res.body as DictionaryMigration;
-              migration.should.not.be.undefined;
-              const migrations = (await findInDb(
-                dburl,
-                'dictionarymigrations',
-                {},
-              )) as DictionaryMigration[];
-              migrations.should.not.be.empty;
-              migrations[0].should.not.be.undefined;
-              const dbMigration = migrations[0];
-              if (!dbMigration._id) {
-                throw new Error('migration in db with no id');
-              }
-              dbMigration._id = dbMigration._id.toString();
-              // we convert to json string to normalize dates
-              const normalizedDbMigration = JSON.parse(JSON.stringify(dbMigration));
-              normalizedDbMigration.should.deep.include(migration);
-              migration.stats.invalidDocumentsCount.should.eq(1);
-              migration.stats.validDocumentsCount.should.eq(2);
-              migration.stats.totalProcessed.should.eq(3);
-              migration.invalidDonorsErrors[0].should.deep.eq({
-                donorId: 1,
-                submitterDonorId: 'ICGC_0002',
-                programId: 'ABCD-EF',
-                errors: [
-                  {
-                    donor: [
-                      {
-                        errorType: 'INVALID_ENUM_VALUE',
-                        fieldName: 'vital_status',
-                        index: 0,
-                        info: {},
-                        message: 'The value is not permissible for this field.',
-                      },
-                    ],
-                  },
-                ],
-              });
-            });
-        });
-      });
     });
   });
 });

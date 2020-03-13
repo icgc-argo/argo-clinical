@@ -118,7 +118,8 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "pretty-quick --staged"
+      "pre-commit": "pretty-quick --staged",
+      "pre-push": "git branch | grep \"*\" | egrep -v \"^* develop$\" && git branch | grep \"*\" | egrep -v \"^* master$\""
     }
   },
   "prettier": {
