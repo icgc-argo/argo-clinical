@@ -3,7 +3,7 @@ const { createLogger, format, transports } = winston;
 const { combine, timestamp, label, prettyPrint, json } = format;
 
 // read the log level from the env directly since this is a very high priority value.
-const LOG_LEVEL = process.env.LOG_LEVEL || 'debug';
+const LOG_LEVEL = process.env.LOG_LEVEL || 'info';
 console.log('log level configured: ', LOG_LEVEL);
 
 // Logger configuration

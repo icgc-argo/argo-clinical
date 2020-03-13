@@ -98,6 +98,8 @@ export namespace operations {
     // check the program id if it matches the authorized one
     // This check is used to validate the program Id along with the schema validations
     // to save extra round trips
+
+    let start = new Date().getTime() / 1000;
     command.records.forEach((r, index) => {
       const schemaResult = schemaManager
         .instance()
@@ -119,6 +121,8 @@ export namespace operations {
       unifiedSchemaErrors = unifiedSchemaErrors.concat(programIdError);
       validRecordsAccumulator.push(schemaResult.processedRecord);
     });
+    let end = new Date().getTime() / 1000;
+    L.info(`schema validation took ${end - start} s`);
 
     if (!_.isEmpty(unifiedSchemaErrors)) {
       L.info(`found ${unifiedSchemaErrors.length} schema errors in registration attempt`);
@@ -142,11 +146,15 @@ export namespace operations {
 
     // fetch related donor docs from the db
     const donorsBySubmitterIdMap: DeepReadonly<DonorMap> = await getDonorsInProgram(filters);
+
+    start = new Date().getTime() / 1000;
     const { errors } = await dataValidator.validateRegistrationData(
       command.programId,
       registrationRecords,
       donorsBySubmitterIdMap,
     );
+    end = new Date().getTime() / 1000;
+    L.info(`validation registration took ${end - start} s`);
 
     if (errors.length > 0) {
       L.info(`found ${errors.length} data errors in registration attempt`);
@@ -970,7 +978,7 @@ export namespace operations {
       validateRequiredColumns(i, d, ['icgc_donor_id', 'submitted_donor_id']);
       result.push({
         donorId: parseInt(d.icgc_donor_id.substring(2), 10),
-        gender: d.donor_sex == '' ? 'Other' : _.startCase(d.donor_sex),
+        gender: d.donor_sex == '' ? OTHER : _.startCase(d.donor_sex),
         programId,
         specimens: getIcgcDonorSpecimens(clinicalData, d),
         submitterId: d.submitted_donor_id,
@@ -1123,6 +1131,15 @@ const getSchemaValidationErrorInfoObject = (
   }
 };
 
+const SOLID_TISSUE = 'Solid tissue';
+const OTHER = 'Other';
+const NORMAL = 'Normal';
+const TUMOR = 'Tumour';
+const PRIMARY_TUMOR = 'Primary tumour';
+const RECURRENT_TUMOR = 'Recurrent tumour';
+const METASTATIC_TUMOR = 'Metastatic tumour';
+const LYMPH_NODE = 'Lymph node';
+
 const ICGC_SPECIMEN_TYPE_MAP: {
   [k: string]: {
     tumour_normal_designation: string;
@@ -1131,143 +1148,143 @@ const ICGC_SPECIMEN_TYPE_MAP: {
   };
 } = {
   'Normal - solid tissue': {
-    tumour_normal_designation: 'Normal',
-    specimen_type: 'Normal',
-    tissue_source: 'Solid tissue',
+    tumour_normal_designation: NORMAL,
+    specimen_type: NORMAL,
+    tissue_source: SOLID_TISSUE,
   },
   'Normal - blood derived': {
-    tumour_normal_designation: 'Normal',
-    specimen_type: 'Normal',
+    tumour_normal_designation: NORMAL,
+    specimen_type: NORMAL,
     tissue_source: 'Blood derived',
   },
   'Normal - bone marrow': {
-    tumour_normal_designation: 'Normal',
-    specimen_type: 'Normal',
+    tumour_normal_designation: NORMAL,
+    specimen_type: NORMAL,
     tissue_source: 'Bone marrow',
   },
   'Normal - tissue adjacent to primary': {
-    tumour_normal_designation: 'Normal', // might need to double check
+    tumour_normal_designation: NORMAL, // might need to double check
     specimen_type: 'Normal - tissue adjacent to primary tumour',
-    tissue_source: 'Solid tissue',
+    tissue_source: SOLID_TISSUE,
   },
   'Normal - buccal cell': {
-    tumour_normal_designation: 'Normal',
-    specimen_type: 'Normal',
+    tumour_normal_designation: NORMAL,
+    specimen_type: NORMAL,
     tissue_source: 'Buccal cell',
   },
   'Normal - EBV immortalized': {
-    tumour_normal_designation: 'Normal',
-    specimen_type: 'Normal',
-    tissue_source: 'Other',
+    tumour_normal_designation: NORMAL,
+    specimen_type: NORMAL,
+    tissue_source: OTHER,
   },
   'Normal - lymph node': {
-    tumour_normal_designation: 'Normal',
-    specimen_type: 'Normal',
-    tissue_source: 'Lymph node',
+    tumour_normal_designation: NORMAL,
+    specimen_type: NORMAL,
+    tissue_source: LYMPH_NODE,
   },
   'Normal - other': {
-    tumour_normal_designation: 'Normal',
-    specimen_type: 'Normal',
-    tissue_source: 'Other',
+    tumour_normal_designation: NORMAL,
+    specimen_type: NORMAL,
+    tissue_source: OTHER,
   },
   'Primary tumour - solid tissue': {
-    tumour_normal_designation: 'Tumour',
-    specimen_type: 'Primary tumour',
-    tissue_source: 'Solid Tissue',
+    tumour_normal_designation: TUMOR,
+    specimen_type: PRIMARY_TUMOR,
+    tissue_source: SOLID_TISSUE,
   },
   'Primary tumour - blood derived (peripheral blood)': {
-    tumour_normal_designation: 'Tumour',
-    specimen_type: 'Primary tumour',
+    tumour_normal_designation: TUMOR,
+    specimen_type: PRIMARY_TUMOR,
     tissue_source: 'Blood derived - peripheral blood',
   },
   'Primary tumour - blood derived (bone marrow)': {
-    tumour_normal_designation: 'Tumour',
-    specimen_type: 'Primary tumour',
+    tumour_normal_designation: TUMOR,
+    specimen_type: PRIMARY_TUMOR,
     tissue_source: 'Blood derived - bone marrow',
   },
   'Primary tumour - additional new primary': {
-    tumour_normal_designation: 'Tumour',
-    specimen_type: 'Primary tumour',
-    tissue_source: 'Other',
+    tumour_normal_designation: TUMOR,
+    specimen_type: PRIMARY_TUMOR,
+    tissue_source: OTHER,
   },
   'Primary tumour - other': {
-    tumour_normal_designation: 'Tumour',
-    specimen_type: 'Primary tumour',
-    tissue_source: 'Other',
+    tumour_normal_designation: TUMOR,
+    specimen_type: PRIMARY_TUMOR,
+    tissue_source: OTHER,
   },
   'Recurrent tumour - solid tissue': {
-    tumour_normal_designation: 'Tumour',
-    specimen_type: 'Recurrent tumour',
-    tissue_source: 'Solid tissue',
+    tumour_normal_designation: TUMOR,
+    specimen_type: RECURRENT_TUMOR,
+    tissue_source: SOLID_TISSUE,
   },
   'Recurrent tumour - blood derived (peripheral blood)': {
-    tumour_normal_designation: 'Tumour',
-    specimen_type: 'Recurrent tumour',
+    tumour_normal_designation: TUMOR,
+    specimen_type: RECURRENT_TUMOR,
     tissue_source: 'Blood derived - peripheral blood',
   },
   'Recurrent tumour - blood derived (bone marrow)': {
-    tumour_normal_designation: 'Tumour',
-    specimen_type: 'Recurrent tumour',
+    tumour_normal_designation: TUMOR,
+    specimen_type: RECURRENT_TUMOR,
     tissue_source: 'Blood derived - bone marrow',
   },
   'Recurrent tumour - other': {
-    tumour_normal_designation: 'Tumour',
-    specimen_type: 'Recurrent tumour',
-    tissue_source: 'Other',
+    tumour_normal_designation: TUMOR,
+    specimen_type: RECURRENT_TUMOR,
+    tissue_source: OTHER,
   },
   'Metastatic tumour - NOS': {
-    tumour_normal_designation: 'Tumour',
-    specimen_type: 'Metastatic tumour',
-    tissue_source: 'Other',
+    tumour_normal_designation: TUMOR,
+    specimen_type: METASTATIC_TUMOR,
+    tissue_source: OTHER,
   },
   'Metastatic tumour - lymph node': {
-    tumour_normal_designation: 'Tumour',
-    specimen_type: 'Metastatic tumour',
-    tissue_source: 'Lymph node',
+    tumour_normal_designation: TUMOR,
+    specimen_type: METASTATIC_TUMOR,
+    tissue_source: LYMPH_NODE,
   },
   'Metastatic tumour - metastasis local to lymph node': {
-    tumour_normal_designation: 'Tumour',
+    tumour_normal_designation: TUMOR,
     specimen_type: 'Metastatic tumour - metastasis local to lymph node',
-    tissue_source: 'Lymph node',
+    tissue_source: LYMPH_NODE,
   },
   'Metastatic tumour - metastasis to distant location': {
-    tumour_normal_designation: 'Tumour',
+    tumour_normal_designation: TUMOR,
     specimen_type: 'Metastatic tumour - metastasis to distant location',
-    tissue_source: 'Other',
+    tissue_source: OTHER,
   },
   'Metastatic tumour - additional metastatic': {
-    tumour_normal_designation: 'Tumour',
+    tumour_normal_designation: TUMOR,
     specimen_type: 'Metastatic tumour - additional metastatic',
-    tissue_source: 'Other',
+    tissue_source: OTHER,
   },
   'Xenograft - derived from primary tumour': {
-    tumour_normal_designation: 'Tumour',
+    tumour_normal_designation: TUMOR,
     specimen_type: 'Xenograft - derived from primary tumour',
-    tissue_source: 'Other',
+    tissue_source: OTHER,
   },
   'Xenograft - derived from tumour cell line': {
-    tumour_normal_designation: 'Tumour',
+    tumour_normal_designation: TUMOR,
     specimen_type: 'Xenograft - derived from tumour cell line',
-    tissue_source: 'Other',
+    tissue_source: OTHER,
   },
   'Cell line - derived from tumour': {
-    tumour_normal_designation: 'Tumour',
+    tumour_normal_designation: TUMOR,
     specimen_type: 'Cell line - derived from tumour',
-    tissue_source: 'Other',
+    tissue_source: OTHER,
   },
   'Primary tumour - lymph node': {
-    tumour_normal_designation: 'Tumour',
-    specimen_type: 'Primary tumour',
-    tissue_source: 'Lymph node',
+    tumour_normal_designation: TUMOR,
+    specimen_type: PRIMARY_TUMOR,
+    tissue_source: LYMPH_NODE,
   },
   'Metastatic tumour - other': {
-    tumour_normal_designation: 'Tumour',
-    specimen_type: 'Metastatic tumour',
-    tissue_source: 'Other',
+    tumour_normal_designation: TUMOR,
+    specimen_type: METASTATIC_TUMOR,
+    tissue_source: OTHER,
   },
   'Cell line - derived from xenograft tumour': {
-    tumour_normal_designation: 'Tumour',
+    tumour_normal_designation: TUMOR,
     specimen_type: 'Cell line - derived from xenograft tumour',
-    tissue_source: 'Other',
+    tissue_source: OTHER,
   },
 };

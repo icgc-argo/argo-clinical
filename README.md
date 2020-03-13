@@ -14,7 +14,7 @@ Make scripts are provided to run this application and the required MongoDB using
 - run: `make debug`
 - tests: `make verify`
 
-To run local without engaging the debugger, run `npm run local` . Since this will not run the docker-compose setup, this requires MongoDB to be running locally (connections configured in the .env file)
+To run local without engaging the debugger, run `npm run local`. Since this will not run the docker-compose setup, this requires MongoDB to be running locally (connections configured in the .env file)
 
 ## Debugging Notes:
 
@@ -22,7 +22,7 @@ If file upload fails with the error `TypeError: Cannot read property 'readFile' 
 
 ## DB migration
 
-we use tool called migrate-mongo: https://www.npmjs.com/package/migrate-mongo
+We use a tool called migrate-mongo: https://www.npmjs.com/package/migrate-mongo
 
 - create script: `npx migrate-mongo create my-script`
 - run migration: `npx migrate-mongo up`
@@ -30,7 +30,7 @@ we use tool called migrate-mongo: https://www.npmjs.com/package/migrate-mongo
   - With this command, migrate-mongo will revert (only) the last applied migration
 - status: `npx migrate-mongo status`
 
-notes:
+Notes:
 
 - make scripts idempotent in case they fail in the middle
 - if a script fails it will stay in pending state
