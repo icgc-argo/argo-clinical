@@ -37,14 +37,17 @@ const genericChooser = (
   return chosenFields.map(element => {
     if (element.meta && element.meta.primaryId) {
       // Dealing with PrimaryIds
-      if (element.name === 'program_id') {
-        return shortName;
-      } else if (element.name === 'submitter_donor_id') {
-        return `subDonor-${counts[0]}`;
-      } else if (element.name === 'submitter_specimen_id') {
-        return `subSpecimen-${counts[0]}.${counts[1]}`;
-      } else if (element.name === 'submitter_sample_id') {
-        return `subSample-${counts[0]}.${counts[1]}.${counts[2]}`;
+      switch (element.name) {
+        case 'program_id':
+          return shortName;
+        case 'submitter_donor_id':
+          return `subDonor-${counts[0]}`;
+        case 'submitter_specimen_id':
+          return `subSpecimen-${counts[0]}.${counts[1]}`;
+        case 'submitter_sample_id':
+          return `subSample-${counts[0]}.${counts[1]}.${counts[2]}`;
+        default:
+          return;
       }
     } else if (element.restrictions && element.restrictions.script) {
       // Script Handling outside scope
@@ -70,36 +73,13 @@ const randomSample = (
 ) => {
   const fields = schema.schemas[0].fields;
   const choicesNoScripts = genericChooser(fields, shortName, counts);
-  const headers = fields.map(element => element.name);
-  const choicesMap = _.zipObject(headers, choicesNoScripts);
-  // Script and Constant Handling
-  Object.keys(choicesMap).forEach(key => {
-    Object.keys(constants).forEach(key => {
-      choicesMap[key] = constants[key]; // @Minh
-    });
-    if (key === 'specimen_type' && choicesMap['tumour_normal_designation'] === 'Normal') {
-      choicesMap[key] = choice(
-        fields
-          .find(element => element.name === 'specimen_type')
-          ?.restrictions?.codeList?.filter(
-            element => typeof element === 'string' && !element.toLowerCase().includes('tumour'),
-          ),
-      );
-    } else if (key === 'specimen_type' && choicesMap['tumour_normal_designation'] === 'Tumour') {
-      choicesMap[key] = choice(
-        fields
-          .find(element => element.name === 'specimen_type')
-          ?.restrictions?.codeList?.filter(
-            element =>
-              typeof element === 'string' &&
-              (element.toLowerCase().includes('tumour') || element.startsWith('Normal')),
-          ),
-      );
-    }
-    if (choicesMap[key] === 'ERROR') {
-      console.log('ERROR in randomSample');
-    }
-  });
+  const choicesMap = Object.assign(
+    _.zipObject(
+      fields.map(element => element.name),
+      choicesNoScripts,
+    ),
+    constants,
+  );
   return Object.values(choicesMap).join('\t');
 
   // const chosenFields = fields.filter(
@@ -135,6 +115,33 @@ const generateFiles = (shortName: string, maxCounts: Counts) => {
     let specimenMax = randomIntFromRange(maxCounts.specimenCount);
     for (let j = 0; j < specimenMax; j++) {
       // fs.append to specimen
+      sampleConstants.specimen_tissue_source = choice(
+        schema.schemas[0].fields.find(element => element.name === 'specimen_tissue_source')
+          ?.restrictions?.codeList,
+      );
+      sampleConstants.tumour_normal_designation = choice(
+        schema.schemas[0].fields.find(element => element.name === 'tumour_normal_designation')
+          ?.restrictions?.codeList,
+      );
+      sampleConstants.specimen_type =
+        sampleConstants.tumour_normal_designation === 'Normal'
+          ? choice(
+              schema.schemas[0].fields
+                .find(element => element.name === 'specimen_type')
+                ?.restrictions?.codeList?.filter(
+                  element =>
+                    typeof element === 'string' && !element.toLowerCase().includes('tumour'),
+                ),
+            )
+          : choice(
+              schema.schemas[0].fields
+                .find(element => element.name === 'specimen_type')
+                ?.restrictions?.codeList?.filter(
+                  element =>
+                    typeof element === 'string' &&
+                    (element.toLowerCase().includes('tumour') || element.startsWith('Normal')),
+                ),
+            );
       let sampleMax = randomIntFromRange(maxCounts.sampleCount);
       for (let k = 0; k < sampleMax; k++) {
         let counts = [i, j, k];
@@ -150,4 +157,4 @@ const generateFiles = (shortName: string, maxCounts: Counts) => {
   }
 };
 
-generateFiles('ZPRI-CA', { donorCount: 3, specimenCount: 2, sampleCount: 2 });
+generateFiles('ZPRI-CA', { donorCount: 1, specimenCount: 3, sampleCount: [1, 6] });
