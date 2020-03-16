@@ -447,7 +447,10 @@ export function getSingleClinicalEntityFromDonorBySchemanName(
   if (clinicalEntityType === ClinicalEntitySchemaNames.REGISTRATION) {
     throw new Error('Sample_registration has no clincal info to return');
   }
-  const uniqueIdNames: string[] = _.concat([] || ClinicalUniqueIdentifier[clinicalEntityType]);
+  const uniqueIdNames: string[] = _.concat([], ClinicalUniqueIdentifier[clinicalEntityType]);
+  if (_.isEmpty(uniqueIdNames)) {
+    throw new Error("illegale state, couldn't find entity id field name");
+  }
   const constraints: ClinicalInfo = {};
   uniqueIdNames.forEach(idN => (constraints[idN] = clinicalInfoRef[idN]));
 

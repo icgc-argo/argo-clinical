@@ -1,2 +1,3 @@
 program_id	submitter_donor_id	submitter_treatment_id	radiation_therapy_modality	application_form	radiation_therapy_fractions	radiation_therapy_dosage	anatomical_site_irradiated
-PACA-AU	ICGC_0003	T_03	Photon	External	5	9	Abdomen
+TEST-CA	ICGC_0003	T_03	Photon	External	5	9	Abdomen
+TEST-CA	ICGC_0001.1	T_05	Photon	External	5	9	Abdomen
