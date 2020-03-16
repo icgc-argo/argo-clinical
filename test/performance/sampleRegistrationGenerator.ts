@@ -22,6 +22,13 @@ interface Counts {
   sampleCount: number | [number, number];
 }
 
+interface SampleRegistrationConstants {
+  gender: string;
+  specimen_tissue_source: string;
+  tumour_normal_designation: string;
+  specimen_type: string;
+}
+
 const genericChooser = (
   chosenFields: readonly FieldDefinition[],
   shortName: string,
@@ -56,13 +63,20 @@ const genericChooser = (
 };
 
 // Generates lines for sample registration
-const randomSample = (shortName: string, counts: number[]) => {
+const randomSample = (
+  shortName: string,
+  constants: SampleRegistrationConstants,
+  counts: number[],
+) => {
   const fields = schema.schemas[0].fields;
-  const headers = fields.map(element => element.name);
   const choicesNoScripts = genericChooser(fields, shortName, counts);
+  const headers = fields.map(element => element.name);
   const choicesMap = _.zipObject(headers, choicesNoScripts);
-  // Script Handling
+  // Script and Constant Handling
   Object.keys(choicesMap).forEach(key => {
+    Object.keys(constants).forEach(key => {
+      choicesMap[key] = constants[key]; // @Minh
+    });
     if (key === 'specimen_type' && choicesMap['tumour_normal_designation'] === 'Normal') {
       choicesMap[key] = choice(
         fields
@@ -96,8 +110,14 @@ const randomSample = (shortName: string, counts: number[]) => {
 // Generates tsv files
 const generateFiles = (shortName: string, maxCounts: Counts) => {
   const fs = require('fs');
+  let sampleConstants: SampleRegistrationConstants = {
+    gender: 'Male',
+    specimen_tissue_source: 'Plasma',
+    tumour_normal_designation: 'Tumour',
+    specimen_type: 'Primary Tumour',
+  };
   fs.appendFile(
-    './test/performance/sampleRegistration.tsv',
+    `./test/performance/sample_registration-${shortName}.tsv`,
     schema.schemas[0].fields
       .map(element => element.name)
       .join('\t')
@@ -108,18 +128,20 @@ const generateFiles = (shortName: string, maxCounts: Counts) => {
   );
   const donorMax = randomIntFromRange(maxCounts.donorCount);
   for (let i = 0; i < donorMax; i++) {
+    // fs.append to donor
+    sampleConstants.gender = choice(
+      schema.schemas[0].fields.find(element => element.name === 'gender')?.restrictions?.codeList,
+    );
     let specimenMax = randomIntFromRange(maxCounts.specimenCount);
     for (let j = 0; j < specimenMax; j++) {
+      // fs.append to specimen
       let sampleMax = randomIntFromRange(maxCounts.sampleCount);
       for (let k = 0; k < sampleMax; k++) {
         let counts = [i, j, k];
         fs.appendFile(
-          './test/performance/sampleRegistration.tsv',
-          randomSample(shortName, counts).concat('\n'),
-          function(
-            // fs.append to other files as well
-            err: any,
-          ) {
+          `./test/performance/sample_registration-${shortName}.tsv`,
+          randomSample(shortName, sampleConstants, counts).concat('\n'),
+          function(err: any) {
             if (err) throw err;
           },
         );
@@ -128,4 +150,4 @@ const generateFiles = (shortName: string, maxCounts: Counts) => {
   }
 };
 
-generateFiles('TEST-CA', { donorCount: 3, specimenCount: 2, sampleCount: 2 });
+generateFiles('ZPRI-CA', { donorCount: 3, specimenCount: 2, sampleCount: 2 });
