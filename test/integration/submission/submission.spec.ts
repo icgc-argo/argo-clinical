@@ -32,6 +32,8 @@ import {
   ClinicalEntitySchemaNames,
   DonorFieldsEnum,
   ClinicalUniqueIdentifier,
+  SavedClinicalEntity,
+  ClinicalEntities,
 } from '../../../src/submission/submission-entities';
 import { TsvUtils } from '../../../src/utils';
 import { donorDao } from '../../../src/clinical/donor-repo';
@@ -959,17 +961,34 @@ describe('Submission Api', () => {
         return err;
       }
       // insert donor into db
-      await insertData(dburl, 'donors', {
-        followUps: [],
-        treatments: [],
-        chemotherapy: [],
-        hormoneTherapy: [],
-        gender: 'Male',
-        submitterId: 'ICGC_0001',
-        programId: 'ABCD-EF',
-        specimens: [],
-        donorId: 1,
-      });
+      await createDonorDoc(
+        dburl,
+        emptyDonorDocument({
+          submitterId: 'ICGC_0001',
+          donorId: 1,
+          gender: 'Male',
+          specimens: [
+            {
+              specimenId: 1,
+              clinicalInfo: {},
+              specimenTissueSource: '',
+              tumourNormalDesignation: 'Normal',
+              submitterId: 'ssp1',
+              specimenType: 'Normal',
+              samples: [
+                {
+                  sampleType: 'totalDNA',
+                  submitterId: 'ssa1',
+                  sampleId: 1,
+                },
+              ],
+            },
+          ],
+          clinicalInfo: {},
+          programId: 'ABCD-EF',
+        }),
+      );
+
       return chai
         .request(app)
         .post('/submission/program/ABCD-EF/clinical/upload')
@@ -1042,6 +1061,30 @@ describe('Submission Api', () => {
               percent_tumour_cells: 0.5,
             },
           },
+          {
+            samples: [],
+            specimenTissueSource: 'Other',
+            tumourNormalDesignation: 'Tumour',
+            submitterId: '8013862',
+            clinicalInfo: {
+              program_id: 'ABCD-EF',
+              submitter_donor_id: 'ICGC_0001',
+              submitter_specimen_id: '8013862',
+              specimen_acquisition_interval: 230,
+              specimen_anatomic_location: 'Other',
+              central_pathology_confirmed: 'No',
+              tumour_histological_type: 'M-1111/22',
+              tumour_grading_system: 'Default',
+              tumour_grade: 'aStringValue',
+              pathological_tumour_staging_system: 'Murphy',
+              pathological_stage_group: 'aStringValue',
+              percent_proliferating_cells: 0.3,
+              percent_inflammatory_tissue: 0.2,
+              percent_stromal_cells: 0.2,
+              percent_necrosis: 0.3,
+              percent_tumour_cells: 0.1,
+            },
+          },
         ],
         primaryDiagnosis: {
           clinicalInfo: {
@@ -1076,9 +1119,10 @@ describe('Submission Api', () => {
                 try {
                   res.should.have.status(200);
                   res.body.submission.state.should.eq(SUBMISSION_STATE.VALID);
-                  const clinicalEntities = res.body.submission.clinicalEntities;
+                  const clinicalEntities: ClinicalEntities = res.body.submission.clinicalEntities;
                   clinicalEntities.donor.stats.new.should.deep.eq([0]);
                   clinicalEntities.specimen.stats.updated.should.deep.eq([0]);
+                  clinicalEntities.specimen.stats.noUpdate.should.deep.eq([1]);
                   clinicalEntities.specimen.dataUpdates.should.deep.eq([
                     {
                       fieldName: 'percent_tumour_cells',
