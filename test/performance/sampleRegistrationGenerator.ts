@@ -12,9 +12,15 @@ const choice = (array: Array<any> | undefined) => {
   return array[choice];
 };
 
-function randomIntFromRange(x: number | [number, number]) {
+const randomIntFromRange = (x: number | [number, number]) => {
   return typeof x === 'number' ? x : Math.floor(Math.random() * (x[1] - x[0] + 1) + x[0]);
-}
+};
+
+const getCodelist = (file: number, elementName: string) => {
+  const codeList = schema.schemas[file].fields.find(element => element.name === elementName)
+    ?.restrictions?.codeList;
+  return codeList !== undefined ? codeList : [];
+};
 
 interface Counts {
   donorCount: number | [number, number];
@@ -65,6 +71,8 @@ const genericChooser = (
   });
 };
 
+const randomDonor = (shortName: string, counts: number[]) => {};
+
 // Generates lines for sample registration
 const randomSample = (
   shortName: string,
@@ -80,7 +88,9 @@ const randomSample = (
     ),
     constants,
   );
-  return Object.values(choicesMap).join('\t');
+  return Object.values(choicesMap)
+    .join('\t')
+    .concat('\n');
 
   // const chosenFields = fields.filter(
   //   element => (element.restrictions && element.restrictions.required) || Math.random() > 0.5,
@@ -109,45 +119,33 @@ const generateFiles = (shortName: string, maxCounts: Counts) => {
   const donorMax = randomIntFromRange(maxCounts.donorCount);
   for (let i = 0; i < donorMax; i++) {
     // fs.append to donor
-    sampleConstants.gender = choice(
-      schema.schemas[0].fields.find(element => element.name === 'gender')?.restrictions?.codeList,
-    );
+    sampleConstants.gender = choice(getCodelist(0, 'gender'));
     let specimenMax = randomIntFromRange(maxCounts.specimenCount);
     for (let j = 0; j < specimenMax; j++) {
       // fs.append to specimen
-      sampleConstants.specimen_tissue_source = choice(
-        schema.schemas[0].fields.find(element => element.name === 'specimen_tissue_source')
-          ?.restrictions?.codeList,
-      );
+      sampleConstants.specimen_tissue_source = choice(getCodelist(0, 'specimen_tissue_source'));
       sampleConstants.tumour_normal_designation = choice(
-        schema.schemas[0].fields.find(element => element.name === 'tumour_normal_designation')
-          ?.restrictions?.codeList,
+        getCodelist(0, 'tumour_normal_designation'),
       );
       sampleConstants.specimen_type =
         sampleConstants.tumour_normal_designation === 'Normal'
           ? choice(
-              schema.schemas[0].fields
-                .find(element => element.name === 'specimen_type')
-                ?.restrictions?.codeList?.filter(
-                  element =>
-                    typeof element === 'string' && !element.toLowerCase().includes('tumour'),
-                ),
+              getCodelist(0, 'specimen_type').filter(
+                element => typeof element === 'string' && !element.toLowerCase().includes('tumour'),
+              ),
             )
           : choice(
-              schema.schemas[0].fields
-                .find(element => element.name === 'specimen_type')
-                ?.restrictions?.codeList?.filter(
-                  element =>
-                    typeof element === 'string' &&
-                    (element.toLowerCase().includes('tumour') || element.startsWith('Normal')),
-                ),
+              getCodelist(0, 'specimen_type').filter(
+                element =>
+                  typeof element === 'string' &&
+                  (element.toLowerCase().includes('tumour') || element.startsWith('Normal')),
+              ),
             );
       let sampleMax = randomIntFromRange(maxCounts.sampleCount);
       for (let k = 0; k < sampleMax; k++) {
-        let counts = [i, j, k];
         fs.appendFile(
           `./test/performance/sample_registration-${shortName}.tsv`,
-          randomSample(shortName, sampleConstants, counts).concat('\n'),
+          randomSample(shortName, sampleConstants, [i, j, k]),
           function(err: any) {
             if (err) throw err;
           },
