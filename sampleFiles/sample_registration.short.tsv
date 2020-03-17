@@ -1,4 +1,5 @@
 program_id	submitter_donor_id	gender	submitter_specimen_id	specimen_tissue_source	tumour_normal_designation	specimen_type	submitter_sample_id	sample_type
-PACA-AU	ICGC_0001.1	Male	sub-sp-pacaau-123	Other	Normal	Normal	sm123-1	Total DNA	
-PACA-AU	ICGC_0002	Female	sub-sp-pacaau-124	Saliva	Tumour	Primary tumour	sm123-2	Total RNA	
-PACA-AU	ICGC_0003	Male	sub-sp-pacaau-125	Saliva	Tumour	Primary tumour	sm123-3	Amplified DNA
+TEST-CA	ICGC_0001.1	Male	sub-sp-pacaau-123	Other	Normal	Normal	sm123-1	Total DNA	
+TEST-CA	ICGC_0002	Female	sub-sp-pacaau-124	Saliva	Tumour	Primary tumour	sm123-2	Total RNA	
+TEST-CA	ICGC_0002	Female	sub-sp-2-220	Saliva	Tumour	Primary tumour	sm-2-220-1	Total RNA	
+TEST-CA	ICGC_0003	Male	sub-sp-pacaau-125	Saliva	Tumour	Primary tumour	sm123-3	Amplified DNA

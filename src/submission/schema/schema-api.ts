@@ -15,9 +15,8 @@ class SchemaController {
     const version: string = req.body.version;
     const sync: boolean = req.query.sync;
     const initiator = ControllerUtils.getUserFromToken(req);
-    await manager.instance().updateSchemaVersion(version, initiator, sync);
-    setStatus('schema', { status: Status.OK });
-    return res.status(200).send(manager.instance().getCurrent());
+    const migration = await manager.instance().updateSchemaVersion(version, initiator, sync);
+    return res.status(200).send(migration);
   }
 
   @HasFullWriteAccess()

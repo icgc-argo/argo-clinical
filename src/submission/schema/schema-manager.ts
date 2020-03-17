@@ -25,13 +25,14 @@ import {
   ClinicalEntityToEnumFieldsMap,
   ClinicalEntityKnownFieldCodeLists,
 } from '../submission-entities';
-import { notEmpty, Errors, sleep, isEmpty } from '../../utils';
+import { notEmpty, Errors, sleep, isEmpty, toString } from '../../utils';
 import _ from 'lodash';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../submission-to-clinical/submission-to-clinical';
 import {
   recalculateEntitiesClinicalInfoStats,
   recalculateAllClincalInfoStats,
 } from '../submission-to-clinical/stat-calculator';
+import { setStatus, Status } from '../../app-health';
 
 const L = loggerFor(__filename);
 
@@ -176,15 +177,13 @@ class SchemaManager {
 
   updateSchemaVersion = async (toVersion: string, updater: string, sync?: boolean) => {
     // submit the migration request
-    await MigrationManager.submitMigration(
+    return await MigrationManager.submitMigration(
       this.getCurrent().version,
       toVersion,
       updater,
       false,
       sync,
     );
-    // update the existing schema
-    await this.loadAndSaveNewVersion(this.getCurrent().name, toVersion);
   };
 
   probeSchemaUpgrade = async (from: string, to: string) => {
@@ -317,6 +316,21 @@ namespace MigrationManager {
     migrationToRun: DeepReadonly<DictionaryMigration>,
     sync?: boolean,
   ) {
+    if (!migrationToRun._id) {
+      throw new Error('Migration should have an id');
+    }
+
+    const newSchemaVersion = migrationToRun.toVersion;
+    const newTargetSchema = await instance().loadSchemaByVersion(
+      instance().getCurrent().name,
+      newSchemaVersion,
+    );
+
+    const preMigrateVerification = await verifyNewSchemaIsValidWithDataValidation(newTargetSchema);
+    if (!_.isEmpty(preMigrateVerification)) {
+      return await abortMigration(migrationToRun, preMigrateVerification);
+    }
+
     // disable submissions system and wait for 2 sec to allow trailing activesubmission operations to complete
     const submissionSystemDisabled = await persistedConfig.setSubmissionDisabledState(true);
     if (!submissionSystemDisabled)
@@ -325,16 +339,18 @@ namespace MigrationManager {
 
     // explicit sync so wait till done
     if (sync) {
-      const result = await runMigration(migrationToRun);
-      return result;
+      return await runMigration(migrationToRun, newTargetSchema);
     }
 
     // start but **DONT** await on the migration process to finish.
-    runMigration(migrationToRun);
+    runMigration(migrationToRun, newTargetSchema);
     return migrationToRun;
   }
 
-  const runMigration = async (roMigration: DeepReadonly<DictionaryMigration>) => {
+  const runMigration = async (
+    roMigration: DeepReadonly<DictionaryMigration>,
+    newTargetSchema: SchemasDictionary,
+  ) => {
     const migration = _.cloneDeep(roMigration) as DictionaryMigration;
 
     if (!migration._id) {
@@ -342,17 +358,6 @@ namespace MigrationManager {
     }
 
     const migrationId = migration._id;
-    const newSchemaVersion = migration.toVersion;
-
-    const newTargetSchema = await instance().loadSchemaByVersion(
-      instance().getCurrent().name,
-      newSchemaVersion,
-    );
-
-    const preMigrateVerification = await verifyNewSchemaIsValidWithDataValidation(newTargetSchema);
-    if (!_.isEmpty(preMigrateVerification)) {
-      return await abortMigration(roMigration, preMigrateVerification);
-    }
 
     const migrationAfterDonorCheck = await checkDonorDocuments(migration, newTargetSchema);
 
@@ -373,6 +378,9 @@ namespace MigrationManager {
     migrationToClose.state = 'CLOSED';
     migrationToClose.stage = 'COMPLETED';
     const closedMigration = await migrationRepo.update(migrationToClose);
+
+    await manager.loadAndSaveNewVersion(manager.getCurrent().name, newTargetSchema.version);
+    setStatus('schema', { status: Status.OK });
 
     await persistedConfig.setSubmissionDisabledState(false);
 
@@ -444,12 +452,14 @@ namespace MigrationManager {
 
   const abortMigration = async (
     migration: DeepReadonly<DictionaryMigration>,
-    newSchemaAnalysis: NewSchemaVerificationResult,
+    newSchemaAnalysis?: NewSchemaVerificationResult,
   ) => {
     const migrationToFail = _.cloneDeep(migration) as DictionaryMigration;
     migrationToFail.stage = 'FAILED';
     migrationToFail.state = 'CLOSED';
-    migrationToFail.newSchemaErrors = newSchemaAnalysis;
+    if (newSchemaAnalysis) {
+      migrationToFail.newSchemaErrors = newSchemaAnalysis;
+    }
 
     const updatedMigration = await migrationRepo.update(migrationToFail);
 
@@ -891,18 +901,4 @@ namespace MigrationManager {
 
     return uniqueSchemasWithChangingCoreFields;
   };
-
-  function toString(obj: any) {
-    if (!obj) {
-      return undefined;
-    }
-    Object.keys(obj).forEach(k => {
-      if (typeof obj[k] === 'object') {
-        return toString(obj[k]);
-      }
-      obj[k] = `${obj[k]}`;
-    });
-
-    return obj;
-  }
 }
