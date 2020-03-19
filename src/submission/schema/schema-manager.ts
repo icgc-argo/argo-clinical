@@ -33,6 +33,7 @@ import {
   recalculateAllClincalInfoStats,
 } from '../submission-to-clinical/stat-calculator';
 import { setStatus, Status } from '../../app-health';
+import * as messenger from '../submission-updates-messenger';
 
 const L = loggerFor(__filename);
 
@@ -303,6 +304,7 @@ namespace MigrationManager {
       invalidDonorsErrors: [],
       invalidSubmissions: [],
       checkedSubmissions: [],
+      programsWithDonorUpdates: [],
     });
 
     if (!savedMigration) {
@@ -361,7 +363,11 @@ namespace MigrationManager {
 
     const migrationAfterDonorCheck = await checkDonorDocuments(migration, newTargetSchema);
 
-    const migrationAfterSubmissionsCheck = await revalidateOpenSubmissionsWithNewSchema(
+    migrationAfterDonorCheck.programsWithDonorUpdates?.forEach(program =>
+      messenger.getInstace().sendProgramUpdatedMessage(program),
+    );
+
+    await revalidateOpenSubmissionsWithNewSchema(
       migrationAfterDonorCheck,
       newTargetSchema,
       migration.dryRun,
@@ -541,6 +547,8 @@ namespace MigrationManager {
       let invalidCount = 0;
       let validCount = 0;
       const donors = await getNextUncheckedDonorDocumentsBatch(migrationId, 20);
+      const programsWithChanges: Set<string> = new Set(migration.programsWithDonorUpdates);
+
       // no more unchecked donors ??
       if (donors.length == 0) {
         // mark migration as done
@@ -565,7 +573,8 @@ namespace MigrationManager {
         if (result && result.length > 0) {
           // if invalid mark as invalid and update document metadata
           if (!dryRun) {
-            await markDonorAsInvalid(donor, migrationId);
+            const invalidDonor = await markDonorAsInvalid(donor, migrationId);
+            updateSetOfProgramsWithChanges(donor, invalidDonor, programsWithChanges);
           } else {
             await updateMigrationIdOnly(donor, migrationId);
           }
@@ -588,7 +597,8 @@ namespace MigrationManager {
             newSchema,
             coreFieldChangesEntitiesCache,
           );
-          await markDonorAsValid(updatedDonor, migrationId, newSchema.version);
+          const validDonor = await markDonorAsValid(updatedDonor, migrationId, newSchema.version);
+          updateSetOfProgramsWithChanges(donor, validDonor, programsWithChanges);
         } else {
           await updateMigrationIdOnly(donor, migrationId);
         }
@@ -598,9 +608,23 @@ namespace MigrationManager {
       migration.stats.invalidDocumentsCount += invalidCount;
       migration.stats.validDocumentsCount += validCount;
       migration.stats.totalProcessed += donors.length;
+      migration.programsWithDonorUpdates = Array.from(programsWithChanges);
       migration = await migrationRepo.update(migration);
     }
     return migration;
+  };
+
+  const updateSetOfProgramsWithChanges = (
+    donorBeforeMigration: DeepReadonly<Donor>,
+    donorAfterMigration: DeepReadonly<Donor>,
+    programsWithChanges: Set<string>,
+  ) => {
+    const programIsBeingUpdated =
+      donorBeforeMigration.schemaMetadata.isValid !== donorAfterMigration.schemaMetadata.isValid ||
+      !_.isEqual(donorBeforeMigration, donorAfterMigration);
+    if (programIsBeingUpdated) {
+      programsWithChanges.add(donorAfterMigration.programId);
+    }
   };
 
   const getNextUncheckedDonorDocumentsBatch = async (migrationId: string, limit: number) => {
