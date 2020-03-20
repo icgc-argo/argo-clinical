@@ -621,7 +621,7 @@ namespace MigrationManager {
   ) => {
     const programIsBeingUpdated =
       donorBeforeMigration.schemaMetadata.isValid !== donorAfterMigration.schemaMetadata.isValid ||
-      !_.isEqual(donorBeforeMigration, donorAfterMigration);
+      !_.isEqual(donorBeforeMigration.aggregatedInfoStats, donorAfterMigration.aggregatedInfoStats);
     if (programIsBeingUpdated) {
       programsWithChanges.add(donorAfterMigration.programId);
     }
