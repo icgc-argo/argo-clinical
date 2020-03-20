@@ -355,6 +355,8 @@ describe('schema migration api', () => {
             },
           ],
         });
+
+        chai.assert(sendProgramUpdatedMessageFunc.notCalled);
       });
     });
   });
