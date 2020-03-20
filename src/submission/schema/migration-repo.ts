@@ -72,6 +72,7 @@ const DictionaryMigrationSchema = new mongoose.Schema(
     invalidDonorsErrors: [],
     invalidSubmissions: [],
     checkedSubmissions: [],
+    programsWithDonorUpdates: [],
     dryRun: { type: Boolean, required: false },
     stats: {},
     createdBy: { type: String, required: true },

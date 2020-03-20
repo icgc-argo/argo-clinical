@@ -6,12 +6,14 @@ import { SampleRegistrationFieldsEnum } from '../../../src/submission/submission
 import { SchemasDictionary } from '../../../src/lectern-client/schema-entities';
 import { DictionaryMigration } from '../../../src/submission/schema/migration-entities';
 import { Donor } from '../../../src/clinical/clinical-entities';
+import { getInstace } from '../../../src/submission/submission-updates-messenger';
 
 import chai from 'chai';
 import 'chai-http';
 import 'deep-equal-in-any-order';
 import 'mocha';
 import mongoose from 'mongoose';
+import { spy, SinonSpy } from 'sinon';
 import { GenericContainer } from 'testcontainers';
 import { findInDb, insertData, emptyDonorDocument, clearCollections } from '../testutils';
 import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN } from '../test.jwt';
@@ -25,6 +27,7 @@ const schemaName = 'ARGO Clinical Submission';
 const startingSchemaVersion = '1.0';
 
 describe('schema migration api', () => {
+  let sendProgramUpdatedMessageFunc: SinonSpy<[string], Promise<void>>;
   let mongoContainer: any;
   let dburl = ``;
 
@@ -189,6 +192,11 @@ describe('schema migration api', () => {
     await insertData(dburl, 'donors', donor2);
     // reset the base schema since tests can load new one
     await bootstrap.loadSchema(schemaName, startingSchemaVersion);
+    sendProgramUpdatedMessageFunc = spy(getInstace(), 'sendProgramUpdatedMessage');
+  });
+
+  afterEach(() => {
+    sendProgramUpdatedMessageFunc.restore();
   });
 
   // very simple smoke test of the migration to be expanded along developement
@@ -217,6 +225,7 @@ describe('schema migration api', () => {
       migrations[0]._id.toString().should.eq(migrationId);
       migrations[0].invalidDonorsErrors.length.should.eq(0);
       migrations[0].stats.validDocumentsCount.should.eq(2);
+      chai.assert(sendProgramUpdatedMessageFunc.calledOnceWith(programId));
     });
   });
 
@@ -298,7 +307,7 @@ describe('schema migration api', () => {
         expectedCoreFields: 2,
       });
 
-      console.log(updatedDonor);
+      chai.assert(sendProgramUpdatedMessageFunc.calledOnceWith(programId));
     });
   });
 
