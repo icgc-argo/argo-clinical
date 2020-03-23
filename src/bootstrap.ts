@@ -142,7 +142,7 @@ export const run = async (config: AppConfig) => {
 
   // close app connections on termination
   const gracefulExit = async () => {
-    await submissionUpdatesMessenger.getInstace().closeOpenConnections();
+    await submissionUpdatesMessenger.getInstance().closeOpenConnections();
 
     await mongoose.connection.close(function() {
       L.debug('Mongoose default connection is disconnected through app termination');

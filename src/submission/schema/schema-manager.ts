@@ -363,9 +363,7 @@ namespace MigrationManager {
 
     const migrationAfterDonorCheck = await checkDonorDocuments(migration, newTargetSchema);
 
-    migrationAfterDonorCheck.programsWithDonorUpdates?.forEach(program =>
-      messenger.getInstace().sendProgramUpdatedMessage(program),
-    );
+    sendMessagesForProgramWithDonorUpdates(migrationAfterDonorCheck.programsWithDonorUpdates);
 
     await revalidateOpenSubmissionsWithNewSchema(
       migrationAfterDonorCheck,
@@ -391,6 +389,16 @@ namespace MigrationManager {
     await persistedConfig.setSubmissionDisabledState(false);
 
     return closedMigration;
+  };
+
+  const sendMessagesForProgramWithDonorUpdates = (programs: string[]) => {
+    programs?.forEach(program => {
+      try {
+        messenger.getInstance().sendProgramUpdatedMessage(program);
+      } catch (e) {
+        L.error(`Found error sending update message for program - ${program}: `, e);
+      }
+    });
   };
 
   const verifyNewSchemaIsValidWithDataValidation = async (

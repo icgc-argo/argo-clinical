@@ -347,7 +347,7 @@ const sendMessageOnUpdatesFromRegistration = async (
     registration.stats.newSampleIds.length > 0 ||
     registration.stats.newSpecimenIds.length > 0
   ) {
-    await messenger.getInstace().sendProgramUpdatedMessage(registration.programId);
+    await messenger.getInstance().sendProgramUpdatedMessage(registration.programId);
   }
 };
 
@@ -369,7 +369,7 @@ const sendMessageOnUpdatesFromClinicalSubmission = async (
     );
 
   if (submissionHasProgramUpdates) {
-    await messenger.getInstace().sendProgramUpdatedMessage(submission.programId);
+    await messenger.getInstance().sendProgramUpdatedMessage(submission.programId);
   }
 };
 

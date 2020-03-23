@@ -6,7 +6,7 @@ import { SampleRegistrationFieldsEnum } from '../../../src/submission/submission
 import { SchemasDictionary } from '../../../src/lectern-client/schema-entities';
 import { DictionaryMigration } from '../../../src/submission/schema/migration-entities';
 import { Donor } from '../../../src/clinical/clinical-entities';
-import { getInstace } from '../../../src/submission/submission-updates-messenger';
+import { getInstance } from '../../../src/submission/submission-updates-messenger';
 
 import chai from 'chai';
 import 'chai-http';
@@ -192,7 +192,7 @@ describe('schema migration api', () => {
     await insertData(dburl, 'donors', donor2);
     // reset the base schema since tests can load new one
     await bootstrap.loadSchema(schemaName, startingSchemaVersion);
-    sendProgramUpdatedMessageFunc = spy(getInstace(), 'sendProgramUpdatedMessage');
+    sendProgramUpdatedMessageFunc = spy(getInstance(), 'sendProgramUpdatedMessage');
   });
 
   afterEach(() => {

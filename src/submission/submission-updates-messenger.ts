@@ -78,7 +78,7 @@ export type KafkaConfig = {
   programUpdateTopic: TopicConfig;
 };
 
-export const getInstace = (): SubmissionUpdatesMessenger => {
+export const getInstance = (): SubmissionUpdatesMessenger => {
   if (!instance) {
     throw new Error('Messenger was not intitialized');
   }
