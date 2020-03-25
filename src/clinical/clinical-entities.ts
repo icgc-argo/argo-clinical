@@ -1,3 +1,5 @@
+import { DeepReadonly } from 'deep-freeze';
+
 export interface Donor {
   _id?: string;
   schemaMetadata: SchemaMetadata;
@@ -73,3 +75,5 @@ export interface ClinicalInfo {
 }
 
 export type DonorMap = Readonly<{ [submitterId: string]: Donor }>;
+
+export type DonorBySubmitterIdMap = { [k: string]: DeepReadonly<Donor> };

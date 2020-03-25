@@ -431,6 +431,8 @@ export interface SubmittedClinicalRecordsMap {
   [type: string]: SubmittedClinicalRecord[];
 }
 
+export type IdToIndexMap = { [k: string]: number[] };
+
 export const ClinicalEntityToEnumFieldsMap: Record<ClinicalEntitySchemaNames, string[]> = {
   [ClinicalEntitySchemaNames.REGISTRATION]: Object.values(SampleRegistrationFieldsEnum),
   [ClinicalEntitySchemaNames.DONOR]: Object.values(DonorFieldsEnum),

@@ -16,11 +16,6 @@ spec:
     env:
     - name: DOCKER_HOST
       value: tcp://localhost:2375
-  - name: helm
-    image: alpine/helm:2.12.3
-    tty: true
-    command:
-    - cat
   - name: docker
     image: docker:18-git
     tty: true
@@ -54,15 +49,21 @@ spec:
                     version = sh(returnStdout: true, script: 'cat package.json | grep version | cut -d \':\' -f2 | sed -e \'s/"//\' -e \'s/",//\'').trim()
                 }
             }
+
         }
 
         stage('Test') {
-            steps {
-                container('node') {
-                    sh "npm ci"
-                    sh "npm run test"
-                }
+          steps {
+            container('node') {
+              sh "npm ci"
             }
+            container('node') {
+              sh "npm run unit-test"
+            }
+            container('node') {
+              sh "npm run int-test"
+            }
+          }
         }
 
        // publish the edge tag

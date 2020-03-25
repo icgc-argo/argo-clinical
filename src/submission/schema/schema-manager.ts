@@ -1,4 +1,5 @@
 import * as service from '../../lectern-client/schema-functions';
+import * as parallelService from '../../lectern-client/parallel';
 import {
   SchemasDictionary,
   DataRecord,
@@ -25,7 +26,7 @@ import {
   ClinicalEntityToEnumFieldsMap,
   ClinicalEntityKnownFieldCodeLists,
 } from '../submission-entities';
-import { notEmpty, Errors, sleep, isEmpty, toString } from '../../utils';
+import { notEmpty, Errors, sleep, isEmpty, toString, MongooseUtils } from '../../utils';
 import _ from 'lodash';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../submission-to-clinical/submission-to-clinical';
 import {
@@ -103,6 +104,36 @@ class SchemaManager {
     return service.process(schema || this.getCurrent(), schemaName, record, index);
   };
 
+  /**
+   * This method does same thing as normal process, however it utilises
+   * worker threads to parallelise record processing.
+   *
+   * @see process
+   *
+   * @param schemaName the schema we want to process records for
+   * @param records the raw records list
+   * @param index the original record index
+   * @param schemasDictionary optional schema to use for validation
+   * @returns promise object contains the validation errors
+   *          and the valid processed records.
+   */
+  processAsync = async (
+    schemaName: string,
+    record: Readonly<DataRecord>,
+    index: number,
+    schemasDictionary?: SchemasDictionary,
+  ): Promise<SchemaProcessingResult> => {
+    if (!schemasDictionary && this.getCurrent() === undefined) {
+      throw new Error('schema manager not initialized correctly');
+    }
+    return await parallelService.processRecord(
+      schemasDictionary || this.getCurrent(),
+      schemaName,
+      record,
+      index,
+    );
+  };
+
   analyzeChanges = async (oldVersion: string, newVersion: string) => {
     const result = await changeAnalyzer.fetchDiffAndAnalyze(
       this.schemaServiceUrl,
@@ -143,7 +174,7 @@ class SchemaManager {
       throw new Error('initial version cannot be empty.');
     }
     const storedSchema = await schemaRepo.get(name);
-    if (storedSchema === null) {
+    if (storedSchema === undefined) {
       L.info(`schema not found in db`);
       this.currentSchemaDictionary = {
         schemas: [],

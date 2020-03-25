@@ -14,7 +14,6 @@ const ServerMock: any = require('mock-http-server') as any;
 
 chai.use(require('chai-http'));
 chai.should();
-mongoose.set('debug', true);
 
 describe('manager', () => {
   let mongoContainer: any;

@@ -1,7 +1,3 @@
-import dotenv from 'dotenv';
-if (process.env.NODE_ENV !== 'PRODUCTION') {
-  console.debug('dotenv: ', dotenv.config());
-}
 export let config: ConfigManager;
 export const JWT_TOKEN_PUBLIC_KEY = 'JWT_TOKEN_PUBLIC_KEY';
 

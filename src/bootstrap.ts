@@ -117,7 +117,9 @@ export const run = async (config: AppConfig) => {
 
   // setup mongo connection
   await setupDBConnection(config.mongoUrl(), config.mongoUser(), config.mongoPassword());
+
   if (process.env.LOG_LEVEL === 'debug') {
+    console.log('setting mongoose to debug verbosity');
     mongoose.set('debug', true);
   }
 

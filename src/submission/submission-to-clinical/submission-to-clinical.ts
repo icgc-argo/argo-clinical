@@ -178,16 +178,17 @@ export const commitRegisteration = async (command: Readonly<CommitRegistrationCo
     const existingDonor = await donorDao.findByProgramAndSubmitterId([
       { programId: dto.programId, submitterId: dto.submitterId },
     ]);
+
     if (existingDonor && existingDonor.length > 0) {
       const mergedDonor = addSamplesToDonor(existingDonor[0], dto);
       const updatedDonor = await donorDao.update(mergedDonor);
       continue;
     }
+
     await donorDao.create(fromCreateDonorDtoToDonor(dto));
   }
 
   registrationRepository.delete(command.registrationId);
-
   sendMessageOnUpdatesFromRegistration(registration);
   return (
     (registration.stats &&

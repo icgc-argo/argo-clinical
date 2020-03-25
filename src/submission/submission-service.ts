@@ -2,7 +2,14 @@ import * as dataValidator from './validation-clinical/validation';
 import { donorDao, FindByProgramAndSubmitterFilter } from '../clinical/donor-repo';
 import _ from 'lodash';
 import { registrationRepository } from './registration-repo';
-import { Donor, DonorMap, Specimen, Sample, SchemaMetadata } from '../clinical/clinical-entities';
+import {
+  Donor,
+  DonorMap,
+  Specimen,
+  Sample,
+  SchemaMetadata,
+  DonorBySubmitterIdMap,
+} from '../clinical/clinical-entities';
 import {
   ActiveRegistration,
   SubmittedRegistrationRecord,
@@ -100,27 +107,37 @@ export namespace operations {
     // to save extra round trips
 
     let start = new Date().getTime() / 1000;
-    command.records.forEach((r, index) => {
-      const schemaResult = schemaManager
-        .instance()
-        .process(ClinicalEntitySchemaNames.REGISTRATION, r, index);
+    // a loop that async loops through all records
+    await Promise.all(
+      command.records.map(async (r, index) => {
+        const schemaResult = await schemaManager
+          .instance()
+          .processAsync(ClinicalEntitySchemaNames.REGISTRATION, r, index);
 
-      if (anyErrors(schemaResult.validationErrors)) {
-        unifiedSchemaErrors = unifiedSchemaErrors.concat(
-          unifySchemaErrors(ClinicalEntitySchemaNames.REGISTRATION, schemaResult, command.records),
+        if (anyErrors(schemaResult.validationErrors)) {
+          unifiedSchemaErrors = unifiedSchemaErrors.concat(
+            unifySchemaErrors(
+              ClinicalEntitySchemaNames.REGISTRATION,
+              schemaResult,
+              command.records,
+            ),
+          );
+        }
+
+        const programIdError = usingInvalidProgramId(
+          ClinicalEntitySchemaNames.REGISTRATION,
+          index,
+          r,
+          command.programId,
         );
-      }
 
-      const programIdError = usingInvalidProgramId(
-        ClinicalEntitySchemaNames.REGISTRATION,
-        index,
-        r,
-        command.programId,
-      );
+        unifiedSchemaErrors = unifiedSchemaErrors.concat(programIdError);
+        // we have to insert at correct index since records may be accumulated out of order
+        validRecordsAccumulator[index] = schemaResult.processedRecord;
 
-      unifiedSchemaErrors = unifiedSchemaErrors.concat(programIdError);
-      validRecordsAccumulator.push(schemaResult.processedRecord);
-    });
+        return undefined;
+      }),
+    );
     let end = new Date().getTime() / 1000;
     L.info(`schema validation took ${end - start} s`);
 
@@ -133,28 +150,32 @@ export namespace operations {
         successful: false,
       };
     }
-
     const registrationRecords = mapToRegistrationRecord(validRecordsAccumulator);
-    const filters: DeepReadonly<FindByProgramAndSubmitterFilter[]> = F(
-      registrationRecords.map(rc => {
-        return {
-          programId: rc.programId,
-          submitterId: rc.donorSubmitterId,
-        };
-      }),
-    );
 
-    // fetch related donor docs from the db
-    const donorsBySubmitterIdMap: DeepReadonly<DonorMap> = await getDonorsInProgram(filters);
+    // all donors in a program, and build memory indexes for fast lookups by donor, specimen, sample submitter Ids
+    const allDonors = await donorDao.findByProgramId(command.programId);
+    const allDonorsMap: DonorBySubmitterIdMap = {};
+    const allDonorsBySpecimenIdMap: DonorBySubmitterIdMap = {};
+    const allDonorsBySampleIdMap: DonorBySubmitterIdMap = {};
+    allDonors.forEach(d => {
+      allDonorsMap[d.submitterId] = d;
+      d.specimens.forEach(sp => {
+        allDonorsBySpecimenIdMap[sp.submitterId] = d;
+        sp.samples.forEach(sa => {
+          allDonorsBySampleIdMap[sa.submitterId] = d;
+        });
+      });
+    });
 
     start = new Date().getTime() / 1000;
     const { errors } = await dataValidator.validateRegistrationData(
-      command.programId,
       registrationRecords,
-      donorsBySubmitterIdMap,
+      allDonorsBySpecimenIdMap,
+      allDonorsBySampleIdMap,
+      allDonorsMap,
     );
     end = new Date().getTime() / 1000;
-    L.info(`validation registration took ${end - start} s`);
+    L.info(`registration data validation took ${end - start} s`);
 
     if (errors.length > 0) {
       L.info(`found ${errors.length} data errors in registration attempt`);
@@ -166,7 +187,7 @@ export namespace operations {
       });
     }
 
-    const stats = calculateUpdates(registrationRecords, donorsBySubmitterIdMap);
+    const stats = calculateUpdates(registrationRecords, allDonorsMap);
 
     // save the new registration object
     const schemaVersion = schemaManager.instance().getCurrent().version;
