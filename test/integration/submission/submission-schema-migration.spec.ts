@@ -17,7 +17,6 @@ import {
 } from '../../../src/submission/schema/migration-entities';
 import { Donor } from '../../../src/clinical/clinical-entities';
 import { getInstance } from '../../../src/submission/submission-updates-messenger';
-import { buildDynamicStubSchema } from './migration_utils/schema_builder';
 
 import chai from 'chai';
 import 'chai-http';
@@ -40,8 +39,6 @@ const schemaName = 'ARGO Clinical Submission';
 const startingSchemaVersion = '1.0';
 
 describe('schema migration api', () => {
-  buildDynamicStubSchema();
-
   let sendProgramUpdatedMessageFunc: SinonSpy<[string], Promise<void>>;
   let mongoContainer: any;
   let dburl = ``;
@@ -214,6 +211,38 @@ describe('schema migration api', () => {
     sendProgramUpdatedMessageFunc.restore();
   });
 
+  const MIGRATION_FAIL_STAGE: MigrationStage = 'FAILED';
+  const MIGRATION_ERROR_PROPERTY: keyof DictionaryMigration = 'newSchemaErrors';
+
+  const assertSuccessfulMigration = async (res: any, version: string) => {
+    res.should.have.status(200);
+    const schema = (await findInDb(dburl, 'dataschemas', {})) as SchemasDictionary[];
+    schema[0].version.should.eq(version);
+  };
+
+  // no fundamental migration rejections
+  const assertNoMigrationErrors = (res: any, version: string) => {
+    const [migration] = res.body;
+    migration.toVersion.should.equal(version);
+    migration.state.should.not.equal(MIGRATION_FAIL_STAGE);
+    migration.should.not.have.property(MIGRATION_ERROR_PROPERTY);
+  };
+
+  // no fundamental migration rejections, AND no errors to any donors
+  const assertNoDonorImpacts = (res: any, version: string) => {
+    const [migration] = res.body;
+
+    assertNoMigrationErrors(res, version);
+    migration.invalidDonorsErrors.should.be.empty;
+    migration.invalidSubmissions.should.be.empty;
+  };
+
+  const assertMigrationErrors = (res: any, version: string) => {
+    const [migration] = res.body;
+    migration.toVersion.should.equal(version);
+    migration.should.have.property(MIGRATION_ERROR_PROPERTY);
+  };
+
   // very simple smoke test of the migration to be expanded along developement
   it('should update the schema', async () => {
     await migrateSyncTo('2.0').then(async (res: any) => {
@@ -244,55 +273,30 @@ describe('schema migration api', () => {
     });
   });
 
-  const migratationFailStage: MigrationStage = 'FAILED';
-
   describe('Changes which should not affect existing donors', () => {
     it('should update the schema after a new enum value was added', async () => {
-      await migrateSyncTo('4.0').then(async (res: any) => {
-        res.should.have.status(200);
-        const schema = (await findInDb(dburl, 'dataschemas', {})) as SchemasDictionary[];
-        schema[0].version.should.eq('4.0');
+      const VERSION = '4.0';
+      await migrateSyncTo(VERSION).then(async (res: any) => {
+        await assertSuccessfulMigration(res, VERSION);
       });
-
       const res = await getAllMigrationDocs();
-      const [migration] = res.body;
-      migration.toVersion.should.equal('4.0');
-      migration.state.should.not.equal(migratationFailStage);
-      migration.should.not.have.property('newSchemaErrors');
-      migration.invalidDonorsErrors.should.be.empty;
-      migration.invalidSubmissions.should.be.empty;
+      assertNoDonorImpacts(res, VERSION);
     });
     it('should update the schema after a new non-required field was added', async () => {
-      await migrateSyncTo('5.0').then(async (res: any) => {
-        res.should.have.status(200);
-        const schema = (await findInDb(dburl, 'dataschemas', {})) as SchemasDictionary[];
-        schema[0].version.should.eq('5.0');
+      const VERSION = '5.0';
+      await migrateSyncTo(VERSION).then(async (res: any) => {
+        await assertSuccessfulMigration(res, VERSION);
       });
-
       const res = await getAllMigrationDocs();
-
-      const [migration] = res.body;
-      migration.toVersion.should.equal('5.0');
-      migration.should.not.have.property('newSchemaErrors');
-      migration.state.should.not.equal(migratationFailStage);
-      migration.invalidDonorsErrors.should.be.empty;
-      migration.invalidSubmissions.should.be.empty;
+      assertNoDonorImpacts(res, VERSION);
     });
     it('should update the schema after a new file was added', async () => {
-      await migrateSyncTo('6.0').then(async (res: any) => {
-        res.should.have.status(200);
-        const schema = (await findInDb(dburl, 'dataschemas', {})) as SchemasDictionary[];
-        schema[0].version.should.eq('6.0');
+      const VERSION = '6.0';
+      await migrateSyncTo(VERSION).then(async (res: any) => {
+        await assertSuccessfulMigration(res, VERSION);
       });
-
       const res = await getAllMigrationDocs();
-
-      const [migration] = res.body;
-      migration.toVersion.should.equal('6.0');
-      migration.state.should.not.equal(migratationFailStage);
-      migration.should.not.have.property('newSchemaErrors');
-      migration.invalidDonorsErrors.should.be.empty;
-      migration.invalidSubmissions.should.be.empty;
+      assertNoDonorImpacts(res, VERSION);
     });
   });
 
@@ -359,19 +363,17 @@ describe('schema migration api', () => {
       });
     });
     it('should update the schema after an enum option was removed, and make donor2 invalid', async () => {
-      await migrateSyncTo('7.0').then(async (res: any) => {
-        res.should.have.status(200);
-        const schema = (await findInDb(dburl, 'dataschemas', {})) as SchemasDictionary[];
-        schema[0].version.should.eq('7.0');
+      const VERSION = '7.0';
+      await migrateSyncTo(VERSION).then(async (res: any) => {
+        await assertSuccessfulMigration(res, VERSION);
       });
 
       const res = await getAllMigrationDocs();
 
       const [migration] = res.body;
-      migration.toVersion.should.equal('7.0');
 
-      migration.stage.should.not.equal(migratationFailStage);
-      migration.should.not.have.property('newSchemaErrors');
+      assertNoMigrationErrors(res, VERSION);
+
       migration.invalidDonorsErrors.length.should.equal(1);
       const errorObj = migration.invalidDonorsErrors[0].errors[0].primary_diagnosis[0];
       chai
@@ -380,20 +382,17 @@ describe('schema migration api', () => {
       chai.expect(errorObj).to.have.property('fieldName', TUMOUR_STAGING_SYSTEM);
     });
     it('should update the schema after a new required field is added, and make all donors invalid', async () => {
+      const VERSION = '8.0';
       await migrateSyncTo('8.0').then(async (res: any) => {
-        res.should.have.status(200);
-        const schema = (await findInDb(dburl, 'dataschemas', {})) as SchemasDictionary[];
-        schema[0].version.should.eq('8.0');
+        await assertSuccessfulMigration(res, VERSION);
       });
 
       const res = await getAllMigrationDocs();
       const donors = await findInDb(dburl, 'donors', {});
 
       const [migration] = res.body;
-      migration.toVersion.should.equal('8.0');
+      assertNoMigrationErrors(res, VERSION);
 
-      migration.stage.should.not.equal('FAILED');
-      migration.should.not.have.property('newSchemaErrors');
       // brand new required field should invalidate every existing donor
       migration.invalidDonorsErrors.length.should.equal(donors.length);
       migration.invalidDonorsErrors.forEach((donorErrObj: { errors: { donor: any[] }[] }) => {
@@ -411,7 +410,8 @@ describe('schema migration api', () => {
 
       /* Although spec doesn't explicity state this change as prohibited, migration logic is refusing the change.
       Failing to provide the field is a breaking change */
-      await migrateSyncTo('9.0').then(async (res: any) => {
+      const VERSION = '9.0';
+      await migrateSyncTo(VERSION).then(async (res: any) => {
         res.should.have.status(200);
         const schema = (await findInDb(dburl, 'dataschemas', {})) as SchemasDictionary[];
         // migration will fail
@@ -420,10 +420,8 @@ describe('schema migration api', () => {
 
       const res = await getAllMigrationDocs();
       const [migration] = res.body;
-      migration.toVersion.should.equal('9.0');
+      assertMigrationErrors(res, VERSION);
 
-      migration.stage.should.equal('FAILED');
-      migration.should.have.property('newSchemaErrors');
       migration.newSchemaErrors.should.deep.eq({
         [ClinicalEntitySchemaNames.DONOR]: {
           missingFields: [DonorFieldsEnum.cause_of_death],
@@ -432,19 +430,16 @@ describe('schema migration api', () => {
       });
     });
     it('should update the schema after regex and script changes invalidate donor2', async () => {
-      await migrateSyncTo('10.0').then(async (res: any) => {
-        res.should.have.status(200);
-        const schema = (await findInDb(dburl, 'dataschemas', {})) as SchemasDictionary[];
-        schema[0].version.should.eq('10.0');
+      const VERSION = '10.0';
+      await migrateSyncTo(VERSION).then(async (res: any) => {
+        await assertSuccessfulMigration(res, VERSION);
       });
 
       const res = await getAllMigrationDocs();
 
       const [migration] = res.body;
-      migration.toVersion.should.equal('10.0');
+      assertNoMigrationErrors(res, VERSION);
 
-      migration.stage.should.not.equal(migratationFailStage);
-      migration.should.not.have.property('newSchemaErrors');
       const errorObj = migration.invalidDonorsErrors[0].errors[0];
       errorObj.should.have.property(ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS);
       chai
@@ -486,39 +481,41 @@ describe('schema migration api', () => {
     it.skip('should reject the new schema where the field type was changed', async () => {
       // wip -- on hold
       // migrations should be rejecting this changes, but there is no logic for it at the moment
-      await migrateSyncTo('11.0');
+      const VERSION = '11.0';
+      await migrateSyncTo(VERSION);
       const res = await getAllMigrationDocs();
-
-      const [migration] = res.body;
-      migration.should.have.property('newSchemaErrors');
-      migration.stage.should.equal(migratationFailStage);
+      assertMigrationErrors(res, VERSION);
     });
     it('should reject the new schema where the field name was changed', async () => {
       // wip
       // renaming a field currently is currently seen as removing the field
       // how the change is analyzed and what error state to produce is subject to change
-      await migrateSyncTo('12.0');
+      const VERSION = '12.0';
+      await migrateSyncTo(VERSION);
       const res = await getAllMigrationDocs();
 
       const [migration] = res.body;
-      migration.should.have.property('newSchemaErrors');
+      assertMigrationErrors(res, VERSION);
+
       migration.newSchemaErrors.should.deep.eq({
         [ClinicalEntitySchemaNames.DONOR]: {
           missingFields: [DonorFieldsEnum.program_id],
           invalidFieldCodeLists: [],
         },
       });
-      migration.stage.should.equal(migratationFailStage);
+      migration.stage.should.equal(MIGRATION_FAIL_STAGE);
     });
     it('should reject migration when a schema is removed', async () => {
       // wip
       // the removal of a schema, is currently just considered as removal of all the fields
       // how this change is analyzed and what error state to produce is subject to change
-      await migrateSyncTo('13.0');
+      const VERSION = '13.0';
+      await migrateSyncTo(VERSION);
       const res = await getAllMigrationDocs();
 
       const [migration] = res.body;
-      migration.should.have.property('newSchemaErrors');
+      assertMigrationErrors(res, VERSION);
+
       migration.newSchemaErrors.should.deep.eq({
         [ClinicalEntitySchemaNames.HORMONE_THERAPY]: {
           missingFields: [
@@ -530,7 +527,6 @@ describe('schema migration api', () => {
           invalidFieldCodeLists: [],
         },
       });
-      migration.stage.should.equal(migratationFailStage);
     });
   });
 
