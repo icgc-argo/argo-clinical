@@ -17,6 +17,7 @@ export interface DictionaryMigration {
   invalidDonorsErrors: any[];
   checkedSubmissions: any[];
   invalidSubmissions: any[];
+  programsWithDonorUpdates: string[];
   createdBy: string;
   newSchemaErrors?: NewSchemaVerificationResult;
 }
