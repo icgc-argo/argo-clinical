@@ -15,10 +15,11 @@ import {
   DataRecord,
   SchemaValidationErrorTypes,
 } from './schema-entities';
-import { loggerFor } from '../logger';
+
 import { Checks, notEmpty, isEmptyString, isAbsent, F, isNotAbsent } from '../utils';
 import schemaErrorMessage from './schema-error-messages';
 import _ from 'lodash';
+import { loggerFor } from '../logger';
 const L = loggerFor(__filename);
 
 export const getSchemaFieldNamesWithPriority = (

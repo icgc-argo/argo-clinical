@@ -15,6 +15,9 @@ import submissionRouter from './routes/submission';
 import schemaRouter from './routes/schema';
 import configRouter from './routes/config';
 import icgcImport from './routes/icgc-import';
+import responseTime from 'response-time';
+import morgan from 'morgan';
+
 const L = loggerFor(__filename);
 
 process.title = 'clinical';
@@ -22,8 +25,9 @@ process.title = 'clinical';
 // Create Express server
 const app = express();
 app.set('port', process.env.PORT || 3000);
-
 app.use(bodyParser.json());
+app.use(morgan('dev'));
+app.use(responseTime());
 app.use(
   bodyParser.urlencoded({
     extended: true,

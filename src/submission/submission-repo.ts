@@ -58,7 +58,7 @@ export const submissionRepository: ClinicalSubmissionRepository = {
       if (activeSubmission == undefined) {
         return undefined;
       }
-      L.info(`found submission for program ${programId}: ${activeSubmission}`);
+      L.debug(`found submission for program ${programId}: ${activeSubmission.version}`);
       return F(MongooseUtils.toPojo(activeSubmission));
     } catch (err) {
       L.error('failed to fetch submission', err);

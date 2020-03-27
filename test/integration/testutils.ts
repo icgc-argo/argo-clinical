@@ -5,7 +5,6 @@ import { Donor } from '../../src/clinical/clinical-entities';
 
 export const clearCollections = async (dburl: string, collections: string[]) => {
   try {
-    console.log(`Clearing collections pre-test:`, collections.join(', '));
     const promises = collections.map(collectionName => cleanCollection(dburl, collectionName));
     await Promise.all(promises);
     await resetCounters(dburl);
@@ -18,16 +17,13 @@ export const clearCollections = async (dburl: string, collections: string[]) => 
 
 export const cleanCollection = async (dburl: string, collection: string): Promise<any> => {
   const conn = await mongo.connect(dburl);
-  console.log('cleanCollection connected');
   try {
     await conn.db('clinical').dropCollection(collection);
-    console.log('cleanCollection dropped collection');
   } catch (err) {
     console.error('failed to drop collection', collection);
   }
 
   await conn.db('clinical').createCollection(collection);
-  console.log('cleanCollection created collection');
   await conn.close();
 };
 
@@ -51,7 +47,6 @@ export const insertData = async (
     .db('clinical')
     .collection(collection)
     .insert(document);
-  console.log('doc Id is:' + document._id);
   await conn.close();
   return document._id;
 };

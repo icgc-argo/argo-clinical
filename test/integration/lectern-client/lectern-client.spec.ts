@@ -12,7 +12,6 @@ const ServerMock: any = require('mock-http-server') as any;
 
 chai.use(require('chai-http'));
 chai.should();
-mongoose.set('debug', true);
 
 describe('Lectern Client', () => {
   const server = new ServerMock({ host: 'localhost', port: 54321 });
