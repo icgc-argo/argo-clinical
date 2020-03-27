@@ -1,8 +1,53 @@
 import { migrationDiffs } from './stub-diffs';
 import _ from 'lodash';
 import fs from 'fs';
-import { schemaV1_accessible, schemaV2, schemaV3 } from './static-schema-data';
+import { SchemaDefinition, FieldDefinition } from '../../../../src/lectern-client/schema-entities';
+import legacyStubSchemas from '../stub-schema.json';
+import { schemaV1_accessible_ORIGINAL } from './static-schema-data';
+import { ClinicalEntitySchemaNames } from '../../../../src/submission/submission-entities';
+
 const DICTIONARY_NAME = 'ARGO Clinical Submission';
+
+type StubSchemaDefinition = Omit<SchemaDefinition, 'key'>;
+const schemaV1 = legacyStubSchemas.dictionaries[0].schemas as Array<StubSchemaDefinition>;
+const schemaV1_keyed = _.keyBy(schemaV1, 'name');
+
+const pairs = Object.entries(schemaV1_keyed).map(([schemaKey, schemaVal]) => {
+  const fields = _.keyBy(schemaVal.fields, 'name');
+  return [schemaKey, { ...schemaVal, fields }];
+});
+
+const schemaV1_accessible = _.fromPairs(pairs);
+
+function asLiterals<T extends string>(arr: T[]): T[] {
+  return arr;
+}
+
+const schemaV1_withfieldTypes = schemaV1.map(schema => {
+  const currSchemaFieldNames = schema.fields.map(fieldObj => fieldObj.name);
+  const arr = asLiterals(currSchemaFieldNames);
+  type currSchemaFields = { [K in typeof arr[number]]: FieldDefinition };
+  let { fields, ...rest } = schema;
+  let typed_Obj: currSchemaFields;
+  schema.fields.forEach(field => {
+    typed_Obj[field.name] = field;
+  });
+  fields = typed_Obj;
+  return { fields, ...rest };
+});
+
+console.log(schemaV1_withfieldTypes);
+
+// interface schemaMap  {
+//   [schemaName in keyof ClinicalEntitySchemaNames]: StubSchemaDefinition
+// }
+
+// const b = Object.values(ClinicalEntitySchemaNames);
+// type schemaTypewip = {
+//   [schemaName in b]: FieldDefinition;
+// };
+
+// const a:schemaTypewip = {donor: {field: [], name: '', description: ''}}
 
 export const buildDynamicStubSchema = () => {
   const convertToDictionaryNotation = (schemaVersion: Object) => {
@@ -13,30 +58,9 @@ export const buildDynamicStubSchema = () => {
     });
   };
 
-  const legacyDictionaries = [
-    {
-      schemas: convertToDictionaryNotation(schemaV1_accessible),
-      name: DICTIONARY_NAME,
-      version: '1.0',
-    },
-
-    {
-      schemas: schemaV2,
-      name: DICTIONARY_NAME,
-      version: '2.0',
-    },
-
-    {
-      schemas: schemaV3,
-      name: DICTIONARY_NAME,
-      version: '3.0',
-    },
-  ];
-
   // Change 8.1.1.1 adding new enum value Adding an enum to the codelist
   const schemaV4 = _.cloneDeep(schemaV1_accessible);
-  schemaV4.donor.fields.cause_of_death.restrictions.codeList.push('Died from disease');
-
+  schemaV4.schemaV4.donor.fields.cause_of_death.restrictions.codeList.push('Died from disease');
   // Change #8.1.1.2 adding non-required field
   const schemaV5 = _.cloneDeep(schemaV1_accessible);
   _.assign(schemaV5.donor.fields, {
@@ -118,7 +142,9 @@ export const buildDynamicStubSchema = () => {
     '12.0': schemaV12,
     '13.0': schemaV13,
   };
-  const newDictionaries = legacyDictionaries.concat(
+
+  // only want extend beyond the first three legacy schemas
+  const newDictionaries = legacyStubSchemas.dictionaries.slice(0, 3).concat(
     Object.entries(newSchemas).map(([versionNum, schemaObj]) => {
       return {
         schemas: convertToDictionaryNotation(schemaObj),
@@ -140,3 +166,5 @@ export const buildDynamicStubSchema = () => {
     JSON.stringify(stub_schema, undefined, 2),
   );
 };
+
+buildDynamicStubSchema();
