@@ -27,7 +27,6 @@ export interface SubmittedRegistrationRecord {
 }
 
 type x = { [key in keyof SubmittedRegistrationRecord]: keyof CreateRegistrationRecord };
-
 export const RegistrationToCreateRegistrationFieldsMap: x = {
   program_id: 'programId',
   submitter_donor_id: 'donorSubmitterId',
@@ -328,6 +327,7 @@ export enum RadiationFieldsEnum {
   submitter_treatment_id = 'submitter_treatment_id',
   radiation_therapy_modality = 'radiation_therapy_modality',
 }
+
 export enum FollowupFieldsEnum {
   program_id = 'program_id',
   submitter_donor_id = 'submitter_donor_id',

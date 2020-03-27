@@ -1,7 +1,7 @@
 // using import fails when running the test
 // import * as chai from "chai";
-import path from 'path';
 const dotEnvPath = __dirname + '/performance.env';
+import path from 'path';
 require('dotenv').config({ path: dotEnvPath });
 console.log('env cpus: ' + process.env.ALLOWED_CPUS);
 import chai from 'chai';
@@ -15,7 +15,7 @@ import { GenericContainer } from 'testcontainers';
 import app from '../../src/app';
 import * as bootstrap from '../../src/bootstrap';
 import { cleanCollection, resetCounters } from '../integration/testutils';
-import { TEST_PUB_KEY, JWT_ABCDEF } from '../integration/test.jwt';
+import { TEST_PUB_KEY, JWT_ABCDEF, JWT_CLINICALSVCADMIN } from '../integration/test.jwt';
 import {
   ClinicalEntitySchemaNames,
   CreateRegistrationResult,
@@ -73,7 +73,7 @@ describe('Submission Api', () => {
             return '';
           },
           schemaServiceUrl() {
-            return `file:///home/ballabadi/dev/repos/argo/argo-clinical/sampleFiles/sample-schema.json`;
+            return 'file://' + path.resolve(__dirname + `/../../sampleFiles/sample-schema.json`);
           },
           testApisDisabled() {
             return false;
@@ -129,10 +129,10 @@ describe('Submission Api', () => {
       let registrationId: string | undefined;
       await chai
         .request(app)
-        .post('/submission/program/ABCD-EF/registration')
-        .auth(JWT_ABCDEF, { type: 'bearer' })
+        .post('/submission/program/TEST-CA/registration')
+        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
         .type('form')
-        .attach('registrationFile', file, `${ClinicalEntitySchemaNames.REGISTRATION}.3k.tsv`)
+        .attach('registrationFile', file, `${ClinicalEntitySchemaNames.REGISTRATION}.300.tsv`)
         .then((res: any) => {
           registrationId = (res.body as CreateRegistrationResult).registration?._id;
           res.should.have.status(201);
@@ -144,8 +144,8 @@ describe('Submission Api', () => {
     const commitRegistration = async (regId: string) => {
       await chai
         .request(app)
-        .post(`/submission/program/ABCD-EF/registration/${regId}/commit`)
-        .auth(JWT_ABCDEF, { type: 'bearer' })
+        .post(`/submission/program/TEST-CA/registration/${regId}/commit`)
+        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
         .then((res: any) => {
           res.should.have.status(200);
         });

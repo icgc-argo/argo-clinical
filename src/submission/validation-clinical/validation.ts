@@ -22,7 +22,7 @@ import {
   ClinicalFields,
   IdToIndexMap,
 } from '../submission-entities';
-import { donorDao, DONOR_FIELDS } from '../../clinical/donor-repo';
+import { donorDao } from '../../clinical/donor-repo';
 import { DeepReadonly } from 'deep-freeze';
 import { DataRecord } from '../../lectern-client/schema-entities';
 import { submissionValidator } from './index';
@@ -47,21 +47,16 @@ export const validateRegistrationData = async (
 ): Promise<ValidationResult> => {
   let errors: SubmissionValidationError[] = [];
 
-  // caching in case we encounter same ids more than once
-  const newSpecimens = new Set<string>();
-  const newSamples = new Set<string>();
-  const newDonors = new Set<string>();
-
   // an index to help faster access to records by key ids to avoid n^2 loop in cross-file validation
-  const donorIdSubmitterIdToSubmittedRecordMap: IdToIndexMap = {};
+  const donorSubmitterIdToSubmittedRecordMap: IdToIndexMap = {};
   const specimenSubmitterIdToSubmittedRecordMap: IdToIndexMap = {};
   const sampleSubmitterIdToSubmittedRecordMap: IdToIndexMap = {};
 
-  // TODO: this can be passed and done before when we iterate over the records in submission service. it tales 0.005 secs so
+  // this can be passed and done before when we iterate over the records in submission service. it takes 0.005 secs so
   // not a big gain.
   for (let index = 0; index < newRecords.length; index++) {
-    donorIdSubmitterIdToSubmittedRecordMap[newRecords[index].donorSubmitterId]?.push(index) ||
-      (donorIdSubmitterIdToSubmittedRecordMap[newRecords[index].donorSubmitterId] = [index]);
+    donorSubmitterIdToSubmittedRecordMap[newRecords[index].donorSubmitterId]?.push(index) ||
+      (donorSubmitterIdToSubmittedRecordMap[newRecords[index].donorSubmitterId] = [index]);
     specimenSubmitterIdToSubmittedRecordMap[newRecords[index].specimenSubmitterId]?.push(index) ||
       (specimenSubmitterIdToSubmittedRecordMap[newRecords[index].specimenSubmitterId] = [index]);
     sampleSubmitterIdToSubmittedRecordMap[newRecords[index].sampleSubmitterId]?.push(index) ||
@@ -89,26 +84,18 @@ export const validateRegistrationData = async (
     );
 
     // CROSS-FILE validation, cross checking new records in file for conflicts
-    if (
-      newDonors.has(donorRecordToValidate.donorSubmitterId) ||
-      allDonorsMap[donorRecordToValidate.donorSubmitterId] === undefined
-    ) {
-      newDonors.add(donorRecordToValidate.donorSubmitterId);
+    if (allDonorsMap[donorRecordToValidate.donorSubmitterId] === undefined) {
       errors = errors.concat(
         conflictingNewDonor(
           index,
           donorRecordToValidate,
           newRecords,
-          donorIdSubmitterIdToSubmittedRecordMap,
+          donorSubmitterIdToSubmittedRecordMap,
         ),
       );
     }
 
-    if (
-      newSpecimens.has(donorRecordToValidate.specimenSubmitterId) ||
-      isNewSpecimen(donorRecordToValidate.specimenSubmitterId, allDonorsBySpecimenIdMap)
-    ) {
-      newSpecimens.add(donorRecordToValidate.specimenSubmitterId);
+    if (isNewSpecimen(donorRecordToValidate.specimenSubmitterId, allDonorsBySpecimenIdMap)) {
       errors = errors.concat(
         conflictingNewSpecimen(
           index,
@@ -119,11 +106,7 @@ export const validateRegistrationData = async (
       );
     }
 
-    if (
-      newSamples.has(donorRecordToValidate.sampleSubmitterId) ||
-      isNewSample(donorRecordToValidate.sampleSubmitterId, allDonorsBySampleIdMap)
-    ) {
-      newSamples.add(donorRecordToValidate.sampleSubmitterId);
+    if (isNewSample(donorRecordToValidate.sampleSubmitterId, allDonorsBySampleIdMap)) {
       errors = errors.concat(
         conflictingNewSample(
           index,

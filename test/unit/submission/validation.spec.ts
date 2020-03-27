@@ -408,14 +408,6 @@ describe('data-validator', () => {
 
     it('should detect specimen belongs to other donor', async () => {
       const existingDonor02 = stubs.validation.existingDonor02();
-
-      // donorDaoFindBySpecimenSubmitterIdAndProgramIdStub.returns(
-      //   Promise.resolve<Donor>(stubs.validation.existingDonor02()),
-      // );
-      // donorDaoFindBySampleSubmitterIdAndProgramIdStub.returns(
-      //   Promise.resolve<Donor>(stubs.validation.existingDonor02()),
-      // );
-
       // test call
       const result = await dv.validateRegistrationData(
         [
