@@ -1,5 +1,9 @@
 // Has to import config before any other import uses the configurations
 import { AppConfig } from './config';
+import dotenv from 'dotenv';
+if (process.env.NODE_ENV !== 'PRODUCTION') {
+  console.debug('dotenv: ', dotenv.config());
+}
 import * as vault from './vault-k8s';
 import { Server } from 'http';
 // we import here to allow configs to fully load

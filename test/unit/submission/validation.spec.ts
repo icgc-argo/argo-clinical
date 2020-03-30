@@ -209,7 +209,6 @@ describe('data-validator', () => {
 
       // test call
       const result = await dv.validateRegistrationData(
-        'PEME-CA',
         [
           {
             donorSubmitterId: 'AB1',
@@ -223,6 +222,14 @@ describe('data-validator', () => {
             specimenType: 'Normal',
           },
         ],
+        {
+          SP1: existingDonorMock,
+          SP13: existingDonorMock,
+          SP14: existingDonorMock,
+        },
+        {
+          AM1: existingDonorMock,
+        },
         { AB1: existingDonorMock },
       );
 
@@ -237,7 +244,6 @@ describe('data-validator', () => {
 
       // test call
       const result = await dv.validateRegistrationData(
-        'PEME-CA',
         [
           {
             donorSubmitterId: 'AB1',
@@ -251,6 +257,14 @@ describe('data-validator', () => {
             specimenType: 'Normal',
           },
         ],
+        {
+          SP1: existingDonorMock,
+          SP13: existingDonorMock,
+          SP14: existingDonorMock,
+        },
+        {
+          AM1: existingDonorMock,
+        },
         { AB1: existingDonorMock },
       );
 
@@ -265,7 +279,6 @@ describe('data-validator', () => {
 
       // test call
       const result = await dv.validateRegistrationData(
-        'PEME-CA',
         [
           {
             donorSubmitterId: 'AB1',
@@ -279,6 +292,14 @@ describe('data-validator', () => {
             specimenType: 'Normal2',
           },
         ],
+        {
+          SP1: existingDonorMock,
+          SP13: existingDonorMock,
+          SP14: existingDonorMock,
+        },
+        {
+          AM1: existingDonorMock,
+        },
         { AB1: existingDonorMock },
       );
 
@@ -293,7 +314,6 @@ describe('data-validator', () => {
 
       // test call
       const result = await dv.validateRegistrationData(
-        'PEME-CA',
         [
           {
             donorSubmitterId: 'AB1',
@@ -307,6 +327,14 @@ describe('data-validator', () => {
             specimenType: 'Normal',
           },
         ],
+        {
+          SP1: existingDonorMock,
+          SP13: existingDonorMock,
+          SP14: existingDonorMock,
+        },
+        {
+          AM1: existingDonorMock,
+        },
         { AB1: existingDonorMock },
       );
 
@@ -331,7 +359,6 @@ describe('data-validator', () => {
       };
       // test call
       const result = await dv.validateRegistrationData(
-        'PEME-CA',
         [
           {
             donorSubmitterId: 'AB1',
@@ -346,6 +373,14 @@ describe('data-validator', () => {
           },
           valid2ndRecord,
         ],
+        {
+          SP1: existingDonorMock,
+          SP13: existingDonorMock,
+          SP14: existingDonorMock,
+        },
+        {
+          AM1: existingDonorMock,
+        },
         { AB1: existingDonorMock },
       );
 
@@ -372,16 +407,9 @@ describe('data-validator', () => {
     });
 
     it('should detect specimen belongs to other donor', async () => {
-      donorDaoFindBySpecimenSubmitterIdAndProgramIdStub.returns(
-        Promise.resolve<Donor>(stubs.validation.existingDonor02()),
-      );
-      donorDaoFindBySampleSubmitterIdAndProgramIdStub.returns(
-        Promise.resolve<Donor>(stubs.validation.existingDonor02()),
-      );
-
+      const existingDonor02 = stubs.validation.existingDonor02();
       // test call
       const result = await dv.validateRegistrationData(
-        'PEME-CA',
         [
           {
             donorSubmitterId: 'AB2',
@@ -395,7 +423,13 @@ describe('data-validator', () => {
             specimenType: 'Normal',
           },
         ],
-        {},
+        {
+          SP1: existingDonor02,
+        },
+        {
+          AM1: existingDonor02,
+        },
+        { AB1: existingDonor02 },
       );
 
       // assertions
@@ -405,6 +439,8 @@ describe('data-validator', () => {
 
     // see issue https://github.com/icgc-argo/argo-clinical/issues/112
     it('should detect specimen belongs to other donor and specimen type changed', async () => {
+      const existingDonor02 = stubs.validation.existingDonor02();
+
       donorDaoFindBySampleSubmitterIdAndProgramIdStub.returns(
         Promise.resolve(stubs.validation.existingDonor02()),
       );
@@ -415,7 +451,6 @@ describe('data-validator', () => {
 
       // test call
       const result = await dv.validateRegistrationData(
-        'PEME-CA',
         [
           {
             donorSubmitterId: 'AB2',
@@ -429,7 +464,13 @@ describe('data-validator', () => {
             specimenType: 'Normal',
           },
         ],
-        {},
+        {
+          SP1: existingDonor02,
+        },
+        {
+          AM1: existingDonor02,
+        },
+        { AB1: existingDonor02 },
       );
 
       const specimenTypeMutatedErr: SubmissionValidationError = {
@@ -453,16 +494,10 @@ describe('data-validator', () => {
     });
 
     it('should detect sample belongs to other specimen, same donor', async () => {
-      donorDaoFindBySpecimenSubmitterIdAndProgramIdStub.returns(
-        Promise.resolve<Donor>(stubs.validation.existingDonor02()),
-      );
-      donorDaoFindBySampleSubmitterIdAndProgramIdStub.returns(
-        Promise.resolve<Donor>(stubs.validation.existingDonor02()),
-      );
       const existingDonorMock: Donor = stubs.validation.existingDonor01();
+
       // test call
       const result = await dv.validateRegistrationData(
-        'PEME-CA',
         [
           {
             donorSubmitterId: 'AB1',
@@ -470,12 +505,20 @@ describe('data-validator', () => {
             programId: 'PEME-CA',
             sampleSubmitterId: 'AM1',
             specimenTissueSource: 'XYZ',
-            sampleType: 'ST11',
+            sampleType: 'ST1',
             specimenSubmitterId: 'SP2',
             tumourNormalDesignation: 'Normal',
             specimenType: 'Normal',
           },
         ],
+        {
+          SP1: existingDonorMock,
+          SP13: existingDonorMock,
+          SP14: existingDonorMock,
+        },
+        {
+          AM1: existingDonorMock,
+        },
         { AB1: existingDonorMock },
       );
 
@@ -485,6 +528,7 @@ describe('data-validator', () => {
     });
 
     it('should detect sample belongs to other specimen, different donor', async () => {
+      const existingDonor02 = stubs.validation.existingDonor02();
       donorDaoFindBySpecimenSubmitterIdAndProgramIdStub.returns(
         Promise.resolve<Donor>(stubs.validation.existingDonor02()),
       );
@@ -493,7 +537,6 @@ describe('data-validator', () => {
       );
       // test call
       const result = await dv.validateRegistrationData(
-        'PEME-CA',
         [
           {
             donorSubmitterId: 'AB2',
@@ -507,11 +550,17 @@ describe('data-validator', () => {
             specimenType: 'Normal',
           },
         ],
-        {},
+        {
+          SP1: existingDonor02,
+        },
+        {
+          AM1: existingDonor02,
+        },
+        { AB1: existingDonor02 },
       );
 
       // assertions
-      chai.expect(result.errors.length).to.eq(2);
+      chai.expect(result.errors.length).to.eq(1);
       chai.expect(result.errors).to.deep.include(sampleBelongsToOtherSpecimenAB2);
     });
 
@@ -520,7 +569,6 @@ describe('data-validator', () => {
       donorDaoCountByStub.returns(Promise.resolve(0));
       // test call
       const result = await dv.validateRegistrationData(
-        'PEME-CA',
         [
           {
             donorSubmitterId: 'AB1',
@@ -545,6 +593,8 @@ describe('data-validator', () => {
             specimenType: 'Normal',
           },
         ],
+        {},
+        {},
         {},
       );
 
@@ -587,7 +637,6 @@ describe('data-validator', () => {
       donorDaoCountByStub.returns(Promise.resolve(0));
       // test call
       const result = await dv.validateRegistrationData(
-        'PEME-CA',
         [
           {
             donorSubmitterId: 'AB1',
@@ -624,6 +673,8 @@ describe('data-validator', () => {
             specimenType: 'Normal',
           },
         ],
+        {},
+        {},
         {},
       );
 
@@ -668,7 +719,6 @@ describe('data-validator', () => {
       donorDaoCountByStub.returns(Promise.resolve(0));
       // test call
       const result = await dv.validateRegistrationData(
-        'PEME-CA',
         [
           {
             donorSubmitterId: 'AB1',
@@ -705,6 +755,8 @@ describe('data-validator', () => {
             specimenType: 'Normal',
           },
         ],
+        {},
+        {},
         {},
       );
 
@@ -747,7 +799,6 @@ describe('data-validator', () => {
       donorDaoCountByStub.returns(Promise.resolve(0));
       // test call
       const result = await dv.validateRegistrationData(
-        'PEME-CA',
         [
           {
             donorSubmitterId: 'AB1',
@@ -784,6 +835,8 @@ describe('data-validator', () => {
             specimenType: 'Normal',
           },
         ],
+        {},
+        {},
         {},
       );
 
@@ -825,7 +878,6 @@ describe('data-validator', () => {
       donorDaoCountByStub.returns(Promise.resolve(0));
       // test call
       const result = await dv.validateRegistrationData(
-        'PEME-CA',
         [
           {
             donorSubmitterId: 'AB1',
@@ -862,6 +914,8 @@ describe('data-validator', () => {
             specimenType: 'Normal',
           },
         ],
+        {},
+        {},
         {},
       );
 
@@ -903,7 +957,6 @@ describe('data-validator', () => {
       donorDaoCountByStub.returns(Promise.resolve(0));
       // test call
       const result = await dv.validateRegistrationData(
-        'PEME-CA',
         [
           {
             donorSubmitterId: 'AB1',
@@ -940,6 +993,8 @@ describe('data-validator', () => {
             specimenType: 'Normal',
           },
         ],
+        {},
+        {},
         {},
       );
 
@@ -981,7 +1036,6 @@ describe('data-validator', () => {
       donorDaoCountByStub.returns(Promise.resolve(0));
       // test call
       const result = await dv.validateRegistrationData(
-        'PEME-CA',
         [
           {
             donorSubmitterId: 'AB1',
@@ -1018,6 +1072,8 @@ describe('data-validator', () => {
             specimenType: 'Normal',
           },
         ],
+        {},
+        {},
         {},
       );
 
@@ -1059,7 +1115,6 @@ describe('data-validator', () => {
     it('should detect duplicate registration records', async () => {
       donorDaoCountByStub.returns(Promise.resolve(0));
       const result = await dv.validateRegistrationData(
-        'PEME-CA',
         [
           {
             donorSubmitterId: 'AB1',
@@ -1095,6 +1150,8 @@ describe('data-validator', () => {
             specimenType: 'Normal',
           },
         ],
+        {},
+        {},
         {},
       );
 

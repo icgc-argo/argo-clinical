@@ -27,7 +27,6 @@ export interface SubmittedRegistrationRecord {
 }
 
 type x = { [key in keyof SubmittedRegistrationRecord]: keyof CreateRegistrationRecord };
-
 export const RegistrationToCreateRegistrationFieldsMap: x = {
   program_id: 'programId',
   submitter_donor_id: 'donorSubmitterId',
@@ -328,6 +327,7 @@ export enum RadiationFieldsEnum {
   submitter_treatment_id = 'submitter_treatment_id',
   radiation_therapy_modality = 'radiation_therapy_modality',
 }
+
 export enum FollowupFieldsEnum {
   program_id = 'program_id',
   submitter_donor_id = 'submitter_donor_id',
@@ -377,15 +377,15 @@ export const ClinicalTherapySchemaNames: ClinicalTherapyType[] = [
 // batchNameRegex are arrays, so we can just add new file name regex when needed
 // also we should check file extensions at api level for each file type upload function
 export const BatchNameRegex: Record<ClinicalEntitySchemaNames, RegExp[]> = {
-  [ClinicalEntitySchemaNames.REGISTRATION]: [/^sample_registration.*\.tsv$/],
-  [ClinicalEntitySchemaNames.DONOR]: [/^donor.*\.tsv$/],
-  [ClinicalEntitySchemaNames.SPECIMEN]: [/^specimen.*\.tsv$/],
-  [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: [/^primary_diagnosis.*\.tsv$/],
-  [ClinicalEntitySchemaNames.FOLLOW_UP]: [/^follow_up.*\.tsv$/],
-  [ClinicalEntitySchemaNames.TREATMENT]: [/^treatment.*\.tsv$/],
-  [ClinicalEntitySchemaNames.CHEMOTHERAPY]: [/^chemotherapy.*\.tsv$/],
-  [ClinicalEntitySchemaNames.RADIATION]: [/^radiation.*\.tsv$/],
-  [ClinicalEntitySchemaNames.HORMONE_THERAPY]: [/^hormone_therapy.*\.tsv$/],
+  [ClinicalEntitySchemaNames.REGISTRATION]: [/^sample_registration.*\.tsv$/i],
+  [ClinicalEntitySchemaNames.DONOR]: [/^donor.*\.tsv$/i],
+  [ClinicalEntitySchemaNames.SPECIMEN]: [/^specimen.*\.tsv$/i],
+  [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: [/^primary_diagnosis.*\.tsv$/i],
+  [ClinicalEntitySchemaNames.FOLLOW_UP]: [/^follow_up.*\.tsv$/i],
+  [ClinicalEntitySchemaNames.TREATMENT]: [/^treatment.*\.tsv$/i],
+  [ClinicalEntitySchemaNames.CHEMOTHERAPY]: [/^chemotherapy.*\.tsv$/i],
+  [ClinicalEntitySchemaNames.RADIATION]: [/^radiation.*\.tsv$/i],
+  [ClinicalEntitySchemaNames.HORMONE_THERAPY]: [/^hormone_therapy.*\.tsv$/i],
 };
 
 // This needed to be added to differentiate between multiple or single fields for identifying
@@ -430,6 +430,8 @@ export interface ClinicalSubmissionRecordsByDonorIdMap {
 export interface SubmittedClinicalRecordsMap {
   [type: string]: SubmittedClinicalRecord[];
 }
+
+export type IdToIndexMap = { [k: string]: number[] };
 
 export const ClinicalEntityToEnumFieldsMap: Record<ClinicalEntitySchemaNames, string[]> = {
   [ClinicalEntitySchemaNames.REGISTRATION]: Object.values(SampleRegistrationFieldsEnum),

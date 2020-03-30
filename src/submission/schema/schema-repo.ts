@@ -5,12 +5,12 @@ import { MongooseUtils } from '../../utils';
 const L = loggerFor(__filename);
 
 export interface SchemaRepository {
-  createOrUpdate(schema: SchemasDictionary): Promise<SchemasDictionary | null>;
-  get(name: String): Promise<SchemasDictionary | null>;
+  createOrUpdate(schema: SchemasDictionary): Promise<SchemasDictionary | undefined>;
+  get(name: String): Promise<SchemasDictionary | undefined>;
 }
 
 export const schemaRepo: SchemaRepository = {
-  createOrUpdate: async (schema: SchemasDictionary): Promise<SchemasDictionary | null> => {
+  createOrUpdate: async (schema: SchemasDictionary): Promise<SchemasDictionary | undefined> => {
     const result = await DataSchemaModel.findOneAndUpdate(
       {
         name: schema.name,
@@ -26,9 +26,13 @@ export const schemaRepo: SchemaRepository = {
     const resultObj = MongooseUtils.toPojo(result);
     return resultObj;
   },
-  get: async (name: String): Promise<SchemasDictionary | null> => {
+  get: async (name: String): Promise<SchemasDictionary | undefined> => {
     L.debug('in Schema repo get');
-    return await DataSchemaModel.findOne({ name: name }).exec();
+    const doc = await DataSchemaModel.findOne({ name: name }).exec();
+    if (!doc) {
+      return undefined;
+    }
+    return MongooseUtils.toPojo(doc);
   },
 };
 
