@@ -1,4 +1,10 @@
-import { DonorMap, Specimen, Sample, Donor } from '../../clinical/clinical-entities';
+import {
+  DonorMap,
+  Specimen,
+  Sample,
+  Donor,
+  DonorBySubmitterIdMap,
+} from '../../clinical/clinical-entities';
 import {
   DataValidationErrors,
   SubmissionValidationError,
@@ -14,8 +20,9 @@ import {
   SubmittedClinicalRecordsMap,
   DonorFieldsEnum,
   ClinicalFields,
+  IdToIndexMap,
 } from '../submission-entities';
-import { donorDao, DONOR_FIELDS } from '../../clinical/donor-repo';
+import { donorDao } from '../../clinical/donor-repo';
 import { DeepReadonly } from 'deep-freeze';
 import { DataRecord } from '../../lectern-client/schema-entities';
 import { submissionValidator } from './index';
@@ -29,57 +36,87 @@ import {
 import { concat } from 'lodash';
 import { ClinicalSubmissionRecordsOperations } from './utils';
 import { mergeRecordsMapIntoDonor } from '../submission-to-clinical/merge-submission';
+import { loggerFor } from '../../logger';
+const L = loggerFor(__filename);
 
 export const validateRegistrationData = async (
-  expectedProgram: string,
   newRecords: DeepReadonly<CreateRegistrationRecord[]>,
-  existingDonors: DeepReadonly<DonorMap>,
+  allDonorsBySpecimenIdMap: DonorBySubmitterIdMap,
+  allDonorsBySampleIdMap: DonorBySubmitterIdMap,
+  allDonorsMap: DonorBySubmitterIdMap,
 ): Promise<ValidationResult> => {
   let errors: SubmissionValidationError[] = [];
 
-  // caching in case we encounter same ids more than once
-  const newSpecimens = new Set<string>();
-  const newSamples = new Set<string>();
-  const newDonors = new Set<string>();
+  // an index to help faster access to records by key ids to avoid n^2 loop in cross-file validation
+  const donorSubmitterIdToSubmittedRecordMap: IdToIndexMap = {};
+  const specimenSubmitterIdToSubmittedRecordMap: IdToIndexMap = {};
+  const sampleSubmitterIdToSubmittedRecordMap: IdToIndexMap = {};
 
+  // this can be passed and done before when we iterate over the records in submission service. it takes 0.005 secs so
+  // not a big gain.
   for (let index = 0; index < newRecords.length; index++) {
-    const registrationRecord = newRecords[index];
+    donorSubmitterIdToSubmittedRecordMap[newRecords[index].donorSubmitterId]?.push(index) ||
+      (donorSubmitterIdToSubmittedRecordMap[newRecords[index].donorSubmitterId] = [index]);
+    specimenSubmitterIdToSubmittedRecordMap[newRecords[index].specimenSubmitterId]?.push(index) ||
+      (specimenSubmitterIdToSubmittedRecordMap[newRecords[index].specimenSubmitterId] = [index]);
+    sampleSubmitterIdToSubmittedRecordMap[newRecords[index].sampleSubmitterId]?.push(index) ||
+      (sampleSubmitterIdToSubmittedRecordMap[newRecords[index].sampleSubmitterId] = [index]);
+  }
+  for (let index = 0; index < newRecords.length; index++) {
+    const donorRecordToValidate = newRecords[index];
 
-    // checks against db
-    errors = errors.concat(await mutatingExistingData(index, registrationRecord, existingDonors));
+    // File VS existing Validation, checks against db data
     errors = errors.concat(
-      await specimenBelongsToOtherDonor(index, registrationRecord, expectedProgram),
+      mutatingExistingData(
+        index,
+        donorRecordToValidate,
+        allDonorsBySpecimenIdMap,
+        allDonorsBySampleIdMap,
+        allDonorsMap,
+      ),
+    );
+
+    errors = errors.concat(
+      specimenBelongsToOtherDonor(index, donorRecordToValidate, allDonorsBySpecimenIdMap),
     );
     errors = errors.concat(
-      await sampleBelongsToAnotherSpecimen(index, registrationRecord, expectedProgram),
+      sampleBelongsToAnotherSpecimen(index, donorRecordToValidate, allDonorsBySampleIdMap),
     );
 
-    // cross checking new records in file
-    if (
-      newDonors.has(registrationRecord.donorSubmitterId) ||
-      (await isNewDonor(registrationRecord, expectedProgram))
-    ) {
-      newDonors.add(registrationRecord.donorSubmitterId);
-      errors = errors.concat(conflictingNewDonor(index, registrationRecord, newRecords));
+    // CROSS-FILE validation, cross checking new records in file for conflicts
+    if (allDonorsMap[donorRecordToValidate.donorSubmitterId] === undefined) {
+      errors = errors.concat(
+        conflictingNewDonor(
+          index,
+          donorRecordToValidate,
+          newRecords,
+          donorSubmitterIdToSubmittedRecordMap,
+        ),
+      );
     }
 
-    if (
-      newSpecimens.has(registrationRecord.specimenSubmitterId) ||
-      (await isNewSpecimen(registrationRecord, expectedProgram))
-    ) {
-      newSpecimens.add(registrationRecord.specimenSubmitterId);
-      errors = errors.concat(conflictingNewSpecimen(index, registrationRecord, newRecords));
+    if (isNewSpecimen(donorRecordToValidate.specimenSubmitterId, allDonorsBySpecimenIdMap)) {
+      errors = errors.concat(
+        conflictingNewSpecimen(
+          index,
+          donorRecordToValidate,
+          newRecords,
+          specimenSubmitterIdToSubmittedRecordMap,
+        ),
+      );
     }
 
-    if (
-      newSamples.has(registrationRecord.sampleSubmitterId) ||
-      (await isNewSample(registrationRecord, expectedProgram))
-    ) {
-      newSamples.add(registrationRecord.sampleSubmitterId);
-      errors = errors.concat(conflictingNewSample(index, registrationRecord, newRecords));
+    if (isNewSample(donorRecordToValidate.sampleSubmitterId, allDonorsBySampleIdMap)) {
+      errors = errors.concat(
+        conflictingNewSample(
+          index,
+          donorRecordToValidate,
+          newRecords,
+          sampleSubmitterIdToSubmittedRecordMap,
+        ),
+      );
     }
   }
-
   return {
     errors,
   };
@@ -207,9 +244,10 @@ export const checkUniqueRecords = (
 };
 
 const conflictingNewSpecimen = (
-  newDonorIndex: number,
-  newDonor: CreateRegistrationRecord,
+  donorToValidateRecIndex: number,
+  donorToValidateRecord: CreateRegistrationRecord,
   newRecords: DeepReadonly<CreateRegistrationRecord[]>,
+  specimenSubmitterIdToSubmittedRecordMap: IdToIndexMap,
 ) => {
   const errors: SubmissionValidationError[] = [];
 
@@ -219,46 +257,59 @@ const conflictingNewSpecimen = (
   const conflictingSpecimenTumourDesignationIndices: number[] = [];
   const conflictingSpecimenTypeIndices: number[] = [];
 
-  newRecords.forEach((rec, index) => {
-    // if same record skip
-    if (newDonorIndex === index) {
-      return;
-    }
+  specimenSubmitterIdToSubmittedRecordMap[donorToValidateRecord.specimenSubmitterId].forEach(
+    rowNum => {
+      // if same record skip
+      if (donorToValidateRecIndex === rowNum) {
+        return;
+      }
+      const recordContainingSameSpecimenId: CreateRegistrationRecord = newRecords[rowNum];
+      // OR if same donor & same new specimen submitterId (check other specimen columns as they should match)
+      if (
+        donorToValidateRecord.donorSubmitterId ===
+          recordContainingSameSpecimenId.donorSubmitterId &&
+        donorToValidateRecord.specimenSubmitterId ===
+          recordContainingSameSpecimenId.specimenSubmitterId
+      ) {
+        if (
+          donorToValidateRecord.specimenTissueSource !==
+          recordContainingSameSpecimenId.specimenTissueSource
+        ) {
+          conflictingSpecimenTissueSourceIndices.push(rowNum);
+        }
 
-    // OR if same donor & same new specimen submitterId (check other specimen columns as they should match)
-    if (
-      newDonor.donorSubmitterId === rec.donorSubmitterId &&
-      newDonor.specimenSubmitterId === rec.specimenSubmitterId
-    ) {
-      if (newDonor.specimenTissueSource !== rec.specimenTissueSource) {
-        conflictingSpecimenTissueSourceIndices.push(index);
+        if (
+          donorToValidateRecord.tumourNormalDesignation !==
+          recordContainingSameSpecimenId.tumourNormalDesignation
+        ) {
+          conflictingSpecimenTumourDesignationIndices.push(rowNum);
+        }
+
+        if (donorToValidateRecord.specimenType !== recordContainingSameSpecimenId.specimenType) {
+          conflictingSpecimenTypeIndices.push(rowNum);
+        }
+
+        return;
       }
 
-      if (newDonor.tumourNormalDesignation !== rec.tumourNormalDesignation) {
-        conflictingSpecimenTumourDesignationIndices.push(index);
+      // different donor but using same specimenId
+      if (
+        donorToValidateRecord.specimenSubmitterId ==
+        recordContainingSameSpecimenId.specimenSubmitterId
+      ) {
+        conflictingSpecimensIndices.push(rowNum);
       }
-
-      if (newDonor.specimenType !== rec.specimenType) {
-        conflictingSpecimenTypeIndices.push(index);
-      }
-
-      return;
-    }
-
-    // different donor but using same specimenId
-    if (newDonor.specimenSubmitterId == rec.specimenSubmitterId) {
-      conflictingSpecimensIndices.push(index);
-    }
-  });
+    },
+  );
 
   // if conflicts add them
   if (conflictingSpecimensIndices.length !== 0) {
     errors.push(
       buildError(
-        newDonor,
+        donorToValidateRecord,
         DataValidationErrors.NEW_SPECIMEN_ID_CONFLICT,
         SampleRegistrationFieldsEnum.submitter_specimen_id,
-        newDonorIndex,
+        donorToValidateRecIndex,
         {
           conflictingRows: conflictingSpecimensIndices,
         },
@@ -269,10 +320,10 @@ const conflictingNewSpecimen = (
   if (conflictingSpecimenTissueSourceIndices.length !== 0) {
     errors.push(
       buildError(
-        newDonor,
+        donorToValidateRecord,
         DataValidationErrors.NEW_SPECIMEN_ATTR_CONFLICT,
         SampleRegistrationFieldsEnum.specimen_tissue_source,
-        newDonorIndex,
+        donorToValidateRecIndex,
         {
           conflictingRows: conflictingSpecimenTissueSourceIndices,
         },
@@ -283,10 +334,10 @@ const conflictingNewSpecimen = (
   if (conflictingSpecimenTumourDesignationIndices.length !== 0) {
     errors.push(
       buildError(
-        newDonor,
+        donorToValidateRecord,
         DataValidationErrors.NEW_SPECIMEN_ATTR_CONFLICT,
         SampleRegistrationFieldsEnum.tumour_normal_designation,
-        newDonorIndex,
+        donorToValidateRecIndex,
         {
           conflictingRows: conflictingSpecimenTumourDesignationIndices,
         },
@@ -297,10 +348,10 @@ const conflictingNewSpecimen = (
   if (conflictingSpecimenTypeIndices.length !== 0) {
     errors.push(
       buildError(
-        newDonor,
+        donorToValidateRecord,
         DataValidationErrors.NEW_SPECIMEN_ATTR_CONFLICT,
         SampleRegistrationFieldsEnum.specimen_type,
-        newDonorIndex,
+        donorToValidateRecIndex,
         {
           conflictingRows: conflictingSpecimenTypeIndices,
         },
@@ -312,23 +363,25 @@ const conflictingNewSpecimen = (
 };
 
 const conflictingNewDonor = (
-  newDonorIndex: number,
-  newDonor: CreateRegistrationRecord,
+  donorToValidateRecIndex: number,
+  donorRecToValidate: CreateRegistrationRecord,
   newRecords: DeepReadonly<CreateRegistrationRecord[]>,
+  donorIdSubmitterIdToSubmittedRecordMap: IdToIndexMap,
 ) => {
   const errors: SubmissionValidationError[] = [];
   const conflictingGendersIndexes: number[] = [];
 
-  newRecords.forEach((rec, index) => {
+  // find the other rows in the submitted records that refer to same donor
+  donorIdSubmitterIdToSubmittedRecordMap[donorRecToValidate.donorSubmitterId].forEach(rowNum => {
     // if same record return
-    if (newDonorIndex === index) {
+    if (rowNum === donorToValidateRecIndex) {
       return;
     }
-
+    const recordContainingSameDonorId: CreateRegistrationRecord = newRecords[rowNum];
     // same donor same specimen and sample Ids
-    if (newDonor.donorSubmitterId === rec.donorSubmitterId) {
-      if (newDonor.gender !== rec.gender) {
-        conflictingGendersIndexes.push(index);
+    if (donorRecToValidate.donorSubmitterId === recordContainingSameDonorId.donorSubmitterId) {
+      if (donorRecToValidate.gender !== recordContainingSameDonorId.gender) {
+        conflictingGendersIndexes.push(rowNum);
       }
       return;
     }
@@ -336,10 +389,10 @@ const conflictingNewDonor = (
 
   if (conflictingGendersIndexes.length !== 0) {
     const err = buildError(
-      newDonor,
+      donorRecToValidate,
       DataValidationErrors.NEW_DONOR_CONFLICT,
       SampleRegistrationFieldsEnum.gender,
-      newDonorIndex,
+      donorToValidateRecIndex,
       {
         conflictingRows: conflictingGendersIndexes,
       },
@@ -350,47 +403,48 @@ const conflictingNewDonor = (
 };
 
 const conflictingNewSample = (
-  newDonorIndex: number,
-  newDonor: CreateRegistrationRecord,
+  donorToValidateIndex: number,
+  donorRecToValidate: CreateRegistrationRecord,
   newRecords: DeepReadonly<CreateRegistrationRecord[]>,
+  sampleIdSubmitterIdToSubmittedRecordMap: IdToIndexMap,
 ) => {
   const errors: SubmissionValidationError[] = [];
   const conflictingSamplesIndices: number[] = [];
   const conflictingSampleTypesIndices: number[] = [];
 
-  newRecords.forEach((rec, index) => {
+  // get all submitted records that refered the same sample Id as the current Donor we validate
+  sampleIdSubmitterIdToSubmittedRecordMap[donorRecToValidate.sampleSubmitterId].forEach(rowNum => {
     // if same record return
-    if (newDonorIndex === index) {
+    if (donorToValidateIndex === rowNum) {
       return;
     }
-
+    const recordContainingSameSample: CreateRegistrationRecord = newRecords[rowNum];
     // same donor same specimen and sample Ids
     if (
-      newDonor.donorSubmitterId === rec.donorSubmitterId &&
-      newDonor.specimenSubmitterId === rec.specimenSubmitterId &&
-      newDonor.sampleSubmitterId === rec.sampleSubmitterId
+      donorRecToValidate.donorSubmitterId === recordContainingSameSample.donorSubmitterId &&
+      donorRecToValidate.specimenSubmitterId === recordContainingSameSample.specimenSubmitterId &&
+      donorRecToValidate.sampleSubmitterId === recordContainingSameSample.sampleSubmitterId
     ) {
-      if (newDonor.sampleType !== rec.sampleType) {
-        conflictingSampleTypesIndices.push(index);
+      if (donorRecToValidate.sampleType !== recordContainingSameSample.sampleType) {
+        conflictingSampleTypesIndices.push(rowNum);
       } else {
-        conflictingSamplesIndices.push(index);
+        conflictingSamplesIndices.push(rowNum);
       }
-
       return;
     }
 
     // different donor and/or different specimen
-    if (newDonor.sampleSubmitterId === rec.sampleSubmitterId) {
-      conflictingSamplesIndices.push(index);
+    if (donorRecToValidate.sampleSubmitterId === recordContainingSameSample.sampleSubmitterId) {
+      conflictingSamplesIndices.push(rowNum);
     }
   });
 
   if (conflictingSamplesIndices.length !== 0) {
     const err = buildError(
-      newDonor,
+      donorRecToValidate,
       DataValidationErrors.NEW_SAMPLE_ID_CONFLICT,
       SampleRegistrationFieldsEnum.submitter_sample_id,
-      newDonorIndex,
+      donorToValidateIndex,
       {
         conflictingRows: conflictingSamplesIndices,
       },
@@ -400,10 +454,10 @@ const conflictingNewSample = (
 
   if (conflictingSampleTypesIndices.length !== 0) {
     const err = buildError(
-      newDonor,
+      donorRecToValidate,
       DataValidationErrors.NEW_SAMPLE_ATTR_CONFLICT,
       SampleRegistrationFieldsEnum.sample_type,
-      newDonorIndex,
+      donorToValidateIndex,
       {
         conflictingRows: conflictingSampleTypesIndices,
       },
@@ -413,44 +467,50 @@ const conflictingNewSample = (
   return errors;
 };
 
-const isNewSpecimen = async (
-  newDonor: DeepReadonly<CreateRegistrationRecord>,
-  programId: string,
+const findSpecimenInAllDonors = (
+  specimenSubmitterId: string,
+  allDonorsBySpecimenSubmiterId: DonorBySubmitterIdMap,
 ) => {
-  const count = await donorDao.countBy({
-    [DONOR_FIELDS.PROGRAM_ID]: { $eq: programId },
-    [DONOR_FIELDS.SPECIMEN_SUBMITTER_ID]: { $eq: newDonor.specimenSubmitterId },
-  });
-
-  return count == 0;
+  return allDonorsBySpecimenSubmiterId[specimenSubmitterId]?.specimens.find(
+    sp => sp.submitterId == specimenSubmitterId,
+  );
 };
 
-const isNewDonor = async (newDonor: DeepReadonly<CreateRegistrationRecord>, programId: string) => {
-  const count = await donorDao.countBy({
-    [DONOR_FIELDS.PROGRAM_ID]: { $eq: programId },
-    [DONOR_FIELDS.SUBMITTER_ID]: { $eq: newDonor.donorSubmitterId },
-  });
-
-  return count == 0;
+const findSampleInAllDonors = (
+  sampleSubmitterId: string,
+  allDonorsBySampleSubmitterIdMap: DonorBySubmitterIdMap,
+) => {
+  const donor = allDonorsBySampleSubmitterIdMap[sampleSubmitterId];
+  if (!donor) return;
+  for (const sp of donor.specimens) {
+    const sample = sp.samples.find(sa => sa.submitterId == sampleSubmitterId);
+    if (sample) {
+      return sample;
+    }
+  }
 };
 
-const isNewSample = async (newDonor: DeepReadonly<CreateRegistrationRecord>, programId: string) => {
-  const count = await donorDao.countBy({
-    [DONOR_FIELDS.PROGRAM_ID]: { $eq: programId },
-    [DONOR_FIELDS.SPECIMEN_SAMPLE_SUBMITTER_ID]: { $eq: newDonor.sampleSubmitterId },
-  });
-
-  return count == 0;
+const isNewSpecimen = (
+  specimenSubmitterId: string,
+  allDonorsBySpecimenIdMap: DonorBySubmitterIdMap,
+) => {
+  return allDonorsBySpecimenIdMap[specimenSubmitterId] === undefined;
 };
 
-const mutatingExistingData = async (
+const isNewSample = (sampleSubmitterId: string, allDonorsBySampleIdMap: DonorBySubmitterIdMap) => {
+  return allDonorsBySampleIdMap[sampleSubmitterId] === undefined;
+};
+
+const mutatingExistingData = (
   index: number,
   newDonor: CreateRegistrationRecord,
-  existingDonors: DeepReadonly<DonorMap>,
+  allDonorsBySpecimenIdMap: DonorBySubmitterIdMap,
+  allDonorsBySampleSubmitterIdMap: DonorBySubmitterIdMap,
+  allDonorsMap: DonorBySubmitterIdMap,
 ) => {
   // if the donor doesn't exist => return
   const errors: SubmissionValidationError[] = [];
-  const existingDonor = existingDonors[newDonor.donorSubmitterId];
+  const existingDonor = allDonorsMap[newDonor.donorSubmitterId];
   let existingSpecimen: DeepReadonly<Specimen> | undefined = undefined;
   let existingSample: DeepReadonly<Sample> | undefined = undefined;
 
@@ -462,8 +522,14 @@ const mutatingExistingData = async (
     );
   }
 
+  // if the specimen id is not in the existing donor
   if (!existingSpecimen) {
-    existingSpecimen = await findExistingSpecimenFromDb(newDonor);
+    // try to check if this specimen exits even for other donors in db
+    // because we show errors of mutation even if the specimen already belongs to donor
+    existingSpecimen = findSpecimenInAllDonors(
+      newDonor.specimenSubmitterId,
+      allDonorsBySpecimenIdMap,
+    );
   }
 
   // is there an existing specimen registered with this submitter Id?
@@ -475,7 +541,11 @@ const mutatingExistingData = async (
   }
 
   if (!existingSample) {
-    existingSample = await findExistingSampleFromDb(newDonor.programId, newDonor.sampleSubmitterId);
+    // check if another donor in db owns this sample even to show mutation errors.
+    existingSample = findSampleInAllDonors(
+      newDonor.sampleSubmitterId,
+      allDonorsBySampleSubmitterIdMap,
+    );
   }
 
   // if sample does not exist => no need to check mutations, return
@@ -506,16 +576,13 @@ const findExistingSampleFromDb = async (programId: string, submitterId: string) 
   return existingSample;
 };
 
-const specimenBelongsToOtherDonor = async (
+const specimenBelongsToOtherDonor = (
   index: number,
   newDonor: CreateRegistrationRecord,
-  programId: string,
+  allDonorsBySpecimenSubmiterId: DonorBySubmitterIdMap,
 ) => {
   const errors: SubmissionValidationError[] = [];
-  const existingDonor = await donorDao.findBySpecimenSubmitterIdAndProgramId({
-    programId,
-    submitterId: newDonor.specimenSubmitterId,
-  });
+  const existingDonor = allDonorsBySpecimenSubmiterId[newDonor.specimenSubmitterId];
   if (existingDonor !== undefined && existingDonor.submitterId !== newDonor.donorSubmitterId) {
     errors.push(
       buildError(
@@ -531,16 +598,13 @@ const specimenBelongsToOtherDonor = async (
   return errors;
 };
 
-const sampleBelongsToAnotherSpecimen = async (
+const sampleBelongsToAnotherSpecimen = (
   index: number,
   newDonor: CreateRegistrationRecord,
-  programId: string,
+  allDonorsBySampleIdMap: DonorBySubmitterIdMap,
 ) => {
   const errors: SubmissionValidationError[] = [];
-  const existingDonor = await donorDao.findBySampleSubmitterIdAndProgramId({
-    programId,
-    submitterId: newDonor.sampleSubmitterId,
-  });
+  const existingDonor = allDonorsBySampleIdMap[newDonor.sampleSubmitterId];
   if (existingDonor !== undefined) {
     const existingSpecimen = existingDonor.specimens.find(specimen =>
       specimen.samples.some(sample => sample.submitterId === newDonor.sampleSubmitterId),
@@ -557,7 +621,6 @@ const sampleBelongsToAnotherSpecimen = async (
       );
     }
   }
-
   return errors;
 };
 

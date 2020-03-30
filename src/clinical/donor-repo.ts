@@ -20,6 +20,11 @@ export enum DONOR_FIELDS {
   TREATMENT_SUBMITTER_ID = 'treatments.clinicalInfo.submitter_treatment_id',
   PROGRAM_ID = 'programId',
   LAST_MIGRATION_ID = 'schemaMetadata.lastMigrationId',
+  GENDER = 'gender',
+  SPECIMEN_TISSUE_SOURCE = 'specimens.specimenTissueSource',
+  SPECIMEN_TYPE = 'specimens.specimenType',
+  SPECIMEN_TUMOR_NORMAL_DESIGNATION = 'specimens.tumourNormalDesignation',
+  SAMPLE_TYPE = 'specimens.samples.sampleType',
 }
 
 const ClinicalEntitySchemaNameToDonoFieldsMap: { [clinicalType: string]: DONOR_FIELDS } = {
@@ -31,6 +36,7 @@ export type FindByProgramAndSubmitterFilter = DeepReadonly<{
   programId: string;
   submitterId: string;
 }>;
+
 export interface DonorRepository {
   findByClinicalEntitySubmitterIdAndProgramId(
     filters: DeepReadonly<FindByProgramAndSubmitterFilter>,
@@ -38,7 +44,10 @@ export interface DonorRepository {
   ): Promise<DeepReadonly<Donor> | undefined>;
   insertDonors(donors: Donor[]): Promise<void>;
   findBy(criteria: any, limit: number): Promise<DeepReadonly<Donor[]>>;
-  findByProgramId(programId: string): Promise<DeepReadonly<Donor[]>>;
+  findByProgramId(
+    programId: string,
+    projections?: Partial<Record<DONOR_FIELDS, number>>,
+  ): Promise<DeepReadonly<Donor[]>>;
   deleteByProgramId(programId: string): Promise<void>;
   findByProgramAndSubmitterId(
     filters: DeepReadonly<FindByProgramAndSubmitterFilter[]>,
@@ -87,12 +96,15 @@ export const donorDao: DonorRepository = {
     return F(mapped);
   },
 
-  async findByProgramId(programId: string): Promise<DeepReadonly<Donor[]>> {
+  async findByProgramId(
+    programId: string,
+    projection?: Partial<Record<DONOR_FIELDS, number>>,
+  ): Promise<DeepReadonly<Donor[]>> {
     const result = await DonorModel.find(
       {
         [DONOR_FIELDS.PROGRAM_ID]: programId,
       },
-      undefined,
+      projection,
       { sort: { [DONOR_FIELDS.DONOR_ID]: 1 } },
     ).exec();
 

@@ -32,7 +32,7 @@ export const registrationRepository: RegistrationRepository = {
       if (activeRegistration == undefined) {
         return undefined;
       }
-      L.info(`found registration for program ${programId}: ${activeRegistration}`);
+      L.info(`found registration for program ${programId}: ${activeRegistration._id}`);
       return F(MongooseUtils.toPojo(activeRegistration));
     } catch (err) {
       L.error('failed to fetch registration', err);

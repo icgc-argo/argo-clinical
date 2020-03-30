@@ -76,7 +76,6 @@ export const analyzeChanges = (schemasDiff: SchemasDictionaryDiffs): ChangeAnaly
   for (const field of Object.keys(schemasDiff)) {
     const fieldChange: FieldDiff = schemasDiff[field];
     if (fieldChange) {
-      console.log(`field : ${field} has changes`);
       const fieldDiff = fieldChange.diff;
       // if we have type at first level then it's a field add/delete
       if (isFieldChange(fieldDiff)) {
@@ -85,12 +84,10 @@ export const analyzeChanges = (schemasDiff: SchemasDictionaryDiffs): ChangeAnaly
 
       if (isNestedChange(fieldDiff)) {
         if (fieldDiff.meta) {
-          console.log('meta change found');
           categorizeMetaChagnes(analysis, field, fieldDiff.meta);
         }
 
         if (fieldDiff.restrictions) {
-          console.log('restrictions change found');
           categorizeRestrictionChanges(analysis, field, fieldDiff.restrictions);
         }
       }
