@@ -66,7 +66,8 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
 };
 
 const BATCH_ERROR_MESSAGES: Record<SubmissionBatchErrorTypes, (errorData: any) => string> = {
-  [SubmissionBatchErrorTypes.TSV_PARSING_FAILED]: () => `Failed to parse the tsv file`,
+  [SubmissionBatchErrorTypes.TSV_PARSING_FAILED]: () =>
+    `This file is formatted incorrectly. Please retain the template format with the correct headers in the first row.`,
   [SubmissionBatchErrorTypes.INVALID_FILE_NAME]: (errorData: { isRegistration: Boolean }) => {
     const exampleText = errorData.isRegistration ? 'sample_registration' : 'donor';
     return `Improperly named files cannot be uploaded or validated. Please retain the template file name and only append characters to the end (e.g. ${exampleText}<_optional_extension>.tsv).`;
