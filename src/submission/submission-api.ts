@@ -10,6 +10,7 @@ import {
   NewClinicalEntity,
   SubmissionBatchError,
   SubmissionBatchErrorTypes,
+  LegacyICGCImportRecord,
 } from './submission-entities';
 import { HasFullWriteAccess, HasProgramWriteAccess } from '../decorators';
 import _ from 'lodash';
@@ -220,27 +221,28 @@ class SubmissionController {
 
   @HasFullWriteAccess()
   async processLegacyIcgcData(req: Request, res: Response) {
-    const clinicalFiles = req.files as { [k: string]: [Express.Multer.File] };
-    const programId = req.params.programId;
-    const clinicalData = {
-      donors: new Array<any>(),
-      specimens: new Array<any>(),
-      samples: new Array<any>(),
-    };
+    const samplesFile = req.file;
+    const programId = req.params.programId as string;
 
-    const donorFile = clinicalFiles['donor'][0];
-    const specimenFile = clinicalFiles['specimen'][0];
-    const sampleFile = clinicalFiles['sample'][0];
-
-    if (!(donorFile && specimenFile && sampleFile)) {
-      return res.status(400).send('you should submit three files, donor specimen sample');
+    if (!programId) {
+      return res.status(400).send('Program id must be provided');
     }
 
-    clinicalData.donors = (await TsvUtils.tsvToJson(donorFile.path)) as any;
-    clinicalData.specimens = (await TsvUtils.tsvToJson(specimenFile.path)) as any;
-    clinicalData.samples = (await TsvUtils.tsvToJson(sampleFile.path)) as any;
+    if (!samplesFile) {
+      return res
+        .status(400)
+        .send(
+          'you should submit a TSV sample file containing these headers: [project_code, submitted_donor_id' +
+            'icgc_donor_id, donor_sex, submitted_specimen_id, specimen_type, icgc_specimen_id, icgc_sample_id, submitted_sample_id, library_strategy] ',
+        );
+    }
 
-    return res.status(200).send(submission.operations.mergeIcgcLegacyData(clinicalData, programId));
+    const samples = (await TsvUtils.tsvToJson(samplesFile.path)) as Readonly<
+      LegacyICGCImportRecord
+    >[];
+    return res
+      .status(200)
+      .send(submission.operations.mergeIcgcLegacyData(samples, programId.toUpperCase()));
   }
 
   @HasFullWriteAccess()

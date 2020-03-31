@@ -755,6 +755,36 @@ describe('Submission Api', () => {
     });
   });
 
+  describe('icgc-import', function() {
+    this.beforeEach(async () => {
+      await clearCollections(dburl, ['donors', 'counters']);
+    });
+
+    it.only('should import legacy samples file', async () => {
+      let file: Buffer;
+      let rows: any[];
+      try {
+        file = fs.readFileSync(stubFilesDir + `/paca.icgc.samples.tsv`);
+        rows = (await TsvUtils.tsvToJson(stubFilesDir + `/paca.icgc.samples.tsv`)) as any;
+      } catch (err) {
+        return err;
+      }
+
+      const response = await chai
+        .request(app)
+        .post('/submission/icgc-import/preprocess/ABCD-EF')
+        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+        .type('form')
+        .attach('samples', file, `paca.icgc.samples.tsv`)
+        .then(res => {
+          return res;
+        });
+
+      response.should.have.status(200);
+      return;
+    });
+  });
+
   describe('clinical-submission: upload', function() {
     this.beforeEach(async () => await clearCollections(dburl, ['donors', 'activesubmissions']));
     it('should return 200 and empty json for no activesubmisison in program', done => {

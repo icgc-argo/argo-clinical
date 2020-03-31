@@ -39,6 +39,7 @@ import {
   BatchNameRegex,
   ClinicalSubmissionRecordsByDonorIdMap,
   RevalidateClinicalSubmissionCommand,
+  LegacyICGCImportRecord,
 } from './submission-entities';
 import * as schemaManager from './schema/schema-manager';
 import {
@@ -1005,17 +1006,22 @@ export namespace operations {
     return undefined;
   };
 
-  export function mergeIcgcLegacyData(clinicalData: any, programId: string) {
+  export function mergeIcgcLegacyData(
+    legacySamples: Readonly<LegacyICGCImportRecord>[],
+    programId: string,
+  ) {
     const result: Donor[] = [];
-
-    clinicalData.donors.forEach((d: { [k: string]: string }, i: number) => {
-      validateRequiredColumns(i, d, ['icgc_donor_id', 'submitted_donor_id']);
+    legacySamples.forEach((sampleRow: LegacyICGCImportRecord, i: number) => {
+      validateRequiredColumns(i, sampleRow, ['icgc_donor_id', 'submitted_donor_id', 'donor_sex']);
       result.push({
-        donorId: parseInt(d.icgc_donor_id.substring(2), 10),
-        gender: d.donor_sex == '' ? OTHER : _.startCase(d.donor_sex),
-        programId,
-        specimens: getIcgcDonorSpecimens(clinicalData, d),
-        submitterId: d.submitted_donor_id,
+        donorId: parseInt(sampleRow.icgc_donor_id.substring(2), 10),
+        gender:
+          sampleRow.donor_sex == '' || sampleRow.donor_sex == 'unspecified'
+            ? OTHER
+            : _.startCase(sampleRow.donor_sex),
+        programId: programId.toUpperCase(),
+        specimens: getIcgcDonorSpecimens(legacySamples, sampleRow),
+        submitterId: sampleRow.submitted_donor_id,
       } as any);
     });
     return result;
@@ -1040,9 +1046,12 @@ export namespace operations {
   }
 }
 
-function getIcgcDonorSpecimens(clinicalData: any, donor: any) {
+function getIcgcDonorSpecimens(
+  legacySamples: Readonly<LegacyICGCImportRecord>[],
+  donor: LegacyICGCImportRecord,
+) {
   const sps: Specimen[] = [];
-  clinicalData.specimens.forEach((s: any, i: number) => {
+  legacySamples.forEach((s: LegacyICGCImportRecord, i: number) => {
     validateRequiredColumns(i, s, [
       'icgc_donor_id',
       'icgc_specimen_id',
@@ -1058,7 +1067,7 @@ function getIcgcDonorSpecimens(clinicalData: any, donor: any) {
       clinicalInfo: {},
       tumourNormalDesignation: getMappedTumorNormalDesignation(s.specimen_type),
       specimenType: getMappedSpecimenType(s.specimen_type),
-      samples: getIcgcSpecimenSamples(clinicalData, s, donor),
+      samples: getIcgcSpecimenSamples(legacySamples, s, donor),
       specimenTissueSource: getMappedTissueSource(s.specimen_type),
     });
   });
@@ -1089,23 +1098,49 @@ function getMappedTissueSource(specimenType: string): string {
   throw new Error('found unknow specimen type: ' + specimenType);
 }
 
-function getIcgcSpecimenSamples(clinicalData: any, speciemn: any, donor: any) {
+function getIcgcSpecimenSamples(
+  legacySamples: LegacyICGCImportRecord[],
+  speciemn: LegacyICGCImportRecord,
+  donor: LegacyICGCImportRecord,
+) {
   const sps: Sample[] = [];
-  clinicalData.samples.forEach((s: any, i: number) => {
-    validateRequiredColumns(i, s, ['icgc_donor_id', 'icgc_specimen_id', 'submitted_sample_id']);
+  legacySamples.forEach((sampleRow: any, i: number) => {
+    validateRequiredColumns(i, sampleRow, [
+      'icgc_donor_id',
+      'icgc_specimen_id',
+      'submitted_sample_id',
+    ]);
     if (
-      s.icgc_donor_id !== donor.icgc_donor_id ||
-      s.icgc_specimen_id !== speciemn.icgc_specimen_id
+      sampleRow.icgc_donor_id !== donor.icgc_donor_id ||
+      sampleRow.icgc_specimen_id !== speciemn.icgc_specimen_id
     ) {
       return;
     }
     sps.push({
-      sampleId: parseInt(s.icgc_sample_id.substring(2), 10),
-      submitterId: s.submitted_sample_id,
-      sampleType: 'SAMPLE_TYPE_PLACEHOLDER',
+      sampleId: parseInt(sampleRow.icgc_sample_id.substring(2), 10),
+      submitterId: sampleRow.submitted_sample_id,
+      sampleType: getSampleTypeFromLegacySample(sampleRow),
     });
   });
   return sps;
+}
+
+function getSampleTypeFromLegacySample(sample: any): string {
+  const ls: string = sample.library_strategy;
+  if (ls.indexOf('WGS') >= 0 || ls.indexOf('WXS') >= 0) {
+    return 'Total DNA';
+  }
+
+  if (ls == 'RNA-Seq') {
+    return 'Total RNA';
+  }
+
+  if (ls == 'miRNA-Seq') {
+    return 'Other RNA fractions';
+  }
+
+  L.error(`invalid sample type in this row ${JSON.stringify(sample)}`, undefined);
+  throw new Error('invalid sample type');
 }
 
 function validateRequiredColumns(index: number, obj: any, cols: string[]) {
