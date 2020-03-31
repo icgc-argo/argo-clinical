@@ -21,7 +21,6 @@ export interface SchemasDictionary {
 export interface SchemaDefinition {
   readonly name: string;
   readonly description: string;
-  readonly key: string;
   readonly fields: ReadonlyArray<FieldDefinition>;
 }
 
@@ -62,7 +61,7 @@ export interface FieldDefinition {
     regex?: string;
     script?: Array<string> | string;
     required?: boolean;
-    range: {
+    range?: {
       min?: number;
       max?: number;
       exclusiveMin?: number;
