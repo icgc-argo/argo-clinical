@@ -30,6 +30,14 @@ We use a tool called migrate-mongo: https://www.npmjs.com/package/migrate-mongo
   - With this command, migrate-mongo will revert (only) the last applied migration
 - status: `npx migrate-mongo status`
 
+## Extending stub-schema for running DB migration Tests
+
+- extend upon the [schema builder](/test/integration/submission/migration_utils/schema_builder.ts) with the new schema
+- run the script using `npx ts-node schema_builder.ts` to generate the [migration-stub-schema.json](/test/integration/submission/migration-stub-schema.json)
+- grab the newer schema with the one you want to compare with (usually v1.0) and run it through [lectern's diff calculator](https://github.com/overture-stack/lectern/blob/master/src/diff/DictionaryDiff.ts)
+- paste the diff as a new entry into [stub-diffs.ts](test/integration/submission/migration_utils/stub-diffs.ts)
+- <sub> note: this process could eventually be improved by running lectern in a container so it can automatically serve the schema and compute the diffs </sub>
+
 Notes:
 
 - make scripts idempotent in case they fail in the middle
