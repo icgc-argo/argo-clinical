@@ -278,6 +278,7 @@ export enum DonorFieldsEnum {
   submitter_donor_id = 'submitter_donor_id',
   vital_status = 'vital_status',
   survival_time = 'survival_time',
+  cause_of_death = 'cause_of_death',
 }
 export enum SpecimenFieldsEnum {
   program_id = 'program_id',
@@ -302,6 +303,8 @@ export enum SpecimenFieldsEnum {
 export enum PrimaryDiagnosisFieldsEnum {
   program_id = 'program_id',
   submitter_donor_id = 'submitter_donor_id',
+  cancer_type_code = 'cancer_type_code',
+  age_at_diagnosis = 'age_at_diagnosis',
 }
 export enum TreatmentFieldsEnum {
   program_id = 'program_id',
