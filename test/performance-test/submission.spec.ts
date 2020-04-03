@@ -15,11 +15,12 @@ import { GenericContainer } from 'testcontainers';
 import app from '../../src/app';
 import * as bootstrap from '../../src/bootstrap';
 import { cleanCollection, resetCounters } from '../integration/testutils';
-import { TEST_PUB_KEY, JWT_ABCDEF, JWT_CLINICALSVCADMIN } from '../integration/test.jwt';
+import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN } from '../integration/test.jwt';
 import {
   ClinicalEntitySchemaNames,
   CreateRegistrationResult,
 } from '../../src/submission/submission-entities';
+import { timeit } from '../../src/utils';
 chai.use(require('chai-http'));
 chai.use(require('deep-equal-in-any-order'));
 chai.should();
@@ -159,15 +160,15 @@ describe('Submission Api', () => {
      * submit 3000 unique & new samples to an empty program (all cache hits will be miss)
      */
     it('Submit 3000 NEW samples into empty db & program', async function() {
-      await timeit(register3k);
+      const result = await timeit('register3k', register3k);
     });
 
     /**
      * Times committing 3000 donors registration into empty program
      */
-    it('Commit 3000 donors Registration into empty db', async function() {
+    it.only('Commit 3000 donors Registration into empty db', async function() {
       const regId = await register3k();
-      await timeit(async () => await commitRegistration(regId));
+      await timeit('commitRegistration', async () => await commitRegistration(regId));
     });
 
     /**
@@ -178,14 +179,14 @@ describe('Submission Api', () => {
     it('Submit 3000 existing samples', async function() {
       const regId = await register3k();
       await commitRegistration(regId);
-      await timeit(register3k);
+      await timeit('register3k', register3k);
     });
   });
 });
 
-const timeit = async (fn: Function) => {
-  const start = new Date().getTime();
-  await fn();
-  const diff = (new Date().getTime() - start) / 1000.0;
-  console.log(diff);
-};
+// const timeit = async (fn: Function) => {
+//   const start = new Date().getTime();
+//   await fn();
+//   const diff = (new Date().getTime() - start) / 1000.0;
+//   console.log(diff);
+// };

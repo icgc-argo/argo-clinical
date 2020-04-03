@@ -22,10 +22,11 @@ import {
   ClinicalEntitySchemaNames,
   ClinicalUniqueIdentifier,
   ClinicalTherapySchemaNames,
+  DonorFieldsEnum,
 } from '../submission-entities';
 
-import { Errors, notEmpty } from '../../utils';
-import { donorDao } from '../../clinical/donor-repo';
+import { Errors, notEmpty, timeit } from '../../utils';
+import { donorDao, FindByProgramAndSubmitterFilter, DONOR_FIELDS } from '../../clinical/donor-repo';
 import _ from 'lodash';
 import { F } from '../../utils';
 import { registrationRepository } from '../registration-repo';
@@ -166,6 +167,7 @@ const performCommitSubmission = async (
  */
 export const commitRegisteration = async (command: Readonly<CommitRegistrationCommand>) => {
   const registration = await registrationRepository.findById(command.registrationId);
+
   if (registration === undefined || registration.programId !== command.programId) {
     throw new Errors.NotFound(`no registration with id :${command.registrationId} found`);
   }
@@ -174,18 +176,24 @@ export const commitRegisteration = async (command: Readonly<CommitRegistrationCo
     registration,
   );
 
+  const filters = new Array<FindByProgramAndSubmitterFilter>();
   for (const dto of donorSampleDtos) {
-    const existingDonor = await donorDao.findByProgramAndSubmitterId([
-      { programId: dto.programId, submitterId: dto.submitterId },
-    ]);
+    filters.push({ programId: dto.programId, submitterId: dto.submitterId });
+  }
 
-    if (existingDonor && existingDonor.length > 0) {
-      const mergedDonor = addSamplesToDonor(existingDonor[0], dto);
+  const existingDonors = (await donorDao.findByProgramAndSubmitterId(filters)) || [];
+  const existingDonorsIds = _.keyBy(existingDonors, DONOR_FIELDS.SUBMITTER_ID);
+
+  for (const i in donorSampleDtos) {
+    if (i == '0') L.profile('time per donor doc');
+    const dto = donorSampleDtos[i];
+    if (existingDonorsIds[dto.submitterId]) {
+      const mergedDonor = addSamplesToDonor(existingDonorsIds[dto.submitterId], dto);
       const updatedDonor = await donorDao.update(mergedDonor);
       continue;
     }
-
     await donorDao.create(fromCreateDonorDtoToDonor(dto));
+    if (i == '0') L.profile('time per donor doc');
   }
 
   registrationRepository.delete(command.registrationId);

@@ -11,7 +11,7 @@ const logConfiguration = {
   level: LOG_LEVEL,
   format: combine(
     // format.colorize(),
-    json(),
+    // json(),
     timestamp(),
     prettyPrint(),
   ),
@@ -22,6 +22,7 @@ export interface Logger {
   error(msg: string, err: Error | undefined): void;
   info(msg: string): void;
   debug(msg: string): void;
+  profile(s: string): void;
 }
 
 const winstonLogger = winston.createLogger(logConfiguration);
@@ -42,6 +43,9 @@ export const loggerFor = (fileName: string): Logger => {
     },
     info: (msg: string): void => {
       winstonLogger.info(msg, { source });
+    },
+    profile: (id: string): void => {
+      winstonLogger.profile(id);
     },
   };
 };
