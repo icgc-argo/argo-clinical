@@ -760,7 +760,7 @@ describe('Submission Api', () => {
       await clearCollections(dburl, ['donors', 'counters']);
     });
 
-    it.only('should import legacy samples file', async () => {
+    it('should import legacy samples file', async () => {
       let file: Buffer;
       let rows: any[];
       try {
