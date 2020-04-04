@@ -652,7 +652,7 @@ paths:
                   type: string
                   format: binary
       responses:
-        '200':
+        '201':
           description: imported successfully
   /clinical/donors:
     get:

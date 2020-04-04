@@ -1011,17 +1011,24 @@ export namespace operations {
     programId: string,
   ) {
     const result: Donor[] = [];
-    legacySamples.forEach((sampleRow: LegacyICGCImportRecord, i: number) => {
-      validateRequiredColumns(i, sampleRow, ['icgc_donor_id', 'submitted_donor_id', 'donor_sex']);
+    // since rows can have duplicated donor ids we don't need to reprocess.
+    const processedDonorIds = new Set<string>();
+    legacySamples.forEach((donorRow: LegacyICGCImportRecord, i: number) => {
+      validateRequiredColumns(i, donorRow, ['icgc_donor_id', 'submitted_donor_id', 'donor_sex']);
+      // we already processed the donor and their samples, specimens
+      if (processedDonorIds.has(donorRow.icgc_donor_id)) {
+        return;
+      }
+      processedDonorIds.add(donorRow.icgc_donor_id);
       result.push({
-        donorId: parseInt(sampleRow.icgc_donor_id.substring(2), 10),
+        donorId: parseInt(donorRow.icgc_donor_id.substring(2), 10),
         gender:
-          sampleRow.donor_sex == '' || sampleRow.donor_sex == 'unspecified'
+          donorRow.donor_sex == '' || donorRow.donor_sex == 'unspecified'
             ? OTHER
-            : _.startCase(sampleRow.donor_sex),
+            : _.startCase(donorRow.donor_sex),
         programId: programId.toUpperCase(),
-        specimens: getIcgcDonorSpecimens(legacySamples, sampleRow),
-        submitterId: sampleRow.submitted_donor_id,
+        specimens: getIcgcDonorSpecimens(legacySamples, donorRow),
+        submitterId: donorRow.submitted_donor_id,
       } as any);
     });
     return result;
@@ -1048,27 +1055,35 @@ export namespace operations {
 
 function getIcgcDonorSpecimens(
   legacySamples: Readonly<LegacyICGCImportRecord>[],
-  donor: LegacyICGCImportRecord,
+  donorRow: LegacyICGCImportRecord,
 ) {
   const sps: Specimen[] = [];
-  legacySamples.forEach((s: LegacyICGCImportRecord, i: number) => {
-    validateRequiredColumns(i, s, [
+  // per donor we only need to process a specific specimen once to get all its samples.
+  const processedDonorSpecimens = new Set<string>();
+  legacySamples.forEach((specimenRow: LegacyICGCImportRecord, i: number) => {
+    validateRequiredColumns(i, specimenRow, [
       'icgc_donor_id',
       'icgc_specimen_id',
       'submitted_specimen_id',
       'specimen_type',
     ]);
-    if (s.icgc_donor_id !== donor.icgc_donor_id) {
+
+    if (specimenRow.icgc_donor_id !== donorRow.icgc_donor_id) {
       return;
     }
+    if (processedDonorSpecimens.has(specimenRow.icgc_specimen_id)) {
+      return;
+    }
+
+    processedDonorSpecimens.add(specimenRow.icgc_specimen_id);
     sps.push({
-      specimenId: parseInt(s.icgc_specimen_id.substring(2), 10),
-      submitterId: s.submitted_specimen_id,
+      specimenId: parseInt(specimenRow.icgc_specimen_id.substring(2), 10),
+      submitterId: specimenRow.submitted_specimen_id,
       clinicalInfo: {},
-      tumourNormalDesignation: getMappedTumorNormalDesignation(s.specimen_type),
-      specimenType: getMappedSpecimenType(s.specimen_type),
-      samples: getIcgcSpecimenSamples(legacySamples, s, donor),
-      specimenTissueSource: getMappedTissueSource(s.specimen_type),
+      tumourNormalDesignation: getMappedTumorNormalDesignation(specimenRow.specimen_type),
+      specimenType: getMappedSpecimenType(specimenRow.specimen_type),
+      samples: getIcgcSpecimenSamples(legacySamples, specimenRow, donorRow),
+      specimenTissueSource: getMappedTissueSource(specimenRow.specimen_type),
     });
   });
   return sps;
@@ -1104,7 +1119,8 @@ function getIcgcSpecimenSamples(
   donor: LegacyICGCImportRecord,
 ) {
   const sps: Sample[] = [];
-  legacySamples.forEach((sampleRow: any, i: number) => {
+  const processedSamplesForSpeciemn = new Set<string>();
+  legacySamples.forEach((sampleRow: LegacyICGCImportRecord, i: number) => {
     validateRequiredColumns(i, sampleRow, [
       'icgc_donor_id',
       'icgc_specimen_id',
@@ -1116,6 +1132,13 @@ function getIcgcSpecimenSamples(
     ) {
       return;
     }
+
+    // we don't expect files to have same sample id twice
+    if (processedSamplesForSpeciemn.has(sampleRow.icgc_sample_id)) {
+      throw new Error('Duplicated sample');
+    }
+
+    processedSamplesForSpeciemn.add(sampleRow.icgc_sample_id);
     sps.push({
       sampleId: parseInt(sampleRow.icgc_sample_id.substring(2), 10),
       submitterId: sampleRow.submitted_sample_id,

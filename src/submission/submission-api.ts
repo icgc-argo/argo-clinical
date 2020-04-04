@@ -251,7 +251,7 @@ class SubmissionController {
       return res.status(400).send('need donors json file, get one by using preprocess endpoint');
     }
     const donorsJson = await fsPromises.readFile(req.file.path, 'utf-8');
-    return res.status(200).send(await submission.operations.adminAddDonors(JSON.parse(donorsJson)));
+    return res.status(201).send(await submission.operations.adminAddDonors(JSON.parse(donorsJson)));
   }
 }
 

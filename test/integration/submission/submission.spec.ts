@@ -755,7 +755,7 @@ describe('Submission Api', () => {
     });
   });
 
-  describe('icgc-import', function() {
+  describe('icgc import', function() {
     this.beforeEach(async () => {
       await clearCollections(dburl, ['donors', 'counters']);
     });
@@ -764,6 +764,9 @@ describe('Submission Api', () => {
       let file: Buffer;
       let rows: any[];
       try {
+        // this file contains 39 rows (samples)
+        // 35 unique donors
+        // 38 unique specimens
         file = fs.readFileSync(stubFilesDir + `/paca.icgc.samples.tsv`);
         rows = (await TsvUtils.tsvToJson(stubFilesDir + `/paca.icgc.samples.tsv`)) as any;
       } catch (err) {
@@ -781,6 +784,58 @@ describe('Submission Api', () => {
         });
 
       response.should.have.status(200);
+      // there should be 35 unique donors
+      response.body.length.should.eq(35);
+      const sps = new Set<string>();
+      let donorToVerify: Donor | undefined;
+      response.body.forEach((d: Donor) => {
+        if (d.donorId == 35239) {
+          donorToVerify = d;
+        }
+        d.specimens.forEach(s => sps.add(s.submitterId));
+      });
+
+      if (donorToVerify === undefined) {
+        throw new Error('didnt find the donor to verify');
+      }
+      chai.expect(donorToVerify).to.deep.eq({
+        donorId: 35239,
+        gender: 'Other',
+        programId: 'ABCD-EF',
+        specimens: [
+          {
+            specimenId: 78151,
+            submitterId: 'PCSI_0127_Pa_P',
+            clinicalInfo: {},
+            tumourNormalDesignation: 'Tumour',
+            specimenType: 'Primary tumour',
+            samples: [
+              {
+                sampleId: 412617,
+                submitterId: 'PCSI_0127_Pa_P',
+                sampleType: 'Total DNA',
+              },
+            ],
+            specimenTissueSource: 'Solid tissue',
+          },
+        ],
+        submitterId: 'PCSI_0127',
+      });
+      chai.expect(sps.size).to.eq(38);
+
+      fs.writeFileSync('/tmp/icgc-donors.json', JSON.stringify(response.body));
+      const donorsFile = (file = fs.readFileSync('/tmp/icgc-donors.json'));
+      const importResponse = await chai
+        .request(app)
+        .post('/submission/icgc-import/')
+        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+        .type('form')
+        .attach('donors', donorsFile, `donors.json`)
+        .then(res => {
+          return res;
+        });
+
+      importResponse.should.have.status(201);
       return;
     });
   });
