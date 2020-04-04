@@ -41,6 +41,9 @@ class SubmissionController {
     let records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
     try {
       records = await TsvUtils.tsvToJson(file.path);
+      if (records.length === 0) {
+        throw new Error('TSV has no records!');
+      }
     } catch (err) {
       L.error(`Clinical Submission TSV_PARSING_FAILED`, err);
       return ControllerUtils.invalidBatch(res, {
@@ -115,6 +118,9 @@ class SubmissionController {
         }
         let records: ReadonlyArray<Readonly<{ [fieldName: string]: string }>> = [];
         records = await TsvUtils.tsvToJson(file.path);
+        if (records.length === 0) {
+          throw new Error('TSV has no records!');
+        }
         newClinicalData.push({
           batchName: file.originalname,
           creator: user,
