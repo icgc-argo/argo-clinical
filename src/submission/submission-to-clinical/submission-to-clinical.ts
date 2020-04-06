@@ -25,7 +25,7 @@ import {
   DonorFieldsEnum,
 } from '../submission-entities';
 
-import { Errors, notEmpty, timeit } from '../../utils';
+import { Errors, notEmpty } from '../../utils';
 import { donorDao, FindByProgramAndSubmitterFilter, DONOR_FIELDS } from '../../clinical/donor-repo';
 import _ from 'lodash';
 import { F } from '../../utils';
@@ -34,10 +34,10 @@ import { submissionRepository } from '../submission-repo';
 import { mergeActiveSubmissionWithDonors } from './merge-submission';
 import * as schemaManager from '../schema/schema-manager';
 import { loggerFor } from '../../logger';
+const L = loggerFor(__filename);
 import { recalculateAllClincalInfoStats } from './stat-calculator';
 import * as messenger from '../submission-updates-messenger';
 
-const L = loggerFor(__filename);
 /**
  * This method will move the current submitted clinical data to
  * the clinical database
@@ -177,25 +177,26 @@ export const commitRegisteration = async (command: Readonly<CommitRegistrationCo
   );
 
   const filters = new Array<FindByProgramAndSubmitterFilter>();
+
   for (const dto of donorSampleDtos) {
     filters.push({ programId: dto.programId, submitterId: dto.submitterId });
   }
 
+  // batch fetch existing donors from db
   const existingDonors = (await donorDao.findByProgramAndSubmitterId(filters)) || [];
   const existingDonorsIds = _.keyBy(existingDonors, DONOR_FIELDS.SUBMITTER_ID);
 
-  for (const i in donorSampleDtos) {
-    if (i == '0') L.profile('time per donor doc');
-    const dto = donorSampleDtos[i];
-    if (existingDonorsIds[dto.submitterId]) {
-      const mergedDonor = addSamplesToDonor(existingDonorsIds[dto.submitterId], dto);
-      const updatedDonor = await donorDao.update(mergedDonor);
-      continue;
-    }
-    await donorDao.create(fromCreateDonorDtoToDonor(dto));
-    if (i == '0') L.profile('time per donor doc');
+  // Performance refactor Note:
+  // instead of awaiting to save donor documents one by one we batch the saving queries and await on the whole batch
+  // AND since each donor document is isolated and only occur once in the collection
+  // and our sequential id generation is atomic it's safe to do so.
+  const DOCUMENTS_PER_BATCH = 200;
+  const totalBatches = Math.ceil(donorSampleDtos.length / DOCUMENTS_PER_BATCH);
+  for (let batchNum = 0; batchNum < totalBatches; batchNum++) {
+    await Promise.all(
+      updateOrCreateDonorsBatch(batchNum, donorSampleDtos, existingDonorsIds, DOCUMENTS_PER_BATCH),
+    );
   }
-
   registrationRepository.delete(command.registrationId);
   sendMessageOnUpdatesFromRegistration(registration);
   return (
@@ -204,6 +205,25 @@ export const commitRegisteration = async (command: Readonly<CommitRegistrationCo
       registration.stats.newSampleIds.map(s => s.submitterId)) ||
     []
   );
+};
+
+const updateOrCreateDonorsBatch = (
+  batchNumber: number,
+  donorSampleDtos: DeepReadonly<CreateDonorSampleDto[]>,
+  existingDonorsIds: _.Dictionary<DeepReadonly<Donor>>,
+  batchSize: number,
+) => {
+  const donorsBatch = _(donorSampleDtos)
+    .slice(batchNumber * batchSize)
+    .take(batchSize)
+    .value();
+  return donorsBatch.map(dto => {
+    if (existingDonorsIds[dto.submitterId]) {
+      const mergedDonor = addSamplesToDonor(existingDonorsIds[dto.submitterId], dto);
+      return donorDao.update(mergedDonor);
+    }
+    return donorDao.create(fromCreateDonorDtoToDonor(dto));
+  });
 };
 
 const fromCreateDonorDtoToDonor = (createDonorDto: DeepReadonly<CreateDonorSampleDto>) => {

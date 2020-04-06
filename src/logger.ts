@@ -1,6 +1,6 @@
 import winston from 'winston';
 const { createLogger, format, transports } = winston;
-const { combine, timestamp, label, prettyPrint, json } = format;
+const { combine, timestamp, label, prettyPrint, json, align, simple } = format;
 
 // read the log level from the env directly since this is a very high priority value.
 const LOG_LEVEL = process.env.LOG_LEVEL || 'info';
@@ -9,12 +9,7 @@ console.log('log level configured: ', LOG_LEVEL);
 // Logger configuration
 const logConfiguration = {
   level: LOG_LEVEL,
-  format: combine(
-    // format.colorize(),
-    // json(),
-    timestamp(),
-    prettyPrint(),
-  ),
+  format: combine(json(), simple(), timestamp()),
   transports: [new winston.transports.Console()],
 };
 
