@@ -8,7 +8,7 @@ const upload = multer({ dest: '/tmp' });
 
 router.post(
   '/preprocess/:programId',
-  upload.fields([{ name: 'donor' }, { name: 'specimen' }, { name: 'sample' }]),
+  upload.single('samples'),
   wrapAsync(submissionAPI.processLegacyIcgcData),
 );
 
