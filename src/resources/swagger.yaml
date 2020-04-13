@@ -606,7 +606,7 @@ paths:
   /submission/icgc-import/preprocess/{programId}:
     parameters:
       - name: programId
-        description: the short name of the program as it will be in argo
+        description: the short name of the program as it will be in argo (a new name or same name)
         in: path
         required: true
         schema:
@@ -614,10 +614,10 @@ paths:
     post:
       tags:
         - ICGC Import
-      summary: transform icgc clinical donor data to argo format donor
+      summary: transform icgc donor samples data to argo format sample registration
       responses:
         '200':
-          description: transformed donors array in argo format
+          description: transformed donors array in argo format, you need to download the response and use the import api if it looks good to you.
           content:
             application/json:
               schema:
@@ -630,15 +630,8 @@ paths:
             schema:
               type: object
               properties:
-                donor:
-                  required: true
-                  type: string
-                  format: binary
-                specimen:
-                  required: true
-                  type: string
-                  format: binary
-                sample:
+                samples:
+                  description: 'TSV file exported from song containing samples for a program, see wiki for how to get it.'
                   required: true
                   type: string
                   format: binary
@@ -646,7 +639,7 @@ paths:
     post:
       tags:
         - ICGC Import
-      summary: imports the json body (donors) to the clinical donors collection
+      summary: imports the json body (donors) to the clinical donors collection obtained from the preprocess api
       description:
       requestBody:
         content:
@@ -659,7 +652,7 @@ paths:
                   type: string
                   format: binary
       responses:
-        '200':
+        '201':
           description: imported successfully
   /clinical/donors:
     get:
