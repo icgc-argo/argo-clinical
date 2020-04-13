@@ -163,14 +163,6 @@ export function mergeAndDeleteRemoved(obj: { [k: string]: any }, override: { [k:
   return;
 }
 
-export async function timeit<T>(tag: string, fn: () => T) {
-  const start = new Date().getTime();
-  const result = await fn();
-  const diff = (new Date().getTime() - start) / 1000.0;
-  console.log(tag, ' ', diff);
-  return result;
-}
-
 export function toString(obj: any) {
   if (!obj) {
     return undefined;
