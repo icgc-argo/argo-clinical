@@ -2127,18 +2127,13 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dburl: 
   res.should.have.status(200);
   const donorRows: any[] = [];
   rows.forEach((r, idx) => {
-    const donorIdCounter = idx + baseDonorId;
-    const sampleIdCounter = idx + baseSampleId;
-    const specimenIdCounter = idx + baseSpecimenId;
     donorRows.push(
       emptyDonorDocument({
-        donorId: donorIdCounter,
         gender: r[SampleRegistrationFieldsEnum.gender],
         submitterId: r[SampleRegistrationFieldsEnum.submitter_donor_id],
         programId: r[SampleRegistrationFieldsEnum.program_id],
         specimens: [
           {
-            specimenId: specimenIdCounter,
             clinicalInfo: {},
             submitterId: r[SampleRegistrationFieldsEnum.submitter_specimen_id],
             specimenTissueSource: r[SampleRegistrationFieldsEnum.specimen_tissue_source],
@@ -2146,7 +2141,6 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dburl: 
             specimenType: r[SampleRegistrationFieldsEnum.specimen_type],
             samples: [
               {
-                sampleId: sampleIdCounter,
                 sampleType: r[SampleRegistrationFieldsEnum.sample_type],
                 submitterId: r[SampleRegistrationFieldsEnum.submitter_sample_id],
               },
@@ -2167,9 +2161,30 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dburl: 
   await conn.close();
 
   chai.expect(donors.length).to.eq(4);
-  donorRows.forEach((dr, i) => {
-    chai.expect(donors[i]).to.deep.include(dr);
+  // ids are not in sequence so we check that they are in range only.
+  donors.forEach(ad => {
+    chai.expect(ad.donorId).to.be.gte(baseDonorId);
+    const specimensIdInRangeCount = ad.specimens.filter(
+      (sp: any) => sp.specimenId >= baseSpecimenId,
+    ).length;
+    chai.expect(specimensIdInRangeCount).to.eq(ad.specimens.length);
+    ad.specimens.forEach((sp: any) => {
+      const samplesWithIdInRangeCount = sp.samples.filter((sa: any) => sa.sampleId >= baseSampleId)
+        .length;
+      chai.expect(samplesWithIdInRangeCount).to.eq(sp.samples.length);
+    });
   });
+
+  donorRows.forEach((dr, i) => {
+    dr = JSON.parse(JSON.stringify(dr));
+    dr = _.omit(dr, 'donorId');
+    const actualNoIds = donors.find(d => d.submitterId == dr.submitterId);
+    actualNoIds.specimens = _(actualNoIds.specimens)
+      .map(sp => _.omit(sp, ['specimenId', 'samples[0].sampleId']))
+      .value();
+    chai.expect(actualNoIds).to.deep.include(dr);
+  });
+
   if (!donors) {
     throw new Error("saved registration shouldn't be null");
   }
