@@ -26,7 +26,12 @@ process.title = 'clinical';
 const app = express();
 app.set('port', process.env.PORT || 3000);
 app.use(bodyParser.json());
-app.use(morgan('dev'));
+app.use(
+  morgan('dev', {
+    // skip those since they get alot of traffic from monitoring
+    skip: (req, res) => req.originalUrl == '/health' || req.originalUrl == '/',
+  }),
+);
 app.use(responseTime());
 app.use(
   bodyParser.urlencoded({

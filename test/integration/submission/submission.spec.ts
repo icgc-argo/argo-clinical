@@ -511,7 +511,7 @@ describe('Submission Api', () => {
         });
     });
 
-    it('should commit registration, detect already registered', done => {
+    it.only('should commit registration, detect already registered', done => {
       let file: Buffer;
       let rows: any[];
       try {
