@@ -64,6 +64,8 @@ export const emptyDonorDocument = (overrides?: Partial<Donor>) => {
     },
     programId: '',
     specimens: [],
+    clinicalInfo: {},
+    createdAt: undefined,
     followUps: [],
     treatments: [],
   };

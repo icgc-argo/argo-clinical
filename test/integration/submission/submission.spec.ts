@@ -37,14 +37,13 @@ import {
 } from '../../../src/submission/submission-entities';
 import { TsvUtils } from '../../../src/utils';
 import { donorDao } from '../../../src/clinical/donor-repo';
-import { Donor } from '../../../src/clinical/clinical-entities';
+import { Donor, Specimen } from '../../../src/clinical/clinical-entities';
 import AdmZip from 'adm-zip';
 import _ from 'lodash';
-import { SchemasDictionary } from '../../../src/lectern-client/schema-entities';
-import { DictionaryMigration } from '../../../src/submission/schema/migration-entities';
+import chaiExclude from 'chai-exclude';
 chai.use(require('chai-http'));
 chai.use(require('deep-equal-in-any-order'));
-
+chai.use(chaiExclude);
 chai.should();
 
 const baseDonorId = 250000;
@@ -511,7 +510,7 @@ describe('Submission Api', () => {
         });
     });
 
-    it.only('should commit registration, detect already registered', done => {
+    it('should commit registration, detect already registered', done => {
       let file: Buffer;
       let rows: any[];
       try {
@@ -1488,7 +1487,17 @@ describe('Submission Api', () => {
             submitterId: 'ICGC_0001',
           });
           // merge shouldn't have mutated donor except for donor.clinicalInfo
-          chai.expect(updatedDonor).to.deep.include(donor);
+          chai
+            .expect(updatedDonor)
+            .excluding([
+              'clinicalInfo',
+              'updatedAt',
+              '__v',
+              'createdAt',
+              'aggregatedInfoStats',
+              'clinicalInfoStats',
+            ])
+            .to.deep.eq(donor);
           chai.expect(updatedDonor.clinicalInfo).to.exist;
           chai.expect(updatedDonor.clinicalInfo).to.deep.include({
             [DonorFieldsEnum.vital_status]: 'Deceased',
@@ -2196,7 +2205,8 @@ async function assert2ndCommitNewSamplesDetected(res: any) {
     newSamples: ['sm123-00-1', 'sm123-129', 'sm128-1', 'sm200-1'],
   });
   const donorsFromDB = await donorDao.findByProgramId('ABCD-EF');
-  chai.expect(donorsFromDB[0]).to.deep.include(comittedDonors2[0]);
+  const expectedDonor = comittedDonors2.find(d => d.submitterId == donorsFromDB[0].submitterId);
+  assertSameDonorWithoutGeneratedIds(donorsFromDB[0] as Donor, expectedDonor as Donor);
 }
 
 async function asserCommitExistingSamplesOK(res: any) {
@@ -2205,16 +2215,18 @@ async function asserCommitExistingSamplesOK(res: any) {
     newSamples: [],
   });
   const donorsFromDB = await donorDao.findByProgramId('ABCD-EF');
-  chai.expect(donorsFromDB[0]).to.deep.include(comittedDonors2[0]);
+  const expectedDonor = comittedDonors2.find(d => d.submitterId == donorsFromDB[0].submitterId);
+  assertSameDonorWithoutGeneratedIds(donorsFromDB[0] as Donor, expectedDonor as Donor);
 }
 
 async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dburl: string) {
   res.should.have.status(200);
-  const donorRows: any[] = [];
+  const expectedDonors: any[] = [];
   rows.forEach((r, idx) => {
-    donorRows.push(
+    expectedDonors.push(
       emptyDonorDocument({
         gender: r[SampleRegistrationFieldsEnum.gender],
+        primaryDiagnosis: undefined,
         submitterId: r[SampleRegistrationFieldsEnum.submitter_donor_id],
         programId: r[SampleRegistrationFieldsEnum.program_id],
         specimens: [
@@ -2237,7 +2249,7 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dburl: 
   });
 
   const conn = await mongo.connect(dburl);
-  const donors: any[] | null = await conn
+  const actualDonors: any[] | null = await conn
     .db('clinical')
     .collection('donors')
     .find({})
@@ -2245,9 +2257,9 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dburl: 
     .toArray();
   await conn.close();
 
-  chai.expect(donors.length).to.eq(4);
+  chai.expect(actualDonors.length).to.eq(4);
   // ids are not in sequence so we check that they are in range only.
-  donors.forEach(ad => {
+  actualDonors.forEach(ad => {
     chai.expect(ad.donorId).to.be.gte(baseDonorId);
     const specimensIdInRangeCount = ad.specimens.filter(
       (sp: any) => sp.specimenId >= baseSpecimenId,
@@ -2260,19 +2272,32 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dburl: 
     });
   });
 
-  donorRows.forEach((dr, i) => {
-    dr = JSON.parse(JSON.stringify(dr));
-    dr = _.omit(dr, 'donorId');
-    const actualNoIds = donors.find(d => d.submitterId == dr.submitterId);
-    actualNoIds.specimens = _(actualNoIds.specimens)
-      .map(sp => _.omit(sp, ['specimenId', 'samples[0].sampleId']))
-      .value();
-    chai.expect(actualNoIds).to.deep.include(dr);
+  expectedDonors.forEach((dr, i) => {
+    dr = JSON.parse(JSON.stringify(dr)) as Donor;
+    const actualDonor = actualDonors.find(d => d.submitterId == dr.submitterId);
+    assertSameDonorWithoutGeneratedIds(actualDonor, dr);
   });
 
-  if (!donors) {
+  if (!actualDonors) {
     throw new Error("saved registration shouldn't be null");
   }
+}
+
+function assertSameDonorWithoutGeneratedIds(actual: Donor, expected: Donor) {
+  chai
+    .expect(actual)
+    .excludingEvery([
+      'donorId',
+      'clinicalInfo',
+      'specimenId',
+      'sampleId',
+      '__v',
+      '_id',
+      'primaryDiagnosis',
+      'updatedAt',
+      'createdAt',
+    ])
+    .to.deep.eq(expected);
 }
 
 async function assertUploadOKRegistrationCreated(res: any, dburl: string) {
