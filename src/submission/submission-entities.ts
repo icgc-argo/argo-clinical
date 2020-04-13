@@ -14,6 +14,19 @@ export interface ActiveRegistration {
   readonly schemaVersion: string;
 }
 
+export interface LegacyICGCImportRecord {
+  project_code: string;
+  submitted_donor_id: string;
+  icgc_donor_id: string;
+  donor_sex: string;
+  submitted_specimen_id: string;
+  specimen_type: string;
+  icgc_specimen_id: string;
+  icgc_sample_id: string;
+  submitted_sample_id: string;
+  library_strategy: string;
+}
+
 export interface SubmittedRegistrationRecord {
   readonly program_id: string;
   readonly submitter_donor_id: string;
