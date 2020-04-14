@@ -376,7 +376,7 @@ describe('Submission Api', () => {
         });
     });
 
-    it.only('should commit registration, create donors', done => {
+    it('should commit registration, create donors', done => {
       let file: Buffer;
       let file2: Buffer;
       let rows: any[];
@@ -454,7 +454,7 @@ describe('Submission Api', () => {
         });
     });
 
-    it.only('should commit registration, detect already registered', async () => {
+    it('should commit registration, detect already registered', async () => {
       let file: Buffer;
       let rows: any[] = [];
       try {
