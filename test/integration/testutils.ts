@@ -20,7 +20,7 @@ export const cleanCollection = async (dburl: string, collection: string): Promis
   try {
     await conn
       .db('clinical')
-      .collection('donors')
+      .collection(collection)
       .remove({});
     await conn.db('clinical').dropCollection(collection);
   } catch (err) {
