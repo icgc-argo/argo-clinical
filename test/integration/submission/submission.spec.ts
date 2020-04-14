@@ -2147,8 +2147,12 @@ async function asserCommitExistingSamplesOK(res: any) {
     newSamples: [],
   });
   const donorsFromDB = await donorDao.findByProgramId('ABCD-EF');
-  const expectedDonor = comittedDonors2.find(d => d.submitterId == donorsFromDB[0].submitterId);
-  assertSameDonorWithoutGeneratedIds(donorsFromDB[0] as Donor, expectedDonor as Donor);
+
+  const expectedDonor = comittedDonors2.find(d => d.submitterId == 'abcd-125');
+  assertSameDonorWithoutGeneratedIds(
+    donorsFromDB.find(d => d.submitterId == 'abcd-125') as Donor,
+    expectedDonor as Donor,
+  );
 }
 
 async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dburl: string) {
