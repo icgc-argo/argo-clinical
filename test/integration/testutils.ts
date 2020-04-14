@@ -18,11 +18,14 @@ export const clearCollections = async (dburl: string, collections: string[]) => 
 export const cleanCollection = async (dburl: string, collection: string): Promise<any> => {
   const conn = await mongo.connect(dburl);
   try {
+    await conn
+      .db('clinical')
+      .collection('donors')
+      .remove({});
     await conn.db('clinical').dropCollection(collection);
   } catch (err) {
-    console.error('failed to drop collection', collection);
+    console.error('failed to drop collection', collection, err);
   }
-
   await conn.db('clinical').createCollection(collection);
   await conn.close();
 };

@@ -52,70 +52,14 @@ const baseSpecimenId = 210000;
 
 const expectedErrors = [
   {
-    index: 0,
-    type: 'MISSING_REQUIRED_FIELD',
-    info: {
-      donorSubmitterId: 'abcd123',
-      sampleSubmitterId: 'sam123',
-      specimenSubmitterId: 'sp123',
-    },
-    fieldName: SampleRegistrationFieldsEnum.specimen_type,
+    batchNames: ['sample_registration.invalid.tsv'],
+    code: 'MISSING_REQUIRED_HEADER',
+    message: 'Missing required headers: [tumour_normal_designation], [specimen_type]',
   },
   {
-    fieldName: SampleRegistrationFieldsEnum.submitter_specimen_id,
-    index: 0,
-    info: {
-      donorSubmitterId: 'abcd123',
-      sampleSubmitterId: 'sam123',
-      specimenSubmitterId: 'sp123',
-      value: 'sp123',
-    },
-    type: 'INVALID_BY_REGEX',
-  },
-  {
-    fieldName: SampleRegistrationFieldsEnum.submitter_sample_id,
-    index: 0,
-    info: {
-      donorSubmitterId: 'abcd123',
-      sampleSubmitterId: 'sam123',
-      specimenSubmitterId: 'sp123',
-      value: 'sam123',
-    },
-    type: 'INVALID_BY_REGEX',
-  },
-  {
-    fieldName: SampleRegistrationFieldsEnum.gender,
-    index: 0,
-    info: {
-      donorSubmitterId: 'abcd123',
-      sampleSubmitterId: 'sam123',
-      specimenSubmitterId: 'sp123',
-      value: 'male',
-    },
-    type: 'INVALID_ENUM_VALUE',
-  },
-  {
-    fieldName: SampleRegistrationFieldsEnum.sample_type,
-    index: 0,
-    info: {
-      donorSubmitterId: 'abcd123',
-      sampleSubmitterId: 'sam123',
-      specimenSubmitterId: 'sp123',
-      value: 'RNA',
-    },
-    type: 'INVALID_ENUM_VALUE',
-  },
-  {
-    fieldName: 'program_id',
-    index: 0,
-    info: {
-      expectedProgram: 'ABCD-EF',
-      donorSubmitterId: 'abcd123',
-      sampleSubmitterId: 'sam123',
-      specimenSubmitterId: 'sp123',
-      value: 'PEXA-MX',
-    },
-    type: DataValidationErrors.INVALID_PROGRAM_ID,
+    batchNames: ['sample_registration.invalid.tsv'],
+    code: 'UNRECOGNIZED_HEADER',
+    message: 'Found unknown headers: [tumor_normal_designation]',
   },
 ];
 
@@ -644,24 +588,20 @@ describe('Submission Api', () => {
       } catch (err) {
         throw err;
       }
-      chai
+      const result = await chai
         .request(app)
         .post('/submission/program/ABCD-EF/registration')
         .type('form')
         .attach('registrationFile', file, `${ClinicalEntitySchemaNames.REGISTRATION}.invalid.tsv`)
         .auth(JWT_ABCDEF, { type: 'bearer' })
-        .end(async (err: any, res: any) => {
-          try {
-            res.should.have.status(422);
-            res.body.should.deep.eq({
-              errors: expectedErrors,
-              successful: false,
-            });
-            await assertDbCollectionEmpty(dburl, 'activeregistration');
-          } catch (err) {
-            throw err;
-          }
+        .then((res: any) => {
+          res.should.have.status(422);
+          res.body.should.deep.include({
+            batchErrors: expectedErrors,
+            successful: false,
+          });
         });
+      await assertDbCollectionEmpty(dburl, 'activeregistration');
     });
 
     it('should not accept invalid file names', done => {
@@ -677,7 +617,7 @@ describe('Submission Api', () => {
         .type('form')
         .attach('registrationFile', file, 'thisIsARegistration.tsv')
         .auth(JWT_ABCDEF, { type: 'bearer' })
-        .end(async (err: any, res: any) => {
+        .end((err: any, res: any) => {
           try {
             res.should.have.status(422);
             res.body.batchErrors.should.deep.include({
@@ -739,18 +679,18 @@ describe('Submission Api', () => {
 
     it('Registration should return 200 if deleted existing registration', async () => {
       const registrationId = await insertData(dburl, 'activeregistrations', ABCD_REGISTRATION_DOC);
-      return chai
+      await chai
         .request(app)
         .delete('/submission/program/ABCD-EF/registration/' + registrationId)
         .auth(JWT_ABCDEF, { type: 'bearer' })
-        .then(async (res: any) => {
+        .then((res: any) => {
           try {
             res.should.have.status(200);
-            await assertDbCollectionEmpty(dburl, 'activeregistration');
           } catch (err) {
             throw err;
           }
         });
+      await assertDbCollectionEmpty(dburl, 'activeregistration');
     });
   });
 
@@ -2308,7 +2248,6 @@ async function assertUploadOKRegistrationCreated(res: any, dburl: string) {
     .collection('activeregistrations')
     .findOne({});
   await conn.close();
-  console.log(' registration in db ', savedRegistration);
   if (!savedRegistration) {
     throw new Error("saved registration shouldn't be null");
   }
