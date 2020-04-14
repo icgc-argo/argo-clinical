@@ -454,9 +454,9 @@ describe('Submission Api', () => {
         });
     });
 
-    it.only('should commit registration, detect already registered', done => {
+    it.only('should commit registration, detect already registered', async () => {
       let file: Buffer;
-      let rows: any[];
+      let rows: any[] = [];
       try {
         file = fs.readFileSync(stubFilesDir + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`);
         (async () =>
@@ -464,78 +464,70 @@ describe('Submission Api', () => {
             stubFilesDir + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`,
           )) as any[]))();
       } catch (err) {
-        return done(err);
+        return err;
       }
-
-      chai
+      const conn = await mongo.connect(dburl);
+      const existingDonors: ActiveRegistration | null = await conn
+        .db('clinical')
+        .collection('donors')
+        .findOne({});
+      console.log(JSON.stringify(existingDonors));
+      const response1 = await chai
         .request(app)
         .post('/submission/program/ABCD-EF/registration')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .type('form')
         .attach('registrationFile', file, `${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`)
-        .end(async (err: any, res: any) => {
+        .then((res: any) => {
           try {
-            await assertUploadOKRegistrationCreated(res, dburl);
             chai.expect(res.body.registration.stats.newSampleIds).to.deep.eq([
               { submitterId: 'sm123-4', rowNumbers: [0] },
               { submitterId: 'sm123-5', rowNumbers: [1] },
               { submitterId: 'sm123-6', rowNumbers: [2] },
               { submitterId: 'sm123-7', rowNumbers: [3] },
             ]);
-            const reg1Id = res.body.registration._id;
-            chai
-              .request(app)
-              .post(`/submission/program/ABCD-EF/registration/${reg1Id}/commit`)
-              .auth(JWT_ABCDEF, { type: 'bearer' })
-              .end(async (err: any, res: any) => {
-                try {
-                  await assertFirstCommitDonorsCreatedInDB(res, rows, dburl);
-                  chai
-                    .request(app)
-                    .post('/submission/program/ABCD-EF/registration')
-                    .auth(JWT_ABCDEF, { type: 'bearer' })
-                    .type('form')
-                    .attach(
-                      'registrationFile',
-                      file,
-                      `${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`,
-                    )
-                    .end(async (err: any, res: any) => {
-                      try {
-                        await assertUploadOKRegistrationCreated(res, dburl);
-                        const reg2Id = res.body.registration._id;
-                        chai.expect(reg2Id).to.not.eq(reg1Id);
-                        chai.expect(res.body.registration.stats.newSampleIds).to.deep.eq([]);
-                        chai.expect(res.body.registration.stats.alreadyRegistered).to.deep.eq([
-                          { submitterId: 'sm123-4', rowNumbers: [0] },
-                          { submitterId: 'sm123-5', rowNumbers: [1] },
-                          { submitterId: 'sm123-6', rowNumbers: [2] },
-                          { submitterId: 'sm123-7', rowNumbers: [3] },
-                        ]);
-                        chai
-                          .request(app)
-                          .post(`/submission/program/ABCD-EF/registration/${reg2Id}/commit`)
-                          .auth(JWT_ABCDEF, { type: 'bearer' })
-                          .end(async (err: any, res: any) => {
-                            try {
-                              await asserCommitExistingSamplesOK(res);
-                              return done();
-                            } catch (err) {
-                              return done(err);
-                            }
-                          });
-                      } catch (err) {
-                        return done(err);
-                      }
-                    });
-                } catch (err) {
-                  return done(err);
-                }
-              });
+            return res;
           } catch (err) {
-            return done(err);
+            return err;
           }
         });
+
+      await assertUploadOKRegistrationCreated(response1, dburl);
+      const reg1Id = response1.body.registration._id;
+      const commit1Response = await chai
+        .request(app)
+        .post(`/submission/program/ABCD-EF/registration/${reg1Id}/commit`)
+        .auth(JWT_ABCDEF, { type: 'bearer' });
+      await assertFirstCommitDonorsCreatedInDB(commit1Response, rows, dburl);
+      const reg2Response = await chai
+        .request(app)
+        .post('/submission/program/ABCD-EF/registration')
+        .auth(JWT_ABCDEF, { type: 'bearer' })
+        .type('form')
+        .attach('registrationFile', file, `${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`)
+        .then((res: any) => {
+          try {
+            const reg2Id = res.body.registration._id;
+            chai.expect(reg2Id).to.not.eq(reg1Id);
+            chai.expect(res.body.registration.stats.newSampleIds).to.deep.eq([]);
+            chai.expect(res.body.registration.stats.alreadyRegistered).to.deep.eq([
+              { submitterId: 'sm123-4', rowNumbers: [0] },
+              { submitterId: 'sm123-5', rowNumbers: [1] },
+              { submitterId: 'sm123-6', rowNumbers: [2] },
+              { submitterId: 'sm123-7', rowNumbers: [3] },
+            ]);
+            return res;
+          } catch (err) {
+            return err;
+          }
+        });
+      await assertUploadOKRegistrationCreated(reg2Response, dburl);
+      const reg2Id = reg2Response.body.registration._id;
+      const commit2 = await chai
+        .request(app)
+        .post(`/submission/program/ABCD-EF/registration/${reg2Id}/commit`)
+        .auth(JWT_ABCDEF, { type: 'bearer' });
+      await asserCommitExistingSamplesOK(commit2);
     });
 
     it('should accept valid registration tsv', done => {
