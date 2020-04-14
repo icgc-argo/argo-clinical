@@ -52,70 +52,14 @@ const baseSpecimenId = 210000;
 
 const expectedErrors = [
   {
-    index: 0,
-    type: 'MISSING_REQUIRED_FIELD',
-    info: {
-      donorSubmitterId: 'abcd123',
-      sampleSubmitterId: 'sam123',
-      specimenSubmitterId: 'sp123',
-    },
-    fieldName: SampleRegistrationFieldsEnum.specimen_type,
+    batchNames: ['sample_registration.invalid.tsv'],
+    code: 'MISSING_REQUIRED_HEADER',
+    message: 'Missing required headers: [tumour_normal_designation], [specimen_type]',
   },
   {
-    fieldName: SampleRegistrationFieldsEnum.submitter_specimen_id,
-    index: 0,
-    info: {
-      donorSubmitterId: 'abcd123',
-      sampleSubmitterId: 'sam123',
-      specimenSubmitterId: 'sp123',
-      value: 'sp123',
-    },
-    type: 'INVALID_BY_REGEX',
-  },
-  {
-    fieldName: SampleRegistrationFieldsEnum.submitter_sample_id,
-    index: 0,
-    info: {
-      donorSubmitterId: 'abcd123',
-      sampleSubmitterId: 'sam123',
-      specimenSubmitterId: 'sp123',
-      value: 'sam123',
-    },
-    type: 'INVALID_BY_REGEX',
-  },
-  {
-    fieldName: SampleRegistrationFieldsEnum.gender,
-    index: 0,
-    info: {
-      donorSubmitterId: 'abcd123',
-      sampleSubmitterId: 'sam123',
-      specimenSubmitterId: 'sp123',
-      value: 'male',
-    },
-    type: 'INVALID_ENUM_VALUE',
-  },
-  {
-    fieldName: SampleRegistrationFieldsEnum.sample_type,
-    index: 0,
-    info: {
-      donorSubmitterId: 'abcd123',
-      sampleSubmitterId: 'sam123',
-      specimenSubmitterId: 'sp123',
-      value: 'RNA',
-    },
-    type: 'INVALID_ENUM_VALUE',
-  },
-  {
-    fieldName: 'program_id',
-    index: 0,
-    info: {
-      expectedProgram: 'ABCD-EF',
-      donorSubmitterId: 'abcd123',
-      sampleSubmitterId: 'sam123',
-      specimenSubmitterId: 'sp123',
-      value: 'PEXA-MX',
-    },
-    type: DataValidationErrors.INVALID_PROGRAM_ID,
+    batchNames: ['sample_registration.invalid.tsv'],
+    code: 'UNRECOGNIZED_HEADER',
+    message: 'Found unknown headers: [tumor_normal_designation]',
   },
 ];
 
@@ -510,9 +454,9 @@ describe('Submission Api', () => {
         });
     });
 
-    it('should commit registration, detect already registered', done => {
+    it('should commit registration, detect already registered', async () => {
       let file: Buffer;
-      let rows: any[];
+      let rows: any[] = [];
       try {
         file = fs.readFileSync(stubFilesDir + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`);
         (async () =>
@@ -520,78 +464,70 @@ describe('Submission Api', () => {
             stubFilesDir + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`,
           )) as any[]))();
       } catch (err) {
-        return done(err);
+        return err;
       }
-
-      chai
+      const conn = await mongo.connect(dburl);
+      const existingDonors: ActiveRegistration | null = await conn
+        .db('clinical')
+        .collection('donors')
+        .findOne({});
+      console.log(JSON.stringify(existingDonors));
+      const response1 = await chai
         .request(app)
         .post('/submission/program/ABCD-EF/registration')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .type('form')
         .attach('registrationFile', file, `${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`)
-        .end(async (err: any, res: any) => {
+        .then((res: any) => {
           try {
-            await assertUploadOKRegistrationCreated(res, dburl);
             chai.expect(res.body.registration.stats.newSampleIds).to.deep.eq([
               { submitterId: 'sm123-4', rowNumbers: [0] },
               { submitterId: 'sm123-5', rowNumbers: [1] },
               { submitterId: 'sm123-6', rowNumbers: [2] },
               { submitterId: 'sm123-7', rowNumbers: [3] },
             ]);
-            const reg1Id = res.body.registration._id;
-            chai
-              .request(app)
-              .post(`/submission/program/ABCD-EF/registration/${reg1Id}/commit`)
-              .auth(JWT_ABCDEF, { type: 'bearer' })
-              .end(async (err: any, res: any) => {
-                try {
-                  await assertFirstCommitDonorsCreatedInDB(res, rows, dburl);
-                  chai
-                    .request(app)
-                    .post('/submission/program/ABCD-EF/registration')
-                    .auth(JWT_ABCDEF, { type: 'bearer' })
-                    .type('form')
-                    .attach(
-                      'registrationFile',
-                      file,
-                      `${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`,
-                    )
-                    .end(async (err: any, res: any) => {
-                      try {
-                        await assertUploadOKRegistrationCreated(res, dburl);
-                        const reg2Id = res.body.registration._id;
-                        chai.expect(reg2Id).to.not.eq(reg1Id);
-                        chai.expect(res.body.registration.stats.newSampleIds).to.deep.eq([]);
-                        chai.expect(res.body.registration.stats.alreadyRegistered).to.deep.eq([
-                          { submitterId: 'sm123-4', rowNumbers: [0] },
-                          { submitterId: 'sm123-5', rowNumbers: [1] },
-                          { submitterId: 'sm123-6', rowNumbers: [2] },
-                          { submitterId: 'sm123-7', rowNumbers: [3] },
-                        ]);
-                        chai
-                          .request(app)
-                          .post(`/submission/program/ABCD-EF/registration/${reg2Id}/commit`)
-                          .auth(JWT_ABCDEF, { type: 'bearer' })
-                          .end(async (err: any, res: any) => {
-                            try {
-                              await asserCommitExistingSamplesOK(res);
-                              return done();
-                            } catch (err) {
-                              return done(err);
-                            }
-                          });
-                      } catch (err) {
-                        return done(err);
-                      }
-                    });
-                } catch (err) {
-                  return done(err);
-                }
-              });
+            return res;
           } catch (err) {
-            return done(err);
+            return err;
           }
         });
+
+      await assertUploadOKRegistrationCreated(response1, dburl);
+      const reg1Id = response1.body.registration._id;
+      const commit1Response = await chai
+        .request(app)
+        .post(`/submission/program/ABCD-EF/registration/${reg1Id}/commit`)
+        .auth(JWT_ABCDEF, { type: 'bearer' });
+      await assertFirstCommitDonorsCreatedInDB(commit1Response, rows, dburl);
+      const reg2Response = await chai
+        .request(app)
+        .post('/submission/program/ABCD-EF/registration')
+        .auth(JWT_ABCDEF, { type: 'bearer' })
+        .type('form')
+        .attach('registrationFile', file, `${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`)
+        .then((res: any) => {
+          try {
+            const reg2Id = res.body.registration._id;
+            chai.expect(reg2Id).to.not.eq(reg1Id);
+            chai.expect(res.body.registration.stats.newSampleIds).to.deep.eq([]);
+            chai.expect(res.body.registration.stats.alreadyRegistered).to.deep.eq([
+              { submitterId: 'sm123-4', rowNumbers: [0] },
+              { submitterId: 'sm123-5', rowNumbers: [1] },
+              { submitterId: 'sm123-6', rowNumbers: [2] },
+              { submitterId: 'sm123-7', rowNumbers: [3] },
+            ]);
+            return res;
+          } catch (err) {
+            return err;
+          }
+        });
+      await assertUploadOKRegistrationCreated(reg2Response, dburl);
+      const reg2Id = reg2Response.body.registration._id;
+      const commit2 = await chai
+        .request(app)
+        .post(`/submission/program/ABCD-EF/registration/${reg2Id}/commit`)
+        .auth(JWT_ABCDEF, { type: 'bearer' });
+      await asserCommitExistingSamplesOK(commit2);
     });
 
     it('should accept valid registration tsv', done => {
@@ -644,24 +580,20 @@ describe('Submission Api', () => {
       } catch (err) {
         throw err;
       }
-      chai
+      const result = await chai
         .request(app)
         .post('/submission/program/ABCD-EF/registration')
         .type('form')
         .attach('registrationFile', file, `${ClinicalEntitySchemaNames.REGISTRATION}.invalid.tsv`)
         .auth(JWT_ABCDEF, { type: 'bearer' })
-        .end(async (err: any, res: any) => {
-          try {
-            res.should.have.status(422);
-            res.body.should.deep.eq({
-              errors: expectedErrors,
-              successful: false,
-            });
-            await assertDbCollectionEmpty(dburl, 'activeregistration');
-          } catch (err) {
-            throw err;
-          }
+        .then((res: any) => {
+          res.should.have.status(422);
+          res.body.should.deep.include({
+            batchErrors: expectedErrors,
+            successful: false,
+          });
         });
+      await assertDbCollectionEmpty(dburl, 'activeregistration');
     });
 
     it('should not accept invalid file names', done => {
@@ -677,7 +609,7 @@ describe('Submission Api', () => {
         .type('form')
         .attach('registrationFile', file, 'thisIsARegistration.tsv')
         .auth(JWT_ABCDEF, { type: 'bearer' })
-        .end(async (err: any, res: any) => {
+        .end((err: any, res: any) => {
           try {
             res.should.have.status(422);
             res.body.batchErrors.should.deep.include({
@@ -739,18 +671,18 @@ describe('Submission Api', () => {
 
     it('Registration should return 200 if deleted existing registration', async () => {
       const registrationId = await insertData(dburl, 'activeregistrations', ABCD_REGISTRATION_DOC);
-      return chai
+      await chai
         .request(app)
         .delete('/submission/program/ABCD-EF/registration/' + registrationId)
         .auth(JWT_ABCDEF, { type: 'bearer' })
-        .then(async (res: any) => {
+        .then((res: any) => {
           try {
             res.should.have.status(200);
-            await assertDbCollectionEmpty(dburl, 'activeregistration');
           } catch (err) {
             throw err;
           }
         });
+      await assertDbCollectionEmpty(dburl, 'activeregistration');
     });
   });
 
@@ -2215,8 +2147,12 @@ async function asserCommitExistingSamplesOK(res: any) {
     newSamples: [],
   });
   const donorsFromDB = await donorDao.findByProgramId('ABCD-EF');
-  const expectedDonor = comittedDonors2.find(d => d.submitterId == donorsFromDB[0].submitterId);
-  assertSameDonorWithoutGeneratedIds(donorsFromDB[0] as Donor, expectedDonor as Donor);
+
+  const expectedDonor = comittedDonors2.find(d => d.submitterId == 'abcd-125');
+  assertSameDonorWithoutGeneratedIds(
+    donorsFromDB.find(d => d.submitterId == 'abcd-125') as Donor,
+    expectedDonor as Donor,
+  );
 }
 
 async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dburl: string) {
@@ -2308,7 +2244,6 @@ async function assertUploadOKRegistrationCreated(res: any, dburl: string) {
     .collection('activeregistrations')
     .findOne({});
   await conn.close();
-  console.log(' registration in db ', savedRegistration);
   if (!savedRegistration) {
     throw new Error("saved registration shouldn't be null");
   }
