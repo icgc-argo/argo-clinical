@@ -461,9 +461,7 @@ describe('schema migration api', () => {
   describe('Prohibited changes which should be rejected', () => {
     it('should check new schema is valid with data validation fields', async () => {
       await migrateSyncTo('3.0');
-
       const res = await getAllMigrationDocs();
-
       const [migration] = res.body;
       migration.newSchemaErrors.should.deep.eq({
         [ClinicalEntitySchemaNames.DONOR]: {
@@ -478,16 +476,13 @@ describe('schema migration api', () => {
         },
       });
     });
-    it.skip('should reject the new schema where the field type was changed', async () => {
-      // wip -- on hold
-      // migrations should be rejecting this changes, but there is no logic for it at the moment
-      const VERSION = '11.0';
-      await migrateSyncTo(VERSION);
-      const res = await getAllMigrationDocs();
-      assertMigrationErrors(res, VERSION);
+
+    it('should reject the new schema where the field type was changed', () => {
+      // https://github.com/icgc-argo/argo-clinical/issues/446
+      console.info('tbd');
     });
+
     it('should reject the new schema where the field name was changed', async () => {
-      // wip
       // renaming a field currently is currently seen as removing the field
       // how the change is analyzed and what error state to produce is subject to change
       const VERSION = '12.0';
@@ -503,10 +498,12 @@ describe('schema migration api', () => {
           invalidFieldCodeLists: [],
         },
       });
+
       migration.stage.should.equal(MIGRATION_FAIL_STAGE);
     });
+
     it('should reject migration when a schema is removed', async () => {
-      // wip
+      // https://github.com/icgc-argo/argo-clinical/issues/466
       // the removal of a schema, is currently just considered as removal of all the fields
       // how this change is analyzed and what error state to produce is subject to change
       const VERSION = '13.0';

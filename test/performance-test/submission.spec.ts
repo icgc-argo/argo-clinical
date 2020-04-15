@@ -10,16 +10,24 @@ import fs from 'fs';
 import 'chai-http';
 import 'deep-equal-in-any-order';
 import 'mocha';
+import winston from 'winston';
 import mongoose from 'mongoose';
 import { GenericContainer } from 'testcontainers';
 import app from '../../src/app';
 import * as bootstrap from '../../src/bootstrap';
 import { cleanCollection, resetCounters } from '../integration/testutils';
-import { TEST_PUB_KEY, JWT_ABCDEF, JWT_CLINICALSVCADMIN } from '../integration/test.jwt';
+import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN } from '../integration/test.jwt';
 import {
   ClinicalEntitySchemaNames,
   CreateRegistrationResult,
 } from '../../src/submission/submission-entities';
+
+// create a different logger to avoid noise from application
+const L = winston.createLogger({
+  level: 'info',
+  transports: [new winston.transports.Console()],
+});
+
 chai.use(require('chai-http'));
 chai.use(require('deep-equal-in-any-order'));
 chai.should();
@@ -98,7 +106,6 @@ describe('Submission Api', () => {
           },
         });
       } catch (err) {
-        console.error('before >>>>>>>>>>>', err);
         return err;
       }
     })();
@@ -156,36 +163,26 @@ describe('Submission Api', () => {
     /// Scenarios
     /////////////////////////
     /**
-     * submit 3000 unique & new samples to an empty program (all cache hits will be miss)
-     */
-    it('Submit 3000 NEW samples into empty db & program', async function() {
-      await timeit(register3k);
-    });
-
-    /**
-     * Times committing 3000 donors registration into empty program
-     */
-    it('Commit 3000 donors Registration into empty db', async function() {
-      const regId = await register3k();
-      await timeit(async () => await commitRegistration(regId));
-    });
-
-    /**
-     * submit 3000 unique samples that already exist for the same program.
+     * submit 3000 unique new samples, then resubmit them for the same program.
      * in this scenario we will load all donors from db into memory and index them
      * this will also cover the cases where we check against existing data.
      */
-    it('Submit 3000 existing samples', async function() {
+    it('Commit 3000 new samples, then resubmit and commit the same 3k samples', async function() {
+      L.profile('register.3k.new');
       const regId = await register3k();
+      L.profile('register.3k.new');
+
+      L.profile('commitRegistration.3k.new');
       await commitRegistration(regId);
-      await timeit(register3k);
+      L.profile('commitRegistration.3k.new');
+
+      L.profile('register.3k.existing');
+      const regId2 = await register3k();
+      L.profile('register.3k.existing');
+
+      L.profile('commitRegistration.3k.existing');
+      await commitRegistration(regId2);
+      L.profile('commitRegistration.3k.existing');
     });
   });
 });
-
-const timeit = async (fn: Function) => {
-  const start = new Date().getTime();
-  await fn();
-  const diff = (new Date().getTime() - start) / 1000.0;
-  console.log(diff);
-};
