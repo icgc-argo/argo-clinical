@@ -1,2 +1,2 @@
-program_id	submitter_donor_id	submitter_treatment_id	hormone_therapy_drug_name	hormone_drug_dosage_units	cumulative_drug_dosage
-TEST-CA	ICGC_0001.1	T_01	Need list	mg/m²	4
+program_id	submitter_donor_id	submitter_treatment_id	drug_name	drug_rxnormid	hormone_drug_dosage_units	cumulative_drug_dosage
+TEST-CA	ICGC_0001.1	T_01		968804	mg/m²	4

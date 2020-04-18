@@ -47,3 +47,16 @@ Notes:
 - the scripts are sorted by date & time
 - a collection in db called changelog will keep track of executed scripts.
 - the docker image will excute the scripts automatically before starting the server and if fails it runs rollback script and exits
+
+## importing rxnorm
+
+- download the full zip file
+- mount it in the mysql container
+- move all mysql scripts from scripts folder to rrf folder.
+
+Mysql 8 Notes:
+
+- you need to enable infiles on server and client: `mysql> SET GLOBAL local_infile=on;`
+- in the populate mysql script you need to add this flag: `--local-infile=1`
+- mysql 8 has incompatibility with mysqljs client auth protocol: https://github.com/mysqljs/mysql/issues/2046
+  `ALTER USER <user> IDENTIFIED WITH mysql_native_password BY '<password>'`

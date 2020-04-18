@@ -1407,12 +1407,25 @@
               }
             },
             {
-              "name": "chemotherapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the chemotherapy treatment regimen.",
+              "name": "drug_rxnormid",
+              "description": "RxNormID assigned to the treatment regimen.",
+              "valueType": "integer",
+              "restrictions": {
+                "required": false
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "primaryId": true
+              }
+            },
+
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": ["Placeholder list 1", "Need list", "Still need it"]
+                "required": false
               },
               "meta": {
                 "validationDependency": true,
@@ -1421,6 +1434,7 @@
                 "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
+
             {
               "name": "chemotherapy_dosage_units",
               "description": "Indicate units used to record chemotherapy drug dosage.",
@@ -1480,6 +1494,7 @@
                 "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
+
             {
               "name": "submitter_treatment_id",
               "valueType": "string",
@@ -1494,20 +1509,30 @@
                 "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
+
             {
-              "name": "hormone_therapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the hormone therapy treatment regimen.",
-              "valueType": "string",
-              "restrictions": {
-                "required": true,
-                "codeList": ["Placeholder list 1", "Need list", "Still need it"]
-              },
+              "name": "drug_rxnormid",
+              "description": "RxNormID assigned to the treatment regimen.",
+              "valueType": "integer",
               "meta": {
                 "validationDependency": true,
                 "core": true,
-                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names."
+                "primaryId": true
               }
             },
+
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
+              }
+            },
+
             {
               "name": "hormone_drug_dosage_units",
               "description": "Indicate the units used to record hormone drug dosage.",

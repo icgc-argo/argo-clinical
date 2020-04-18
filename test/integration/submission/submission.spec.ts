@@ -5,7 +5,7 @@ import mongo from 'mongodb';
 import fs from 'fs';
 // needed for types
 import 'chai-http';
-import 'deep-equal-in-any-order';
+import 'sampleFiles/src/types/deep-equal-in-any-order';
 import 'mocha';
 import mongoose from 'mongoose';
 import { GenericContainer } from 'testcontainers';

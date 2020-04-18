@@ -1,4 +1,4 @@
-program_id	submitter_donor_id	submitter_treatment_id	chemotherapy_drug_name	chemotherapy_dosage_units	cumulative_drug_dosage
-TEST-CA	ICGC_0002	T_02	Still need it	mg/m²	4
-TEST-CA	ICGC_0003	T_03	Need list	µg/m²	20
-TEST-CA	ICGC_0001.1	T_04	Need list	µg/m²	35
+program_id	submitter_donor_id	submitter_treatment_id	drug_name	drug_rxnormid	chemotherapy_dosage_units	cumulative_drug_dosage
+TEST-CA	ICGC_0002	T_02	aminobenzoic acid		mg/m²	4
+TEST-CA	ICGC_0003	T_03	mesna		µg/m²	20
+TEST-CA	ICGC_0001.1	T_04		19	µg/m²	35

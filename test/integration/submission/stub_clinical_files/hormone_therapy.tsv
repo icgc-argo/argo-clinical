@@ -1,2 +1,2 @@
-program_id	submitter_donor_id	submitter_treatment_id	hormone_therapy_drug_name	hormone_drug_dosage_units	cumulative_drug_dosage
-ABCD-EF	ICGC_0001	T_03	Other	mg/m²	4
+program_id	submitter_donor_id	submitter_treatment_id	drug_name	drug_rxnormid	cumulative_drug_dosage
+ABCD-EF	ICGC_0001	T_03	Cytarabine		4

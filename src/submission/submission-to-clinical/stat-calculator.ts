@@ -4,13 +4,13 @@ import {
   ClinicalInfo,
   ClinicalInfoStats,
   AggregateClinicalInfoStats,
-} from '../../../src/clinical/clinical-entities';
+} from '../../clinical/clinical-entities';
 import { ClinicalEntitySchemaNames } from '../submission-entities';
-import { isNotAbsent, isEmpty, notEmpty } from '../../../src/utils';
+import { isNotAbsent, isEmpty, notEmpty } from '../../utils';
 
 import * as schemaManager from '../schema/schema-manager';
 import { getClinicalObjectsFromDonor } from './submission-to-clinical';
-import { SchemasDictionary } from '../../../src/lectern-client/schema-entities';
+import { SchemasDictionary } from '../../lectern-client/schema-entities';
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 
@@ -59,8 +59,8 @@ export const recalculateEntitiesClinicalInfoStats = (
   return mutableDonor;
 };
 
-// this function will mutate the entity
 export const updateClinicalStatsAndDonorStats = (
+  // this function will mutate the entity
   entity: ClinicalEntity | Donor | undefined,
   donor: Donor,
   clinicalType: ClinicalEntitySchemaNames,

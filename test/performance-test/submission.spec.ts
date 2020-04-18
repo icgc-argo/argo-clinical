@@ -8,7 +8,7 @@ import chai from 'chai';
 import fs from 'fs';
 // needed for types
 import 'chai-http';
-import 'deep-equal-in-any-order';
+import 'sampleFiles/src/types/deep-equal-in-any-order';
 import 'mocha';
 import winston from 'winston';
 import mongoose from 'mongoose';

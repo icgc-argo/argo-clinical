@@ -1,37 +1,38 @@
-
-debug:
-	docker-compose up --force-recreate -d
+# use this to start docker + debugger 
+all: dcompose populate-rxnorm
 	npm run debug
 
-compose:
-	docker-compose -f docker-compose.all.yaml up -d
+# use this to just start debbugger
+# this is useful to avoid the slow wait in starting up the docker compose file.
+debug:
+	npm run debug
 
+#run the docker compose file
+dcompose:
+	docker-compose -f compose/docker-compose.yaml up -d
+	# we need to sleep for db containers to start
+	sleep 10
+
+# run the scripts to populate sample rxnorm in mysql db
+populate-rxnorm:
+	docker container exec -w "/var/lib/mysql-files/" clinical_rxnormdb "/bin/sh" ./populate_mysql_rxn.sh
+
+# run all tests
 verify:
 	npm run test
 
 test-submission:
 	npx mocha --exit --timeout 30000 -r ts-node/register test/integration/submission/submission.spec.ts
+
 stop:
-	docker-compose down --remove-orphans 
+	docker-compose  -f compose/docker-compose.yaml down --remove-orphans 
 
+# stop db and delete clinical db only 
+purge:
+	docker-compose -f compose/docker-compose.yaml down
+	# we don't want to remove the rxnorm import
+	docker volume rm clinical_db_vol
+
+# delete. everything.
 nuke:
-	docker-compose down --volumes --remove-orphans 
-
-
-# curl file upload relative path
-registration-upload:
-	pwd
-	# todo check why this doesn't work 
-	curl -v -X POST \
-	http://localhost:3000/submission/registration/ \
-	-H 'cache-control: no-cache' \
-	-H 'content-type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW' \
-	-F programId=PEME-CA \
-	-F creator=bashar \
-	-F 'registrationFile=@/home/ballabadi/dev/repos/argo/argo-clinical/sampleFiles/registration.tsv'
-
-registration-get:
-	curl -X GET \
-	'http://localhost:3000/submission/registration?programId=PEME-CA' \
-	-H 'cache-control: no-cache'
-
+	docker-compose  -f compose/docker-compose.yaml down --volumes --remove-orphans 

@@ -293,6 +293,7 @@ export enum DonorFieldsEnum {
   survival_time = 'survival_time',
   cause_of_death = 'cause_of_death',
 }
+
 export enum SpecimenFieldsEnum {
   program_id = 'program_id',
   submitter_donor_id = 'submitter_donor_id',
@@ -313,30 +314,40 @@ export enum SpecimenFieldsEnum {
   central_pathology_confirmed = 'central_pathology_confirmed',
   tumour_histological_type = 'tumour_histological_type',
 }
+
 export enum PrimaryDiagnosisFieldsEnum {
   program_id = 'program_id',
   submitter_donor_id = 'submitter_donor_id',
   cancer_type_code = 'cancer_type_code',
   age_at_diagnosis = 'age_at_diagnosis',
 }
+
 export enum TreatmentFieldsEnum {
   program_id = 'program_id',
   submitter_donor_id = 'submitter_donor_id',
   submitter_treatment_id = 'submitter_treatment_id',
   treatment_type = 'treatment_type',
 }
+
+export enum TherapyRxNormFields {
+  drug_name = 'drug_name',
+  drug_rxnormid = 'drug_rxnormid',
+}
+
 export enum ChemotherapyFieldsEnum {
   program_id = 'program_id',
   submitter_donor_id = 'submitter_donor_id',
   submitter_treatment_id = 'submitter_treatment_id',
   chemotherapy_drug_name = 'chemotherapy_drug_name',
 }
+
 export enum HormoneTherapyFieldsEnum {
   program_id = 'program_id',
   submitter_donor_id = 'submitter_donor_id',
   submitter_treatment_id = 'submitter_treatment_id',
   hormone_therapy_drug_name = 'hormone_therapy_drug_name',
 }
+
 export enum RadiationFieldsEnum {
   program_id = 'program_id',
   submitter_donor_id = 'submitter_donor_id',
