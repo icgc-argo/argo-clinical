@@ -35,7 +35,11 @@ import { mergeActiveSubmissionWithDonors } from './merge-submission';
 import * as schemaManager from '../schema/schema-manager';
 import { loggerFor } from '../../logger';
 const L = loggerFor(__filename);
-import { recalculateAllClincalInfoStats } from './stat-calculator';
+import {
+  updateDonorStatsForRegistrationCommit,
+  getDonorWithRecalcStatsIgnoreOverridden,
+  forceRecalcDonorCoreEntitiesStats,
+} from './stat-calculator';
 import * as messenger from '../submission-updates-messenger';
 
 /**
@@ -139,7 +143,7 @@ const performCommitSubmission = async (
         ud.schemaMetadata.isValid = true;
         ud.schemaMetadata.lastValidSchemaVersion = schemaManager.instance().getCurrent().version;
         // recalculate the donors stats
-        verifiedDonorDTOs.push(recalculateAllClincalInfoStats(ud));
+        verifiedDonorDTOs.push(getDonorWithRecalcStatsIgnoreOverridden(ud));
         return;
       }
     }
@@ -207,6 +211,27 @@ export const commitRegisteration = async (command: Readonly<CommitRegistrationCo
   );
 };
 
+export const adminUpdateDonorStats = async (
+  programId: string,
+  submitterDonorId: string,
+  coreCompletionOverride: any,
+) => {
+  const filters = [{ programId: programId, submitterId: submitterDonorId }];
+  const donors = await donorDao.findByProgramAndSubmitterId(filters);
+
+  if (!donors || donors.length === 0) {
+    throw new Error(`Donor not found!`);
+  }
+  if (donors.length > 1) {
+    throw new Error(`Found multiple donors, shouldn't be possible!`);
+  }
+
+  // Update core
+  const updatedDonor = forceRecalcDonorCoreEntitiesStats(donors[0], coreCompletionOverride);
+
+  return await donorDao.update(updatedDonor);
+};
+
 const updateOrCreateDonorsBatch = (
   batchNumber: number,
   donorSampleDtos: DeepReadonly<CreateDonorSampleDto[]>,
@@ -220,7 +245,8 @@ const updateOrCreateDonorsBatch = (
   return donorsBatch.map(dto => {
     if (existingDonorsIds[dto.submitterId]) {
       const mergedDonor = addSamplesToDonor(existingDonorsIds[dto.submitterId], dto);
-      return donorDao.update(mergedDonor);
+      const statUpdatedDonor = updateDonorStatsForRegistrationCommit(mergedDonor);
+      return donorDao.update(statUpdatedDonor);
     }
     return donorDao.create(fromCreateDonorDtoToDonor(dto));
   });

@@ -384,6 +384,13 @@ export type ClinicalTherapyType =
   | ClinicalEntitySchemaNames.RADIATION
   | ClinicalEntitySchemaNames.HORMONE_THERAPY;
 
+export type CoreClinicalEntites =
+  | ClinicalEntitySchemaNames.DONOR
+  | ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS
+  | ClinicalEntitySchemaNames.TREATMENT
+  | ClinicalEntitySchemaNames.FOLLOW_UP
+  | ClinicalEntitySchemaNames.SPECIMEN;
+
 export const ClinicalTherapySchemaNames: ClinicalTherapyType[] = [
   ClinicalEntitySchemaNames.CHEMOTHERAPY,
   ClinicalEntitySchemaNames.HORMONE_THERAPY,

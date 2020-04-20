@@ -54,18 +54,6 @@ describe('schema migration api', () => {
       submitter_donor_id: 'ICGC_0001',
       survival_time: 120,
     },
-    clinicalInfoStats: {
-      submittedCoreFields: 3,
-      expectedCoreFields: 3,
-      submittedExtendedFields: 0,
-      expectedExtendedFields: 0,
-    },
-    aggregatedInfoStats: {
-      submittedCoreFields: 3,
-      expectedCoreFields: 3,
-      submittedExtendedFields: 0,
-      expectedExtendedFields: 0,
-    },
   });
 
   const donor2: Donor = emptyDonorDocument({
@@ -77,12 +65,6 @@ describe('schema migration api', () => {
       cause_of_death: 'Died of cancer',
       submitter_donor_id: 'ICGC_0003',
       survival_time: 67,
-    },
-    clinicalInfoStats: {
-      submittedCoreFields: 3,
-      expectedCoreFields: 3,
-      submittedExtendedFields: 0,
-      expectedExtendedFields: 0,
     },
     specimens: [
       {
@@ -104,18 +86,6 @@ describe('schema migration api', () => {
         cancer_type_code: 'A11.1A',
         tumour_staging_system: 'Murphy',
       },
-      clinicalInfoStats: {
-        submittedCoreFields: 2,
-        expectedCoreFields: 7,
-        submittedExtendedFields: 0,
-        expectedExtendedFields: 0,
-      },
-    },
-    aggregatedInfoStats: {
-      submittedCoreFields: 5,
-      expectedCoreFields: 10,
-      submittedExtendedFields: 0,
-      expectedExtendedFields: 0,
     },
   });
 
@@ -301,66 +271,60 @@ describe('schema migration api', () => {
   });
 
   describe('Changes that can affect existing donors', () => {
-    it('should run migration and update all donor entity clincial info stats', async () => {
-      const donorWithNoStats = emptyDonorDocument({
+    it('should run migration and add clincial info completion for donor entity', async () => {
+      const donorInvalidWithNewSchema = emptyDonorDocument({
         submitterId: 'ICGC_0004',
         programId,
         clinicalInfo: {
           program_id: 'ABCD-EF',
           submitter_donor_id: 'ICGC_0004',
-          vital_status: 'Deceased',
+          vital_status: 'Unknown', // migration will find this to be invalid
           cause_of_death: 'Died of cancer',
           survival_time: 67,
         },
+        aggregatedInfoStats: {
+          coreEntitiesStats: {
+            [ClinicalEntitySchemaNames.DONOR]: 1,
+            [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: 0,
+            [ClinicalEntitySchemaNames.TREATMENT]: 1, // treatment has been overridden because donor never got any treatment
+            [ClinicalEntitySchemaNames.FOLLOW_UP]: 0,
+            [ClinicalEntitySchemaNames.SPECIMEN]: 0,
+          },
+          overriddenCoreEntities: [ClinicalEntitySchemaNames.TREATMENT],
+        },
       });
-      await insertData(dburl, 'donors', donorWithNoStats);
-
-      const donors = await findInDb(dburl, 'donors', {});
-
-      // donor 1 stats before migration
-      chai.expect(donors[0].aggregatedInfoStats).to.deep.include({
-        submittedCoreFields: 3,
-        expectedCoreFields: 3,
-      });
-      // donor 2 stats before migration
-      chai.expect(donors[1].aggregatedInfoStats).to.deep.include({
-        submittedCoreFields: 5,
-        expectedCoreFields: 10,
-      });
-      chai.expect(donors[1].primaryDiagnosis.clinicalInfoStats).to.deep.include({
-        submittedCoreFields: 2,
-        expectedCoreFields: 7,
-      });
-      // this donor has no stats currently but it has clinicalInfos (which will remain schema valid), so migration should add them
-      chai.expect(donors[2].aggregatedInfoStats).to.deep.eq(undefined);
-
-      await migrateSyncTo('2.0').then(async (res: any) => {
+      await insertData(dburl, 'donors', donorInvalidWithNewSchema);
+      await migrateSyncTo('2.0').then((res: any) => {
         res.should.have.status(200);
-        const updatedDonor = await findInDb(dburl, 'donors', {});
-
-        // donor 1 stats after migraiton
-        chai.expect(updatedDonor[0].aggregatedInfoStats).to.deep.include({
-          submittedCoreFields: 2,
-          expectedCoreFields: 2,
-        });
-        // donor 2 stats after migraiton
-        chai.expect(updatedDonor[1].aggregatedInfoStats).to.deep.include({
-          submittedCoreFields: 5,
-          expectedCoreFields: 10,
-        });
-        // this stub schema has also turned an existing required field to core in primary diagnosis
-        chai.expect(updatedDonor[1].primaryDiagnosis.clinicalInfoStats).to.deep.include({
-          submittedCoreFields: 3,
-          expectedCoreFields: 8,
-        });
-        // donor 3 stats after migraiton, now has recently calculated stats, including the one without any stats
-        chai.expect(updatedDonor[2].aggregatedInfoStats).to.deep.include({
-          submittedCoreFields: 2,
-          expectedCoreFields: 2,
-        });
-
-        chai.assert(sendProgramUpdatedMessageFunc.calledOnceWith(programId));
       });
+      const updatedDonor = await findInDb(dburl, 'donors', {});
+
+      // donor 1 stats after migraiton, added entity completion
+      chai.expect(updatedDonor[0].aggregatedInfoStats.coreEntitiesStats).to.deep.include({
+        [ClinicalEntitySchemaNames.DONOR]: 1,
+        [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: 0,
+        [ClinicalEntitySchemaNames.TREATMENT]: 0,
+        [ClinicalEntitySchemaNames.FOLLOW_UP]: 0,
+        [ClinicalEntitySchemaNames.SPECIMEN]: 0,
+      });
+      // donor 2 stats after migraiton
+      chai.expect(updatedDonor[1].aggregatedInfoStats.coreEntitiesStats).to.deep.include({
+        [ClinicalEntitySchemaNames.DONOR]: 1,
+        [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: 1,
+        [ClinicalEntitySchemaNames.TREATMENT]: 0,
+        [ClinicalEntitySchemaNames.FOLLOW_UP]: 0,
+        [ClinicalEntitySchemaNames.SPECIMEN]: 0,
+      });
+      // donor 3 stats after migraiton
+      chai.expect(updatedDonor[2].aggregatedInfoStats.coreEntitiesStats).to.deep.include({
+        [ClinicalEntitySchemaNames.DONOR]: 0, // donor info is invalid so set to zero
+        [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: 0,
+        [ClinicalEntitySchemaNames.TREATMENT]: 1, // no treatment submitted, but overridden entity remains unchanged
+        [ClinicalEntitySchemaNames.FOLLOW_UP]: 0,
+        [ClinicalEntitySchemaNames.SPECIMEN]: 0,
+      });
+
+      chai.assert(sendProgramUpdatedMessageFunc.calledOnceWith(programId));
     });
     it('should update the schema after an enum option was removed, and make donor2 invalid', async () => {
       const VERSION = '7.0';

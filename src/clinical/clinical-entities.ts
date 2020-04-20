@@ -1,4 +1,5 @@
 import { DeepReadonly } from 'deep-freeze';
+import { CoreClinicalEntites } from '../submission/submission-entities';
 
 export interface Donor {
   _id?: string;
@@ -9,7 +10,6 @@ export interface Donor {
   programId: string;
   specimens: Array<Specimen>;
   clinicalInfo?: ClinicalInfo;
-  clinicalInfoStats?: ClinicalInfoStats;
   primaryDiagnosis?: ClinicalEntity | undefined;
   followUps?: Array<FollowUp>;
   treatments?: Array<Treatment>;
@@ -19,17 +19,8 @@ export interface Donor {
 }
 
 export interface AggregateClinicalInfoStats {
-  submittedCoreFields: number;
-  submittedExtendedFields?: number;
-  expectedCoreFields: number;
-  expectedExtendedFields?: number;
-}
-
-export interface ClinicalInfoStats {
-  submittedCoreFields: number;
-  submittedExtendedFields?: number;
-  expectedCoreFields: number;
-  expectedExtendedFields?: number;
+  coreEntitiesStats: Record<CoreClinicalEntites, number>;
+  overriddenCoreEntities: string[];
 }
 
 export interface SchemaMetadata {
@@ -41,7 +32,6 @@ export interface SchemaMetadata {
 
 export type ClinicalEntity = {
   clinicalInfo: ClinicalInfo;
-  clinicalInfoStats?: ClinicalInfoStats;
   [k: string]: any;
 };
 

@@ -1,3 +1,5 @@
+import { SchemaValidationError } from '../../lectern-client/schema-entities';
+
 export type MigrationStage = 'SUBMITTED' | 'ANALYZED' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
 export type MigrationState = 'OPEN' | 'CLOSED';
 
@@ -29,3 +31,7 @@ export type NewSchemaVerificationResult = {
     // invalidFieldRegex?: { name: string; expectedRegex: RegExp };
   };
 };
+
+export type DonorMigrationSchemaErrors = Array<{
+  [clinicalType: string]: ReadonlyArray<SchemaValidationError>;
+}>;
