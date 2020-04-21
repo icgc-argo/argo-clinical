@@ -1,5 +1,9 @@
-import { Donor } from '../../../src/clinical/clinical-entities';
-import { ClinicalEntitySchemaNames, CoreClinicalEntites } from '../submission-entities';
+import {
+  Donor,
+  CoreEntitiesStats,
+  CoreClinicalEntites,
+} from '../../../src/clinical/clinical-entities';
+import { ClinicalEntitySchemaNames } from '../submission-entities';
 import { notEmpty, F } from '../../../src/utils';
 
 import { getClinicalEntitiesFromDonorBySchemaName } from './submission-to-clinical';
@@ -45,7 +49,10 @@ const calcDonorCoreEntityStats = (
   } else {
     // for others we just need to find one clinical info for core entity
     coreStats[clinicalType] =
-      getClinicalEntitiesFromDonorBySchemaName(donor, clinicalType).length >= 1 ? 1 : 0;
+      getClinicalEntitiesFromDonorBySchemaName(donor, clinicalType as ClinicalEntitySchemaNames)
+        .length >= 1
+        ? 1
+        : 0;
   }
 
   donor.aggregatedInfoStats = {
@@ -152,7 +159,7 @@ export const setInvalidCoreEntityStatsForMigration = (
   return mutableDonor;
 };
 
-const getEmptyCoreStats = (): Record<CoreClinicalEntites, number> => {
+const getEmptyCoreStats = (): CoreEntitiesStats => {
   return cloneDeep({
     [ClinicalEntitySchemaNames.DONOR]: 0,
     [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: 0,

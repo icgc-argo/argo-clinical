@@ -1,5 +1,4 @@
 import { DeepReadonly } from 'deep-freeze';
-import { CoreClinicalEntites } from '../submission/submission-entities';
 
 export interface Donor {
   _id?: string;
@@ -19,7 +18,7 @@ export interface Donor {
 }
 
 export interface AggregateClinicalInfoStats {
-  coreEntitiesStats: Record<CoreClinicalEntites, number>;
+  coreEntitiesStats: CoreEntitiesStats;
   overriddenCoreEntities: string[];
 }
 
@@ -67,3 +66,13 @@ export interface ClinicalInfo {
 export type DonorMap = Readonly<{ [submitterId: string]: Donor }>;
 
 export type DonorBySubmitterIdMap = { [k: string]: DeepReadonly<Donor> };
+
+export type CoreEntitiesStats = {
+  donor: number;
+  specimen: number;
+  primary_diagnosis: number;
+  follow_up: number;
+  treatment: number;
+};
+
+export type CoreClinicalEntites = keyof CoreEntitiesStats;
