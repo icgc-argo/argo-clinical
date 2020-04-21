@@ -15,7 +15,6 @@ import submissionRouter from './routes/submission';
 import schemaRouter from './routes/schema';
 import configRouter from './routes/config';
 import icgcImport from './routes/icgc-import';
-import adminOp from './routes/adminOp';
 import responseTime from 'response-time';
 import morgan from 'morgan';
 
@@ -64,7 +63,6 @@ app.use(
 );
 
 /** Attach Routers */
-app.use('/submission/admin-operations', adminOp);
 app.use('/submission/configs', configRouter);
 app.use('/submission/program/:programId/registration', registrationRouter);
 app.use('/submission/program/:programId/clinical', submissionRouter);

@@ -259,26 +259,6 @@ class SubmissionController {
     const donorsJson = await fsPromises.readFile(req.file.path, 'utf-8');
     return res.status(201).send(await submission.operations.adminAddDonors(JSON.parse(donorsJson)));
   }
-
-  // @HasFullWriteAccess()
-  async overrideDonorStats(req: Request, res: Response) {
-    const programId = req.params.programId;
-    const submitterDonorId = req.params.submitterDonorId;
-
-    if (!programId || !submitterDonorId) {
-      return ControllerUtils.badRequest(res, 'Missing programId and/or submitterDonorId');
-    }
-
-    const coreCompletionOverride = req.body.coreCompletionOverride || {};
-
-    const upadtedDonor = await submission2Clinical.adminUpdateDonorStats(
-      programId,
-      submitterDonorId,
-      coreCompletionOverride,
-    );
-
-    return res.status(200).send(upadtedDonor);
-  }
 }
 
 const submissionSystemIsDisabled = async (res: Response) => {
