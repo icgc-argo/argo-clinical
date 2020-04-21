@@ -1712,7 +1712,7 @@ describe('Submission Api', () => {
         [ClinicalEntitySchemaNames.SPECIMEN]: 0,
       });
 
-      // Imaginge donor adds specimens via registration
+      // Imagine donor adds specimens via registration
       DonorBeforeUpdate.specimens = [
         {
           samples: [{ sampleType: 'ctDNA', submitterId: 'sm123-00-1' }],

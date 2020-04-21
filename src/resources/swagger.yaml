@@ -19,6 +19,49 @@ paths:
               schema:
                 type: object
 
+  /submission/admin-operations/recalculate-stats/{programId}/{submittedDonorId}:
+    post:
+      tags:
+        - Submission Admin Operations
+      summary: Used to override donor aggregatedInfoStats
+      description: For coreCompletionOverride, only the ones defined will be overridden the rest will be recalculated
+      parameters:
+        - name: programId
+          description: the programId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: submittedDonorId
+          description: the of submittedDonorId of donor
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                coreCompletionOverride:
+                  type: object
+                  properties:
+                    donor:
+                      type: number
+                    treatment:
+                      type: number
+                    primary_diagnosis:
+                      type: number
+                    follow_up:
+                      type: number
+                    specimen:
+                      type: number
+      responses:
+        '200':
+          description: 'Donor with updated stats'
+
   /submission/configs:
     get:
       tags:
@@ -755,6 +798,8 @@ tags:
     description: Service status monitoring
   - name: Submission Configurations
     description: Submission Service Configurations
+  - name: Submission Admin Operations
+    description: Submission Service Admin Operations
   - name: Schemas
     description: View and manage the Data Schema used by Argo-Clinical
   - name: Sample Registration

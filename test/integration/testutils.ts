@@ -134,5 +134,3 @@ export async function findInDb(dburl: string, collection: string, filter: any) {
   await conn.close();
   return result;
 }
-
-// export asyn function updateDonor(dburl: string, submitterDonorId: string) {}

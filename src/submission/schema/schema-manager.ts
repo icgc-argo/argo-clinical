@@ -34,7 +34,7 @@ import { notEmpty, Errors, sleep, isEmpty, toString, MongooseUtils } from '../..
 import _ from 'lodash';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../submission-to-clinical/submission-to-clinical';
 import {
-  getDonorWithRecalcStatsIgnoreOverridden,
+  recalculateDonorStatsHoldOverridden,
   setInvalidCoreEntityStatsForMigration,
 } from '../submission-to-clinical/stat-calculator';
 import { setStatus, Status } from '../../app-health';
@@ -744,7 +744,7 @@ namespace MigrationManager {
       isEmpty(donorBeforeSetValid.aggregatedInfoStats) ||
       !donorBeforeSetValid.schemaMetadata.isValid
     ) {
-      return getDonorWithRecalcStatsIgnoreOverridden(_.cloneDeep(donorBeforeSetValid) as Donor);
+      return recalculateDonorStatsHoldOverridden(_.cloneDeep(donorBeforeSetValid) as Donor);
     }
     return donorBeforeSetValid;
   };

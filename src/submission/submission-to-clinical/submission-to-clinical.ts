@@ -36,9 +36,9 @@ import * as schemaManager from '../schema/schema-manager';
 import { loggerFor } from '../../logger';
 const L = loggerFor(__filename);
 import {
-  updateDonorStatsForRegistrationCommit,
-  getDonorWithRecalcStatsIgnoreOverridden,
-  forceRecalcDonorCoreEntitiesStats,
+  updateDonorStatsFromRegistrationCommit,
+  recalculateDonorStatsHoldOverridden,
+  forceRecalcDonorCoreEntityStats,
 } from './stat-calculator';
 import * as messenger from '../submission-updates-messenger';
 
@@ -143,7 +143,7 @@ const performCommitSubmission = async (
         ud.schemaMetadata.isValid = true;
         ud.schemaMetadata.lastValidSchemaVersion = schemaManager.instance().getCurrent().version;
         // recalculate the donors stats
-        verifiedDonorDTOs.push(getDonorWithRecalcStatsIgnoreOverridden(ud));
+        verifiedDonorDTOs.push(recalculateDonorStatsHoldOverridden(ud));
         return;
       }
     }
@@ -227,7 +227,7 @@ export const adminUpdateDonorStats = async (
   }
 
   // Update core
-  const updatedDonor = forceRecalcDonorCoreEntitiesStats(donors[0], coreCompletionOverride);
+  const updatedDonor = forceRecalcDonorCoreEntityStats(donors[0], coreCompletionOverride);
 
   return await donorDao.update(updatedDonor);
 };
@@ -245,7 +245,7 @@ const updateOrCreateDonorsBatch = (
   return donorsBatch.map(dto => {
     if (existingDonorsIds[dto.submitterId]) {
       const mergedDonor = addSamplesToDonor(existingDonorsIds[dto.submitterId], dto);
-      const statUpdatedDonor = updateDonorStatsForRegistrationCommit(mergedDonor);
+      const statUpdatedDonor = updateDonorStatsFromRegistrationCommit(mergedDonor);
       return donorDao.update(statUpdatedDonor);
     }
     return donorDao.create(fromCreateDonorDtoToDonor(dto));

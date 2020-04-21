@@ -23,5 +23,4 @@ router.post('/reopen/:versionId', wrapAsync(submissionAPI.reopenActiveSubmission
 
 router.delete('/:versionId/:fileType', wrapAsync(submissionAPI.clearFileFromActiveSubmission));
 
-router.post('/recalculate-stats/:submitterDonorId', wrapAsync(submissionAPI.overrideDonorStats));
 export default router;

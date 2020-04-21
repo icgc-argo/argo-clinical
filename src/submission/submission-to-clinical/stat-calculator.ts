@@ -24,7 +24,7 @@ const coreClinialEntities = new Set<CoreClinicalEntites>([
 // We conisder only `required & core` fields for core field calculation, which are always submitted.
 // Additionally, `optional & core` fields are submitted in relation to `required & core` fields,
 // which are verified at upload/data-validate step. So can assume record is valid.
-const calcDonorEntityCoreStat = (
+const calcDonorCoreEntityStats = (
   donor: Donor,
   clinicalType: CoreClinicalEntites,
   forceFlags: ForceRecaculateFlags, // used to control recalculate under certain conditions
@@ -58,9 +58,9 @@ const calcDonorEntityCoreStat = (
   };
 };
 
-export const getDonorWithRecalcStatsIgnoreOverridden = (donor: Donor) => {
+export const recalculateDonorStatsHoldOverridden = (donor: Donor) => {
   coreClinialEntities.forEach(type =>
-    calcDonorEntityCoreStat(donor, type, {
+    calcDonorCoreEntityStats(donor, type, {
       recalcEvenIfComplete: true,
       recalcEvenIfOverriden: false,
     }),
@@ -69,14 +69,14 @@ export const getDonorWithRecalcStatsIgnoreOverridden = (donor: Donor) => {
   return donor;
 };
 
-export const updateDonorStatsForRegistrationCommit = (donor: DeepReadonly<Donor>) => {
+export const updateDonorStatsFromRegistrationCommit = (donor: DeepReadonly<Donor>) => {
   // no aggreagated info so donor has no clinical submission, nothing to calculate
   if (!donor.aggregatedInfoStats) return donor;
 
   const mutableDonor = cloneDeep(donor) as Donor;
 
   // specimen core stats can change from sample registration when specimens are added
-  calcDonorEntityCoreStat(mutableDonor, ClinicalEntitySchemaNames.SPECIMEN, {
+  calcDonorCoreEntityStats(mutableDonor, ClinicalEntitySchemaNames.SPECIMEN, {
     recalcEvenIfComplete: true,
     recalcEvenIfOverriden: true,
   });
@@ -86,16 +86,47 @@ export const updateDonorStatsForRegistrationCommit = (donor: DeepReadonly<Donor>
   return F(mutableDonor);
 };
 
-export const updateDonorEntityStatsForSubmissioncommit = (
+export const updateDonorStatsFromSubmissionCommit = (
   donor: Donor,
   clinicalType: ClinicalEntitySchemaNames,
 ) => {
   if (isCoreEntity(clinicalType)) {
-    calcDonorEntityCoreStat(donor, clinicalType as CoreClinicalEntites, {
+    calcDonorCoreEntityStats(donor, clinicalType as CoreClinicalEntites, {
       recalcEvenIfComplete: false,
       recalcEvenIfOverriden: true,
     });
   }
+};
+
+export const forceRecalcDonorCoreEntityStats = (
+  donor: DeepReadonly<Donor>,
+  coreStatOverride: any = {},
+) => {
+  if (!isValidCoreStatOverride(coreStatOverride)) {
+    throw new Error(`Invalid coreStatOverride`);
+  }
+
+  const donorUpdated = cloneDeep(donor) as Donor;
+
+  coreClinialEntities.forEach(type =>
+    calcDonorCoreEntityStats(donorUpdated, type, {
+      recalcEvenIfComplete: true,
+      recalcEvenIfOverriden: true,
+    }),
+  );
+
+  const newCoreCompletion = {
+    ...donorUpdated.aggregatedInfoStats?.coreEntitiesStats, // set recalculated core completion
+    ...coreStatOverride, // merge coreStatOverride
+  };
+
+  donorUpdated.aggregatedInfoStats = {
+    ...donorUpdated.aggregatedInfoStats,
+    coreEntitiesStats: newCoreCompletion,
+    overriddenCoreEntities: Object.keys(coreStatOverride || {}),
+  };
+
+  return donorUpdated;
 };
 
 // currently invalid core entities are set to zero
@@ -119,37 +150,6 @@ export const setInvalidCoreEntityStatsForMigration = (
     overriddenCoreEntities: overriddenCoreEntities,
   };
   return mutableDonor;
-};
-
-export const forceRecalcDonorCoreEntitiesStats = (
-  donor: DeepReadonly<Donor>,
-  coreStatOverride: any = {},
-) => {
-  if (!isValidCoreStatOverride(coreStatOverride)) {
-    throw new Error(`Invalid coreStatOverride`);
-  }
-
-  const donorUpdated = cloneDeep(donor) as Donor;
-
-  coreClinialEntities.forEach(type =>
-    calcDonorEntityCoreStat(donorUpdated, type, {
-      recalcEvenIfComplete: true,
-      recalcEvenIfOverriden: true,
-    }),
-  );
-
-  const newCoreCompletion = {
-    ...donorUpdated.aggregatedInfoStats?.coreEntitiesStats, // set recalculated core completion
-    ...coreStatOverride, // merge coreStatOverride
-  };
-
-  donorUpdated.aggregatedInfoStats = {
-    ...donorUpdated.aggregatedInfoStats,
-    coreEntitiesStats: newCoreCompletion,
-    overriddenCoreEntities: Object.keys(coreStatOverride || {}),
-  };
-
-  return donorUpdated;
 };
 
 const getEmptyCoreStats = (): Record<CoreClinicalEntites, number> => {
