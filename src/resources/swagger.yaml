@@ -748,7 +748,7 @@ paths:
         '404':
           description: no matching sample found
 
-  /clinical/donor/{donorId}/aggregated-info-stats:
+  /clinical/donor/{donorId}/completeness-stats:
     patch:
       tags:
         - Patch Operations
@@ -773,13 +773,13 @@ paths:
                   properties:
                     donor:
                       type: number
-                    treatment:
+                    treatments:
                       type: number
-                    primary_diagnosis:
+                    primaryDiagnosis:
                       type: number
-                    follow_up:
+                    followUps:
                       type: number
-                    specimen:
+                    specimens:
                       type: number
       responses:
         '200':

@@ -660,7 +660,7 @@ namespace MigrationManager {
   ) => {
     const programIsBeingUpdated =
       donorBeforeMigration.schemaMetadata.isValid !== donorAfterMigration.schemaMetadata.isValid ||
-      !_.isEqual(donorBeforeMigration.aggregatedInfoStats, donorAfterMigration.aggregatedInfoStats);
+      !_.isEqual(donorBeforeMigration.completenessStats, donorAfterMigration.completenessStats);
     if (programIsBeingUpdated) {
       programsWithChanges.add(donorAfterMigration.programId);
     }
@@ -741,7 +741,7 @@ namespace MigrationManager {
   const updateStatsForValidDonorToBe = async (donorBeforeSetValid: DeepReadonly<Donor>) => {
     // donor has no aggregated stats or it was previously invalid, so need to calculate for entire donor
     if (
-      isEmpty(donorBeforeSetValid.aggregatedInfoStats) ||
+      isEmpty(donorBeforeSetValid.completenessStats) ||
       !donorBeforeSetValid.schemaMetadata.isValid
     ) {
       return recalculateDonorStatsHoldOverridden(_.cloneDeep(donorBeforeSetValid) as Donor);

@@ -1422,14 +1422,7 @@ describe('Submission Api', () => {
           // merge shouldn't have mutated donor except for donor.clinicalInfo
           chai
             .expect(updatedDonor)
-            .excluding([
-              'clinicalInfo',
-              'updatedAt',
-              '__v',
-              'createdAt',
-              'aggregatedInfoStats',
-              'clinicalInfoStats',
-            ])
+            .excluding(['clinicalInfo', 'updatedAt', '__v', 'createdAt', 'completenessStats'])
             .to.deep.eq(donor);
           chai.expect(updatedDonor.clinicalInfo).to.exist;
           chai.expect(updatedDonor.clinicalInfo).to.deep.include({
@@ -1704,12 +1697,12 @@ describe('Submission Api', () => {
       await validateSubmission();
       await commitActiveSubmission();
       const [DonorBeforeUpdate] = await findInDb(dburl, 'donors', donorFilter);
-      DonorBeforeUpdate.aggregatedInfoStats.coreEntitiesStats.should.deep.include({
-        [ClinicalEntitySchemaNames.DONOR]: 1,
-        [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: 1,
-        [ClinicalEntitySchemaNames.TREATMENT]: 1,
-        [ClinicalEntitySchemaNames.FOLLOW_UP]: 0,
-        [ClinicalEntitySchemaNames.SPECIMEN]: 0,
+      DonorBeforeUpdate.completenessStats.coreEntitiesStats.should.deep.include({
+        donor: 1,
+        primaryDiagnosis: 1,
+        treatments: 1,
+        followUps: 0,
+        specimens: 0,
       });
 
       // Imagine donor adds specimens via registration
@@ -1750,12 +1743,12 @@ describe('Submission Api', () => {
           res.body.should.be.empty;
           await assertDbCollectionEmpty(dburl, 'activesubmissions');
           const [UpdatedDonor] = await findInDb(dburl, 'donors', donorFilter);
-          UpdatedDonor.aggregatedInfoStats.coreEntitiesStats.should.deep.include({
-            [ClinicalEntitySchemaNames.DONOR]: 1,
-            [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: 1,
-            [ClinicalEntitySchemaNames.TREATMENT]: 1,
-            [ClinicalEntitySchemaNames.FOLLOW_UP]: 1,
-            [ClinicalEntitySchemaNames.SPECIMEN]: 0.5, // half of registered specimen's have records
+          UpdatedDonor.completenessStats.coreEntitiesStats.should.deep.include({
+            donor: 1,
+            primaryDiagnosis: 1,
+            treatments: 1,
+            followUps: 1,
+            specimens: 0.5, // half of registered specimen's have records
           });
         });
     });
@@ -1895,13 +1888,13 @@ describe('Submission Api', () => {
             clinicalInfo: {},
           },
         ],
-        aggregatedInfoStats: {
+        completenessStats: {
           coreEntitiesStats: {
-            [ClinicalEntitySchemaNames.DONOR]: 0,
-            [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: 0,
-            [ClinicalEntitySchemaNames.TREATMENT]: 1, // overridden stat
-            [ClinicalEntitySchemaNames.FOLLOW_UP]: 0,
-            [ClinicalEntitySchemaNames.SPECIMEN]: 0,
+            donor: 0,
+            primaryDiagnosis: 0,
+            treatments: 1, // overridden stat
+            followUps: 0,
+            specimens: 0,
           },
           overriddenCoreEntities: [ClinicalEntitySchemaNames.TREATMENT],
         },
@@ -1925,12 +1918,12 @@ describe('Submission Api', () => {
           });
           // donor was invalid but is now valid after submission, so stats should be updated
           updatedDonor.schemaMetadata.isValid.should.eq(true);
-          updatedDonor.aggregatedInfoStats.coreEntitiesStats.should.deep.include({
-            [ClinicalEntitySchemaNames.DONOR]: 1,
-            [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: 0,
-            [ClinicalEntitySchemaNames.TREATMENT]: 1, // overridden field is same as before, despite no treatment record
-            [ClinicalEntitySchemaNames.FOLLOW_UP]: 0,
-            [ClinicalEntitySchemaNames.SPECIMEN]: 0.5, // one of the tumour/normal specimen has record
+          updatedDonor.completenessStats.coreEntitiesStats.should.deep.include({
+            donor: 1,
+            primaryDiagnosis: 0,
+            treatments: 1, // overridden field is same as before, despite no treatment record
+            followUps: 0,
+            specimens: 0.5, // one of the tumour/normal specimen has record
           });
         });
     });

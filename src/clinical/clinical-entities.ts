@@ -14,7 +14,7 @@ export interface Donor {
   treatments?: Array<Treatment>;
   createdAt?: string;
   updatedAt?: string;
-  aggregatedInfoStats?: AggregateClinicalInfoStats;
+  completenessStats?: AggregateClinicalInfoStats;
 }
 
 export interface AggregateClinicalInfoStats {
@@ -67,12 +67,12 @@ export type DonorMap = Readonly<{ [submitterId: string]: Donor }>;
 
 export type DonorBySubmitterIdMap = { [k: string]: DeepReadonly<Donor> };
 
-export type CoreEntitiesStats = {
+export interface CoreEntitiesStats {
   donor: number;
-  specimen: number;
-  primary_diagnosis: number;
-  follow_up: number;
-  treatment: number;
-};
+  specimens: number;
+  primaryDiagnosis: number;
+  followUps: number;
+  treatments: number;
+}
 
 export type CoreClinicalEntites = keyof CoreEntitiesStats;

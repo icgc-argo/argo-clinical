@@ -40,7 +40,7 @@ class ClinicalController {
   }
 
   @HasFullWriteAccess()
-  async overrideDonorStats(req: Request, res: Response) {
+  async patchDonorCompletenessStats(req: Request, res: Response) {
     const strDonorId = req.params.donorId;
 
     // extract number only since that's what is stored in db

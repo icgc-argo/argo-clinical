@@ -317,7 +317,7 @@ const DonorSchema = new mongoose.Schema(
     followUps: [FollowUpSchema],
     treatments: [TreatmentSchema],
     schemaMetadata: {},
-    aggregatedInfoStats: {},
+    completenessStats: {},
   },
   { timestamps: true, minimize: false }, // minimize false is to avoid omitting clinicalInfo:{}
 );

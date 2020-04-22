@@ -282,13 +282,13 @@ describe('schema migration api', () => {
           cause_of_death: 'Died of cancer',
           survival_time: 67,
         },
-        aggregatedInfoStats: {
+        completenessStats: {
           coreEntitiesStats: {
-            [ClinicalEntitySchemaNames.DONOR]: 1,
-            [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: 0,
-            [ClinicalEntitySchemaNames.TREATMENT]: 1, // treatment has been overridden because donor never got any treatment
-            [ClinicalEntitySchemaNames.FOLLOW_UP]: 0,
-            [ClinicalEntitySchemaNames.SPECIMEN]: 0,
+            donor: 1,
+            primaryDiagnosis: 0,
+            treatments: 1, // treatment has been overridden because donor never got any treatment
+            followUps: 0,
+            specimens: 0,
           },
           overriddenCoreEntities: [ClinicalEntitySchemaNames.TREATMENT],
         },
@@ -300,28 +300,28 @@ describe('schema migration api', () => {
       const updatedDonor = await findInDb(dburl, 'donors', {});
 
       // donor 1 stats after migraiton, added entity completion
-      chai.expect(updatedDonor[0].aggregatedInfoStats.coreEntitiesStats).to.deep.include({
-        [ClinicalEntitySchemaNames.DONOR]: 1,
-        [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: 0,
-        [ClinicalEntitySchemaNames.TREATMENT]: 0,
-        [ClinicalEntitySchemaNames.FOLLOW_UP]: 0,
-        [ClinicalEntitySchemaNames.SPECIMEN]: 0,
+      chai.expect(updatedDonor[0].completenessStats.coreEntitiesStats).to.deep.include({
+        donor: 1,
+        primaryDiagnosis: 0,
+        treatments: 0,
+        followUps: 0,
+        specimens: 0,
       });
       // donor 2 stats after migraiton
-      chai.expect(updatedDonor[1].aggregatedInfoStats.coreEntitiesStats).to.deep.include({
-        [ClinicalEntitySchemaNames.DONOR]: 1,
-        [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: 1,
-        [ClinicalEntitySchemaNames.TREATMENT]: 0,
-        [ClinicalEntitySchemaNames.FOLLOW_UP]: 0,
-        [ClinicalEntitySchemaNames.SPECIMEN]: 0,
+      chai.expect(updatedDonor[1].completenessStats.coreEntitiesStats).to.deep.include({
+        donor: 1,
+        primaryDiagnosis: 1,
+        treatments: 0,
+        followUps: 0,
+        specimens: 0,
       });
       // donor 3 stats after migraiton
-      chai.expect(updatedDonor[2].aggregatedInfoStats.coreEntitiesStats).to.deep.include({
-        [ClinicalEntitySchemaNames.DONOR]: 0, // donor info is invalid so set to zero
-        [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: 0,
-        [ClinicalEntitySchemaNames.TREATMENT]: 1, // no treatment submitted, but overridden entity remains unchanged
-        [ClinicalEntitySchemaNames.FOLLOW_UP]: 0,
-        [ClinicalEntitySchemaNames.SPECIMEN]: 0,
+      chai.expect(updatedDonor[2].completenessStats.coreEntitiesStats).to.deep.include({
+        donor: 0, // donor info is invalid so set to zero
+        primaryDiagnosis: 0,
+        treatments: 1, // no treatment submitted, but overridden entity remains unchanged
+        followUps: 0,
+        specimens: 0,
       });
 
       chai.assert(sendProgramUpdatedMessageFunc.calledOnceWith(programId));
