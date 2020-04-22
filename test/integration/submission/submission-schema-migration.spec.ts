@@ -283,14 +283,14 @@ describe('schema migration api', () => {
           survival_time: 67,
         },
         completenessStats: {
-          coreEntitiesStats: {
+          coreCompletion: {
             donor: 1,
             primaryDiagnosis: 0,
             treatments: 1, // treatment has been overridden because donor never got any treatment
             followUps: 0,
             specimens: 0,
           },
-          overriddenCoreEntities: [ClinicalEntitySchemaNames.TREATMENT],
+          overriddenCoreCompletion: ['treatments'],
         },
       });
       await insertData(dburl, 'donors', donorInvalidWithNewSchema);
@@ -300,7 +300,7 @@ describe('schema migration api', () => {
       const updatedDonor = await findInDb(dburl, 'donors', {});
 
       // donor 1 stats after migraiton, added entity completion
-      chai.expect(updatedDonor[0].completenessStats.coreEntitiesStats).to.deep.include({
+      chai.expect(updatedDonor[0].completenessStats.coreCompletion).to.deep.include({
         donor: 1,
         primaryDiagnosis: 0,
         treatments: 0,
@@ -308,7 +308,7 @@ describe('schema migration api', () => {
         specimens: 0,
       });
       // donor 2 stats after migraiton
-      chai.expect(updatedDonor[1].completenessStats.coreEntitiesStats).to.deep.include({
+      chai.expect(updatedDonor[1].completenessStats.coreCompletion).to.deep.include({
         donor: 1,
         primaryDiagnosis: 1,
         treatments: 0,
@@ -316,13 +316,16 @@ describe('schema migration api', () => {
         specimens: 0,
       });
       // donor 3 stats after migraiton
-      chai.expect(updatedDonor[2].completenessStats.coreEntitiesStats).to.deep.include({
+      chai.expect(updatedDonor[2].completenessStats.coreCompletion).to.deep.include({
         donor: 0, // donor info is invalid so set to zero
         primaryDiagnosis: 0,
         treatments: 1, // no treatment submitted, but overridden entity remains unchanged
         followUps: 0,
         specimens: 0,
       });
+      chai
+        .expect(updatedDonor[2].completenessStats.overriddenCoreCompletion)
+        .to.deep.eq(['treatments']);
 
       chai.assert(sendProgramUpdatedMessageFunc.calledOnceWith(programId));
     });

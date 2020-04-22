@@ -14,12 +14,12 @@ export interface Donor {
   treatments?: Array<Treatment>;
   createdAt?: string;
   updatedAt?: string;
-  completenessStats?: AggregateClinicalInfoStats;
+  completenessStats?: CompetenessStats;
 }
 
-export interface AggregateClinicalInfoStats {
-  coreEntitiesStats: CoreEntitiesStats;
-  overriddenCoreEntities: string[];
+export interface CompetenessStats {
+  coreCompletion: CoreCompletionStats;
+  overriddenCoreCompletion: CoreClinicalEntites[];
 }
 
 export interface SchemaMetadata {
@@ -67,7 +67,7 @@ export type DonorMap = Readonly<{ [submitterId: string]: Donor }>;
 
 export type DonorBySubmitterIdMap = { [k: string]: DeepReadonly<Donor> };
 
-export interface CoreEntitiesStats {
+export interface CoreCompletionStats {
   donor: number;
   specimens: number;
   primaryDiagnosis: number;
@@ -75,4 +75,4 @@ export interface CoreEntitiesStats {
   treatments: number;
 }
 
-export type CoreClinicalEntites = keyof CoreEntitiesStats;
+export type CoreClinicalEntites = keyof CoreCompletionStats;

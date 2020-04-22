@@ -1697,7 +1697,7 @@ describe('Submission Api', () => {
       await validateSubmission();
       await commitActiveSubmission();
       const [DonorBeforeUpdate] = await findInDb(dburl, 'donors', donorFilter);
-      DonorBeforeUpdate.completenessStats.coreEntitiesStats.should.deep.include({
+      DonorBeforeUpdate.completenessStats.coreCompletion.should.deep.include({
         donor: 1,
         primaryDiagnosis: 1,
         treatments: 1,
@@ -1743,7 +1743,7 @@ describe('Submission Api', () => {
           res.body.should.be.empty;
           await assertDbCollectionEmpty(dburl, 'activesubmissions');
           const [UpdatedDonor] = await findInDb(dburl, 'donors', donorFilter);
-          UpdatedDonor.completenessStats.coreEntitiesStats.should.deep.include({
+          UpdatedDonor.completenessStats.coreCompletion.should.deep.include({
             donor: 1,
             primaryDiagnosis: 1,
             treatments: 1,
@@ -1889,14 +1889,14 @@ describe('Submission Api', () => {
           },
         ],
         completenessStats: {
-          coreEntitiesStats: {
+          coreCompletion: {
             donor: 0,
             primaryDiagnosis: 0,
             treatments: 1, // overridden stat
             followUps: 0,
             specimens: 0,
           },
-          overriddenCoreEntities: [ClinicalEntitySchemaNames.TREATMENT],
+          overriddenCoreCompletion: ['treatments'],
         },
       });
       await insertData(dburl, 'donors', invalidDonor);
@@ -1918,13 +1918,16 @@ describe('Submission Api', () => {
           });
           // donor was invalid but is now valid after submission, so stats should be updated
           updatedDonor.schemaMetadata.isValid.should.eq(true);
-          updatedDonor.completenessStats.coreEntitiesStats.should.deep.include({
+          updatedDonor.completenessStats.coreCompletion.should.deep.include({
             donor: 1,
             primaryDiagnosis: 0,
             treatments: 1, // overridden field is same as before, despite no treatment record
             followUps: 0,
             specimens: 0.5, // one of the tumour/normal specimen has record
           });
+          chai
+            .expect(updatedDonor.completenessStats.overriddenCoreCompletion)
+            .to.deep.eq(['treatments']);
         });
     });
   });
