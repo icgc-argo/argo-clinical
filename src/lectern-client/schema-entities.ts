@@ -3,14 +3,14 @@ import { DeepReadonly } from 'deep-freeze';
 const L = loggerFor(__filename);
 
 export class DataRecord {
-  readonly [k: string]: string;
+  readonly [k: string]: string | string[];
 }
 
 export class TypedDataRecord {
   readonly [k: string]: SchemaTypes;
 }
 
-export type SchemaTypes = string | boolean | number | undefined;
+export type SchemaTypes = string | string[] | boolean | boolean[] | number | number[] | undefined;
 
 export interface SchemasDictionary {
   version: string;
@@ -57,18 +57,23 @@ export interface FieldDefinition {
   description: string;
   meta?: { key?: boolean; default?: SchemaTypes; core?: boolean };
   restrictions?: {
-    codeList?: Array<string | number>;
+    codeList?: CodeListRestriction;
     regex?: string;
     script?: Array<string> | string;
     required?: boolean;
-    range?: {
-      min?: number;
-      max?: number;
-      exclusiveMin?: number;
-      exclusiveMax?: number;
-    };
+    range?: RangeRestriction;
   };
+  isArray?: boolean;
 }
+
+export type CodeListRestriction = Array<string | number>;
+
+export type RangeRestriction = {
+  min?: number;
+  max?: number;
+  exclusiveMin?: number;
+  exclusiveMax?: number;
+};
 
 export enum ValueType {
   STRING = 'string',

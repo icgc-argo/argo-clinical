@@ -441,6 +441,7 @@
             },
             {
               "name": "presenting_symptoms",
+              "isArray": true,
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {

@@ -38,7 +38,7 @@ class SubmissionController {
     const programId = req.params.programId;
     const creator = ControllerUtils.getUserFromToken(req);
     const file = req.file;
-    let records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
+    let records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj>;
     try {
       records = await TsvUtils.tsvToJson(file.path);
       if (records.length === 0) {
@@ -116,7 +116,7 @@ class SubmissionController {
         if (!file.originalname.match(/.*\.tsv$/)) {
           throw new Error('invalid extension');
         }
-        let records: ReadonlyArray<Readonly<{ [fieldName: string]: string }>> = [];
+        let records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj> = [];
         records = await TsvUtils.tsvToJson(file.path);
         if (records.length === 0) {
           throw new Error('TSV has no records!');

@@ -5,6 +5,8 @@ import {
   SchemaProcessingResult,
   FieldNamesByPriorityMap,
   BatchProcessingResult,
+  CodeListRestriction,
+  RangeRestriction,
 } from './schema-entities';
 import vm from 'vm';
 import {
@@ -16,10 +18,21 @@ import {
   SchemaValidationErrorTypes,
 } from './schema-entities';
 
-import { Checks, notEmpty, isEmptyString, isAbsent, F, isNotAbsent } from '../utils';
+import {
+  Checks,
+  notEmpty,
+  isEmptyString,
+  isAbsent,
+  F,
+  isNotAbsent,
+  isStringArray,
+  isString,
+  isEmpty,
+} from '../utils';
 import schemaErrorMessage from './schema-error-messages';
 import _ from 'lodash';
 import { loggerFor } from '../logger';
+import { DeepReadonly } from 'deep-freeze';
 const L = loggerFor(__filename);
 
 export const getSchemaFieldNamesWithPriority = (
@@ -65,7 +78,7 @@ export const processRecords = (
   records.forEach((r, i) => {
     const result = process(dataSchema, definition, r, i);
     validationErrors = validationErrors.concat(result.validationErrors);
-    processedRecords.push(result.processedRecord);
+    processedRecords.push(_.cloneDeep(result.processedRecord) as TypedDataRecord);
   });
 
   L.debug(
@@ -110,7 +123,7 @@ export const process = (
   L.debug(`converted row #${index} from raw strings`);
   const postTypeConversionValidationResult = validateAfterTypeConversion(
     schemaDef,
-    convertedRecord,
+    _.cloneDeep(convertedRecord) as DataRecord,
     index,
   );
 
@@ -136,26 +149,31 @@ export const process = (
  */
 const populateDefaults = (
   schemaDef: Readonly<SchemaDefinition>,
-  record: DataRecord,
+  record: DeepReadonly<DataRecord>,
   index: number,
 ): DataRecord => {
   Checks.checkNotNull('records', record);
   L.debug(`in populateDefaults ${schemaDef.name}, ${record}`);
-  const mutableRecord: RawMutableRecord = { ...record };
+  const mutableRecord: RawMutableRecord = _.cloneDeep(record) as RawMutableRecord;
   const x: SchemaDefinition = schemaDef;
   schemaDef.fields.forEach(field => {
-    if (
-      isNotAbsent(record[field.name]) &&
-      record[field.name].trim() === '' &&
-      field.meta &&
-      field.meta.default
-    ) {
-      L.debug(`populating Default: ${field.meta.default} for ${field.name} in record : ${record}`);
-      mutableRecord[field.name] = `${field.meta.default}`;
+    const value = record[field.name];
+    if (isString(value)) {
+      if (isNotAbsent(value) && value.trim() === '' && field.meta && field.meta.default) {
+        L.debug(
+          `populating Default: ${field.meta.default} for ${field.name} in record : ${record}`,
+        );
+        mutableRecord[field.name] = `${field.meta.default}`;
+      }
+      return undefined;
     }
-    return undefined;
+    if (isStringArray(value)) {
+      // TODO
+      return undefined;
+    }
   });
-  return F(mutableRecord);
+
+  return _.cloneDeep(mutableRecord);
 };
 
 const convertFromRawStrings = (
@@ -163,7 +181,7 @@ const convertFromRawStrings = (
   record: DataRecord,
   index: number,
   recordErrors: ReadonlyArray<SchemaValidationError>,
-): TypedDataRecord => {
+): DeepReadonly<TypedDataRecord> => {
   const mutableRecord: MutableRecord = { ...record };
   schemaDef.fields.forEach(field => {
     // if there was an error for this field don't convert it. this means a string was passed instead of number or boolean
@@ -185,44 +203,57 @@ const convertFromRawStrings = (
       return;
     }
 
-    if (isEmptyString(record[field.name])) {
+    // need to check how it behaves for record[field.name] == ""
+    if (isEmpty(record[field.name])) {
       mutableRecord[field.name] = undefined;
       return;
     }
 
     const valueType = field.valueType;
-    let formattedFieldValue = record[field.name];
-    const rawValue = formattedFieldValue;
+    const rawValue = record[field.name];
 
-    // convert field to match corresponding enum from codelist, if possible
-    if (field.restrictions && field.restrictions.codeList && valueType === ValueType.STRING) {
-      const formattedField = field.restrictions.codeList.find(
-        e => e.toString().toLowerCase() === record[field.name].toString().toLowerCase(),
+    if (field.isArray) {
+      const rawValues = convertToArray(rawValue);
+      mutableRecord[field.name] = rawValues.map(
+        rv => getTypedValue(field, valueType, rv) as any, // fix type here
       );
-      if (formattedField) {
-        formattedFieldValue = formattedField as string;
-      }
+    } else {
+      mutableRecord[field.name] = getTypedValue(field, valueType, rawValue as string);
     }
-
-    let typedValue: SchemaTypes = record[field.name];
-    switch (valueType) {
-      case ValueType.STRING:
-        typedValue = formattedFieldValue;
-        break;
-      case ValueType.INTEGER:
-        typedValue = Number(rawValue);
-        break;
-      case ValueType.NUMBER:
-        typedValue = Number(rawValue);
-        break;
-      case ValueType.BOOLEAN:
-        // we have to lower case in case of inconsistent letters (boolean requires all small letters).
-        typedValue = Boolean(rawValue.toLowerCase());
-        break;
-    }
-    mutableRecord[field.name] = typedValue;
   });
   return F(mutableRecord);
+};
+
+const getTypedValue = (field: FieldDefinition, valueType: ValueType, rawValue: string) => {
+  let formattedFieldValue = rawValue;
+  // convert field to match corresponding enum from codelist, if possible
+  if (field.restrictions && field.restrictions.codeList && valueType === ValueType.STRING) {
+    const formattedField = field.restrictions.codeList.find(
+      e => e.toString().toLowerCase() === rawValue.toString().toLowerCase(),
+    );
+    if (formattedField) {
+      formattedFieldValue = formattedField as string;
+    }
+  }
+
+  let typedValue: SchemaTypes = rawValue;
+  switch (valueType) {
+    case ValueType.STRING:
+      typedValue = formattedFieldValue;
+      break;
+    case ValueType.INTEGER:
+      typedValue = Number(rawValue);
+      break;
+    case ValueType.NUMBER:
+      typedValue = Number(rawValue);
+      break;
+    case ValueType.BOOLEAN:
+      // we have to lower case in case of inconsistent letters (boolean requires all small letters).
+      typedValue = Boolean(rawValue.toLowerCase());
+      break;
+  }
+
+  return typedValue;
 };
 
 /**
@@ -238,6 +269,7 @@ const validate = (
   const majorErrors = validation
     .runValidationPipeline(record, index, schemaDef.fields, [
       validation.validateFieldNames,
+      validation.validateNonArrayFields,
       validation.validateRequiredFields,
       validation.validateValueTypes,
     ])
@@ -268,7 +300,7 @@ export type ProcessingFunction = (
 ) => any;
 
 type MutableRecord = { [key: string]: SchemaTypes };
-type RawMutableRecord = { [key: string]: string };
+type RawMutableRecord = { [key: string]: string | string[] };
 
 namespace validation {
   // these validation functions run AFTER the record has been converted to the correct types from raw strings
@@ -314,15 +346,16 @@ namespace validation {
     return fields
       .map(field => {
         const value = rec[field.name];
-        if (typeof value !== 'string') {
+        if (typeof value !== 'string' && !isStringArray(value)) {
           return undefined;
         }
 
-        if (
-          field.restrictions &&
-          field.restrictions.regex &&
-          isInvalidRegexValue(field.restrictions.regex, value)
-        ) {
+        const regex = field.restrictions?.regex;
+        if (!isRegexExists(regex)) return undefined; // type guard
+
+        const vals = convertToArray(value);
+        const invalidVals = vals.filter(v => isInvalidRegexValue(regex, v));
+        if (invalidVals.length !== 0) {
           return buildError(SchemaValidationErrorTypes.INVALID_BY_REGEX, field.name, index);
         }
         return undefined;
@@ -338,17 +371,18 @@ namespace validation {
     return fields
       .map(field => {
         const value = rec[field.name];
-        if (value && typeof value !== 'number') {
+        if (typeof value !== 'number' && !isNumberArray(value)) {
           return undefined;
         }
+        const range = field.restrictions?.range;
+        if (!isRangeExists(range)) return undefined; // type guard
 
-        if (
-          field.restrictions &&
-          field.restrictions.range &&
-          isOutOfRange(field.restrictions.range, value as number | undefined)
-        ) {
+        const val = convertToArray(value);
+        const invalidVals = val.filter(v => isOutOfRange(range, v));
+        if (invalidVals.length !== 0) {
           return buildError(SchemaValidationErrorTypes.INVALID_BY_RANGE, field.name, index);
         }
+
         return undefined;
       })
       .filter(notEmpty);
@@ -381,12 +415,20 @@ namespace validation {
   ) => {
     return fields
       .map(field => {
-        if (
-          field.restrictions &&
-          field.restrictions.codeList &&
-          isInvalidEnumValue(field.restrictions.codeList, rec[field.name])
-        ) {
-          return buildError(SchemaValidationErrorTypes.INVALID_ENUM_VALUE, field.name, index);
+        const codeList = field.restrictions?.codeList || undefined;
+        if (!isCodeListExists(codeList)) return undefined; // type guard
+
+        const vals = convertToArray(rec[field.name]); // put all values into array if not already done
+        const invalidValues = vals.filter(val => isInvalidEnumValue(codeList, val));
+        if (invalidValues.length !== 0) {
+          return buildError(
+            SchemaValidationErrorTypes.INVALID_ENUM_VALUE,
+            field.name,
+            index,
+            //   {
+            //   invalidValues,
+            // }
+          );
         }
         return undefined;
       })
@@ -400,10 +442,21 @@ namespace validation {
   ) => {
     return fields
       .map(field => {
-        if (rec[field.name] && isInvalidFieldType(field.valueType, rec[field.name])) {
-          return buildError(SchemaValidationErrorTypes.INVALID_FIELD_VALUE_TYPE, field.name, index);
-        }
-        return undefined;
+        if (!rec[field.name]) return undefined;
+
+        const vals = convertToArray(rec[field.name]); // put all values into array
+        const invalidValues = vals.filter(val => isInvalidFieldType(field.valueType, val));
+
+        if (invalidValues.length === 0) return undefined;
+
+        return buildError(
+          SchemaValidationErrorTypes.INVALID_FIELD_VALUE_TYPE,
+          field.name,
+          index,
+          //   {
+          //   invalidValues,
+          // }
+        );
       })
       .filter(notEmpty);
   };
@@ -439,6 +492,21 @@ namespace validation {
       .filter(notEmpty);
   };
 
+  export const validateNonArrayFields: ValidationFunction = (
+    record: Readonly<DataRecord>,
+    index: number,
+    fields: Array<FieldDefinition>,
+  ) => {
+    return fields
+      .map(field => {
+        if (!field.isArray && isStringArray(record[field.name])) {
+          return buildError(SchemaValidationErrorTypes.INVALID_FIELD_VALUE_TYPE, field.name, index);
+        }
+        return undefined;
+      })
+      .filter(notEmpty);
+  };
+
   export const getValidFields = (
     errs: ReadonlyArray<SchemaValidationError>,
     fields: ReadonlyArray<FieldDefinition>,
@@ -456,17 +524,33 @@ namespace validation {
       case ValueType.STRING:
         return false;
       case ValueType.INTEGER:
-        return Number(value) == NaN || !Number.isInteger(Number(value));
+        return isNaN(Number(value)) || !Number.isInteger(Number(value));
       case ValueType.NUMBER:
-        return Number(value) == NaN;
+        return isNaN(Number(value));
       case ValueType.BOOLEAN:
         return !(value.toLowerCase() === 'true' || value.toLowerCase() === 'false');
     }
   };
 
   export const isRequiredMissing = (field: FieldDefinition, record: DataRecord) => {
-    return field.restrictions && field.restrictions.required && isEmptyString(record[field.name]);
+    const isRequired = field.restrictions && field.restrictions.required;
+    if (!isRequired) return false;
+
+    const vals = convertToArray(record[field.name]);
+    return vals.every(isEmptyString);
   };
+
+  function isCodeListExists(codeList: any): codeList is CodeListRestriction {
+    return codeList !== undefined && codeList.length > 0;
+  }
+
+  function isRegexExists(regex: any): regex is string {
+    return regex !== undefined;
+  }
+
+  function isRangeExists(range: any): range is RangeRestriction {
+    return range !== undefined;
+  }
 
   const isOutOfRange = (range: any, value: number | undefined) => {
     if (value == undefined) return false;
@@ -480,7 +564,7 @@ namespace validation {
     return invalidRange;
   };
   const isInvalidEnumValue = (
-    codeList: Array<string | number>,
+    codeList: CodeListRestriction,
     value: string | boolean | number | undefined,
   ) => {
     // optional field if the value is absent at this point
@@ -494,6 +578,10 @@ namespace validation {
     const regexPattern = new RegExp(regex);
     return !regexPattern.test(value);
   };
+
+  function isNumberArray(values: any): values is number[] {
+    return Array.isArray(values) && !values.some(isNaN);
+  }
 
   const validateWithScript = (
     field: FieldDefinition,
@@ -561,3 +649,7 @@ namespace validation {
     return { ...errorData, message: schemaErrorMessage(errorType, errorData) };
   };
 }
+
+const convertToArray = <T>(val: T | T[]): T[] => {
+  return _.concat([], val);
+};

@@ -9,15 +9,16 @@ import _ from 'lodash';
 const fsPromises = fs.promises;
 
 export namespace TsvUtils {
-  export const tsvToJson = async (
-    file: string,
-  ): Promise<ReadonlyArray<{ [key: string]: string }>> => {
+  export type TsvRecordAsJsonObj = { [header: string]: string | string[] };
+  // type TsvRecordAsJsonObj = { [header: string]: string };
+
+  export const tsvToJson = async (file: string): Promise<ReadonlyArray<TsvRecordAsJsonObj>> => {
     const contents = await fsPromises.readFile(file, 'utf-8');
     const arr = parseTsvToJson(contents);
     return arr;
   };
 
-  export const parseTsvToJson = (content: string): ReadonlyArray<{ [key: string]: string }> => {
+  export const parseTsvToJson = (content: string): ReadonlyArray<TsvRecordAsJsonObj> => {
     const lines = content.split('\n');
     const headers = lines
       .slice(0, 1)[0]
@@ -29,8 +30,14 @@ export namespace TsvUtils {
         return undefined;
       }
       const data = line.split('\t');
-      return headers.reduce<{ [k: string]: string }>((obj, nextKey, index) => {
-        obj[nextKey] = (data[index] && data[index].trim()) || '';
+      return headers.reduce<TsvRecordAsJsonObj>((obj, nextKey, index) => {
+        const arrData = (data[index] || '')
+          .trim()
+          .split(',')
+          .map(s => s.trim());
+
+        obj[nextKey] = arrData.length === 1 ? arrData[0] : arrData;
+        // obj[nextKey] = (data[index] && data[index].trim()) || '';
         return obj;
       }, {});
     });
@@ -123,7 +130,11 @@ export function isEmpty<TValue>(value: TValue | null | undefined): value is TVal
 }
 
 export function isString(value: any): value is string {
-  return value instanceof String;
+  return typeof value === 'string' || value instanceof String;
+}
+
+export function isStringArray(value: any | undefined | null): value is string[] {
+  return Array.isArray(value) && value.every(isString);
 }
 
 // returns true if value matches at least one of the expressions

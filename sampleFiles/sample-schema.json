@@ -94,7 +94,9 @@
               "meta": {
                 "validationDependency": true,
                 "primaryId": true,
-                "examples": "PACA-AU,BR-CA"
+                "examples": "PACA-AU,BR-CA",
+                "notes": "This is the unique id that is assigned to your program.  If you have logged into the platform, this is the Program Id that you see in the Submiission area.",
+                "displayName": "Program ID"
               },
               "restrictions": {
                 "required": true
@@ -107,7 +109,8 @@
               "meta": {
                 "validationDependency": true,
                 "primaryId": true,
-                "examples": "90234,BLD_donor_89,AML-90"
+                "examples": "90234,BLD_donor_89,AML-90",
+                "displayName": "Submitter Donor ID"
               },
               "restrictions": {
                 "required": true,
@@ -120,7 +123,8 @@
               "description": "Description of the donor self-reported gender. Gender is described as the assemblage of properties that distinguish people on the basis of their societal roles.",
               "meta": {
                 "validationDependency": true,
-                "core": true
+                "core": true,
+                "displayName": "Gender"
               },
               "restrictions": {
                 "required": true,
@@ -134,7 +138,8 @@
               "meta": {
                 "validationDependency": true,
                 "primaryId": true,
-                "examples": "LAML_PO,00445,THY_099-tumour"
+                "examples": "LAML_PO,00445,THY_099-tumour",
+                "displayName": "Submitter Specimen ID"
               },
               "restrictions": {
                 "required": true,
@@ -147,7 +152,8 @@
               "description": "Tissue source of the biospecimen.",
               "meta": {
                 "validationDependency": true,
-                "core": true
+                "core": true,
+                "displayName": "Specimen Tissue Source"
               },
               "restrictions": {
                 "required": true,
@@ -191,7 +197,8 @@
               },
               "meta": {
                 "validationDependency": true,
-                "core": true
+                "core": true,
+                "displayName": "Tumour Normal Designation"
               }
             },
             {
@@ -223,7 +230,8 @@
               },
               "meta": {
                 "validationDependency": true,
-                "core": true
+                "core": true,
+                "displayName": "Specimen Type"
               }
             },
             {
@@ -233,7 +241,8 @@
               "meta": {
                 "validationDependency": true,
                 "primaryId": true,
-                "examples": "hnc_12,CCG_34_94583,BRCA47832-3239"
+                "examples": "hnc_12,CCG_34_94583,BRCA47832-3239",
+                "displayName": "Submitter Sample ID"
               },
               "restrictions": {
                 "required": true,
@@ -246,7 +255,8 @@
               "description": "Description of the type of molecular sample used for testing.",
               "meta": {
                 "validationDependency": true,
-                "core": true
+                "core": true,
+                "displayName": "Sample Type"
               },
               "restrictions": {
                 "required": true,
@@ -278,7 +288,8 @@
               "meta": {
                 "validationDependency": true,
                 "primaryId": true,
-                "foreignKey": "sample_registration.program_id"
+                "foreignKey": "sample_registration.program_id",
+                "displayName": "Program ID"
               },
               "restrictions": {
                 "required": true
@@ -291,7 +302,8 @@
               "meta": {
                 "validationDependency": true,
                 "primaryId": true,
-                "foreignKey": "sample_registration.submitter_donor_id"
+                "foreignKey": "sample_registration.submitter_donor_id",
+                "displayName": "Submitter Donor ID"
               },
               "restrictions": {
                 "required": true,
@@ -308,7 +320,8 @@
               "valueType": "string",
               "meta": {
                 "validationDependency": true,
-                "core": true
+                "core": true,
+                "displayName": "Vital Status"
               }
             },
             {
@@ -324,7 +337,8 @@
               "meta": {
                 "core": true,
                 "dependsOn": "donor.vital_status",
-                "notes": "Cause of death is only required to be submitted if the donor's vital_status is Deceased."
+                "notes": "Cause of death is only required to be submitted if the donor's vital_status is Deceased.",
+                "displayName": "Cause of Death"
               }
             },
             {
@@ -336,7 +350,8 @@
                 "notes": "Survival_time is only required to be submitted if the donor's vital_status is Deceased.",
                 "validationDependency": true,
                 "units": "days",
-                "core": "true"
+                "core": "true",
+                "displayName": "Survival Time"
               },
               "restrictions": {
                 "script": [
@@ -350,7 +365,10 @@
               "restrictions": {
                 "codeList": ["Yes", "No", "Unknown"]
               },
-              "valueType": "string"
+              "valueType": "string",
+              "meta": {
+                "displayName": "Prior Malignancy"
+              }
             },
             {
               "description": "ICD-10 diagnostic code for type of cancer in a prior malignancy.",
@@ -358,7 +376,10 @@
               "restrictions": {
                 "regex": "[A-Z]{1}[0-9]{2}.[0-9]{0,3}[A-Z]{0,1}$"
               },
-              "valueType": "string"
+              "valueType": "string",
+              "meta": {
+                "displayName": "Cancer Type Prior Malignancy"
+              }
             },
             {
               "description": "If donor has history of prior malignancy, indicate age at previous diagnosis, in years.",
@@ -368,22 +389,34 @@
             {
               "description": "If donor has history of prior malignancy, indicate laterality of previous diagnosis.",
               "name": "laterality_of_prior_malignancy",
-              "valueType": "string"
+              "valueType": "string",
+              "meta": {
+                "displayName": "Age at Prior Malignancy"
+              }
             },
             {
               "description": "Indicate the donor's height, in centimeters (cm).",
               "name": "height",
-              "valueType": "integer"
+              "valueType": "integer",
+              "meta": {
+                "displayName": "Height"
+              }
             },
             {
               "description": "Indicate the donor's weight, in kilograms (kg).",
               "name": "weight",
-              "valueType": "integer"
+              "valueType": "integer",
+              "meta": {
+                "displayName": "Weight"
+              }
             },
             {
               "description": "Indicate the donor's Body Mass Index (BMI) in kg/m².",
               "name": "bmi",
-              "valueType": "integer"
+              "valueType": "integer",
+              "meta": {
+                "displayName": "BMI"
+              }
             },
             {
               "description": "Indicate the donor's menopause status at the time of primary diagnosis. (Codelist reference: NCI CDE ID: 2434914)",
@@ -397,22 +430,34 @@
                   "Not applicable"
                 ]
               },
-              "valueType": "string"
+              "valueType": "string",
+              "meta": {
+                "displayName": "Menopause Status"
+              }
             },
             {
               "description": "Indicate the donor's age of menarche, the first occurrence of menstruation.",
               "name": "age_at_menarche",
-              "valueType": "integer"
+              "valueType": "integer",
+              "meta": {
+                "displayName": "Age at Menarche"
+              }
             },
             {
               "description": "Indicate the number of pregnancies a donor has had.",
               "name": "number_of_pregnancies",
-              "valueType": "integer"
+              "valueType": "integer",
+              "meta": {
+                "displayName": "Number of Pregnancies"
+              }
             },
             {
               "description": "Indicate the number of children the donor has birthed.",
               "name": "number_of_children",
-              "valueType": "integer"
+              "valueType": "integer",
+              "meta": {
+                "displayName": "Number of Children"
+              }
             }
           ]
         },
@@ -430,7 +475,8 @@
               "meta": {
                 "validationDependency": true,
                 "primaryId": true,
-                "foreignKey": "sample_registration.program_id"
+                "foreignKey": "sample_registration.program_id",
+                "displayName": "Program ID"
               },
               "restrictions": {
                 "required": true
@@ -443,7 +489,8 @@
               "meta": {
                 "validationDependency": true,
                 "primaryId": true,
-                "foreignKey": "sample_registration.submitter_donor_id"
+                "foreignKey": "sample_registration.submitter_donor_id",
+                "displayName": "Submitter Donor ID"
               },
               "restrictions": {
                 "required": true,
@@ -457,7 +504,8 @@
               "meta": {
                 "validationDependency": true,
                 "primaryId": true,
-                "foreignKey": "sample_registration.submitter_specimen_id"
+                "foreignKey": "sample_registration.submitter_specimen_id",
+                "displayName": "Submitter Specimen ID"
               },
               "restrictions": {
                 "required": true,
@@ -471,11 +519,12 @@
               "meta": {
                 "core": true,
                 "dependsOn": "sample_registration.tumour_normal_designation",
-                "notes": "This field is only required if the specimen is a tumour."
+                "notes": "This field is only required if the specimen is a tumour.",
+                "displayName": "Pathological Tumour Staging System"
               },
               "restrictions": {
                 "script": [
-                  "(function validate() {\n\n        let result = {valid: true, message: \"Ok\"};\n        \n        /* This is not a required field, so first ensure that it exists */\n        if ($field){\n            /* Contingent on the naming system for tumour staging systems to remain consistent */\n            const stagingName = $name.trim().toLowerCase().split('_tumour_staging_system')[0];\n            /* Perform validation only if an AJCC value was selected */\n            if (/^(AJCC)\\b/i.test($field)){\n                const requiredFields = [\n                    `${stagingName}_m_category`,\n                    `${stagingName}_n_category`,\n                    `${stagingName}_t_category`\n                ];\n                const convertedRow = Object.fromEntries(Object.entries($row).map(([fieldName,fieldVal]) => [fieldName.toLowerCase(), fieldVal]));\n                /* Check for contigous spaces wrapped with quotes (empty strings) */\n                const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n                /* search for fields with falsy values, given the field exists */\n                const emptyFields = requiredFields.filter(field => Object.keys(convertedRow).includes(field) && (!convertedRow[field] || checkforEmpty(convertedRow[field])))\n                if (emptyFields.length){\n                    result = {valid: false, \"message\": `The following fields are required when ${$name} is set to an AJCC option: ${emptyFields}`};\n                }\n            }\n        }\n        return result;\n    })()"
+                  "(function validate() {\n    let result = { valid: true, message: 'Ok' };\n    const arrayFormatter = arr => `\\n${arr.map(entry => `- \"${entry}\"`).join('\\n')}`;\n    /* This is not a required field, so first ensure that it exists */\n    if ($field) {\n      /* Contingent on the naming system for tumour staging systems to remain consistent */\n      const stagingName = $name\n        .trim()\n        .toLowerCase()\n        .split('_tumour_staging_system')[0];\n      const requiredFields = [\n        `${stagingName}_m_category`,\n        `${stagingName}_n_category`,\n        `${stagingName}_t_category`,\n      ];\n      const convertedRow = Object.fromEntries(\n        Object.entries($row).map(([fieldName, fieldVal]) => [fieldName.toLowerCase(), fieldVal]),\n      );\n      /* Check for contigous spaces wrapped with quotes (empty strings) */\n      const checkforEmpty = entry => {\n        return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'));\n      };\n      /* search for fields with falsy values, given the field exists */\n      const emptyFields = requiredFields.filter(\n        field =>\n          Object.keys(convertedRow).includes(field) &&\n          (!convertedRow[field] || checkforEmpty(convertedRow[field])),\n      );\n\n      /* The fields should be provided IF and ONLY IF the AJCC regex passes */\n      if (/^(AJCC)\\b/i.test($field) && emptyFields.length) {\n        result = {\n          valid: false,\n          message: `The following fields are required when ${$name} is set to an AJCC option: ${arrayFormatter(\n            emptyFields,\n          )}`,\n        };\n      } else if (!/^(AJCC)\\b/i.test($field) && emptyFields.length != requiredFields.length) {\n        const errorFields = requiredFields.filter(fieldName => !emptyFields.includes(fieldName));\n        result = {\n          valid: false,\n          message: `The following fields cannot be provided when ${$name} is not set to an AJCC option: ${arrayFormatter(\n            errorFields,\n          )}`,\n        };\n      }\n    }\n    return result;\n  })()"
                 ],
                 "codeList": [
                   "Binet",
@@ -502,7 +551,8 @@
               "meta": {
                 "core": true,
                 "dependsOn": "specimen.pathological_tumour_staging_system",
-                "notes": "This field is required only if the selected pathological_tumour_staging_system is any edition of the AJCC cancer staging system."
+                "notes": "This field is required only if the selected pathological_tumour_staging_system is any edition of the AJCC cancer staging system.",
+                "displayName": "Pathological T Category"
               }
             },
             {
@@ -512,7 +562,8 @@
               "meta": {
                 "core": true,
                 "dependsOn": "specimen.pathological_tumour_staging_system",
-                "notes": "This field is required only if the selected pathological_tumour_staging_system is any edition of the AJCC cancer staging system."
+                "notes": "This field is required only if the selected pathological_tumour_staging_system is any edition of the AJCC cancer staging system.",
+                "displayName": "Pathological N Category"
               }
             },
             {
@@ -522,16 +573,19 @@
               "meta": {
                 "core": true,
                 "dependsOn": "specimen.pathological_tumour_staging_system",
-                "notes": "This field is required only if the selected pathological_tumour_staging_system is any edition of the AJCC cancer staging system."
+                "notes": "This field is required only if the selected pathological_tumour_staging_system is any edition of the AJCC cancer staging system.",
+                "displayName": "Pathological M Category"
               }
             },
             {
               "name": "pathological_stage_group",
-              "description": "Specify the tumour stage, based on tumor_staging_system, used to assess the cancer at the time the tumour specimen was resected.",
+              "description": "Specify the tumour stage, based on tumour_staging_system, used to assess the cancer at the time the tumour specimen was resected.",
               "valueType": "string",
               "meta": {
                 "core": true,
-                "dependsOn": "specimen.pathological_tumour_staging_system"
+                "dependsOn": "specimen.pathological_tumour_staging_system",
+                "notes": "This field depends on the selected pathological staging system, and is only required if the specimen is a tumour.",
+                "displayName": "Pathological Stage Group"
               }
             },
             {
@@ -541,10 +595,12 @@
               "meta": {
                 "validationDependency": true,
                 "units": "days",
-                "core": true
+                "core": true,
+                "displayName": "Specimen Aquisition Interval"
               },
               "restrictions": {
-                "required": true
+                "required": true,
+                "notes": "The associated Primary Diagnosis is used as the reference point for this interval. To calculate this, find the number of days since the date of primary diagnosis."
               }
             },
             {
@@ -555,7 +611,8 @@
                 "core": true,
                 "dependsOn": "sample_registration.tumour_normal_designation",
                 "notes": "This field is only required if the specimen is a tumour.",
-                "examples": "8260/3,9691/36"
+                "examples": "8260/3,9691/36",
+                "displayName": "Tumour Histological Type"
               },
               "restrictions": {
                 "regex": "^[8,9]{1}[0-9]{3}/[0,1,2,3,6,9]{1}[1-9]{0,1}$"
@@ -566,7 +623,8 @@
               "description": "Anatomic location of a specimen when it was collected.",
               "valueType": "string",
               "meta": {
-                "core": true
+                "core": true,
+                "displayName": "Specimen Anatomic Location"
               },
               "restrictions": {
                 "required": true,
@@ -877,6 +935,9 @@
                   "Fresh",
                   "Other"
                 ]
+              },
+              "meta": {
+                "displayName": "Specimen Processing"
               }
             },
             {
@@ -884,7 +945,8 @@
               "description": "Indicate the method of specimen storage for specimens that were not extracted freshly or immediately cultured.",
               "valueType": "string",
               "meta": {
-                "notes": "For specimens that were freshly extracted or immediately cultured, select Not Applicable."
+                "notes": "For specimens that were freshly extracted or immediately cultured, select Not Applicable.",
+                "displayName": "Specimen Storage"
               },
               "restrictions": {
                 "codeList": [
@@ -906,7 +968,8 @@
               "meta": {
                 "core": true,
                 "dependsOn": "sample_registration.tumour_normal_designation",
-                "notes": "This field is only required if the specimen is a tumour."
+                "notes": "This field is only required if the specimen is a tumour.",
+                "displayName": "Central Pathology Confirmed"
               },
               "restrictions": {
                 "codeList": ["Yes", "No", "Unknown"]
@@ -919,7 +982,8 @@
               "meta": {
                 "core": true,
                 "dependsOn": "sample_registration.tumour_normal_designation",
-                "notes": "This field is only required if the specimen is a tumour."
+                "notes": "This field is only required if the specimen is a tumour.",
+                "displayName": "Tumour Grading System"
               },
               "restrictions": {
                 "codeList": [
@@ -939,11 +1003,12 @@
               "meta": {
                 "core": true,
                 "dependsOn": "specimen.tumour_grading_system",
-                "notes": "This field depends on the selected tumour grading system."
+                "notes": "This field depends on the selected tumour grading system, and is only required if the specimen is a tumour.",
+                "displayName": "Tumour Grade"
               },
               "restrictions": {
                 "script": [
-                  "(function validate() {\n    let result = { valid: true, message: 'Ok' };\n    if ($row.tumour_grading_system && $field) {\n      let codeList = [];\n\n      switch ($row.tumour_grading_system && $row.tumour_grading_system.trim().toLowerCase()) {\n        case 'default':\n          codeList = [\n            'gx - cannot be assessed',\n            'g1 well differentiated/low grade',\n            'g2 moderately differentiated/intermediated grade',\n            'g3 poorly differentiated/high grade',\n            'g4 undifferentiated/high grade',\n          ];\n          break;\n        case 'gleason':\n          codeList = [\n            'gleason x: gleason score cannot be determined',\n            'gleason 2–6: the tumor tissue is well differentiated',\n            'gleason 7: the tumor tissue is moderately differentiated',\n            'gleason 8–10: the tumor tissue is poorly differentiated or undifferentiated',\n          ];\n          break;\n        case 'nottingham':\n          codeList = [\n            'g1 (low grade or well differentiated)',\n            'g2 (intermediate grade or moderately differentiated)',\n            'g3 (high grade or poorly differentiated)',\n          ];\n          break;\n        case 'brain cancer':\n          codeList = ['grade i', 'grade ii', 'grade iii', 'grade iv'];\n          break;\n        case 'isup for renal cell carcinoma':\n          codeList = [\n            'grade 1: tumor cell nucleoli invisible or small and basophilic at 400 x magnification',\n            'grade 2: tumor cell nucleoli conspicuous at 400 x magnification but inconspicuous at 100 x magnification',\n            'grade 3: tumor cell nucleoli eosinophilic and clearly visible at 100 x magnification',\n            'grade 4: tumors showing extreme nuclear pleomorphism and/or containing tumor giant cells and/or the presence of any proportion of tumor showing sarcomatoid and/or rhabdoid dedifferentiation',\n          ];\n          break;\n        case 'lymphoid neoplasms':\n          codeList = ['low grade or indolent nhl', 'high grade or aggressive nhl'];\n          break;\n        default:\n          codelist = [];\n      }\n\n      if (!codeList.includes($field.trim().toLowerCase()) && codeList.length) {\n        const msg = `'${$field}' is not a permissible value. When 'tumour_grading_system' is set to '${\n          $row.tumour_grading_system\n        }', 'tumour_grade' must be one of the following: \\n${codeList.join('\\n')}`;\n\n        result.valid = false;\n        result.message = msg;\n      }\n    }\n    return result;\n  })()"
+                  "(function validate() {\n    let result = { valid: true, message: 'Ok' };\n    if ($row.tumour_grading_system && $field) {\n      let codeList = [];\n\n      switch ($row.tumour_grading_system && $row.tumour_grading_system.trim().toLowerCase()) {\n        case 'default':\n          codeList = [\n            'gx - cannot be assessed',\n            'g1 well differentiated/low grade',\n            'g2 moderately differentiated/intermediated grade',\n            'g3 poorly differentiated/high grade',\n            'g4 undifferentiated/high grade',\n          ];\n          break;\n        case 'gleason':\n          codeList = [\n            'gleason x: gleason score cannot be determined',\n            'gleason 2–6: the tumor tissue is well differentiated',\n            'gleason 7: the tumor tissue is moderately differentiated',\n            'gleason 8–10: the tumor tissue is poorly differentiated or undifferentiated',\n          ];\n          break;\n        case 'nottingham':\n          codeList = [\n            'g1 (low grade or well differentiated)',\n            'g2 (intermediate grade or moderately differentiated)',\n            'g3 (high grade or poorly differentiated)',\n          ];\n          break;\n        case 'brain cancer':\n          codeList = ['grade i', 'grade ii', 'grade iii', 'grade iv'];\n          break;\n        case 'isup for renal cell carcinoma':\n          codeList = [\n            'grade 1: tumor cell nucleoli invisible or small and basophilic at 400 x magnification',\n            'grade 2: tumor cell nucleoli conspicuous at 400 x magnification but inconspicuous at 100 x magnification',\n            'grade 3: tumor cell nucleoli eosinophilic and clearly visible at 100 x magnification',\n            'grade 4: tumors showing extreme nuclear pleomorphism and/or containing tumor giant cells and/or the presence of any proportion of tumor showing sarcomatoid and/or rhabdoid dedifferentiation',\n          ];\n          break;\n        case 'lymphoid neoplasms':\n          codeList = ['low grade or indolent nhl', 'high grade or aggressive nhl'];\n          break;\n        default:\n          codelist = [];\n      }\n\n      if (!codeList.includes($field.trim().toLowerCase()) && codeList.length) {\n        const msg = `'${$field}' is not a permissible value. When 'tumour_grading_system' is set to '${\n          $row.tumour_grading_system\n        }', 'tumour_grade' must be one of the following: \\n${codeList\n          .map(code => `- \"${code}\"`)\n          .join('\\n')}`;\n\n        result.valid = false;\n        result.message = msg;\n      }\n    }\n    return result;\n  })()"
                 ]
               }
             },
@@ -954,7 +1019,8 @@
               "meta": {
                 "core": true,
                 "dependsOn": "sample_registration.tumour_normal_designation",
-                "notes": "This field is only required if the specimen is a tumour."
+                "notes": "This field is only required if the specimen is a tumour.",
+                "displayName": "Percent Tumour Cells"
               }
             },
             {
@@ -964,7 +1030,8 @@
               "meta": {
                 "core": true,
                 "dependsOn": "sample_registration.tumour_normal_designation",
-                "notes": "This field is only required if the specimen is a tumour."
+                "notes": "This field is only required if the specimen is a tumour.",
+                "displayName": "Percent Proliferating Cells"
               }
             },
             {
@@ -974,7 +1041,8 @@
               "meta": {
                 "core": true,
                 "dependsOn": "sample_registration.tumour_normal_designation",
-                "notes": "This field is only required if the specimen is a tumour."
+                "notes": "This field is only required if the specimen is a tumour.",
+                "displayName": "Percent Inflammatory Tissue"
               }
             },
             {
@@ -984,7 +1052,8 @@
               "meta": {
                 "core": true,
                 "dependsOn": "sample_registration.tumour_normal_designation",
-                "notes": "This field is only required if the specimen is a tumour."
+                "notes": "This field is only required if the specimen is a tumour.",
+                "displayName": "Percent Stromal Cells"
               }
             },
             {
@@ -994,7 +1063,8 @@
               "meta": {
                 "core": true,
                 "dependsOn": "sample_registration.tumour_normal_designation",
-                "notes": "This field is only required if the specimen is a tumour."
+                "notes": "This field is only required if the specimen is a tumour.",
+                "displayName": "Percent Necrosis"
               }
             }
           ]
@@ -1013,7 +1083,8 @@
               "meta": {
                 "validationDependency": true,
                 "primaryId": true,
-                "foreignKey": "sample_registration.program_id"
+                "foreignKey": "sample_registration.program_id",
+                "displayName": "Program ID"
               },
               "restrictions": {
                 "required": true
@@ -1026,7 +1097,8 @@
               "meta": {
                 "validationDependency": true,
                 "primaryId": true,
-                "foreignKey": "sample_registration.submitter_donor_id"
+                "foreignKey": "sample_registration.submitter_donor_id",
+                "displayName": "Submitter Donor ID"
               },
               "restrictions": {
                 "required": true,
@@ -1042,19 +1114,43 @@
               },
               "meta": {
                 "units": "years",
-                "core": true
+                "core": true,
+                "displayName": "Age at Diagnosis"
               }
             },
             {
               "name": "cancer_type_code",
               "valueType": "string",
-              "description": "The code to represent the cancer type using the WHO ICD-10 code (https://icd.who.int/browse10/2016/en#/) classification.",
+              "description": "The code to represent the cancer type using the WHO ICD-10 code (https://icd.who.int/browse10/2019/en) classification.",
               "restrictions": {
                 "required": true,
-                "regex": "[A-Z]{1}[0-9]{2}.[0-9]{0,3}[A-Z]{0,1}$"
+                "regex": "^[C][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$"
               },
               "meta": {
-                "core": true
+                "core": true,
+                "examples": "C41.1,C16.9,C00.543A",
+                "displayName": "Cancer Type Code"
+              }
+            },
+            {
+              "name": "basis_of_diagnosis",
+              "description": "Indicate the most valid basis of how the primary diagnosis was identified. If more than one diagnosis technique was used, select the term that has the highest code number (see notes). (Reference: IACR Standard for Basis of Diagnosis http://www.iacr.com.fr/images/doc/basis.pdf)",
+              "restrictions": {
+                "codeList": [
+                  "Death certificate only",
+                  "Clinical",
+                  "Clinical investigation",
+                  "Specific tumour markers",
+                  "Cytology",
+                  "Histology of a metastasis",
+                  "Histology of a primary tumour",
+                  "Unknown"
+                ]
+              },
+              "valueType": "string",
+              "meta": {
+                "notes": "0: Death certificate only: Information provided is from a death certificate.\n1: Clinical: Diagnosis made before death.\n2: Clinical investigation: All diagnostic techniques, including X-ray, endoscopy, imaging, ultrasound, exploratory surgery (such as laparotomy), and autopsy, without a tissue diagnosis.\n4: Specific tumour markers: Including biochemical and/or immunologic markers that are specific for a tumour site.\n5: Cytology: Examination of cells from a primary or secondary site, including fluids aspirated by endoscopy or needle; also includes the microscopic examination of peripheral blood and bone marrow aspirates.\n6: Histology of a metastasis: Histologic examination of tissue from a metastasis, including autopsy specimens.\n7: Histology of a primary tumour: Histologic examination of tissue from primary tumour, however obtained, including all cutting techniques and bone marrow biopsies; also includes autopsy specimens of primary tumour.\n9: Unknown: No information on how the diagnosis has been made.",
+                "displayName": "Basis of Diagnosis"
               }
             },
             {
@@ -1065,13 +1161,17 @@
                 "required": true
               },
               "meta": {
-                "core": true
+                "core": true,
+                "displayName": "Number Of Lymph Nodes Positive"
               }
             },
             {
               "name": "number_lymph_nodes_examined",
               "description": "The total number of lymph nodes tested for the presence of cancer. (Reference: NCI CDE ID: 3)",
-              "valueType": "integer"
+              "valueType": "integer",
+              "meta": {
+                "displayName": "Number Of Lymph Nodes Examined"
+              }
             },
             {
               "name": "clinical_tumour_staging_system",
@@ -1079,7 +1179,7 @@
               "description": "Indicate the tumour staging system used to stage the cancer at the time of primary diagnosis (prior to treatment).",
               "restrictions": {
                 "script": [
-                  "(function validate() {\n\n        let result = {valid: true, message: \"Ok\"};\n        \n        /* This is not a required field, so first ensure that it exists */\n        if ($field){\n            /* Contingent on the naming system for tumour staging systems to remain consistent */\n            const stagingName = $name.trim().toLowerCase().split('_tumour_staging_system')[0];\n            /* Perform validation only if an AJCC value was selected */\n            if (/^(AJCC)\\b/i.test($field)){\n                const requiredFields = [\n                    `${stagingName}_m_category`,\n                    `${stagingName}_n_category`,\n                    `${stagingName}_t_category`\n                ];\n                const convertedRow = Object.fromEntries(Object.entries($row).map(([fieldName,fieldVal]) => [fieldName.toLowerCase(), fieldVal]));\n                /* Check for contigous spaces wrapped with quotes (empty strings) */\n                const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n                /* search for fields with falsy values, given the field exists */\n                const emptyFields = requiredFields.filter(field => Object.keys(convertedRow).includes(field) && (!convertedRow[field] || checkforEmpty(convertedRow[field])))\n                if (emptyFields.length){\n                    result = {valid: false, \"message\": `The following fields are required when ${$name} is set to an AJCC option: ${emptyFields}`};\n                }\n            }\n        }\n        return result;\n    })()"
+                  "(function validate() {\n    let result = { valid: true, message: 'Ok' };\n    const arrayFormatter = arr => `\\n${arr.map(entry => `- \"${entry}\"`).join('\\n')}`;\n    /* This is not a required field, so first ensure that it exists */\n    if ($field) {\n      /* Contingent on the naming system for tumour staging systems to remain consistent */\n      const stagingName = $name\n        .trim()\n        .toLowerCase()\n        .split('_tumour_staging_system')[0];\n      const requiredFields = [\n        `${stagingName}_m_category`,\n        `${stagingName}_n_category`,\n        `${stagingName}_t_category`,\n      ];\n      const convertedRow = Object.fromEntries(\n        Object.entries($row).map(([fieldName, fieldVal]) => [fieldName.toLowerCase(), fieldVal]),\n      );\n      /* Check for contigous spaces wrapped with quotes (empty strings) */\n      const checkforEmpty = entry => {\n        return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'));\n      };\n      /* search for fields with falsy values, given the field exists */\n      const emptyFields = requiredFields.filter(\n        field =>\n          Object.keys(convertedRow).includes(field) &&\n          (!convertedRow[field] || checkforEmpty(convertedRow[field])),\n      );\n\n      /* The fields should be provided IF and ONLY IF the AJCC regex passes */\n      if (/^(AJCC)\\b/i.test($field) && emptyFields.length) {\n        result = {\n          valid: false,\n          message: `The following fields are required when ${$name} is set to an AJCC option: ${arrayFormatter(\n            emptyFields,\n          )}`,\n        };\n      } else if (!/^(AJCC)\\b/i.test($field) && emptyFields.length != requiredFields.length) {\n        const errorFields = requiredFields.filter(fieldName => !emptyFields.includes(fieldName));\n        result = {\n          valid: false,\n          message: `The following fields cannot be provided when ${$name} is not set to an AJCC option: ${arrayFormatter(\n            errorFields,\n          )}`,\n        };\n      }\n    }\n    return result;\n  })()"
                 ],
                 "required": true,
                 "codeList": [
@@ -1100,7 +1200,8 @@
                 ]
               },
               "meta": {
-                "core": true
+                "core": true,
+                "displayName": "Clinical Tumour Staging System"
               }
             },
             {
@@ -1112,7 +1213,8 @@
               },
               "meta": {
                 "core": true,
-                "dependsOn": "primary_diagnosis.clinical_tumour_staging_system"
+                "dependsOn": "primary_diagnosis.clinical_tumour_staging_system",
+                "displayName": "Clinical Stage Group"
               }
             },
             {
@@ -1121,7 +1223,8 @@
               "valueType": "string",
               "meta": {
                 "core": true,
-                "dependsOn": "primary_diagnosis.clinical_tumour_staging_system"
+                "dependsOn": "primary_diagnosis.clinical_tumour_staging_system",
+                "displayName": "Stage Suffix"
               }
             },
             {
@@ -1131,7 +1234,8 @@
               "meta": {
                 "core": true,
                 "dependsOn": "primary_diagnosis.clinical_tumour_staging_system",
-                "notes": "This field is required only if the selected clinical_tumour_staging_system is any edition of the AJCC cancer staging system."
+                "notes": "This field is required only if the selected clinical_tumour_staging_system is any edition of the AJCC cancer staging system.",
+                "displayName": "Clinical T Category"
               }
             },
             {
@@ -1141,7 +1245,8 @@
               "meta": {
                 "core": true,
                 "dependsOn": "primary_diagnosis.clinical_tumour_staging_system",
-                "notes": "This field is required only if the selected clinical_tumour_staging_system is any edition of the AJCC cancer staging system."
+                "notes": "This field is required only if the selected clinical_tumour_staging_system is any edition of the AJCC cancer staging system.",
+                "displayName": "Clinical N Category"
               }
             },
             {
@@ -1151,13 +1256,15 @@
               "meta": {
                 "core": true,
                 "dependsOn": "primary_diagnosis.clinical_tumour_staging_system",
-                "notes": "This field is required only if the selected clinical_tumour_staging_system is any edition of the AJCC cancer staging system."
+                "notes": "This field is required only if the selected clinical_tumour_staging_system is any edition of the AJCC cancer staging system.",
+                "displayName": "Clinical M Category"
               }
             },
             {
               "name": "presenting_symptoms",
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
+              "isArray": true,
               "restrictions": {
                 "codeList": [
                   "Abdominal Pain",
@@ -1184,6 +1291,9 @@
                   "Vomiting",
                   "Weight Loss"
                 ]
+              },
+              "meta": {
+                "displayName": "Presenting Symptoms"
               }
             },
             {
@@ -1194,7 +1304,8 @@
                 "codeList": ["Grade 0", "Grade 1", "Grade 2", "Grade 3", "Grade 4"]
               },
               "meta": {
-                "notes": "Grade 0: Fully active, able to carry on all pre-disease performance without restriction \n Grade 1: Restricted in physically strenuous activity but ambulatory and able to carry out work of a light or sedentary nature (ie. Light house work, office work) \n Grade 2: Ambulatory and capable of all selfcare but unable to carry out any work activities; up and about more than 50% of waking hours \n Grade 3: Capable of only limited selfcare; confined to bed or chair more than 50% of waking hours \n Grade 4: Completely disabled; cannot carry on any selfcare; totally confined to bed or chair"
+                "notes": "Grade 0: Fully active, able to carry on all pre-disease performance without restriction \n Grade 1: Restricted in physically strenuous activity but ambulatory and able to carry out work of a light or sedentary nature (ie. Light house work, office work) \n Grade 2: Ambulatory and capable of all selfcare but unable to carry out any work activities; up and about more than 50% of waking hours \n Grade 3: Capable of only limited selfcare; confined to bed or chair more than 50% of waking hours \n Grade 4: Completely disabled; cannot carry on any selfcare; totally confined to bed or chair",
+                "displayName": "Performance Status"
               }
             }
           ]
@@ -1213,7 +1324,8 @@
               "meta": {
                 "validationDependency": true,
                 "primaryId": true,
-                "foreignKey": "sample_registration.program_id"
+                "foreignKey": "sample_registration.program_id",
+                "displayName": "Program ID"
               },
               "restrictions": {
                 "required": true
@@ -1226,7 +1338,8 @@
               "meta": {
                 "validationDependency": true,
                 "primaryId": true,
-                "foreignKey": "sample_registration.submitter_donor_id"
+                "foreignKey": "sample_registration.submitter_donor_id",
+                "displayName": "Submitter Donor ID"
               },
               "restrictions": {
                 "required": true,
@@ -1239,7 +1352,8 @@
               "valueType": "string",
               "meta": {
                 "validationDependency": true,
-                "primaryId": true
+                "primaryId": true,
+                "displayName": "Submitter Treatment ID"
               },
               "restrictions": {
                 "required": true,
@@ -1274,13 +1388,17 @@
               "meta": {
                 "validationDependency": true,
                 "core": true,
-                "notes": "Depending on the treatment_type selected, additional treament details may be required to be submitted."
+                "notes": "Depending on the treatment_type selected, additional treament details may be required to be submitted.",
+                "displayName": "Treatment Type"
               }
             },
             {
               "name": "age_at_consent_for_treatment",
               "description": "Indicate the age of donor when consent was given for treatment.",
-              "valueType": "integer"
+              "valueType": "integer",
+              "meta": {
+                "displayName": "Age At Consent For Treatment"
+              }
             },
             {
               "name": "is_primary_treatment",
@@ -1291,7 +1409,8 @@
                 "codeList": ["Yes", "No", "Unknown"]
               },
               "meta": {
-                "core": true
+                "core": true,
+                "displayName": "Is Primary Treatment"
               }
             },
             {
@@ -1303,7 +1422,9 @@
               },
               "meta": {
                 "core": true,
-                "units": "days"
+                "units": "days",
+                "notes": "The associated Primary Diagnosis is used as the reference point for this interval. To calculate this, find the number of days since the date of primary diagnosis",
+                "displayName": "Treatment Start Interval"
               }
             },
             {
@@ -1315,7 +1436,8 @@
               },
               "meta": {
                 "core": true,
-                "units": "days"
+                "units": "days",
+                "displayName": "Treatment Duration"
               }
             },
             {
@@ -1335,7 +1457,8 @@
                 ]
               },
               "meta": {
-                "core": true
+                "core": true,
+                "displayName": "Therapeutic Intent"
               }
             },
             {
@@ -1353,14 +1476,15 @@
                 ]
               },
               "meta": {
-                "core": true
+                "core": true,
+                "displayName": "Response to Therapy"
               }
             }
           ]
         },
         {
           "name": "chemotherapy",
-          "description": "The collection of data elements describing the details of a chemotherapy treatment regimen completed by a donor.",
+          "description": "The collection of data elements describing the details of a chemotherapy treatment regimen completed by a donor. For multiple treatment agents in a single regimen, submit multiple rows in the chemotherapy file.",
           "meta": {
             "parent": "treatment"
           },
@@ -1372,7 +1496,8 @@
               "meta": {
                 "validationDependency": true,
                 "primaryId": true,
-                "foreignKey": "sample_registration.program_id"
+                "foreignKey": "sample_registration.program_id",
+                "displayName": "Program ID"
               },
               "restrictions": {
                 "required": true
@@ -1385,7 +1510,8 @@
               "meta": {
                 "validationDependency": true,
                 "primaryId": true,
-                "foreignKey": "sample_registration.submitter_donor_id"
+                "foreignKey": "sample_registration.submitter_donor_id",
+                "displayName": "Submitter Donor ID"
               },
               "restrictions": {
                 "required": true,
@@ -1399,7 +1525,8 @@
               "meta": {
                 "validationDependency": true,
                 "primaryId": true,
-                "foreignKey": "treatment.submitter_treatment_id"
+                "foreignKey": "treatment.submitter_treatment_id",
+                "displayName": "Submitter Treatment ID"
               },
               "restrictions": {
                 "required": true,
@@ -1418,7 +1545,8 @@
                 "validationDependency": true,
                 "core": true,
                 "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
-                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib",
+                "displayName": "Chemotherapy Drug Name"
               }
             },
             {
@@ -1427,10 +1555,11 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg"]
+                "codeList": ["mg/m2", "IU/m2", "µg/m2", "g/m2", "mg/kg"]
               },
               "meta": {
-                "core": true
+                "core": true,
+                "displayName": "Chemotherapy Dosage Units"
               }
             },
             {
@@ -1441,14 +1570,15 @@
                 "required": true
               },
               "meta": {
-                "core": true
+                "core": true,
+                "displayName": "Cumulative Drug Dosage"
               }
             }
           ]
         },
         {
           "name": "hormone_therapy",
-          "description": "The collection of data elements describing the details of a hormone treatment therapy completed by a donor.",
+          "description": "The collection of data elements describing the details of a hormone treatment therapy completed by a donor. For multiple treatment agents in a single regimen, submit multiple rows in the hormone_therapy file.",
           "meta": {
             "parent": "treatment"
           },
@@ -1460,7 +1590,8 @@
               "meta": {
                 "validationDependency": true,
                 "primaryId": true,
-                "foreignKey": "sample_registration.program_id"
+                "foreignKey": "sample_registration.program_id",
+                "displayName": "Program ID"
               },
               "restrictions": {
                 "required": true
@@ -1473,7 +1604,8 @@
               "meta": {
                 "validationDependency": true,
                 "primaryId": true,
-                "foreignKey": "sample_registration.submitter_donor_id"
+                "foreignKey": "sample_registration.submitter_donor_id",
+                "displayName": "Submitter Donor ID"
               },
               "restrictions": {
                 "required": true,
@@ -1487,7 +1619,8 @@
               "meta": {
                 "validationDependency": true,
                 "primaryId": true,
-                "foreignKey": "treatment.submitter_treatment_id"
+                "foreignKey": "treatment.submitter_treatment_id",
+                "displayName": "Submitter Treatment ID"
               },
               "restrictions": {
                 "required": true,
@@ -1505,7 +1638,8 @@
               "meta": {
                 "validationDependency": true,
                 "core": true,
-                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names."
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "displayName": "Hormone Therapy Drug Name"
               }
             },
             {
@@ -1514,10 +1648,11 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg "]
+                "codeList": ["mg/m2", "IU/m2", "µg/m2", "g/m2", "mg/kg"]
               },
               "meta": {
-                "core": true
+                "core": true,
+                "displayName": "Hormone Therapy Dosage Units"
               }
             },
             {
@@ -1528,7 +1663,8 @@
                 "required": true
               },
               "meta": {
-                "core": true
+                "core": true,
+                "displayName": "Cumulative Drug Dose"
               }
             }
           ]
@@ -1547,7 +1683,8 @@
               "meta": {
                 "validationDependency": true,
                 "primaryId": true,
-                "foreignKey": "sample_registration.program_id"
+                "foreignKey": "sample_registration.program_id",
+                "displayName": "Program ID"
               },
               "restrictions": {
                 "required": true
@@ -1560,7 +1697,8 @@
               "meta": {
                 "validationDependency": true,
                 "primaryId": true,
-                "foreignKey": "sample_registration.submitter_donor_id"
+                "foreignKey": "sample_registration.submitter_donor_id",
+                "displayName": "Submitter Donor ID"
               },
               "restrictions": {
                 "required": true,
@@ -1574,7 +1712,8 @@
               "meta": {
                 "validationDependency": true,
                 "primaryId": true,
-                "foreignKey": "treatment.submitter_treatment_id"
+                "foreignKey": "treatment.submitter_treatment_id",
+                "displayName": "Submitter Treatment ID"
               },
               "restrictions": {
                 "required": true,
@@ -1591,7 +1730,8 @@
               },
               "meta": {
                 "validationDependency": true,
-                "core": true
+                "core": true,
+                "displayName": "Radiation Therapy Modality"
               }
             },
             {
@@ -1603,7 +1743,8 @@
                 "codeList": ["External", "Internal (including Brachytherapy)"]
               },
               "meta": {
-                "core": true
+                "core": true,
+                "displayName": "Application Form"
               }
             },
             {
@@ -1614,7 +1755,8 @@
                 "required": true
               },
               "meta": {
-                "core": true
+                "core": true,
+                "displayName": "Radiation Therapy Fractions"
               }
             },
             {
@@ -1625,7 +1767,8 @@
                 "required": true
               },
               "meta": {
-                "core": true
+                "core": true,
+                "displayName": "Radiation Therapy Dosage"
               }
             },
             {
@@ -1650,14 +1793,15 @@
                 ]
               },
               "meta": {
-                "core": true
+                "core": true,
+                "displayName": "Anatomical Site Irradiated"
               }
             }
           ]
         },
         {
           "name": "follow_up",
-          "description": "The collection of data elements related to a specific follow up visit to a donor. A follow up is defined as any point of contact with a patient after diagnosis.",
+          "description": "The collection of data elements related to a specific follow-up visit to a donor. A follow-up is defined as any point of contact with a patient after diagnosis. A donor can have multiple follow-up records.",
           "meta": {
             "parent": "donor"
           },
@@ -1669,7 +1813,8 @@
               "meta": {
                 "validationDependency": true,
                 "primaryId": true,
-                "foreignKey": "sample_registration.program_id"
+                "foreignKey": "sample_registration.program_id",
+                "displayName": "Program ID"
               },
               "restrictions": {
                 "required": true
@@ -1682,7 +1827,8 @@
               "meta": {
                 "validationDependency": true,
                 "primaryId": true,
-                "foreignKey": "sample_registration.submitter_donor_id"
+                "foreignKey": "sample_registration.submitter_donor_id",
+                "displayName": "Submitter Donor ID"
               },
               "restrictions": {
                 "required": true,
@@ -1695,7 +1841,8 @@
               "valueType": "string",
               "meta": {
                 "validationDependency": true,
-                "primaryId": true
+                "primaryId": true,
+                "displayName": "Submitter Follow-Up ID"
               },
               "restrictions": {
                 "required": true,
@@ -1703,7 +1850,7 @@
               }
             },
             {
-              "description": "Interval from the primary diagnosis date to the follow up date, in days.",
+              "description": "Interval from the primary diagnosis date to the follow-up date, in days.",
               "name": "interval_of_followup",
               "valueType": "integer",
               "restrictions": {
@@ -1711,7 +1858,9 @@
               },
               "meta": {
                 "core": true,
-                "units": "days"
+                "units": "days",
+                "displayName": "Interval Of Follow-Up",
+                "notes": "The associated Primary Diagnosis is used as the reference point for this interval. To calculate this, find the number of days since the date of primary diagnosis."
               }
             },
             {
@@ -1731,7 +1880,16 @@
                 ]
               },
               "meta": {
-                "core": true
+                "core": true,
+                "displayName": "Disease Status at Follow-Up"
+              }
+            },
+            {
+              "description": "Indicate the donor's weight, in kilograms (kg), at the time of follow-up.",
+              "name": "weight_at_followup",
+              "valueType": "integer",
+              "meta": {
+                "displayName": "Weight at Follow-Up"
               }
             },
             {
@@ -1749,7 +1907,8 @@
               "meta": {
                 "core": true,
                 "dependsOn": "follow_up.disease_status_at_followup",
-                "notes": "This field is required to be submitted if disease_status_at_followup indicates progression or relapse."
+                "notes": "This field is required to be submitted if disease_status_at_followup indicates progression or relapse.",
+                "displayName": "Relapse Type"
               }
             },
             {
@@ -1765,7 +1924,8 @@
                 "core": true,
                 "units": "days",
                 "dependsOn": "follow_up.disease_status_at_followup",
-                "notes": "This field is required to be submitted if disease_status_at_followup indicates progression or relapse."
+                "notes": "This field is required to be submitted if disease_status_at_followup indicates a progression or relapse value.",
+                "displayName": "Relapse Interval"
               }
             },
             {
@@ -1779,7 +1939,7 @@
                 ],
                 "codeList": [
                   "Autopsy",
-                  "Biomarker in liquid biopsy (e.g. tumor marker in blood or urine)",
+                  "Biomarker in liquid biopsy (e.g. tumour marker in blood or urine)",
                   "Biopsy",
                   "Blood draw",
                   "Bone marrow aspirate",
@@ -1808,7 +1968,8 @@
               "meta": {
                 "core": true,
                 "dependsOn": "follow_up.disease_status_at_followup",
-                "notes": "This field is required to be submitted if disease_status_at_followup indicates progression or relapse."
+                "notes": "This field is required to be submitted if disease_status_at_followup indicates progression or relapse",
+                "displayName": "Method Of Progression Status"
               }
             },
             {
@@ -2113,7 +2274,8 @@
               "meta": {
                 "core": true,
                 "dependsOn": "follow_up.disease_status_at_followup",
-                "notes": "This field is required to be submitted if disease_status_at_followup indicates progression or relapse."
+                "notes": "This field is required to be submitted if disease_status_at_followup indicates progression or relapse.",
+                "displayName": "Anatomic Site Progression or Recurrences"
               }
             },
             {
@@ -2138,7 +2300,7 @@
                   "AJCC 1st Edition"
                 ],
                 "script": [
-                  "(function validate() {\n\n        let result = {valid: true, message: \"Ok\"};\n        \n        /* This is not a required field, so first ensure that it exists */\n        if ($field){\n            /* Contingent on the naming system for tumour staging systems to remain consistent */\n            const stagingName = $name.trim().toLowerCase().split('_tumour_staging_system')[0];\n            /* Perform validation only if an AJCC value was selected */\n            if (/^(AJCC)\\b/i.test($field)){\n                const requiredFields = [\n                    `${stagingName}_m_category`,\n                    `${stagingName}_n_category`,\n                    `${stagingName}_t_category`\n                ];\n                const convertedRow = Object.fromEntries(Object.entries($row).map(([fieldName,fieldVal]) => [fieldName.toLowerCase(), fieldVal]));\n                /* Check for contigous spaces wrapped with quotes (empty strings) */\n                const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n                /* search for fields with falsy values, given the field exists */\n                const emptyFields = requiredFields.filter(field => Object.keys(convertedRow).includes(field) && (!convertedRow[field] || checkforEmpty(convertedRow[field])))\n                if (emptyFields.length){\n                    result = {valid: false, \"message\": `The following fields are required when ${$name} is set to an AJCC option: ${emptyFields}`};\n                }\n            }\n        }\n        return result;\n    })()",
+                  "(function validate() {\n    let result = { valid: true, message: 'Ok' };\n    const arrayFormatter = arr => `\\n${arr.map(entry => `- \"${entry}\"`).join('\\n')}`;\n    /* This is not a required field, so first ensure that it exists */\n    if ($field) {\n      /* Contingent on the naming system for tumour staging systems to remain consistent */\n      const stagingName = $name\n        .trim()\n        .toLowerCase()\n        .split('_tumour_staging_system')[0];\n      const requiredFields = [\n        `${stagingName}_m_category`,\n        `${stagingName}_n_category`,\n        `${stagingName}_t_category`,\n      ];\n      const convertedRow = Object.fromEntries(\n        Object.entries($row).map(([fieldName, fieldVal]) => [fieldName.toLowerCase(), fieldVal]),\n      );\n      /* Check for contigous spaces wrapped with quotes (empty strings) */\n      const checkforEmpty = entry => {\n        return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'));\n      };\n      /* search for fields with falsy values, given the field exists */\n      const emptyFields = requiredFields.filter(\n        field =>\n          Object.keys(convertedRow).includes(field) &&\n          (!convertedRow[field] || checkforEmpty(convertedRow[field])),\n      );\n\n      /* The fields should be provided IF and ONLY IF the AJCC regex passes */\n      if (/^(AJCC)\\b/i.test($field) && emptyFields.length) {\n        result = {\n          valid: false,\n          message: `The following fields are required when ${$name} is set to an AJCC option: ${arrayFormatter(\n            emptyFields,\n          )}`,\n        };\n      } else if (!/^(AJCC)\\b/i.test($field) && emptyFields.length != requiredFields.length) {\n        const errorFields = requiredFields.filter(fieldName => !emptyFields.includes(fieldName));\n        result = {\n          valid: false,\n          message: `The following fields cannot be provided when ${$name} is not set to an AJCC option: ${arrayFormatter(\n            errorFields,\n          )}`,\n        };\n      }\n    }\n    return result;\n  })()",
                   "(function validate() {\n        let result = {valid: true, message: \"Ok\"};\n\n        /* required field, cannot be null */\n        const diseaseStatus = $row.disease_status_at_followup.trim().toLowerCase();\n\n        const isRequired = diseaseStatus.match(/(progression)$/);\n\n        // checks for a string just consisting of whitespace\n        const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n\n        if (isRequired && (!$field || checkforEmpty($field))){\n            result = {valid: false, message: `'${$name}' is a required field if 'disease_status_at_followup' is of type 'progression'.` }\n        }\n\n        return result;\n    })()",
                   "(function validate() {\n        let result = {valid: true, message: \"Ok\"};\n\n        /* required field, cannot be null */\n        const diseaseStatus = $row.disease_status_at_followup.trim().toLowerCase();\n\n        const isRequired = diseaseStatus === \"relapse\";\n\n        // checks for a string just consisting of whitespace\n        const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n\n        if (isRequired && (!$field || checkforEmpty($field))){\n            result = {valid: false, message: `'${$name}' is a required field if 'disease_status_at_followup' set to 'relapse'.` }\n        }\n\n        return result;\n    })()"
                 ]
@@ -2146,7 +2308,8 @@
               "meta": {
                 "core": true,
                 "dependsOn": "follow_up.disease_status_at_followup",
-                "notes": "This field is required to be submitted if disease_status_at_followup indicates progression or relapse."
+                "notes": "This field is required to be submitted if disease_status_at_followup indicates progression or relapse.",
+                "displayName": "Recurrance Tumour Staging System"
               }
             },
             {
@@ -2156,7 +2319,8 @@
               "meta": {
                 "core": true,
                 "dependsOn": "follow_up.recurrence_tumour_staging_system",
-                "notes": "This field is required only if the selected recurrence_tumour_staging_system is any edition of the AJCC cancer staging system."
+                "notes": "This field is required only if the selected recurrence_tumour_staging_system is any edition of the AJCC cancer staging system.",
+                "displayName": "Recurrence T Category"
               }
             },
             {
@@ -2166,7 +2330,8 @@
               "meta": {
                 "core": true,
                 "dependsOn": "follow_up.recurrence_tumour_staging_system",
-                "notes": "This field is required only if the selected recurrence_tumour_staging_system is any edition of the AJCC cancer staging system."
+                "notes": "This field is required only if the selected recurrence_tumour_staging_system is any edition of the AJCC cancer staging system.",
+                "displayName": "Recurrence N Category"
               }
             },
             {
@@ -2176,7 +2341,8 @@
               "meta": {
                 "core": true,
                 "dependsOn": "follow_up.recurrence_tumour_staging_system",
-                "notes": "This field is required only if the selected recurrence_tumour_staging_system is any edition of the AJCC cancer staging system."
+                "notes": "This field is required only if the selected recurrence_tumour_staging_system is any edition of the AJCC cancer staging system.",
+                "displayName": "Recurrence M Category"
               }
             },
             {
@@ -2185,7 +2351,8 @@
               "valueType": "string",
               "meta": {
                 "core": true,
-                "dependsOn": "follow_up.recurrence_tumour_staging_system"
+                "dependsOn": "follow_up.recurrence_tumour_staging_system",
+                "displayName": "Recurrence Stage Group"
               }
             },
             {
@@ -2194,7 +2361,7 @@
               "valueType": "string",
               "restrictions": {
                 "script": [
-                  "(function validate() {\n\n        let result = {valid: true, message: \"Ok\"};\n        \n        /* This is not a required field, so first ensure that it exists */\n        if ($field){\n            /* Contingent on the naming system for tumour staging systems to remain consistent */\n            const stagingName = $name.trim().toLowerCase().split('_tumour_staging_system')[0];\n            /* Perform validation only if an AJCC value was selected */\n            if (/^(AJCC)\\b/i.test($field)){\n                const requiredFields = [\n                    `${stagingName}_m_category`,\n                    `${stagingName}_n_category`,\n                    `${stagingName}_t_category`\n                ];\n                const convertedRow = Object.fromEntries(Object.entries($row).map(([fieldName,fieldVal]) => [fieldName.toLowerCase(), fieldVal]));\n                /* Check for contigous spaces wrapped with quotes (empty strings) */\n                const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n                /* search for fields with falsy values, given the field exists */\n                const emptyFields = requiredFields.filter(field => Object.keys(convertedRow).includes(field) && (!convertedRow[field] || checkforEmpty(convertedRow[field])))\n                if (emptyFields.length){\n                    result = {valid: false, \"message\": `The following fields are required when ${$name} is set to an AJCC option: ${emptyFields}`};\n                }\n            }\n        }\n        return result;\n    })()"
+                  "(function validate() {\n    let result = { valid: true, message: 'Ok' };\n    const arrayFormatter = arr => `\\n${arr.map(entry => `- \"${entry}\"`).join('\\n')}`;\n    /* This is not a required field, so first ensure that it exists */\n    if ($field) {\n      /* Contingent on the naming system for tumour staging systems to remain consistent */\n      const stagingName = $name\n        .trim()\n        .toLowerCase()\n        .split('_tumour_staging_system')[0];\n      const requiredFields = [\n        `${stagingName}_m_category`,\n        `${stagingName}_n_category`,\n        `${stagingName}_t_category`,\n      ];\n      const convertedRow = Object.fromEntries(\n        Object.entries($row).map(([fieldName, fieldVal]) => [fieldName.toLowerCase(), fieldVal]),\n      );\n      /* Check for contigous spaces wrapped with quotes (empty strings) */\n      const checkforEmpty = entry => {\n        return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'));\n      };\n      /* search for fields with falsy values, given the field exists */\n      const emptyFields = requiredFields.filter(\n        field =>\n          Object.keys(convertedRow).includes(field) &&\n          (!convertedRow[field] || checkforEmpty(convertedRow[field])),\n      );\n\n      /* The fields should be provided IF and ONLY IF the AJCC regex passes */\n      if (/^(AJCC)\\b/i.test($field) && emptyFields.length) {\n        result = {\n          valid: false,\n          message: `The following fields are required when ${$name} is set to an AJCC option: ${arrayFormatter(\n            emptyFields,\n          )}`,\n        };\n      } else if (!/^(AJCC)\\b/i.test($field) && emptyFields.length != requiredFields.length) {\n        const errorFields = requiredFields.filter(fieldName => !emptyFields.includes(fieldName));\n        result = {\n          valid: false,\n          message: `The following fields cannot be provided when ${$name} is not set to an AJCC option: ${arrayFormatter(\n            errorFields,\n          )}`,\n        };\n      }\n    }\n    return result;\n  })()"
                 ],
                 "codeList": [
                   "Binet",
@@ -2212,6 +2379,9 @@
                   "AJCC 2nd Edition",
                   "AJCC 1st Edition"
                 ]
+              },
+              "meta": {
+                "displayName": "Post-therapy Tumour Staging System"
               }
             },
             {
@@ -2220,7 +2390,8 @@
               "valueType": "string",
               "meta": {
                 "dependsOn": "follow_up.post_therapy_tumour_staging_system",
-                "notes": "This field is required only if the selected posttherapy_tumour_staging_system is any edition of the AJCC cancer staging system."
+                "notes": "This field is required only if the selected posttherapy_tumour_staging_system is any edition of the AJCC cancer staging system.",
+                "displayName": "Post-therapy T Category"
               }
             },
             {
@@ -2229,7 +2400,8 @@
               "valueType": "string",
               "meta": {
                 "dependsOn": "follow_up.post_therapy_tumour_staging_system",
-                "notes": "This field is required only if the selected posttherapy_tumour_staging_system is any edition of the AJCC cancer staging system."
+                "notes": "This field is required only if the selected posttherapy_tumour_staging_system is any edition of the AJCC cancer staging system.",
+                "displayName": "Post-therapy N Category"
               }
             },
             {
@@ -2238,7 +2410,8 @@
               "valueType": "string",
               "meta": {
                 "dependsOn": "follow_up.post_therapy_tumour_staging_system",
-                "notes": "This field is required only if the selected posttherapy_tumour_staging_system is any edition of the AJCC cancer staging system."
+                "notes": "This field is required only if the selected posttherapy_tumour_staging_system is any edition of the AJCC cancer staging system.",
+                "displayName": "Post-therapy M Category"
               }
             },
             {
@@ -2247,7 +2420,8 @@
               "valueType": "string",
               "meta": {
                 "dependsOn": "follow_up.post_therapy_tumour_staging_system",
-                "notes": "This field value is dependent on the selected posttherapy_tumour_staging_system."
+                "notes": "This field value is dependent on the selected posttherapy_tumour_staging_system.",
+                "displayName": "Post-therapy Stage Group"
               }
             }
           ]
