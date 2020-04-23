@@ -9,7 +9,7 @@ debug:
 
 #run the docker compose file
 dcompose:
-	docker-compose -f compose/docker-compose.yaml up -d
+	docker-compose -f compose/docker-compose.yaml up --force-recreate -d
 	# we need to sleep for db containers to start
 	sleep 10
 

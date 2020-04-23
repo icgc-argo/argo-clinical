@@ -1409,9 +1409,9 @@
             {
               "name": "drug_rxnormid",
               "description": "RxNormID assigned to the treatment regimen.",
-              "valueType": "integer",
+              "valueType": "string",
               "restrictions": {
-                "required": false
+                "required": true
               },
               "meta": {
                 "validationDependency": true,
@@ -1419,13 +1419,12 @@
                 "primaryId": true
               }
             },
-
             {
               "name": "drug_name",
               "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": false
+                "required": true
               },
               "meta": {
                 "validationDependency": true,
@@ -1494,7 +1493,6 @@
                 "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
-
             {
               "name": "submitter_treatment_id",
               "valueType": "string",
@@ -1506,18 +1504,21 @@
               },
               "restrictions": {
                 "required": true,
+                "foreignKey": "treatment.submitter_treatment_id",
                 "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
-
             {
               "name": "drug_rxnormid",
               "description": "RxNormID assigned to the treatment regimen.",
-              "valueType": "integer",
+              "valueType": "string",
               "meta": {
                 "validationDependency": true,
                 "core": true,
                 "primaryId": true
+              },
+              "restrictions": {
+                "required": true
               }
             },
 
@@ -1530,6 +1531,9 @@
                 "core": true,
                 "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
                 "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
+              },
+              "restrictions": {
+                "required": true
               }
             },
 
@@ -1576,6 +1580,19 @@
               },
               "restrictions": {
                 "required": true
+              }
+            },
+            {
+              "name": "submitter_therapy_id",
+              "valueType": "string",
+              "description": "Unique identifier of the therapy, assigned by the data provider.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": true,
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {

@@ -32,23 +32,37 @@ describe('decorator', () => {
       testApisDisabled() {
         return true;
       },
-      kafkaMessagingEnabled() {
-        return false;
+      kafkaProperties() {
+        return {
+          kafkaMessagingEnabled() {
+            return false;
+          },
+          kafkaBrokers() {
+            return new Array<string>();
+          },
+          kafkaClientId() {
+            return '';
+          },
+          kafkaTopicProgramUpdate() {
+            return '';
+          },
+          kafkaTopicProgramUpdateConfigPartitions(): number {
+            return NaN;
+          },
+          kafkaTopicProgramUpdateConfigReplications(): number {
+            return NaN;
+          },
+        };
       },
-      kafkaBrokers() {
-        return new Array<string>();
-      },
-      kafkaClientId() {
-        return '';
-      },
-      kafkaTopicProgramUpdate() {
-        return '';
-      },
-      kafkaTopicProgramUpdateConfigPartitions(): number {
-        return NaN;
-      },
-      kafkaTopicProgramUpdateConfigReplications(): number {
-        return NaN;
+      rxNormDbProperties() {
+        return {
+          database: '',
+          host: '',
+          password: '',
+          port: 0,
+          timeout: 0,
+          user: '',
+        };
       },
     });
   });

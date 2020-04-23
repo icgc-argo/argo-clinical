@@ -23,6 +23,7 @@ services:
   vault:
     container_name: clinical_vault
     image: vault
+
     volumes:
       - $PWD/logs/:/tmp/logs
       - ./vault:/scripts

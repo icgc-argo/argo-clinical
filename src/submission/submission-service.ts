@@ -64,7 +64,7 @@ import {
 import { DeepReadonly } from 'deep-freeze';
 import { submissionRepository } from './submission-repo';
 import { v1 as uuid } from 'uuid';
-import dbRxNormService from '../rxnorm/db-service';
+import dbRxNormService from '../rxnorm/service';
 import { RxNormConcept } from '../rxnorm/api';
 import { validateSubmissionData, checkUniqueRecords } from './validation-clinical/validation';
 import { batchErrorMessage } from './submission-error-messages';
@@ -828,10 +828,10 @@ export namespace operations {
 
     await Promise.all(
       command.records.map(async (record, index) => {
+        let processedRecord: any = {};
         const schemaResult = schemaManager
           .instance()
           .process(command.clinicalType, record, index, schema);
-        let processedRecord: any = {};
 
         if (schemaResult.validationErrors.length > 0) {
           errorsAccumulator = errorsAccumulator.concat(
@@ -852,8 +852,9 @@ export namespace operations {
         );
         errorsAccumulator = errorsAccumulator.concat(programIdError);
 
-        // special case for therapies where we need to populate the rxnorm Ids
-        if (isRxNormTherapy(command.clinicalType)) {
+        // special case for therapies where we need to populate the rxnorm Ids, only do this step
+        // if the record is valid so far to avoid spending alot of time here
+        if (errorsAccumulator.length == 0 && isRxNormTherapy(command.clinicalType)) {
           const result = await validateRxNormFields(processedRecord, index);
           if (result.error != undefined) {
             errorsAccumulator = errorsAccumulator.concat([result.error]);
@@ -911,17 +912,17 @@ export namespace operations {
     error: SubmissionValidationError | undefined;
   }> {
     // if the id is provided we do a look up and double check against the name (if provided)
-    if (isNotAbsent(therapyRecord[TherapyRxNormFields.drug_rxnormid] as number)) {
-      const rxRecord = await dbRxNormService.lookupByRxcui(
-        therapyRecord[TherapyRxNormFields.drug_rxnormid] as number,
+    if (isNotAbsent(therapyRecord[TherapyRxNormFields.drug_rxnormid] as string)) {
+      const rxRecords = await dbRxNormService.lookupByRxcui(
+        therapyRecord[TherapyRxNormFields.drug_rxnormid] as string,
       );
-      if (rxRecord == undefined) {
+      if (_.isEmpty(rxRecords)) {
         const error: SubmissionValidationError = {
           fieldName: TherapyRxNormFields.drug_rxnormid,
           index: index,
           info: {}, // todo: finish this
-          message: 'couldnt find valid drug by this id',
-          type: DataValidationErrors.ID_NOT_REGISTERED, // todo: fix this to correct code
+          message: 'couldnt find valid drug by this id', // todo
+          type: DataValidationErrors.THERAPY_RXNORM_RXCUI_NOT_FOUND,
         };
         return {
           rxNormRecord: undefined,
@@ -929,53 +930,26 @@ export namespace operations {
         };
       }
 
-      if (therapyRecord[TherapyRxNormFields.drug_name] == undefined) {
-        return {
-          rxNormRecord: rxRecord,
-          error: undefined,
-        };
-      }
+      const matchingRecord = rxRecords.find(
+        rx => rx.str == therapyRecord[TherapyRxNormFields.drug_name],
+      );
 
-      if (therapyRecord[TherapyRxNormFields.drug_name] == rxRecord.str) {
+      if (matchingRecord != undefined) {
         return {
-          rxNormRecord: rxRecord,
+          rxNormRecord: matchingRecord,
           error: undefined,
         };
       }
 
       const providedName = therapyRecord[TherapyRxNormFields.drug_name];
-      const foundName = rxRecord.str;
+      const foundNames = rxRecords.map(r => r.str);
       const error: SubmissionValidationError = {
         fieldName: TherapyRxNormFields.drug_rxnormid,
         index: index,
         info: {}, // todo: finish this
-        message: `drug name provided doesnt match the one found in rxnorm for this id, provided name ${providedName}, found: ${foundName}`,
-        type: DataValidationErrors.ID_NOT_REGISTERED, // todo: fix this to correct code
-      };
-      return {
-        rxNormRecord: undefined,
-        error: error,
-      };
-    }
-
-    // only the drug name was provided do a lookup with that.
-    if (isNotEmptyString(therapyRecord[TherapyRxNormFields.drug_name] as string)) {
-      const rxRecord = await dbRxNormService.lookupByStr(
-        therapyRecord[TherapyRxNormFields.drug_name] as string,
-      );
-      if (rxRecord != undefined) {
-        return {
-          rxNormRecord: rxRecord,
-          error: undefined,
-        };
-      }
-
-      const error: SubmissionValidationError = {
-        fieldName: TherapyRxNormFields.drug_rxnormid,
-        index: index,
-        info: {}, // todo: finish this
-        message: 'couldnt find a valid rxcui for this drug name',
-        type: DataValidationErrors.ID_NOT_REGISTERED, // todo: fix this to correct code
+        // todo
+        message: `drug name provided doesnt match the one found in rxnorm for this id, provided name ${providedName}, found: ${foundNames}`,
+        type: DataValidationErrors.THERAPY_RXNORM_DRUG_NAME_INVALID,
       };
       return {
         rxNormRecord: undefined,
@@ -989,8 +963,8 @@ export namespace operations {
       fieldName: TherapyRxNormFields.drug_rxnormid,
       index: index,
       info: {}, // todo: finish this
-      message: `an rxcui id or drug name is required`,
-      type: DataValidationErrors.ID_NOT_REGISTERED, // todo: fix this to correct code
+      message: `an rxcui id or drug name is required`, // todo
+      type: DataValidationErrors.THERAPY_MISSING_RXNORM_FIELDS,
     };
     return {
       rxNormRecord: undefined,
