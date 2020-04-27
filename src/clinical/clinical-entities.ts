@@ -9,27 +9,17 @@ export interface Donor {
   programId: string;
   specimens: Array<Specimen>;
   clinicalInfo?: ClinicalInfo;
-  clinicalInfoStats?: ClinicalInfoStats;
   primaryDiagnosis?: ClinicalEntity | undefined;
   followUps?: Array<FollowUp>;
   treatments?: Array<Treatment>;
   createdAt?: string;
   updatedAt?: string;
-  aggregatedInfoStats?: AggregateClinicalInfoStats;
+  completenessStats?: CompetenessStats;
 }
 
-export interface AggregateClinicalInfoStats {
-  submittedCoreFields: number;
-  submittedExtendedFields?: number;
-  expectedCoreFields: number;
-  expectedExtendedFields?: number;
-}
-
-export interface ClinicalInfoStats {
-  submittedCoreFields: number;
-  submittedExtendedFields?: number;
-  expectedCoreFields: number;
-  expectedExtendedFields?: number;
+export interface CompetenessStats {
+  coreCompletion: CoreCompletionStats;
+  overriddenCoreCompletion: CoreClinicalEntites[];
 }
 
 export interface SchemaMetadata {
@@ -41,7 +31,6 @@ export interface SchemaMetadata {
 
 export type ClinicalEntity = {
   clinicalInfo: ClinicalInfo;
-  clinicalInfoStats?: ClinicalInfoStats;
   [k: string]: any;
 };
 
@@ -77,3 +66,13 @@ export interface ClinicalInfo {
 export type DonorMap = Readonly<{ [submitterId: string]: Donor }>;
 
 export type DonorBySubmitterIdMap = { [k: string]: DeepReadonly<Donor> };
+
+export interface CoreCompletionStats {
+  donor: number;
+  specimens: number;
+  primaryDiagnosis: number;
+  followUps: number;
+  treatments: number;
+}
+
+export type CoreClinicalEntites = keyof CoreCompletionStats;

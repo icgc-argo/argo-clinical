@@ -20,6 +20,7 @@ import {
   assertDbCollectionEmpty,
   findInDb,
   createDonorDoc,
+  updateData,
 } from '../testutils';
 import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN, JWT_ABCDEF, JWT_WXYZEF } from '../test.jwt';
 import {
@@ -1421,14 +1422,7 @@ describe('Submission Api', () => {
           // merge shouldn't have mutated donor except for donor.clinicalInfo
           chai
             .expect(updatedDonor)
-            .excluding([
-              'clinicalInfo',
-              'updatedAt',
-              '__v',
-              'createdAt',
-              'aggregatedInfoStats',
-              'clinicalInfoStats',
-            ])
+            .excluding(['clinicalInfo', 'updatedAt', '__v', 'createdAt', 'completenessStats'])
             .to.deep.eq(donor);
           chai.expect(updatedDonor.clinicalInfo).to.exist;
           chai.expect(updatedDonor.clinicalInfo).to.deep.include({
@@ -1690,11 +1684,11 @@ describe('Submission Api', () => {
     });
 
     it('should return 200 when commit is completed - clinical stats', async () => {
+      const donorFilter = { programId: programId, submitterId: 'ICGC_0001' };
       // To get submission into correct state (pending approval) we need to already have a completed submission...
       await uploadSubmission([
         'donor.tsv',
         'primary_diagnosis.tsv',
-        // 'follow_up.tsv',
         'treatment.tsv',
         'chemotherapy.tsv',
         'radiation.tsv',
@@ -1702,48 +1696,42 @@ describe('Submission Api', () => {
       ]);
       await validateSubmission();
       await commitActiveSubmission();
-      const [DonorBeforeUpdate] = await findInDb(dburl, 'donors', {
-        programId: programId,
-        submitterId: 'ICGC_0001',
-      });
-      DonorBeforeUpdate.clinicalInfoStats.should.deep.include({
-        submittedCoreFields: 3,
-        expectedCoreFields: 3,
-      });
-      DonorBeforeUpdate.primaryDiagnosis.clinicalInfoStats.should.deep.include({
-        submittedCoreFields: 2,
-        expectedCoreFields: 7,
-      });
-      DonorBeforeUpdate.treatments[0].clinicalInfoStats.should.deep.include({
-        submittedCoreFields: 6,
-        expectedCoreFields: 6,
-      });
-      // chemo_therapy stats
-      DonorBeforeUpdate.treatments[0].therapies[0].clinicalInfoStats.should.deep.include({
-        submittedCoreFields: 3,
-        expectedCoreFields: 3,
-      });
-      // radiation_therapy stats
-      DonorBeforeUpdate.treatments[0].therapies[1].clinicalInfoStats.should.deep.include({
-        submittedCoreFields: 5,
-        expectedCoreFields: 5,
-      });
-      DonorBeforeUpdate.treatments[1].clinicalInfoStats.should.deep.include({
-        submittedCoreFields: 6,
-        expectedCoreFields: 6,
-      });
-      // hormone_therapy stats
-      DonorBeforeUpdate.treatments[1].therapies[0].clinicalInfoStats.should.deep.include({
-        submittedCoreFields: 3,
-        expectedCoreFields: 3,
-      });
-      // Total of all clinical entities above should add up below
-      DonorBeforeUpdate.aggregatedInfoStats.should.deep.include({
-        submittedCoreFields: 28,
-        expectedCoreFields: 33,
+      const [DonorBeforeUpdate] = await findInDb(dburl, 'donors', donorFilter);
+      DonorBeforeUpdate.completenessStats.coreCompletion.should.deep.include({
+        donor: 1,
+        primaryDiagnosis: 1,
+        treatments: 1,
+        followUps: 0,
+        specimens: 0,
       });
 
-      await uploadSubmissionWithUpdates(['donor-with-updates.tsv', 'follow_up.tsv']);
+      // Imagine donor adds specimens via registration
+      DonorBeforeUpdate.specimens = [
+        {
+          samples: [{ sampleType: 'ctDNA', submitterId: 'sm123-00-1' }],
+          specimenTissueSource: 'Other',
+          tumourNormalDesignation: 'Normal',
+          specimenType: 'Normal',
+          submitterId: 'ss123-sjdm-2',
+          clinicalInfo: {},
+        },
+        {
+          samples: [{ sampleType: 'ctDNA', submitterId: 'sm123-00-2' }],
+          specimenTissueSource: 'Other',
+          tumourNormalDesignation: 'Tumour',
+          specimenType: 'Tumour',
+          submitterId: 'ss123-sjdm-1',
+          clinicalInfo: {},
+        },
+      ];
+
+      await updateData(dburl, 'donors', DonorBeforeUpdate, donorFilter);
+
+      await uploadSubmissionWithUpdates([
+        'donor-with-updates.tsv',
+        'follow_up.tsv',
+        'specimen2.tsv', // added clinical info for tumour specimen ss123-sjdm-1
+      ]);
       await validateSubmission();
       await commitActiveSubmission();
       return chai
@@ -1754,26 +1742,13 @@ describe('Submission Api', () => {
           res.should.have.status(200);
           res.body.should.be.empty;
           await assertDbCollectionEmpty(dburl, 'activesubmissions');
-          const [UpdatedDonor] = await findInDb(dburl, 'donors', {
-            programId: programId,
-            submitterId: 'ICGC_0001',
-          });
-          UpdatedDonor.clinicalInfoStats.should.deep.include({
-            submittedCoreFields: 1,
-            expectedCoreFields: 3,
-          });
-          UpdatedDonor.followUps[0].clinicalInfoStats.should.deep.include({
-            submittedCoreFields: 6,
-            expectedCoreFields: 11,
-          });
-          UpdatedDonor.followUps[1].clinicalInfoStats.should.deep.include({
-            submittedCoreFields: 6,
-            expectedCoreFields: 11,
-          });
-          // Total of all clinical entities should add to previous aggregated values up below
-          UpdatedDonor.aggregatedInfoStats.should.deep.include({
-            submittedCoreFields: 38,
-            expectedCoreFields: 55,
+          const [UpdatedDonor] = await findInDb(dburl, 'donors', donorFilter);
+          UpdatedDonor.completenessStats.coreCompletion.should.deep.include({
+            donor: 1,
+            primaryDiagnosis: 1,
+            treatments: 1,
+            followUps: 1,
+            specimens: 0.5, // half of registered specimen's have records
           });
         });
     });
@@ -1890,43 +1865,43 @@ describe('Submission Api', () => {
         },
         clinicalInfo: {
           program_id: 'ABCD-EF',
-          vital_status: 'DoDa',
-          cause_of_death: 'DaDo',
+          vital_status: 'DoDa', // invalid with new schema
+          cause_of_death: 'DaDo', // invalid with new schema
           submitter_donor_id: 'ICGC_0001',
           survival_time: 120,
         },
-        primaryDiagnosis: {
-          clinicalInfo: {
-            program_id: 'PACA-AU',
-            submitter_donor_id: 'ICGC_0001',
-            number_lymph_nodes_examined: 2,
-            age_at_diagnosis: 96,
-            cancer_type_code: 'A11.1A',
-            tumour_staging_system: 'Murphy',
+        specimens: [
+          {
+            samples: [{ sampleType: 'ctDNA', submitterId: 'sm123-00-1' }],
+            specimenTissueSource: 'Other',
+            tumourNormalDesignation: 'Normal',
+            specimenType: 'Normal',
+            submitterId: 'ss123-sjdm-2',
+            clinicalInfo: {},
           },
-          clinicalInfoStats: {
-            submittedCoreFields: 2,
-            expectedCoreFields: 7,
-            submittedExtendedFields: 0,
-            expectedExtendedFields: 0,
+          {
+            samples: [{ sampleType: 'ctDNA', submitterId: 'sm123-00-2' }],
+            specimenTissueSource: 'Other',
+            tumourNormalDesignation: 'Tumour',
+            specimenType: 'Tumour',
+            submitterId: 'ss123-sjdm-1',
+            clinicalInfo: {},
           },
-        },
-        clinicalInfoStats: {
-          submittedCoreFields: 1,
-          expectedCoreFields: 1,
-          submittedExtendedFields: 0,
-          expectedExtendedFields: 0,
-        },
-        aggregatedInfoStats: {
-          submittedCoreFields: 3,
-          expectedCoreFields: 8,
-          submittedExtendedFields: 0,
-          expectedExtendedFields: 0,
+        ],
+        completenessStats: {
+          coreCompletion: {
+            donor: 0,
+            primaryDiagnosis: 0,
+            treatments: 1, // overridden stat
+            followUps: 0,
+            specimens: 0,
+          },
+          overriddenCoreCompletion: ['treatments'],
         },
       });
       await insertData(dburl, 'donors', invalidDonor);
 
-      await uploadSubmission(['donor.tsv']);
+      await uploadSubmission(['donor.tsv', 'specimen2.tsv']);
       await validateSubmission();
       await commitActiveSubmission();
       return chai
@@ -1943,15 +1918,16 @@ describe('Submission Api', () => {
           });
           // donor was invalid but is now valid after submission, so stats should be updated
           updatedDonor.schemaMetadata.isValid.should.eq(true);
-          updatedDonor.clinicalInfoStats.should.deep.include({
-            submittedCoreFields: 3,
-            expectedCoreFields: 3,
+          updatedDonor.completenessStats.coreCompletion.should.deep.include({
+            donor: 1,
+            primaryDiagnosis: 0,
+            treatments: 1, // overridden field is same as before, despite no treatment record
+            followUps: 0,
+            specimens: 0.5, // one of the tumour/normal specimen has record
           });
-          updatedDonor.aggregatedInfoStats.should.deep.include({
-            submittedCoreFields: 5,
-            expectedCoreFields: 10,
-          });
-          // await clearCollections(dburl, ['donors']);
+          chai
+            .expect(updatedDonor.completenessStats.overriddenCoreCompletion)
+            .to.deep.eq(['treatments']);
         });
     });
   });
