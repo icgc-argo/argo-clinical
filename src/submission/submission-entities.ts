@@ -336,7 +336,7 @@ export enum TreatmentFieldsEnum {
 
 export enum TherapyRxNormFields {
   drug_name = 'drug_name',
-  drug_rxnormid = 'drug_rxnormid',
+  drug_rxnormid = 'drug_rxnormcui',
 }
 
 export enum CommonTherapyFields {

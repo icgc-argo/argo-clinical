@@ -1407,7 +1407,7 @@
               }
             },
             {
-              "name": "drug_rxnormid",
+              "name": "drug_rxnormcui",
               "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
@@ -1416,7 +1416,8 @@
               "meta": {
                 "validationDependency": true,
                 "core": true,
-                "primaryId": true
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
               }
             },
             {
@@ -1509,13 +1510,14 @@
               }
             },
             {
-              "name": "drug_rxnormid",
+              "name": "drug_rxnormcui",
               "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "meta": {
                 "validationDependency": true,
                 "core": true,
-                "primaryId": true
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
               },
               "restrictions": {
                 "required": true

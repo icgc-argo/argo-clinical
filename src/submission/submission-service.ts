@@ -67,7 +67,7 @@ import { v1 as uuid } from 'uuid';
 import dbRxNormService from '../rxnorm/service';
 import { RxNormConcept } from '../rxnorm/api';
 import { validateSubmissionData, checkUniqueRecords } from './validation-clinical/validation';
-import { batchErrorMessage } from './submission-error-messages';
+import { batchErrorMessage, validationErrorMessage } from './submission-error-messages';
 import {
   ClinicalSubmissionRecordsOperations,
   usingInvalidProgramId,
@@ -897,6 +897,7 @@ export namespace operations {
       throw new Error("shouldn't happen");
     }
     const recordWithRxNormPopulated = _.cloneDeep(r) as Record<string, any>;
+    // we replace the drug name to normalize the case
     recordWithRxNormPopulated[TherapyRxNormFields.drug_name] =
       rxnormConceptLookupResult.rxNormRecord.str;
     recordWithRxNormPopulated[TherapyRxNormFields.drug_rxnormid] =
@@ -920,8 +921,8 @@ export namespace operations {
         const error: SubmissionValidationError = {
           fieldName: TherapyRxNormFields.drug_rxnormid,
           index: index,
-          info: {}, // todo: finish this
-          message: 'couldnt find valid drug by this id', // todo
+          info: {},
+          message: validationErrorMessage(DataValidationErrors.THERAPY_RXNORM_RXCUI_NOT_FOUND),
           type: DataValidationErrors.THERAPY_RXNORM_RXCUI_NOT_FOUND,
         };
         return {
@@ -931,7 +932,9 @@ export namespace operations {
       }
 
       const matchingRecord = rxRecords.find(
-        rx => rx.str == therapyRecord[TherapyRxNormFields.drug_name],
+        rx =>
+          rx.str.toLowerCase() ==
+          (therapyRecord[TherapyRxNormFields.drug_name] as string).toLowerCase(),
       );
 
       if (matchingRecord != undefined) {
@@ -941,14 +944,14 @@ export namespace operations {
         };
       }
 
-      const providedName = therapyRecord[TherapyRxNormFields.drug_name];
       const foundNames = rxRecords.map(r => r.str);
       const error: SubmissionValidationError = {
         fieldName: TherapyRxNormFields.drug_rxnormid,
         index: index,
-        info: {}, // todo: finish this
-        // todo
-        message: `drug name provided doesnt match the one found in rxnorm for this id, provided name ${providedName}, found: ${foundNames}`,
+        info: {},
+        message: validationErrorMessage(DataValidationErrors.THERAPY_RXNORM_DRUG_NAME_INVALID, {
+          foundNames,
+        }),
         type: DataValidationErrors.THERAPY_RXNORM_DRUG_NAME_INVALID,
       };
       return {
@@ -962,8 +965,8 @@ export namespace operations {
     const error: SubmissionValidationError = {
       fieldName: TherapyRxNormFields.drug_rxnormid,
       index: index,
-      info: {}, // todo: finish this
-      message: `an rxcui id or drug name is required`, // todo
+      info: {},
+      message: `an rxcui id or drug name is required`,
       type: DataValidationErrors.THERAPY_MISSING_RXNORM_FIELDS,
     };
     return {
