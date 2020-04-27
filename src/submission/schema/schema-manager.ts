@@ -26,7 +26,7 @@ import {
   ClinicalEntityToEnumFieldsMap,
   ClinicalEntityKnownFieldCodeLists,
 } from '../submission-entities';
-import { notEmpty, Errors, sleep, isEmpty, toString, MongooseUtils } from '../../utils';
+import { notEmpty, Errors, sleep, isEmpty, toString } from '../../utils';
 import _ from 'lodash';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../submission-to-clinical/submission-to-clinical';
 import {
@@ -35,6 +35,7 @@ import {
 } from '../submission-to-clinical/stat-calculator';
 import { setStatus, Status } from '../../app-health';
 import * as messenger from '../submission-updates-messenger';
+import { mergeRecordsMapIntoDonor } from '../submission-to-clinical/merge-submission';
 
 const L = loggerFor(__filename);
 
@@ -250,8 +251,8 @@ export const revalidateAllDonorClinicalEntitiesAgainstSchema = (
     if (!isValid) {
       return;
     }
-    const errs = MigrationManager.validateDonorEntityAgainstNewSchema(schemaName, schema, donor);
-    isValid = !errs || errs.length == 0;
+    const result = MigrationManager.validateDonorEntityAgainstNewSchema(schemaName, schema, donor);
+    isValid = !result?.validationErrors || result?.validationErrors?.length == 0;
   });
   return isValid;
 };
@@ -609,20 +610,24 @@ namespace MigrationManager {
           newSchema,
           breakingChangesEntitesCache,
         );
-        if (result && result.length > 0) {
+
+        // update donor records to the valid & reprocessed records from schema validation for consistency
+        const reprocessedDonor = mergeRecordsMapIntoDonor(result.donorReporcessedRecords, donor);
+
+        if (result.donorSchemaErrors && result.donorSchemaErrors.length > 0) {
           // if invalid mark as invalid and update document metadata
           if (!dryRun) {
-            const invalidDonor = await markDonorAsInvalid(donor, migrationId);
-            updateSetOfProgramsWithChanges(donor, invalidDonor, programsWithChanges);
+            const invalidDonor = await markDonorAsInvalid(reprocessedDonor, migrationId);
+            updateSetOfProgramsWithChanges(reprocessedDonor, invalidDonor, programsWithChanges);
           } else {
-            await updateMigrationIdOnly(donor, migrationId);
+            await updateMigrationIdOnly(reprocessedDonor, migrationId);
           }
 
           migration.invalidDonorsErrors.push({
-            donorId: donor.donorId,
-            submitterDonorId: donor.submitterId,
-            programId: donor.programId,
-            errors: result,
+            donorId: reprocessedDonor.donorId,
+            submitterDonorId: reprocessedDonor.submitterId,
+            programId: reprocessedDonor.programId,
+            errors: result.donorSchemaErrors,
           });
 
           invalidCount += 1;
@@ -632,14 +637,14 @@ namespace MigrationManager {
         if (!dryRun) {
           // update stats if donor is valid
           const updatedDonor = await updateEntitiesClinicalInfoStats(
-            donor,
+            reprocessedDonor,
             newSchema,
             coreFieldChangesEntitiesCache,
           );
           const validDonor = await markDonorAsValid(updatedDonor, migrationId, newSchema.version);
-          updateSetOfProgramsWithChanges(donor, validDonor, programsWithChanges);
+          updateSetOfProgramsWithChanges(reprocessedDonor, validDonor, programsWithChanges);
         } else {
-          await updateMigrationIdOnly(donor, migrationId);
+          await updateMigrationIdOnly(reprocessedDonor, migrationId);
         }
         validCount += 1;
       }
@@ -714,20 +719,22 @@ namespace MigrationManager {
     breakingChangesEntitesCache: { [versions: string]: ClinicalEntitySchemaNames[] },
   ) => {
     const donorSchemaErrors: any[] = [];
+    const donorReporcessedRecords: any = {};
     const donorDocSchemaVersion = donor.schemaMetadata.lastValidSchemaVersion;
     const versionsKey = `${donorDocSchemaVersion}->${newSchema.version}`;
 
     const schemaNamesWithBreakingChanges = breakingChangesEntitesCache[versionsKey];
     for (const schemaName of schemaNamesWithBreakingChanges) {
       // not fields since we only need to check the whole schema once.
-      const errors = validateDonorEntityAgainstNewSchema(schemaName, newSchema, donor);
-      if (errors && errors.length > 0) {
+      const result = validateDonorEntityAgainstNewSchema(schemaName, newSchema, donor);
+      if (result?.validationErrors && result?.validationErrors.length > 0) {
         donorSchemaErrors.push({
-          [schemaName]: errors,
+          [schemaName]: result?.validationErrors,
         });
       }
+      donorReporcessedRecords[schemaName] = result?.processedRecords || [];
     }
-    return donorSchemaErrors;
+    return { donorSchemaErrors, donorReporcessedRecords };
   };
 
   const updateEntitiesClinicalInfoStats = async (
@@ -768,11 +775,7 @@ namespace MigrationManager {
         return prepareForSchemaReProcessing(cr);
       })
       .filter(notEmpty);
-    const result = service.processRecords(schema, schemaName, stringifyedRecords);
-    if (result.validationErrors.length > 0) {
-      return result.validationErrors;
-    }
-    return undefined;
+    return service.processRecords(schema, schemaName, stringifyedRecords);
   };
 
   function prepareForSchemaReProcessing(record: object) {
@@ -782,7 +785,7 @@ namespace MigrationManager {
   }
 
   const markDonorAsInvalid = async (donor: DeepReadonly<Donor>, migrationId: string) => {
-    return await clinicalService.updateDonorSchemaMetadata(donor, migrationId, false);
+    return await clinicalService.updateMigratedDonor(donor, migrationId, false);
   };
 
   const markDonorAsValid = async (
@@ -790,12 +793,7 @@ namespace MigrationManager {
     migrationId: string,
     newSchemaVersion: string,
   ) => {
-    return await clinicalService.updateDonorSchemaMetadata(
-      donor,
-      migrationId,
-      true,
-      newSchemaVersion,
-    );
+    return await clinicalService.updateMigratedDonor(donor, migrationId, true, newSchemaVersion);
   };
 
   const updateMigrationIdOnly = async (donor: DeepReadonly<Donor>, migrationId: string) => {

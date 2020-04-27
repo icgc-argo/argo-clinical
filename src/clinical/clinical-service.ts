@@ -4,7 +4,7 @@ import { Sample, Donor, SchemaMetadata } from './clinical-entities';
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 
-export async function updateDonorSchemaMetadata(
+export async function updateMigratedDonor(
   donor: DeepReadonly<Donor>,
   migrationId: string,
   isValid: boolean,
