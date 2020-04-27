@@ -159,18 +159,27 @@ const populateDefaults = (
   const mutableRecord: RawMutableRecord = _.cloneDeep(record) as RawMutableRecord;
   const x: SchemaDefinition = schemaDef;
   schemaDef.fields.forEach(field => {
+    const defaultValue = field.meta && field.meta.default;
+    if (isEmpty(defaultValue)) return undefined;
+
     const value = record[field.name];
-    if (isString(value)) {
-      if (isNotAbsent(value) && value.trim() === '' && field.meta && field.meta.default) {
-        L.debug(
-          `populating Default: ${field.meta.default} for ${field.name} in record : ${record}`,
-        );
-        mutableRecord[field.name] = `${field.meta.default}`;
+
+    // data record  value is (or is expected to be) just one string
+    if (isString(value) && !field.isArray) {
+      if (isNotAbsent(value) && value.trim() === '') {
+        L.debug(`populating Default: ${defaultValue} for ${field.name} in record : ${record}`);
+        mutableRecord[field.name] = `${defaultValue}`;
       }
       return undefined;
     }
-    if (isStringArray(value)) {
-      // TODO
+
+    // data record value is (or is expected to be) array of string
+    if (isStringArray(value) && field.isArray) {
+      if (notEmpty(value) && value.every(v => v.trim() === '')) {
+        L.debug(`populating Default: ${defaultValue} for ${field.name} in record : ${record}`);
+        const arrayDefaultValue = convertToArray(defaultValue);
+        mutableRecord[field.name] = arrayDefaultValue.map(v => `${v}`);
+      }
       return undefined;
     }
   });
@@ -348,10 +357,10 @@ namespace validation {
     return fields
       .map(field => {
         const recordFieldValues = convertToArray(rec[field.name]);
-        if (!isStringArray(recordFieldValues)) return undefined; // type guard
+        if (!isStringArray(recordFieldValues)) return undefined;
 
         const regex = field.restrictions?.regex;
-        if (isEmpty(regex)) return undefined; // type guard
+        if (isEmpty(regex)) return undefined;
 
         const invalidVals = recordFieldValues.filter(v => isInvalidRegexValue(regex, v));
         if (invalidVals.length !== 0) {
@@ -373,7 +382,7 @@ namespace validation {
         if (!isNumberArray(recordFieldValues)) return undefined;
 
         const range = field.restrictions?.range;
-        if (isEmpty(range)) return undefined; // type guard
+        if (isEmpty(range)) return undefined;
 
         const invalidVals = recordFieldValues.filter(v => isOutOfRange(range, v));
         if (invalidVals.length !== 0) {
@@ -524,7 +533,7 @@ namespace validation {
     return recordFieldValues.every(isEmptyString);
   };
 
-  const isOutOfRange = (range: any, value: number | undefined) => {
+  const isOutOfRange = (range: RangeRestriction, value: number | undefined) => {
     if (value == undefined) return false;
     const invalidRange =
       // less than the min if defined ?

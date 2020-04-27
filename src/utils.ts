@@ -130,7 +130,11 @@ export function isEmpty<TValue>(value: TValue | null | undefined): value is unde
 }
 
 export const convertToArray = <T>(val: T | T[]): T[] => {
-  return _.concat([], val);
+  if (Array.isArray(val)) {
+    return val;
+  } else {
+    return [val];
+  }
 };
 
 export function isString(value: any): value is string {
