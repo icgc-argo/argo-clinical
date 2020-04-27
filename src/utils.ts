@@ -125,9 +125,13 @@ export function notEmpty<TValue>(value: TValue | null | undefined): value is TVa
   return value !== null && value !== undefined && !_.isEmpty(value);
 }
 
-export function isEmpty<TValue>(value: TValue | null | undefined): value is TValue {
+export function isEmpty<TValue>(value: TValue | null | undefined): value is undefined {
   return !notEmpty(value);
 }
+
+export const convertToArray = <T>(val: T | T[]): T[] => {
+  return _.concat([], val);
+};
 
 export function isString(value: any): value is string {
   return typeof value === 'string' || value instanceof String;
@@ -135,6 +139,14 @@ export function isString(value: any): value is string {
 
 export function isStringArray(value: any | undefined | null): value is string[] {
   return Array.isArray(value) && value.every(isString);
+}
+
+export function isNumber(value: any): value is number {
+  return typeof value === 'number';
+}
+
+export function isNumberArray(values: any): values is number[] {
+  return Array.isArray(values) && values.every(isNumber);
 }
 
 // returns true if value matches at least one of the expressions

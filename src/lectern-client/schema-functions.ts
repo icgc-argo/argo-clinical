@@ -28,6 +28,8 @@ import {
   isStringArray,
   isString,
   isEmpty,
+  convertToArray,
+  isNumberArray,
 } from '../utils';
 import schemaErrorMessage from './schema-error-messages';
 import _ from 'lodash';
@@ -345,16 +347,13 @@ namespace validation {
   ) => {
     return fields
       .map(field => {
-        const value = rec[field.name];
-        if (typeof value !== 'string' && !isStringArray(value)) {
-          return undefined;
-        }
+        const recordFieldValues = convertToArray(rec[field.name]);
+        if (!isStringArray(recordFieldValues)) return undefined; // type guard
 
         const regex = field.restrictions?.regex;
-        if (!isRegexExists(regex)) return undefined; // type guard
+        if (isEmpty(regex)) return undefined; // type guard
 
-        const vals = convertToArray(value);
-        const invalidVals = vals.filter(v => isInvalidRegexValue(regex, v));
+        const invalidVals = recordFieldValues.filter(v => isInvalidRegexValue(regex, v));
         if (invalidVals.length !== 0) {
           return buildError(SchemaValidationErrorTypes.INVALID_BY_REGEX, field.name, index);
         }
@@ -370,19 +369,16 @@ namespace validation {
   ) => {
     return fields
       .map(field => {
-        const value = rec[field.name];
-        if (typeof value !== 'number' && !isNumberArray(value)) {
-          return undefined;
-        }
-        const range = field.restrictions?.range;
-        if (!isRangeExists(range)) return undefined; // type guard
+        const recordFieldValues = convertToArray(rec[field.name]);
+        if (!isNumberArray(recordFieldValues)) return undefined;
 
-        const val = convertToArray(value);
-        const invalidVals = val.filter(v => isOutOfRange(range, v));
+        const range = field.restrictions?.range;
+        if (isEmpty(range)) return undefined; // type guard
+
+        const invalidVals = recordFieldValues.filter(v => isOutOfRange(range, v));
         if (invalidVals.length !== 0) {
           return buildError(SchemaValidationErrorTypes.INVALID_BY_RANGE, field.name, index);
         }
-
         return undefined;
       })
       .filter(notEmpty);
@@ -416,19 +412,13 @@ namespace validation {
     return fields
       .map(field => {
         const codeList = field.restrictions?.codeList || undefined;
-        if (!isCodeListExists(codeList)) return undefined; // type guard
+        if (isEmpty(codeList)) return undefined;
 
-        const vals = convertToArray(rec[field.name]); // put all values into array if not already done
-        const invalidValues = vals.filter(val => isInvalidEnumValue(codeList, val));
+        const recordFieldValues = convertToArray(rec[field.name]); // put all values into array for easier validation
+        const invalidValues = recordFieldValues.filter(val => isInvalidEnumValue(codeList, val));
+
         if (invalidValues.length !== 0) {
-          return buildError(
-            SchemaValidationErrorTypes.INVALID_ENUM_VALUE,
-            field.name,
-            index,
-            //   {
-            //   invalidValues,
-            // }
-          );
+          return buildError(SchemaValidationErrorTypes.INVALID_ENUM_VALUE, field.name, index);
         }
         return undefined;
       })
@@ -442,21 +432,15 @@ namespace validation {
   ) => {
     return fields
       .map(field => {
-        if (!rec[field.name]) return undefined;
+        if (isEmpty(rec[field.name])) return undefined;
 
-        const vals = convertToArray(rec[field.name]); // put all values into array
-        const invalidValues = vals.filter(val => isInvalidFieldType(field.valueType, val));
+        const recordFieldValues = convertToArray(rec[field.name]); // put all values into array
+        const invalidValues = recordFieldValues.filter(v => isInvalidFieldType(field.valueType, v));
 
-        if (invalidValues.length === 0) return undefined;
-
-        return buildError(
-          SchemaValidationErrorTypes.INVALID_FIELD_VALUE_TYPE,
-          field.name,
-          index,
-          //   {
-          //   invalidValues,
-          // }
-        );
+        if (invalidValues.length !== 0) {
+          return buildError(SchemaValidationErrorTypes.INVALID_FIELD_VALUE_TYPE, field.name, index);
+        }
+        return undefined;
       })
       .filter(notEmpty);
   };
@@ -536,21 +520,9 @@ namespace validation {
     const isRequired = field.restrictions && field.restrictions.required;
     if (!isRequired) return false;
 
-    const vals = convertToArray(record[field.name]);
-    return vals.every(isEmptyString);
+    const recordFieldValues = convertToArray(record[field.name]);
+    return recordFieldValues.every(isEmptyString);
   };
-
-  function isCodeListExists(codeList: any): codeList is CodeListRestriction {
-    return codeList !== undefined && codeList.length > 0;
-  }
-
-  function isRegexExists(regex: any): regex is string {
-    return regex !== undefined;
-  }
-
-  function isRangeExists(range: any): range is RangeRestriction {
-    return range !== undefined;
-  }
 
   const isOutOfRange = (range: any, value: number | undefined) => {
     if (value == undefined) return false;
@@ -563,6 +535,7 @@ namespace validation {
       (range.exclusiveMax !== undefined && value >= range.exclusiveMax);
     return invalidRange;
   };
+
   const isInvalidEnumValue = (
     codeList: CodeListRestriction,
     value: string | boolean | number | undefined,
@@ -578,10 +551,6 @@ namespace validation {
     const regexPattern = new RegExp(regex);
     return !regexPattern.test(value);
   };
-
-  function isNumberArray(values: any): values is number[] {
-    return Array.isArray(values) && !values.some(isNaN);
-  }
 
   const validateWithScript = (
     field: FieldDefinition,
@@ -649,7 +618,3 @@ namespace validation {
     return { ...errorData, message: schemaErrorMessage(errorType, errorData) };
   };
 }
-
-const convertToArray = <T>(val: T | T[]): T[] => {
-  return _.concat([], val);
-};
