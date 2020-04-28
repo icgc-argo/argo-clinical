@@ -13,7 +13,11 @@ import { schemaClient as schemaServiceAdapter } from '../../lectern-client/schem
 import { schemaRepo } from './schema-repo';
 import { loggerFor } from '../../logger';
 import { migrationRepo } from './migration-repo';
-import { DictionaryMigration, NewSchemaVerificationResult } from './migration-entities';
+import {
+  DictionaryMigration,
+  NewSchemaVerificationResult,
+  DonorMigrationSchemaErrors,
+} from './migration-entities';
 import { Donor, ClinicalInfo } from '../../clinical/clinical-entities';
 import { DeepReadonly } from 'deep-freeze';
 import * as clinicalService from '../../clinical/clinical-service';
@@ -30,8 +34,8 @@ import { notEmpty, Errors, sleep, isEmpty, toString, MongooseUtils } from '../..
 import _ from 'lodash';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../submission-to-clinical/submission-to-clinical';
 import {
-  recalculateEntitiesClinicalInfoStats,
-  recalculateAllClincalInfoStats,
+  recalculateDonorStatsHoldOverridden,
+  setInvalidCoreEntityStatsForMigration,
 } from '../submission-to-clinical/stat-calculator';
 import { setStatus, Status } from '../../app-health';
 import * as messenger from '../submission-updates-messenger';
@@ -612,7 +616,8 @@ namespace MigrationManager {
         if (result && result.length > 0) {
           // if invalid mark as invalid and update document metadata
           if (!dryRun) {
-            const invalidDonor = await markDonorAsInvalid(donor, migrationId);
+            const updatedDonor = await updateStatsForInvalidDonorToBe(donor, result);
+            const invalidDonor = await markDonorAsInvalid(updatedDonor, migrationId);
             updateSetOfProgramsWithChanges(donor, invalidDonor, programsWithChanges);
           } else {
             await updateMigrationIdOnly(donor, migrationId);
@@ -630,12 +635,7 @@ namespace MigrationManager {
         }
 
         if (!dryRun) {
-          // update stats if donor is valid
-          const updatedDonor = await updateEntitiesClinicalInfoStats(
-            donor,
-            newSchema,
-            coreFieldChangesEntitiesCache,
-          );
+          const updatedDonor = await updateStatsForValidDonorToBe(donor);
           const validDonor = await markDonorAsValid(updatedDonor, migrationId, newSchema.version);
           updateSetOfProgramsWithChanges(donor, validDonor, programsWithChanges);
         } else {
@@ -660,7 +660,7 @@ namespace MigrationManager {
   ) => {
     const programIsBeingUpdated =
       donorBeforeMigration.schemaMetadata.isValid !== donorAfterMigration.schemaMetadata.isValid ||
-      !_.isEqual(donorBeforeMigration.aggregatedInfoStats, donorAfterMigration.aggregatedInfoStats);
+      !_.isEqual(donorBeforeMigration.completenessStats, donorAfterMigration.completenessStats);
     if (programIsBeingUpdated) {
       programsWithChanges.add(donorAfterMigration.programId);
     }
@@ -713,7 +713,7 @@ namespace MigrationManager {
     newSchema: SchemasDictionary,
     breakingChangesEntitesCache: { [versions: string]: ClinicalEntitySchemaNames[] },
   ) => {
-    const donorSchemaErrors: any[] = [];
+    const donorSchemaErrors: DonorMigrationSchemaErrors = [];
     const donorDocSchemaVersion = donor.schemaMetadata.lastValidSchemaVersion;
     const versionsKey = `${donorDocSchemaVersion}->${newSchema.version}`;
 
@@ -730,23 +730,23 @@ namespace MigrationManager {
     return donorSchemaErrors;
   };
 
-  const updateEntitiesClinicalInfoStats = async (
-    donor: DeepReadonly<Donor>,
-    newSchema: SchemasDictionary,
-    coreFieldUpdatedEntitiesCache: { [versionsKey: string]: ClinicalEntitySchemaNames[] },
+  const updateStatsForInvalidDonorToBe = async (
+    donorBeforeSetInvalid: DeepReadonly<Donor>,
+    results: DonorMigrationSchemaErrors,
   ) => {
-    // donor has no aggregated stats or it was previously invalid, so need to calculate for entire donor
-    if (isEmpty(donor.aggregatedInfoStats) || !donor.schemaMetadata.isValid) {
-      return recalculateAllClincalInfoStats(donor, newSchema);
-    }
+    const invalidEntities = results.map(r => Object.keys(r)).flat();
+    return setInvalidCoreEntityStatsForMigration(donorBeforeSetInvalid, invalidEntities);
+  };
 
-    // donor has stats, so just update the ones that have changes for
-    const versionsKey = `${donor.schemaMetadata.lastValidSchemaVersion}->${newSchema.version}`;
-    return recalculateEntitiesClinicalInfoStats(
-      donor,
-      coreFieldUpdatedEntitiesCache[versionsKey],
-      newSchema,
-    );
+  const updateStatsForValidDonorToBe = async (donorBeforeSetValid: DeepReadonly<Donor>) => {
+    // donor has no aggregated stats or it was previously invalid, so need to calculate for entire donor
+    if (
+      isEmpty(donorBeforeSetValid.completenessStats) ||
+      !donorBeforeSetValid.schemaMetadata.isValid
+    ) {
+      return recalculateDonorStatsHoldOverridden(_.cloneDeep(donorBeforeSetValid) as Donor);
+    }
+    return donorBeforeSetValid;
   };
 
   export const validateDonorEntityAgainstNewSchema = (

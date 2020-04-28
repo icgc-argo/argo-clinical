@@ -72,6 +72,22 @@ export async function insertRxNormDrug(id: string, name: string, dbConnection: m
   );
 }
 
+export const updateData = async (
+  dburl: string,
+  collection: string,
+  document: any,
+  filter: any = {},
+): Promise<any> => {
+  console.log(`dburl ${dburl}`);
+  const conn = await mongo.connect(dburl);
+  await conn
+    .db('clinical')
+    .collection(collection)
+    .update(filter, document, { upsert: true });
+  await conn.close();
+  return document._id;
+};
+
 export const emptyDonorDocument = (overrides?: Partial<Donor>) => {
   const gender = Math.random() > 0.5 ? 'Male' : 'Female';
   const donor: Donor = {

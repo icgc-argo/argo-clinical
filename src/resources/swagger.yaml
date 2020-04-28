@@ -748,6 +748,43 @@ paths:
         '404':
           description: no matching sample found
 
+  /clinical/donor/{donorId}/completeness-stats:
+    patch:
+      tags:
+        - Patch Operations
+      summary: Used to override donor aggregatedInfoStats
+      description: For coreCompletionOverride, only the ones defined will be overridden the rest will be recalculated
+      parameters:
+        - name: donorId
+          description: the argo donorId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                coreCompletionOverride:
+                  type: object
+                  properties:
+                    donor:
+                      type: number
+                    treatments:
+                      type: number
+                    primaryDiagnosis:
+                      type: number
+                    followUps:
+                      type: number
+                    specimens:
+                      type: number
+      responses:
+        '200':
+          description: 'Donor with updated stats'
+
 servers:
   - url: /
 tags:
@@ -763,6 +800,8 @@ tags:
     description: Uploading, Validating, and Committing clinical data
   - name: Clinical Data
     description: ''
+  - name: Patch Operations
+    description: Clinical Service Patch Operations
   - name: ICGC Import
     description: APIs to do the icgc import
 components:
