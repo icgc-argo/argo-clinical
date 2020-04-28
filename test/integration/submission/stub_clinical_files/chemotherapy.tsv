@@ -1,2 +1,2 @@
-program_id	submitter_donor_id	submitter_treatment_id	drug_name	drug_rxnormid	chemotherapy_dosage_units	cumulative_drug_dosage
-ABCD-EF	ICGC_0001	T_02	mesna	44	mg/m²	4
+program_id	submitter_donor_id	submitter_treatment_id	drug_name	drug_rxnormcui	chemotherapy_dosage_units	cumulative_drug_dosage
+ABCD-EF	ICGC_0001	T_02	drugA	423	mg/m²	4

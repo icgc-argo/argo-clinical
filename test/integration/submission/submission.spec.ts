@@ -68,14 +68,13 @@ describe('Submission Api', () => {
     return (async () => {
       try {
         mongoContainer = await new GenericContainer('mongo').withExposedPorts(27017).start();
-        mysqlContainer = await new GenericContainer('mysql:5.5')
+        mysqlContainer = await new GenericContainer('mysql', '5.5')
           .withEnv('MYSQL_DATABASE', RXNORM_DB)
           .withEnv('MYSQL_USER', RXNORM_USER)
           .withEnv('MYSQL_ROOT_PASSWORD', RXNORM_PASS)
           .withEnv('MYSQL_PASSWORD', RXNORM_PASS)
           .withExposedPorts(3306)
           .start();
-        // start containers in parallel
         console.log('mongo test container started');
         await bootstrap.run({
           mongoPassword() {
@@ -141,20 +140,20 @@ describe('Submission Api', () => {
             };
           },
         });
-        const rxnormDbConnection = mysql.createConnection({
+        const rxnormDbConnection = mysql.createPool({
           database: RXNORM_DB,
           user: RXNORM_USER,
           password: RXNORM_PASS,
           host: mysqlContainer.getContainerIpAddress(),
           port: mysqlContainer.getMappedPort(3306),
         });
-        createtRxNormTables(rxnormDbConnection);
-        insertRxNormDrug('423', 'drugA', rxnormDbConnection);
-        insertRxNormDrug('423', 'drug A', rxnormDbConnection);
-        insertRxNormDrug('423', 'Koolaid', rxnormDbConnection);
-        insertRxNormDrug('22323', 'drug 2', rxnormDbConnection);
-        insertRxNormDrug('22323', 'drug B', rxnormDbConnection);
-        insertRxNormDrug('12', '123-H2O', rxnormDbConnection);
+        await createtRxNormTables(rxnormDbConnection);
+        await insertRxNormDrug('423', 'drugA', rxnormDbConnection);
+        await insertRxNormDrug('423', 'drug A', rxnormDbConnection);
+        await insertRxNormDrug('423', 'Koolaid', rxnormDbConnection);
+        await insertRxNormDrug('22323', 'drug 2', rxnormDbConnection);
+        await insertRxNormDrug('22323', 'drug B', rxnormDbConnection);
+        await insertRxNormDrug('12', '123-H2O', rxnormDbConnection);
       } catch (err) {
         console.error('before >>>>>>>>>>>', err);
         return err;
@@ -1415,7 +1414,7 @@ describe('Submission Api', () => {
         });
     });
 
-    it.only('should return 200 when commit is completed', async () => {
+    it('should return 200 when commit is completed', async () => {
       // To get submission into correct state (pending approval) we need to already have a completed submission...
       await uploadSubmission([
         'donor.tsv',

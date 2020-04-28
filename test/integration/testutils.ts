@@ -1,8 +1,8 @@
 import mongo from 'mongodb';
 import _ from 'lodash';
 import chai from 'chai';
-import { Donor } from '../../src/clinical/clinical-entities';
 import * as mysql from 'mysql';
+import { Donor } from '../../src/clinical/clinical-entities';
 import * as utils from 'util';
 export const clearCollections = async (dburl: string, collections: string[]) => {
   try {
@@ -55,19 +55,21 @@ export const insertData = async (
   return document._id;
 };
 
-export async function createtRxNormTables(dbConnection: mysql.Connection) {
-  const connect = utils.promisify(dbConnection.connect).bind(dbConnection);
+export async function execMysqlQuery(sql: string, dbConnection: mysql.Pool) {
   const query = utils.promisify(dbConnection.query).bind(dbConnection);
-  const sql = 'CREATE TABLE RXNCONSO (RXCUI VARCHAR(255), STR VARCHAR(255))';
-  await connect();
   await query(sql);
 }
 
-export async function insertRxNormDrug(id: string, name: string, dbConnection: mysql.Connection) {
-  const connect = utils.promisify(dbConnection.connect).bind(dbConnection);
-  const query = utils.promisify(dbConnection.query).bind(dbConnection);
-  await connect();
-  await query(`insert into RXNCONSO (RXCUI, STR) values('${id}', '${name}')`);
+export async function createtRxNormTables(dbConnection: mysql.Pool) {
+  const sql = 'CREATE TABLE RXNCONSO (RXCUI VARCHAR(255), STR VARCHAR(255))';
+  await execMysqlQuery(sql, dbConnection);
+}
+
+export async function insertRxNormDrug(id: string, name: string, dbConnection: mysql.Pool) {
+  await execMysqlQuery(
+    `insert into RXNCONSO (RXCUI, STR) values('${id}', '${name}')`,
+    dbConnection,
+  );
 }
 
 export const emptyDonorDocument = (overrides?: Partial<Donor>) => {

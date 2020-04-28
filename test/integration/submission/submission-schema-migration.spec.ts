@@ -20,7 +20,7 @@ import { getInstance } from '../../../src/submission/submission-updates-messenge
 
 import chai from 'chai';
 import 'chai-http';
-import 'sampleFiles/src/types/deep-equal-in-any-order';
+import 'deep-equal-in-any-order';
 import 'mocha';
 import mongoose from 'mongoose';
 import { spy, SinonSpy } from 'sinon';
