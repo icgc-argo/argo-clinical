@@ -4,6 +4,7 @@ import {
   ClinicalEntitySchemaNames,
   PrimaryDiagnosisFieldsEnum,
   CommonTherapyFields,
+  TherapyRxNormFields,
 } from '../../../src/submission/submission-entities';
 import { DonorFieldsEnum } from '../../../src/submission/submission-entities';
 import { SampleRegistrationFieldsEnum } from '../../../src/submission/submission-entities';
@@ -509,10 +510,11 @@ describe('schema migration api', () => {
       migration.newSchemaErrors.should.deep.eq({
         [ClinicalEntitySchemaNames.HORMONE_THERAPY]: {
           missingFields: [
+            TherapyRxNormFields.drug_name,
+            TherapyRxNormFields.drug_rxnormid,
             CommonTherapyFields.program_id,
             CommonTherapyFields.submitter_donor_id,
             CommonTherapyFields.submitter_treatment_id,
-            'hormone_therapy_drug_name',
           ],
           invalidFieldCodeLists: [],
         },
