@@ -10,7 +10,6 @@ const fsPromises = fs.promises;
 
 export namespace TsvUtils {
   export type TsvRecordAsJsonObj = { [header: string]: string | string[] };
-  // type TsvRecordAsJsonObj = { [header: string]: string };
 
   export const tsvToJson = async (file: string): Promise<ReadonlyArray<TsvRecordAsJsonObj>> => {
     const contents = await fsPromises.readFile(file, 'utf-8');
@@ -37,7 +36,6 @@ export namespace TsvUtils {
           .map(s => s.trim());
 
         obj[nextKey] = arrData.length === 1 ? arrData[0] : arrData;
-        // obj[nextKey] = (data[index] && data[index].trim()) || '';
         return obj;
       }, {});
     });

@@ -5,7 +5,7 @@ import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 import { forceRecalcDonorCoreEntityStats } from '../submission/submission-to-clinical/stat-calculator';
 
-export async function updateMigratedDonor(
+export async function updateDonorSchemaMetadata(
   donor: DeepReadonly<Donor>,
   migrationId: string,
   isValid: boolean,

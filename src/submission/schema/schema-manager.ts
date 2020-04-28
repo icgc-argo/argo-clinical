@@ -39,7 +39,6 @@ import {
 } from '../submission-to-clinical/stat-calculator';
 import { setStatus, Status } from '../../app-health';
 import * as messenger from '../submission-updates-messenger';
-import { mergeRecordsMapIntoDonor } from '../submission-to-clinical/merge-submission';
 
 const L = loggerFor(__filename);
 
@@ -614,7 +613,6 @@ namespace MigrationManager {
           newSchema,
           breakingChangesEntitesCache,
         );
-
         if (result && result.length > 0) {
           // if invalid mark as invalid and update document metadata
           if (!dryRun) {
@@ -784,7 +782,7 @@ namespace MigrationManager {
   }
 
   const markDonorAsInvalid = async (donor: DeepReadonly<Donor>, migrationId: string) => {
-    return await clinicalService.updateMigratedDonor(donor, migrationId, false);
+    return await clinicalService.updateDonorSchemaMetadata(donor, migrationId, false);
   };
 
   const markDonorAsValid = async (
@@ -792,7 +790,12 @@ namespace MigrationManager {
     migrationId: string,
     newSchemaVersion: string,
   ) => {
-    return await clinicalService.updateMigratedDonor(donor, migrationId, true, newSchemaVersion);
+    return await clinicalService.updateDonorSchemaMetadata(
+      donor,
+      migrationId,
+      true,
+      newSchemaVersion,
+    );
   };
 
   const updateMigrationIdOnly = async (donor: DeepReadonly<Donor>, migrationId: string) => {
