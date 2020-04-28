@@ -927,6 +927,16 @@ namespace MigrationManager {
       });
     });
 
+    // ******************
+    // isArray designation
+    // ******************
+    changeAnalysis.isArrayDesignationChanges.forEach(fp => {
+      invalidatingFields.push({
+        type: 'IS_ARRAY_CHANGED',
+        fieldPath: fp,
+      });
+    });
+
     return invalidatingFields;
   };
 

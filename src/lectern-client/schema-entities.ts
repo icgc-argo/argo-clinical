@@ -121,6 +121,7 @@ export interface ChangeAnalysis {
     renamedFields: string[];
     deletedFields: string[];
   };
+  isArrayDesignationChanges: string[];
   restrictionsChanges: RestrictionChanges;
   metaChanges?: MetaChanges;
 }
