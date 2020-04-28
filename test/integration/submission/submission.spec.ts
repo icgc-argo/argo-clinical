@@ -1564,7 +1564,7 @@ describe('Submission Api', () => {
       // To get submission into correct state (pending approval) we need to already have a completed submission...
       await uploadSubmission([
         'donor.tsv',
-        'primary_diagnosis.tsv',
+        'primary_diagnosis-array_input.tsv',
         'follow_up.tsv',
         'treatment.tsv',
         'chemotherapy.tsv',
@@ -1586,7 +1586,7 @@ describe('Submission Api', () => {
         age_at_diagnosis: 96,
         cancer_type_code: 'A11.1A',
         tumour_staging_system: 'Murphy',
-        presenting_symptoms: null, // tslint:disable-line
+        presenting_symptoms: ['Back Pain', 'Nausea'],
       };
 
       const donor = {
@@ -1616,7 +1616,7 @@ describe('Submission Api', () => {
         submitterId: 'ICGC_0001',
       });
 
-      // data from primary_diagnosis.tsv
+      // data from primary_diagnosis-array_input.tsv
       donorBeforeApproveCommit.primaryDiagnosis.clinicalInfo.should.deep.eq(primary_diagnosis);
 
       DonorBeforeUpdate.clinicalInfo.should.include(donor);
@@ -1639,10 +1639,8 @@ describe('Submission Api', () => {
             '__v', // ignore mongodb field
             'updatedAt', // ignore mongodb field
             'clinicalInfo', // donor clinicalInfo is being updated
-            'clinicalInfoStats', // donor clinicalInfoStats are being updated
             'treatments', // the treatments are being updated
             'followUps[0]', // this followUp is being updated
-            'aggregatedInfoStats', // aggregatedInfoStats are being updated
           ]);
           // these are set becuase they were updated and can be ignored in this chai.expect assert
           donorBeforeUpdates.followUps[0] = updatedDonor.followUps[0];

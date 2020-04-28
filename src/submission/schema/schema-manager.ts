@@ -255,8 +255,8 @@ export const revalidateAllDonorClinicalEntitiesAgainstSchema = (
     if (!isValid) {
       return;
     }
-    const result = MigrationManager.validateDonorEntityAgainstNewSchema(schemaName, schema, donor);
-    isValid = !result?.validationErrors || result?.validationErrors?.length == 0;
+    const errs = MigrationManager.validateDonorEntityAgainstNewSchema(schemaName, schema, donor);
+    isValid = !errs || errs.length == 0;
   });
   return isValid;
 };
@@ -615,27 +615,21 @@ namespace MigrationManager {
           breakingChangesEntitesCache,
         );
 
-        // update donor records to the valid & reprocessed records from schema validation for consistency
-        const reprocessedDonor = mergeRecordsMapIntoDonor(result.donorReporcessedRecords, donor);
-
-        if (result.donorSchemaErrors && result.donorSchemaErrors.length > 0) {
+        if (result && result.length > 0) {
           // if invalid mark as invalid and update document metadata
           if (!dryRun) {
-            const updatedDonor = await updateStatsForInvalidDonorToBe(
-              reprocessedDonor,
-              result.donorSchemaErrors,
-            );
+            const updatedDonor = await updateStatsForInvalidDonorToBe(donor, result);
             const invalidDonor = await markDonorAsInvalid(updatedDonor, migrationId);
-            updateSetOfProgramsWithChanges(reprocessedDonor, invalidDonor, programsWithChanges);
+            updateSetOfProgramsWithChanges(donor, invalidDonor, programsWithChanges);
           } else {
-            await updateMigrationIdOnly(reprocessedDonor, migrationId);
+            await updateMigrationIdOnly(donor, migrationId);
           }
 
           migration.invalidDonorsErrors.push({
-            donorId: reprocessedDonor.donorId,
-            submitterDonorId: reprocessedDonor.submitterId,
-            programId: reprocessedDonor.programId,
-            errors: result.donorSchemaErrors,
+            donorId: donor.donorId,
+            submitterDonorId: donor.submitterId,
+            programId: donor.programId,
+            errors: result,
           });
 
           invalidCount += 1;
@@ -643,12 +637,11 @@ namespace MigrationManager {
         }
 
         if (!dryRun) {
-          // update stats if donor is valid
-          const updatedDonor = await updateStatsForValidDonorToBe(reprocessedDonor);
+          const updatedDonor = await updateStatsForValidDonorToBe(donor);
           const validDonor = await markDonorAsValid(updatedDonor, migrationId, newSchema.version);
-          updateSetOfProgramsWithChanges(reprocessedDonor, validDonor, programsWithChanges);
+          updateSetOfProgramsWithChanges(donor, validDonor, programsWithChanges);
         } else {
-          await updateMigrationIdOnly(reprocessedDonor, migrationId);
+          await updateMigrationIdOnly(donor, migrationId);
         }
         validCount += 1;
       }
@@ -723,22 +716,20 @@ namespace MigrationManager {
     breakingChangesEntitesCache: { [versions: string]: ClinicalEntitySchemaNames[] },
   ) => {
     const donorSchemaErrors: DonorMigrationSchemaErrors = [];
-    const donorReporcessedRecords: any = {};
     const donorDocSchemaVersion = donor.schemaMetadata.lastValidSchemaVersion;
     const versionsKey = `${donorDocSchemaVersion}->${newSchema.version}`;
 
     const schemaNamesWithBreakingChanges = breakingChangesEntitesCache[versionsKey];
     for (const schemaName of schemaNamesWithBreakingChanges) {
       // not fields since we only need to check the whole schema once.
-      const result = validateDonorEntityAgainstNewSchema(schemaName, newSchema, donor);
-      if (result?.validationErrors && result?.validationErrors.length > 0) {
+      const errors = validateDonorEntityAgainstNewSchema(schemaName, newSchema, donor);
+      if (errors && errors.length > 0) {
         donorSchemaErrors.push({
-          [schemaName]: result?.validationErrors,
+          [schemaName]: errors,
         });
       }
-      donorReporcessedRecords[schemaName] = result?.processedRecords || [];
     }
-    return { donorSchemaErrors, donorReporcessedRecords };
+    return donorSchemaErrors;
   };
 
   const updateStatsForInvalidDonorToBe = async (
@@ -779,7 +770,11 @@ namespace MigrationManager {
         return prepareForSchemaReProcessing(cr);
       })
       .filter(notEmpty);
-    return service.processRecords(schema, schemaName, stringifyedRecords);
+    const result = service.processRecords(schema, schemaName, stringifyedRecords);
+    if (result.validationErrors.length > 0) {
+      return result.validationErrors;
+    }
+    return undefined;
   };
 
   function prepareForSchemaReProcessing(record: object) {
