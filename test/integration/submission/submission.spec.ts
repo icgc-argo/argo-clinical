@@ -5,7 +5,7 @@ import mongo from 'mongodb';
 import fs from 'fs';
 // needed for types
 import 'chai-http';
-import 'sampleFiles/src/types/deep-equal-in-any-order';
+import 'deep-equal-in-any-order';
 import 'mocha';
 import mongoose from 'mongoose';
 import { GenericContainer } from 'testcontainers';
@@ -20,7 +20,10 @@ import {
   assertDbCollectionEmpty,
   findInDb,
   createDonorDoc,
+  createtRxNormTables,
+  insertRxNormDrug,
 } from '../testutils';
+import * as mysql from 'mysql';
 import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN, JWT_ABCDEF, JWT_WXYZEF } from '../test.jwt';
 import {
   ActiveRegistration,
@@ -32,7 +35,6 @@ import {
   ClinicalEntitySchemaNames,
   DonorFieldsEnum,
   ClinicalUniqueIdentifier,
-  SavedClinicalEntity,
   ClinicalEntities,
 } from '../../../src/submission/submission-entities';
 import { TsvUtils } from '../../../src/utils';
@@ -53,26 +55,27 @@ const schemaName = 'ARGO Clinical Submission';
 const schemaVersion = '1.0';
 const stubFilesDir = __dirname + `/stub_clinical_files`;
 
+const RXNORM_DB = 'rxnorm';
+const RXNORM_USER = 'clinical';
+const RXNORM_PASS = 'password';
+
 describe('Submission Api', () => {
+  let dburl = ``;
   let mongoContainer: any;
   let mysqlContainer: any;
-  let dburl = ``;
   // will run when all tests are finished
   before(() => {
     return (async () => {
       try {
-        const mongoContainerPromise = new GenericContainer('mongo').withExposedPorts(27017).start();
-        const mysqlContainerPromise = new GenericContainer('mysql')
-          .withEnv('MYSQL_DATABASE', 'rxnorm')
-          .withEnv('MYSQL_USER', 'clinical')
-          .withEnv('MYSQL_ROOT_PASSWORD', 'password')
-          .withEnv('MYSQL_PASSWORD', 'password')
+        mongoContainer = await new GenericContainer('mongo').withExposedPorts(27017).start();
+        mysqlContainer = await new GenericContainer('mysql:5.5')
+          .withEnv('MYSQL_DATABASE', RXNORM_DB)
+          .withEnv('MYSQL_USER', RXNORM_USER)
+          .withEnv('MYSQL_ROOT_PASSWORD', RXNORM_PASS)
+          .withEnv('MYSQL_PASSWORD', RXNORM_PASS)
           .withExposedPorts(3306)
           .start();
         // start containers in parallel
-        const containers = await Promise.all([mongoContainerPromise, mysqlContainerPromise]);
-        mongoContainer = containers[0];
-        mysqlContainer = containers[1];
         console.log('mongo test container started');
         await bootstrap.run({
           mongoPassword() {
@@ -129,15 +132,29 @@ describe('Submission Api', () => {
           },
           rxNormDbProperties() {
             return {
-              database: 'rxnorm',
-              user: 'clinical',
-              password: 'password',
+              database: RXNORM_DB,
+              user: RXNORM_USER,
+              password: RXNORM_PASS,
               timeout: 5000,
               host: mysqlContainer.getContainerIpAddress(),
               port: mysqlContainer.getMappedPort(3306),
             };
           },
         });
+        const rxnormDbConnection = mysql.createConnection({
+          database: RXNORM_DB,
+          user: RXNORM_USER,
+          password: RXNORM_PASS,
+          host: mysqlContainer.getContainerIpAddress(),
+          port: mysqlContainer.getMappedPort(3306),
+        });
+        createtRxNormTables(rxnormDbConnection);
+        insertRxNormDrug('423', 'drugA', rxnormDbConnection);
+        insertRxNormDrug('423', 'drug A', rxnormDbConnection);
+        insertRxNormDrug('423', 'Koolaid', rxnormDbConnection);
+        insertRxNormDrug('22323', 'drug 2', rxnormDbConnection);
+        insertRxNormDrug('22323', 'drug B', rxnormDbConnection);
+        insertRxNormDrug('12', '123-H2O', rxnormDbConnection);
       } catch (err) {
         console.error('before >>>>>>>>>>>', err);
         return err;
@@ -1398,7 +1415,7 @@ describe('Submission Api', () => {
         });
     });
 
-    it('should return 200 when commit is completed', async () => {
+    it.only('should return 200 when commit is completed', async () => {
       // To get submission into correct state (pending approval) we need to already have a completed submission...
       await uploadSubmission([
         'donor.tsv',

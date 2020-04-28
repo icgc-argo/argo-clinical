@@ -2,7 +2,8 @@ import mongo from 'mongodb';
 import _ from 'lodash';
 import chai from 'chai';
 import { Donor } from '../../src/clinical/clinical-entities';
-
+import * as mysql from 'mysql';
+import * as utils from 'util';
 export const clearCollections = async (dburl: string, collections: string[]) => {
   try {
     const promises = collections.map(collectionName => cleanCollection(dburl, collectionName));
@@ -53,6 +54,21 @@ export const insertData = async (
   await conn.close();
   return document._id;
 };
+
+export async function createtRxNormTables(dbConnection: mysql.Connection) {
+  const connect = utils.promisify(dbConnection.connect).bind(dbConnection);
+  const query = utils.promisify(dbConnection.query).bind(dbConnection);
+  const sql = 'CREATE TABLE RXNCONSO (RXCUI VARCHAR(255), STR VARCHAR(255))';
+  await connect();
+  await query(sql);
+}
+
+export async function insertRxNormDrug(id: string, name: string, dbConnection: mysql.Connection) {
+  const connect = utils.promisify(dbConnection.connect).bind(dbConnection);
+  const query = utils.promisify(dbConnection.query).bind(dbConnection);
+  await connect();
+  await query(`insert into RXNCONSO (RXCUI, STR) values('${id}', '${name}')`);
+}
 
 export const emptyDonorDocument = (overrides?: Partial<Donor>) => {
   const gender = Math.random() > 0.5 ? 'Male' : 'Female';
