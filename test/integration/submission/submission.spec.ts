@@ -1909,6 +1909,7 @@ describe('Submission Api', () => {
           const downloadedFiles: string[] = res.body
             .getEntries()
             .map((fileEntry: any) => res.body.readAsText(fileEntry));
+
           const refFiles: string[] = refZip
             .getEntries()
             .map((fileEntry: any) => refZip.readAsText(fileEntry));
