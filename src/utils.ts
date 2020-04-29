@@ -36,6 +36,31 @@ export namespace TsvUtils {
     });
     return rows.filter(notEmpty);
   };
+
+  export const parseObjectToTsv = (recordsObjects: any, headers: string[]) => {
+    const columns: number = headers.length;
+    // map headers to an index, used to place recordObject values in correct column
+    const headersToColumnMap: any = {};
+    headers.map((f, i) => (headersToColumnMap[f] = i));
+
+    const allTsvRecords = new Array(recordsObjects.length);
+    recordsObjects.forEach((jr: any, i: number) => {
+      const tsvRecordAsArray = new Array<string>(columns);
+      Object.entries(jr).forEach(([key, val]) => {
+        const indexInTsvArray = headersToColumnMap[key];
+        if (Array.isArray(val)) {
+          tsvRecordAsArray[indexInTsvArray] = val.map(v => String(v || '').trim()).join(', ');
+        } else {
+          tsvRecordAsArray[indexInTsvArray] = String(val || '').trim();
+        }
+      });
+      allTsvRecords[i] = tsvRecordAsArray.join('\t'); // hold order of recordsObjects
+    });
+
+    console.log(allTsvRecords);
+    const headersStr = Object.keys(headersToColumnMap).join('\t');
+    return headersStr + '\n' + allTsvRecords.join('\n');
+  };
 }
 
 export namespace ControllerUtils {

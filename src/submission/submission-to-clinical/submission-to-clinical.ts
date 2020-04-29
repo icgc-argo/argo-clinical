@@ -22,7 +22,6 @@ import {
   ClinicalEntitySchemaNames,
   ClinicalUniqueIdentifier,
   ClinicalTherapySchemaNames,
-  DonorFieldsEnum,
 } from '../submission-entities';
 
 import { Errors, notEmpty } from '../../utils';

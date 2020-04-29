@@ -16,6 +16,8 @@ import { HasFullWriteAccess, HasProgramWriteAccess } from '../decorators';
 import _ from 'lodash';
 import { batchErrorMessage } from './submission-error-messages';
 import * as fs from 'fs';
+import AdmZip from 'adm-zip';
+
 const L = loggerFor(__filename);
 const fsPromises = fs.promises;
 class SubmissionController {
@@ -258,6 +260,30 @@ class SubmissionController {
     }
     const donorsJson = await fsPromises.readFile(req.file.path, 'utf-8');
     return res.status(201).send(await submission.operations.adminAddDonors(JSON.parse(donorsJson)));
+  }
+
+  // @HasProgramWriteAccess((req: Request) => req.params.programId)
+  async downloadCommittedClinicalDataAsTsv(req: Request, res: Response) {
+    const programId = req.params.programId;
+
+    const data = await submission.operations.getAllCommittedClinicalData(programId);
+
+    res
+      .status(200)
+      .contentType('application/zip')
+      .attachment(`all_clincial_data.zip`);
+
+    // prepare zip file
+    const zip = new AdmZip();
+    data.forEach(d => {
+      const tsvData = TsvUtils.parseObjectToTsv(d.records, d.allSchemaFields);
+      zip.addFile(
+        `${d.schemaEntityName}_v${d.schemaVersion}.tsv`,
+        Buffer.alloc(tsvData.length, tsvData),
+      );
+    });
+
+    res.send(zip.toBuffer());
   }
 }
 

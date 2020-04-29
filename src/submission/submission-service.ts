@@ -50,7 +50,15 @@ import {
   SchemasDictionary,
 } from '../lectern-client/schema-entities';
 import { loggerFor } from '../logger';
-import { Errors, F, isStringMatchRegex, toString, isEmptyString } from '../utils';
+import {
+  Errors,
+  F,
+  isStringMatchRegex,
+  toString,
+  isEmptyString,
+  isEmpty,
+  notEmpty,
+} from '../utils';
 import { DeepReadonly } from 'deep-freeze';
 import { submissionRepository } from './submission-repo';
 import { v1 as uuid } from 'uuid';
@@ -60,6 +68,9 @@ import {
   ClinicalSubmissionRecordsOperations,
   usingInvalidProgramId,
 } from './validation-clinical/utils';
+import { getDonors } from '../clinical/clinical-service';
+import { getClinicalEntitiesFromDonorBySchemaName } from './submission-to-clinical/submission-to-clinical';
+
 const L = loggerFor(__filename);
 
 const emptyStats = {
@@ -628,6 +639,71 @@ export namespace operations {
       reopenedActiveSubmission,
     );
   };
+
+  export async function getAllCommittedClinicalData(programId: string) {
+    if (!programId) throw new Error('Missing programId!');
+
+    const donors = await getDonors(programId); // get in batch??
+
+    // collect all records
+    const recordsMap: any = {};
+    donors.forEach(d => {
+      Object.values(ClinicalEntitySchemaNames).forEach(entity => {
+        let clincialInfoRecords;
+        if (entity === ClinicalEntitySchemaNames.REGISTRATION) {
+          clincialInfoRecords = generateSampleRegistrationRecordsFromDonor(d);
+        } else {
+          clincialInfoRecords = getClinicalEntitiesFromDonorBySchemaName(d, entity);
+        }
+        recordsMap[entity] = _.concat(recordsMap[entity] || [], clincialInfoRecords);
+      });
+    });
+
+    // map into object ready for api processing
+    const schemasWithFields = schemaManager.instance().getSchemasWithFields();
+    const schemaVersion = schemaManager.instance().getCurrent().version;
+    return Object.entries(recordsMap)
+      .map(([schemaEntityName, records]) => {
+        if (isEmpty(records)) return undefined;
+
+        const relevantSchemaWithFields = schemasWithFields.find(s => s.name === schemaEntityName);
+        if (!relevantSchemaWithFields) {
+          throw new Error(`Can't find schema ${schemaEntityName}, shouldn't be possbile`);
+        }
+
+        return {
+          schemaEntityName: relevantSchemaWithFields.name,
+          schemaVersion,
+          records,
+          allSchemaFields: relevantSchemaWithFields.fields,
+        };
+      })
+      .filter(notEmpty);
+  }
+
+  function generateSampleRegistrationRecordsFromDonor(
+    d: DeepReadonly<Donor>,
+  ): SubmittedRegistrationRecord[] {
+    const baseRegistrationRecord = {
+      program_id: d.programId,
+      submitter_donor_id: d.submitterId,
+      gender: d.gender,
+    };
+
+    return d.specimens
+      .map(sp =>
+        sp.samples.map(sm => ({
+          ...baseRegistrationRecord,
+          submitter_specimen_id: sp.submitterId,
+          specimen_tissue_source: sp.specimenTissueSource,
+          tumour_normal_designation: sp.tumourNormalDesignation,
+          specimen_type: sp.specimenType,
+          submitter_sample_id: sm.submitterId,
+          sample_type: sm.sampleType,
+        })),
+      )
+      .flat();
+  }
 
   /* *************** *
    * Private Methods

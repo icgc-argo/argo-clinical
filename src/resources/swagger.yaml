@@ -602,6 +602,25 @@ paths:
           description: Active submission is not in PENDING_APPROVAL state and cannot be reopned
         '500':
           $ref: '#/components/responses/ServerError'
+  /submission/program/{programId}/clinical/download-committed:
+    parameters:
+      - name: programId
+        description: the short name of the program
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get all commited clinical data
+      description: returns all commited clinical and sample registration data in tsv submission ready format
+      responses:
+        '200':
+          description: 'A zip file'
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
 
   /submission/icgc-import/preprocess/{programId}:
     parameters:
