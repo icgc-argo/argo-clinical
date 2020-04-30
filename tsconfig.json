@@ -16,8 +16,8 @@
     "outDir": "dist",
     "baseUrl": ".",
     "paths": {
-      "*": ["node_modules/*", "sampleFiles/src/types/*"]
+      "*": ["node_modules/*", "src/types/*"]
     }
   },
-  "include": ["sampleFiles/src/**/*", "test/**/*"]
+  "include": ["src/**/*", "test/**/*"]
 }
