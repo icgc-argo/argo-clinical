@@ -262,7 +262,7 @@ class SubmissionController {
     return res.status(201).send(await submission.operations.adminAddDonors(JSON.parse(donorsJson)));
   }
 
-  // @HasProgramWriteAccess((req: Request) => req.params.programId)
+  @HasProgramWriteAccess((req: Request) => req.params.programId)
   async downloadCommittedClinicalDataAsTsv(req: Request, res: Response) {
     const programId = req.params.programId;
 

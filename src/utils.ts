@@ -48,6 +48,9 @@ export namespace TsvUtils {
       const tsvRecordAsArray = new Array<string>(columns);
       Object.entries(jr).forEach(([key, val]) => {
         const indexInTsvArray = headersToColumnMap[key];
+        if (!indexInTsvArray) {
+          return undefined;
+        }
         if (Array.isArray(val)) {
           tsvRecordAsArray[indexInTsvArray] = val.map(v => String(v || '').trim()).join(', ');
         } else {
