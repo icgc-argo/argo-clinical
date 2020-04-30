@@ -1585,19 +1585,6 @@
               }
             },
             {
-              "name": "submitter_therapy_id",
-              "valueType": "string",
-              "description": "Unique identifier of the therapy, assigned by the data provider.",
-              "meta": {
-                "validationDependency": true,
-                "primaryId": true
-              },
-              "restrictions": {
-                "required": true,
-                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
-              }
-            },
-            {
               "name": "submitter_donor_id",
               "valueType": "string",
               "description": "Unique identifier of the donor, assigned by the data provider.",
