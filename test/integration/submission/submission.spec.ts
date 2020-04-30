@@ -1401,7 +1401,7 @@ describe('Submission Api', () => {
           res.should.have.status(409);
         });
     });
-    it.only('should return 200 when commit is completed', async () => {
+    it('should return 200 when commit is completed', async () => {
       await uploadSubmission();
       await validateSubmission();
       return chai
@@ -1683,7 +1683,7 @@ describe('Submission Api', () => {
         });
     });
 
-    it.only('should return 200 when commit is completed - clinical stats', async () => {
+    it('should return 200 when commit is completed - clinical stats', async () => {
       const donorFilter = { programId: programId, submitterId: 'ICGC_0001' };
       // To get submission into correct state (pending approval) we need to already have a completed submission...
       await uploadSubmission([
@@ -1853,7 +1853,7 @@ describe('Submission Api', () => {
         });
     });
 
-    it.only('should recalculate donor aggregate stats if donor becomes valid', async () => {
+    it('should recalculate donor aggregate stats if donor becomes valid', async () => {
       await clearCollections(dburl, ['donors']);
       const invalidDonor = emptyDonorDocument({
         submitterId: 'ICGC_0001',

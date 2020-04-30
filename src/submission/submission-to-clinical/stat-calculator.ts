@@ -111,7 +111,15 @@ export const updateDonorStatsFromSubmissionCommit = (
   donor: Donor,
   clinicalType: ClinicalEntitySchemaNames,
 ) => {
+  // registration has no buisness here
+  if (clinicalType === ClinicalEntitySchemaNames.REGISTRATION) return;
+
   if (isCoreEntitySchemaName(clinicalType)) {
+    // if donor is invalid don't recalculate, just remove from overriden, will be fully recalculated once it becomes valid
+    if (!donor.schemaMetadata.isValid) {
+      removeEntityFromOverridenCore(donor, clinicalType);
+      return;
+    }
     calcDonorCoreEntityStats(donor, clinicalType as CoreClinicalSchemaName, {
       recalcEvenIfComplete: false,
       recalcEvenIfOverriden: true,
@@ -161,8 +169,8 @@ export const setInvalidCoreEntityStatsForMigration = (
   const coreCompletion = mutableDonor.completionStats?.coreCompletion || getEmptyCoreStats();
 
   invalidEntities.filter(isCoreEntitySchemaName).forEach(coreEntity => {
-    coreCompletion[schemaNameToCoreCompletenessStat[coreEntity as CoreClinicalSchemaName]] = 0;
-    pull(overriddenCoreEntities, coreEntity);
+    coreCompletion[schemaNameToCoreCompletenessStat[coreEntity]] = 0;
+    pull(overriddenCoreEntities, schemaNameToCoreCompletenessStat[coreEntity]);
   });
 
   mutableDonor.completionStats = {
@@ -183,7 +191,7 @@ const getEmptyCoreStats = (): CoreCompletionStats => {
   });
 };
 
-const isCoreEntitySchemaName = (clinicalType: string) =>
+const isCoreEntitySchemaName = (clinicalType: string): clinicalType is CoreClinicalSchemaName =>
   coreClinialSchemaNamesSet.has(clinicalType as CoreClinicalSchemaName);
 
 function noNeedToCalcCoreStat(
@@ -191,27 +199,32 @@ function noNeedToCalcCoreStat(
   clinicalType: CoreClinicalSchemaName,
   forceFlags: ForceRecaculateFlags,
 ) {
+  // if recalculate ovveriden, need to ignore completion value since overriden value could be 100%
+  if (forceFlags.recalcEvenIfOverriden && !forceFlags.recalcEvenIfComplete) {
+    return false;
+  }
+
   // if entity was manually overriden, don't recalculate (might set to undesired value)
   if (
-    forceFlags.recalcEvenIfOverriden ||
-    !donor.completionStats?.overriddenCoreCompletion.find(
+    !forceFlags.recalcEvenIfOverriden &&
+    donor.completionStats?.overriddenCoreCompletion.find(
       type => type === schemaNameToCoreCompletenessStat[clinicalType],
     )
   ) {
-    return false;
+    return true;
   }
 
   // if entity is already core complete it can't become uncomplete since records can't be deleted
   // only exception is if specimens are added
   if (
-    forceFlags.recalcEvenIfComplete ||
+    !forceFlags.recalcEvenIfComplete &&
     (donor.completionStats?.coreCompletion || {})[
       schemaNameToCoreCompletenessStat[clinicalType]
-    ] !== 1
+    ] === 1
   ) {
-    return false;
+    return true;
   }
-  return true;
+  return false;
 }
 
 function isValidCoreStatOverride(updatedCompletion: any): updatedCompletion is CoreCompletionStats {
@@ -221,5 +234,12 @@ function isValidCoreStatOverride(updatedCompletion: any): updatedCompletion is C
       isNumber(val) &&
       val >= 0 &&
       val <= 1,
+  );
+}
+
+function removeEntityFromOverridenCore(donor: Donor, clinicalType: CoreClinicalSchemaName) {
+  pull(
+    donor.completionStats?.overriddenCoreCompletion || [],
+    schemaNameToCoreCompletenessStat[clinicalType],
   );
 }
