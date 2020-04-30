@@ -66,10 +66,8 @@ export const mergeActiveSubmissionWithDonors = async (
           throw new Error(`Entity ${entityType} not implemented yet`);
       }
 
-      // update clinical entity stats and aggregate donor stats if donor is already valid, if donor is invalid it needs full recalculation
-      if (donor.schemaMetadata.isValid === true) {
-        updateDonorStatsFromSubmissionCommit(donor, entityType);
-      }
+      // update clinical entity stats
+      updateDonorStatsFromSubmissionCommit(donor, entityType);
     });
   }
 
