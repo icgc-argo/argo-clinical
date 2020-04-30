@@ -1401,7 +1401,7 @@ describe('Submission Api', () => {
           res.should.have.status(409);
         });
     });
-    it('should return 200 when commit is completed', async () => {
+    it.only('should return 200 when commit is completed', async () => {
       await uploadSubmission();
       await validateSubmission();
       return chai
@@ -1422,7 +1422,7 @@ describe('Submission Api', () => {
           // merge shouldn't have mutated donor except for donor.clinicalInfo
           chai
             .expect(updatedDonor)
-            .excluding(['clinicalInfo', 'updatedAt', '__v', 'createdAt', 'completenessStats'])
+            .excluding(['clinicalInfo', 'updatedAt', '__v', 'createdAt', 'completionStats'])
             .to.deep.eq(donor);
           chai.expect(updatedDonor.clinicalInfo).to.exist;
           chai.expect(updatedDonor.clinicalInfo).to.deep.include({
@@ -1683,7 +1683,7 @@ describe('Submission Api', () => {
         });
     });
 
-    it('should return 200 when commit is completed - clinical stats', async () => {
+    it.only('should return 200 when commit is completed - clinical stats', async () => {
       const donorFilter = { programId: programId, submitterId: 'ICGC_0001' };
       // To get submission into correct state (pending approval) we need to already have a completed submission...
       await uploadSubmission([
@@ -1697,7 +1697,7 @@ describe('Submission Api', () => {
       await validateSubmission();
       await commitActiveSubmission();
       const [DonorBeforeUpdate] = await findInDb(dburl, 'donors', donorFilter);
-      DonorBeforeUpdate.completenessStats.coreCompletion.should.deep.include({
+      DonorBeforeUpdate.completionStats.coreCompletion.should.deep.include({
         donor: 1,
         primaryDiagnosis: 1,
         treatments: 1,
@@ -1743,7 +1743,7 @@ describe('Submission Api', () => {
           res.body.should.be.empty;
           await assertDbCollectionEmpty(dburl, 'activesubmissions');
           const [UpdatedDonor] = await findInDb(dburl, 'donors', donorFilter);
-          UpdatedDonor.completenessStats.coreCompletion.should.deep.include({
+          UpdatedDonor.completionStats.coreCompletion.should.deep.include({
             donor: 1,
             primaryDiagnosis: 1,
             treatments: 1,
@@ -1853,7 +1853,7 @@ describe('Submission Api', () => {
         });
     });
 
-    it('should recalculate donor aggregate stats if donor becomes valid', async () => {
+    it.only('should recalculate donor aggregate stats if donor becomes valid', async () => {
       await clearCollections(dburl, ['donors']);
       const invalidDonor = emptyDonorDocument({
         submitterId: 'ICGC_0001',
@@ -1888,7 +1888,7 @@ describe('Submission Api', () => {
             clinicalInfo: {},
           },
         ],
-        completenessStats: {
+        completionStats: {
           coreCompletion: {
             donor: 0,
             primaryDiagnosis: 0,
@@ -1918,7 +1918,7 @@ describe('Submission Api', () => {
           });
           // donor was invalid but is now valid after submission, so stats should be updated
           updatedDonor.schemaMetadata.isValid.should.eq(true);
-          updatedDonor.completenessStats.coreCompletion.should.deep.include({
+          updatedDonor.completionStats.coreCompletion.should.deep.include({
             donor: 1,
             primaryDiagnosis: 0,
             treatments: 1, // overridden field is same as before, despite no treatment record
@@ -1926,7 +1926,7 @@ describe('Submission Api', () => {
             specimens: 0.5, // one of the tumour/normal specimen has record
           });
           chai
-            .expect(updatedDonor.completenessStats.overriddenCoreCompletion)
+            .expect(updatedDonor.completionStats.overriddenCoreCompletion)
             .to.deep.eq(['treatments']);
         });
     });

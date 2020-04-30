@@ -35,11 +35,7 @@ import { mergeActiveSubmissionWithDonors } from './merge-submission';
 import * as schemaManager from '../schema/schema-manager';
 import { loggerFor } from '../../logger';
 const L = loggerFor(__filename);
-import {
-  updateDonorStatsFromRegistrationCommit,
-  recalculateDonorStatsHoldOverridden,
-  forceRecalcDonorCoreEntityStats,
-} from './stat-calculator';
+import { updateDonorStatsFromRegistrationCommit } from './stat-calculator';
 import * as messenger from '../submission-updates-messenger';
 
 /**
@@ -142,8 +138,7 @@ const performCommitSubmission = async (
         L.info(`donor ${ud._id} is now valid`);
         ud.schemaMetadata.isValid = true;
         ud.schemaMetadata.lastValidSchemaVersion = schemaManager.instance().getCurrent().version;
-        // recalculate the donors stats
-        verifiedDonorDTOs.push(recalculateDonorStatsHoldOverridden(ud));
+        verifiedDonorDTOs.push(ud);
         return;
       }
     }
