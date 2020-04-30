@@ -45,9 +45,9 @@ const coreClinialSchemaNamesSet = new Set<CoreClinicalSchemaName>(
 const calcDonorCoreEntityStats = (
   donor: Donor,
   clinicalType: CoreClinicalSchemaName,
-  forceRecalc: ForceRecaculateFlags, // used to control recalculate under certain conditions
+  forceFlags: ForceRecaculateFlags, // used to control recalculate under certain conditions
 ) => {
-  if (noNeedToCalcCoreStat(donor, clinicalType, forceRecalc)) return;
+  if (noNeedToCalcCoreStat(donor, clinicalType, forceFlags)) return;
 
   const coreStats = cloneDeep(donor.completionStats?.coreCompletion) || getEmptyCoreStats();
 
