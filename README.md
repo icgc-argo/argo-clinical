@@ -50,13 +50,11 @@ Notes:
 
 ## importing rxnorm
 
+you can see the compose directory for the simplified process
+it's recommended to use mysql 5.7, 5.6. or 5.5 mysql 8 has issues, but works nonetheless.
+
 - download the full zip file
 - mount it in the mysql container
 - move all mysql scripts from scripts folder to rrf folder.
 
-Mysql 8 Notes:
-
-- you need to enable infiles on server and client: `mysql> SET GLOBAL local_infile=on;`
-- in the populate mysql script you need to add this flag: `--local-infile=1`
-- mysql 8 has incompatibility with mysqljs client auth protocol: https://github.com/mysqljs/mysql/issues/2046
-  `ALTER USER <user> IDENTIFIED WITH mysql_native_password BY '<password>'`
+the job to import this: https://jenkins.qa.cancercollaboratory.org/job/ARGO/job/devops/job/rxnorm-import/
