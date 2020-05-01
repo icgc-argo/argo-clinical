@@ -1,8 +1,9 @@
 import { donorDao, DONOR_FIELDS } from './donor-repo';
 import { Errors } from '../utils';
-import { Sample, Donor, SchemaMetadata } from './clinical-entities';
+import { Sample, Donor } from './clinical-entities';
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
+import { forceRecalcDonorCoreEntityStats } from '../submission/submission-to-clinical/stat-calculator';
 
 export async function updateDonorSchemaMetadata(
   donor: DeepReadonly<Donor>,
@@ -116,3 +117,14 @@ export async function findDonor(submitterId: string, programId: string) {
 export async function deleteDonors(programId: string) {
   return await donorDao.deleteByProgramId(programId);
 }
+
+export const updateDonorStats = async (donorId: number, coreCompletionOverride: any) => {
+  const [donor] = await donorDao.findBy({ donorId: donorId }, 1);
+
+  if (!donor) return undefined;
+
+  // Update core
+  const updatedDonor = forceRecalcDonorCoreEntityStats(donor, coreCompletionOverride);
+
+  return await donorDao.update(updatedDonor);
+};

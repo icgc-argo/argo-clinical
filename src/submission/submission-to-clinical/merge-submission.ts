@@ -20,7 +20,7 @@ import _ from 'lodash';
 import { loggerFor } from '../../logger';
 import { Errors } from '../../utils';
 import { getSingleClinicalObjectFromDonor } from './submission-to-clinical';
-import { updateClinicalStatsAndDonorStats } from './stat-calculator';
+import { updateDonorStatsFromSubmissionCommit } from './stat-calculator';
 
 const L = loggerFor(__filename);
 
@@ -66,10 +66,8 @@ export const mergeActiveSubmissionWithDonors = async (
           throw new Error(`Entity ${entityType} not implemented yet`);
       }
 
-      // update clinical entity stats and aggregate donor stats if donor is already valid, if donor is invalid it needs full recalculation
-      if (donor.schemaMetadata.isValid === true) {
-        updateClinicalStatsAndDonorStats(entityWithUpdatedInfo, donor, entityType);
-      }
+      // update clinical entity stats
+      updateDonorStatsFromSubmissionCommit(donor, entityType);
     });
   }
 

@@ -291,12 +291,6 @@ export const stubs = {
       specimens: [],
       followUps: [],
       treatments: [],
-      aggregatedInfoStats: {
-        submittedCoreFields: 1,
-        expectedCoreFields: 3,
-        submittedExtendedFields: 0,
-        expectedExtendedFields: 0,
-      },
     }),
   },
 };
