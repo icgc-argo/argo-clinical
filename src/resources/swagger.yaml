@@ -767,7 +767,7 @@ paths:
         '404':
           description: no matching sample found
 
-  /clinical/donor/{donorId}/completeness-stats:
+  /clinical/donor/{donorId}/completion-stats:
     patch:
       tags:
         - Patch Operations

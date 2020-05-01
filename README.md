@@ -47,3 +47,14 @@ Notes:
 - the scripts are sorted by date & time
 - a collection in db called changelog will keep track of executed scripts.
 - the docker image will excute the scripts automatically before starting the server and if fails it runs rollback script and exits
+
+## importing rxnorm
+
+you can see the compose directory for the simplified process
+it's recommended to use mysql 5.7, 5.6. or 5.5 mysql 8 has issues, but works nonetheless.
+
+- download the full zip file
+- mount it in the mysql container
+- move all mysql scripts from scripts folder to rrf folder.
+
+the job to import this: https://jenkins.qa.cancercollaboratory.org/job/ARGO/job/devops/job/rxnorm-import/

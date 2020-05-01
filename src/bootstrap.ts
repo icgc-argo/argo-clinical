@@ -1,12 +1,13 @@
 import mongoose from 'mongoose';
 import { loggerFor } from './logger';
-import { AppConfig, initConfigs, JWT_TOKEN_PUBLIC_KEY } from './config';
+import { AppConfig, initConfigs, JWT_TOKEN_PUBLIC_KEY, RxNormDbConfig } from './config';
 import * as manager from './submission/schema/schema-manager';
 import * as utils from './utils';
 import fetch from 'node-fetch';
 import { setStatus, Status } from './app-health';
 import * as persistedConfig from './submission/persisted-config/service';
 import * as submissionUpdatesMessenger from './submission/submission-updates-messenger';
+import { initPool } from './rxnorm/pool';
 
 const L = loggerFor(__filename);
 
@@ -112,25 +113,41 @@ const setJwtPublicKey = (keyUrl: string) => {
   getKey(1);
 };
 
+const setupRxNormConnection = (conf: RxNormDbConfig) => {
+  const pool = initPool({
+    database: conf.database,
+    host: conf.host,
+    password: conf.password,
+    user: conf.user,
+    port: conf.port,
+    timeout: conf.timeout,
+  });
+
+  pool.on('error', err => setStatus('rxNormDb', { status: Status.ERROR }));
+  pool.on('connection', () => setStatus('rxNormDb', { status: Status.OK }));
+};
+
 export const run = async (config: AppConfig) => {
   initConfigs(config);
 
   // setup mongo connection
   await setupDBConnection(config.mongoUrl(), config.mongoUser(), config.mongoPassword());
 
+  setupRxNormConnection(config.rxNormDbProperties());
   if (process.env.LOG_LEVEL === 'debug') {
     console.log('setting mongoose to debug verbosity');
     mongoose.set('debug', true);
   }
 
   // setup messenger with kafka configs
-  await submissionUpdatesMessenger.initialize(config.kafkaMessagingEnabled(), {
-    clientId: config.kafkaClientId(),
-    brokers: config.kafkaBrokers(),
+  const kafkaProps = config.kafkaProperties();
+  await submissionUpdatesMessenger.initialize(kafkaProps.kafkaMessagingEnabled(), {
+    clientId: kafkaProps.kafkaClientId(),
+    brokers: kafkaProps.kafkaBrokers(),
     programUpdateTopic: {
-      topic: config.kafkaTopicProgramUpdate(),
-      numPartitions: config.kafkaTopicProgramUpdateConfigPartitions(),
-      replicationFactor: config.kafkaTopicProgramUpdateConfigReplications(),
+      topic: kafkaProps.kafkaTopicProgramUpdate(),
+      numPartitions: kafkaProps.kafkaTopicProgramUpdateConfigPartitions(),
+      replicationFactor: kafkaProps.kafkaTopicProgramUpdateConfigReplications(),
     },
   });
 

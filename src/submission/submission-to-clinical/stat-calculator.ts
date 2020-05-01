@@ -5,10 +5,10 @@ import {
 } from '../../../src/clinical/clinical-entities';
 import { ClinicalEntitySchemaNames } from '../submission-entities';
 import { notEmpty, F } from '../../../src/utils';
-
 import { getClinicalEntitiesFromDonorBySchemaName } from './submission-to-clinical';
+
 import { DeepReadonly } from 'deep-freeze';
-import { cloneDeep, pull, includes } from 'lodash';
+import { cloneDeep, pull } from 'lodash';
 import { isNumber } from 'util';
 
 type ForceRecaculateFlags = {
@@ -49,7 +49,7 @@ const calcDonorCoreEntityStats = (
 ) => {
   if (noNeedToCalcCoreStat(donor, clinicalType, forceFlags)) return;
 
-  const coreStats = cloneDeep(donor.completenessStats?.coreCompletion) || getEmptyCoreStats();
+  const coreStats = cloneDeep(donor.completionStats?.coreCompletion) || getEmptyCoreStats();
 
   if (clinicalType === ClinicalEntitySchemaNames.SPECIMEN) {
     // for specimen, need to check all specimen has a record and at least one tumor and one normal exists
@@ -69,11 +69,11 @@ const calcDonorCoreEntityStats = (
     coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = entites.length >= 1 ? 1 : 0;
   }
 
-  donor.completenessStats = {
-    ...donor.completenessStats,
+  donor.completionStats = {
+    ...donor.completionStats,
     coreCompletion: coreStats,
     overriddenCoreCompletion: pull(
-      donor.completenessStats?.overriddenCoreCompletion || [],
+      donor.completionStats?.overriddenCoreCompletion || [],
       schemaNameToCoreCompletenessStat[clinicalType],
     ),
   };
@@ -92,7 +92,7 @@ export const recalculateDonorStatsHoldOverridden = (donor: Donor) => {
 
 export const updateDonorStatsFromRegistrationCommit = (donor: DeepReadonly<Donor>) => {
   // no aggreagated info so donor has no clinical submission, nothing to calculate
-  if (!donor.completenessStats) return donor;
+  if (!donor.completionStats) return donor;
 
   const mutableDonor = cloneDeep(donor) as Donor;
 
@@ -111,7 +111,15 @@ export const updateDonorStatsFromSubmissionCommit = (
   donor: Donor,
   clinicalType: ClinicalEntitySchemaNames,
 ) => {
+  // registration has no buisness here
+  if (clinicalType === ClinicalEntitySchemaNames.REGISTRATION) return;
+
   if (isCoreEntitySchemaName(clinicalType)) {
+    // if donor is invalid don't recalculate, just remove from overriden, will be fully recalculated once it becomes valid
+    if (!donor.schemaMetadata.isValid) {
+      removeEntityFromOverridenCore(donor, clinicalType);
+      return;
+    }
     calcDonorCoreEntityStats(donor, clinicalType as CoreClinicalSchemaName, {
       recalcEvenIfComplete: false,
       recalcEvenIfOverriden: true,
@@ -137,12 +145,12 @@ export const forceRecalcDonorCoreEntityStats = (
   );
 
   const newCoreCompletion = {
-    ...donorUpdated.completenessStats?.coreCompletion, // set recalculated core completion
+    ...donorUpdated.completionStats?.coreCompletion, // set recalculated core completion
     ...coreStatOverride, // merge coreStatOverride
   };
 
-  donorUpdated.completenessStats = {
-    ...donorUpdated.completenessStats,
+  donorUpdated.completionStats = {
+    ...donorUpdated.completionStats,
     coreCompletion: newCoreCompletion,
     overriddenCoreCompletion: Object.keys(coreStatOverride || {}) as CoreClinicalEntites[],
   };
@@ -157,16 +165,16 @@ export const setInvalidCoreEntityStatsForMigration = (
 ) => {
   const mutableDonor = cloneDeep(donor) as Donor;
 
-  const overriddenCoreEntities = mutableDonor.completenessStats?.overriddenCoreCompletion || [];
-  const coreCompletion = mutableDonor.completenessStats?.coreCompletion || getEmptyCoreStats();
+  const overriddenCoreEntities = mutableDonor.completionStats?.overriddenCoreCompletion || [];
+  const coreCompletion = mutableDonor.completionStats?.coreCompletion || getEmptyCoreStats();
 
   invalidEntities.filter(isCoreEntitySchemaName).forEach(coreEntity => {
-    coreCompletion[schemaNameToCoreCompletenessStat[coreEntity as CoreClinicalSchemaName]] = 0;
-    pull(overriddenCoreEntities, coreEntity);
+    coreCompletion[schemaNameToCoreCompletenessStat[coreEntity]] = 0;
+    pull(overriddenCoreEntities, schemaNameToCoreCompletenessStat[coreEntity]);
   });
 
-  mutableDonor.completenessStats = {
-    ...mutableDonor.completenessStats,
+  mutableDonor.completionStats = {
+    ...mutableDonor.completionStats,
     coreCompletion: coreCompletion,
     overriddenCoreCompletion: overriddenCoreEntities,
   };
@@ -183,7 +191,7 @@ const getEmptyCoreStats = (): CoreCompletionStats => {
   });
 };
 
-const isCoreEntitySchemaName = (clinicalType: string) =>
+const isCoreEntitySchemaName = (clinicalType: string): clinicalType is CoreClinicalSchemaName =>
   coreClinialSchemaNamesSet.has(clinicalType as CoreClinicalSchemaName);
 
 function noNeedToCalcCoreStat(
@@ -191,10 +199,15 @@ function noNeedToCalcCoreStat(
   clinicalType: CoreClinicalSchemaName,
   forceFlags: ForceRecaculateFlags,
 ) {
+  // if recalculate ovveriden, need to ignore completion value since overriden value could be 100%
+  if (forceFlags.recalcEvenIfOverriden && !forceFlags.recalcEvenIfComplete) {
+    return false;
+  }
+
   // if entity was manually overriden, don't recalculate (might set to undesired value)
   if (
     !forceFlags.recalcEvenIfOverriden &&
-    donor.completenessStats?.overriddenCoreCompletion.find(
+    donor.completionStats?.overriddenCoreCompletion.find(
       type => type === schemaNameToCoreCompletenessStat[clinicalType],
     )
   ) {
@@ -205,7 +218,7 @@ function noNeedToCalcCoreStat(
   // only exception is if specimens are added
   if (
     !forceFlags.recalcEvenIfComplete &&
-    (donor.completenessStats?.coreCompletion || {})[
+    (donor.completionStats?.coreCompletion || {})[
       schemaNameToCoreCompletenessStat[clinicalType]
     ] === 1
   ) {
@@ -221,5 +234,12 @@ function isValidCoreStatOverride(updatedCompletion: any): updatedCompletion is C
       isNumber(val) &&
       val >= 0 &&
       val <= 1,
+  );
+}
+
+function removeEntityFromOverridenCore(donor: Donor, clinicalType: CoreClinicalSchemaName) {
+  pull(
+    donor.completionStats?.overriddenCoreCompletion || [],
+    schemaNameToCoreCompletenessStat[clinicalType],
   );
 }

@@ -63,6 +63,14 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
     const info = errorData.info;
     return `${errorData.fieldName} should not be provided when the ${info.variableRequirement.fieldName} is ${info.variableRequirement.fieldValue}.`;
   },
+  THERAPY_RXCUI_NOT_FOUND: errorData => {
+    return `This is not a valid RxNorm entry. Please verify the drug_rxnormcui.`;
+  },
+  THERAPY_RXNORM_DRUG_NAME_INVALID: errorData => {
+    return `This is not a valid RxNorm entry. Please verify the drug_name as listed in the RxNorm database. Potential values for this id include:\n ${errorData.foundNames
+      .map((d: string) => `- ${d}`)
+      .join('\n')}`;
+  },
 };
 
 const BATCH_ERROR_MESSAGES: Record<SubmissionBatchErrorTypes, (errorData: any) => string> = {

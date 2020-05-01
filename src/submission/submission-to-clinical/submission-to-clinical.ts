@@ -37,7 +37,6 @@ const L = loggerFor(__filename);
 import {
   updateDonorStatsFromRegistrationCommit,
   recalculateDonorStatsHoldOverridden,
-  forceRecalcDonorCoreEntityStats,
 } from './stat-calculator';
 import * as messenger from '../submission-updates-messenger';
 

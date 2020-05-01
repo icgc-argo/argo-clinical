@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import { DeepReadonly } from 'deep-freeze';
 import { F, MongooseUtils, notEmpty } from '../utils';
 import { loggerFor } from '../logger';
-import { ClinicalEntitySchemaNames } from '../../src/submission/submission-entities';
+import { ClinicalEntitySchemaNames } from '../submission/submission-entities';
 
 export const SUBMITTER_ID = 'submitterId';
 export const SPECIMEN_SUBMITTER_ID = 'specimen.submitterId';
@@ -317,7 +317,7 @@ const DonorSchema = new mongoose.Schema(
     followUps: [FollowUpSchema],
     treatments: [TreatmentSchema],
     schemaMetadata: {},
-    completenessStats: {},
+    completionStats: {},
   },
   { timestamps: true, minimize: false }, // minimize false is to avoid omitting clinicalInfo:{}
 );
