@@ -309,7 +309,7 @@ describe('schema migration api', () => {
           cause_of_death: 'Died of cancer',
           survival_time: 67,
         },
-        completenessStats: {
+        completionStats: {
           coreCompletion: {
             donor: 1,
             primaryDiagnosis: 0,
@@ -327,7 +327,7 @@ describe('schema migration api', () => {
       const updatedDonor = await findInDb(dburl, 'donors', {});
 
       // donor 1 stats after migraiton, added entity completion
-      chai.expect(updatedDonor[0].completenessStats.coreCompletion).to.deep.include({
+      chai.expect(updatedDonor[0].completionStats.coreCompletion).to.deep.include({
         donor: 1,
         primaryDiagnosis: 0,
         treatments: 0,
@@ -335,7 +335,7 @@ describe('schema migration api', () => {
         specimens: 0,
       });
       // donor 2 stats after migraiton
-      chai.expect(updatedDonor[1].completenessStats.coreCompletion).to.deep.include({
+      chai.expect(updatedDonor[1].completionStats.coreCompletion).to.deep.include({
         donor: 1,
         primaryDiagnosis: 1,
         treatments: 0,
@@ -343,7 +343,7 @@ describe('schema migration api', () => {
         specimens: 0,
       });
       // donor 3 stats after migraiton
-      chai.expect(updatedDonor[2].completenessStats.coreCompletion).to.deep.include({
+      chai.expect(updatedDonor[2].completionStats.coreCompletion).to.deep.include({
         donor: 0, // donor info is invalid so set to zero
         primaryDiagnosis: 0,
         treatments: 1, // no treatment submitted, but overridden entity remains unchanged
@@ -351,7 +351,7 @@ describe('schema migration api', () => {
         specimens: 0,
       });
       chai
-        .expect(updatedDonor[2].completenessStats.overriddenCoreCompletion)
+        .expect(updatedDonor[2].completionStats.overriddenCoreCompletion)
         .to.deep.eq(['treatments']);
 
       chai.assert(sendProgramUpdatedMessageFunc.calledOnceWith(programId));

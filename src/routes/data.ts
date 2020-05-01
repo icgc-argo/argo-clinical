@@ -13,9 +13,6 @@ router.get('/donors/id', wrapAsync(clinicalApi.findDonorId));
 router.get('/specimens/id', wrapAsync(clinicalApi.findSpecimenId));
 router.get('/samples/id', wrapAsync(clinicalApi.findSampleId));
 
-router.patch(
-  '/donor/:donorId/completeness-stats',
-  wrapAsync(clinicalApi.patchDonorCompletenessStats),
-);
+router.patch('/donor/:donorId/completion-stats', wrapAsync(clinicalApi.patchDonorCompletionStats));
 
 export default router;
