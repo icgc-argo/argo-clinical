@@ -16,12 +16,8 @@ export interface AppConfig {
   jwtPubKey(): string;
   schemaServiceUrl(): string;
   testApisDisabled(): boolean;
-  kafkaMessagingEnabled(): boolean;
-  kafkaClientId(): string;
-  kafkaBrokers(): string[];
-  kafkaTopicProgramUpdate(): string;
-  kafkaTopicProgramUpdateConfigPartitions(): number;
-  kafkaTopicProgramUpdateConfigReplications(): number;
+  kafkaProperties(): KafkaConfigurations;
+  rxNormDbProperties(): RxNormDbConfig;
 }
 
 class ConfigManager {
@@ -29,4 +25,21 @@ class ConfigManager {
   getConfig(): AppConfig {
     return this.impl;
   }
+}
+
+export interface KafkaConfigurations {
+  kafkaMessagingEnabled(): boolean;
+  kafkaClientId(): string;
+  kafkaBrokers(): string[];
+  kafkaTopicProgramUpdate(): string;
+  kafkaTopicProgramUpdateConfigPartitions(): number;
+  kafkaTopicProgramUpdateConfigReplications(): number;
+}
+export interface RxNormDbConfig {
+  host: string;
+  user: string;
+  password: string;
+  database: string;
+  port: number;
+  timeout: number;
 }

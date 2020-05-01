@@ -5,8 +5,8 @@ import {
 } from '../../../src/clinical/clinical-entities';
 import { ClinicalEntitySchemaNames } from '../submission-entities';
 import { notEmpty, F } from '../../../src/utils';
-
 import { getClinicalEntitiesFromDonorBySchemaName } from './submission-to-clinical';
+
 import { DeepReadonly } from 'deep-freeze';
 import { cloneDeep, pull } from 'lodash';
 import { isNumber } from 'util';

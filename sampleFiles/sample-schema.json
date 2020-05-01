@@ -1407,12 +1407,25 @@
               }
             },
             {
-              "name": "chemotherapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the chemotherapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": ["Placeholder list 1", "Need list", "Still need it"]
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
               },
               "meta": {
                 "validationDependency": true,
@@ -1421,6 +1434,7 @@
                 "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
+
             {
               "name": "chemotherapy_dosage_units",
               "description": "Indicate units used to record chemotherapy drug dosage.",
@@ -1491,23 +1505,40 @@
               },
               "restrictions": {
                 "required": true,
+                "foreignKey": "treatment.submitter_treatment_id",
                 "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
-              "name": "hormone_therapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the hormone therapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
-              "restrictions": {
-                "required": true,
-                "codeList": ["Placeholder list 1", "Need list", "Still need it"]
-              },
               "meta": {
                 "validationDependency": true,
                 "core": true,
-                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names."
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              },
+              "restrictions": {
+                "required": true
               }
             },
+
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
+              },
+              "restrictions": {
+                "required": true
+              }
+            },
+
             {
               "name": "hormone_drug_dosage_units",
               "description": "Indicate the units used to record hormone drug dosage.",
