@@ -125,6 +125,15 @@ const setupRxNormConnection = (conf: RxNormDbConfig) => {
 
   pool.on('error', err => setStatus('rxNormDb', { status: Status.ERROR }));
   pool.on('connection', () => setStatus('rxNormDb', { status: Status.OK }));
+
+  // test get connection
+  pool.getConnection((err, con) => {
+    if (err) setStatus('rxNormDb', { status: Status.ERROR });
+    con.ping(err => {
+      if (err) setStatus('rxNormDb', { status: Status.ERROR });
+      setStatus('rxNormDb', { status: Status.OK });
+    });
+  });
 };
 
 export const run = async (config: AppConfig) => {
