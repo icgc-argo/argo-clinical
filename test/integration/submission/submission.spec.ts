@@ -8,9 +8,10 @@ import 'chai-http';
 import 'deep-equal-in-any-order';
 import 'mocha';
 import mongoose from 'mongoose';
-import { GenericContainer } from 'testcontainers';
+import { GenericContainer, Wait } from 'testcontainers';
 import app from '../../../src/app';
 import * as bootstrap from '../../../src/bootstrap';
+import * as pool from '../../../src/rxnorm/pool';
 import {
   cleanCollection,
   insertData,
@@ -24,7 +25,6 @@ import {
   insertRxNormDrug,
   updateData,
 } from '../testutils';
-import * as mysql from 'mysql';
 import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN, JWT_ABCDEF, JWT_WXYZEF } from '../test.jwt';
 import {
   ActiveRegistration,
@@ -44,6 +44,7 @@ import { Donor, Specimen } from '../../../src/clinical/clinical-entities';
 import AdmZip from 'adm-zip';
 import _ from 'lodash';
 import chaiExclude from 'chai-exclude';
+import { HostPortWaitStrategy } from 'testcontainers/dist/wait-strategy';
 chai.use(require('chai-http'));
 chai.use(require('deep-equal-in-any-order'));
 chai.use(chaiExclude);
@@ -68,8 +69,8 @@ describe('Submission Api', () => {
   before(() => {
     return (async () => {
       try {
-        mongoContainer = await new GenericContainer('mongo').withExposedPorts(27017).start();
-        mysqlContainer = await new GenericContainer('mysql', '5.5')
+        mongoContainer = await new GenericContainer('mongo', '4.0').withExposedPorts(27017).start();
+        mysqlContainer = await new GenericContainer('mysql', '5.7')
           .withEnv('MYSQL_DATABASE', RXNORM_DB)
           .withEnv('MYSQL_USER', RXNORM_USER)
           .withEnv('MYSQL_ROOT_PASSWORD', RXNORM_PASS)
@@ -141,20 +142,14 @@ describe('Submission Api', () => {
             };
           },
         });
-        const rxnormDbConnection = mysql.createPool({
-          database: RXNORM_DB,
-          user: RXNORM_USER,
-          password: RXNORM_PASS,
-          host: mysqlContainer.getContainerIpAddress(),
-          port: mysqlContainer.getMappedPort(3306),
-        });
-        await createtRxNormTables(rxnormDbConnection);
-        await insertRxNormDrug('423', 'drugA', rxnormDbConnection);
-        await insertRxNormDrug('423', 'drug A', rxnormDbConnection);
-        await insertRxNormDrug('423', 'Koolaid', rxnormDbConnection);
-        await insertRxNormDrug('22323', 'drug 2', rxnormDbConnection);
-        await insertRxNormDrug('22323', 'drug B', rxnormDbConnection);
-        await insertRxNormDrug('12', '123-H2O', rxnormDbConnection);
+        const connPool = pool.getPool();
+        await createtRxNormTables(connPool);
+        await insertRxNormDrug('423', 'drugA', connPool);
+        await insertRxNormDrug('423', 'drug A', connPool);
+        await insertRxNormDrug('423', 'Koolaid', connPool);
+        await insertRxNormDrug('22323', 'drug 2', connPool);
+        await insertRxNormDrug('22323', 'drug B', connPool);
+        await insertRxNormDrug('12', '123-H2O', connPool);
       } catch (err) {
         console.error('before >>>>>>>>>>>', err);
         return err;
