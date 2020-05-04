@@ -21,8 +21,7 @@ let server: Server;
     }
 
     try {
-      const secretsData = await vault.loadSecret(process.env.VAULT_SECRETS_PATH);
-      secrets = JSON.parse(secretsData.content);
+      secrets = await vault.loadSecret(process.env.VAULT_SECRETS_PATH);
     } catch (err) {
       console.error(err);
       throw new Error('failed to load secrets from vault.');
