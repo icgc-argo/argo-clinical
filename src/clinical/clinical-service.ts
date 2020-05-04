@@ -4,8 +4,6 @@ import { Sample, Donor } from './clinical-entities';
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 import { forceRecalcDonorCoreEntityStats } from '../submission/submission-to-clinical/stat-calculator';
-import { ClinicalEntitySchemaNames } from '../submission/submission-entities';
-import { getClinicalEntitiesFromDonorBySchemaName } from '../submission/submission-to-clinical/submission-to-clinical';
 
 export async function updateDonorSchemaMetadata(
   donor: DeepReadonly<Donor>,

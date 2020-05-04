@@ -602,7 +602,7 @@ paths:
           description: Active submission is not in PENDING_APPROVAL state and cannot be reopned
         '500':
           $ref: '#/components/responses/ServerError'
-  /submission/program/{programId}/clinical/download-committed:
+  /submission/program/{programId}/clinical/committed/tsv:
     parameters:
       - name: programId
         description: the short name of the program
@@ -611,8 +611,8 @@ paths:
         schema:
           type: string
     get:
-      summary: Get all commited clinical data
-      description: returns all commited clinical and sample registration data in tsv submission ready format
+      summary: Get all commited clinical data for a program
+      description: returns all commited clinical and sample_registration data in submission ready tsv
       responses:
         '200':
           description: 'A zip file'
@@ -621,6 +621,14 @@ paths:
               schema:
                 type: string
                 format: binary
+        '400':
+          description: Invalid programId provided
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/ServerError'
 
   /submission/icgc-import/preprocess/{programId}:
     parameters:

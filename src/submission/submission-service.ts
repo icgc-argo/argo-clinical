@@ -42,6 +42,7 @@ import {
   LegacyICGCImportRecord,
   TherapyRxNormFields,
   DataValidationErrors,
+  SubmittedClinicalRecord,
 } from './submission-entities';
 import * as schemaManager from './schema/schema-manager';
 import {
@@ -648,6 +649,7 @@ export namespace operations {
   export async function getAllCommittedClinicalData(programId: string) {
     if (!programId) throw new Error('Missing programId!');
 
+    // this query takes about 6sec for 20,000 donors with sample registration only running locally
     const donors = await getDonors(programId); // get in batch??
 
     // collect all records
@@ -680,7 +682,7 @@ export namespace operations {
           schemaEntityName: relevantSchemaWithFields.name,
           schemaVersion,
           records,
-          allSchemaFields: relevantSchemaWithFields.fields,
+          schemaFields: relevantSchemaWithFields.fields,
         };
       })
       .filter(notEmpty);

@@ -40,7 +40,7 @@ export namespace TsvUtils {
   export const parseObjectToTsv = (recordsObjects: any, headers: string[]) => {
     const columns: number = headers.length;
     // map headers to an index, used to place recordObject values in correct column
-    const headersToColumnMap: any = {};
+    const headersToColumnMap: Record<string, number> = {};
     headers.map((f, i) => (headersToColumnMap[f] = i));
 
     const allTsvRecords = new Array(recordsObjects.length);
@@ -48,8 +48,8 @@ export namespace TsvUtils {
       const tsvRecordAsArray = new Array<string>(columns);
       Object.entries(jr).forEach(([key, val]) => {
         const indexInTsvArray = headersToColumnMap[key];
-        if (!indexInTsvArray) {
-          return undefined;
+        if (isNaN(indexInTsvArray)) {
+          return undefined; // couldn't match field with expected headers so ignore it
         }
         if (Array.isArray(val)) {
           tsvRecordAsArray[indexInTsvArray] = val.map(v => String(v || '').trim()).join(', ');
@@ -60,7 +60,6 @@ export namespace TsvUtils {
       allTsvRecords[i] = tsvRecordAsArray.join('\t'); // hold order of recordsObjects
     });
 
-    console.log(allTsvRecords);
     const headersStr = Object.keys(headersToColumnMap).join('\t');
     return headersStr + '\n' + allTsvRecords.join('\n');
   };
