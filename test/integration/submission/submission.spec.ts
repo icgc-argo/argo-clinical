@@ -8,9 +8,10 @@ import 'chai-http';
 import 'deep-equal-in-any-order';
 import 'mocha';
 import mongoose from 'mongoose';
-import { GenericContainer } from 'testcontainers';
+import { GenericContainer, Wait } from 'testcontainers';
 import app from '../../../src/app';
 import * as bootstrap from '../../../src/bootstrap';
+import * as pool from '../../../src/rxnorm/pool';
 import {
   cleanCollection,
   insertData,
@@ -68,12 +69,13 @@ describe('Submission Api', () => {
   before(() => {
     return (async () => {
       try {
-        mongoContainer = await new GenericContainer('mongo').withExposedPorts(27017).start();
-        mysqlContainer = await new GenericContainer('mysql', '5.5')
+        mongoContainer = await new GenericContainer('mongo', '4.0').withExposedPorts(27017).start();
+        mysqlContainer = await new GenericContainer('mysql', '5.7')
           .withEnv('MYSQL_DATABASE', RXNORM_DB)
           .withEnv('MYSQL_USER', RXNORM_USER)
           .withEnv('MYSQL_ROOT_PASSWORD', RXNORM_PASS)
           .withEnv('MYSQL_PASSWORD', RXNORM_PASS)
+          .withWaitStrategy(Wait.forLogMessage('ready for connections.'))
           .withExposedPorts(3306)
           .start();
         console.log('mongo test container started');
@@ -141,13 +143,7 @@ describe('Submission Api', () => {
             };
           },
         });
-        const rxnormDbConnection = mysql.createPool({
-          database: RXNORM_DB,
-          user: RXNORM_USER,
-          password: RXNORM_PASS,
-          host: mysqlContainer.getContainerIpAddress(),
-          port: mysqlContainer.getMappedPort(3306),
-        });
+        const rxnormDbConnection = pool.getPool();
         await createtRxNormTables(rxnormDbConnection);
         await insertRxNormDrug('423', 'drugA', rxnormDbConnection);
         await insertRxNormDrug('423', 'drug A', rxnormDbConnection);

@@ -114,6 +114,7 @@ const setJwtPublicKey = (keyUrl: string) => {
 };
 
 const setupRxNormConnection = (conf: RxNormDbConfig) => {
+  if (!conf.host) return;
   const pool = initPool({
     database: conf.database,
     host: conf.host,
@@ -123,17 +124,9 @@ const setupRxNormConnection = (conf: RxNormDbConfig) => {
     timeout: conf.timeout,
   });
 
-  pool.on('error', err => setStatus('rxNormDb', { status: Status.ERROR }));
   pool.on('connection', () => setStatus('rxNormDb', { status: Status.OK }));
 
-  // test get connection
-  pool.getConnection((err, con) => {
-    if (err) setStatus('rxNormDb', { status: Status.ERROR });
-    con.ping(err => {
-      if (err) setStatus('rxNormDb', { status: Status.ERROR });
-      setStatus('rxNormDb', { status: Status.OK });
-    });
-  });
+  setStatus('rxNormDb', { status: Status.OK });
 };
 
 export const run = async (config: AppConfig) => {
@@ -141,12 +134,13 @@ export const run = async (config: AppConfig) => {
 
   // setup mongo connection
   await setupDBConnection(config.mongoUrl(), config.mongoUser(), config.mongoPassword());
-
-  setupRxNormConnection(config.rxNormDbProperties());
   if (process.env.LOG_LEVEL === 'debug') {
     console.log('setting mongoose to debug verbosity');
     mongoose.set('debug', true);
   }
+
+  // RxNorm Db
+  setupRxNormConnection(config.rxNormDbProperties());
 
   // setup messenger with kafka configs
   const kafkaProps = config.kafkaProperties();
@@ -185,6 +179,11 @@ export const run = async (config: AppConfig) => {
       throw new Error('App is not configured correctly either provide jwt pub key url or key');
     }
     setJwtPublicKey(config.jwtPubKeyUrl());
+    setInterval(() => {
+      setJwtPublicKey(config.jwtPubKeyUrl());
+    }, 5 * 60 * 1000);
+  } else {
+    setStatus('egoPublicKey', { status: Status.OK });
   }
 
   await persistedConfig.initSubmissionConfigsIfNoneExist();
