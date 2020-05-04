@@ -115,7 +115,6 @@ describe('schema migration api', () => {
           .withEnv('MYSQL_ROOT_PASSWORD', 'password')
           .withEnv('MYSQL_PASSWORD', 'password')
           .withExposedPorts(3306)
-          .withWaitStrategy(Wait.forLogMessage('ready for connections.'))
           .start();
         mongoContainer = await mongoContainerPromise;
         mysqlContainer = await mysqlContainerPromise;

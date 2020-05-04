@@ -25,7 +25,6 @@ import {
   insertRxNormDrug,
   updateData,
 } from '../testutils';
-import * as mysql from 'mysql';
 import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN, JWT_ABCDEF, JWT_WXYZEF } from '../test.jwt';
 import {
   ActiveRegistration,
@@ -45,6 +44,7 @@ import { Donor, Specimen } from '../../../src/clinical/clinical-entities';
 import AdmZip from 'adm-zip';
 import _ from 'lodash';
 import chaiExclude from 'chai-exclude';
+import { HostPortWaitStrategy } from 'testcontainers/dist/wait-strategy';
 chai.use(require('chai-http'));
 chai.use(require('deep-equal-in-any-order'));
 chai.use(chaiExclude);
@@ -75,7 +75,6 @@ describe('Submission Api', () => {
           .withEnv('MYSQL_USER', RXNORM_USER)
           .withEnv('MYSQL_ROOT_PASSWORD', RXNORM_PASS)
           .withEnv('MYSQL_PASSWORD', RXNORM_PASS)
-          .withWaitStrategy(Wait.forLogMessage('ready for connections.'))
           .withExposedPorts(3306)
           .start();
         console.log('mongo test container started');
@@ -143,14 +142,14 @@ describe('Submission Api', () => {
             };
           },
         });
-        const rxnormDbConnection = pool.getPool();
-        await createtRxNormTables(rxnormDbConnection);
-        await insertRxNormDrug('423', 'drugA', rxnormDbConnection);
-        await insertRxNormDrug('423', 'drug A', rxnormDbConnection);
-        await insertRxNormDrug('423', 'Koolaid', rxnormDbConnection);
-        await insertRxNormDrug('22323', 'drug 2', rxnormDbConnection);
-        await insertRxNormDrug('22323', 'drug B', rxnormDbConnection);
-        await insertRxNormDrug('12', '123-H2O', rxnormDbConnection);
+        const connPool = pool.getPool();
+        await createtRxNormTables(connPool);
+        await insertRxNormDrug('423', 'drugA', connPool);
+        await insertRxNormDrug('423', 'drug A', connPool);
+        await insertRxNormDrug('423', 'Koolaid', connPool);
+        await insertRxNormDrug('22323', 'drug 2', connPool);
+        await insertRxNormDrug('22323', 'drug B', connPool);
+        await insertRxNormDrug('12', '123-H2O', connPool);
       } catch (err) {
         console.error('before >>>>>>>>>>>', err);
         return err;

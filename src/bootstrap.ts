@@ -8,6 +8,9 @@ import { setStatus, Status } from './app-health';
 import * as persistedConfig from './submission/persisted-config/service';
 import * as submissionUpdatesMessenger from './submission/submission-updates-messenger';
 import { initPool } from './rxnorm/pool';
+import { promisify } from 'bluebird';
+import { cat } from 'shelljs';
+import { Pool } from 'mysql';
 
 const L = loggerFor(__filename);
 
@@ -123,11 +126,25 @@ const setupRxNormConnection = (conf: RxNormDbConfig) => {
     port: conf.port,
     timeout: conf.timeout,
   });
-
   pool.on('connection', () => setStatus('rxNormDb', { status: Status.OK }));
 
-  setStatus('rxNormDb', { status: Status.OK });
+  // check for rxnorm connection every 5 minutes
+  pingRxNorm(pool);
+  setInterval(async () => {
+    await pingRxNorm(pool);
+  }, 5 * 60 * 1000);
 };
+
+async function pingRxNorm(pool: Pool) {
+  try {
+    const query = promisify(pool.query).bind(pool);
+    await query('select 1');
+    setStatus('rxNormDb', { status: Status.OK });
+  } catch (err) {
+    L.error('cannot get connection to rxnorm', err);
+    setStatus('rxNormDb', { status: Status.ERROR });
+  }
+}
 
 export const run = async (config: AppConfig) => {
   initConfigs(config);
