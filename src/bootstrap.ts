@@ -1,12 +1,16 @@
 import mongoose from 'mongoose';
 import { loggerFor } from './logger';
-import { AppConfig, initConfigs, JWT_TOKEN_PUBLIC_KEY } from './config';
+import { AppConfig, initConfigs, JWT_TOKEN_PUBLIC_KEY, RxNormDbConfig } from './config';
 import * as manager from './submission/schema/schema-manager';
 import * as utils from './utils';
 import fetch from 'node-fetch';
 import { setStatus, Status } from './app-health';
 import * as persistedConfig from './submission/persisted-config/service';
 import * as submissionUpdatesMessenger from './submission/submission-updates-messenger';
+import { initPool } from './rxnorm/pool';
+import { promisify } from 'bluebird';
+import { cat } from 'shelljs';
+import { Pool } from 'mysql';
 
 const L = loggerFor(__filename);
 
@@ -112,25 +116,58 @@ const setJwtPublicKey = (keyUrl: string) => {
   getKey(1);
 };
 
+const setupRxNormConnection = (conf: RxNormDbConfig) => {
+  if (!conf.host) return;
+  const pool = initPool({
+    database: conf.database,
+    host: conf.host,
+    password: conf.password,
+    user: conf.user,
+    port: conf.port,
+    timeout: conf.timeout,
+  });
+  pool.on('connection', () => setStatus('rxNormDb', { status: Status.OK }));
+
+  // check for rxnorm connection every 5 minutes
+  pingRxNorm(pool);
+  setInterval(async () => {
+    await pingRxNorm(pool);
+  }, 5 * 60 * 1000);
+};
+
+async function pingRxNorm(pool: Pool) {
+  try {
+    const query = promisify(pool.query).bind(pool);
+    await query('select 1');
+    setStatus('rxNormDb', { status: Status.OK });
+  } catch (err) {
+    L.error('cannot get connection to rxnorm', err);
+    setStatus('rxNormDb', { status: Status.ERROR });
+  }
+}
+
 export const run = async (config: AppConfig) => {
   initConfigs(config);
 
   // setup mongo connection
   await setupDBConnection(config.mongoUrl(), config.mongoUser(), config.mongoPassword());
-
   if (process.env.LOG_LEVEL === 'debug') {
     console.log('setting mongoose to debug verbosity');
     mongoose.set('debug', true);
   }
 
+  // RxNorm Db
+  setupRxNormConnection(config.rxNormDbProperties());
+
   // setup messenger with kafka configs
-  await submissionUpdatesMessenger.initialize(config.kafkaMessagingEnabled(), {
-    clientId: config.kafkaClientId(),
-    brokers: config.kafkaBrokers(),
+  const kafkaProps = config.kafkaProperties();
+  await submissionUpdatesMessenger.initialize(kafkaProps.kafkaMessagingEnabled(), {
+    clientId: kafkaProps.kafkaClientId(),
+    brokers: kafkaProps.kafkaBrokers(),
     programUpdateTopic: {
-      topic: config.kafkaTopicProgramUpdate(),
-      numPartitions: config.kafkaTopicProgramUpdateConfigPartitions(),
-      replicationFactor: config.kafkaTopicProgramUpdateConfigReplications(),
+      topic: kafkaProps.kafkaTopicProgramUpdate(),
+      numPartitions: kafkaProps.kafkaTopicProgramUpdateConfigPartitions(),
+      replicationFactor: kafkaProps.kafkaTopicProgramUpdateConfigReplications(),
     },
   });
 
@@ -159,6 +196,11 @@ export const run = async (config: AppConfig) => {
       throw new Error('App is not configured correctly either provide jwt pub key url or key');
     }
     setJwtPublicKey(config.jwtPubKeyUrl());
+    setInterval(() => {
+      setJwtPublicKey(config.jwtPubKeyUrl());
+    }, 5 * 60 * 1000);
+  } else {
+    setStatus('egoPublicKey', { status: Status.OK });
   }
 
   await persistedConfig.initSubmissionConfigsIfNoneExist();

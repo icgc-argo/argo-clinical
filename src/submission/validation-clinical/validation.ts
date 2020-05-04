@@ -21,6 +21,8 @@ import {
   DonorFieldsEnum,
   ClinicalFields,
   IdToIndexMap,
+  TherapyRxNormFields,
+  SubmittedClinicalRecord,
 } from '../submission-entities';
 import { donorDao } from '../../clinical/donor-repo';
 import { DeepReadonly } from 'deep-freeze';
@@ -37,6 +39,7 @@ import { concat } from 'lodash';
 import { ClinicalSubmissionRecordsOperations } from './utils';
 import { mergeRecordsMapIntoDonor } from '../submission-to-clinical/merge-submission';
 import { loggerFor } from '../../logger';
+
 const L = loggerFor(__filename);
 
 export const validateRegistrationData = async (
@@ -219,6 +222,7 @@ export const checkUniqueRecords = (
       identifierToIndexMap[uniqueIdentiferValue] = [index];
       return;
     }
+
     identifierToIndexMap[uniqueIdentiferValue].push(index);
     const sameIdentifiedRecordIndecies = identifierToIndexMap[uniqueIdentiferValue];
     sameIdentifiedRecordIndecies.forEach(recordIndex => {

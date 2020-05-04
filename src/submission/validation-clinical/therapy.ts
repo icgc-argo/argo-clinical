@@ -5,6 +5,7 @@ import {
   SubmittedClinicalRecord,
   DataValidationErrors,
   ClinicalTherapyType,
+  TherapyRxNormFields,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, Treatment } from '../../clinical/clinical-entities';
@@ -23,12 +24,9 @@ export const validate = async (
   }
 
   const errors: SubmissionValidationError[] = [];
-
   const treatment = getTreatment(therapyRecord, mergedDonor, errors);
   if (!treatment) return errors;
-
   checkTreatementHasCorrectTypeForTherapy(therapyRecord, treatment, errors);
-
   return errors;
 };
 

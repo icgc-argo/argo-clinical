@@ -3,7 +3,8 @@ import * as bootstrap from '../../../src/bootstrap';
 import {
   ClinicalEntitySchemaNames,
   PrimaryDiagnosisFieldsEnum,
-  HormoneTherapyFieldsEnum,
+  CommonTherapyFields,
+  TherapyRxNormFields,
 } from '../../../src/submission/submission-entities';
 import { DonorFieldsEnum } from '../../../src/submission/submission-entities';
 import { SampleRegistrationFieldsEnum } from '../../../src/submission/submission-entities';
@@ -24,7 +25,7 @@ import 'deep-equal-in-any-order';
 import 'mocha';
 import mongoose from 'mongoose';
 import { spy, SinonSpy } from 'sinon';
-import { GenericContainer } from 'testcontainers';
+import { GenericContainer, Wait } from 'testcontainers';
 import { findInDb, insertData, emptyDonorDocument, clearCollections } from '../testutils';
 import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN } from '../test.jwt';
 import _ from 'lodash';
@@ -41,6 +42,7 @@ const startingSchemaVersion = '1.0';
 describe('schema migration api', () => {
   let sendProgramUpdatedMessageFunc: SinonSpy<[string], Promise<void>>;
   let mongoContainer: any;
+  let mysqlContainer: any;
   let dburl = ``;
 
   const programId = 'ABCD-EF';
@@ -104,8 +106,19 @@ describe('schema migration api', () => {
   before(() => {
     return (async () => {
       try {
-        mongoContainer = await new GenericContainer('mongo').withExposedPorts(27017).start();
-        console.log('mongo test container started');
+        const mongoContainerPromise = new GenericContainer('mongo', '4.0')
+          .withExposedPorts(27017)
+          .start();
+        const mysqlContainerPromise = new GenericContainer('mysql', '5.7')
+          .withEnv('MYSQL_DATABASE', 'rxnorm')
+          .withEnv('MYSQL_USER', 'clinical')
+          .withEnv('MYSQL_ROOT_PASSWORD', 'password')
+          .withEnv('MYSQL_PASSWORD', 'password')
+          .withExposedPorts(3306)
+          .start();
+        mongoContainer = await mongoContainerPromise;
+        mysqlContainer = await mysqlContainerPromise;
+        console.log('db test containers started');
         await bootstrap.run({
           mongoPassword() {
             return '';
@@ -137,23 +150,37 @@ describe('schema migration api', () => {
           testApisDisabled() {
             return false;
           },
-          kafkaMessagingEnabled() {
-            return false;
+          kafkaProperties() {
+            return {
+              kafkaMessagingEnabled() {
+                return false;
+              },
+              kafkaBrokers() {
+                return new Array<string>();
+              },
+              kafkaClientId() {
+                return '';
+              },
+              kafkaTopicProgramUpdate() {
+                return '';
+              },
+              kafkaTopicProgramUpdateConfigPartitions(): number {
+                return NaN;
+              },
+              kafkaTopicProgramUpdateConfigReplications(): number {
+                return NaN;
+              },
+            };
           },
-          kafkaBrokers() {
-            return new Array<string>();
-          },
-          kafkaClientId() {
-            return '';
-          },
-          kafkaTopicProgramUpdate() {
-            return '';
-          },
-          kafkaTopicProgramUpdateConfigPartitions(): number {
-            return NaN;
-          },
-          kafkaTopicProgramUpdateConfigReplications(): number {
-            return NaN;
+          rxNormDbProperties() {
+            return {
+              database: 'rxnorm',
+              user: 'clinical',
+              password: 'password',
+              timeout: 5000,
+              host: mysqlContainer.getContainerIpAddress(),
+              port: mysqlContainer.getMappedPort(3306),
+            };
           },
         });
       } catch (err) {
@@ -483,10 +510,11 @@ describe('schema migration api', () => {
       migration.newSchemaErrors.should.deep.eq({
         [ClinicalEntitySchemaNames.HORMONE_THERAPY]: {
           missingFields: [
-            HormoneTherapyFieldsEnum.program_id,
-            HormoneTherapyFieldsEnum.submitter_donor_id,
-            HormoneTherapyFieldsEnum.submitter_treatment_id,
-            HormoneTherapyFieldsEnum.hormone_therapy_drug_name,
+            TherapyRxNormFields.drug_name,
+            TherapyRxNormFields.drug_rxnormid,
+            CommonTherapyFields.program_id,
+            CommonTherapyFields.submitter_donor_id,
+            CommonTherapyFields.submitter_treatment_id,
           ],
           invalidFieldCodeLists: [],
         },

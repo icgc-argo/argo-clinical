@@ -1,7 +1,9 @@
 import mongo from 'mongodb';
 import _ from 'lodash';
 import chai from 'chai';
+import * as mysql from 'mysql';
 import { Donor } from '../../src/clinical/clinical-entities';
+import * as utils from 'util';
 
 export const clearCollections = async (dburl: string, collections: string[]) => {
   try {
@@ -53,6 +55,20 @@ export const insertData = async (
   await conn.close();
   return document._id;
 };
+
+export async function execMysqlQuery(sql: string, pool: mysql.Pool) {
+  const query = utils.promisify(pool.query).bind(pool);
+  await query(sql);
+}
+
+export async function createtRxNormTables(pool: mysql.Pool) {
+  const sql = 'CREATE TABLE RXNCONSO (RXCUI VARCHAR(255), STR VARCHAR(255))';
+  await execMysqlQuery(sql, pool);
+}
+
+export async function insertRxNormDrug(id: string, name: string, pool: mysql.Pool) {
+  await execMysqlQuery(`insert into RXNCONSO (RXCUI, STR) values('${id}', '${name}')`, pool);
+}
 
 export const updateData = async (
   dburl: string,

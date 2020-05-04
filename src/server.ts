@@ -1,5 +1,5 @@
 // Has to import config before any other import uses the configurations
-import { AppConfig } from './config';
+import { AppConfig, RxNormDbConfig, KafkaConfigurations } from './config';
 import dotenv from 'dotenv';
 if (process.env.NODE_ENV !== 'PRODUCTION') {
   console.debug('dotenv: ', dotenv.config());
@@ -21,8 +21,7 @@ let server: Server;
     }
 
     try {
-      const secretsData = await vault.loadSecret(process.env.VAULT_SECRETS_PATH);
-      secrets = JSON.parse(secretsData.content);
+      secrets = await vault.loadSecret(process.env.VAULT_SECRETS_PATH);
     } catch (err) {
       console.error(err);
       throw new Error('failed to load secrets from vault.');
@@ -72,23 +71,37 @@ let server: Server;
     testApisDisabled(): boolean {
       return process.env.DISABLE_TEST_APIS === 'false' ? false : true;
     },
-    kafkaMessagingEnabled(): boolean {
-      return process.env.KAFKA_MESSAGING_ENABLED === 'true' ? true : false;
+    kafkaProperties(): KafkaConfigurations {
+      return {
+        kafkaMessagingEnabled(): boolean {
+          return process.env.KAFKA_MESSAGING_ENABLED === 'true' ? true : false;
+        },
+        kafkaClientId(): string {
+          return process.env.KAFKA_CLIENT_ID || '';
+        },
+        kafkaBrokers(): string[] {
+          return process.env.KAFKA_BROKERS?.split(',') || new Array<string>();
+        },
+        kafkaTopicProgramUpdate(): string {
+          return process.env.KAFKA_TOPIC_PROGRAM_UPDATE || '';
+        },
+        kafkaTopicProgramUpdateConfigPartitions(): number {
+          return Number(process.env.KAFKA_TOPIC_PROGRAM_UPDATE_CONFIG_PARTITIONS) || 1;
+        },
+        kafkaTopicProgramUpdateConfigReplications(): number {
+          return Number(process.env.KAFKA_TOPIC_PROGRAM_UPDATE_CONFIG_REPLICATIONS) || 1;
+        },
+      };
     },
-    kafkaClientId(): string {
-      return process.env.KAFKA_CLIENT_ID || '';
-    },
-    kafkaBrokers(): string[] {
-      return process.env.KAFKA_BROKERS?.split(',') || new Array<string>();
-    },
-    kafkaTopicProgramUpdate(): string {
-      return process.env.KAFKA_TOPIC_PROGRAM_UPDATE || '';
-    },
-    kafkaTopicProgramUpdateConfigPartitions(): number {
-      return Number(process.env.KAFKA_TOPIC_PROGRAM_UPDATE_CONFIG_PARTITIONS) || 1;
-    },
-    kafkaTopicProgramUpdateConfigReplications(): number {
-      return Number(process.env.KAFKA_TOPIC_PROGRAM_UPDATE_CONFIG_REPLICATIONS) || 1;
+    rxNormDbProperties(): RxNormDbConfig {
+      return {
+        database: process.env.RXNORM_DB_NAME || 'rxnorm',
+        host: process.env.RXNORM_DB_HOST || 'localhost',
+        password: process.env.RXNORM_DB_PASSWORD || secrets.RXNORM_DB_PASSWORD || '',
+        user: process.env.RXNORM_DB_USER || secrets.RXNORM_DB_USER || 'clinical',
+        port: Number(process.env.RXNORM_DB_PORT) || 3306,
+        timeout: Number(process.env.RXNORM_DB_TIMEOUT_MILLIS) || 5 * 1000,
+      };
     },
   };
 

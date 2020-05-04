@@ -131,7 +131,7 @@ export const isStringMatchRegex = (expressions: RegExp[], value: string) => {
   return expressions.filter(exp => RegExp(exp).test(value)).length >= 1;
 };
 
-export const isNotEmptyString = (value: string) => {
+export const isNotEmptyString = (value: string | undefined): value is string => {
   return isNotAbsent(value) && value.trim() !== '';
 };
 
@@ -139,11 +139,13 @@ export const isEmptyString = (value: string) => {
   return !isNotEmptyString(value);
 };
 
-export const isAbsent = (value: string | number | boolean | undefined) => {
+export const isAbsent = (value: string | number | boolean | undefined): value is undefined => {
   return !isNotAbsent(value);
 };
 
-export const isNotAbsent = (value: string | number | boolean | undefined) => {
+export const isNotAbsent = (
+  value: string | number | boolean | undefined,
+): value is string | number | boolean => {
   return value !== null && value !== undefined;
 };
 
