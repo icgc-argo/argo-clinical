@@ -576,7 +576,7 @@ describe('schema migration api', () => {
 const migrateSyncTo = async (newSchemaVersion: string) => {
   return chai
     .request(app)
-    .patch('/dictionary/?sync=true')
+    .post('/dictionary/migration/run?sync=true')
     .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
     .send({
       version: newSchemaVersion,
@@ -586,7 +586,7 @@ const migrateSyncTo = async (newSchemaVersion: string) => {
 const dryRunMigrateTo = async (newSchemaVersion: string) => {
   return chai
     .request(app)
-    .post('/dictionary/dry-run-update')
+    .post('/dictionary/migration/dry-run-update')
     .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
     .send({
       version: newSchemaVersion,

@@ -55,7 +55,7 @@ paths:
         '200':
           description: 'Sample registration and Clinical Submission disabled state has been set'
 
-  /dictionary:
+  /dictionary/migration/run:
     get:
       tags:
         - Dictionary
@@ -68,9 +68,9 @@ paths:
                 type: array
                 items:
                   type: object
-    patch:
+    post:
       tags:
-        - Dictionary Management
+        - Dictionary Migration
         - Admin
       description: 'update and load a new schema version from lectern to be used.'
       requestBody:
@@ -89,10 +89,10 @@ paths:
             application/json:
               schema:
                 type: object
-  /dictionary/dry-run-update:
+  /dictionary/migration/dry-run-update:
     post:
       tags:
-        - Dictionary Management
+        - Dictionary Migration
         - Admin
       requestBody:
         content:
@@ -113,7 +113,7 @@ paths:
   /dictionary/migration/resume:
     post:
       tags:
-        - Dictionary Management
+        - Dictionary Migration
         - Admin
       responses:
         '200':
@@ -127,7 +127,7 @@ paths:
   /dictionary/migration/{migrationId}:
     get:
       tags:
-        - Dictionary Management
+        - Dictionary Migration
         - Admin
       parameters:
         - name: migrationId
@@ -148,7 +148,7 @@ paths:
   /dictionary/migration/:
     get:
       tags:
-        - Dictionary Management
+        - Dictionary Migration
         - Admin
       responses:
         '200':
@@ -793,6 +793,66 @@ paths:
         '200':
           description: 'Donor with updated stats'
 
+  /submission/schema:
+    get:
+      deprecated: true
+      summary: 'use `/dictionary` instead'
+      tags:
+        - Deprecated
+    patch:
+      deprecated: true
+      summary: 'use `/dictionary` instead'
+      tags:
+        - Deprecated
+  /submission/schema/dry-run-update:
+    post:
+      deprecated: true
+      summary: 'use `/dictionary/dry-run-update` instead'
+      tags:
+        - Deprecated
+  /submission/schema/migration/resume:
+    post:
+      deprecated: true
+      summary: 'use `/dictionary/migration/resume` instead'
+      tags:
+        - Deprecated
+  /submission/schema/migration/{migrationId}:
+    get:
+      deprecated: true
+      summary: 'use `/dictionary/migration/{migrationId}` instead'
+      tags:
+        - Deprecated
+  /submission/schema/migration/:
+    get:
+      deprecated: true
+      summary: 'use `/dictionary/migration` instead'
+      tags:
+        - Deprecated
+  /submission/schema/changes:
+    get:
+      deprecated: true
+      summary: 'use `/dictionary/changes` instead'
+      tags:
+        - Deprecated
+  /submission/schema/list:
+    get:
+      deprecated: true
+      summary: 'use `/dictionary/list` instead'
+      tags:
+        - Deprecated
+  /submission/schema/template/all:
+    get:
+      deprecated: true
+      summary: 'use `/dictionary/template/all` instead'
+      tags:
+        - Deprecated
+  /submission/schema/template/{schemaName}:
+    get:
+      deprecated: true
+      summary: 'use `/dictionary/template/{schemaName}` instead'
+      tags:
+        - Deprecated
+
 servers:
   - url: /
 tags:
@@ -802,7 +862,7 @@ tags:
     description: Submission Service Configurations
   - name: Dictionary
     description: View the Data Dictionary used by Argo-Clinical
-  - name: Dictionary Management
+  - name: Dictionary Migration
     description: Update Data Dictionary and manage migrations
   - name: Sample Registration
     description: Registering new Donors, Specimens, and Samples
@@ -816,6 +876,8 @@ tags:
     description: APIs to do the icgc import
   - name: Admin
     description: Admin operations collected for convenience
+  - name: Deprecated
+    description: Deprecated enpoints
 components:
   parameters:
     QueryProgramId:
