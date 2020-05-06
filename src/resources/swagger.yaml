@@ -796,60 +796,60 @@ paths:
   /submission/schema:
     get:
       deprecated: true
-      summary: 'use `/dictionary` instead'
+      summary: 'use  `GET /dictionary` instead'
       tags:
         - Deprecated
     patch:
       deprecated: true
-      summary: 'use `/dictionary` instead'
+      summary: 'use  `POST /dictionary/migration/run` instead'
       tags:
         - Deprecated
   /submission/schema/dry-run-update:
     post:
       deprecated: true
-      summary: 'use `/dictionary/dry-run-update` instead'
+      summary: 'use `POST /dictionary/migration/dry-run-update` instead'
       tags:
         - Deprecated
   /submission/schema/migration/resume:
     post:
       deprecated: true
-      summary: 'use `/dictionary/migration/resume` instead'
+      summary: 'use `POST /dictionary/migration/resume` instead'
       tags:
         - Deprecated
   /submission/schema/migration/{migrationId}:
     get:
       deprecated: true
-      summary: 'use `/dictionary/migration/{migrationId}` instead'
+      summary: 'use `GET /dictionary/migration/{migrationId}` instead'
       tags:
         - Deprecated
   /submission/schema/migration/:
     get:
       deprecated: true
-      summary: 'use `/dictionary/migration` instead'
+      summary: 'use `GET /dictionary/migration` instead'
       tags:
         - Deprecated
   /submission/schema/changes:
     get:
       deprecated: true
-      summary: 'use `/dictionary/changes` instead'
+      summary: 'use `GET /dictionary/changes` instead'
       tags:
         - Deprecated
   /submission/schema/list:
     get:
       deprecated: true
-      summary: 'use `/dictionary/list` instead'
+      summary: 'use `GET /dictionary/list` instead'
       tags:
         - Deprecated
   /submission/schema/template/all:
     get:
       deprecated: true
-      summary: 'use `/dictionary/template/all` instead'
+      summary: 'use `GET /dictionary/template/all` instead'
       tags:
         - Deprecated
   /submission/schema/template/{schemaName}:
     get:
       deprecated: true
-      summary: 'use `/dictionary/template/{schemaName}` instead'
+      summary: 'use `GET /dictionary/template/{schemaName}` instead'
       tags:
         - Deprecated
 
