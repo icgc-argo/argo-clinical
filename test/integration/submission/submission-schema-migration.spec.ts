@@ -15,7 +15,7 @@ import {
 import {
   DictionaryMigration,
   MigrationStage,
-} from '../../../src/submission/schema/migration-entities';
+} from '../../../src/submission/migration/migration-entities';
 import { Donor } from '../../../src/clinical/clinical-entities';
 import { getInstance } from '../../../src/submission/submission-updates-messenger';
 
