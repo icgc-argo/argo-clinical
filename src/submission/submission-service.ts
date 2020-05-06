@@ -42,7 +42,7 @@ import {
   TherapyRxNormFields,
   DataValidationErrors,
 } from './submission-entities';
-import * as schemaManager from '../schema/schema-manager';
+import * as dictionaryManager from '../dictionary/manager';
 import {
   SchemaValidationError,
   TypedDataRecord,
@@ -116,7 +116,7 @@ export namespace operations {
     // a loop that async loops through all records
     await Promise.all(
       command.records.map(async (r, index) => {
-        const schemaResult = await schemaManager
+        const schemaResult = await dictionaryManager
           .instance()
           .processAsync(ClinicalEntitySchemaNames.REGISTRATION, r, index);
 
@@ -209,7 +209,7 @@ export namespace operations {
     const stats = calculateUpdates(registrationRecords, allDonorsMap);
 
     // save the new registration object
-    const schemaVersion = schemaManager.instance().getCurrent().version;
+    const schemaVersion = dictionaryManager.instance().getCurrent().version;
     const registration = toActiveRegistration(command, registrationRecords, stats, schemaVersion);
     const savedRegistration = await registrationRepository.create(registration);
     return F({
@@ -360,7 +360,7 @@ export namespace operations {
           programId: command.programId,
           clinicalType: clinicalType,
         },
-        schemaManager.instance().getCurrent(),
+        dictionaryManager.instance().getCurrent(),
       );
 
       // because there was a requirement to not keep an open empty submission
@@ -822,7 +822,7 @@ export namespace operations {
     await Promise.all(
       command.records.map(async (record, index) => {
         let processedRecord: any = {};
-        const schemaResult = schemaManager
+        const schemaResult = dictionaryManager
           .instance()
           .process(command.clinicalType, record, index, schema);
 
@@ -1057,7 +1057,7 @@ export namespace operations {
         continue;
       }
       const commonFieldNamesSet = new Set(newClinicalEnity.fieldNames);
-      const clinicalFieldNamesByPriorityMap = schemaManager
+      const clinicalFieldNamesByPriorityMap = dictionaryManager
         .instance()
         .getSchemaFieldNamesWithPriority(clinicalType);
       const missingFields: string[] = [];
@@ -1163,8 +1163,8 @@ export namespace operations {
   export async function adminAddDonors(donors: Donor[]) {
     const schemaMetadata: SchemaMetadata = {
       isValid: true,
-      lastValidSchemaVersion: schemaManager.instance().getCurrent().version,
-      originalSchemaVersion: schemaManager.instance().getCurrent().version,
+      lastValidSchemaVersion: dictionaryManager.instance().getCurrent().version,
+      originalSchemaVersion: dictionaryManager.instance().getCurrent().version,
     };
 
     donors.forEach((d: any) => {

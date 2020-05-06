@@ -55,7 +55,7 @@ paths:
         '200':
           description: 'Sample registration and Clinical Submission disabled state has been set'
 
-  /submission/schema:
+  /dictionary:
     get:
       tags:
         - Schemas
@@ -88,7 +88,7 @@ paths:
             application/json:
               schema:
                 type: object
-  /submission/schema/dry-run-update:
+  /dictionary/dry-run-update:
     post:
       tags:
         - Schemas
@@ -108,7 +108,7 @@ paths:
             application/json:
               schema:
                 type: object
-  /submission/schema/migration/resume:
+  /dictionary/migration/resume:
     post:
       tags:
         - Schemas
@@ -121,7 +121,7 @@ paths:
                 type: array
                 items:
                   type: object
-  /submission/schema/migration/{migrationId}:
+  /dictionary/migration/{migrationId}:
     get:
       tags:
         - Schemas
@@ -141,7 +141,7 @@ paths:
                 type: array
                 items:
                   type: object
-  /submission/schema/migration/:
+  /dictionary/migration/:
     get:
       tags:
         - Schemas
@@ -154,7 +154,7 @@ paths:
                 type: array
                 items:
                   type: object
-  /submission/schema/changes:
+  /dictionary/changes:
     get:
       tags:
         - Schemas
@@ -178,7 +178,7 @@ paths:
             application/json:
               schema:
                 type: object
-  /submission/schema/list:
+  /dictionary/list:
     get:
       tags:
         - Schemas
@@ -199,7 +199,7 @@ paths:
                 items:
                   type: object
 
-  /submission/schema/template/all:
+  /dictionary/template/all:
     get:
       tags:
         - Schemas
@@ -211,7 +211,7 @@ paths:
               schema:
                 type: string
                 format: binary
-  /submission/schema/template/{schemaName}:
+  /dictionary/template/{schemaName}:
     parameters:
       - name: schemaName
         description: the name of the schema to generate the template for

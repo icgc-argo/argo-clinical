@@ -8,7 +8,7 @@ import {
 } from '../lectern-client/schema-entities';
 import * as changeAnalyzer from '../lectern-client/change-analyzer';
 import { schemaClient as schemaServiceAdapter } from '../lectern-client/schema-rest-client';
-import { schemaRepo } from './schema-repo';
+import { schemaRepo } from './repo';
 import { loggerFor } from '../logger';
 import { Donor } from '../clinical/clinical-entities';
 import { DeepReadonly } from 'deep-freeze';

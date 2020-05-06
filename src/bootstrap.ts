@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { loggerFor } from './logger';
 import { AppConfig, initConfigs, JWT_TOKEN_PUBLIC_KEY, RxNormDbConfig } from './config';
-import * as manager from './schema/schema-manager';
+import * as dictionaryManager from './dictionary/manager';
 import * as utils from './utils';
 import fetch from 'node-fetch';
 import { setStatus, Status } from './app-health';
@@ -173,7 +173,7 @@ export const run = async (config: AppConfig) => {
 
   // setup schema manager
   try {
-    manager.create(config.schemaServiceUrl());
+    dictionaryManager.create(config.schemaServiceUrl());
     await loadSchema(config.schemaName(), config.initialSchemaVersion());
   } catch (err) {
     L.error('failed to load schema', err);
@@ -211,7 +211,7 @@ export const run = async (config: AppConfig) => {
 
 export async function loadSchema(schemaName: string, initialVersion: string) {
   try {
-    await manager.instance().loadSchemaAndSave(schemaName, initialVersion);
+    await dictionaryManager.instance().loadSchemaAndSave(schemaName, initialVersion);
     setStatus('schema', { status: Status.OK });
   } catch (err) {
     L.error('failed to load the schema', err);

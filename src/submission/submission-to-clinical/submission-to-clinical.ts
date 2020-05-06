@@ -22,7 +22,7 @@ import { F } from '../../utils';
 import { registrationRepository } from '../registration-repo';
 import { submissionRepository } from '../submission-repo';
 import { mergeActiveSubmissionWithDonors } from './merge-submission';
-import * as schemaManager from '../../schema/schema-manager';
+import * as dictionaryManager from '../../dictionary/manager';
 import { loggerFor } from '../../logger';
 const L = loggerFor(__filename);
 import {
@@ -123,14 +123,16 @@ const performCommitSubmission = async (
   updatedDonorDTOs.forEach(ud => {
     if (ud.schemaMetadata.isValid === false) {
       L.debug('Donor is invalid, revalidating if valid now');
-      const isValid = schemaManager.revalidateAllDonorClinicalEntitiesAgainstSchema(
+      const isValid = dictionaryManager.revalidateAllDonorClinicalEntitiesAgainstSchema(
         ud,
-        schemaManager.instance().getCurrent(),
+        dictionaryManager.instance().getCurrent(),
       );
       if (isValid) {
         L.info(`donor ${ud._id} is now valid`);
         ud.schemaMetadata.isValid = true;
-        ud.schemaMetadata.lastValidSchemaVersion = schemaManager.instance().getCurrent().version;
+        ud.schemaMetadata.lastValidSchemaVersion = dictionaryManager
+          .instance()
+          .getCurrent().version;
         // recalculate the donors stats
         verifiedDonorDTOs.push(recalculateDonorStatsHoldOverridden(ud));
         return;

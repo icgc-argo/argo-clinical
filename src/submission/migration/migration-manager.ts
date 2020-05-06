@@ -31,19 +31,23 @@ import {
 } from '../submission-to-clinical/stat-calculator';
 import { setStatus, Status } from '../../app-health';
 import * as messenger from '../submission-updates-messenger';
-import * as schemaManager from '../../schema/schema-manager';
+import * as dictionaryManager from '../../dictionary/manager';
 import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 
 const L = loggerFor(__filename);
 
 export namespace MigrationManager {
-  // function for compatibility
-  function instance() {
-    return schemaManager.instance();
+  function dictionaryManagerInstance() {
+    return dictionaryManager.instance();
   }
 
   export const dryRunSchemaUpgrade = async (toVersion: string, initiator: string) => {
-    return await submitMigration(instance().getCurrent().version, toVersion, initiator, true);
+    return await submitMigration(
+      dictionaryManagerInstance().getCurrent().version,
+      toVersion,
+      initiator,
+      true,
+    );
   };
 
   export const getMigration = async (migrationId: string | undefined) => {
@@ -116,8 +120,8 @@ export namespace MigrationManager {
     }
 
     const newSchemaVersion = migrationToRun.toVersion;
-    const newTargetSchema = await instance().loadSchemaByVersion(
-      instance().getCurrent().name,
+    const newTargetSchema = await dictionaryManagerInstance().loadSchemaByVersion(
+      dictionaryManagerInstance().getCurrent().name,
       newSchemaVersion,
     );
 
@@ -176,7 +180,10 @@ export namespace MigrationManager {
     migrationToClose.stage = 'COMPLETED';
     const closedMigration = await migrationRepo.update(migrationToClose);
 
-    await instance().loadAndSaveNewVersion(instance().getCurrent().name, newTargetSchema.version);
+    await dictionaryManagerInstance().loadAndSaveNewVersion(
+      dictionaryManagerInstance().getCurrent().name,
+      newTargetSchema.version,
+    );
     setStatus('schema', { status: Status.OK });
 
     await persistedConfig.setSubmissionDisabledState(false);
@@ -442,7 +449,7 @@ export namespace MigrationManager {
     ) {
       L.debug(`didn't find cached analysis for versions: ${versionsKey}`);
       // analyze changes between the document last valid schema
-      const analysis = await instance().analyzeChanges(
+      const analysis = await dictionaryManagerInstance().analyzeChanges(
         donor.schemaMetadata.lastValidSchemaVersion,
         newSchema.version,
       );

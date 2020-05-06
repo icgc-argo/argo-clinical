@@ -1,7 +1,7 @@
 import * as express from 'express';
 
 import { wrapAsync } from '../middleware';
-import * as schemaApi from '../schema/schema-api';
+import * as schemaApi from '../dictionary/api';
 const router = express.Router();
 // get current schema
 router.get('/', wrapAsync(schemaApi.get));

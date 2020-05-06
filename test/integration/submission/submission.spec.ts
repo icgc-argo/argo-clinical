@@ -1863,7 +1863,7 @@ describe('Submission Api', () => {
       console.log("Getting template for '" + name + "'...");
       chai
         .request(app)
-        .get('/submission/schema/template/' + name)
+        .get('/dictionary/template/' + name)
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .end((err: any, res: any) => {
           res.should.have.status(200);
@@ -1887,7 +1887,7 @@ describe('Submission Api', () => {
       }
       chai
         .request(app)
-        .get('/submission/schema/template/all')
+        .get('/dictionary/template/all')
         .buffer()
         // parse: collects data and creates AdmZip object (made wth buffered data) in res.body
         .parse((res: any, callBack: any) => {
@@ -1924,7 +1924,7 @@ describe('Submission Api', () => {
       console.log("Getting template for '" + name + "'...");
       chai
         .request(app)
-        .get('/submission/schema/template/' + name)
+        .get('/dictionary/template/' + name)
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .end((err: any, res: any) => {
           res.should.have.status(404);
@@ -1939,7 +1939,7 @@ describe('Submission Api', () => {
       console.log("Getting template for '" + name + "'...");
       chai
         .request(app)
-        .get('/submission/schema/template/' + name)
+        .get('/dictionary/template/' + name)
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .end((err: any, res: any) => {
           res.should.have.status(404);

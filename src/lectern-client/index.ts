@@ -1,5 +1,5 @@
-import * as schemaManager from '../schema/schema-manager';
+import * as dictionaryManager from '../dictionary/manager';
 
 export default {
-  schemaManager,
+  dictionaryManager,
 };
