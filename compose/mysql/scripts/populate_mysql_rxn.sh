@@ -14,7 +14,7 @@
 # Database connection parameters
 # Please edit these variables to reflect your environment
 #
-MYSQL_HOME=/usr/local/mysql 
+MYSQL_HOME=/usr/bin/
 user=user
 password=password
 db_name=rxnorm
@@ -35,13 +35,13 @@ echo "db_name =    $db_name" >> mysql.log 2>&1
 
 
 echo "    Create and load tables ... `/bin/date`" >> mysql.log 2>&1
-$MYSQL_HOME/bin/mysql -vvv -u $user -p$password -h$dbserver $db_name < Table_scripts_mysql_rxn.sql >> mysql.log 2>&1
+$MYSQL_HOME/mysql -vvv -u $user -p$password -h$dbserver $db_name < Table_scripts_mysql_rxn.sql >> mysql.log 2>&1
 if [ $? -ne 0 ]; then ef=1; fi
 
 if [ $ef -ne 1 ]
 then
 echo "    Load Data ... `/bin/date`" >> mysql.log 2>&1
-$MYSQL_HOME/bin/mysql -vvv  --local-infile=1 -u $user -p$password -h$dbserver $db_name < Load_scripts_mysql_rxn_unix.sql >> mysql.log 2>&1
+$MYSQL_HOME/mysql -vvv  --local-infile=1 -u $user -p$password -h$dbserver $db_name < Load_scripts_mysql_rxn_unix.sql >> mysql.log 2>&1
 if [ $? -ne 0 ]; then ef=1; fi
 fi
 

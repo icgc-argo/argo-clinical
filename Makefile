@@ -11,7 +11,7 @@ debug:
 dcompose:
 	docker-compose -f compose/docker-compose.yaml up --force-recreate -d
 	# we need to sleep for db containers to start
-	sleep 10
+	sleep 20
 
 # run the scripts to populate sample rxnorm in mysql db
 populate-rxnorm:
