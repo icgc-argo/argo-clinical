@@ -62,7 +62,11 @@ import {
   ClinicalSubmissionRecordsOperations,
   usingInvalidProgramId,
 } from './validation-clinical/utils';
-import { ClinicalEntitySchemaNames, TherapyRxNormFields } from '../common-model/entities';
+import {
+  ClinicalEntitySchemaNames,
+  DonorFieldsEnum,
+  TherapyRxNormFields,
+} from '../common-model/entities';
 
 const L = loggerFor(__filename);
 
@@ -684,7 +688,7 @@ export namespace operations {
       errorsList.push({
         index: schemaErr.index,
         type: schemaErr.errorType,
-        info: getSchemaValidationErrorInfoObject(type, schemaErr, records[schemaErr.index]),
+        info: getValidationErrorInfoObject(type, schemaErr, records[schemaErr.index]),
         fieldName: schemaErr.fieldName,
         message: schemaErr.message,
       });
@@ -809,11 +813,9 @@ export namespace operations {
     command: ClinicalSubmissionCommand,
     schema: SchemasDictionary,
   ) => {
+    const schemaName = command.clinicalType as ClinicalEntitySchemaNames;
     // check records are unique
-    const errors: SubmissionValidationError[] = checkUniqueRecords(
-      command.clinicalType as ClinicalEntitySchemaNames,
-      command.records,
-    );
+    const errors: SubmissionValidationError[] = checkUniqueRecords(schemaName, command.records);
 
     let errorsAccumulator: DeepReadonly<SubmissionValidationError[]> = [];
     const validRecordsAccumulator: any[] = [];
@@ -827,11 +829,7 @@ export namespace operations {
 
         if (schemaResult.validationErrors.length > 0) {
           errorsAccumulator = errorsAccumulator.concat(
-            unifySchemaErrors(
-              command.clinicalType as ClinicalEntitySchemaNames,
-              schemaResult,
-              command.records,
-            ),
+            unifySchemaErrors(schemaName, schemaResult, command.records),
           );
         }
 
@@ -847,7 +845,7 @@ export namespace operations {
         // special case for therapies where we need to populate the rxnorm Ids, only do this step
         // if the record is valid so far to avoid spending alot of time here
         if (errorsAccumulator.length == 0 && isRxNormTherapy(command.clinicalType)) {
-          const result = await validateRxNormFields(processedRecord, index);
+          const result = await validateRxNormFields(processedRecord, index, schemaName);
           if (result.error != undefined) {
             errorsAccumulator = errorsAccumulator.concat([result.error]);
           }
@@ -877,12 +875,18 @@ export namespace operations {
   async function validateRxNormFields(
     r: TypedDataRecord,
     index: number,
+    therapyType: ClinicalEntitySchemaNames,
   ): Promise<{
     record: TypedDataRecord | undefined;
     error: SubmissionValidationError | undefined;
   }> {
     const rxnormConceptLookupResult = await lookupRxNormConcept(r, index);
     if (rxnormConceptLookupResult.error != undefined) {
+      rxnormConceptLookupResult.error.info = getValidationErrorInfoObject(
+        therapyType,
+        rxnormConceptLookupResult.error,
+        r,
+      );
       return { error: rxnormConceptLookupResult.error, record: undefined };
     }
     if (rxnormConceptLookupResult.rxNormRecord == undefined) {
@@ -1323,10 +1327,10 @@ async function updateSubmissionWithVersionOrDeleteEmpty(
   );
 }
 
-const getSchemaValidationErrorInfoObject = (
+const getValidationErrorInfoObject = (
   type: ClinicalEntitySchemaNames,
-  schemaErr: DeepReadonly<SchemaValidationError>,
-  record: DeepReadonly<DataRecord>,
+  schemaErr: DeepReadonly<SchemaValidationError | SubmissionValidationError>,
+  record: DeepReadonly<DataRecord | TypedDataRecord>,
 ) => {
   switch (type) {
     case ClinicalEntitySchemaNames.REGISTRATION: {
@@ -1342,7 +1346,7 @@ const getSchemaValidationErrorInfoObject = (
       return F({
         ...schemaErr.info,
         value: record[schemaErr.fieldName],
-        donorSubmitterId: record[SampleRegistrationFieldsEnum.submitter_donor_id],
+        donorSubmitterId: record[DonorFieldsEnum.submitter_donor_id],
       });
     }
   }
