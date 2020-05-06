@@ -35,7 +35,6 @@ import {
   SubmissionBatchErrorTypes,
   ValidateSubmissionResult,
   NewClinicalEntities,
-  ClinicalEntitySchemaNames,
   BatchNameRegex,
   ClinicalSubmissionRecordsByDonorIdMap,
   RevalidateClinicalSubmissionCommand,
@@ -52,15 +51,7 @@ import {
   SchemasDictionary,
 } from '../lectern-client/schema-entities';
 import { loggerFor } from '../logger';
-import {
-  Errors,
-  F,
-  isStringMatchRegex,
-  toString,
-  isEmptyString,
-  isNotEmptyString,
-  isNotAbsent,
-} from '../utils';
+import { Errors, F, isStringMatchRegex, toString, isEmptyString, isNotAbsent } from '../utils';
 import { DeepReadonly } from 'deep-freeze';
 import { submissionRepository } from './submission-repo';
 import { v1 as uuid } from 'uuid';
@@ -72,6 +63,8 @@ import {
   ClinicalSubmissionRecordsOperations,
   usingInvalidProgramId,
 } from './validation-clinical/utils';
+import { ClinicalEntitySchemaNames } from '../common-model/entities';
+
 const L = loggerFor(__filename);
 
 const emptyStats = {

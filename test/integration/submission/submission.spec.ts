@@ -33,18 +33,18 @@ import {
   SUBMISSION_STATE,
   DataValidationErrors,
   SubmissionBatchErrorTypes,
-  ClinicalEntitySchemaNames,
   DonorFieldsEnum,
   ClinicalUniqueIdentifier,
   ClinicalEntities,
 } from '../../../src/submission/submission-entities';
+import { ClinicalEntitySchemaNames } from '../../../src/common-model/entities';
 import { TsvUtils } from '../../../src/utils';
 import { donorDao } from '../../../src/clinical/donor-repo';
-import { Donor, Specimen } from '../../../src/clinical/clinical-entities';
+import { Donor } from '../../../src/clinical/clinical-entities';
 import AdmZip from 'adm-zip';
 import _ from 'lodash';
 import chaiExclude from 'chai-exclude';
-import { HostPortWaitStrategy } from 'testcontainers/dist/wait-strategy';
+
 chai.use(require('chai-http'));
 chai.use(require('deep-equal-in-any-order'));
 chai.use(chaiExclude);

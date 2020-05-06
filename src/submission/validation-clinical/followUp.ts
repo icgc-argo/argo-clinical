@@ -1,9 +1,9 @@
 import {
   SubmissionValidationError,
-  ClinicalEntitySchemaNames,
   SubmittedClinicalRecord,
   FollowupFieldsEnum,
 } from '../submission-entities';
+import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
 import _ from 'lodash';

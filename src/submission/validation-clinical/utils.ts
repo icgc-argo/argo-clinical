@@ -6,7 +6,6 @@ import {
   ModificationType,
   SubmissionValidationUpdate,
   RecordValidationResult,
-  ClinicalEntitySchemaNames,
   SubmittedClinicalRecordsMap,
   ClinicalUniqueIdentifier,
   DonorFieldsEnum,
@@ -14,6 +13,7 @@ import {
   TreatmentTypeValuesMappedByTherapy,
   ClinicalTherapyType,
 } from '../submission-entities';
+import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
 import { validationErrorMessage } from '../submission-error-messages';
 import _ from 'lodash';

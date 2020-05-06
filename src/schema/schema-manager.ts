@@ -12,7 +12,7 @@ import { schemaRepo } from './schema-repo';
 import { loggerFor } from '../logger';
 import { Donor } from '../clinical/clinical-entities';
 import { DeepReadonly } from 'deep-freeze';
-import { ClinicalEntitySchemaNames } from '../submission/submission-entities';
+import { ClinicalEntitySchemaNames } from '../common-model/entities';
 import _ from 'lodash';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../submission/submission-to-clinical/submission-to-clinical';
 import { MigrationManager } from '../submission/migration/migration-manager';

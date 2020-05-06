@@ -3,7 +3,7 @@ import * as specimen from './specimen';
 import * as follow_up from './followUp';
 import * as treatment from './treatment';
 import * as therapy from './therapy';
-import { ClinicalEntitySchemaNames } from '../submission-entities';
+import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 
 // this done because typescript doesn't allow mapping with string index signature for default export
 const availableValidators: { [k: string]: any } = {

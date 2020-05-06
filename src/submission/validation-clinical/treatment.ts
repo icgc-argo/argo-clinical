@@ -1,6 +1,5 @@
 import {
   SubmissionValidationError,
-  ClinicalEntitySchemaNames,
   TreatmentFieldsEnum,
   SubmittedClinicalRecord,
   DataValidationErrors,
@@ -8,6 +7,7 @@ import {
   ClinicalTherapyType,
   ClinicalTherapySchemaNames,
 } from '../submission-entities';
+import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, Treatment } from '../../clinical/clinical-entities';
 import * as utils from './utils';

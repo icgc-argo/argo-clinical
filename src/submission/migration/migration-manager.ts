@@ -17,7 +17,6 @@ import * as clinicalService from '../../clinical/clinical-service';
 import * as persistedConfig from '../persisted-config/service';
 import * as submissionService from '../submission-service';
 import {
-  ClinicalEntitySchemaNames,
   RevalidateClinicalSubmissionCommand,
   SUBMISSION_STATE,
   ClinicalEntityToEnumFieldsMap,
@@ -33,16 +32,16 @@ import {
 import { setStatus, Status } from '../../app-health';
 import * as messenger from '../submission-updates-messenger';
 import * as schemaManager from '../../schema/schema-manager';
+import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 
 const L = loggerFor(__filename);
 
-// functions for compatibility
-function instance() {
-  return schemaManager.instance();
-}
-const manager = schemaManager.instance();
-
 export namespace MigrationManager {
+  // function for compatibility
+  function instance() {
+    return schemaManager.instance();
+  }
+
   export const dryRunSchemaUpgrade = async (toVersion: string, initiator: string) => {
     return await submitMigration(instance().getCurrent().version, toVersion, initiator, true);
   };
@@ -177,7 +176,7 @@ export namespace MigrationManager {
     migrationToClose.stage = 'COMPLETED';
     const closedMigration = await migrationRepo.update(migrationToClose);
 
-    await manager.loadAndSaveNewVersion(manager.getCurrent().name, newTargetSchema.version);
+    await instance().loadAndSaveNewVersion(instance().getCurrent().name, newTargetSchema.version);
     setStatus('schema', { status: Status.OK });
 
     await persistedConfig.setSubmissionDisabledState(false);

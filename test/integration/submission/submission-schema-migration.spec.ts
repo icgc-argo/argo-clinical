@@ -1,11 +1,11 @@
 import app from '../../../src/app';
 import * as bootstrap from '../../../src/bootstrap';
 import {
-  ClinicalEntitySchemaNames,
   PrimaryDiagnosisFieldsEnum,
   CommonTherapyFields,
   TherapyRxNormFields,
 } from '../../../src/submission/submission-entities';
+import { ClinicalEntitySchemaNames } from '../../../src/common-model/entities';
 import { DonorFieldsEnum } from '../../../src/submission/submission-entities';
 import { SampleRegistrationFieldsEnum } from '../../../src/submission/submission-entities';
 import {

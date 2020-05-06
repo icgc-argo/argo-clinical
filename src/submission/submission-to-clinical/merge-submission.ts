@@ -9,7 +9,6 @@ import {
 } from '../../clinical/clinical-entities';
 import {
   ActiveClinicalSubmission,
-  ClinicalEntitySchemaNames,
   SubmittedClinicalRecordsMap,
   ClinicalUniqueIdentifier,
   ClinicalTherapySchemaNames,
@@ -21,6 +20,7 @@ import { loggerFor } from '../../logger';
 import { Errors } from '../../utils';
 import { getSingleClinicalObjectFromDonor } from './submission-to-clinical';
 import { updateDonorStatsFromSubmissionCommit } from './stat-calculator';
+import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 
 const L = loggerFor(__filename);
 

@@ -8,7 +8,6 @@ import {
   DataValidationErrors,
   CreateRegistrationRecord,
   SampleRegistrationFieldsEnum,
-  ClinicalEntitySchemaNames,
   SpecimenFieldsEnum,
   DonorFieldsEnum,
   TreatmentFieldsEnum,
@@ -22,6 +21,7 @@ import {
   ClinicalSubmissionRecordsOperations,
   usingInvalidProgramId,
 } from '../../../src/submission/validation-clinical/utils';
+import { ClinicalEntitySchemaNames } from '../../../src/common-model/entities';
 
 const genderMutatedErr: SubmissionValidationError = {
   fieldName: 'gender',

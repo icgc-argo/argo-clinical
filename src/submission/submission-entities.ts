@@ -1,5 +1,6 @@
 import { DeepReadonly } from 'deep-freeze';
 import { SchemaValidationErrorTypes } from '../lectern-client/schema-entities';
+import { ClinicalEntitySchemaNames } from '../common-model/entities';
 
 /**
  * Represents a valid registration that is not yet committed (in progress)
@@ -371,18 +372,6 @@ export enum ModificationType {
 export type ClinicalTypeValidateResult = {
   [clinicalType: string]: Pick<SavedClinicalEntity, 'dataErrors' | 'dataUpdates' | 'stats'>;
 };
-
-export enum ClinicalEntitySchemaNames {
-  REGISTRATION = 'sample_registration',
-  DONOR = 'donor',
-  SPECIMEN = 'specimen',
-  PRIMARY_DIAGNOSIS = 'primary_diagnosis',
-  TREATMENT = 'treatment',
-  CHEMOTHERAPY = 'chemotherapy',
-  RADIATION = 'radiation',
-  FOLLOW_UP = 'follow_up',
-  HORMONE_THERAPY = 'hormone_therapy',
-}
 
 export type ClinicalTherapyType =
   | ClinicalEntitySchemaNames.CHEMOTHERAPY

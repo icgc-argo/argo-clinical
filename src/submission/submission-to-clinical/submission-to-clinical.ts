@@ -19,11 +19,10 @@ import {
   SubmittedRegistrationRecord,
   SampleRegistrationFieldsEnum,
   SUBMISSION_STATE,
-  ClinicalEntitySchemaNames,
   ClinicalUniqueIdentifier,
   ClinicalTherapySchemaNames,
-  DonorFieldsEnum,
 } from '../submission-entities';
+import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 
 import { Errors, notEmpty } from '../../utils';
 import { donorDao, FindByProgramAndSubmitterFilter, DONOR_FIELDS } from '../../clinical/donor-repo';
