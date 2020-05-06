@@ -33,11 +33,13 @@ import {
   SUBMISSION_STATE,
   DataValidationErrors,
   SubmissionBatchErrorTypes,
-  DonorFieldsEnum,
-  ClinicalUniqueIdentifier,
   ClinicalEntities,
 } from '../../../src/submission/submission-entities';
-import { ClinicalEntitySchemaNames } from '../../../src/common-model/entities';
+import {
+  ClinicalEntitySchemaNames,
+  DonorFieldsEnum,
+  ClinicalUniqueIdentifier,
+} from '../../../src/common-model/entities';
 import { TsvUtils } from '../../../src/utils';
 import { donorDao } from '../../../src/clinical/donor-repo';
 import { Donor } from '../../../src/clinical/clinical-entities';

@@ -39,7 +39,6 @@ import {
   ClinicalSubmissionRecordsByDonorIdMap,
   RevalidateClinicalSubmissionCommand,
   LegacyICGCImportRecord,
-  TherapyRxNormFields,
   DataValidationErrors,
 } from './submission-entities';
 import * as dictionaryManager from '../dictionary/manager';
@@ -63,7 +62,7 @@ import {
   ClinicalSubmissionRecordsOperations,
   usingInvalidProgramId,
 } from './validation-clinical/utils';
-import { ClinicalEntitySchemaNames } from '../common-model/entities';
+import { ClinicalEntitySchemaNames, TherapyRxNormFields } from '../common-model/entities';
 
 const L = loggerFor(__filename);
 

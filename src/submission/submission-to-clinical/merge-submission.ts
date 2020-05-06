@@ -7,20 +7,19 @@ import {
   Therapy,
   ClinicalEntity,
 } from '../../clinical/clinical-entities';
-import {
-  ActiveClinicalSubmission,
-  SubmittedClinicalRecordsMap,
-  ClinicalUniqueIdentifier,
-  ClinicalTherapySchemaNames,
-  DonorFieldsEnum,
-  ClinicalTherapyType,
-} from '../submission-entities';
+import { ActiveClinicalSubmission, SubmittedClinicalRecordsMap } from '../submission-entities';
 import _ from 'lodash';
 import { loggerFor } from '../../logger';
 import { Errors } from '../../utils';
 import { getSingleClinicalObjectFromDonor } from '../../common-model/functions';
 import { updateDonorStatsFromSubmissionCommit } from './stat-calculator';
-import { ClinicalEntitySchemaNames } from '../../common-model/entities';
+import {
+  ClinicalEntitySchemaNames,
+  ClinicalUniqueIdentifier,
+  ClinicalTherapySchemaNames,
+  DonorFieldsEnum,
+  ClinicalTherapyType,
+} from '../../common-model/entities';
 
 const L = loggerFor(__filename);
 

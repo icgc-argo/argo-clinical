@@ -58,7 +58,7 @@ paths:
   /dictionary:
     get:
       tags:
-        - Schemas
+        - Dictionary
       responses:
         '200':
           description: 'the current loaded schema by the clinical submission'
@@ -70,7 +70,7 @@ paths:
                   type: object
     patch:
       tags:
-        - Schemas
+        - Dictionary
       description: 'update and load a new schema version from lectern to be used.'
       requestBody:
         content:
@@ -91,7 +91,7 @@ paths:
   /dictionary/dry-run-update:
     post:
       tags:
-        - Schemas
+        - Dictionary
       requestBody:
         content:
           application/json:
@@ -111,7 +111,7 @@ paths:
   /dictionary/migration/resume:
     post:
       tags:
-        - Schemas
+        - Dictionary
       responses:
         '200':
           description: 'Resume an active migration'
@@ -124,7 +124,7 @@ paths:
   /dictionary/migration/{migrationId}:
     get:
       tags:
-        - Schemas
+        - Dictionary
       parameters:
         - name: migrationId
           description: the id of a specific migration to fetch
@@ -144,7 +144,7 @@ paths:
   /dictionary/migration/:
     get:
       tags:
-        - Schemas
+        - Dictionary
       responses:
         '200':
           description: 'A list of all migrations'
@@ -157,7 +157,7 @@ paths:
   /dictionary/changes:
     get:
       tags:
-        - Schemas
+        - Dictionary
       parameters:
         - name: from
           description: the old version
@@ -181,7 +181,7 @@ paths:
   /dictionary/list:
     get:
       tags:
-        - Schemas
+        - Dictionary
       parameters:
         - name: includeFields
           description: include fields of each schema in the response
@@ -202,7 +202,7 @@ paths:
   /dictionary/template/all:
     get:
       tags:
-        - Schemas
+        - Dictionary
       responses:
         '200':
           description: 'A zip file with all schemas'
@@ -222,7 +222,7 @@ paths:
           type: string
     get:
       tags:
-        - Schemas
+        - Dictionary
       responses:
         '200':
           description: 'A tsv template file for the given schemaName'
@@ -792,8 +792,8 @@ tags:
     description: Service status monitoring
   - name: Submission Configurations
     description: Submission Service Configurations
-  - name: Schemas
-    description: View and manage the Data Schema used by Argo-Clinical
+  - name: Dictionary
+    description: View and manage the Data Dictionary used by Argo-Clinical
   - name: Sample Registration
     description: Registering new Donors, Specimens, and Samples
   - name: Submission

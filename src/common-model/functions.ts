@@ -1,11 +1,11 @@
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, ClinicalInfo } from '../clinical/clinical-entities';
-import { ClinicalEntitySchemaNames } from './entities';
-import _ from 'lodash';
 import {
-  ClinicalTherapySchemaNames,
+  ClinicalEntitySchemaNames,
   ClinicalUniqueIdentifier,
-} from '../submission/submission-entities';
+  ClinicalTherapySchemaNames,
+} from './entities';
+import _ from 'lodash';
 import { notEmpty } from '../utils';
 
 export function getSingleClinicalObjectFromDonor(

@@ -1,9 +1,5 @@
-import {
-  SubmissionValidationError,
-  SubmittedClinicalRecord,
-  FollowupFieldsEnum,
-} from '../submission-entities';
-import { ClinicalEntitySchemaNames } from '../../common-model/entities';
+import { SubmissionValidationError, SubmittedClinicalRecord } from '../submission-entities';
+import { ClinicalEntitySchemaNames, FollowupFieldsEnum } from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
 import _ from 'lodash';

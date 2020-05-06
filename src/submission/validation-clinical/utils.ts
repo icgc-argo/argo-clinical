@@ -7,13 +7,15 @@ import {
   SubmissionValidationUpdate,
   RecordValidationResult,
   SubmittedClinicalRecordsMap,
+  TreatmentTypeValuesMappedByTherapy,
+} from '../submission-entities';
+import {
+  ClinicalEntitySchemaNames,
   ClinicalUniqueIdentifier,
   DonorFieldsEnum,
   ClinicalFields,
-  TreatmentTypeValuesMappedByTherapy,
   ClinicalTherapyType,
-} from '../submission-entities';
-import { ClinicalEntitySchemaNames } from '../../common-model/entities';
+} from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
 import { validationErrorMessage } from '../submission-error-messages';
 import _ from 'lodash';
