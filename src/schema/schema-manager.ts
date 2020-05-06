@@ -14,7 +14,7 @@ import { Donor } from '../clinical/clinical-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { ClinicalEntitySchemaNames } from '../common-model/entities';
 import _ from 'lodash';
-import { getClinicalEntitiesFromDonorBySchemaName } from '../submission/submission-to-clinical/submission-to-clinical';
+import { getClinicalEntitiesFromDonorBySchemaName } from '../common-model/functions';
 import { MigrationManager } from '../submission/migration/migration-manager';
 const L = loggerFor(__filename);
 

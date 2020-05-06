@@ -24,7 +24,7 @@ import {
 } from '../submission-entities';
 import { notEmpty, Errors, sleep, isEmpty, toString } from '../../utils';
 import _ from 'lodash';
-import { getClinicalEntitiesFromDonorBySchemaName } from '../submission-to-clinical/submission-to-clinical';
+import { getClinicalEntitiesFromDonorBySchemaName } from '../../common-model/functions';
 import {
   recalculateDonorStatsHoldOverridden,
   setInvalidCoreEntityStatsForMigration,

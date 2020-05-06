@@ -10,7 +10,7 @@ import { DeepReadonly } from 'deep-freeze';
 import { Donor, Treatment } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
-import { getSingleClinicalObjectFromDonor } from '../submission-to-clinical/submission-to-clinical';
+import { getSingleClinicalObjectFromDonor } from '../../common-model/functions';
 
 export const validate = async (
   therapyRecord: DeepReadonly<SubmittedClinicalRecord>,

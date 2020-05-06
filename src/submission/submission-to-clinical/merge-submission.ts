@@ -18,7 +18,7 @@ import {
 import _ from 'lodash';
 import { loggerFor } from '../../logger';
 import { Errors } from '../../utils';
-import { getSingleClinicalObjectFromDonor } from './submission-to-clinical';
+import { getSingleClinicalObjectFromDonor } from '../../common-model/functions';
 import { updateDonorStatsFromSubmissionCommit } from './stat-calculator';
 import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 
