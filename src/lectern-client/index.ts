@@ -1,4 +1,4 @@
-import * as schemaManager from '../submission/schema/schema-manager';
+import * as schemaManager from '../schema/schema-manager';
 
 export default {
   schemaManager,

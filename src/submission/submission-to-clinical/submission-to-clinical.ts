@@ -32,7 +32,7 @@ import { F } from '../../utils';
 import { registrationRepository } from '../registration-repo';
 import { submissionRepository } from '../submission-repo';
 import { mergeActiveSubmissionWithDonors } from './merge-submission';
-import * as schemaManager from '../schema/schema-manager';
+import * as schemaManager from '../../schema/schema-manager';
 import { loggerFor } from '../../logger';
 const L = loggerFor(__filename);
 import {

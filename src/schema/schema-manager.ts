@@ -1,5 +1,5 @@
-import * as service from '../../lectern-client/schema-functions';
-import * as parallelService from '../../lectern-client/parallel';
+import * as service from '../lectern-client/schema-functions';
+import * as parallelService from '../lectern-client/parallel';
 import {
   SchemasDictionary,
   DataRecord,
@@ -7,38 +7,38 @@ import {
   FieldNamesByPriorityMap,
   ChangeAnalysis,
   SchemaDefinition,
-} from '../../lectern-client/schema-entities';
-import * as changeAnalyzer from '../../lectern-client/change-analyzer';
-import { schemaClient as schemaServiceAdapter } from '../../lectern-client/schema-rest-client';
+} from '../lectern-client/schema-entities';
+import * as changeAnalyzer from '../lectern-client/change-analyzer';
+import { schemaClient as schemaServiceAdapter } from '../lectern-client/schema-rest-client';
 import { schemaRepo } from './schema-repo';
-import { loggerFor } from '../../logger';
-import { migrationRepo } from './migration-repo';
+import { loggerFor } from '../logger';
+import { migrationRepo } from '../submission/schema/migration-repo';
 import {
   DictionaryMigration,
   NewSchemaVerificationResult,
   DonorMigrationSchemaErrors,
-} from './migration-entities';
-import { Donor, ClinicalInfo } from '../../clinical/clinical-entities';
+} from '../submission/schema/migration-entities';
+import { Donor, ClinicalInfo } from '../clinical/clinical-entities';
 import { DeepReadonly } from 'deep-freeze';
-import * as clinicalService from '../../clinical/clinical-service';
-import * as persistedConfig from '../persisted-config/service';
-import * as submissionService from '../submission-service';
+import * as clinicalService from '../clinical/clinical-service';
+import * as persistedConfig from '../submission/persisted-config/service';
+import * as submissionService from '../submission/submission-service';
 import {
   ClinicalEntitySchemaNames,
   RevalidateClinicalSubmissionCommand,
   SUBMISSION_STATE,
   ClinicalEntityToEnumFieldsMap,
   ClinicalEntityKnownFieldCodeLists,
-} from '../submission-entities';
-import { notEmpty, Errors, sleep, isEmpty, toString, MongooseUtils } from '../../utils';
+} from '../submission/submission-entities';
+import { notEmpty, Errors, sleep, isEmpty, toString, MongooseUtils } from '../utils';
 import _ from 'lodash';
-import { getClinicalEntitiesFromDonorBySchemaName } from '../submission-to-clinical/submission-to-clinical';
+import { getClinicalEntitiesFromDonorBySchemaName } from '../submission/submission-to-clinical/submission-to-clinical';
 import {
   recalculateDonorStatsHoldOverridden,
   setInvalidCoreEntityStatsForMigration,
-} from '../submission-to-clinical/stat-calculator';
-import { setStatus, Status } from '../../app-health';
-import * as messenger from '../submission-updates-messenger';
+} from '../submission/submission-to-clinical/stat-calculator';
+import { setStatus, Status } from '../app-health';
+import * as messenger from '../submission/submission-updates-messenger';
 
 const L = loggerFor(__filename);
 

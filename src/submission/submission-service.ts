@@ -43,7 +43,7 @@ import {
   TherapyRxNormFields,
   DataValidationErrors,
 } from './submission-entities';
-import * as schemaManager from './schema/schema-manager';
+import * as schemaManager from '../schema/schema-manager';
 import {
   SchemaValidationError,
   TypedDataRecord,
