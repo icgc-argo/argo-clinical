@@ -70,7 +70,8 @@ paths:
                   type: object
     patch:
       tags:
-        - Dictionary
+        - Dictionary Management
+        - Admin
       description: 'update and load a new schema version from lectern to be used.'
       requestBody:
         content:
@@ -91,7 +92,8 @@ paths:
   /dictionary/dry-run-update:
     post:
       tags:
-        - Dictionary
+        - Dictionary Management
+        - Admin
       requestBody:
         content:
           application/json:
@@ -111,7 +113,8 @@ paths:
   /dictionary/migration/resume:
     post:
       tags:
-        - Dictionary
+        - Dictionary Management
+        - Admin
       responses:
         '200':
           description: 'Resume an active migration'
@@ -124,7 +127,8 @@ paths:
   /dictionary/migration/{migrationId}:
     get:
       tags:
-        - Dictionary
+        - Dictionary Management
+        - Admin
       parameters:
         - name: migrationId
           description: the id of a specific migration to fetch
@@ -144,7 +148,8 @@ paths:
   /dictionary/migration/:
     get:
       tags:
-        - Dictionary
+        - Dictionary Management
+        - Admin
       responses:
         '200':
           description: 'A list of all migrations'
@@ -614,6 +619,7 @@ paths:
     post:
       tags:
         - ICGC Import
+        - Admin
       summary: transform icgc donor samples data to argo format sample registration
       responses:
         '200':
@@ -639,6 +645,7 @@ paths:
     post:
       tags:
         - ICGC Import
+        - Admin
       summary: imports the json body (donors) to the clinical donors collection obtained from the preprocess api
       description:
       requestBody:
@@ -752,6 +759,7 @@ paths:
     patch:
       tags:
         - Patch Operations
+        - Admin
       summary: Used to override donor aggregatedInfoStats
       description: For coreCompletionOverride, only the ones defined will be overridden the rest will be recalculated
       parameters:
@@ -793,7 +801,9 @@ tags:
   - name: Submission Configurations
     description: Submission Service Configurations
   - name: Dictionary
-    description: View and manage the Data Dictionary used by Argo-Clinical
+    description: View the Data Dictionary used by Argo-Clinical
+  - name: Dictionary Management
+    description: Update Data Dictionary and manage migrations
   - name: Sample Registration
     description: Registering new Donors, Specimens, and Samples
   - name: Submission
@@ -804,6 +814,8 @@ tags:
     description: Clinical Service Patch Operations
   - name: ICGC Import
     description: APIs to do the icgc import
+  - name: Admin
+    description: Admin operations collected for convenience
 components:
   parameters:
     QueryProgramId:

@@ -69,6 +69,7 @@ app.use('/submission/program/:programId/clinical', submissionRouter);
 app.use('/submission/icgc-import', icgcImport);
 
 app.use('/dictionary', dictionaryRouter);
+app.use('/submission/schema', dictionaryRouter); // deprecated
 
 app.use('/clinical', dataRouter);
 
