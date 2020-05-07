@@ -1,9 +1,12 @@
 import { donorDao, DONOR_FIELDS } from './donor-repo';
-import { Errors } from '../utils';
+import { Errors, notEmpty } from '../utils';
 import { Sample, Donor } from './clinical-entities';
 import { DeepReadonly } from 'deep-freeze';
-import _ from 'lodash';
+import _, { isEmpty } from 'lodash';
 import { forceRecalcDonorCoreEntityStats } from '../submission/submission-to-clinical/stat-calculator';
+import { ClinicalEntitySchemaNames } from '../common-model/entities';
+import { getClinicalEntitiesFromDonorBySchemaName } from '../common-model/functions';
+import * as dictionaryManager from '../dictionary/manager';
 
 export async function updateDonorSchemaMetadata(
   donor: DeepReadonly<Donor>,
@@ -128,3 +131,65 @@ export const updateDonorStats = async (donorId: number, coreCompletionOverride: 
 
   return await donorDao.update(updatedDonor);
 };
+
+export async function getProgramClinicalData(programId: string) {
+  if (!programId) throw new Error('Missing programId!');
+
+  // this query takes about 6sec for 20,000 donors with sample registration only running locally
+  const donors = await getDonors(programId); // get in batch??
+
+  // collect all records
+  const recordsMap: any = {};
+  donors.forEach(d => {
+    Object.values(ClinicalEntitySchemaNames).forEach(entity => {
+      let clincialInfoRecords;
+      if (entity === ClinicalEntitySchemaNames.REGISTRATION) {
+        clincialInfoRecords = generateSampleRegistrationDataForDonor(d);
+      } else {
+        clincialInfoRecords = getClinicalEntitiesFromDonorBySchemaName(d, entity);
+      }
+      recordsMap[entity] = _.concat(recordsMap[entity] || [], clincialInfoRecords);
+    });
+  });
+
+  // map into object ready for api processing
+  const schemasWithFields = dictionaryManager.instance().getSchemasWithFields();
+  return Object.entries(recordsMap)
+    .map(([schemaEntityName, records]) => {
+      if (isEmpty(records)) return undefined;
+
+      const relevantSchemaWithFields = schemasWithFields.find(s => s.name === schemaEntityName);
+      if (!relevantSchemaWithFields) {
+        throw new Error(`Can't find schema ${schemaEntityName}, somthing is wrong here.`);
+      }
+
+      return {
+        schemaEntityName: relevantSchemaWithFields.name,
+        records,
+        schemaFields: relevantSchemaWithFields.fields,
+      };
+    })
+    .filter(notEmpty);
+}
+
+function generateSampleRegistrationDataForDonor(d: DeepReadonly<Donor>) {
+  const baseRegistrationRecord = {
+    program_id: d.programId,
+    submitter_donor_id: d.submitterId,
+    gender: d.gender,
+  };
+
+  return d.specimens
+    .map(sp =>
+      sp.samples.map(sm => ({
+        ...baseRegistrationRecord,
+        submitter_specimen_id: sp.submitterId,
+        specimen_tissue_source: sp.specimenTissueSource,
+        tumour_normal_designation: sp.tumourNormalDesignation,
+        specimen_type: sp.specimenType,
+        submitter_sample_id: sm.submitterId,
+        sample_type: sm.sampleType,
+      })),
+    )
+    .flat();
+}

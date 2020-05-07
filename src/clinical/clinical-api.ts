@@ -1,12 +1,36 @@
 import { Request, Response } from 'express';
 import * as service from './clinical-service';
-import { HasFullWriteAccess, ProtectTestEndpoint } from '../decorators';
-import { ControllerUtils } from '../utils';
+import { HasFullWriteAccess, ProtectTestEndpoint, HasProgramWriteAccess } from '../decorators';
+import { ControllerUtils, TsvUtils } from '../utils';
+import AdmZip from 'adm-zip';
 
 class ClinicalController {
   @HasFullWriteAccess()
   async findDonors(req: Request, res: Response) {
     return res.status(200).send(await service.getDonors(req.query.programId));
+  }
+
+  @HasProgramWriteAccess((req: Request) => req.params.programId)
+  async getProgramClinicalDataAsTsvsInZip(req: Request, res: Response) {
+    const programId = req.params.programId;
+    if (!programId) {
+      return ControllerUtils.badRequest(res, 'Invalid programId provided');
+    }
+
+    const data = await service.getProgramClinicalData(programId);
+
+    res
+      .status(200)
+      .contentType('application/zip')
+      .attachment(`${programId}_all_clincial_data.zip`);
+
+    const zip = new AdmZip();
+    data.forEach(d => {
+      const tsvData = TsvUtils.parseObjectToTsv(d.records, d.schemaFields);
+      zip.addFile(`${d.schemaEntityName}.tsv`, Buffer.alloc(tsvData.length, tsvData));
+    });
+
+    res.send(zip.toBuffer());
   }
 
   @ProtectTestEndpoint()
