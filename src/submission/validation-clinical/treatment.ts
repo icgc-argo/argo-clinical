@@ -15,7 +15,7 @@ import { Donor, Treatment } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
 import { getSingleClinicalObjectFromDonor } from '../../common-model/functions';
-import { checkClinicalEntityDoesntBelongToOtherDonor } from './utils';
+import { checkClinicalEntityDoesntBelongToOtherDonor, checkRelatedEntityExists } from './utils';
 
 export const validate = async (
   treatmentRecord: DeepReadonly<SubmittedClinicalRecord>,
@@ -26,17 +26,26 @@ export const validate = async (
   if (!treatmentRecord || !existentDonor || !mergedDonor) {
     throw new Error("Can't call this function without a registerd donor & treatment record");
   }
-
   const errors: SubmissionValidationError[] = [];
-
   await checkTreatmentDoesntBelongToOtherDonor(treatmentRecord, existentDonor, errors);
 
-  if (errors.length > 0) return errors;
-
-  for (const therapyName of ClinicalTherapySchemaNames) {
-    checkTherapyFileNeeded(treatmentRecord, mergedDonor, therapyName, errors);
+  // order is important here if the previous treatment is good we take time
+  // to validate therapies
+  const validateTherapies = errors.length > 0;
+  if (validateTherapies) {
+    for (const therapyName of ClinicalTherapySchemaNames) {
+      checkTherapyFileNeeded(treatmentRecord, mergedDonor, therapyName, errors);
+    }
   }
 
+  // validate primary diagnosis exists
+  checkRelatedEntityExists(
+    ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+    treatmentRecord,
+    mergedDonor,
+    errors,
+    true,
+  );
   return errors;
 };
 

@@ -1,4 +1,4 @@
-import { donorDao, DONOR_FIELDS } from './donor-repo';
+import { donorDao, DONOR_DOCUMENT_FIELDS } from './donor-repo';
 import { Errors } from '../utils';
 import { Sample, Donor } from './clinical-entities';
 import { DeepReadonly } from 'deep-freeze';
@@ -38,9 +38,9 @@ export async function getDonorsByMigrationId(migrationId: string, limit: number)
   return await donorDao.findBy(
     {
       $or: [
-        { [DONOR_FIELDS.LAST_MIGRATION_ID]: { $ne: migrationId } },
-        { [DONOR_FIELDS.LAST_MIGRATION_ID]: undefined },
-        { [DONOR_FIELDS.LAST_MIGRATION_ID]: { $exists: false } },
+        { [DONOR_DOCUMENT_FIELDS.LAST_MIGRATION_ID]: { $ne: migrationId } },
+        { [DONOR_DOCUMENT_FIELDS.LAST_MIGRATION_ID]: undefined },
+        { [DONOR_DOCUMENT_FIELDS.LAST_MIGRATION_ID]: { $exists: false } },
       ],
     },
     limit,

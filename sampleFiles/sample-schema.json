@@ -1042,7 +1042,7 @@
               },
               "restrictions": {
                 "required": true,
-                "regex": "#/regex/submitter_id"
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -1282,7 +1282,7 @@
               },
               "restrictions": {
                 "required": true,
-                "regex": "#/regex/submitter_id"
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -1779,6 +1779,18 @@
               "meta": {
                 "displayName": "Submitter Primary Diagnosis ID",
                 "primaryId": true
+              },
+              "restrictions": {
+                "regex": "#/regex/submitter_id"
+              }
+            },
+            {
+              "name": "submitter_treatment_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
+              "meta": {
+                "primaryId": true,
+                "displayName": "Submitter Treatment ID"
               },
               "restrictions": {
                 "regex": "#/regex/submitter_id"

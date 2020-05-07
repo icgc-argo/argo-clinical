@@ -1,5 +1,9 @@
 import * as dataValidator from './validation-clinical/validation';
-import { donorDao, FindByProgramAndSubmitterFilter, DONOR_FIELDS } from '../clinical/donor-repo';
+import {
+  donorDao,
+  FindByProgramAndSubmitterFilter,
+  DONOR_DOCUMENT_FIELDS,
+} from '../clinical/donor-repo';
 import _ from 'lodash';
 import { registrationRepository } from './registration-repo';
 import {
@@ -163,16 +167,16 @@ export namespace operations {
 
     // all donors in a program, and build memory indexes for fast lookups by donor, specimen, sample submitter Ids
     const allDonors = await donorDao.findByProgramId(command.programId, {
-      [DONOR_FIELDS.DONOR_ID]: 1,
-      [DONOR_FIELDS.PROGRAM_ID]: 1,
-      [DONOR_FIELDS.SUBMITTER_ID]: 1,
-      [DONOR_FIELDS.GENDER]: 1,
-      [DONOR_FIELDS.SPECIMEN_SUBMITTER_ID]: 1,
-      [DONOR_FIELDS.SPECIMEN_TISSUE_SOURCE]: 1,
-      [DONOR_FIELDS.SPECIMEN_TYPE]: 1,
-      [DONOR_FIELDS.SPECIMEN_TUMOR_NORMAL_DESIGNATION]: 1,
-      [DONOR_FIELDS.SAMPLE_TYPE]: 1,
-      [DONOR_FIELDS.SPECIMEN_SAMPLE_SUBMITTER_ID]: 1,
+      [DONOR_DOCUMENT_FIELDS.DONOR_ID]: 1,
+      [DONOR_DOCUMENT_FIELDS.PROGRAM_ID]: 1,
+      [DONOR_DOCUMENT_FIELDS.SUBMITTER_ID]: 1,
+      [DONOR_DOCUMENT_FIELDS.GENDER]: 1,
+      [DONOR_DOCUMENT_FIELDS.SPECIMEN_SUBMITTER_ID]: 1,
+      [DONOR_DOCUMENT_FIELDS.SPECIMEN_TISSUE_SOURCE]: 1,
+      [DONOR_DOCUMENT_FIELDS.SPECIMEN_TYPE]: 1,
+      [DONOR_DOCUMENT_FIELDS.SPECIMEN_TUMOR_NORMAL_DESIGNATION]: 1,
+      [DONOR_DOCUMENT_FIELDS.SAMPLE_TYPE]: 1,
+      [DONOR_DOCUMENT_FIELDS.SPECIMEN_SAMPLE_SUBMITTER_ID]: 1,
     });
 
     const allDonorsMap: DonorBySubmitterIdMap = {};
