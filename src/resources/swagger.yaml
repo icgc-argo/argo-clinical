@@ -55,7 +55,7 @@ paths:
         '200':
           description: 'Sample registration and Clinical Submission disabled state has been set'
 
-  /dictionary/migration/run:
+  /dictionary:
     get:
       tags:
         - Dictionary
@@ -68,6 +68,7 @@ paths:
                 type: array
                 items:
                   type: object
+  /dictionary/migration/run:
     post:
       tags:
         - Dictionary Migration
