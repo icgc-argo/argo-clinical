@@ -46,7 +46,6 @@ export const insertData = async (
   collection: string,
   document: any,
 ): Promise<any> => {
-  console.log(`dburl ${dburl}`);
   const conn = await mongo.connect(dburl);
   await conn
     .db('clinical')
@@ -76,7 +75,6 @@ export const updateData = async (
   document: any,
   filter: any = {},
 ): Promise<any> => {
-  console.log(`dburl ${dburl}`);
   const conn = await mongo.connect(dburl);
   await conn
     .db('clinical')

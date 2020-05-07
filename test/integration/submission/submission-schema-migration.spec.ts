@@ -79,16 +79,18 @@ describe('schema migration api', () => {
         specimenId: 210001,
       },
     ],
-    primaryDiagnosis: {
-      clinicalInfo: {
-        program_id: 'PACA-AU',
-        submitter_donor_id: 'ICGC_0003',
-        number_lymph_nodes_examined: 2,
-        age_at_diagnosis: 96,
-        cancer_type_code: 'A11.1A',
-        tumour_staging_system: 'Murphy',
+    primaryDiagnoses: [
+      {
+        clinicalInfo: {
+          program_id: 'PACA-AU',
+          submitter_donor_id: 'ICGC_0003',
+          number_lymph_nodes_examined: 2,
+          age_at_diagnosis: 96,
+          cancer_type_code: 'A11.1A',
+          tumour_staging_system: 'Murphy',
+        },
       },
-    },
+    ],
   });
 
   const newSchemaInvalidDonor: Donor = emptyDonorDocument({

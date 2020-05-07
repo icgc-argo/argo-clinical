@@ -1,2 +1,4 @@
-program_id	number_lymph_nodes_positive	submitter_donor_id	age_at_diagnosis	cancer_type_code	clinical_tumour_staging_system	
-TEST-CA	2	ICGC_0001.1	96	A11.1A	Murphy
+program_id	number_lymph_nodes_positive	submitter_donor_id	submitter_primary_diagnosis_id	age_at_diagnosis	cancer_type_code	clinical_tumour_staging_system	clinical_stage_group
+TEST-CA	2	ICGC_0001.1	PR-1-1	96	A11.1A	Murphy	csg1
+TEST-CA	2	ICGC_0001.1	PR-1-2	96	A11.1A	Murphy	csg2
+TEST-CA	2	ICGC_0002	PR-2-1	96	A11.1A	Murphy	csg1

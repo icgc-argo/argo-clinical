@@ -118,8 +118,12 @@ const updateDonorInfo = (donor: Donor, record: ClinicalInfo) => {
 };
 
 const updatePrimaryDiagnosisInfo = (donor: Donor, record: ClinicalInfo) => {
-  donor.primaryDiagnosis = { clinicalInfo: record };
-  return donor.primaryDiagnosis;
+  let primaryDiagnosis = findPrimaryDiagnosis(donor, record);
+  if (!primaryDiagnosis) {
+    primaryDiagnosis = addNewPrimaryDiagnosisObj(donor);
+  }
+  primaryDiagnosis.clinicalInfo = record;
+  return primaryDiagnosis;
 };
 
 const updateSpecimenInfo = (donor: Donor, record: ClinicalInfo) => {
@@ -188,6 +192,10 @@ const findFollowUp = (donor: Donor, record: ClinicalInfo) => {
   return findClinicalObject(donor, record, ClinicalEntitySchemaNames.FOLLOW_UP) as FollowUp;
 };
 
+const findPrimaryDiagnosis = (donor: Donor, record: ClinicalInfo) => {
+  return findClinicalObject(donor, record, ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS);
+};
+
 const findClinicalObject = (
   donor: Donor,
   newRecord: ClinicalInfo,
@@ -227,6 +235,12 @@ const addNewFollowUpObj = (donor: Donor): FollowUp => {
   const newFollowUp = { clinicalInfo: {} };
   donor.followUps = _.concat(donor.followUps || [], newFollowUp);
   return _.last(donor.followUps) as FollowUp;
+};
+
+const addNewPrimaryDiagnosisObj = (donor: Donor): ClinicalEntity => {
+  const newPrimaryDiag = { clinicalInfo: {} };
+  donor.primaryDiagnoses = _.concat(donor.primaryDiagnoses || [], newPrimaryDiag);
+  return _.last(donor.primaryDiagnoses) as FollowUp;
 };
 
 const addNewTherapyObj = (treatment: Treatment, therapyType: ClinicalTherapyType): Therapy => {

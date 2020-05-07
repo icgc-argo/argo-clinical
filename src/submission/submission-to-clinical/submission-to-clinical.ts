@@ -230,7 +230,7 @@ const fromCreateDonorDtoToDonor = (createDonorDto: DeepReadonly<CreateDonorSampl
     programId: createDonorDto.programId,
     specimens: createDonorDto.specimens.map(toSpecimen),
     clinicalInfo: {},
-    primaryDiagnosis: undefined,
+    primaryDiagnoses: undefined,
     followUps: [],
     treatments: [],
   };

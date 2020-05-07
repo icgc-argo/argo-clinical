@@ -1418,10 +1418,10 @@ describe('Submission Api', () => {
       ]);
       await validateSubmission();
       await commitActiveSubmission();
-      const [DonorBeforeUpdate] = await findInDb(dburl, 'donors', {
+      const [DonorBeforeUpdate] = (await findInDb(dburl, 'donors', {
         programId: programId,
         submitterId: 'ICGC_0001',
-      });
+      })) as Donor[];
 
       const entityBase = { program_id: programId, submitter_donor_id: 'ICGC_0001' };
 
@@ -1440,9 +1440,9 @@ describe('Submission Api', () => {
         cause_of_death: 'Died of cancer',
         survival_time: 522,
       };
-
-      DonorBeforeUpdate.primaryDiagnosis.clinicalInfo.should.deep.eq(primary_diagnosis);
-      DonorBeforeUpdate.clinicalInfo.should.deep.eq(donor);
+      const pd = DonorBeforeUpdate.primaryDiagnoses || [];
+      pd[0].clinicalInfo.should.deep.eq(primary_diagnosis);
+      DonorBeforeUpdate.clinicalInfo?.should.deep.eq(donor);
 
       // Now we need to have a submission with updates, and validate to get it into the correct state
       await uploadSubmissionWithUpdates([
@@ -1464,7 +1464,7 @@ describe('Submission Api', () => {
       // data from primary_diagnosis.tsv
       donorBeforeApproveCommit.primaryDiagnosis.clinicalInfo.should.deep.eq(primary_diagnosis);
 
-      DonorBeforeUpdate.clinicalInfo.should.include(donor);
+      DonorBeforeUpdate.clinicalInfo?.should.include(donor);
 
       return chai
         .request(app)
@@ -1528,7 +1528,7 @@ describe('Submission Api', () => {
         });
     });
 
-    it('should return 200 when commit is completed - clinical stats', async () => {
+    it.only('should return 200 when commit is completed - clinical stats', async () => {
       const donorFilter = { programId: programId, submitterId: 'ICGC_0001' };
       // To get submission into correct state (pending approval) we need to already have a completed submission...
       await uploadSubmission([
@@ -1635,16 +1635,18 @@ describe('Submission Api', () => {
             cause_of_death: 'Died of cancer',
             survival_time: 23,
           },
-          primaryDiagnosis: {
-            clinicalInfo: {
-              program_id: programId,
-              number_lymph_nodes_positive: 1,
-              submitter_donor_id: 'ICGC_0003',
-              age_at_diagnosis: 96,
-              cancer_type_code: 'A11.1A',
-              tumour_staging_system: 'Binet', // this will be updated to Murphy
+          primaryDiagnoses: [
+            {
+              clinicalInfo: {
+                program_id: programId,
+                number_lymph_nodes_positive: 1,
+                submitter_donor_id: 'ICGC_0003',
+                age_at_diagnosis: 96,
+                cancer_type_code: 'A11.1A',
+                tumour_staging_system: 'Binet', // this will be updated to Murphy
+              },
             },
-          },
+          ],
         }),
       );
       await uploadSubmission(['donor_TC-SMUIDAV.tsv', 'primary_diagnosis_TC-SMUIDAV.tsv']);
@@ -1685,7 +1687,7 @@ describe('Submission Api', () => {
 
           // we expect the other invalid donor to be updated even that it remained invalid
           // due to not updating the invalid clinical file (donor.clinicalInfo)
-          chai.expect(updatedDonor2.primaryDiagnosis).to.deep.include({
+          chai.expect(updatedDonor2.primaryDiagnoses).to.deep.include({
             clinicalInfo: {
               age_at_diagnosis: 96,
               cancer_type_code: 'A11.1A',
@@ -1984,7 +1986,7 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dburl: 
     expectedDonors.push(
       emptyDonorDocument({
         gender: r[SampleRegistrationFieldsEnum.gender],
-        primaryDiagnosis: undefined,
+        primaryDiagnoses: undefined,
         submitterId: r[SampleRegistrationFieldsEnum.submitter_donor_id],
         programId: r[SampleRegistrationFieldsEnum.program_id],
         specimens: [
@@ -2467,7 +2469,6 @@ const INVALID_FILENAME_ERROR =
 
 const clearCollections = async (dburl: string, collections: string[]) => {
   try {
-    console.log(`Clearing collections pre-test:`, collections.join(', '));
     const promises = collections.map(collectionName => cleanCollection(dburl, collectionName));
     await Promise.all(promises);
     await resetCounters(dburl);

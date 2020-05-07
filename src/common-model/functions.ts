@@ -30,8 +30,8 @@ export function getClinicalObjectsFromDonor(
   }
 
   if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS) {
-    if (donor.primaryDiagnosis) {
-      return [donor.primaryDiagnosis];
+    if (donor.primaryDiagnoses) {
+      return donor.primaryDiagnoses;
     }
   }
 
