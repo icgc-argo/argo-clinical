@@ -1,6 +1,6 @@
 import * as dataValidator from './validation-clinical/validation';
 import { donorDao, FindByProgramAndSubmitterFilter, DONOR_FIELDS } from '../clinical/donor-repo';
-import _ from 'lodash';
+import _, { isEmpty } from 'lodash';
 import { registrationRepository } from './registration-repo';
 import {
   Donor,
@@ -40,6 +40,7 @@ import {
   RevalidateClinicalSubmissionCommand,
   LegacyICGCImportRecord,
   DataValidationErrors,
+  SubmittedClinicalRecord,
 } from './submission-entities';
 import * as dictionaryManager from '../dictionary/manager';
 import {
@@ -50,7 +51,15 @@ import {
   SchemasDictionary,
 } from '../lectern-client/schema-entities';
 import { loggerFor } from '../logger';
-import { Errors, F, isStringMatchRegex, toString, isEmptyString, isNotAbsent } from '../utils';
+import {
+  Errors,
+  F,
+  isStringMatchRegex,
+  toString,
+  isEmptyString,
+  isNotAbsent,
+  notEmpty,
+} from '../utils';
 import { DeepReadonly } from 'deep-freeze';
 import { submissionRepository } from './submission-repo';
 import { v1 as uuid } from 'uuid';
@@ -67,6 +76,8 @@ import {
   DonorFieldsEnum,
   TherapyRxNormFields,
 } from '../common-model/entities';
+import { getDonors } from '../clinical/clinical-service';
+import { getClinicalEntitiesFromDonorBySchemaName } from '../common-model/functions';
 
 const L = loggerFor(__filename);
 
@@ -636,6 +647,72 @@ export namespace operations {
       reopenedActiveSubmission,
     );
   };
+
+  export async function getAllCommittedClinicalData(programId: string) {
+    if (!programId) throw new Error('Missing programId!');
+
+    // this query takes about 6sec for 20,000 donors with sample registration only running locally
+    const donors = await getDonors(programId); // get in batch??
+
+    // collect all records
+    const recordsMap: any = {};
+    donors.forEach(d => {
+      Object.values(ClinicalEntitySchemaNames).forEach(entity => {
+        let clincialInfoRecords;
+        if (entity === ClinicalEntitySchemaNames.REGISTRATION) {
+          clincialInfoRecords = generateSampleRegistrationRecordsFromDonor(d);
+        } else {
+          clincialInfoRecords = getClinicalEntitiesFromDonorBySchemaName(d, entity);
+        }
+        recordsMap[entity] = _.concat(recordsMap[entity] || [], clincialInfoRecords);
+      });
+    });
+
+    // map into object ready for api processing
+    const schemasWithFields = dictionaryManager.instance().getSchemasWithFields();
+    const schemaVersion = dictionaryManager.instance().getCurrent().version;
+    return Object.entries(recordsMap)
+      .map(([schemaEntityName, records]) => {
+        if (isEmpty(records)) return undefined;
+
+        const relevantSchemaWithFields = schemasWithFields.find(s => s.name === schemaEntityName);
+        if (!relevantSchemaWithFields) {
+          throw new Error(`Can't find schema ${schemaEntityName}, shouldn't be possbile`);
+        }
+
+        return {
+          schemaEntityName: relevantSchemaWithFields.name,
+          schemaVersion,
+          records,
+          schemaFields: relevantSchemaWithFields.fields,
+        };
+      })
+      .filter(notEmpty);
+  }
+
+  function generateSampleRegistrationRecordsFromDonor(
+    d: DeepReadonly<Donor>,
+  ): SubmittedRegistrationRecord[] {
+    const baseRegistrationRecord = {
+      program_id: d.programId,
+      submitter_donor_id: d.submitterId,
+      gender: d.gender,
+    };
+
+    return d.specimens
+      .map(sp =>
+        sp.samples.map(sm => ({
+          ...baseRegistrationRecord,
+          submitter_specimen_id: sp.submitterId,
+          specimen_tissue_source: sp.specimenTissueSource,
+          tumour_normal_designation: sp.tumourNormalDesignation,
+          specimen_type: sp.specimenType,
+          submitter_sample_id: sm.submitterId,
+          sample_type: sm.sampleType,
+        })),
+      )
+      .flat();
+  }
 
   /* *************** *
    * Private Methods

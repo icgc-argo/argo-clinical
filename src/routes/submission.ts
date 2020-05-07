@@ -23,4 +23,6 @@ router.post('/reopen/:versionId', wrapAsync(submissionAPI.reopenActiveSubmission
 
 router.delete('/:versionId/:fileType', wrapAsync(submissionAPI.clearFileFromActiveSubmission));
 
+router.get('/committed/tsv', wrapAsync(submissionAPI.downloadCommittedClinicalDataAsTsv));
+
 export default router;
