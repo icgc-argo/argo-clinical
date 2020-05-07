@@ -8,7 +8,7 @@ router.get('/', wrapAsync(schemaApi.get));
 router.get('/changes', wrapAsync(schemaApi.schemaController.probe));
 
 // returns a list of all sub-schemas except sample_registration
-router.get('/list', wrapAsync(schemaApi.getClinicalEntitiesTemplate));
+router.get('/list', wrapAsync(schemaApi.getClinicalEntities));
 
 // this takes precedence over /:schemaName
 router.get('/template/all', wrapAsync(schemaApi.getAllTemplates));
