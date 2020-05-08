@@ -1,13 +1,9 @@
-import {
-  SubmissionValidationError,
-  ClinicalEntitySchemaNames,
-  SubmittedClinicalRecord,
-  FollowupFieldsEnum,
-} from '../submission-entities';
+import { SubmissionValidationError, SubmittedClinicalRecord } from '../submission-entities';
+import { ClinicalEntitySchemaNames, FollowupFieldsEnum } from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
 import _ from 'lodash';
-import { getClinicalEntitiesFromDonorBySchemaName } from '../submission-to-clinical/submission-to-clinical';
+import { getClinicalEntitiesFromDonorBySchemaName } from '../../common-model/functions';
 import { checkClinicalEntityDoesntBelongToOtherDonor } from './utils';
 
 export const validate = async (

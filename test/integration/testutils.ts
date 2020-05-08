@@ -4,6 +4,7 @@ import chai from 'chai';
 import * as mysql from 'mysql';
 import { Donor } from '../../src/clinical/clinical-entities';
 import * as utils from 'util';
+
 export const clearCollections = async (dburl: string, collections: string[]) => {
   try {
     const promises = collections.map(collectionName => cleanCollection(dburl, collectionName));
@@ -55,21 +56,18 @@ export const insertData = async (
   return document._id;
 };
 
-export async function execMysqlQuery(sql: string, dbConnection: mysql.Pool) {
-  const query = utils.promisify(dbConnection.query).bind(dbConnection);
+export async function execMysqlQuery(sql: string, pool: mysql.Pool) {
+  const query = utils.promisify(pool.query).bind(pool);
   await query(sql);
 }
 
-export async function createtRxNormTables(dbConnection: mysql.Pool) {
+export async function createtRxNormTables(pool: mysql.Pool) {
   const sql = 'CREATE TABLE RXNCONSO (RXCUI VARCHAR(255), STR VARCHAR(255))';
-  await execMysqlQuery(sql, dbConnection);
+  await execMysqlQuery(sql, pool);
 }
 
-export async function insertRxNormDrug(id: string, name: string, dbConnection: mysql.Pool) {
-  await execMysqlQuery(
-    `insert into RXNCONSO (RXCUI, STR) values('${id}', '${name}')`,
-    dbConnection,
-  );
+export async function insertRxNormDrug(id: string, name: string, pool: mysql.Pool) {
+  await execMysqlQuery(`insert into RXNCONSO (RXCUI, STR) values('${id}', '${name}')`, pool);
 }
 
 export const updateData = async (

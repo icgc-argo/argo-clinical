@@ -12,15 +12,13 @@ import 'sampleFiles/src/types/deep-equal-in-any-order';
 import 'mocha';
 import winston from 'winston';
 import mongoose from 'mongoose';
-import { GenericContainer } from 'testcontainers';
+import { GenericContainer, Wait } from 'testcontainers';
 import app from '../../src/app';
 import * as bootstrap from '../../src/bootstrap';
 import { cleanCollection, resetCounters } from '../integration/testutils';
 import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN } from '../integration/test.jwt';
-import {
-  ClinicalEntitySchemaNames,
-  CreateRegistrationResult,
-} from '../../src/submission/submission-entities';
+import { CreateRegistrationResult } from '../../src/submission/submission-entities';
+import { ClinicalEntitySchemaNames } from '../../src/common-model/entities';
 
 // create a different logger to avoid noise from application
 const L = winston.createLogger({
@@ -54,12 +52,15 @@ describe('Submission Api', () => {
   before(() => {
     return (async () => {
       try {
-        const mongoContainerPromise = new GenericContainer('mongo').withExposedPorts(27017).start();
-        const mysqlContainerPromise = new GenericContainer('mysql')
+        const mongoContainerPromise = new GenericContainer('mongo', '4.0')
+          .withExposedPorts(27017)
+          .start();
+        const mysqlContainerPromise = new GenericContainer('mysql', '5.7')
           .withEnv('MYSQL_DATABASE', 'rxnorm')
           .withEnv('MYSQL_USER', 'clinical')
           .withEnv('MYSQL_ROOT_PASSWORD', 'password')
           .withEnv('MYSQL_PASSWORD', 'password')
+          .withWaitStrategy(Wait.forLogMessage('ready for connections.'))
           .withExposedPorts(3306)
           .start();
         // start containers in parallel

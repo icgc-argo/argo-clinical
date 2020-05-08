@@ -5,8 +5,8 @@ import {
   PrimaryDiagnosisFieldsEnum,
   CommonTherapyFields,
   TherapyRxNormFields,
-} from '../../../src/submission/submission-entities';
-import { DonorFieldsEnum } from '../../../src/submission/submission-entities';
+  DonorFieldsEnum,
+} from '../../../src/common-model/entities';
 import { SampleRegistrationFieldsEnum } from '../../../src/submission/submission-entities';
 import {
   SchemasDictionary,
@@ -15,7 +15,7 @@ import {
 import {
   DictionaryMigration,
   MigrationStage,
-} from '../../../src/submission/schema/migration-entities';
+} from '../../../src/submission/migration/migration-entities';
 import { Donor } from '../../../src/clinical/clinical-entities';
 import { getInstance } from '../../../src/submission/submission-updates-messenger';
 
@@ -25,7 +25,7 @@ import 'deep-equal-in-any-order';
 import 'mocha';
 import mongoose from 'mongoose';
 import { spy, SinonSpy } from 'sinon';
-import { GenericContainer } from 'testcontainers';
+import { GenericContainer, Wait } from 'testcontainers';
 import { findInDb, insertData, emptyDonorDocument, clearCollections } from '../testutils';
 import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN } from '../test.jwt';
 import _ from 'lodash';
@@ -106,18 +106,18 @@ describe('schema migration api', () => {
   before(() => {
     return (async () => {
       try {
-        const mongoContainerPromise = new GenericContainer('mongo').withExposedPorts(27017).start();
-        const mysqlContainerPromise = new GenericContainer('mysql')
+        const mongoContainerPromise = new GenericContainer('mongo', '4.0')
+          .withExposedPorts(27017)
+          .start();
+        const mysqlContainerPromise = new GenericContainer('mysql', '5.7')
           .withEnv('MYSQL_DATABASE', 'rxnorm')
           .withEnv('MYSQL_USER', 'clinical')
           .withEnv('MYSQL_ROOT_PASSWORD', 'password')
           .withEnv('MYSQL_PASSWORD', 'password')
           .withExposedPorts(3306)
           .start();
-        // start containers in parallel
-        const containers = await Promise.all([mongoContainerPromise, mysqlContainerPromise]);
-        mongoContainer = containers[0];
-        mysqlContainer = containers[1];
+        mongoContainer = await mongoContainerPromise;
+        mysqlContainer = await mysqlContainerPromise;
         console.log('db test containers started');
         await bootstrap.run({
           mongoPassword() {
@@ -576,7 +576,7 @@ describe('schema migration api', () => {
 const migrateSyncTo = async (newSchemaVersion: string) => {
   return chai
     .request(app)
-    .patch('/submission/schema/?sync=true')
+    .post('/dictionary/migration/run?sync=true')
     .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
     .send({
       version: newSchemaVersion,
@@ -586,7 +586,7 @@ const migrateSyncTo = async (newSchemaVersion: string) => {
 const dryRunMigrateTo = async (newSchemaVersion: string) => {
   return chai
     .request(app)
-    .post('/submission/schema/dry-run-update')
+    .post('/dictionary/migration/dry-run-update')
     .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
     .send({
       version: newSchemaVersion,
@@ -596,6 +596,6 @@ const dryRunMigrateTo = async (newSchemaVersion: string) => {
 const getAllMigrationDocs = async () => {
   return await chai
     .request(app)
-    .get('/submission/schema/migration')
+    .get('/dictionary/migration')
     .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' });
 };

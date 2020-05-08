@@ -8,9 +8,10 @@ import 'chai-http';
 import 'deep-equal-in-any-order';
 import 'mocha';
 import mongoose from 'mongoose';
-import { GenericContainer } from 'testcontainers';
+import { GenericContainer, Wait } from 'testcontainers';
 import app from '../../../src/app';
 import * as bootstrap from '../../../src/bootstrap';
+import * as pool from '../../../src/rxnorm/pool';
 import {
   cleanCollection,
   insertData,
@@ -24,7 +25,6 @@ import {
   insertRxNormDrug,
   updateData,
 } from '../testutils';
-import * as mysql from 'mysql';
 import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN, JWT_ABCDEF, JWT_WXYZEF } from '../test.jwt';
 import {
   ActiveRegistration,
@@ -33,17 +33,20 @@ import {
   SUBMISSION_STATE,
   DataValidationErrors,
   SubmissionBatchErrorTypes,
+  ClinicalEntities,
+} from '../../../src/submission/submission-entities';
+import {
   ClinicalEntitySchemaNames,
   DonorFieldsEnum,
   ClinicalUniqueIdentifier,
-  ClinicalEntities,
-} from '../../../src/submission/submission-entities';
+} from '../../../src/common-model/entities';
 import { TsvUtils } from '../../../src/utils';
 import { donorDao } from '../../../src/clinical/donor-repo';
-import { Donor, Specimen } from '../../../src/clinical/clinical-entities';
+import { Donor } from '../../../src/clinical/clinical-entities';
 import AdmZip from 'adm-zip';
 import _ from 'lodash';
 import chaiExclude from 'chai-exclude';
+
 chai.use(require('chai-http'));
 chai.use(require('deep-equal-in-any-order'));
 chai.use(chaiExclude);
@@ -68,8 +71,8 @@ describe('Submission Api', () => {
   before(() => {
     return (async () => {
       try {
-        mongoContainer = await new GenericContainer('mongo').withExposedPorts(27017).start();
-        mysqlContainer = await new GenericContainer('mysql', '5.5')
+        mongoContainer = await new GenericContainer('mongo', '4.0').withExposedPorts(27017).start();
+        mysqlContainer = await new GenericContainer('mysql', '5.7')
           .withEnv('MYSQL_DATABASE', RXNORM_DB)
           .withEnv('MYSQL_USER', RXNORM_USER)
           .withEnv('MYSQL_ROOT_PASSWORD', RXNORM_PASS)
@@ -141,20 +144,14 @@ describe('Submission Api', () => {
             };
           },
         });
-        const rxnormDbConnection = mysql.createPool({
-          database: RXNORM_DB,
-          user: RXNORM_USER,
-          password: RXNORM_PASS,
-          host: mysqlContainer.getContainerIpAddress(),
-          port: mysqlContainer.getMappedPort(3306),
-        });
-        await createtRxNormTables(rxnormDbConnection);
-        await insertRxNormDrug('423', 'drugA', rxnormDbConnection);
-        await insertRxNormDrug('423', 'drug A', rxnormDbConnection);
-        await insertRxNormDrug('423', 'Koolaid', rxnormDbConnection);
-        await insertRxNormDrug('22323', 'drug 2', rxnormDbConnection);
-        await insertRxNormDrug('22323', 'drug B', rxnormDbConnection);
-        await insertRxNormDrug('12', '123-H2O', rxnormDbConnection);
+        const connPool = pool.getPool();
+        await createtRxNormTables(connPool);
+        await insertRxNormDrug('423', 'drugA', connPool);
+        await insertRxNormDrug('423', 'drug A', connPool);
+        await insertRxNormDrug('423', 'Koolaid', connPool);
+        await insertRxNormDrug('22323', 'drug 2', connPool);
+        await insertRxNormDrug('22323', 'drug B', connPool);
+        await insertRxNormDrug('12', '123-H2O', connPool);
       } catch (err) {
         console.error('before >>>>>>>>>>>', err);
         return err;
@@ -1868,7 +1865,7 @@ describe('Submission Api', () => {
       console.log("Getting template for '" + name + "'...");
       chai
         .request(app)
-        .get('/submission/schema/template/' + name)
+        .get('/dictionary/template/' + name)
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .end((err: any, res: any) => {
           res.should.have.status(200);
@@ -1892,7 +1889,7 @@ describe('Submission Api', () => {
       }
       chai
         .request(app)
-        .get('/submission/schema/template/all')
+        .get('/dictionary/template/all')
         .buffer()
         // parse: collects data and creates AdmZip object (made wth buffered data) in res.body
         .parse((res: any, callBack: any) => {
@@ -1929,7 +1926,7 @@ describe('Submission Api', () => {
       console.log("Getting template for '" + name + "'...");
       chai
         .request(app)
-        .get('/submission/schema/template/' + name)
+        .get('/dictionary/template/' + name)
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .end((err: any, res: any) => {
           res.should.have.status(404);
@@ -1944,7 +1941,7 @@ describe('Submission Api', () => {
       console.log("Getting template for '" + name + "'...");
       chai
         .request(app)
-        .get('/submission/schema/template/' + name)
+        .get('/dictionary/template/' + name)
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .end((err: any, res: any) => {
           res.should.have.status(404);
