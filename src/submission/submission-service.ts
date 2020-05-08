@@ -1,6 +1,6 @@
 import * as dataValidator from './validation-clinical/validation';
 import { donorDao, FindByProgramAndSubmitterFilter, DONOR_FIELDS } from '../clinical/donor-repo';
-import _, { isEmpty } from 'lodash';
+import _ from 'lodash';
 import { registrationRepository } from './registration-repo';
 import {
   Donor,
@@ -40,7 +40,6 @@ import {
   RevalidateClinicalSubmissionCommand,
   LegacyICGCImportRecord,
   DataValidationErrors,
-  SubmittedClinicalRecord,
 } from './submission-entities';
 import * as dictionaryManager from '../dictionary/manager';
 import {
@@ -51,15 +50,7 @@ import {
   SchemasDictionary,
 } from '../lectern-client/schema-entities';
 import { loggerFor } from '../logger';
-import {
-  Errors,
-  F,
-  isStringMatchRegex,
-  toString,
-  isEmptyString,
-  isNotAbsent,
-  notEmpty,
-} from '../utils';
+import { Errors, F, isStringMatchRegex, toString, isEmptyString, isNotAbsent } from '../utils';
 import { DeepReadonly } from 'deep-freeze';
 import { submissionRepository } from './submission-repo';
 import { v1 as uuid } from 'uuid';
@@ -76,8 +67,6 @@ import {
   DonorFieldsEnum,
   TherapyRxNormFields,
 } from '../common-model/entities';
-import { getDonors } from '../clinical/clinical-service';
-import { getClinicalEntitiesFromDonorBySchemaName } from '../common-model/functions';
 
 const L = loggerFor(__filename);
 

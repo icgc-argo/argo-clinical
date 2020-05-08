@@ -155,18 +155,18 @@ export async function getProgramClinicalData(programId: string) {
   // map into object ready for api processing
   const schemasWithFields = dictionaryManager.instance().getSchemasWithFields();
   return Object.entries(recordsMap)
-    .map(([schemaEntityName, records]) => {
+    .map(([entityName, records]) => {
       if (isEmpty(records)) return undefined;
 
-      const relevantSchemaWithFields = schemasWithFields.find(s => s.name === schemaEntityName);
+      const relevantSchemaWithFields = schemasWithFields.find(s => s.name === entityName);
       if (!relevantSchemaWithFields) {
-        throw new Error(`Can't find schema ${schemaEntityName}, somthing is wrong here.`);
+        throw new Error(`Can't find schema ${entityName}, somthing is wrong here.`);
       }
 
       return {
-        schemaEntityName: relevantSchemaWithFields.name,
+        entityName,
         records,
-        schemaFields: relevantSchemaWithFields.fields,
+        entityFields: relevantSchemaWithFields?.fields,
       };
     })
     .filter(notEmpty);

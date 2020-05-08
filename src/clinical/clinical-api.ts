@@ -17,20 +17,23 @@ class ClinicalController {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
 
-    const data = await service.getProgramClinicalData(programId);
+    const dataPromise = service.getProgramClinicalData(programId);
 
-    res
-      .status(200)
-      .contentType('application/zip')
-      .attachment(`${programId}_all_clincial_data.zip`);
+    dataPromise.then(data => {
+      const todaysDate = currentDateFormatted();
+      res
+        .status(200)
+        .contentType('application/zip')
+        .attachment(`${programId}_Clinical_Data_${todaysDate}.zip`);
 
-    const zip = new AdmZip();
-    data.forEach(d => {
-      const tsvData = TsvUtils.parseObjectToTsv(d.records, d.schemaFields);
-      zip.addFile(`${d.schemaEntityName}.tsv`, Buffer.alloc(tsvData.length, tsvData));
+      const zip = new AdmZip();
+      data.forEach(d => {
+        const tsvData = TsvUtils.convertJsonRecordsToTsv(d.records, d.entityFields);
+        zip.addFile(`${d.entityName}.tsv`, Buffer.alloc(tsvData.length, tsvData));
+      });
+
+      res.send(zip.toBuffer());
     });
-
-    res.send(zip.toBuffer());
   }
 
   @ProtectTestEndpoint()
@@ -84,6 +87,11 @@ class ClinicalController {
 
     return res.status(200).send(upadtedDonor);
   }
+}
+
+function currentDateFormatted() {
+  const now = new Date();
+  return `${now.getFullYear}-${now.getMonth}-${now.getDate}`;
 }
 
 export default new ClinicalController();
