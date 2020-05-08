@@ -17,7 +17,7 @@ class ClinicalController {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
 
-    const dataPromise = service.getProgramClinicalData(programId);
+    const dataPromise = service.getClinicalData(programId);
 
     dataPromise.then(data => {
       const todaysDate = currentDateFormatted();
@@ -91,7 +91,7 @@ class ClinicalController {
 
 function currentDateFormatted() {
   const now = new Date();
-  return `${now.getFullYear}-${now.getMonth}-${now.getDate}`;
+  return `${now.getFullYear()}${now.getMonth()}${now.getDate()}`;
 }
 
 export default new ClinicalController();

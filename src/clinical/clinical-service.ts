@@ -7,6 +7,9 @@ import { forceRecalcDonorCoreEntityStats } from '../submission/submission-to-cli
 import { ClinicalEntitySchemaNames } from '../common-model/entities';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../common-model/functions';
 import * as dictionaryManager from '../dictionary/manager';
+import { loggerFor } from '../logger';
+
+const L = loggerFor(__filename);
 
 export async function updateDonorSchemaMetadata(
   donor: DeepReadonly<Donor>,
@@ -132,11 +135,12 @@ export const updateDonorStats = async (donorId: number, coreCompletionOverride: 
   return await donorDao.update(updatedDonor);
 };
 
-export async function getProgramClinicalData(programId: string) {
+export async function getClinicalData(programId: string) {
   if (!programId) throw new Error('Missing programId!');
 
-  // this query takes about 6sec for 20,000 donors with sample registration only running locally
-  const donors = await getDonors(programId); // get in batch??
+  const start = new Date().getTime() / 1000;
+
+  const donors = await getDonors(programId);
 
   // collect all records
   const recordsMap: any = {};
@@ -154,22 +158,24 @@ export async function getProgramClinicalData(programId: string) {
 
   // map into object ready for api processing
   const schemasWithFields = dictionaryManager.instance().getSchemasWithFields();
-  return Object.entries(recordsMap)
+  const data = Object.entries(recordsMap)
     .map(([entityName, records]) => {
       if (isEmpty(records)) return undefined;
 
       const relevantSchemaWithFields = schemasWithFields.find(s => s.name === entityName);
-      if (!relevantSchemaWithFields) {
-        throw new Error(`Can't find schema ${entityName}, somthing is wrong here.`);
-      }
 
       return {
         entityName,
         records,
-        entityFields: relevantSchemaWithFields?.fields,
+        entityFields: relevantSchemaWithFields?.fields || [],
       };
     })
     .filter(notEmpty);
+
+  const end = new Date().getTime() / 1000;
+  L.info(`getClinicalData took ${end - start}s`);
+
+  return data;
 }
 
 function generateSampleRegistrationDataForDonor(d: DeepReadonly<Donor>) {
