@@ -2,10 +2,9 @@ import {
   DataValidationErrors,
   SubmittedClinicalRecord,
   SubmissionValidationError,
-  SpecimenFieldsEnum,
-  DonorFieldsEnum,
   DonorVitalStatusValues,
 } from '../submission-entities';
+import { SpecimenFieldsEnum, DonorFieldsEnum } from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
 import * as utils from './utils';

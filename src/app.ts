@@ -12,7 +12,7 @@ import * as middleware from './middleware';
 import dataRouter from './routes/data';
 import registrationRouter from './routes/registration';
 import submissionRouter from './routes/submission';
-import schemaRouter from './routes/schema';
+import dictionaryRouter from './routes/dictionary';
 import configRouter from './routes/config';
 import icgcImport from './routes/icgc-import';
 import responseTime from 'response-time';
@@ -66,8 +66,10 @@ app.use(
 app.use('/submission/configs', configRouter);
 app.use('/submission/program/:programId/registration', registrationRouter);
 app.use('/submission/program/:programId/clinical', submissionRouter);
-app.use('/submission/schema', schemaRouter);
 app.use('/submission/icgc-import', icgcImport);
+
+app.use('/dictionary', dictionaryRouter);
+app.use('/submission/schema', dictionaryRouter); // deprecated
 
 app.use('/clinical', dataRouter);
 

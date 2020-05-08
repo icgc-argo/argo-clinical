@@ -3,9 +3,9 @@ import {
   CoreCompletionStats,
   CoreClinicalEntites,
 } from '../../../src/clinical/clinical-entities';
-import { ClinicalEntitySchemaNames } from '../submission-entities';
+import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 import { notEmpty, F } from '../../../src/utils';
-import { getClinicalEntitiesFromDonorBySchemaName } from './submission-to-clinical';
+import { getClinicalEntitiesFromDonorBySchemaName } from '../../common-model/functions';
 
 import { DeepReadonly } from 'deep-freeze';
 import { cloneDeep, pull } from 'lodash';

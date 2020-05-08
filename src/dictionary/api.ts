@@ -1,12 +1,12 @@
-import * as manager from './schema-manager';
+import * as manager from './manager';
 import { Request, Response } from 'express';
-import { loggerFor } from '../../logger';
-import { SchemasDictionary, SchemaDefinition } from '../../lectern-client/schema-entities';
-import { setStatus, Status } from '../../app-health';
-import { ControllerUtils } from '../../utils';
-import { ClinicalEntitySchemaNames } from '../submission-entities';
+import { loggerFor } from '../logger';
+import { SchemaDefinition } from '../lectern-client/schema-entities';
+import { setStatus, Status } from '../app-health';
+import { ControllerUtils } from '../utils';
+import { ClinicalEntitySchemaNames } from '../common-model/entities';
 import AdmZip from 'adm-zip';
-import { HasFullWriteAccess } from '../../decorators';
+import { HasFullWriteAccess } from '../decorators';
 const L = loggerFor(__filename);
 
 class SchemaController {

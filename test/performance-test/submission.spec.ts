@@ -17,10 +17,8 @@ import app from '../../src/app';
 import * as bootstrap from '../../src/bootstrap';
 import { cleanCollection, resetCounters } from '../integration/testutils';
 import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN } from '../integration/test.jwt';
-import {
-  ClinicalEntitySchemaNames,
-  CreateRegistrationResult,
-} from '../../src/submission/submission-entities';
+import { CreateRegistrationResult } from '../../src/submission/submission-entities';
+import { ClinicalEntitySchemaNames } from '../../src/common-model/entities';
 
 // create a different logger to avoid noise from application
 const L = winston.createLogger({

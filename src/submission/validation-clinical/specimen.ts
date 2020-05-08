@@ -2,19 +2,21 @@ import {
   SubmissionValidationError,
   DataValidationErrors,
   SubmittedClinicalRecord,
+  DonorVitalStatusValues,
+  SampleRegistrationFieldsEnum,
+} from '../submission-entities';
+import {
   ClinicalEntitySchemaNames,
   DonorFieldsEnum,
   SpecimenFieldsEnum,
   ClinicalUniqueIdentifier,
-  DonorVitalStatusValues,
-  SampleRegistrationFieldsEnum,
-} from '../submission-entities';
+} from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, Specimen } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
 import { isEmptyString, isAbsent } from '../../utils';
-import { getSingleClinicalObjectFromDonor } from '../submission-to-clinical/submission-to-clinical';
+import { getSingleClinicalObjectFromDonor } from '../../common-model/functions';
 
 export const validate = async (
   specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
