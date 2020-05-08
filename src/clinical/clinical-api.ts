@@ -17,23 +17,21 @@ class ClinicalController {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
 
-    const dataPromise = service.getClinicalData(programId);
+    const data = await service.getClinicalData(programId);
 
-    dataPromise.then(data => {
-      const todaysDate = currentDateFormatted();
-      res
-        .status(200)
-        .contentType('application/zip')
-        .attachment(`${programId}_Clinical_Data_${todaysDate}.zip`);
+    const todaysDate = currentDateFormatted();
+    res
+      .status(200)
+      .contentType('application/zip')
+      .attachment(`${programId}_Clinical_Data_${todaysDate}.zip`);
 
-      const zip = new AdmZip();
-      data.forEach(d => {
-        const tsvData = TsvUtils.convertJsonRecordsToTsv(d.records, d.entityFields);
-        zip.addFile(`${d.entityName}.tsv`, Buffer.alloc(tsvData.length, tsvData));
-      });
-
-      res.send(zip.toBuffer());
+    const zip = new AdmZip();
+    data.forEach(d => {
+      const tsvData = TsvUtils.convertJsonRecordsToTsv(d.records, d.entityFields);
+      zip.addFile(`${d.entityName}.tsv`, Buffer.alloc(tsvData.length, tsvData));
     });
+
+    res.send(zip.toBuffer());
   }
 
   @ProtectTestEndpoint()
