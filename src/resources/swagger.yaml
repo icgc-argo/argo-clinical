@@ -734,6 +734,35 @@ paths:
           $ref: '#/components/responses/ServerError'
         '200':
           description: 'all donors deleted'
+  /clinical/program/{programId}/tsv-export:
+    parameters:
+      - name: programId
+        description: the short name of the program
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - Clinical Data
+      summary: Get all commited clinical data for a program
+      description: Returns a zip file with all commited clinical and sample_registration data in tsvs. Exported data may not be valid with current dictionary.
+      responses:
+        '200':
+          description: 'A zip file with tsv file(s) inside'
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Invalid programId provided
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/ServerError'
   /clinical/donors/id:
     get:
       tags:

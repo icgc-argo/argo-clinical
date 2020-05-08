@@ -37,14 +37,14 @@ export namespace TsvUtils {
     return rows.filter(notEmpty);
   };
 
-  export const parseObjectToTsv = (recordsObjects: any, headers: string[]) => {
+  export const convertJsonRecordsToTsv = (jsonRecords: any, headers: string[]) => {
     const columns: number = headers.length;
     // map headers to an index, used to place recordObject values in correct column
     const headersToColumnMap: Record<string, number> = {};
     headers.map((f, i) => (headersToColumnMap[f] = i));
 
-    const allTsvRecords = new Array(recordsObjects.length);
-    recordsObjects.forEach((jr: any, i: number) => {
+    const allTsvRecords = new Array<string>(jsonRecords.length);
+    jsonRecords.forEach((jr: any, i: number) => {
       const tsvRecordAsArray = new Array<string>(columns);
       Object.entries(jr).forEach(([key, val]) => {
         const indexInTsvArray = headersToColumnMap[key];
@@ -60,7 +60,7 @@ export namespace TsvUtils {
       allTsvRecords[i] = tsvRecordAsArray.join('\t'); // hold order of recordsObjects
     });
 
-    const headersStr = Object.keys(headersToColumnMap).join('\t');
+    const headersStr = headers.join('\t');
     return headersStr + '\n' + allTsvRecords.join('\n');
   };
 }
