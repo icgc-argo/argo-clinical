@@ -176,7 +176,7 @@ export async function getClinicalData(programId: string) {
     .filter(notEmpty);
 
   const end = new Date().getTime() / 1000;
-  L.info(`getClinicalData took ${end - start}s`);
+  L.debug(`getClinicalData took ${end - start}s`);
 
   return data;
 }

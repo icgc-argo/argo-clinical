@@ -276,7 +276,7 @@ describe('clinical Api', () => {
               callBack(undefined, new AdmZip(Buffer.concat(data)));
             });
           })
-          .end((_, res: any) => {
+          .end((err: any, res: any) => {
             const zipFile = res.body as AdmZip;
 
             // check files are present
