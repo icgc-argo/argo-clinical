@@ -9,6 +9,7 @@ class ClinicalController {
   async findDonors(req: Request, res: Response) {
     return res.status(200).send(await service.getDonors(req.query.programId));
   }
+
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async getProgramClinicalDataAsTsvsInZip(req: Request, res: Response) {
     const programId = req.params.programId;

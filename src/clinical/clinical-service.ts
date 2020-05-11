@@ -163,11 +163,14 @@ export async function getClinicalData(programId: string) {
       if (isEmpty(records)) return undefined;
 
       const relevantSchemaWithFields = schemasWithFields.find(s => s.name === entityName);
+      if (!relevantSchemaWithFields) {
+        throw new Error(`Can't find schema ${entityName}, something is wrong here!`);
+      }
 
       return {
         entityName,
         records,
-        entityFields: relevantSchemaWithFields?.fields || [],
+        entityFields: relevantSchemaWithFields.fields,
       };
     })
     .filter(notEmpty);
