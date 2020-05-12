@@ -1,13 +1,14 @@
 import { donorDao, DONOR_FIELDS } from './donor-repo';
-import { Errors, notEmpty } from '../utils';
+import { Errors } from '../utils';
 import { Sample, Donor } from './clinical-entities';
 import { DeepReadonly } from 'deep-freeze';
-import _, { isEmpty } from 'lodash';
+import _ from 'lodash';
 import { forceRecalcDonorCoreEntityStats } from '../submission/submission-to-clinical/stat-calculator';
-import { ClinicalEntitySchemaNames } from '../common-model/entities';
-import { getClinicalEntitiesFromDonorBySchemaName } from '../common-model/functions';
 import * as dictionaryManager from '../dictionary/manager';
 import { loggerFor } from '../logger';
+import { WorkerTasks } from './service-worker-thread/tasks';
+import { StaticPool } from 'node-worker-threads-pool';
+import { runTaskInWorkerThread } from './service-worker-thread/runner';
 
 const L = loggerFor(__filename);
 
@@ -135,59 +136,34 @@ export const updateDonorStats = async (donorId: number, coreCompletionOverride: 
   return await donorDao.update(updatedDonor);
 };
 
-export function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
-  L.info('inside extractDataFromDonors');
-  const recordsMap: any = {};
-  donors.forEach(d => {
-    Object.values(ClinicalEntitySchemaNames).forEach(entity => {
-      let clincialInfoRecords;
-      if (entity === ClinicalEntitySchemaNames.REGISTRATION) {
-        clincialInfoRecords = generateSampleRegistrationDataForDonor(d);
-      } else {
-        clincialInfoRecords = getClinicalEntitiesFromDonorBySchemaName(d, entity);
-      }
-      recordsMap[entity] = _.concat(recordsMap[entity] || [], clincialInfoRecords);
-    });
-  });
+export const getClinicalData = async (programId: string) => {
+  if (!programId) throw new Error('Missing programId!');
+  const start = new Date().getTime() / 1000;
 
-  const data = Object.entries(recordsMap)
-    .map(([entityName, records]) => {
-      if (isEmpty(records)) return undefined;
+  // worker-threads can't get dictionary instance so deal with it here and pass it to worker task
+  const schemasWithFields = dictionaryManager.instance().getSchemasWithFields();
 
-      const relevantSchemaWithFields = schemasWithFields.find((s: any) => s.name === entityName);
-      if (!relevantSchemaWithFields) {
-        throw new Error(`Can't find schema ${entityName}, something is wrong here!`);
-      }
+  // async/await functions just hang in current library worker-thread setup, root cause is unknown
+  const donors = await donorDao.findByProgramIdOmitMongoDocId(programId);
 
-      return {
-        entityName,
-        records,
-        entityFields: relevantSchemaWithFields.fields,
-      };
-    })
-    .filter(notEmpty);
+  const taskToRun = WorkerTasks.ExtractDataFromDonors;
+  const taskArgs = [donors, schemasWithFields];
+  const data = await runTaskInWorkerThread(taskToRun, taskArgs);
+
+  const end = new Date().getTime() / 1000;
+  L.debug(`getClinicalData took ${end - start}s`);
 
   return data;
-}
+};
 
-function generateSampleRegistrationDataForDonor(d: DeepReadonly<Donor>) {
-  const baseRegistrationRecord = {
-    program_id: d.programId,
-    submitter_donor_id: d.submitterId,
-    gender: d.gender,
-  };
+// const pool = new StaticPool({
+//   size: 1,
+//   task: __dirname + '/service-worker.js',
+// });
+// const poolTimeOutMs = 20 * 1000;
 
-  return d.specimens
-    .map(sp =>
-      sp.samples.map(sm => ({
-        ...baseRegistrationRecord,
-        submitter_specimen_id: sp.submitterId,
-        specimen_tissue_source: sp.specimenTissueSource,
-        tumour_normal_designation: sp.tumourNormalDesignation,
-        specimen_type: sp.specimenType,
-        submitter_sample_id: sm.submitterId,
-        sample_type: sm.sampleType,
-      })),
-    )
-    .flat();
-}
+// async function runTaskInWorkerThread(taskToRun: WorkerTasks, taskArgs: any) {
+//   const args = { taskToRun, taskArgs };
+//   const result = await pool.exec(args, poolTimeOutMs);
+//   return result;
+// }

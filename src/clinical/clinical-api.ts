@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import * as service from './clinical-service';
-import * as nonBlockingFunctions from './nonblocking';
 import { HasFullWriteAccess, ProtectTestEndpoint, HasProgramWriteAccess } from '../decorators';
 import { ControllerUtils, TsvUtils } from '../utils';
 import AdmZip from 'adm-zip';
@@ -18,7 +17,7 @@ class ClinicalController {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
 
-    const data = await nonBlockingFunctions.getClinicalData(programId);
+    const data = await service.getClinicalData(programId);
 
     const todaysDate = currentDateFormatted();
     res
