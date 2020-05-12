@@ -62,10 +62,6 @@ export function getClinicalEntitiesFromDonorBySchemaName(
   donor: DeepReadonly<Donor>,
   clinicalEntitySchemaName: ClinicalEntitySchemaNames,
 ): ClinicalInfo[] {
-  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.REGISTRATION) {
-    return sampleRegistrationDataFromDonor(donor);
-  }
-
   const result = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName) as any[];
 
   const clinicalRecords = result
@@ -95,26 +91,4 @@ export function getSingleClinicalEntityFromDonorBySchemanName(
 
   const clinicalInfos = getClinicalEntitiesFromDonorBySchemaName(donor, clinicalEntityType);
   return _(clinicalInfos).find(constraints);
-}
-
-function sampleRegistrationDataFromDonor(d: DeepReadonly<Donor>) {
-  const baseRegistrationRecord = {
-    program_id: d.programId,
-    submitter_donor_id: d.submitterId,
-    gender: d.gender,
-  };
-
-  return d.specimens
-    .map(sp =>
-      sp.samples.map(sm => ({
-        ...baseRegistrationRecord,
-        submitter_specimen_id: sp.submitterId,
-        specimen_tissue_source: sp.specimenTissueSource,
-        tumour_normal_designation: sp.tumourNormalDesignation,
-        specimen_type: sp.specimenType,
-        submitter_sample_id: sm.submitterId,
-        sample_type: sm.sampleType,
-      })),
-    )
-    .flat();
 }
