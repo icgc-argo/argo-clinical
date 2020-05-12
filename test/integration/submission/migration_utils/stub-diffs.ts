@@ -1,5 +1,5 @@
 // computed separately using lectern's diff tool
-import legacyStubSchemas from '../stub-schema.json';
+import legacyStubSchemas from '../../stub-schema.json';
 
 export const migrationDiffs = [
   legacyStubSchemas.diffs[0],

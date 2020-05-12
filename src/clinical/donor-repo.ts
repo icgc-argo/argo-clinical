@@ -47,6 +47,7 @@ export interface DonorRepository {
   findByProgramId(
     programId: string,
     projections?: Partial<Record<DONOR_FIELDS, number>>,
+    omitMongoDocIds?: boolean,
   ): Promise<DeepReadonly<Donor[]>>;
   deleteByProgramId(programId: string): Promise<void>;
   findByProgramAndSubmitterId(
@@ -99,7 +100,12 @@ export const donorDao: DonorRepository = {
   async findByProgramId(
     programId: string,
     projection?: Partial<Record<DONOR_FIELDS, number>>,
+    omitMongoDocIds?: boolean,
   ): Promise<DeepReadonly<Donor[]>> {
+    if (omitMongoDocIds) {
+      return findByProgramIdOmitMongoDocId(programId, projection);
+    }
+
     const result = await DonorModel.find(
       {
         [DONOR_FIELDS.PROGRAM_ID]: programId,
@@ -250,6 +256,25 @@ export const donorDao: DonorRepository = {
     return F(MongooseUtils.toPojo(newDonor));
   },
 };
+
+// Like findByProgramId, but DocQuery asks mongo to return PoJo without docIds for faster fetch
+async function findByProgramIdOmitMongoDocId(
+  programId: string,
+  projection?: Partial<Record<DONOR_FIELDS, number>>,
+): Promise<DeepReadonly<Donor[]>> {
+  const result = await DonorModel.find(
+    {
+      [DONOR_FIELDS.PROGRAM_ID]: programId,
+    },
+    projection,
+    { sort: { [DONOR_FIELDS.DONOR_ID]: 1 } },
+  )
+    .select('-_id') // don't select '_id' so F() doesn't crash
+    .lean() // ask mongo to return pojo only
+    .exec();
+
+  return F(result);
+}
 
 type DonorDocument = mongoose.Document & Donor;
 
