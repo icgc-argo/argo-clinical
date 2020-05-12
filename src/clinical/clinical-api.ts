@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as service from './clinical-service';
+import * as nonBlockingFunctions from './nonblocking';
 import { HasFullWriteAccess, ProtectTestEndpoint, HasProgramWriteAccess } from '../decorators';
 import { ControllerUtils, TsvUtils } from '../utils';
 import AdmZip from 'adm-zip';
@@ -17,7 +18,7 @@ class ClinicalController {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
 
-    const data = await service.getClinicalData(programId);
+    const data = await nonBlockingFunctions.getClinicalData(programId);
 
     const todaysDate = currentDateFormatted();
     res
@@ -26,7 +27,7 @@ class ClinicalController {
       .attachment(`${programId}_Clinical_Data_${todaysDate}.zip`);
 
     const zip = new AdmZip();
-    data.forEach(d => {
+    data.forEach((d: any) => {
       const tsvData = TsvUtils.convertJsonRecordsToTsv(d.records, d.entityFields);
       zip.addFile(`${d.entityName}.tsv`, Buffer.alloc(tsvData.length, tsvData));
     });

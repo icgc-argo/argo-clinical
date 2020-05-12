@@ -135,14 +135,8 @@ export const updateDonorStats = async (donorId: number, coreCompletionOverride: 
   return await donorDao.update(updatedDonor);
 };
 
-export async function getClinicalData(programId: string) {
-  if (!programId) throw new Error('Missing programId!');
-
-  const start = new Date().getTime() / 1000;
-
-  const donors = await getDonors(programId);
-
-  // collect all records
+export function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
+  L.info('inside extractDataFromDonors');
   const recordsMap: any = {};
   donors.forEach(d => {
     Object.values(ClinicalEntitySchemaNames).forEach(entity => {
@@ -156,13 +150,11 @@ export async function getClinicalData(programId: string) {
     });
   });
 
-  // map into object ready for api processing
-  const schemasWithFields = dictionaryManager.instance().getSchemasWithFields();
   const data = Object.entries(recordsMap)
     .map(([entityName, records]) => {
       if (isEmpty(records)) return undefined;
 
-      const relevantSchemaWithFields = schemasWithFields.find(s => s.name === entityName);
+      const relevantSchemaWithFields = schemasWithFields.find((s: any) => s.name === entityName);
       if (!relevantSchemaWithFields) {
         throw new Error(`Can't find schema ${entityName}, something is wrong here!`);
       }
@@ -174,9 +166,6 @@ export async function getClinicalData(programId: string) {
       };
     })
     .filter(notEmpty);
-
-  const end = new Date().getTime() / 1000;
-  L.debug(`getClinicalData took ${end - start}s`);
 
   return data;
 }
