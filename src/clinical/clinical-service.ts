@@ -4,6 +4,12 @@ import { Sample, Donor } from './clinical-entities';
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 import { forceRecalcDonorCoreEntityStats } from '../submission/submission-to-clinical/stat-calculator';
+import * as dictionaryManager from '../dictionary/manager';
+import { loggerFor } from '../logger';
+import { WorkerTasks } from './service-worker-thread/tasks';
+import { runTaskInWorkerThread } from './service-worker-thread/runner';
+
+const L = loggerFor(__filename);
 
 export async function updateDonorSchemaMetadata(
   donor: DeepReadonly<Donor>,
@@ -127,4 +133,24 @@ export const updateDonorStats = async (donorId: number, coreCompletionOverride: 
   const updatedDonor = forceRecalcDonorCoreEntityStats(donor, coreCompletionOverride);
 
   return await donorDao.update(updatedDonor);
+};
+
+export const getClinicalData = async (programId: string) => {
+  if (!programId) throw new Error('Missing programId!');
+  const start = new Date().getTime() / 1000;
+
+  // worker-threads can't get dictionary instance so deal with it here and pass it to worker task
+  const schemasWithFields = dictionaryManager.instance().getSchemasWithFields();
+
+  // async/await functions just hang in current library worker-thread setup, root cause is unknown
+  const donors = await donorDao.findByProgramId(programId, {}, true);
+
+  const taskToRun = WorkerTasks.ExtractDataFromDonors;
+  const taskArgs = [donors, schemasWithFields];
+  const data = await runTaskInWorkerThread(taskToRun, taskArgs);
+
+  const end = new Date().getTime() / 1000;
+  L.debug(`getClinicalData took ${end - start}s`);
+
+  return data;
 };
