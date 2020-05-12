@@ -387,7 +387,6 @@ export function checkRelatedEntityExists(
     },
   );
 
-  // primary diagnosis is optional for follow up
   if (!required && isEmptyString(record[entitySubmitterIdField] as string)) {
     return;
   }
@@ -397,13 +396,13 @@ export function checkRelatedEntityExists(
     return;
   }
 
-  const primaryDiag = getRelatedEntityByFK(
+  const relatedEntity = getRelatedEntityByFK(
     entity,
     record[entitySubmitterIdField] as string,
     mergedDonor,
   );
 
-  if (!primaryDiag) {
+  if (!relatedEntity) {
     errors.push(error);
   }
 }
