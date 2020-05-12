@@ -1930,7 +1930,7 @@ describe('Submission Api', () => {
         });
     });
 
-    it.only('get all templates zip', done => {
+    it('get all templates zip', done => {
       let refZip: AdmZip;
       try {
         refZip = new AdmZip(stubFilesDir + '/all.zip');
