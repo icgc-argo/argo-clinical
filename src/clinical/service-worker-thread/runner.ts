@@ -1,12 +1,20 @@
 import { StaticPool } from 'node-worker-threads-pool';
 import { WorkerTasks } from './tasks';
+import * as os from 'os';
+import { loggerFor } from '../../logger';
+const L = loggerFor(__filename);
 
-const poolSize = 1;
+// check allowed cpus or use available
+const cpuCount = os.cpus().length;
+L.info(`available cpus: ${cpuCount}`);
+const availableCpus = Number(process.env.ALLOWED_CPUS) || cpuCount;
+L.info(`using ${availableCpus} cpus`);
+
 const poolTimeOutMs = 20 * 1000;
 const jsWorkerLocation = __dirname + '/worker.js';
 
 const pool = new StaticPool({
-  size: poolSize,
+  size: availableCpus,
   task: jsWorkerLocation,
 });
 

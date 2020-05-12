@@ -110,7 +110,7 @@ describe('clinical Api', () => {
             return '';
           },
           schemaServiceUrl() {
-            return `file://${__dirname}/stub-schema.json`;
+            return `file://${__dirname}/../stub-schema.json`;
           },
           testApisDisabled() {
             return false;
