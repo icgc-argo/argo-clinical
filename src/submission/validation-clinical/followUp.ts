@@ -13,6 +13,7 @@ import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
 import _ from 'lodash';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../../common-model/functions';
+
 import { checkClinicalEntityDoesntBelongToOtherDonor, checkRelatedEntityExists } from './utils';
 
 export const validate = async (

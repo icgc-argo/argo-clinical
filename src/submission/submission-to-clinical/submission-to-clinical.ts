@@ -14,7 +14,6 @@ import {
   SampleRegistrationFieldsEnum,
   SUBMISSION_STATE,
 } from '../submission-entities';
-
 import { Errors } from '../../utils';
 import {
   donorDao,

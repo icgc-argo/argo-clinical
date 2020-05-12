@@ -3,7 +3,6 @@ import mongoose from 'mongoose';
 import { DeepReadonly } from 'deep-freeze';
 import { F, MongooseUtils, notEmpty } from '../utils';
 import { loggerFor } from '../logger';
-
 export const SUBMITTER_ID = 'submitterId';
 export const SPECIMEN_SUBMITTER_ID = 'specimen.submitterId';
 export const SPECIMEN_SAMPLE_SUBMITTER_ID = 'specimen.sample.submitterId';

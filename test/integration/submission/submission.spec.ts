@@ -47,7 +47,6 @@ import { Donor } from '../../../src/clinical/clinical-entities';
 import AdmZip from 'adm-zip';
 import _ from 'lodash';
 import chaiExclude from 'chai-exclude';
-import { deepEqual } from 'assert';
 
 chai.use(require('chai-http'));
 chai.use(require('deep-equal-in-any-order'));
