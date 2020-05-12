@@ -121,7 +121,7 @@ export const donorDao: DonorRepository = {
     return F(mapped);
   },
 
-  // Like findByProgramId, but DocQuery asks mongo to return PoJo & without docIds for faster fetch
+  // Like findByProgramId, but DocQuery asks mongo to return PoJo without docIds for faster fetch
   async findByProgramIdOmitMongoDocId(
     programId: string,
     projection?: Partial<Record<DONOR_FIELDS, number>>,

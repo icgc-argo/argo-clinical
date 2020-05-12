@@ -7,7 +7,6 @@ import { forceRecalcDonorCoreEntityStats } from '../submission/submission-to-cli
 import * as dictionaryManager from '../dictionary/manager';
 import { loggerFor } from '../logger';
 import { WorkerTasks } from './service-worker-thread/tasks';
-import { StaticPool } from 'node-worker-threads-pool';
 import { runTaskInWorkerThread } from './service-worker-thread/runner';
 
 const L = loggerFor(__filename);
@@ -155,15 +154,3 @@ export const getClinicalData = async (programId: string) => {
 
   return data;
 };
-
-// const pool = new StaticPool({
-//   size: 1,
-//   task: __dirname + '/service-worker.js',
-// });
-// const poolTimeOutMs = 20 * 1000;
-
-// async function runTaskInWorkerThread(taskToRun: WorkerTasks, taskArgs: any) {
-//   const args = { taskToRun, taskArgs };
-//   const result = await pool.exec(args, poolTimeOutMs);
-//   return result;
-// }
