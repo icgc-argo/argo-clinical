@@ -246,7 +246,6 @@ describe('schema migration api', () => {
   it('should update the schema', async () => {
     await migrateSyncTo('2.0').then(async (res: any) => {
       res.should.have.status(200);
-
       const schema = (await findInDb(dburl, 'dataschemas', {})) as SchemasDictionary[];
       schema[0].version.should.eq('2.0');
     });

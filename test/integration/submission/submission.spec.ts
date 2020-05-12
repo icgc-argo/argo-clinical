@@ -39,6 +39,7 @@ import {
   ClinicalEntitySchemaNames,
   DonorFieldsEnum,
   ClinicalUniqueIdentifier,
+  PrimaryDiagnosisFieldsEnum,
 } from '../../../src/common-model/entities';
 import { TsvUtils } from '../../../src/utils';
 import { donorDao } from '../../../src/clinical/donor-repo';
@@ -46,6 +47,7 @@ import { Donor } from '../../../src/clinical/clinical-entities';
 import AdmZip from 'adm-zip';
 import _ from 'lodash';
 import chaiExclude from 'chai-exclude';
+import { deepEqual } from 'assert';
 
 chai.use(require('chai-http'));
 chai.use(require('deep-equal-in-any-order'));
@@ -721,7 +723,7 @@ describe('Submission Api', () => {
               code: 'INVALID_FILE_NAME',
             },
             {
-              message: `Missing required headers: [${SampleRegistrationFieldsEnum.submitter_donor_id}], [${SampleRegistrationFieldsEnum.submitter_specimen_id}]`,
+              message: `Missing required headers: [${SampleRegistrationFieldsEnum.submitter_donor_id}], [${PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id}], [${SampleRegistrationFieldsEnum.submitter_specimen_id}]`,
               batchNames: ['specimen-invalid-headers.tsv'],
               code: SubmissionBatchErrorTypes.MISSING_REQUIRED_HEADER,
             },
@@ -892,6 +894,12 @@ describe('Submission Api', () => {
       // insert donor into db
       await insertData(dburl, 'donors', {
         followUps: [],
+        schemaMetadata: {
+          isValid: true,
+          lastValidSchemaVersion: '1.0',
+          originalSchemaVersion: '1.0',
+          lastMigrationId: undefined,
+        },
         treatments: [],
         chemotherapy: [],
         hormoneTherapy: [],
@@ -900,6 +908,7 @@ describe('Submission Api', () => {
         programId: 'ABCD-EF',
         specimens: [
           {
+            specimenType: 'whatever',
             samples: [],
             specimenTissueSource: 'Other',
             tumourNormalDesignation: 'Tumour',
@@ -908,6 +917,7 @@ describe('Submission Api', () => {
               program_id: 'ABCD-EF',
               submitter_donor_id: 'ICGC_0001',
               submitter_specimen_id: '8013861',
+              submitter_primary_diagnosis_id: 'P-1',
               specimen_acquisition_interval: 200,
               specimen_anatomic_location: 'Other',
               central_pathology_confirmed: 'No',
@@ -925,6 +935,7 @@ describe('Submission Api', () => {
           },
           {
             samples: [],
+            specimenType: 'whatever',
             specimenTissueSource: 'Other',
             tumourNormalDesignation: 'Tumour',
             submitterId: '8013862',
@@ -932,6 +943,7 @@ describe('Submission Api', () => {
               program_id: 'ABCD-EF',
               submitter_donor_id: 'ICGC_0001',
               submitter_specimen_id: '8013862',
+              submitter_primary_diagnosis_id: 'P-1',
               specimen_acquisition_interval: 230,
               specimen_anatomic_location: 'Other',
               central_pathology_confirmed: 'No',
@@ -948,19 +960,22 @@ describe('Submission Api', () => {
             },
           },
         ],
-        primaryDiagnosis: {
-          clinicalInfo: {
-            program_id: 'ABCD-EF',
-            number_lymph_nodes_examined: 2,
-            submitter_donor_id: 'ICGC_0001',
-            age_at_diagnosis: 96,
-            cancer_type_code: 'A11.1A',
-            tumour_staging_system: 'Murphy',
-            presenting_symptoms: null, // tslint:disable-line
+        primaryDiagnoses: [
+          {
+            clinicalInfo: {
+              program_id: 'ABCD-EF',
+              submitter_primary_diagnosis_id: 'P-1',
+              number_lymph_nodes_examined: 2,
+              submitter_donor_id: 'ICGC_0001',
+              age_at_diagnosis: 96,
+              cancer_type_code: 'A11.1A',
+              tumour_staging_system: 'Murphy',
+              presenting_symptoms: undefined, // tslint:disable-line
+            },
           },
-        },
+        ],
         donorId: 1,
-      });
+      } as Donor);
       return chai
         .request(app)
         .post('/submission/program/ABCD-EF/clinical/upload')
@@ -1318,6 +1333,7 @@ describe('Submission Api', () => {
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
         .then((res: any) => {
           submissionVersion = res.body.submission.version;
+          res.should.have.status(200);
         });
     };
 
@@ -1328,6 +1344,7 @@ describe('Submission Api', () => {
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
         .then((res: any) => {
           submissionVersion = res.body.version;
+          res.should.have.status(200);
         });
     };
 
@@ -1430,6 +1447,7 @@ describe('Submission Api', () => {
         number_lymph_nodes_examined: 2,
         age_at_diagnosis: 96,
         cancer_type_code: 'A11.1A',
+        submitter_primary_diagnosis_id: 'P-1',
         tumour_staging_system: 'Murphy',
         presenting_symptoms: null, // tslint:disable-line
       };
@@ -1462,7 +1480,7 @@ describe('Submission Api', () => {
       });
 
       // data from primary_diagnosis.tsv
-      donorBeforeApproveCommit.primaryDiagnosis.clinicalInfo.should.deep.eq(primary_diagnosis);
+      donorBeforeApproveCommit.primaryDiagnoses[0].clinicalInfo.should.deep.eq(primary_diagnosis);
 
       DonorBeforeUpdate.clinicalInfo?.should.include(donor);
 
@@ -1528,7 +1546,7 @@ describe('Submission Api', () => {
         });
     });
 
-    it.only('should return 200 when commit is completed - clinical stats', async () => {
+    it('should return 200 when commit is completed - clinical stats', async () => {
       const donorFilter = { programId: programId, submitterId: 'ICGC_0001' };
       // To get submission into correct state (pending approval) we need to already have a completed submission...
       await uploadSubmission([
@@ -1705,6 +1723,19 @@ describe('Submission Api', () => {
       const invalidDonor = emptyDonorDocument({
         submitterId: 'ICGC_0001',
         programId,
+        primaryDiagnoses: [
+          {
+            clinicalInfo: {
+              submitter_primary_diagnosis_id: 'P-1',
+              age_at_diagnosis: 96,
+              cancer_type_code: 'A11.1A',
+              number_lymph_nodes_examined: 2,
+              program_id: 'ABCD-EF',
+              submitter_donor_id: 'ICGC_0001',
+              tumour_staging_system: 'Murphy',
+            },
+          },
+        ],
         schemaMetadata: {
           isValid: false, // assume this is a donor that became invalid after a migration
           lastValidSchemaVersion: '0.1',
@@ -1732,16 +1763,34 @@ describe('Submission Api', () => {
             tumourNormalDesignation: 'Tumour',
             specimenType: 'Tumour',
             submitterId: 'ss123-sjdm-1',
-            clinicalInfo: {},
+            clinicalInfo: {
+              program_id: 'ABCD-EF',
+              submitter_donor_id: 'ICGC_0001',
+              submitter_specimen_id: 'ss123-sjdm-1',
+              // submitter_primary_diagnosis_id: 'P-1',
+              specimen_acquisition_interval: 200,
+              specimen_anatomic_location: 'Other',
+              central_pathology_confirmed: 'No',
+              tumour_histological_type: 'M-1111/22',
+              tumour_grading_system: 'Default',
+              tumour_grade: 'aStringValue',
+              pathological_tumour_staging_system: 'Murphy',
+              pathological_stage_group: 'aStringValue',
+              percent_proliferating_cells: 0.5,
+              percent_inflammatory_tissue: 0.6,
+              percent_stromal_cells: 0.65,
+              percent_necrosis: 0.65,
+              percent_tumour_cells: 0.5,
+            },
           },
         ],
         completionStats: {
           coreCompletion: {
             donor: 0,
-            primaryDiagnosis: 0,
+            primaryDiagnosis: 1,
             treatments: 1, // overridden stat
             followUps: 0,
-            specimens: 0,
+            specimens: 0.5,
           },
           overriddenCoreCompletion: ['treatments'],
         },
@@ -1767,7 +1816,7 @@ describe('Submission Api', () => {
           updatedDonor.schemaMetadata.isValid.should.eq(true);
           updatedDonor.completionStats.coreCompletion.should.deep.include({
             donor: 1,
-            primaryDiagnosis: 0,
+            primaryDiagnosis: 1,
             treatments: 1, // overridden field is same as before, despite no treatment record
             followUps: 0,
             specimens: 0.5, // one of the tumour/normal specimen has record
@@ -1904,21 +1953,22 @@ describe('Submission Api', () => {
           });
         })
         .end((err: any, res: any) => {
-          // array of file content (which are just the field headers for each clinical type)
-          const downloadedFiles: string[] = res.body
+          const downloadedFiles: Record<string, string> = {};
+          res.body
             .getEntries()
-            .map((fileEntry: any) => res.body.readAsText(fileEntry));
+            .map(
+              (fileEntry: any) =>
+                (downloadedFiles[fileEntry.entryName] = res.body.readAsText(fileEntry)),
+            );
 
-          const refFiles: string[] = refZip
+          const refFiles: Record<string, string> = {};
+          refZip
             .getEntries()
-            .map((fileEntry: any) => refZip.readAsText(fileEntry));
+            .forEach(
+              (fileEntry: any) => (refFiles[fileEntry.entryName] = refZip.readAsText(fileEntry)),
+            );
 
-          console.log(`Ref data is: [${refFiles}]`);
-          console.log(`Downloaded data is: [${downloadedFiles}]`);
-
-          refFiles.forEach(file => {
-            chai.expect(downloadedFiles).to.contain(file);
-          });
+          refFiles.should.deep.eq(downloadedFiles);
           return done();
         });
     });
@@ -2053,7 +2103,7 @@ function assertSameDonorWithoutGeneratedIds(actual: Donor, expected: Donor) {
       'sampleId',
       '__v',
       '_id',
-      'primaryDiagnosis',
+      'primaryDiagnoses',
       'updatedAt',
       'createdAt',
     ])
@@ -2081,6 +2131,7 @@ const comittedDonors2: Donor[] = [
       originalSchemaVersion: '1.0',
     },
     followUps: [],
+    primaryDiagnoses: [],
     treatments: [],
     gender: 'Male',
     submitterId: 'abcd-125',
@@ -2113,6 +2164,7 @@ const comittedDonors2: Donor[] = [
     followUps: [],
     treatments: [],
     gender: 'Female',
+    primaryDiagnoses: [],
     submitterId: 'abcd-126',
     programId: 'ABCD-EF',
     specimens: [
@@ -2157,6 +2209,7 @@ const comittedDonors2: Donor[] = [
     },
     followUps: [],
     treatments: [],
+    primaryDiagnoses: [],
     gender: 'Male',
     submitterId: 'abcd-127',
     programId: 'ABCD-EF',
@@ -2187,6 +2240,7 @@ const comittedDonors2: Donor[] = [
     },
     followUps: [],
     treatments: [],
+    primaryDiagnoses: [],
     gender: 'Female',
     submitterId: 'abcd-128',
     programId: 'ABCD-EF',
@@ -2232,6 +2286,7 @@ const comittedDonors2: Donor[] = [
     },
     followUps: [],
     treatments: [],
+    primaryDiagnoses: [],
     _id: '5d534820ae008e4dcb205274',
     gender: 'Female',
     submitterId: 'abcd-129',
@@ -2263,6 +2318,7 @@ const comittedDonors2: Donor[] = [
     },
     followUps: [],
     treatments: [],
+    primaryDiagnoses: [],
     gender: 'Male',
     submitterId: 'abcd-200',
     programId: 'ABCD-EF',

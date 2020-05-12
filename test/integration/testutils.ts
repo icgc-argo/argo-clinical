@@ -100,6 +100,7 @@ export const emptyDonorDocument = (overrides?: Partial<Donor>) => {
     clinicalInfo: {},
     createdAt: undefined,
     followUps: [],
+    primaryDiagnoses: [],
     treatments: [],
   };
   if (!overrides) {

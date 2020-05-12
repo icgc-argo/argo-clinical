@@ -31,7 +31,7 @@ export const validate = async (
 
   // order is important here if the previous treatment is good we take time
   // to validate therapies
-  const validateTherapies = errors.length > 0;
+  const validateTherapies = errors.length == 0;
   if (validateTherapies) {
     for (const therapyName of ClinicalTherapySchemaNames) {
       checkTherapyFileNeeded(treatmentRecord, mergedDonor, therapyName, errors);

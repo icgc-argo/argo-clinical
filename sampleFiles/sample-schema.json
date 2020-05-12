@@ -460,7 +460,7 @@
               },
               "restrictions": {
                 "required": true,
-                "regex": "#/regex/submitter_id"
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -1781,7 +1781,7 @@
                 "primaryId": true
               },
               "restrictions": {
-                "regex": "#/regex/submitter_id"
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -1793,7 +1793,7 @@
                 "displayName": "Submitter Treatment ID"
               },
               "restrictions": {
-                "regex": "#/regex/submitter_id"
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
