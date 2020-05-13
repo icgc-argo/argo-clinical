@@ -1,9 +1,5 @@
 import { SubmissionValidationError, SubmittedClinicalRecord } from '../submission-entities';
-import {
-  ClinicalEntitySchemaNames,
-  FollowupFieldsEnum,
-  PrimaryDiagnosisFieldsEnum,
-} from '../../common-model/entities';
+import { ClinicalEntitySchemaNames, PrimaryDiagnosisFieldsEnum } from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
 import _ from 'lodash';
@@ -22,7 +18,7 @@ export const validate = async (
   const errors: SubmissionValidationError[] = [];
   const primaryDiagnosisClinicalInfo = getExisting(existentDonor, primaryDiagnosisRecord);
 
-  // adding new follow up to this donor ?
+  // adding new primary diagnosis to this donor ?
   if (!primaryDiagnosisClinicalInfo) {
     // check it is unique in this program
     await checkClinicalEntityDoesntBelongToOtherDonor(
