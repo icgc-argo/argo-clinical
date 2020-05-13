@@ -5,8 +5,8 @@ import {
   PrimaryDiagnosisFieldsEnum,
   CommonTherapyFields,
   TherapyRxNormFields,
-} from '../../../src/submission/submission-entities';
-import { DonorFieldsEnum } from '../../../src/submission/submission-entities';
+  DonorFieldsEnum,
+} from '../../../src/common-model/entities';
 import { SampleRegistrationFieldsEnum } from '../../../src/submission/submission-entities';
 import {
   SchemasDictionary,
@@ -15,7 +15,7 @@ import {
 import {
   DictionaryMigration,
   MigrationStage,
-} from '../../../src/submission/schema/migration-entities';
+} from '../../../src/submission/migration/migration-entities';
 import { Donor } from '../../../src/clinical/clinical-entities';
 import { getInstance } from '../../../src/submission/submission-updates-messenger';
 
@@ -576,7 +576,7 @@ describe('schema migration api', () => {
 const migrateSyncTo = async (newSchemaVersion: string) => {
   return chai
     .request(app)
-    .patch('/submission/schema/?sync=true')
+    .post('/dictionary/migration/run?sync=true')
     .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
     .send({
       version: newSchemaVersion,
@@ -586,7 +586,7 @@ const migrateSyncTo = async (newSchemaVersion: string) => {
 const dryRunMigrateTo = async (newSchemaVersion: string) => {
   return chai
     .request(app)
-    .post('/submission/schema/dry-run-update')
+    .post('/dictionary/migration/dry-run-update')
     .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
     .send({
       version: newSchemaVersion,
@@ -596,6 +596,6 @@ const dryRunMigrateTo = async (newSchemaVersion: string) => {
 const getAllMigrationDocs = async () => {
   return await chai
     .request(app)
-    .get('/submission/schema/migration')
+    .get('/dictionary/migration')
     .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' });
 };

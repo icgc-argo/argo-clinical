@@ -3,7 +3,7 @@ import {
   DonorFieldsEnum,
   FollowupFieldsEnum,
   TreatmentFieldsEnum,
-} from '../../../src/submission/submission-entities';
+} from '../../../src/common-model/entities';
 
 /**
  * strongly typed stubs file!!

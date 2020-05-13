@@ -33,18 +33,20 @@ import {
   SUBMISSION_STATE,
   DataValidationErrors,
   SubmissionBatchErrorTypes,
+  ClinicalEntities,
+} from '../../../src/submission/submission-entities';
+import {
   ClinicalEntitySchemaNames,
   DonorFieldsEnum,
   ClinicalUniqueIdentifier,
-  ClinicalEntities,
-} from '../../../src/submission/submission-entities';
+} from '../../../src/common-model/entities';
 import { TsvUtils } from '../../../src/utils';
 import { donorDao } from '../../../src/clinical/donor-repo';
-import { Donor, Specimen } from '../../../src/clinical/clinical-entities';
+import { Donor } from '../../../src/clinical/clinical-entities';
 import AdmZip from 'adm-zip';
 import _ from 'lodash';
 import chaiExclude from 'chai-exclude';
-import { HostPortWaitStrategy } from 'testcontainers/dist/wait-strategy';
+
 chai.use(require('chai-http'));
 chai.use(require('deep-equal-in-any-order'));
 chai.use(chaiExclude);
@@ -104,7 +106,7 @@ describe('Submission Api', () => {
             return '';
           },
           schemaServiceUrl() {
-            return `file://${__dirname}/stub-schema.json`;
+            return `file://${__dirname}/../stub-schema.json`;
           },
           testApisDisabled() {
             return false;
@@ -1863,7 +1865,7 @@ describe('Submission Api', () => {
       console.log("Getting template for '" + name + "'...");
       chai
         .request(app)
-        .get('/submission/schema/template/' + name)
+        .get('/dictionary/template/' + name)
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .end((err: any, res: any) => {
           res.should.have.status(200);
@@ -1887,7 +1889,7 @@ describe('Submission Api', () => {
       }
       chai
         .request(app)
-        .get('/submission/schema/template/all')
+        .get('/dictionary/template/all')
         .buffer()
         // parse: collects data and creates AdmZip object (made wth buffered data) in res.body
         .parse((res: any, callBack: any) => {
@@ -1924,7 +1926,7 @@ describe('Submission Api', () => {
       console.log("Getting template for '" + name + "'...");
       chai
         .request(app)
-        .get('/submission/schema/template/' + name)
+        .get('/dictionary/template/' + name)
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .end((err: any, res: any) => {
           res.should.have.status(404);
@@ -1939,7 +1941,7 @@ describe('Submission Api', () => {
       console.log("Getting template for '" + name + "'...");
       chai
         .request(app)
-        .get('/submission/schema/template/' + name)
+        .get('/dictionary/template/' + name)
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .end((err: any, res: any) => {
           res.should.have.status(404);

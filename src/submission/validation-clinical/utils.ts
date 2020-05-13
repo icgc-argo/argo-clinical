@@ -6,20 +6,22 @@ import {
   ModificationType,
   SubmissionValidationUpdate,
   RecordValidationResult,
-  ClinicalEntitySchemaNames,
   SubmittedClinicalRecordsMap,
+  TreatmentTypeValuesMappedByTherapy,
+} from '../submission-entities';
+import {
+  ClinicalEntitySchemaNames,
   ClinicalUniqueIdentifier,
   DonorFieldsEnum,
   ClinicalFields,
-  TreatmentTypeValuesMappedByTherapy,
   ClinicalTherapyType,
-} from '../submission-entities';
+} from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
 import { validationErrorMessage } from '../submission-error-messages';
 import _ from 'lodash';
 import { DataRecord } from '../../lectern-client/schema-entities';
 import { Donor, ClinicalInfo } from '../../clinical/clinical-entities';
-import { getSingleClinicalEntityFromDonorBySchemanName } from '../submission-to-clinical/submission-to-clinical';
+import { getSingleClinicalEntityFromDonorBySchemanName } from '../../common-model/functions';
 import { donorDao } from '../../clinical/donor-repo';
 
 export const buildSubmissionError = (

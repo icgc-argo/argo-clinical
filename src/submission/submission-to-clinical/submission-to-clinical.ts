@@ -3,13 +3,7 @@
  * to the clinical model, somehow as set of ETL operations.
  */
 import { DeepReadonly } from 'deep-freeze';
-import {
-  Donor,
-  Specimen,
-  Sample,
-  SchemaMetadata,
-  ClinicalInfo,
-} from '../../clinical/clinical-entities';
+import { Donor, Specimen, Sample, SchemaMetadata } from '../../clinical/clinical-entities';
 import {
   ActiveClinicalSubmission,
   ActiveSubmissionIdentifier,
@@ -19,20 +13,16 @@ import {
   SubmittedRegistrationRecord,
   SampleRegistrationFieldsEnum,
   SUBMISSION_STATE,
-  ClinicalEntitySchemaNames,
-  ClinicalUniqueIdentifier,
-  ClinicalTherapySchemaNames,
-  DonorFieldsEnum,
 } from '../submission-entities';
 
-import { Errors, notEmpty } from '../../utils';
+import { Errors } from '../../utils';
 import { donorDao, FindByProgramAndSubmitterFilter, DONOR_FIELDS } from '../../clinical/donor-repo';
 import _ from 'lodash';
 import { F } from '../../utils';
 import { registrationRepository } from '../registration-repo';
 import { submissionRepository } from '../submission-repo';
 import { mergeActiveSubmissionWithDonors } from './merge-submission';
-import * as schemaManager from '../schema/schema-manager';
+import * as dictionaryManager from '../../dictionary/manager';
 import { loggerFor } from '../../logger';
 const L = loggerFor(__filename);
 import {
@@ -133,14 +123,16 @@ const performCommitSubmission = async (
   updatedDonorDTOs.forEach(ud => {
     if (ud.schemaMetadata.isValid === false) {
       L.debug('Donor is invalid, revalidating if valid now');
-      const isValid = schemaManager.revalidateAllDonorClinicalEntitiesAgainstSchema(
+      const isValid = dictionaryManager.revalidateAllDonorClinicalEntitiesAgainstSchema(
         ud,
-        schemaManager.instance().getCurrent(),
+        dictionaryManager.instance().getCurrent(),
       );
       if (isValid) {
         L.info(`donor ${ud._id} is now valid`);
         ud.schemaMetadata.isValid = true;
-        ud.schemaMetadata.lastValidSchemaVersion = schemaManager.instance().getCurrent().version;
+        ud.schemaMetadata.lastValidSchemaVersion = dictionaryManager
+          .instance()
+          .getCurrent().version;
         // recalculate the donors stats
         verifiedDonorDTOs.push(recalculateDonorStatsHoldOverridden(ud));
         return;
@@ -405,91 +397,6 @@ const sendMessageOnUpdatesFromClinicalSubmission = async (
     await messenger.getInstance().sendProgramUpdatedMessage(submission.programId);
   }
 };
-
-export function getSingleClinicalObjectFromDonor(
-  donor: DeepReadonly<Donor>,
-  clinicalEntitySchemaName: ClinicalEntitySchemaNames,
-  constraints: object, // similar to mongo filters, e.g. {submitted_donor_id: 'DR_01'}
-) {
-  const entities = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName);
-  return _.find(entities, constraints);
-}
-
-export function getClinicalObjectsFromDonor(
-  donor: DeepReadonly<Donor>,
-  clinicalEntitySchemaName: ClinicalEntitySchemaNames,
-) {
-  if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.DONOR) {
-    return [donor];
-  }
-
-  if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.SPECIMEN) {
-    return donor.specimens;
-  }
-
-  if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS) {
-    if (donor.primaryDiagnosis) {
-      return [donor.primaryDiagnosis];
-    }
-  }
-
-  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.TREATMENT) {
-    if (donor.treatments) {
-      return donor.treatments;
-    }
-  }
-
-  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.FOLLOW_UP) {
-    if (donor.followUps) {
-      return donor.followUps;
-    }
-  }
-
-  if (ClinicalTherapySchemaNames.find(tsn => tsn === clinicalEntitySchemaName)) {
-    if (donor.treatments) {
-      return donor.treatments
-        .map(tr => tr.therapies.filter(th => th.therapyType === clinicalEntitySchemaName))
-        .flat()
-        .filter(notEmpty);
-    }
-  }
-  return [];
-}
-
-export function getClinicalEntitiesFromDonorBySchemaName(
-  donor: DeepReadonly<Donor>,
-  clinicalEntitySchemaName: ClinicalEntitySchemaNames,
-): ClinicalInfo[] {
-  const result = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName) as any[];
-
-  const clinicalRecords = result
-    .map((e: any) => {
-      if (e.clinicalInfo) {
-        return e.clinicalInfo as ClinicalInfo;
-      }
-    })
-    .filter(notEmpty);
-  return clinicalRecords;
-}
-
-export function getSingleClinicalEntityFromDonorBySchemanName(
-  donor: DeepReadonly<Donor>,
-  clinicalEntityType: ClinicalEntitySchemaNames,
-  clinicalInfoRef: ClinicalInfo, // this function will use the values of the clinicalInfoRef that are needed to uniquely find a clinical info
-): ClinicalInfo | undefined {
-  if (clinicalEntityType === ClinicalEntitySchemaNames.REGISTRATION) {
-    throw new Error('Sample_registration has no clincal info to return');
-  }
-  const uniqueIdNames: string[] = _.concat([], ClinicalUniqueIdentifier[clinicalEntityType]);
-  if (_.isEmpty(uniqueIdNames)) {
-    throw new Error("illegale state, couldn't find entity id field name");
-  }
-  const constraints: ClinicalInfo = {};
-  uniqueIdNames.forEach(idN => (constraints[idN] = clinicalInfoRef[idN]));
-
-  const clinicalInfos = getClinicalEntitiesFromDonorBySchemaName(donor, clinicalEntityType);
-  return _(clinicalInfos).find(constraints);
-}
 
 export interface CreateDonorSampleDto {
   gender: string;

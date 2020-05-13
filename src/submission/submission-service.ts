@@ -35,16 +35,13 @@ import {
   SubmissionBatchErrorTypes,
   ValidateSubmissionResult,
   NewClinicalEntities,
-  ClinicalEntitySchemaNames,
   BatchNameRegex,
   ClinicalSubmissionRecordsByDonorIdMap,
   RevalidateClinicalSubmissionCommand,
   LegacyICGCImportRecord,
-  TherapyRxNormFields,
   DataValidationErrors,
-  DonorFieldsEnum,
 } from './submission-entities';
-import * as schemaManager from './schema/schema-manager';
+import * as dictionaryManager from '../dictionary/manager';
 import {
   SchemaValidationError,
   TypedDataRecord,
@@ -53,15 +50,7 @@ import {
   SchemasDictionary,
 } from '../lectern-client/schema-entities';
 import { loggerFor } from '../logger';
-import {
-  Errors,
-  F,
-  isStringMatchRegex,
-  toString,
-  isEmptyString,
-  isNotEmptyString,
-  isNotAbsent,
-} from '../utils';
+import { Errors, F, isStringMatchRegex, toString, isEmptyString, isNotAbsent } from '../utils';
 import { DeepReadonly } from 'deep-freeze';
 import { submissionRepository } from './submission-repo';
 import { v1 as uuid } from 'uuid';
@@ -73,6 +62,12 @@ import {
   ClinicalSubmissionRecordsOperations,
   usingInvalidProgramId,
 } from './validation-clinical/utils';
+import {
+  ClinicalEntitySchemaNames,
+  DonorFieldsEnum,
+  TherapyRxNormFields,
+} from '../common-model/entities';
+
 const L = loggerFor(__filename);
 
 const emptyStats = {
@@ -124,7 +119,7 @@ export namespace operations {
     // a loop that async loops through all records
     await Promise.all(
       command.records.map(async (r, index) => {
-        const schemaResult = await schemaManager
+        const schemaResult = await dictionaryManager
           .instance()
           .processAsync(ClinicalEntitySchemaNames.REGISTRATION, r, index);
 
@@ -217,7 +212,7 @@ export namespace operations {
     const stats = calculateUpdates(registrationRecords, allDonorsMap);
 
     // save the new registration object
-    const schemaVersion = schemaManager.instance().getCurrent().version;
+    const schemaVersion = dictionaryManager.instance().getCurrent().version;
     const registration = toActiveRegistration(command, registrationRecords, stats, schemaVersion);
     const savedRegistration = await registrationRepository.create(registration);
     return F({
@@ -368,7 +363,7 @@ export namespace operations {
           programId: command.programId,
           clinicalType: clinicalType,
         },
-        schemaManager.instance().getCurrent(),
+        dictionaryManager.instance().getCurrent(),
       );
 
       // because there was a requirement to not keep an open empty submission
@@ -828,7 +823,9 @@ export namespace operations {
     await Promise.all(
       command.records.map(async (record, index) => {
         let processedRecord: any = {};
-        const schemaResult = schemaManager.instance().process(schemaName, record, index, schema);
+        const schemaResult = dictionaryManager
+          .instance()
+          .process(command.clinicalType, record, index, schema);
 
         if (schemaResult.validationErrors.length > 0) {
           errorsAccumulator = errorsAccumulator.concat(
@@ -1063,7 +1060,7 @@ export namespace operations {
         continue;
       }
       const commonFieldNamesSet = new Set(newClinicalEnity.fieldNames);
-      const clinicalFieldNamesByPriorityMap = schemaManager
+      const clinicalFieldNamesByPriorityMap = dictionaryManager
         .instance()
         .getSchemaFieldNamesWithPriority(clinicalType);
       const missingFields: string[] = [];
@@ -1169,8 +1166,8 @@ export namespace operations {
   export async function adminAddDonors(donors: Donor[]) {
     const schemaMetadata: SchemaMetadata = {
       isValid: true,
-      lastValidSchemaVersion: schemaManager.instance().getCurrent().version,
-      originalSchemaVersion: schemaManager.instance().getCurrent().version,
+      lastValidSchemaVersion: dictionaryManager.instance().getCurrent().version,
+      originalSchemaVersion: dictionaryManager.instance().getCurrent().version,
     };
 
     donors.forEach((d: any) => {

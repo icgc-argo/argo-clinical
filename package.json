@@ -1,6 +1,6 @@
 {
   "name": "argo-clinical",
-  "version": "1.16.0",
+  "version": "1.17.0",
   "description": "Clinical submission system and repo",
   "scripts": {
     "start": "npm run serve",
@@ -36,15 +36,16 @@
   },
   "homepage": "https://github.com/icgc-argo/argo-clinical#readme",
   "devDependencies": {
-    "@types/adm-zip": "^0.4.32",
+    "@types/adm-zip": "^0.4.33",
     "@types/async": "^3.0.0",
     "@types/bcrypt-nodejs": "^0.0.30",
     "@types/bluebird": "^3.5.27",
     "@types/body-parser": "^1.17.0",
-    "@types/chai": "^4.1.7",
+    "@types/chai": "^4.2.11",
     "@types/chai-http": "^4.2.0",
     "@types/compression": "^0.0.36",
     "@types/connect-mongo": "^0.0.42",
+    "@types/deep-equal-in-any-order": "^1.0.1",
     "@types/deep-freeze": "^0.1.1",
     "@types/dockerode": "^2.5.20",
     "@types/dotenv": "^6.1.1",

@@ -14,16 +14,16 @@ import {
   RegistrationToCreateRegistrationFieldsMap,
   RecordValidationResult,
   ClinicalTypeValidateResult,
-  ClinicalEntitySchemaNames,
-  ClinicalUniqueIdentifier,
   ClinicalSubmissionRecordsByDonorIdMap,
   SubmittedClinicalRecordsMap,
+  IdToIndexMap,
+} from '../submission-entities';
+import {
+  ClinicalEntitySchemaNames,
+  ClinicalUniqueIdentifier,
   DonorFieldsEnum,
   ClinicalFields,
-  IdToIndexMap,
-  TherapyRxNormFields,
-  SubmittedClinicalRecord,
-} from '../submission-entities';
+} from '../../common-model/entities';
 import { donorDao } from '../../clinical/donor-repo';
 import { DeepReadonly } from 'deep-freeze';
 import { DataRecord } from '../../lectern-client/schema-entities';
