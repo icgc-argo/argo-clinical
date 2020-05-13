@@ -3,15 +3,13 @@ import mongoose from 'mongoose';
 import { DeepReadonly } from 'deep-freeze';
 import { F, MongooseUtils, notEmpty } from '../utils';
 import { loggerFor } from '../logger';
-import { ClinicalEntitySchemaNames } from '../common-model/entities';
-
 export const SUBMITTER_ID = 'submitterId';
 export const SPECIMEN_SUBMITTER_ID = 'specimen.submitterId';
 export const SPECIMEN_SAMPLE_SUBMITTER_ID = 'specimen.sample.submitterId';
 const L = loggerFor(__filename);
 const AutoIncrement = require('mongoose-sequence')(mongoose);
 
-export enum DONOR_FIELDS {
+export enum DONOR_DOCUMENT_FIELDS {
   SUBMITTER_ID = 'submitterId',
   DONOR_ID = 'donorId',
   SPECIMEN_SUBMITTER_ID = 'specimens.submitterId',
@@ -25,12 +23,8 @@ export enum DONOR_FIELDS {
   SPECIMEN_TYPE = 'specimens.specimenType',
   SPECIMEN_TUMOR_NORMAL_DESIGNATION = 'specimens.tumourNormalDesignation',
   SAMPLE_TYPE = 'specimens.samples.sampleType',
+  PRIMARY_DIAGNOSIS_SUBMITTER_ID = 'primaryDiagnoses.clinicalInfo.submitter_primary_diagnosis_id',
 }
-
-const ClinicalEntitySchemaNameToDonoFieldsMap: { [clinicalType: string]: DONOR_FIELDS } = {
-  [ClinicalEntitySchemaNames.TREATMENT]: DONOR_FIELDS.TREATMENT_SUBMITTER_ID,
-  [ClinicalEntitySchemaNames.FOLLOW_UP]: DONOR_FIELDS.FOLLOWUP_SUBMITTER_ID,
-};
 
 export type FindByProgramAndSubmitterFilter = DeepReadonly<{
   programId: string;
@@ -40,13 +34,13 @@ export type FindByProgramAndSubmitterFilter = DeepReadonly<{
 export interface DonorRepository {
   findByClinicalEntitySubmitterIdAndProgramId(
     filters: DeepReadonly<FindByProgramAndSubmitterFilter>,
-    clinicalEntityType: ClinicalEntitySchemaNames,
+    submitterIdFieldName: DONOR_DOCUMENT_FIELDS,
   ): Promise<DeepReadonly<Donor> | undefined>;
   insertDonors(donors: Donor[]): Promise<void>;
   findBy(criteria: any, limit: number): Promise<DeepReadonly<Donor[]>>;
   findByProgramId(
     programId: string,
-    projections?: Partial<Record<DONOR_FIELDS, number>>,
+    projections?: Partial<Record<DONOR_DOCUMENT_FIELDS, number>>,
     omitMongoDocIds?: boolean,
   ): Promise<DeepReadonly<Donor[]>>;
   deleteByProgramId(programId: string): Promise<void>;
@@ -80,7 +74,7 @@ export const donorDao: DonorRepository = {
 
   async deleteByProgramId(programId: string): Promise<void> {
     await DonorModel.deleteMany({
-      [DONOR_FIELDS.PROGRAM_ID]: programId,
+      [DONOR_DOCUMENT_FIELDS.PROGRAM_ID]: programId,
     }).exec();
   },
 
@@ -99,7 +93,7 @@ export const donorDao: DonorRepository = {
 
   async findByProgramId(
     programId: string,
-    projection?: Partial<Record<DONOR_FIELDS, number>>,
+    projection?: Partial<Record<DONOR_DOCUMENT_FIELDS, number>>,
     omitMongoDocIds?: boolean,
   ): Promise<DeepReadonly<Donor[]>> {
     if (omitMongoDocIds) {
@@ -108,10 +102,10 @@ export const donorDao: DonorRepository = {
 
     const result = await DonorModel.find(
       {
-        [DONOR_FIELDS.PROGRAM_ID]: programId,
+        [DONOR_DOCUMENT_FIELDS.PROGRAM_ID]: programId,
       },
       projection,
-      { sort: { [DONOR_FIELDS.DONOR_ID]: 1 } },
+      { sort: { [DONOR_DOCUMENT_FIELDS.DONOR_ID]: 1 } },
     ).exec();
 
     // convert the id to string to avoid runtime error on freezing
@@ -127,8 +121,8 @@ export const donorDao: DonorRepository = {
     filter: FindByProgramAndSubmitterFilter,
   ): Promise<DeepReadonly<Donor> | undefined> {
     const result = await DonorModel.find({
-      [DONOR_FIELDS.SPECIMEN_SUBMITTER_ID]: filter.submitterId,
-      [DONOR_FIELDS.PROGRAM_ID]: filter.programId,
+      [DONOR_DOCUMENT_FIELDS.SPECIMEN_SUBMITTER_ID]: filter.submitterId,
+      [DONOR_DOCUMENT_FIELDS.PROGRAM_ID]: filter.programId,
     }).exec();
     if (!result) {
       return undefined;
@@ -146,8 +140,8 @@ export const donorDao: DonorRepository = {
     filter: FindByProgramAndSubmitterFilter,
   ): Promise<DeepReadonly<Donor> | undefined> {
     const result = await DonorModel.find({
-      [DONOR_FIELDS.SPECIMEN_SAMPLE_SUBMITTER_ID]: filter.submitterId,
-      [DONOR_FIELDS.PROGRAM_ID]: filter.programId,
+      [DONOR_DOCUMENT_FIELDS.SPECIMEN_SAMPLE_SUBMITTER_ID]: filter.submitterId,
+      [DONOR_DOCUMENT_FIELDS.PROGRAM_ID]: filter.programId,
     }).exec();
 
     if (!result) {
@@ -165,11 +159,11 @@ export const donorDao: DonorRepository = {
 
   async findByClinicalEntitySubmitterIdAndProgramId(
     filter: DeepReadonly<FindByProgramAndSubmitterFilter>,
-    clinicalEntityType: ClinicalEntitySchemaNames,
+    submitterIdFieldName: DONOR_DOCUMENT_FIELDS,
   ): Promise<DeepReadonly<Donor> | undefined> {
     const result = await DonorModel.find({
-      [ClinicalEntitySchemaNameToDonoFieldsMap[clinicalEntityType]]: filter.submitterId,
-      [DONOR_FIELDS.PROGRAM_ID]: filter.programId,
+      [submitterIdFieldName]: filter.submitterId,
+      [DONOR_DOCUMENT_FIELDS.PROGRAM_ID]: filter.programId,
     }).exec();
 
     if (!result) {
@@ -260,14 +254,14 @@ export const donorDao: DonorRepository = {
 // Like findByProgramId, but DocQuery asks mongo to return PoJo without docIds for faster fetch
 async function findByProgramIdOmitMongoDocId(
   programId: string,
-  projection?: Partial<Record<DONOR_FIELDS, number>>,
+  projection?: Partial<Record<DONOR_DOCUMENT_FIELDS, number>>,
 ): Promise<DeepReadonly<Donor[]>> {
   const result = await DonorModel.find(
     {
-      [DONOR_FIELDS.PROGRAM_ID]: programId,
+      [DONOR_DOCUMENT_FIELDS.PROGRAM_ID]: programId,
     },
     projection,
-    { sort: { [DONOR_FIELDS.DONOR_ID]: 1 } },
+    { sort: { [DONOR_DOCUMENT_FIELDS.DONOR_ID]: 1 } },
   )
     .select('-_id') // don't select '_id' so F() doesn't crash
     .lean() // ask mongo to return pojo only
@@ -338,7 +332,7 @@ const DonorSchema = new mongoose.Schema(
     programId: { type: String, required: true },
     specimens: [SpecimenSchema],
     clinicalInfo: {},
-    primaryDiagnosis: PrimaryDiagnosisSchema,
+    primaryDiagnoses: [PrimaryDiagnosisSchema],
     followUps: [FollowUpSchema],
     treatments: [TreatmentSchema],
     schemaMetadata: {},

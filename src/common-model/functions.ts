@@ -4,6 +4,7 @@ import {
   ClinicalEntitySchemaNames,
   ClinicalUniqueIdentifier,
   ClinicalTherapySchemaNames,
+  ClinicalFields,
 } from './entities';
 import _ from 'lodash';
 import { notEmpty } from '../utils';
@@ -30,8 +31,8 @@ export function getClinicalObjectsFromDonor(
   }
 
   if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS) {
-    if (donor.primaryDiagnosis) {
-      return [donor.primaryDiagnosis];
+    if (donor.primaryDiagnoses) {
+      return donor.primaryDiagnoses;
     }
   }
 
@@ -91,4 +92,8 @@ export function getSingleClinicalEntityFromDonorBySchemanName(
 
   const clinicalInfos = getClinicalEntitiesFromDonorBySchemaName(donor, clinicalEntityType);
   return _(clinicalInfos).find(constraints);
+}
+
+export function getEntitySubmitterIdFieldName(entityName: ClinicalEntitySchemaNames) {
+  return `submitter_${entityName}_id` as string;
 }
