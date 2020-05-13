@@ -6,21 +6,30 @@ import {
   ModificationType,
   SubmissionValidationUpdate,
   RecordValidationResult,
-  ClinicalEntitySchemaNames,
   SubmittedClinicalRecordsMap,
+  TreatmentTypeValuesMappedByTherapy,
+} from '../submission-entities';
+import {
+  ClinicalEntitySchemaNames,
   ClinicalUniqueIdentifier,
   DonorFieldsEnum,
   ClinicalFields,
-  TreatmentTypeValuesMappedByTherapy,
   ClinicalTherapyType,
-} from '../submission-entities';
+  PrimaryDiagnosisFieldsEnum,
+  TreatmentFieldsEnum,
+} from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
 import { validationErrorMessage } from '../submission-error-messages';
 import _ from 'lodash';
 import { DataRecord } from '../../lectern-client/schema-entities';
 import { Donor, ClinicalInfo } from '../../clinical/clinical-entities';
-import { getSingleClinicalEntityFromDonorBySchemanName } from '../submission-to-clinical/submission-to-clinical';
-import { donorDao } from '../../clinical/donor-repo';
+import {
+  getSingleClinicalEntityFromDonorBySchemanName,
+  getSingleClinicalObjectFromDonor,
+  getEntitySubmitterIdFieldName,
+} from '../../common-model/functions';
+import { donorDao, DONOR_DOCUMENT_FIELDS } from '../../clinical/donor-repo';
+import { isEmptyString } from '../../utils';
 
 export const buildSubmissionError = (
   newRecord: SubmittedClinicalRecord,
@@ -295,6 +304,13 @@ export function treatmentTypeNotMatchTherapyType(
   return !TreatmentTypeValuesMappedByTherapy[therapyType].some(ttv => ttv === treatmentType);
 }
 
+const ClinicalEntitySchemaNameToDonoFieldsMap: { [clinicalType: string]: DONOR_DOCUMENT_FIELDS } = {
+  [ClinicalEntitySchemaNames.TREATMENT]: DONOR_DOCUMENT_FIELDS.TREATMENT_SUBMITTER_ID,
+  [ClinicalEntitySchemaNames.FOLLOW_UP]: DONOR_DOCUMENT_FIELDS.FOLLOWUP_SUBMITTER_ID,
+  [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]:
+    DONOR_DOCUMENT_FIELDS.PRIMARY_DIAGNOSIS_SUBMITTER_ID,
+};
+
 // check that a donor is not found with the same clinical entity unique identifier
 export async function checkClinicalEntityDoesntBelongToOtherDonor(
   clinicalType: Exclude<
@@ -311,7 +327,7 @@ export async function checkClinicalEntityDoesntBelongToOtherDonor(
       programId: existentDonor.programId,
       submitterId: record[ClinicalUniqueIdentifier[clinicalType]] as string,
     },
-    clinicalType,
+    ClinicalEntitySchemaNameToDonoFieldsMap[clinicalType],
   );
   if (alreadyAssociatedDonor && alreadyAssociatedDonor.submitterId !== expectedSubmitterDonorId) {
     errors.push(
@@ -352,6 +368,63 @@ export function getAtPath(object: any, nodes: any[]) {
   });
 
   return objectAtNode || {};
+}
+
+export function checkRelatedEntityExists(
+  entity: ClinicalEntitySchemaNames,
+  record: SubmittedClinicalRecord,
+  mergedDonor: Donor,
+  errors: SubmissionValidationError[],
+  required: boolean,
+) {
+  const entitySubmitterIdField = getEntitySubmitterIdFieldName(entity);
+  const error = buildSubmissionError(
+    record,
+    DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
+    entitySubmitterIdField as ClinicalFields,
+    {
+      missingField: [entity + '.' + entitySubmitterIdField],
+    },
+  );
+
+  if (!required && isEmptyString(record[entitySubmitterIdField] as string)) {
+    return;
+  }
+
+  if (required && isEmptyString(record[entitySubmitterIdField] as string)) {
+    errors.push(error);
+    return;
+  }
+
+  const relatedEntity = getRelatedEntityByFK(
+    entity,
+    record[entitySubmitterIdField] as string,
+    mergedDonor,
+  );
+
+  if (!relatedEntity) {
+    errors.push(error);
+  }
+}
+
+function getRelatedEntityByFK(
+  relatedEntityName: ClinicalEntitySchemaNames,
+  fk: string,
+  mergedDonor: Donor,
+) {
+  if (
+    relatedEntityName == ClinicalEntitySchemaNames.REGISTRATION ||
+    relatedEntityName == ClinicalEntitySchemaNames.CHEMOTHERAPY ||
+    relatedEntityName == ClinicalEntitySchemaNames.RADIATION ||
+    relatedEntityName == ClinicalEntitySchemaNames.HORMONE_THERAPY
+  ) {
+    throw new Error('method only supports single submitterId as FK');
+  }
+
+  const entity = getSingleClinicalObjectFromDonor(mergedDonor, relatedEntityName, {
+    clinicalInfo: { [ClinicalUniqueIdentifier[relatedEntityName]]: fk as string },
+  });
+  return entity;
 }
 
 export function getValuesFromRecordOrClinicalInfo(

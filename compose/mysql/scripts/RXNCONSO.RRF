@@ -1,0 +1,126 @@
+3|ENG||||||8717795||58488005||SNOMEDCT_US|PT|58488005|1,4-alpha-Glucan branching enzyme||N||
+3|ENG||||||8717796||58488005||SNOMEDCT_US|FN|58488005|1,4-alpha-Glucan branching enzyme (substance)||N||
+3|ENG||||||8717808||58488005||SNOMEDCT_US|SY|58488005|Amylo-(1,4,6)-transglycosylase||N||
+3|ENG||||||8718164||58488005||SNOMEDCT_US|SY|58488005|Branching enzyme||N||
+19|ENG||||||10794494||112116001||SNOMEDCT_US|SY|112116001|17-hydrocorticosteroid||N||
+19|ENG||||||10794495||112116001||SNOMEDCT_US|SY|112116001|17-hydroxycorticoid||N||
+19|ENG||||||10794496||112116001||SNOMEDCT_US|PT|112116001|17-hydroxycorticosteroid||N||
+19|ENG||||||10794497||112116001||SNOMEDCT_US|FN|112116001|17-hydroxycorticosteroid (substance)||N||
+21|ENG||||||11823621||||SNOMEDCT_US|PT|46120009|17-ketosteroid||N||
+21|ENG||||||11823622||||SNOMEDCT_US|FN|46120009|17-ketosteroid (substance)||N||
+21|ENG||||||11823623||||SNOMEDCT_US|SY|46120009|17-oxosteroid||N||
+22|ENG||||||10794434||103034000||SNOMEDCT_US|SY|103034000|11-beta,18,21-trihydroxypregn-4-ene-3,20-dione||N||
+22|ENG||||||10794513||103034000||SNOMEDCT_US|PT|103034000|18-hydroxycorticosterone||N||
+22|ENG||||||10794514||103034000||SNOMEDCT_US|FN|103034000|18-hydroxycorticosterone (substance)||N||
+33|ENG||||||10794594||37850005||SNOMEDCT_US|PT|37850005|2-acetolactate mutase||N||
+33|ENG||||||10794595||37850005||SNOMEDCT_US|FN|37850005|2-acetolactate mutase (substance)||N||
+36|ENG||||||10794609||95984008||SNOMEDCT_US|SY|95984008|2-aminoadipic acid||N||
+36|ENG||||||10796079||95984008||SNOMEDCT_US|PT|95984008|Alpha-aminoadipic acid||N||
+36|ENG||||||10796080||95984008||SNOMEDCT_US|FN|95984008|Alpha-aminoadipic acid (substance)||N||
+38|ENG||||||8056626||M0002947|D001971|MSH|PEP|D001971|Parlodel||N||
+38|ENG||||||828||||MMSL|BN|3355|Parlodel||N||
+38|ENG||||||829|829|38||RXNORM|BN|38|Parlodel||N|4096|
+43|ENG||||||10794695||16458008||SNOMEDCT_US|PT|16458008|2-isopropylmalate synthase||N||
+43|ENG||||||10794696||16458008||SNOMEDCT_US|FN|16458008|2-isopropylmalate synthase (substance)||N||
+44|ENG||||||10283027||||USP|IN|m49500|Mesna||N||
+44|ENG||||||10325757||||GS|IN|1950|Mesna||N||
+44|ENG||||||10806824||108821000||SNOMEDCT_US|PT|108821000|Mesna-containing product||N||
+44|ENG||||||10820779||386922000||SNOMEDCT_US|SY|386922000|Sodium 2-mercaptoethanesulfonate||N||
+44|ENG||||||2072248||||VANDF|IN|4019477|MESNA||N||
+44|ENG||||||2798745||||MTHSPL|SU|NR7O1405Q9|mesna||N|4096|
+44|ENG||||||2982613||||MTHSPL|SU|NR7O1405Q9|MESNA||N|4096|
+44|ENG||||||3811408||||NDDF|IN|002678|mesna||N||
+44|ENG||||||5481074||||ATC|IN|R05CB05|mesna||N||
+44|ENG||||||5481075||||ATC|IN|V03AF01|mesna||N||
+44|ENG||||||7817036||M0023193|D015080|MSH|ET|D015080|Sodium 2-Mercaptoethanesulphonate||N||
+44|ENG||||||9259515||108821000||SNOMEDCT_US|FN|108821000|Product containing mesna (medicinal product)||N||
+44|ENG||||||945||||MMSL|BN|41498|Mesna||N||
+44|ENG||||||946||M0023193|D015080|MSH|MH|D015080|Mesna||N||
+44|ENG||||||947|947|44||RXNORM|IN|44|Mesna||N|4096|
+44|ENG||||||950||386922000||SNOMEDCT_US|PT|386922000|Mesna||N||
+44|ENG||||||953||||MMSL|IN|5057|mesna||N||
+44|ENG||||||955||||MMSL|GN|d01411|mesna||N||
+44|ENG||||||960||M0023193|D015080|MSH|N1|D015080|Ethanesulfonic acid, 2-mercapto-, monosodium salt||N||
+44|ENG||||||962||M0023193|D015080|MSH|PM|D015080|2-Mercaptoethanesulphonate, Sodium||N||
+44|ENG||||||964||386922000||SNOMEDCT_US|FN|386922000|Mesna (substance)||N||
+48|ENG||||||1062||259336006||SNOMEDCT_US|SY|259336006|24,25-DHCC - 24,25-Dihydroxycholecalciferol||N||
+48|ENG||||||10794774||259336006||SNOMEDCT_US|SY|259336006|24,25-dihydroxycholecalciferol||N||
+48|ENG||||||10794775||259336006||SNOMEDCT_US|PT|259336006|24,25-dihydroxyvitamin D3||N||
+48|ENG||||||10794776||259336006||SNOMEDCT_US|FN|259336006|24,25-dihydroxyvitamin D3 (substance)||N||
+48|ENG||||||10794777||259336006||SNOMEDCT_US|SY|259336006|24R-dihydroxycalcidiol||N||
+49|ENG||||||10794780||70309004||SNOMEDCT_US|SY|70309004|25-hydroxycholecalciferol 1-hydroxylase||N||
+49|ENG||||||10794781||70309004||SNOMEDCT_US|SY|70309004|25-hydroxycholecalciferol 1-mono-oxygenase||N||
+49|ENG||||||1091||70309004||SNOMEDCT_US|PT|70309004|Calcidiol 1-monooxygenase||N||
+49|ENG||||||1117||70309004||SNOMEDCT_US|FN|70309004|Calcidiol 1-monooxygenase (substance)||N||
+50|ENG||||||10794778||67517005||SNOMEDCT_US|PT|67517005|25-hydroxy ergocalciferol||N||
+50|ENG||||||10794779||67517005||SNOMEDCT_US|FN|67517005|25-hydroxy ergocalciferol (substance)||N||
+50|ENG||||||10794784||67517005||SNOMEDCT_US|SY|67517005|25-hydroxyvitamin D2||N||
+52|ENG||||||10794792||5950004||SNOMEDCT_US|PT|5950004|3',5'-cyclic-nucleotide phosphodiesterase||N||
+52|ENG||||||10794793||5950004||SNOMEDCT_US|FN|5950004|3',5'-cyclic-nucleotide phosphodiesterase (substance)||N||
+53|ENG||||||10794791||25978004||SNOMEDCT_US|PT|25978004|3',5'-cyclic-GMP phosphodiesterase||N||
+53|ENG||||||4247741||25978004||SNOMEDCT_US|SY|25978004|3',5'-cyclic-guanosine monophosphate phosphodiesterase||N||
+53|ENG||||||4247742||25978004||SNOMEDCT_US|FN|25978004|3',5'-cyclic-guanosine monophosphate phosphodiesterase (substance)||N||
+60|ENG||||||10894799||DB01509||DRUGBANK|SY|DB01509|3,4-methylenedioxyamphetamine||N||
+60|ENG||||||10894800||DB01509||DRUGBANK|SY|DB01509|MDA||N||
+60|ENG||||||10894801||DB01509||DRUGBANK|SY|DB01509|Methylenedioxyamphetamine||N||
+60|ENG||||||10894802||DB01509||DRUGBANK|FSY|DB01509|Tenamfetamina||N||
+60|ENG||||||10894803||DB01509||DRUGBANK|IN|DB01509|Tenamfetamine||N||
+60|ENG||||||10894804||DB01509||DRUGBANK|FSY|DB01509|Tenamfetaminum||N||
+60|ENG||||||1400||44555003||SNOMEDCT_US|SY|44555003|MDA||N||
+60|ENG||||||1403||44555003||SNOMEDCT_US|PT|44555003|Methylenedioxyamphetamine||N||
+60|ENG||||||1407||44555003||SNOMEDCT_US|FN|44555003|Methylenedioxyamphetamine (substance)||N||
+61|ENG||||||10797883||70587000||SNOMEDCT_US|PT|70587000|Beta alanine||N||
+61|ENG||||||10797884||70587000||SNOMEDCT_US|FN|70587000|Beta alanine (substance)||N||
+61|ENG||||||1423||M0023212|D015091|MSH|N1|D015091|beta-Alanine||N||
+61|ENG||||||1424|1424|61||RXNORM|IN|61|beta-Alanine||N|4096|
+61|ENG||||||1425||M0023212|D015091|MSH|MH|D015091|beta-Alanine||N||
+61|ENG||||||1431||M0023212|D015091|MSH|PM|D015091|beta Alanine||N||
+61|ENG||||||1436||M0023212|D015091|MSH|PM|D015091|3 Aminopropionic Acid||N||
+61|ENG||||||2696198||M0023212|D015091|MSH|DSV|D015091|AMINOPROPIONIC ACID 03||Y||
+61|ENG||||||2945894||||VANDF|IN|4028377|BETA-ALANINE||N||
+61|ENG||||||6802681||||NDDF|IN|006175|beta-alanine||N||
+61|ENG||||||8019562||M0023212|D015091|MSH|ET|D015091|3-Aminopropionic Acid||N||
+61|ENG||||||9183401||||MTHSPL|SU|11P2JDE17B|.BETA.-ALANINE||N|4096|
+63|ENG||||||5481013||||ATC|IN|C10AX05|meglutol||N||
+66|ENG||||||10794888||709125009||SNOMEDCT_US|SY|709125009|3-hydroxyanthranilic acid||N||
+72|ENG||||||10794971||69419004||SNOMEDCT_US|PT|69419004|3-oxoacyl-acyl-carrier-protein synthase||N||
+72|ENG||||||10794972||69419004||SNOMEDCT_US|FN|69419004|3-oxoacyl-acyl-carrier-protein synthase (substance)||N||
+73|ENG||||||2148985||M0006700|D004281|MSH|PEP|D004281|Docosahexaenoate||N||
+73|ENG||||||2458041|2458041|73||RXNORM|IN|73|Docosahexaenoate||N|4096|
+74|ENG||||||10281571||||USP|IN|m2810|Aminobenzoic Acid||N||
+74|ENG||||||10308369||39707000||SNOMEDCT_US|FN|39707000|Product containing para-aminobenzoic acid (medicinal product)||N||
+74|ENG||||||10327776||||GS|IN|2118|Para-Aminobenzoic Acid (PABA)||N||
+74|ENG||||||10334144||DB02362||DRUGBANK|SY|DB02362|1-Amino-4-carboxybenzene||N||
+74|ENG||||||10334145||DB02362||DRUGBANK|SY|DB02362|4-Carboxyaniline||N||
+74|ENG||||||10334146||DB02362||DRUGBANK|SY|DB02362|p-Aminobenzoic acid||N||
+74|ENG||||||10334147||DB02362||DRUGBANK|SY|DB02362|p-Carboxyaniline||N||
+74|ENG||||||10334148||DB02362||DRUGBANK|SY|DB02362|p-Carboxyphenylamine||N||
+74|ENG||||||10334149||DB02362||DRUGBANK|SY|DB02362|para-Aminobenzoic acid||N||
+74|ENG||||||10795034||373489001||SNOMEDCT_US|SY|373489001|4-aminobenzoic acid||N||
+74|ENG||||||10808629||39707000||SNOMEDCT_US|PT|39707000|Para-aminobenzoic acid-containing product||N||
+74|ENG||||||1683||M0015714|D010129|MSH|MH|D010129|4-Aminobenzoic Acid||N||
+74|ENG||||||1684|1684|74||RXNORM|IN|74|4-Aminobenzoic Acid||N|4096|
+74|ENG||||||1690||M0015714|D010129|MSH|PM|D010129|4 Aminobenzoic Acid||N||
+74|ENG||||||1702||M0015714|D010129|MSH|PM|D010129|p Aminobenzoic Acid||N||
+74|ENG||||||1704||||MMSL|BN|5490|PABA||N||
+74|ENG||||||1712||373489001||SNOMEDCT_US|PT|373489001|Para-aminobenzoic acid||N||
+74|ENG||||||1718||M0015714|D010129|MSH|PM|D010129|para Aminobenzoic Acid||N||
+74|ENG||||||1719||M0015714|D010129|MSH|N1|D010129|Benzoic acid, 4-amino-||N||
+74|ENG||||||1730||||MMSL|IN|5231|paraaminobenzoic acid||N||
+74|ENG||||||1731||||MMSL|GN|d00331|paraaminobenzoic acid||N||
+74|ENG||||||1734||373489001||SNOMEDCT_US|FN|373489001|Para-aminobenzoic acid (substance)||N||
+74|ENG||||||2072755||||VANDF|IN|4019089|PARA-AMINOBENZOIC ACID||N||
+74|ENG||||||2371473||||MMSL|MS|NOCODE|PABA||N||
+74|ENG||||||2371694||||MMSL|MS|NOCODE|Para-Aminobenzoic Acid||N||
+74|ENG||||||2689159||M0015714|D010129|MSH|DSV|D010129|AMINOBENZOIC ACID P||Y||
+74|ENG||||||2697334||M0015714|D010129|MSH|DSV|D010129|AMINOBENZOIC ACID A 04||Y||
+74|ENG||||||3303230||||MTHSPL|SU|TL2TJE8QTX|AMINOBENZOIC ACID||N|4096|
+74|ENG||||||4230758||||MTHSPL|SU|TL2TJE8QTX|Aminobenzoic Acid||N|4096|
+74|ENG||||||4246938||||NDDF|IN|001006|aminobenzoic acid||N||
+74|ENG||||||5038034||||NDDF|IN|002325|aminobenzoic acid||N||
+74|ENG||||||5471363||||NDDF|IN|001966|aminobenzoic acid||N||
+74|ENG||||||5471364||||NDDF|IN|002338|aminobenzoic acid||N||
+74|ENG||||||5478629||||ATC|IN|D02BA01|aminobenzoic acid||N||
+74|ENG||||||7768637||M0015714|D010129|MSH|ET|D010129|Aminobenzoic Acid (USP)||N||
+74|ENG||||||7818083||M0015714|D010129|MSH|ET|D010129|PABA||N||
+74|ENG||||||7821196||M0015714|D010129|MSH|ET|D010129|p-Aminobenzoic Acid||N||

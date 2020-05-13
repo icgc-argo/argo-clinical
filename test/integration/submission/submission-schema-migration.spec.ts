@@ -3,9 +3,10 @@ import * as bootstrap from '../../../src/bootstrap';
 import {
   ClinicalEntitySchemaNames,
   PrimaryDiagnosisFieldsEnum,
-  HormoneTherapyFieldsEnum,
-} from '../../../src/submission/submission-entities';
-import { DonorFieldsEnum } from '../../../src/submission/submission-entities';
+  CommonTherapyFields,
+  TherapyRxNormFields,
+  DonorFieldsEnum,
+} from '../../../src/common-model/entities';
 import { SampleRegistrationFieldsEnum } from '../../../src/submission/submission-entities';
 import {
   SchemasDictionary,
@@ -14,7 +15,7 @@ import {
 import {
   DictionaryMigration,
   MigrationStage,
-} from '../../../src/submission/schema/migration-entities';
+} from '../../../src/submission/migration/migration-entities';
 import { Donor } from '../../../src/clinical/clinical-entities';
 import { getInstance } from '../../../src/submission/submission-updates-messenger';
 
@@ -24,7 +25,7 @@ import 'deep-equal-in-any-order';
 import 'mocha';
 import mongoose from 'mongoose';
 import { spy, SinonSpy } from 'sinon';
-import { GenericContainer } from 'testcontainers';
+import { GenericContainer, Wait } from 'testcontainers';
 import { findInDb, insertData, emptyDonorDocument, clearCollections } from '../testutils';
 import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN } from '../test.jwt';
 import _ from 'lodash';
@@ -41,6 +42,7 @@ const startingSchemaVersion = '1.0';
 describe('schema migration api', () => {
   let sendProgramUpdatedMessageFunc: SinonSpy<[string], Promise<void>>;
   let mongoContainer: any;
+  let mysqlContainer: any;
   let dburl = ``;
 
   const programId = 'ABCD-EF';
@@ -77,16 +79,18 @@ describe('schema migration api', () => {
         specimenId: 210001,
       },
     ],
-    primaryDiagnosis: {
-      clinicalInfo: {
-        program_id: 'PACA-AU',
-        submitter_donor_id: 'ICGC_0003',
-        number_lymph_nodes_examined: 2,
-        age_at_diagnosis: 96,
-        cancer_type_code: 'A11.1A',
-        tumour_staging_system: 'Murphy',
+    primaryDiagnoses: [
+      {
+        clinicalInfo: {
+          program_id: 'PACA-AU',
+          submitter_donor_id: 'ICGC_0003',
+          number_lymph_nodes_examined: 2,
+          age_at_diagnosis: 96,
+          cancer_type_code: 'A11.1A',
+          tumour_staging_system: 'Murphy',
+        },
       },
-    },
+    ],
   });
 
   const newSchemaInvalidDonor: Donor = emptyDonorDocument({
@@ -104,8 +108,19 @@ describe('schema migration api', () => {
   before(() => {
     return (async () => {
       try {
-        mongoContainer = await new GenericContainer('mongo').withExposedPorts(27017).start();
-        console.log('mongo test container started');
+        const mongoContainerPromise = new GenericContainer('mongo', '4.0')
+          .withExposedPorts(27017)
+          .start();
+        const mysqlContainerPromise = new GenericContainer('mysql', '5.7')
+          .withEnv('MYSQL_DATABASE', 'rxnorm')
+          .withEnv('MYSQL_USER', 'clinical')
+          .withEnv('MYSQL_ROOT_PASSWORD', 'password')
+          .withEnv('MYSQL_PASSWORD', 'password')
+          .withExposedPorts(3306)
+          .start();
+        mongoContainer = await mongoContainerPromise;
+        mysqlContainer = await mysqlContainerPromise;
+        console.log('db test containers started');
         await bootstrap.run({
           mongoPassword() {
             return '';
@@ -137,23 +152,37 @@ describe('schema migration api', () => {
           testApisDisabled() {
             return false;
           },
-          kafkaMessagingEnabled() {
-            return false;
+          kafkaProperties() {
+            return {
+              kafkaMessagingEnabled() {
+                return false;
+              },
+              kafkaBrokers() {
+                return new Array<string>();
+              },
+              kafkaClientId() {
+                return '';
+              },
+              kafkaTopicProgramUpdate() {
+                return '';
+              },
+              kafkaTopicProgramUpdateConfigPartitions(): number {
+                return NaN;
+              },
+              kafkaTopicProgramUpdateConfigReplications(): number {
+                return NaN;
+              },
+            };
           },
-          kafkaBrokers() {
-            return new Array<string>();
-          },
-          kafkaClientId() {
-            return '';
-          },
-          kafkaTopicProgramUpdate() {
-            return '';
-          },
-          kafkaTopicProgramUpdateConfigPartitions(): number {
-            return NaN;
-          },
-          kafkaTopicProgramUpdateConfigReplications(): number {
-            return NaN;
+          rxNormDbProperties() {
+            return {
+              database: 'rxnorm',
+              user: 'clinical',
+              password: 'password',
+              timeout: 5000,
+              host: mysqlContainer.getContainerIpAddress(),
+              port: mysqlContainer.getMappedPort(3306),
+            };
           },
         });
       } catch (err) {
@@ -217,7 +246,6 @@ describe('schema migration api', () => {
   it('should update the schema', async () => {
     await migrateSyncTo('2.0').then(async (res: any) => {
       res.should.have.status(200);
-
       const schema = (await findInDb(dburl, 'dataschemas', {})) as SchemasDictionary[];
       schema[0].version.should.eq('2.0');
     });
@@ -282,7 +310,7 @@ describe('schema migration api', () => {
           cause_of_death: 'Died of cancer',
           survival_time: 67,
         },
-        completenessStats: {
+        completionStats: {
           coreCompletion: {
             donor: 1,
             primaryDiagnosis: 0,
@@ -300,7 +328,7 @@ describe('schema migration api', () => {
       const updatedDonor = await findInDb(dburl, 'donors', {});
 
       // donor 1 stats after migraiton, added entity completion
-      chai.expect(updatedDonor[0].completenessStats.coreCompletion).to.deep.include({
+      chai.expect(updatedDonor[0].completionStats.coreCompletion).to.deep.include({
         donor: 1,
         primaryDiagnosis: 0,
         treatments: 0,
@@ -308,7 +336,7 @@ describe('schema migration api', () => {
         specimens: 0,
       });
       // donor 2 stats after migraiton
-      chai.expect(updatedDonor[1].completenessStats.coreCompletion).to.deep.include({
+      chai.expect(updatedDonor[1].completionStats.coreCompletion).to.deep.include({
         donor: 1,
         primaryDiagnosis: 1,
         treatments: 0,
@@ -316,7 +344,7 @@ describe('schema migration api', () => {
         specimens: 0,
       });
       // donor 3 stats after migraiton
-      chai.expect(updatedDonor[2].completenessStats.coreCompletion).to.deep.include({
+      chai.expect(updatedDonor[2].completionStats.coreCompletion).to.deep.include({
         donor: 0, // donor info is invalid so set to zero
         primaryDiagnosis: 0,
         treatments: 1, // no treatment submitted, but overridden entity remains unchanged
@@ -324,7 +352,7 @@ describe('schema migration api', () => {
         specimens: 0,
       });
       chai
-        .expect(updatedDonor[2].completenessStats.overriddenCoreCompletion)
+        .expect(updatedDonor[2].completionStats.overriddenCoreCompletion)
         .to.deep.eq(['treatments']);
 
       chai.assert(sendProgramUpdatedMessageFunc.calledOnceWith(programId));
@@ -483,10 +511,11 @@ describe('schema migration api', () => {
       migration.newSchemaErrors.should.deep.eq({
         [ClinicalEntitySchemaNames.HORMONE_THERAPY]: {
           missingFields: [
-            HormoneTherapyFieldsEnum.program_id,
-            HormoneTherapyFieldsEnum.submitter_donor_id,
-            HormoneTherapyFieldsEnum.submitter_treatment_id,
-            HormoneTherapyFieldsEnum.hormone_therapy_drug_name,
+            TherapyRxNormFields.drug_name,
+            TherapyRxNormFields.drug_rxnormid,
+            CommonTherapyFields.program_id,
+            CommonTherapyFields.submitter_donor_id,
+            CommonTherapyFields.submitter_treatment_id,
           ],
           invalidFieldCodeLists: [],
         },
@@ -548,7 +577,7 @@ describe('schema migration api', () => {
 const migrateSyncTo = async (newSchemaVersion: string) => {
   return chai
     .request(app)
-    .patch('/submission/schema/?sync=true')
+    .post('/dictionary/migration/run?sync=true')
     .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
     .send({
       version: newSchemaVersion,
@@ -558,7 +587,7 @@ const migrateSyncTo = async (newSchemaVersion: string) => {
 const dryRunMigrateTo = async (newSchemaVersion: string) => {
   return chai
     .request(app)
-    .post('/submission/schema/dry-run-update')
+    .post('/dictionary/migration/dry-run-update')
     .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
     .send({
       version: newSchemaVersion,
@@ -568,6 +597,6 @@ const dryRunMigrateTo = async (newSchemaVersion: string) => {
 const getAllMigrationDocs = async () => {
   return await chai
     .request(app)
-    .get('/submission/schema/migration')
+    .get('/dictionary/migration')
     .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' });
 };

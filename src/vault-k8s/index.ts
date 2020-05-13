@@ -23,8 +23,8 @@ async function login() {
 
   // exchange for a vault token
   const options: vault.VaultOptions = {
-    apiVersion: 'v1', // default
-    endpoint: process.env.VAULT_URL, // default
+    apiVersion: 'v1',
+    endpoint: process.env.VAULT_URL,
   };
 
   vaultClient = vault(options);
@@ -44,5 +44,8 @@ export async function loadSecret(key: string) {
 
   const result = await vaultClient.read(key);
   console.log(`loaded Secret ${key}`);
-  return result.data.data;
+  if (result.data.data) {
+    return result.data.data;
+  }
+  return result.data;
 }

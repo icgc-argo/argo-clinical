@@ -1,8 +1,29 @@
-version: '2'
+version: '3.8'
 
 services:
+  rxnormdb:
+    container_name: clinical_rxnormdb
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'rxnorm'
+      # So you don't have to use root, but you can if you like
+      MYSQL_USER: 'user'
+      # You can use whatever password you like
+      MYSQL_PASSWORD: 'password'
+      # Password for root access
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      - '3306:3306'
+    expose:
+      - '3306'
+    volumes:
+      - my-db:/var/lib/mysql
+      - ./mysql/scripts:/var/lib/mysql-files/
   vault:
+    container_name: clinical_vault
     image: vault
+
     volumes:
       - $PWD/logs/:/tmp/logs
       - ./vault:/scripts
@@ -18,6 +39,7 @@ services:
       VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
 
   mongodb:
+    container_name: clinical_db
     image: 'bitnami/mongodb:4.0'
     ports:
       - '27027:27017'
@@ -30,4 +52,7 @@ services:
       MONGODB_ROOT_PASSWORD: password123
 volumes:
   mongodb_data:
+    name: clinical_db_vol
     driver: local
+  my-db:
+    name: clinical_rxnorm_vol

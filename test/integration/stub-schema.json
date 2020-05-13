@@ -353,6 +353,18 @@
               }
             },
             {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
               "name": "submitter_donor_id",
               "valueType": "string",
               "description": "Unique identifier of the donor, assigned by the data provider.",
@@ -477,6 +489,19 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -700,12 +725,36 @@
               }
             },
             {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
               "description": "Unique identifier for a follow-up event in a donors clincal record, assigned by the data provider.",
               "name": "submitter_follow_up_id",
               "valueType": "string",
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_treatment_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
+              "meta": {
+                "primaryId": true,
+                "displayName": "Submitter Treatment ID"
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -1252,6 +1301,19 @@
               }
             },
             {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
               "name": "submitter_treatment_id",
               "valueType": "string",
               "description": "Unique identifier of the treatment, as assigned by the data provider.",
@@ -1404,15 +1466,31 @@
               }
             },
             {
-              "name": "chemotherapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the chemotherapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": ["Allopurinol", "Dronabinol", "Sucralfate", "Lapatinib"]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -1599,15 +1677,31 @@
               }
             },
             {
-              "name": "hormone_therapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the hormone therapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": ["Placeholder list 1", "Need list", "Still need it", "Other"]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -1851,6 +1945,19 @@
               }
             },
             {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
               "name": "submitter_donor_id",
               "valueType": "string",
               "description": "Unique identifier of the donor, assigned by the data provider.",
@@ -1978,6 +2085,19 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -2207,6 +2327,30 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
+              "name": "submitter_treatment_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
+              "meta": {
+                "primaryId": true,
+                "displayName": "Submitter Treatment ID"
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -2753,6 +2897,19 @@
               }
             },
             {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
               "name": "submitter_treatment_id",
               "valueType": "string",
               "description": "Unique identifier of the treatment, as assigned by the data provider.",
@@ -2905,27 +3062,31 @@
               }
             },
             {
-              "name": "chemotherapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the chemotherapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": ["Allopurinol", "Dronabinol", "Sucralfate", "Lapatinib"]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
               }
             },
             {
-              "name": "chemotherapy_dosage_units",
-              "description": "Indicate units used to record chemotherapy drug dosage.",
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg"]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -3106,15 +3267,31 @@
               }
             },
             {
-              "name": "hormone_therapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the hormone therapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": ["Placeholder list 1", "Need list", "Still need it", "Other"]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -3339,6 +3516,19 @@
               }
             },
             {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
               "name": "age_at_diagnosis",
               "valueType": "integer",
               "description": "Age that the donor was first diagnosed with cancer, in years.",
@@ -3434,6 +3624,19 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -3603,12 +3806,36 @@
               }
             },
             {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
               "description": "Unique identifier for a follow-up event in a donors clincal record, assigned by the data provider.",
               "name": "submitter_follow_up_id",
               "valueType": "string",
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_treatment_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
+              "meta": {
+                "primaryId": true,
+                "displayName": "Submitter Treatment ID"
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -4155,6 +4382,19 @@
               }
             },
             {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
               "name": "submitter_treatment_id",
               "valueType": "string",
               "description": "Unique identifier of the treatment, as assigned by the data provider.",
@@ -4307,15 +4547,31 @@
               }
             },
             {
-              "name": "chemotherapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the chemotherapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": ["Allopurinol", "Dronabinol", "Sucralfate", "Lapatinib"]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -4508,15 +4764,31 @@
               }
             },
             {
-              "name": "hormone_therapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the hormone therapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": ["Placeholder list 1", "Need list", "Still need it", "Other"]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {

@@ -8,19 +8,17 @@ import chai from 'chai';
 import fs from 'fs';
 // needed for types
 import 'chai-http';
-import 'deep-equal-in-any-order';
+import 'sampleFiles/src/types/deep-equal-in-any-order';
 import 'mocha';
 import winston from 'winston';
 import mongoose from 'mongoose';
-import { GenericContainer } from 'testcontainers';
+import { GenericContainer, Wait } from 'testcontainers';
 import app from '../../src/app';
 import * as bootstrap from '../../src/bootstrap';
 import { cleanCollection, resetCounters } from '../integration/testutils';
 import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN } from '../integration/test.jwt';
-import {
-  ClinicalEntitySchemaNames,
-  CreateRegistrationResult,
-} from '../../src/submission/submission-entities';
+import { CreateRegistrationResult } from '../../src/submission/submission-entities';
+import { ClinicalEntitySchemaNames } from '../../src/common-model/entities';
 
 // create a different logger to avoid noise from application
 const L = winston.createLogger({
@@ -48,13 +46,29 @@ const schemaVersion = '1.0';
 
 describe('Submission Api', () => {
   let mongoContainer: any;
+  let mysqlContainer: any;
   let dburl = ``;
   // will run when all tests are finished
   before(() => {
     return (async () => {
       try {
-        mongoContainer = await new GenericContainer('mongo').withExposedPorts(27017).start();
-        console.log('mongo test container started');
+        const mongoContainerPromise = new GenericContainer('mongo', '4.0')
+          .withExposedPorts(27017)
+          .start();
+        const mysqlContainerPromise = new GenericContainer('mysql', '5.7')
+          .withEnv('MYSQL_DATABASE', 'rxnorm')
+          .withEnv('MYSQL_USER', 'clinical')
+          .withEnv('MYSQL_ROOT_PASSWORD', 'password')
+          .withEnv('MYSQL_PASSWORD', 'password')
+          .withWaitStrategy(Wait.forLogMessage('ready for connections.'))
+          .withExposedPorts(3306)
+          .start();
+        // start containers in parallel
+        const containers = await Promise.all([mongoContainerPromise, mysqlContainerPromise]);
+        mongoContainer = containers[0];
+        mysqlContainer = containers[1];
+        console.log('db test containers started');
+
         await bootstrap.run({
           mongoPassword() {
             return '';
@@ -86,23 +100,37 @@ describe('Submission Api', () => {
           testApisDisabled() {
             return false;
           },
-          kafkaMessagingEnabled() {
-            return false;
+          kafkaProperties() {
+            return {
+              kafkaMessagingEnabled() {
+                return false;
+              },
+              kafkaBrokers() {
+                return new Array<string>();
+              },
+              kafkaClientId() {
+                return '';
+              },
+              kafkaTopicProgramUpdate() {
+                return '';
+              },
+              kafkaTopicProgramUpdateConfigPartitions(): number {
+                return NaN;
+              },
+              kafkaTopicProgramUpdateConfigReplications(): number {
+                return NaN;
+              },
+            };
           },
-          kafkaBrokers() {
-            return new Array<string>();
-          },
-          kafkaClientId() {
-            return '';
-          },
-          kafkaTopicProgramUpdate() {
-            return '';
-          },
-          kafkaTopicProgramUpdateConfigPartitions(): number {
-            return NaN;
-          },
-          kafkaTopicProgramUpdateConfigReplications(): number {
-            return NaN;
+          rxNormDbProperties() {
+            return {
+              database: 'rxnorm',
+              user: 'clinical',
+              password: 'password',
+              timeout: 5000,
+              host: mysqlContainer.getContainerIpAddress(),
+              port: mysqlContainer.getMappedPort(3306),
+            };
           },
         });
       } catch (err) {

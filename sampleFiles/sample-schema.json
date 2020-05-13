@@ -451,6 +451,19 @@
               }
             },
             {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate the primary diagnosis event in the clinical timeline that this specimen aquisition was related to.",
+              "meta": {
+                "primaryId": true,
+                "displayName": "Submitter Primary Diagnosis ID"
+              },
+              "restrictions": {
+                "required": true,
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
               "name": "submitter_specimen_id",
               "description": "Unique identifier of the specimen, assigned by the data provider.",
               "valueType": "string",
@@ -1020,6 +1033,19 @@
               }
             },
             {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Unique identifier of the primary diagnosis event, assigned by the data provider.",
+              "meta": {
+                "primaryId": true,
+                "displayName": "Submitter Primary Diagnosis ID"
+              },
+              "restrictions": {
+                "required": true,
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
               "name": "submitter_donor_id",
               "valueType": "string",
               "description": "Unique identifier of the donor, assigned by the data provider.",
@@ -1248,6 +1274,19 @@
               }
             },
             {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate the primary diagnosis event in the clinical timeline that this specimen aquisition was related to.",
+              "meta": {
+                "primaryId": true,
+                "displayName": "Submitter Primary Diagnosis ID"
+              },
+              "restrictions": {
+                "required": true,
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
               "name": "treatment_type",
               "description": "Indicate the type of treatment regimen that the donor completed.",
               "valueType": "string",
@@ -1408,12 +1447,25 @@
               }
             },
             {
-              "name": "chemotherapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the chemotherapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": ["Placeholder list 1", "Need list", "Still need it"]
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
               },
               "meta": {
                 "validationDependency": true,
@@ -1422,13 +1474,14 @@
                 "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
+
             {
               "name": "chemotherapy_dosage_units",
               "description": "Indicate units used to record chemotherapy drug dosage.",
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg"]
+                "codeList": ["mg/m2", "IU/m2", "µg/m2", "g/m2", "kg"]
               },
               "meta": {
                 "core": true
@@ -1492,30 +1545,47 @@
               },
               "restrictions": {
                 "required": true,
+                "foreignKey": "treatment.submitter_treatment_id",
                 "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
-              "name": "hormone_therapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the hormone therapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
-              "restrictions": {
-                "required": true,
-                "codeList": ["Placeholder list 1", "Need list", "Still need it"]
-              },
               "meta": {
                 "validationDependency": true,
                 "core": true,
-                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names."
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              },
+              "restrictions": {
+                "required": true
               }
             },
+
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
+              },
+              "restrictions": {
+                "required": true
+              }
+            },
+
             {
               "name": "hormone_drug_dosage_units",
               "description": "Indicate the units used to record hormone drug dosage.",
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg "]
+                "codeList": ["mg/m2", "IU/m2", "µg/m2", "g/m2", "kg"]
               },
               "meta": {
                 "core": true
@@ -1700,6 +1770,30 @@
               },
               "restrictions": {
                 "required": true,
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
+              "name": "submitter_treatment_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
+              "meta": {
+                "primaryId": true,
+                "displayName": "Submitter Treatment ID"
+              },
+              "restrictions": {
                 "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },

@@ -6,8 +6,8 @@ import {
   SchemasDictionary,
   ValueType,
 } from '../../../../src/lectern-client/schema-entities';
-import legacyStubSchemas from '../stub-schema.json';
-import { ClinicalEntitySchemaNames } from '../../../../src/submission/submission-entities';
+import legacyStubSchemas from '../../stub-schema.json';
+import { ClinicalEntitySchemaNames } from '../../../../src/common-model/entities';
 import * as fieldNames from './fields';
 
 const DICTIONARY_NAME = 'ARGO Clinical Submission';

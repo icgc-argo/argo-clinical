@@ -8,9 +8,10 @@ import 'chai-http';
 import 'deep-equal-in-any-order';
 import 'mocha';
 import mongoose from 'mongoose';
-import { GenericContainer } from 'testcontainers';
+import { GenericContainer, Wait } from 'testcontainers';
 import app from '../../../src/app';
 import * as bootstrap from '../../../src/bootstrap';
+import * as pool from '../../../src/rxnorm/pool';
 import {
   cleanCollection,
   insertData,
@@ -20,6 +21,8 @@ import {
   assertDbCollectionEmpty,
   findInDb,
   createDonorDoc,
+  createtRxNormTables,
+  insertRxNormDrug,
   updateData,
 } from '../testutils';
 import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN, JWT_ABCDEF, JWT_WXYZEF } from '../test.jwt';
@@ -30,18 +33,21 @@ import {
   SUBMISSION_STATE,
   DataValidationErrors,
   SubmissionBatchErrorTypes,
+  ClinicalEntities,
+} from '../../../src/submission/submission-entities';
+import {
   ClinicalEntitySchemaNames,
   DonorFieldsEnum,
   ClinicalUniqueIdentifier,
-  SavedClinicalEntity,
-  ClinicalEntities,
-} from '../../../src/submission/submission-entities';
+  PrimaryDiagnosisFieldsEnum,
+} from '../../../src/common-model/entities';
 import { TsvUtils } from '../../../src/utils';
 import { donorDao } from '../../../src/clinical/donor-repo';
-import { Donor, Specimen } from '../../../src/clinical/clinical-entities';
+import { Donor } from '../../../src/clinical/clinical-entities';
 import AdmZip from 'adm-zip';
 import _ from 'lodash';
 import chaiExclude from 'chai-exclude';
+
 chai.use(require('chai-http'));
 chai.use(require('deep-equal-in-any-order'));
 chai.use(chaiExclude);
@@ -50,212 +56,30 @@ chai.should();
 const baseDonorId = 250000;
 const baseSampleId = 610000;
 const baseSpecimenId = 210000;
-
-const expectedErrors = [
-  {
-    batchNames: ['sample_registration.invalid.tsv'],
-    code: 'MISSING_REQUIRED_HEADER',
-    message: 'Missing required headers: [tumour_normal_designation], [specimen_type]',
-  },
-  {
-    batchNames: ['sample_registration.invalid.tsv'],
-    code: 'UNRECOGNIZED_HEADER',
-    message: 'Found unknown headers: [tumor_normal_designation]',
-  },
-];
-
-const expectedResponse1 = {
-  registration: {
-    programId: 'ABCD-EF',
-    creator: 'Test User',
-    stats: {
-      alreadyRegistered: [],
-      newDonorIds: [
-        {
-          submitterId: 'abcd123',
-          rowNumbers: [0],
-        },
-      ],
-      newSpecimenIds: [
-        {
-          submitterId: 'ss123',
-          rowNumbers: [0],
-        },
-      ],
-      newSampleIds: [
-        {
-          submitterId: 'sm123',
-          rowNumbers: [0],
-        },
-      ],
-    },
-    records: [
-      {
-        [SampleRegistrationFieldsEnum.program_id]: 'ABCD-EF',
-        [SampleRegistrationFieldsEnum.submitter_donor_id]: 'abcd123',
-        [SampleRegistrationFieldsEnum.gender]: 'Male',
-        [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'ss123',
-        [SampleRegistrationFieldsEnum.specimen_tissue_source]: 'Other',
-        [SampleRegistrationFieldsEnum.tumour_normal_designation]: 'Normal',
-        [SampleRegistrationFieldsEnum.specimen_type]: 'Normal',
-        [SampleRegistrationFieldsEnum.submitter_sample_id]: 'sm123',
-        [SampleRegistrationFieldsEnum.sample_type]: 'ctDNA',
-      },
-    ],
-    __v: 0,
-  },
-  errors: [],
-  successful: true,
-};
-const ABCD_REGISTRATION_DOC: ActiveRegistration = {
-  programId: 'ABCD-EF',
-  creator: 'Test User',
-  schemaVersion: '1.0',
-  batchName: `${ClinicalEntitySchemaNames.REGISTRATION}.tsv`,
-  stats: {
-    newDonorIds: [
-      {
-        submitterId: 'abcd123',
-        rowNumbers: [0],
-      },
-    ],
-    newSpecimenIds: [
-      {
-        submitterId: 'ss123',
-        rowNumbers: [0],
-      },
-    ],
-    newSampleIds: [
-      {
-        submitterId: 'sm123',
-        rowNumbers: [0],
-      },
-    ],
-    alreadyRegistered: [],
-  },
-  records: [
-    {
-      [SampleRegistrationFieldsEnum.program_id]: 'ABCD-EF',
-      [SampleRegistrationFieldsEnum.submitter_donor_id]: 'abcd123',
-      [SampleRegistrationFieldsEnum.gender]: 'Male',
-      [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'ss123',
-      [SampleRegistrationFieldsEnum.specimen_tissue_source]: 'Other',
-      [SampleRegistrationFieldsEnum.tumour_normal_designation]: 'Normal',
-      [SampleRegistrationFieldsEnum.specimen_type]: 'Normal',
-      [SampleRegistrationFieldsEnum.submitter_sample_id]: 'sm123',
-      [SampleRegistrationFieldsEnum.sample_type]: 'ctDNA',
-    },
-  ],
-};
-const expectedDonorBatchSubmissionSchemaErrors = [
-  {
-    index: 1,
-    type: 'FOUND_IDENTICAL_IDS',
-    info: {
-      value: 'ICGC_0001',
-      donorSubmitterId: 'ICGC_0001',
-      useAllRecordValues: false,
-      conflictingRows: [2],
-      uniqueIdNames: [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.DONOR]],
-    },
-    message:
-      'You are trying to submit the same [submitter_donor_id] in multiple rows. [submitter_donor_id] can only be submitted once per file.',
-    fieldName: DonorFieldsEnum.submitter_donor_id,
-  },
-  {
-    index: 2,
-    type: 'FOUND_IDENTICAL_IDS',
-    info: {
-      value: 'ICGC_0001',
-      donorSubmitterId: 'ICGC_0001',
-      useAllRecordValues: false,
-      conflictingRows: [1],
-      uniqueIdNames: [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.DONOR]],
-    },
-    message:
-      'You are trying to submit the same [submitter_donor_id] in multiple rows. [submitter_donor_id] can only be submitted once per file.',
-    fieldName: DonorFieldsEnum.submitter_donor_id,
-  },
-  {
-    index: 0,
-    type: 'INVALID_FIELD_VALUE_TYPE',
-    info: {
-      value: 'acdc',
-      donorSubmitterId: 'ICGC_0002',
-    },
-    message: 'The value is not permissible for this field.',
-    fieldName: DonorFieldsEnum.survival_time,
-  },
-  {
-    index: 0,
-    type: 'INVALID_ENUM_VALUE',
-    info: {
-      value: 'undecided',
-      donorSubmitterId: 'ICGC_0002',
-    },
-    message: 'The value is not permissible for this field.',
-    fieldName: DonorFieldsEnum.vital_status,
-  },
-];
-const expectedRadiationBatchSubmissionSchemaErrors = [
-  {
-    index: 0,
-    type: 'FOUND_IDENTICAL_IDS',
-    info: {
-      value: 'ICGC_0001',
-      donorSubmitterId: 'ICGC_0001',
-      useAllRecordValues: false,
-      conflictingRows: [1],
-      uniqueIdNames: ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.RADIATION],
-    },
-    message:
-      'You are trying to submit the same [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] in multiple rows. [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] can only be submitted once per file.',
-    fieldName: DonorFieldsEnum.submitter_donor_id,
-  },
-  {
-    index: 1,
-    type: 'FOUND_IDENTICAL_IDS',
-    info: {
-      value: 'ICGC_0001',
-      donorSubmitterId: 'ICGC_0001',
-      useAllRecordValues: false,
-      conflictingRows: [0],
-      uniqueIdNames: ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.RADIATION],
-    },
-    message:
-      'You are trying to submit the same [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] in multiple rows. [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] can only be submitted once per file.',
-    fieldName: DonorFieldsEnum.submitter_donor_id,
-  },
-];
-
-const INVALID_FILENAME_ERROR =
-  'Improperly named files cannot be uploaded or validated. Please retain the template file name and only append characters to the end (e.g. donor<_optional_extension>.tsv).';
-
-const clearCollections = async (dburl: string, collections: string[]) => {
-  try {
-    console.log(`Clearing collections pre-test:`, collections.join(', '));
-    const promises = collections.map(collectionName => cleanCollection(dburl, collectionName));
-    await Promise.all(promises);
-    await resetCounters(dburl);
-    return;
-  } catch (err) {
-    console.error(err);
-    return err;
-  }
-};
 const schemaName = 'ARGO Clinical Submission';
 const schemaVersion = '1.0';
-
 const stubFilesDir = __dirname + `/stub_clinical_files`;
 
+const RXNORM_DB = 'rxnorm';
+const RXNORM_USER = 'clinical';
+const RXNORM_PASS = 'password';
+
 describe('Submission Api', () => {
-  let mongoContainer: any;
   let dburl = ``;
+  let mongoContainer: any;
+  let mysqlContainer: any;
   // will run when all tests are finished
   before(() => {
     return (async () => {
       try {
-        mongoContainer = await new GenericContainer('mongo').withExposedPorts(27017).start();
+        mongoContainer = await new GenericContainer('mongo', '4.0').withExposedPorts(27017).start();
+        mysqlContainer = await new GenericContainer('mysql', '5.7')
+          .withEnv('MYSQL_DATABASE', RXNORM_DB)
+          .withEnv('MYSQL_USER', RXNORM_USER)
+          .withEnv('MYSQL_ROOT_PASSWORD', RXNORM_PASS)
+          .withEnv('MYSQL_PASSWORD', RXNORM_PASS)
+          .withExposedPorts(3306)
+          .start();
         console.log('mongo test container started');
         await bootstrap.run({
           mongoPassword() {
@@ -283,30 +107,52 @@ describe('Submission Api', () => {
             return '';
           },
           schemaServiceUrl() {
-            return `file://${__dirname}/stub-schema.json`;
+            return `file://${__dirname}/../stub-schema.json`;
           },
           testApisDisabled() {
             return false;
           },
-          kafkaMessagingEnabled() {
-            return false;
+          kafkaProperties() {
+            return {
+              kafkaMessagingEnabled() {
+                return false;
+              },
+              kafkaBrokers() {
+                return new Array<string>();
+              },
+              kafkaClientId() {
+                return '';
+              },
+              kafkaTopicProgramUpdate() {
+                return '';
+              },
+              kafkaTopicProgramUpdateConfigPartitions(): number {
+                return NaN;
+              },
+              kafkaTopicProgramUpdateConfigReplications(): number {
+                return NaN;
+              },
+            };
           },
-          kafkaBrokers() {
-            return new Array<string>();
-          },
-          kafkaClientId() {
-            return '';
-          },
-          kafkaTopicProgramUpdate() {
-            return '';
-          },
-          kafkaTopicProgramUpdateConfigPartitions(): number {
-            return NaN;
-          },
-          kafkaTopicProgramUpdateConfigReplications(): number {
-            return NaN;
+          rxNormDbProperties() {
+            return {
+              database: RXNORM_DB,
+              user: RXNORM_USER,
+              password: RXNORM_PASS,
+              timeout: 5000,
+              host: mysqlContainer.getContainerIpAddress(),
+              port: mysqlContainer.getMappedPort(3306),
+            };
           },
         });
+        const connPool = pool.getPool();
+        await createtRxNormTables(connPool);
+        await insertRxNormDrug('423', 'drugA', connPool);
+        await insertRxNormDrug('423', 'drug A', connPool);
+        await insertRxNormDrug('423', 'Koolaid', connPool);
+        await insertRxNormDrug('22323', 'drug 2', connPool);
+        await insertRxNormDrug('22323', 'drug B', connPool);
+        await insertRxNormDrug('12', '123-H2O', connPool);
       } catch (err) {
         console.error('before >>>>>>>>>>>', err);
         return err;
@@ -876,7 +722,7 @@ describe('Submission Api', () => {
               code: 'INVALID_FILE_NAME',
             },
             {
-              message: `Missing required headers: [${SampleRegistrationFieldsEnum.submitter_donor_id}], [${SampleRegistrationFieldsEnum.submitter_specimen_id}]`,
+              message: `Missing required headers: [${SampleRegistrationFieldsEnum.submitter_donor_id}], [${PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id}], [${SampleRegistrationFieldsEnum.submitter_specimen_id}]`,
               batchNames: ['specimen-invalid-headers.tsv'],
               code: SubmissionBatchErrorTypes.MISSING_REQUIRED_HEADER,
             },
@@ -1047,6 +893,12 @@ describe('Submission Api', () => {
       // insert donor into db
       await insertData(dburl, 'donors', {
         followUps: [],
+        schemaMetadata: {
+          isValid: true,
+          lastValidSchemaVersion: '1.0',
+          originalSchemaVersion: '1.0',
+          lastMigrationId: undefined,
+        },
         treatments: [],
         chemotherapy: [],
         hormoneTherapy: [],
@@ -1055,6 +907,7 @@ describe('Submission Api', () => {
         programId: 'ABCD-EF',
         specimens: [
           {
+            specimenType: 'whatever',
             samples: [],
             specimenTissueSource: 'Other',
             tumourNormalDesignation: 'Tumour',
@@ -1063,6 +916,7 @@ describe('Submission Api', () => {
               program_id: 'ABCD-EF',
               submitter_donor_id: 'ICGC_0001',
               submitter_specimen_id: '8013861',
+              submitter_primary_diagnosis_id: 'P-1',
               specimen_acquisition_interval: 200,
               specimen_anatomic_location: 'Other',
               central_pathology_confirmed: 'No',
@@ -1080,6 +934,7 @@ describe('Submission Api', () => {
           },
           {
             samples: [],
+            specimenType: 'whatever',
             specimenTissueSource: 'Other',
             tumourNormalDesignation: 'Tumour',
             submitterId: '8013862',
@@ -1087,6 +942,7 @@ describe('Submission Api', () => {
               program_id: 'ABCD-EF',
               submitter_donor_id: 'ICGC_0001',
               submitter_specimen_id: '8013862',
+              submitter_primary_diagnosis_id: 'P-1',
               specimen_acquisition_interval: 230,
               specimen_anatomic_location: 'Other',
               central_pathology_confirmed: 'No',
@@ -1103,19 +959,22 @@ describe('Submission Api', () => {
             },
           },
         ],
-        primaryDiagnosis: {
-          clinicalInfo: {
-            program_id: 'ABCD-EF',
-            number_lymph_nodes_examined: 2,
-            submitter_donor_id: 'ICGC_0001',
-            age_at_diagnosis: 96,
-            cancer_type_code: 'A11.1A',
-            tumour_staging_system: 'Murphy',
-            presenting_symptoms: null, // tslint:disable-line
+        primaryDiagnoses: [
+          {
+            clinicalInfo: {
+              program_id: 'ABCD-EF',
+              submitter_primary_diagnosis_id: 'P-1',
+              number_lymph_nodes_examined: 2,
+              submitter_donor_id: 'ICGC_0001',
+              age_at_diagnosis: 96,
+              cancer_type_code: 'A11.1A',
+              tumour_staging_system: 'Murphy',
+              presenting_symptoms: undefined, // tslint:disable-line
+            },
           },
-        },
+        ],
         donorId: 1,
-      });
+      } as Donor);
       return chai
         .request(app)
         .post('/submission/program/ABCD-EF/clinical/upload')
@@ -1422,7 +1281,7 @@ describe('Submission Api', () => {
           // merge shouldn't have mutated donor except for donor.clinicalInfo
           chai
             .expect(updatedDonor)
-            .excluding(['clinicalInfo', 'updatedAt', '__v', 'createdAt', 'completenessStats'])
+            .excluding(['clinicalInfo', 'updatedAt', '__v', 'createdAt', 'completionStats'])
             .to.deep.eq(donor);
           chai.expect(updatedDonor.clinicalInfo).to.exist;
           chai.expect(updatedDonor.clinicalInfo).to.deep.include({
@@ -1473,6 +1332,7 @@ describe('Submission Api', () => {
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
         .then((res: any) => {
           submissionVersion = res.body.submission.version;
+          res.should.have.status(200);
         });
     };
 
@@ -1483,6 +1343,7 @@ describe('Submission Api', () => {
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
         .then((res: any) => {
           submissionVersion = res.body.version;
+          res.should.have.status(200);
         });
     };
 
@@ -1573,10 +1434,10 @@ describe('Submission Api', () => {
       ]);
       await validateSubmission();
       await commitActiveSubmission();
-      const [DonorBeforeUpdate] = await findInDb(dburl, 'donors', {
+      const [DonorBeforeUpdate] = (await findInDb(dburl, 'donors', {
         programId: programId,
         submitterId: 'ICGC_0001',
-      });
+      })) as Donor[];
 
       const entityBase = { program_id: programId, submitter_donor_id: 'ICGC_0001' };
 
@@ -1585,6 +1446,7 @@ describe('Submission Api', () => {
         number_lymph_nodes_examined: 2,
         age_at_diagnosis: 96,
         cancer_type_code: 'A11.1A',
+        submitter_primary_diagnosis_id: 'P-1',
         tumour_staging_system: 'Murphy',
         presenting_symptoms: ['Back Pain', 'Nausea'],
       };
@@ -1595,9 +1457,9 @@ describe('Submission Api', () => {
         cause_of_death: 'Died of cancer',
         survival_time: 522,
       };
-
-      DonorBeforeUpdate.primaryDiagnosis.clinicalInfo.should.deep.eq(primary_diagnosis);
-      DonorBeforeUpdate.clinicalInfo.should.deep.eq(donor);
+      const pd = DonorBeforeUpdate.primaryDiagnoses || [];
+      pd[0].clinicalInfo.should.deep.eq(primary_diagnosis);
+      DonorBeforeUpdate.clinicalInfo?.should.deep.eq(donor);
 
       // Now we need to have a submission with updates, and validate to get it into the correct state
       await uploadSubmissionWithUpdates([
@@ -1616,10 +1478,10 @@ describe('Submission Api', () => {
         submitterId: 'ICGC_0001',
       });
 
-      // data from primary_diagnosis-array_input.tsv
-      donorBeforeApproveCommit.primaryDiagnosis.clinicalInfo.should.deep.eq(primary_diagnosis);
+      // data from primary_diagnosis.tsv
+      donorBeforeApproveCommit.primaryDiagnoses[0].clinicalInfo.should.deep.eq(primary_diagnosis);
 
-      DonorBeforeUpdate.clinicalInfo.should.include(donor);
+      DonorBeforeUpdate.clinicalInfo?.should.include(donor);
 
       return chai
         .request(app)
@@ -1695,7 +1557,7 @@ describe('Submission Api', () => {
       await validateSubmission();
       await commitActiveSubmission();
       const [DonorBeforeUpdate] = await findInDb(dburl, 'donors', donorFilter);
-      DonorBeforeUpdate.completenessStats.coreCompletion.should.deep.include({
+      DonorBeforeUpdate.completionStats.coreCompletion.should.deep.include({
         donor: 1,
         primaryDiagnosis: 1,
         treatments: 1,
@@ -1741,7 +1603,7 @@ describe('Submission Api', () => {
           res.body.should.be.empty;
           await assertDbCollectionEmpty(dburl, 'activesubmissions');
           const [UpdatedDonor] = await findInDb(dburl, 'donors', donorFilter);
-          UpdatedDonor.completenessStats.coreCompletion.should.deep.include({
+          UpdatedDonor.completionStats.coreCompletion.should.deep.include({
             donor: 1,
             primaryDiagnosis: 1,
             treatments: 1,
@@ -1788,16 +1650,18 @@ describe('Submission Api', () => {
             cause_of_death: 'Died of cancer',
             survival_time: 23,
           },
-          primaryDiagnosis: {
-            clinicalInfo: {
-              program_id: programId,
-              number_lymph_nodes_positive: 1,
-              submitter_donor_id: 'ICGC_0003',
-              age_at_diagnosis: 96,
-              cancer_type_code: 'A11.1A',
-              tumour_staging_system: 'Binet', // this will be updated to Murphy
+          primaryDiagnoses: [
+            {
+              clinicalInfo: {
+                program_id: programId,
+                number_lymph_nodes_positive: 1,
+                submitter_donor_id: 'ICGC_0003',
+                age_at_diagnosis: 96,
+                cancer_type_code: 'A11.1A',
+                tumour_staging_system: 'Binet', // this will be updated to Murphy
+              },
             },
-          },
+          ],
         }),
       );
       await uploadSubmission(['donor_TC-SMUIDAV.tsv', 'primary_diagnosis_TC-SMUIDAV.tsv']);
@@ -1838,7 +1702,7 @@ describe('Submission Api', () => {
 
           // we expect the other invalid donor to be updated even that it remained invalid
           // due to not updating the invalid clinical file (donor.clinicalInfo)
-          chai.expect(updatedDonor2.primaryDiagnosis).to.deep.include({
+          chai.expect(updatedDonor2.primaryDiagnoses).to.deep.include({
             clinicalInfo: {
               age_at_diagnosis: 96,
               cancer_type_code: 'A11.1A',
@@ -1856,6 +1720,19 @@ describe('Submission Api', () => {
       const invalidDonor = emptyDonorDocument({
         submitterId: 'ICGC_0001',
         programId,
+        primaryDiagnoses: [
+          {
+            clinicalInfo: {
+              submitter_primary_diagnosis_id: 'P-1',
+              age_at_diagnosis: 96,
+              cancer_type_code: 'A11.1A',
+              number_lymph_nodes_examined: 2,
+              program_id: 'ABCD-EF',
+              submitter_donor_id: 'ICGC_0001',
+              tumour_staging_system: 'Murphy',
+            },
+          },
+        ],
         schemaMetadata: {
           isValid: false, // assume this is a donor that became invalid after a migration
           lastValidSchemaVersion: '0.1',
@@ -1883,16 +1760,34 @@ describe('Submission Api', () => {
             tumourNormalDesignation: 'Tumour',
             specimenType: 'Tumour',
             submitterId: 'ss123-sjdm-1',
-            clinicalInfo: {},
+            clinicalInfo: {
+              program_id: 'ABCD-EF',
+              submitter_donor_id: 'ICGC_0001',
+              submitter_specimen_id: 'ss123-sjdm-1',
+              // submitter_primary_diagnosis_id: 'P-1',
+              specimen_acquisition_interval: 200,
+              specimen_anatomic_location: 'Other',
+              central_pathology_confirmed: 'No',
+              tumour_histological_type: 'M-1111/22',
+              tumour_grading_system: 'Default',
+              tumour_grade: 'aStringValue',
+              pathological_tumour_staging_system: 'Murphy',
+              pathological_stage_group: 'aStringValue',
+              percent_proliferating_cells: 0.5,
+              percent_inflammatory_tissue: 0.6,
+              percent_stromal_cells: 0.65,
+              percent_necrosis: 0.65,
+              percent_tumour_cells: 0.5,
+            },
           },
         ],
-        completenessStats: {
+        completionStats: {
           coreCompletion: {
             donor: 0,
-            primaryDiagnosis: 0,
+            primaryDiagnosis: 1,
             treatments: 1, // overridden stat
             followUps: 0,
-            specimens: 0,
+            specimens: 0.5,
           },
           overriddenCoreCompletion: ['treatments'],
         },
@@ -1916,15 +1811,15 @@ describe('Submission Api', () => {
           });
           // donor was invalid but is now valid after submission, so stats should be updated
           updatedDonor.schemaMetadata.isValid.should.eq(true);
-          updatedDonor.completenessStats.coreCompletion.should.deep.include({
+          updatedDonor.completionStats.coreCompletion.should.deep.include({
             donor: 1,
-            primaryDiagnosis: 0,
+            primaryDiagnosis: 1,
             treatments: 1, // overridden field is same as before, despite no treatment record
             followUps: 0,
             specimens: 0.5, // one of the tumour/normal specimen has record
           });
           chai
-            .expect(updatedDonor.completenessStats.overriddenCoreCompletion)
+            .expect(updatedDonor.completionStats.overriddenCoreCompletion)
             .to.deep.eq(['treatments']);
         });
     });
@@ -2018,7 +1913,7 @@ describe('Submission Api', () => {
       console.log("Getting template for '" + name + "'...");
       chai
         .request(app)
-        .get('/submission/schema/template/' + name)
+        .get('/dictionary/template/' + name)
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .end((err: any, res: any) => {
           res.should.have.status(200);
@@ -2042,7 +1937,7 @@ describe('Submission Api', () => {
       }
       chai
         .request(app)
-        .get('/submission/schema/template/all')
+        .get('/dictionary/template/all')
         .buffer()
         // parse: collects data and creates AdmZip object (made wth buffered data) in res.body
         .parse((res: any, callBack: any) => {
@@ -2055,20 +1950,22 @@ describe('Submission Api', () => {
           });
         })
         .end((err: any, res: any) => {
-          // array of file content (which are just the field headers for each clinical type)
-          const downloadedFiles: string[] = res.body
+          const downloadedFiles: Record<string, string> = {};
+          res.body
             .getEntries()
-            .map((fileEntry: any) => res.body.readAsText(fileEntry));
-          const refFiles: string[] = refZip
+            .map(
+              (fileEntry: any) =>
+                (downloadedFiles[fileEntry.entryName] = res.body.readAsText(fileEntry)),
+            );
+
+          const refFiles: Record<string, string> = {};
+          refZip
             .getEntries()
-            .map((fileEntry: any) => refZip.readAsText(fileEntry));
+            .forEach(
+              (fileEntry: any) => (refFiles[fileEntry.entryName] = refZip.readAsText(fileEntry)),
+            );
 
-          console.log(`Ref data is: [${refFiles}]`);
-          console.log(`Downloaded data is: [${downloadedFiles}]`);
-
-          refFiles.forEach(file => {
-            chai.expect(downloadedFiles).to.contain(file);
-          });
+          refFiles.should.deep.eq(downloadedFiles);
           return done();
         });
     });
@@ -2078,7 +1975,7 @@ describe('Submission Api', () => {
       console.log("Getting template for '" + name + "'...");
       chai
         .request(app)
-        .get('/submission/schema/template/' + name)
+        .get('/dictionary/template/' + name)
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .end((err: any, res: any) => {
           res.should.have.status(404);
@@ -2093,7 +1990,7 @@ describe('Submission Api', () => {
       console.log("Getting template for '" + name + "'...");
       chai
         .request(app)
-        .get('/submission/schema/template/' + name)
+        .get('/dictionary/template/' + name)
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .end((err: any, res: any) => {
           res.should.have.status(404);
@@ -2136,7 +2033,7 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dburl: 
     expectedDonors.push(
       emptyDonorDocument({
         gender: r[SampleRegistrationFieldsEnum.gender],
-        primaryDiagnosis: undefined,
+        primaryDiagnoses: undefined,
         submitterId: r[SampleRegistrationFieldsEnum.submitter_donor_id],
         programId: r[SampleRegistrationFieldsEnum.program_id],
         specimens: [
@@ -2203,7 +2100,7 @@ function assertSameDonorWithoutGeneratedIds(actual: Donor, expected: Donor) {
       'sampleId',
       '__v',
       '_id',
-      'primaryDiagnosis',
+      'primaryDiagnoses',
       'updatedAt',
       'createdAt',
     ])
@@ -2231,6 +2128,7 @@ const comittedDonors2: Donor[] = [
       originalSchemaVersion: '1.0',
     },
     followUps: [],
+    primaryDiagnoses: [],
     treatments: [],
     gender: 'Male',
     submitterId: 'abcd-125',
@@ -2263,6 +2161,7 @@ const comittedDonors2: Donor[] = [
     followUps: [],
     treatments: [],
     gender: 'Female',
+    primaryDiagnoses: [],
     submitterId: 'abcd-126',
     programId: 'ABCD-EF',
     specimens: [
@@ -2307,6 +2206,7 @@ const comittedDonors2: Donor[] = [
     },
     followUps: [],
     treatments: [],
+    primaryDiagnoses: [],
     gender: 'Male',
     submitterId: 'abcd-127',
     programId: 'ABCD-EF',
@@ -2337,6 +2237,7 @@ const comittedDonors2: Donor[] = [
     },
     followUps: [],
     treatments: [],
+    primaryDiagnoses: [],
     gender: 'Female',
     submitterId: 'abcd-128',
     programId: 'ABCD-EF',
@@ -2382,6 +2283,7 @@ const comittedDonors2: Donor[] = [
     },
     followUps: [],
     treatments: [],
+    primaryDiagnoses: [],
     _id: '5d534820ae008e4dcb205274',
     gender: 'Female',
     submitterId: 'abcd-129',
@@ -2413,6 +2315,7 @@ const comittedDonors2: Donor[] = [
     },
     followUps: [],
     treatments: [],
+    primaryDiagnoses: [],
     gender: 'Male',
     submitterId: 'abcd-200',
     programId: 'ABCD-EF',
@@ -2436,3 +2339,195 @@ const comittedDonors2: Donor[] = [
     donorId: baseDonorId + 5,
   },
 ];
+
+const expectedErrors = [
+  {
+    batchNames: ['sample_registration.invalid.tsv'],
+    code: 'MISSING_REQUIRED_HEADER',
+    message: 'Missing required headers: [tumour_normal_designation], [specimen_type]',
+  },
+  {
+    batchNames: ['sample_registration.invalid.tsv'],
+    code: 'UNRECOGNIZED_HEADER',
+    message: 'Found unknown headers: [tumor_normal_designation]',
+  },
+];
+
+const expectedResponse1 = {
+  registration: {
+    programId: 'ABCD-EF',
+    creator: 'Test User',
+    stats: {
+      alreadyRegistered: [],
+      newDonorIds: [
+        {
+          submitterId: 'abcd123',
+          rowNumbers: [0],
+        },
+      ],
+      newSpecimenIds: [
+        {
+          submitterId: 'ss123',
+          rowNumbers: [0],
+        },
+      ],
+      newSampleIds: [
+        {
+          submitterId: 'sm123',
+          rowNumbers: [0],
+        },
+      ],
+    },
+    records: [
+      {
+        [SampleRegistrationFieldsEnum.program_id]: 'ABCD-EF',
+        [SampleRegistrationFieldsEnum.submitter_donor_id]: 'abcd123',
+        [SampleRegistrationFieldsEnum.gender]: 'Male',
+        [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'ss123',
+        [SampleRegistrationFieldsEnum.specimen_tissue_source]: 'Other',
+        [SampleRegistrationFieldsEnum.tumour_normal_designation]: 'Normal',
+        [SampleRegistrationFieldsEnum.specimen_type]: 'Normal',
+        [SampleRegistrationFieldsEnum.submitter_sample_id]: 'sm123',
+        [SampleRegistrationFieldsEnum.sample_type]: 'ctDNA',
+      },
+    ],
+    __v: 0,
+  },
+  errors: [],
+  successful: true,
+};
+const ABCD_REGISTRATION_DOC: ActiveRegistration = {
+  programId: 'ABCD-EF',
+  creator: 'Test User',
+  schemaVersion: '1.0',
+  batchName: `${ClinicalEntitySchemaNames.REGISTRATION}.tsv`,
+  stats: {
+    newDonorIds: [
+      {
+        submitterId: 'abcd123',
+        rowNumbers: [0],
+      },
+    ],
+    newSpecimenIds: [
+      {
+        submitterId: 'ss123',
+        rowNumbers: [0],
+      },
+    ],
+    newSampleIds: [
+      {
+        submitterId: 'sm123',
+        rowNumbers: [0],
+      },
+    ],
+    alreadyRegistered: [],
+  },
+  records: [
+    {
+      [SampleRegistrationFieldsEnum.program_id]: 'ABCD-EF',
+      [SampleRegistrationFieldsEnum.submitter_donor_id]: 'abcd123',
+      [SampleRegistrationFieldsEnum.gender]: 'Male',
+      [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'ss123',
+      [SampleRegistrationFieldsEnum.specimen_tissue_source]: 'Other',
+      [SampleRegistrationFieldsEnum.tumour_normal_designation]: 'Normal',
+      [SampleRegistrationFieldsEnum.specimen_type]: 'Normal',
+      [SampleRegistrationFieldsEnum.submitter_sample_id]: 'sm123',
+      [SampleRegistrationFieldsEnum.sample_type]: 'ctDNA',
+    },
+  ],
+};
+const expectedDonorBatchSubmissionSchemaErrors = [
+  {
+    index: 1,
+    type: 'FOUND_IDENTICAL_IDS',
+    info: {
+      value: 'ICGC_0001',
+      donorSubmitterId: 'ICGC_0001',
+      useAllRecordValues: false,
+      conflictingRows: [2],
+      uniqueIdNames: [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.DONOR]],
+    },
+    message:
+      'You are trying to submit the same [submitter_donor_id] in multiple rows. [submitter_donor_id] can only be submitted once per file.',
+    fieldName: DonorFieldsEnum.submitter_donor_id,
+  },
+  {
+    index: 2,
+    type: 'FOUND_IDENTICAL_IDS',
+    info: {
+      value: 'ICGC_0001',
+      donorSubmitterId: 'ICGC_0001',
+      useAllRecordValues: false,
+      conflictingRows: [1],
+      uniqueIdNames: [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.DONOR]],
+    },
+    message:
+      'You are trying to submit the same [submitter_donor_id] in multiple rows. [submitter_donor_id] can only be submitted once per file.',
+    fieldName: DonorFieldsEnum.submitter_donor_id,
+  },
+  {
+    index: 0,
+    type: 'INVALID_FIELD_VALUE_TYPE',
+    info: {
+      value: 'acdc',
+      donorSubmitterId: 'ICGC_0002',
+    },
+    message: 'The value is not permissible for this field.',
+    fieldName: DonorFieldsEnum.survival_time,
+  },
+  {
+    index: 0,
+    type: 'INVALID_ENUM_VALUE',
+    info: {
+      value: 'undecided',
+      donorSubmitterId: 'ICGC_0002',
+    },
+    message: 'The value is not permissible for this field.',
+    fieldName: DonorFieldsEnum.vital_status,
+  },
+];
+const expectedRadiationBatchSubmissionSchemaErrors = [
+  {
+    index: 0,
+    type: 'FOUND_IDENTICAL_IDS',
+    info: {
+      value: 'ICGC_0001',
+      donorSubmitterId: 'ICGC_0001',
+      useAllRecordValues: false,
+      conflictingRows: [1],
+      uniqueIdNames: ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.RADIATION],
+    },
+    message:
+      'You are trying to submit the same [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] in multiple rows. [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] can only be submitted once per file.',
+    fieldName: DonorFieldsEnum.submitter_donor_id,
+  },
+  {
+    index: 1,
+    type: 'FOUND_IDENTICAL_IDS',
+    info: {
+      value: 'ICGC_0001',
+      donorSubmitterId: 'ICGC_0001',
+      useAllRecordValues: false,
+      conflictingRows: [0],
+      uniqueIdNames: ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.RADIATION],
+    },
+    message:
+      'You are trying to submit the same [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] in multiple rows. [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] can only be submitted once per file.',
+    fieldName: DonorFieldsEnum.submitter_donor_id,
+  },
+];
+
+const INVALID_FILENAME_ERROR =
+  'Improperly named files cannot be uploaded or validated. Please retain the template file name and only append characters to the end (e.g. donor<_optional_extension>.tsv).';
+
+const clearCollections = async (dburl: string, collections: string[]) => {
+  try {
+    const promises = collections.map(collectionName => cleanCollection(dburl, collectionName));
+    await Promise.all(promises);
+    await resetCounters(dburl);
+    return;
+  } catch (err) {
+    console.error(err);
+    return err;
+  }
+};

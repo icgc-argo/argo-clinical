@@ -1,16 +1,18 @@
 import {
   SubmissionValidationError,
-  ClinicalEntitySchemaNames,
-  TreatmentFieldsEnum,
   SubmittedClinicalRecord,
   DataValidationErrors,
-  ClinicalTherapyType,
 } from '../submission-entities';
+import {
+  ClinicalEntitySchemaNames,
+  TreatmentFieldsEnum,
+  ClinicalTherapyType,
+} from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, Treatment } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
-import { getSingleClinicalObjectFromDonor } from '../submission-to-clinical/submission-to-clinical';
+import { getSingleClinicalObjectFromDonor } from '../../common-model/functions';
 
 export const validate = async (
   therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
@@ -23,12 +25,9 @@ export const validate = async (
   }
 
   const errors: SubmissionValidationError[] = [];
-
   const treatment = getTreatment(therapyRecord, mergedDonor, errors);
   if (!treatment) return errors;
-
   checkTreatementHasCorrectTypeForTherapy(therapyRecord, treatment, errors);
-
   return errors;
 };
 

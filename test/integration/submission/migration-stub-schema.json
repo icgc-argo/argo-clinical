@@ -12,12 +12,7 @@
               "description": "Donors last known state of living or deceased.",
               "name": "vital_status",
               "restrictions": {
-                "codeList": [
-                  "Alive",
-                  "Deceased",
-                  "Not reported",
-                  "Unknown"
-                ],
+                "codeList": ["Alive", "Deceased", "Not reported", "Unknown"],
                 "required": true
               },
               "valueType": "string"
@@ -26,11 +21,7 @@
               "description": "Donors last known state of living or deceased.",
               "name": "vital_status",
               "restrictions": {
-                "codeList": [
-                  "Alive",
-                  "Deceased",
-                  "Not reported"
-                ],
+                "codeList": ["Alive", "Deceased", "Not reported"],
                 "required": true
               },
               "valueType": "string"
@@ -41,9 +32,7 @@
                   "type": "updated",
                   "data": {
                     "added": [],
-                    "deleted": [
-                      "Unknown"
-                    ]
+                    "deleted": ["Unknown"]
                   }
                 }
               }
@@ -57,11 +46,7 @@
               "description": "Anatomic location of a specimen when it was collected.",
               "name": "anatomic_location_of_specimen_collection",
               "restrictions": {
-                "codeList": [
-                  "Muscle",
-                  "Other",
-                  "Wrist"
-                ],
+                "codeList": ["Muscle", "Other", "Wrist"],
                 "required": true
               },
               "valueType": "string"
@@ -70,10 +55,7 @@
               "description": "Anatomic location of a specimen when it was collected.",
               "name": "anatomic_location_of_specimen_collection",
               "restrictions": {
-                "codeList": [
-                  "Muscle",
-                  "Wrist"
-                ],
+                "codeList": ["Muscle", "Wrist"],
                 "required": true
               },
               "valueType": "string"
@@ -84,9 +66,7 @@
                   "type": "updated",
                   "data": {
                     "added": [],
-                    "deleted": [
-                      "Other"
-                    ]
+                    "deleted": ["Other"]
                   }
                 }
               }
@@ -100,12 +80,7 @@
               "description": "Description of the cause of a donor's death.",
               "name": "cause_of_death",
               "restrictions": {
-                "codeList": [
-                  "Died of cancer",
-                  "Died of other reasons",
-                  "Not reported",
-                  "Unknown"
-                ]
+                "codeList": ["Died of cancer", "Died of other reasons", "Not reported", "Unknown"]
               },
               "valueType": "string",
               "meta": {
@@ -116,12 +91,7 @@
               "description": "Description of the cause of a donor's death.",
               "name": "cause_of_death",
               "restrictions": {
-                "codeList": [
-                  "Died of cancer",
-                  "Died of other reasons",
-                  "Not reported",
-                  "Unknown"
-                ]
+                "codeList": ["Died of cancer", "Died of other reasons", "Not reported", "Unknown"]
               },
               "valueType": "string"
             },
@@ -144,14 +114,7 @@
               "description": "Specify the tumour staging system used to stage the cancer at the time of primary diagnosis (prior to treatment).",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Binet",
-                  "Rai",
-                  "FIGO",
-                  "Ann Arbor",
-                  "Murphy",
-                  "Lugano"
-                ]
+                "codeList": ["Binet", "Rai", "FIGO", "Ann Arbor", "Murphy", "Lugano"]
               }
             },
             "right": {
@@ -160,14 +123,7 @@
               "description": "Specify the tumour staging system used to stage the cancer at the time of primary diagnosis (prior to treatment).",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Binet",
-                  "Rai",
-                  "FIGO",
-                  "Ann Arbor",
-                  "Murphy",
-                  "Lugano"
-                ]
+                "codeList": ["Binet", "Rai", "FIGO", "Ann Arbor", "Murphy", "Lugano"]
               },
               "meta": {
                 "core": true
@@ -197,12 +153,7 @@
               "description": "Description of the cause of a donor's death.",
               "name": "cause_of_death",
               "restrictions": {
-                "codeList": [
-                  "Died of cancer",
-                  "Died of other reasons",
-                  "Not reported",
-                  "Unknown"
-                ]
+                "codeList": ["Died of cancer", "Died of other reasons", "Not reported", "Unknown"]
               },
               "valueType": "string",
               "meta": {
@@ -231,9 +182,7 @@
                 "codeList": {
                   "type": "updated",
                   "data": {
-                    "added": [
-                      "Died from disease"
-                    ],
+                    "added": ["Died from disease"],
                     "deleted": []
                   }
                 }
@@ -313,14 +262,7 @@
               "description": "Specify the tumour staging system used to stage the cancer at the time of primary diagnosis (prior to treatment).",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Binet",
-                  "Rai",
-                  "FIGO",
-                  "Ann Arbor",
-                  "Murphy",
-                  "Lugano"
-                ]
+                "codeList": ["Binet", "Rai", "FIGO", "Ann Arbor", "Murphy", "Lugano"]
               }
             },
             "right": {
@@ -329,13 +271,7 @@
               "description": "Specify the tumour staging system used to stage the cancer at the time of primary diagnosis (prior to treatment).",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Binet",
-                  "Rai",
-                  "FIGO",
-                  "Ann Arbor",
-                  "Lugano"
-                ]
+                "codeList": ["Binet", "Rai", "FIGO", "Ann Arbor", "Lugano"]
               }
             },
             "diff": {
@@ -344,9 +280,7 @@
                   "type": "updated",
                   "data": {
                     "added": [],
-                    "deleted": [
-                      "Murphy"
-                    ]
+                    "deleted": ["Murphy"]
                   }
                 }
               }
@@ -398,12 +332,7 @@
               "description": "Description of the cause of a donor's death.",
               "name": "cause_of_death",
               "restrictions": {
-                "codeList": [
-                  "Died of cancer",
-                  "Died of other reasons",
-                  "Not reported",
-                  "Unknown"
-                ]
+                "codeList": ["Died of cancer", "Died of other reasons", "Not reported", "Unknown"]
               },
               "valueType": "string",
               "meta": {
@@ -416,12 +345,7 @@
                 "description": "Description of the cause of a donor's death.",
                 "name": "cause_of_death",
                 "restrictions": {
-                  "codeList": [
-                    "Died of cancer",
-                    "Died of other reasons",
-                    "Not reported",
-                    "Unknown"
-                  ]
+                  "codeList": ["Died of cancer", "Died of other reasons", "Not reported", "Unknown"]
                 },
                 "valueType": "string",
                 "meta": {
@@ -731,20 +655,15 @@
           }
         ],
         [
-          "hormone_therapy.hormone_therapy_drug_name",
+          "hormone_therapy.drug_name",
           {
             "left": {
-              "name": "hormone_therapy_drug_name",
+              "name": "drug_name",
               "description": "Name of agent or drug administered to patient as part of the hormone therapy treatment regimen.",
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Placeholder list 1",
-                  "Need list",
-                  "Still need it",
-                  "Other"
-                ]
+                "codeList": ["Placeholder list 1", "Need list", "Still need it", "Other"]
               },
               "meta": {
                 "core": true
@@ -753,17 +672,12 @@
             "diff": {
               "type": "deleted",
               "data": {
-                "name": "hormone_therapy_drug_name",
+                "name": "drug_name",
                 "description": "Name of agent or drug administered to patient as part of the hormone therapy treatment regimen.",
                 "valueType": "string",
                 "restrictions": {
                   "required": true,
-                  "codeList": [
-                    "Placeholder list 1",
-                    "Need list",
-                    "Still need it",
-                    "Other"
-                  ]
+                  "codeList": ["Placeholder list 1", "Need list", "Still need it", "Other"]
                 },
                 "meta": {
                   "core": true
@@ -781,13 +695,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "mg/m²",
-                  "IU/m²",
-                  "µg/m²",
-                  "g/m²",
-                  "kg "
-                ]
+                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg "]
               },
               "meta": {
                 "core": true
@@ -801,13 +709,7 @@
                 "valueType": "string",
                 "restrictions": {
                   "required": true,
-                  "codeList": [
-                    "mg/m²",
-                    "IU/m²",
-                    "µg/m²",
-                    "g/m²",
-                    "kg "
-                  ]
+                  "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg "]
                 },
                 "meta": {
                   "core": true
@@ -879,11 +781,7 @@
               "description": "Description of the donor self-reported gender. Gender is described as the assemblage of properties that distinguish people on the basis of their societal roles.",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Male",
-                  "Female",
-                  "Other"
-                ]
+                "codeList": ["Male", "Female", "Other"]
               },
               "meta": {
                 "core": true
@@ -934,10 +832,7 @@
               "description": "Description of specimens tumour/normal status for data processing.",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Normal",
-                  "Tumour"
-                ]
+                "codeList": ["Normal", "Tumour"]
               },
               "meta": {
                 "core": true
@@ -1028,12 +923,7 @@
               "description": "Donors last known state of living or deceased.",
               "name": "vital_status",
               "restrictions": {
-                "codeList": [
-                  "Alive",
-                  "Deceased",
-                  "Not reported",
-                  "Unknown"
-                ],
+                "codeList": ["Alive", "Deceased", "Not reported", "Unknown"],
                 "required": true
               },
               "valueType": "string",
@@ -1045,12 +935,7 @@
               "description": "Description of the cause of a donor's death.",
               "name": "cause_of_death",
               "restrictions": {
-                "codeList": [
-                  "Died of cancer",
-                  "Died of other reasons",
-                  "Not reported",
-                  "Unknown"
-                ]
+                "codeList": ["Died of cancer", "Died of other reasons", "Not reported", "Unknown"]
               },
               "valueType": "string",
               "meta": {
@@ -1078,6 +963,18 @@
               "description": "Unique identifier of the ARGO program.",
               "restrictions": {
                 "required": true
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -1119,14 +1016,7 @@
               "description": "Specify the tumour staging system used to stage the cancer at the time of primary diagnosis (prior to treatment).",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Binet",
-                  "Rai",
-                  "FIGO",
-                  "Ann Arbor",
-                  "Murphy",
-                  "Lugano"
-                ]
+                "codeList": ["Binet", "Rai", "FIGO", "Ann Arbor", "Murphy", "Lugano"]
               }
             },
             {
@@ -1179,13 +1069,7 @@
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
-                "codeList": [
-                  "Back Pain",
-                  "Nausea",
-                  "None",
-                  "Unknown",
-                  "Weight Loss"
-                ]
+                "codeList": ["Back Pain", "Nausea", "None", "Unknown", "Weight Loss"]
               }
             },
             {
@@ -1193,12 +1077,7 @@
               "description": "Indicate the menopause status of the patient at the time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
-                "codeList": [
-                  "Perimenopausal",
-                  "Postmenopausal",
-                  "Premenopausal",
-                  "Unknown"
-                ]
+                "codeList": ["Perimenopausal", "Postmenopausal", "Premenopausal", "Unknown"]
               }
             }
           ]
@@ -1222,6 +1101,19 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -1251,11 +1143,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Muscle",
-                  "Other",
-                  "Wrist"
-                ]
+                "codeList": ["Muscle", "Other", "Wrist"]
               }
             },
             {
@@ -1264,12 +1152,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Yes",
-                  "No",
-                  "Unknown",
-                  "Not reported"
-                ]
+                "codeList": ["Yes", "No", "Unknown", "Not reported"]
               },
               "meta": {
                 "core": true
@@ -1451,6 +1334,30 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
+              "name": "submitter_treatment_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
+              "meta": {
+                "primaryId": true,
+                "displayName": "Submitter Treatment ID"
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -2006,6 +1913,19 @@
               }
             },
             {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
               "name": "submitter_treatment_id",
               "valueType": "string",
               "description": "Unique identifier of the treatment, as assigned by the data provider.",
@@ -2057,10 +1977,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Yes",
-                  "No"
-                ]
+                "codeList": ["Yes", "No"]
               },
               "meta": {
                 "core": true
@@ -2161,20 +2078,31 @@
               }
             },
             {
-              "name": "chemotherapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the chemotherapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": [
-                  "Allopurinol",
-                  "Dronabinol",
-                  "Sucralfate",
-                  "Lapatinib"
-                ]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -2183,13 +2111,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "mg/m²",
-                  "IU/m²",
-                  "µg/m²",
-                  "g/m²",
-                  "kg"
-                ]
+                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg"]
               },
               "meta": {
                 "core": true
@@ -2256,12 +2178,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Electron",
-                  "Heavy Ions",
-                  "Photon",
-                  "Proton"
-                ]
+                "codeList": ["Electron", "Heavy Ions", "Photon", "Proton"]
               },
               "meta": {
                 "core": true
@@ -2273,10 +2190,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "External",
-                  "Internal (including Brachytherapy)"
-                ]
+                "codeList": ["External", "Internal (including Brachytherapy)"]
               },
               "meta": {
                 "core": true
@@ -2375,20 +2289,31 @@
               }
             },
             {
-              "name": "hormone_therapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the hormone therapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": [
-                  "Placeholder list 1",
-                  "Need list",
-                  "Still need it",
-                  "Other"
-                ]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -2397,13 +2322,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "mg/m²",
-                  "IU/m²",
-                  "µg/m²",
-                  "g/m²",
-                  "kg "
-                ]
+                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg "]
               },
               "meta": {
                 "core": true
@@ -2455,11 +2374,7 @@
               "description": "Description of the donor self-reported gender. Gender is described as the assemblage of properties that distinguish people on the basis of their societal roles.",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Male",
-                  "Female",
-                  "Other"
-                ]
+                "codeList": ["Male", "Female", "Other"]
               },
               "meta": {
                 "core": true
@@ -2510,10 +2425,7 @@
               "description": "Description of specimens tumour/normal status for data processing.",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Normal",
-                  "Tumour"
-                ]
+                "codeList": ["Normal", "Tumour"]
               },
               "meta": {
                 "core": true
@@ -2604,11 +2516,7 @@
               "description": "Donors last known state of living or deceased.",
               "name": "vital_status",
               "restrictions": {
-                "codeList": [
-                  "Alive",
-                  "Deceased",
-                  "Not reported"
-                ],
+                "codeList": ["Alive", "Deceased", "Not reported"],
                 "required": true
               },
               "valueType": "string",
@@ -2620,12 +2528,7 @@
               "description": "Description of the cause of a donor's death.",
               "name": "cause_of_death",
               "restrictions": {
-                "codeList": [
-                  "Died of cancer",
-                  "Died of other reasons",
-                  "Not reported",
-                  "Unknown"
-                ]
+                "codeList": ["Died of cancer", "Died of other reasons", "Not reported", "Unknown"]
               },
               "valueType": "string"
             },
@@ -2650,6 +2553,19 @@
               "description": "Unique identifier of the ARGO program.",
               "restrictions": {
                 "required": true
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -2691,14 +2607,7 @@
               "description": "Specify the tumour staging system used to stage the cancer at the time of primary diagnosis (prior to treatment).",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Binet",
-                  "Rai",
-                  "FIGO",
-                  "Ann Arbor",
-                  "Murphy",
-                  "Lugano"
-                ]
+                "codeList": ["Binet", "Rai", "FIGO", "Ann Arbor", "Murphy", "Lugano"]
               },
               "meta": {
                 "core": true
@@ -2754,13 +2663,7 @@
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
-                "codeList": [
-                  "Back Pain",
-                  "Nausea",
-                  "None",
-                  "Unknown",
-                  "Weight Loss"
-                ]
+                "codeList": ["Back Pain", "Nausea", "None", "Unknown", "Weight Loss"]
               }
             },
             {
@@ -2768,12 +2671,7 @@
               "description": "Indicate the menopause status of the patient at the time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
-                "codeList": [
-                  "Perimenopausal",
-                  "Postmenopausal",
-                  "Premenopausal",
-                  "Unknown"
-                ]
+                "codeList": ["Perimenopausal", "Postmenopausal", "Premenopausal", "Unknown"]
               }
             }
           ]
@@ -2797,6 +2695,19 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -2826,10 +2737,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Muscle",
-                  "Wrist"
-                ]
+                "codeList": ["Muscle", "Wrist"]
               }
             },
             {
@@ -2838,12 +2746,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Yes",
-                  "No",
-                  "Unknown",
-                  "Not reported"
-                ]
+                "codeList": ["Yes", "No", "Unknown", "Not reported"]
               },
               "meta": {
                 "core": true
@@ -3034,6 +2937,30 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
+              "name": "submitter_treatment_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
+              "meta": {
+                "primaryId": true,
+                "displayName": "Submitter Treatment ID"
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -3580,6 +3507,19 @@
               }
             },
             {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
               "name": "submitter_treatment_id",
               "valueType": "string",
               "description": "Unique identifier of the treatment, as assigned by the data provider.",
@@ -3631,10 +3571,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Yes",
-                  "No"
-                ]
+                "codeList": ["Yes", "No"]
               },
               "meta": {
                 "core": true
@@ -3735,38 +3672,31 @@
               }
             },
             {
-              "name": "chemotherapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the chemotherapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": [
-                  "Allopurinol",
-                  "Dronabinol",
-                  "Sucralfate",
-                  "Lapatinib"
-                ]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
               }
             },
             {
-              "name": "chemotherapy_dosage_units",
-              "description": "Indicate units used to record chemotherapy drug dosage.",
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": [
-                  "mg/m²",
-                  "IU/m²",
-                  "µg/m²",
-                  "g/m²",
-                  "kg"
-                ]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -3833,12 +3763,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Electron",
-                  "Heavy Ions",
-                  "Photon",
-                  "Proton"
-                ]
+                "codeList": ["Electron", "Heavy Ions", "Photon", "Proton"]
               },
               "meta": {
                 "core": true
@@ -3850,10 +3775,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "External",
-                  "Internal (including Brachytherapy)"
-                ]
+                "codeList": ["External", "Internal (including Brachytherapy)"]
               },
               "meta": {
                 "core": true
@@ -3955,20 +3877,31 @@
               }
             },
             {
-              "name": "hormone_therapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the hormone therapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": [
-                  "Placeholder list 1",
-                  "Need list",
-                  "Still need it",
-                  "Other"
-                ]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -3977,13 +3910,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "mg/m²",
-                  "IU/m²",
-                  "µg/m²",
-                  "g/m²",
-                  "kg "
-                ]
+                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg "]
               },
               "meta": {
                 "core": true
@@ -4035,11 +3962,7 @@
               "description": "Description of the donor self-reported gender. Gender is described as the assemblage of properties that distinguish people on the basis of their societal roles.",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Male",
-                  "Female",
-                  "Other"
-                ]
+                "codeList": ["Male", "Female", "Other"]
               }
             },
             {
@@ -4157,11 +4080,7 @@
               "description": "Donors last known state of living or deceased.",
               "name": "vital_status",
               "restrictions": {
-                "codeList": [
-                  "Alive",
-                  "Dead",
-                  "Not reported"
-                ],
+                "codeList": ["Alive", "Dead", "Not reported"],
                 "required": true
               },
               "valueType": "string"
@@ -4170,12 +4089,7 @@
               "description": "Description of the cause of a donor's death.",
               "name": "cause_of_death",
               "restrictions": {
-                "codeList": [
-                  "Died of cancer",
-                  "Died of other reasons",
-                  "Not reported",
-                  "Unknown"
-                ]
+                "codeList": ["Died of cancer", "Died of other reasons", "Not reported", "Unknown"]
               },
               "valueType": "string"
             },
@@ -4211,6 +4125,19 @@
               }
             },
             {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
               "name": "age_at_diagnosis",
               "valueType": "integer",
               "description": "Age that the donor was first diagnosed with cancer, in years.",
@@ -4236,14 +4163,7 @@
               "description": "Specify the tumour staging system used to stage the cancer at the time of primary diagnosis (prior to treatment).",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Binet",
-                  "Rai",
-                  "FIGO",
-                  "Ann Arbor",
-                  "Murphy",
-                  "Lugano"
-                ]
+                "codeList": ["Binet", "Rai", "FIGO", "Ann Arbor", "Murphy", "Lugano"]
               }
             },
             {
@@ -4281,13 +4201,7 @@
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
-                "codeList": [
-                  "Back Pain",
-                  "Nausea",
-                  "None",
-                  "Unknown",
-                  "Weight Loss"
-                ]
+                "codeList": ["Back Pain", "Nausea", "None", "Unknown", "Weight Loss"]
               }
             },
             {
@@ -4295,12 +4209,7 @@
               "description": "Indicate the menopause status of the patient at the time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
-                "codeList": [
-                  "Perimenopausal",
-                  "Postmenopausal",
-                  "Premenopausal",
-                  "Unknown"
-                ]
+                "codeList": ["Perimenopausal", "Postmenopausal", "Premenopausal", "Unknown"]
               }
             }
           ]
@@ -4324,6 +4233,19 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -4352,12 +4274,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Muscle",
-                  "Other",
-                  "Unknown",
-                  "Wrist"
-                ]
+                "codeList": ["Muscle", "Other", "Unknown", "Wrist"]
               }
             },
             {
@@ -4366,12 +4283,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Yes",
-                  "No",
-                  "Unknown",
-                  "Not reported"
-                ]
+                "codeList": ["Yes", "No", "Unknown", "Not reported"]
               }
             },
             {
@@ -4413,14 +4325,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Binet",
-                  "Rai",
-                  "FIGO",
-                  "Ann Arbor",
-                  "Murphy",
-                  "Lugano"
-                ]
+                "codeList": ["Binet", "Rai", "FIGO", "Ann Arbor", "Murphy", "Lugano"]
               }
             },
             {
@@ -4510,12 +4415,36 @@
               }
             },
             {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
               "description": "Unique identifier for a follow-up event in a donors clincal record, assigned by the data provider.",
               "name": "submitter_follow_up_id",
               "valueType": "string",
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_treatment_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
+              "meta": {
+                "primaryId": true,
+                "displayName": "Submitter Treatment ID"
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -5062,6 +4991,19 @@
               }
             },
             {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
               "name": "submitter_treatment_id",
               "valueType": "string",
               "description": "Unique identifier of the treatment, as assigned by the data provider.",
@@ -5113,10 +5055,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Yes",
-                  "No"
-                ]
+                "codeList": ["Yes", "No"]
               },
               "meta": {
                 "core": true
@@ -5217,20 +5156,31 @@
               }
             },
             {
-              "name": "chemotherapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the chemotherapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": [
-                  "Allopurinol",
-                  "Dronabinol",
-                  "Sucralfate",
-                  "Lapatinib"
-                ]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -5239,13 +5189,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "mg/m²",
-                  "IU/m²",
-                  "µg/m²",
-                  "g/m²",
-                  "kg"
-                ]
+                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg"]
               },
               "meta": {
                 "core": true
@@ -5315,12 +5259,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Electron",
-                  "Heavy Ions",
-                  "Photon",
-                  "Proton"
-                ]
+                "codeList": ["Electron", "Heavy Ions", "Photon", "Proton"]
               },
               "meta": {
                 "core": true
@@ -5332,10 +5271,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "External",
-                  "Internal (including Brachytherapy)"
-                ]
+                "codeList": ["External", "Internal (including Brachytherapy)"]
               },
               "meta": {
                 "core": true
@@ -5437,20 +5373,31 @@
               }
             },
             {
-              "name": "hormone_therapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the hormone therapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": [
-                  "Placeholder list 1",
-                  "Need list",
-                  "Still need it",
-                  "Other"
-                ]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -5459,13 +5406,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "mg/m²",
-                  "IU/m²",
-                  "µg/m²",
-                  "g/m²",
-                  "kg "
-                ]
+                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg "]
               },
               "meta": {
                 "core": true
@@ -5517,11 +5458,7 @@
               "description": "Description of the donor self-reported gender. Gender is described as the assemblage of properties that distinguish people on the basis of their societal roles.",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Male",
-                  "Female",
-                  "Other"
-                ]
+                "codeList": ["Male", "Female", "Other"]
               },
               "meta": {
                 "core": true
@@ -5572,10 +5509,7 @@
               "description": "Description of specimens tumour/normal status for data processing.",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Normal",
-                  "Tumour"
-                ]
+                "codeList": ["Normal", "Tumour"]
               },
               "meta": {
                 "core": true
@@ -5666,12 +5600,7 @@
               "description": "Donors last known state of living or deceased.",
               "name": "vital_status",
               "restrictions": {
-                "codeList": [
-                  "Alive",
-                  "Deceased",
-                  "Not reported",
-                  "Unknown"
-                ],
+                "codeList": ["Alive", "Deceased", "Not reported", "Unknown"],
                 "required": true
               },
               "valueType": "string",
@@ -5720,6 +5649,18 @@
               }
             },
             {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
               "name": "submitter_donor_id",
               "valueType": "string",
               "description": "Unique identifier of the donor, assigned by the data provider.",
@@ -5758,14 +5699,7 @@
               "description": "Specify the tumour staging system used to stage the cancer at the time of primary diagnosis (prior to treatment).",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Binet",
-                  "Rai",
-                  "FIGO",
-                  "Ann Arbor",
-                  "Murphy",
-                  "Lugano"
-                ]
+                "codeList": ["Binet", "Rai", "FIGO", "Ann Arbor", "Murphy", "Lugano"]
               }
             },
             {
@@ -5818,13 +5752,7 @@
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
-                "codeList": [
-                  "Back Pain",
-                  "Nausea",
-                  "None",
-                  "Unknown",
-                  "Weight Loss"
-                ]
+                "codeList": ["Back Pain", "Nausea", "None", "Unknown", "Weight Loss"]
               }
             },
             {
@@ -5832,12 +5760,7 @@
               "description": "Indicate the menopause status of the patient at the time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
-                "codeList": [
-                  "Perimenopausal",
-                  "Postmenopausal",
-                  "Premenopausal",
-                  "Unknown"
-                ]
+                "codeList": ["Perimenopausal", "Postmenopausal", "Premenopausal", "Unknown"]
               }
             }
           ]
@@ -5861,6 +5784,19 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -5890,11 +5826,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Muscle",
-                  "Other",
-                  "Wrist"
-                ]
+                "codeList": ["Muscle", "Other", "Wrist"]
               }
             },
             {
@@ -5903,12 +5835,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Yes",
-                  "No",
-                  "Unknown",
-                  "Not reported"
-                ]
+                "codeList": ["Yes", "No", "Unknown", "Not reported"]
               },
               "meta": {
                 "core": true
@@ -6090,6 +6017,30 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
+              "name": "submitter_treatment_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
+              "meta": {
+                "primaryId": true,
+                "displayName": "Submitter Treatment ID"
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -6645,6 +6596,19 @@
               }
             },
             {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
               "name": "submitter_treatment_id",
               "valueType": "string",
               "description": "Unique identifier of the treatment, as assigned by the data provider.",
@@ -6696,10 +6660,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Yes",
-                  "No"
-                ]
+                "codeList": ["Yes", "No"]
               },
               "meta": {
                 "core": true
@@ -6800,20 +6761,31 @@
               }
             },
             {
-              "name": "chemotherapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the chemotherapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": [
-                  "Allopurinol",
-                  "Dronabinol",
-                  "Sucralfate",
-                  "Lapatinib"
-                ]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -6822,13 +6794,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "mg/m²",
-                  "IU/m²",
-                  "µg/m²",
-                  "g/m²",
-                  "kg"
-                ]
+                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg"]
               },
               "meta": {
                 "core": true
@@ -6895,12 +6861,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Electron",
-                  "Heavy Ions",
-                  "Photon",
-                  "Proton"
-                ]
+                "codeList": ["Electron", "Heavy Ions", "Photon", "Proton"]
               },
               "meta": {
                 "core": true
@@ -6912,10 +6873,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "External",
-                  "Internal (including Brachytherapy)"
-                ]
+                "codeList": ["External", "Internal (including Brachytherapy)"]
               },
               "meta": {
                 "core": true
@@ -7014,20 +6972,31 @@
               }
             },
             {
-              "name": "hormone_therapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the hormone therapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": [
-                  "Placeholder list 1",
-                  "Need list",
-                  "Still need it",
-                  "Other"
-                ]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -7036,13 +7005,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "mg/m²",
-                  "IU/m²",
-                  "µg/m²",
-                  "g/m²",
-                  "kg "
-                ]
+                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg "]
               },
               "meta": {
                 "core": true
@@ -7094,11 +7057,7 @@
               "description": "Description of the donor self-reported gender. Gender is described as the assemblage of properties that distinguish people on the basis of their societal roles.",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Male",
-                  "Female",
-                  "Other"
-                ]
+                "codeList": ["Male", "Female", "Other"]
               },
               "meta": {
                 "core": true
@@ -7149,10 +7108,7 @@
               "description": "Description of specimens tumour/normal status for data processing.",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Normal",
-                  "Tumour"
-                ]
+                "codeList": ["Normal", "Tumour"]
               },
               "meta": {
                 "core": true
@@ -7243,12 +7199,7 @@
               "description": "Donors last known state of living or deceased.",
               "name": "vital_status",
               "restrictions": {
-                "codeList": [
-                  "Alive",
-                  "Deceased",
-                  "Not reported",
-                  "Unknown"
-                ],
+                "codeList": ["Alive", "Deceased", "Not reported", "Unknown"],
                 "required": true
               },
               "valueType": "string",
@@ -7260,12 +7211,7 @@
               "description": "Description of the cause of a donor's death.",
               "name": "cause_of_death",
               "restrictions": {
-                "codeList": [
-                  "Died of cancer",
-                  "Died of other reasons",
-                  "Not reported",
-                  "Unknown"
-                ]
+                "codeList": ["Died of cancer", "Died of other reasons", "Not reported", "Unknown"]
               },
               "valueType": "string",
               "meta": {
@@ -7301,6 +7247,18 @@
               "description": "Unique identifier of the ARGO program.",
               "restrictions": {
                 "required": true
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -7342,14 +7300,7 @@
               "description": "Specify the tumour staging system used to stage the cancer at the time of primary diagnosis (prior to treatment).",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Binet",
-                  "Rai",
-                  "FIGO",
-                  "Ann Arbor",
-                  "Murphy",
-                  "Lugano"
-                ]
+                "codeList": ["Binet", "Rai", "FIGO", "Ann Arbor", "Murphy", "Lugano"]
               }
             },
             {
@@ -7402,13 +7353,7 @@
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
-                "codeList": [
-                  "Back Pain",
-                  "Nausea",
-                  "None",
-                  "Unknown",
-                  "Weight Loss"
-                ]
+                "codeList": ["Back Pain", "Nausea", "None", "Unknown", "Weight Loss"]
               }
             },
             {
@@ -7416,12 +7361,7 @@
               "description": "Indicate the menopause status of the patient at the time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
-                "codeList": [
-                  "Perimenopausal",
-                  "Postmenopausal",
-                  "Premenopausal",
-                  "Unknown"
-                ]
+                "codeList": ["Perimenopausal", "Postmenopausal", "Premenopausal", "Unknown"]
               }
             }
           ]
@@ -7445,6 +7385,19 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -7474,11 +7427,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Muscle",
-                  "Other",
-                  "Wrist"
-                ]
+                "codeList": ["Muscle", "Other", "Wrist"]
               }
             },
             {
@@ -7487,12 +7436,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Yes",
-                  "No",
-                  "Unknown",
-                  "Not reported"
-                ]
+                "codeList": ["Yes", "No", "Unknown", "Not reported"]
               },
               "meta": {
                 "core": true
@@ -7674,6 +7618,30 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
+              "name": "submitter_treatment_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
+              "meta": {
+                "primaryId": true,
+                "displayName": "Submitter Treatment ID"
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -8229,6 +8197,19 @@
               }
             },
             {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
               "name": "submitter_treatment_id",
               "valueType": "string",
               "description": "Unique identifier of the treatment, as assigned by the data provider.",
@@ -8280,10 +8261,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Yes",
-                  "No"
-                ]
+                "codeList": ["Yes", "No"]
               },
               "meta": {
                 "core": true
@@ -8384,20 +8362,31 @@
               }
             },
             {
-              "name": "chemotherapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the chemotherapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": [
-                  "Allopurinol",
-                  "Dronabinol",
-                  "Sucralfate",
-                  "Lapatinib"
-                ]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -8406,13 +8395,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "mg/m²",
-                  "IU/m²",
-                  "µg/m²",
-                  "g/m²",
-                  "kg"
-                ]
+                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg"]
               },
               "meta": {
                 "core": true
@@ -8479,12 +8462,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Electron",
-                  "Heavy Ions",
-                  "Photon",
-                  "Proton"
-                ]
+                "codeList": ["Electron", "Heavy Ions", "Photon", "Proton"]
               },
               "meta": {
                 "core": true
@@ -8496,10 +8474,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "External",
-                  "Internal (including Brachytherapy)"
-                ]
+                "codeList": ["External", "Internal (including Brachytherapy)"]
               },
               "meta": {
                 "core": true
@@ -8598,20 +8573,31 @@
               }
             },
             {
-              "name": "hormone_therapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the hormone therapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": [
-                  "Placeholder list 1",
-                  "Need list",
-                  "Still need it",
-                  "Other"
-                ]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -8620,13 +8606,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "mg/m²",
-                  "IU/m²",
-                  "µg/m²",
-                  "g/m²",
-                  "kg "
-                ]
+                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg "]
               },
               "meta": {
                 "core": true
@@ -8678,11 +8658,7 @@
               "description": "Description of the donor self-reported gender. Gender is described as the assemblage of properties that distinguish people on the basis of their societal roles.",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Male",
-                  "Female",
-                  "Other"
-                ]
+                "codeList": ["Male", "Female", "Other"]
               },
               "meta": {
                 "core": true
@@ -8733,10 +8709,7 @@
               "description": "Description of specimens tumour/normal status for data processing.",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Normal",
-                  "Tumour"
-                ]
+                "codeList": ["Normal", "Tumour"]
               },
               "meta": {
                 "core": true
@@ -8827,12 +8800,7 @@
               "description": "Donors last known state of living or deceased.",
               "name": "vital_status",
               "restrictions": {
-                "codeList": [
-                  "Alive",
-                  "Deceased",
-                  "Not reported",
-                  "Unknown"
-                ],
+                "codeList": ["Alive", "Deceased", "Not reported", "Unknown"],
                 "required": true
               },
               "valueType": "string",
@@ -8844,12 +8812,7 @@
               "description": "Description of the cause of a donor's death.",
               "name": "cause_of_death",
               "restrictions": {
-                "codeList": [
-                  "Died of cancer",
-                  "Died of other reasons",
-                  "Not reported",
-                  "Unknown"
-                ]
+                "codeList": ["Died of cancer", "Died of other reasons", "Not reported", "Unknown"]
               },
               "valueType": "string",
               "meta": {
@@ -8877,6 +8840,18 @@
               "description": "Unique identifier of the ARGO program.",
               "restrictions": {
                 "required": true
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -8918,14 +8893,7 @@
               "description": "Specify the tumour staging system used to stage the cancer at the time of primary diagnosis (prior to treatment).",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Binet",
-                  "Rai",
-                  "FIGO",
-                  "Ann Arbor",
-                  "Murphy",
-                  "Lugano"
-                ]
+                "codeList": ["Binet", "Rai", "FIGO", "Ann Arbor", "Murphy", "Lugano"]
               }
             },
             {
@@ -8978,13 +8946,7 @@
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
-                "codeList": [
-                  "Back Pain",
-                  "Nausea",
-                  "None",
-                  "Unknown",
-                  "Weight Loss"
-                ]
+                "codeList": ["Back Pain", "Nausea", "None", "Unknown", "Weight Loss"]
               }
             },
             {
@@ -8992,12 +8954,7 @@
               "description": "Indicate the menopause status of the patient at the time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
-                "codeList": [
-                  "Perimenopausal",
-                  "Postmenopausal",
-                  "Premenopausal",
-                  "Unknown"
-                ]
+                "codeList": ["Perimenopausal", "Postmenopausal", "Premenopausal", "Unknown"]
               }
             }
           ]
@@ -9021,6 +8978,19 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -9050,11 +9020,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Muscle",
-                  "Other",
-                  "Wrist"
-                ]
+                "codeList": ["Muscle", "Other", "Wrist"]
               }
             },
             {
@@ -9063,12 +9029,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Yes",
-                  "No",
-                  "Unknown",
-                  "Not reported"
-                ]
+                "codeList": ["Yes", "No", "Unknown", "Not reported"]
               },
               "meta": {
                 "core": true
@@ -9250,6 +9211,30 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
+              "name": "submitter_treatment_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
+              "meta": {
+                "primaryId": true,
+                "displayName": "Submitter Treatment ID"
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -9805,6 +9790,19 @@
               }
             },
             {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
               "name": "submitter_treatment_id",
               "valueType": "string",
               "description": "Unique identifier of the treatment, as assigned by the data provider.",
@@ -9856,10 +9854,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Yes",
-                  "No"
-                ]
+                "codeList": ["Yes", "No"]
               },
               "meta": {
                 "core": true
@@ -9960,20 +9955,31 @@
               }
             },
             {
-              "name": "chemotherapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the chemotherapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": [
-                  "Allopurinol",
-                  "Dronabinol",
-                  "Sucralfate",
-                  "Lapatinib"
-                ]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -9982,13 +9988,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "mg/m²",
-                  "IU/m²",
-                  "µg/m²",
-                  "g/m²",
-                  "kg"
-                ]
+                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg"]
               },
               "meta": {
                 "core": true
@@ -10055,12 +10055,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Electron",
-                  "Heavy Ions",
-                  "Photon",
-                  "Proton"
-                ]
+                "codeList": ["Electron", "Heavy Ions", "Photon", "Proton"]
               },
               "meta": {
                 "core": true
@@ -10072,10 +10067,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "External",
-                  "Internal (including Brachytherapy)"
-                ]
+                "codeList": ["External", "Internal (including Brachytherapy)"]
               },
               "meta": {
                 "core": true
@@ -10174,20 +10166,31 @@
               }
             },
             {
-              "name": "hormone_therapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the hormone therapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": [
-                  "Placeholder list 1",
-                  "Need list",
-                  "Still need it",
-                  "Other"
-                ]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -10196,13 +10199,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "mg/m²",
-                  "IU/m²",
-                  "µg/m²",
-                  "g/m²",
-                  "kg "
-                ]
+                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg "]
               },
               "meta": {
                 "core": true
@@ -10265,11 +10262,7 @@
               "description": "Description of the donor self-reported gender. Gender is described as the assemblage of properties that distinguish people on the basis of their societal roles.",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Male",
-                  "Female",
-                  "Other"
-                ]
+                "codeList": ["Male", "Female", "Other"]
               },
               "meta": {
                 "core": true
@@ -10320,10 +10313,7 @@
               "description": "Description of specimens tumour/normal status for data processing.",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Normal",
-                  "Tumour"
-                ]
+                "codeList": ["Normal", "Tumour"]
               },
               "meta": {
                 "core": true
@@ -10414,12 +10404,7 @@
               "description": "Donors last known state of living or deceased.",
               "name": "vital_status",
               "restrictions": {
-                "codeList": [
-                  "Alive",
-                  "Deceased",
-                  "Not reported",
-                  "Unknown"
-                ],
+                "codeList": ["Alive", "Deceased", "Not reported", "Unknown"],
                 "required": true
               },
               "valueType": "string",
@@ -10431,12 +10416,7 @@
               "description": "Description of the cause of a donor's death.",
               "name": "cause_of_death",
               "restrictions": {
-                "codeList": [
-                  "Died of cancer",
-                  "Died of other reasons",
-                  "Not reported",
-                  "Unknown"
-                ]
+                "codeList": ["Died of cancer", "Died of other reasons", "Not reported", "Unknown"]
               },
               "valueType": "string",
               "meta": {
@@ -10464,6 +10444,18 @@
               "description": "Unique identifier of the ARGO program.",
               "restrictions": {
                 "required": true
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -10505,13 +10497,7 @@
               "description": "Specify the tumour staging system used to stage the cancer at the time of primary diagnosis (prior to treatment).",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Binet",
-                  "Rai",
-                  "FIGO",
-                  "Ann Arbor",
-                  "Lugano"
-                ]
+                "codeList": ["Binet", "Rai", "FIGO", "Ann Arbor", "Lugano"]
               }
             },
             {
@@ -10564,13 +10550,7 @@
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
-                "codeList": [
-                  "Back Pain",
-                  "Nausea",
-                  "None",
-                  "Unknown",
-                  "Weight Loss"
-                ]
+                "codeList": ["Back Pain", "Nausea", "None", "Unknown", "Weight Loss"]
               }
             },
             {
@@ -10578,12 +10558,7 @@
               "description": "Indicate the menopause status of the patient at the time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
-                "codeList": [
-                  "Perimenopausal",
-                  "Postmenopausal",
-                  "Premenopausal",
-                  "Unknown"
-                ]
+                "codeList": ["Perimenopausal", "Postmenopausal", "Premenopausal", "Unknown"]
               }
             }
           ]
@@ -10607,6 +10582,19 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -10636,11 +10624,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Muscle",
-                  "Other",
-                  "Wrist"
-                ]
+                "codeList": ["Muscle", "Other", "Wrist"]
               }
             },
             {
@@ -10649,12 +10633,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Yes",
-                  "No",
-                  "Unknown",
-                  "Not reported"
-                ]
+                "codeList": ["Yes", "No", "Unknown", "Not reported"]
               },
               "meta": {
                 "core": true
@@ -10836,6 +10815,30 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
+              "name": "submitter_treatment_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
+              "meta": {
+                "primaryId": true,
+                "displayName": "Submitter Treatment ID"
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -11391,6 +11394,19 @@
               }
             },
             {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
               "name": "submitter_treatment_id",
               "valueType": "string",
               "description": "Unique identifier of the treatment, as assigned by the data provider.",
@@ -11442,10 +11458,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Yes",
-                  "No"
-                ]
+                "codeList": ["Yes", "No"]
               },
               "meta": {
                 "core": true
@@ -11546,20 +11559,31 @@
               }
             },
             {
-              "name": "chemotherapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the chemotherapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": [
-                  "Allopurinol",
-                  "Dronabinol",
-                  "Sucralfate",
-                  "Lapatinib"
-                ]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -11568,13 +11592,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "mg/m²",
-                  "IU/m²",
-                  "µg/m²",
-                  "g/m²",
-                  "kg"
-                ]
+                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg"]
               },
               "meta": {
                 "core": true
@@ -11641,12 +11659,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Electron",
-                  "Heavy Ions",
-                  "Photon",
-                  "Proton"
-                ]
+                "codeList": ["Electron", "Heavy Ions", "Photon", "Proton"]
               },
               "meta": {
                 "core": true
@@ -11658,10 +11671,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "External",
-                  "Internal (including Brachytherapy)"
-                ]
+                "codeList": ["External", "Internal (including Brachytherapy)"]
               },
               "meta": {
                 "core": true
@@ -11760,20 +11770,31 @@
               }
             },
             {
-              "name": "hormone_therapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the hormone therapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": [
-                  "Placeholder list 1",
-                  "Need list",
-                  "Still need it",
-                  "Other"
-                ]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -11782,13 +11803,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "mg/m²",
-                  "IU/m²",
-                  "µg/m²",
-                  "g/m²",
-                  "kg "
-                ]
+                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg "]
               },
               "meta": {
                 "core": true
@@ -11840,11 +11855,7 @@
               "description": "Description of the donor self-reported gender. Gender is described as the assemblage of properties that distinguish people on the basis of their societal roles.",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Male",
-                  "Female",
-                  "Other"
-                ]
+                "codeList": ["Male", "Female", "Other"]
               },
               "meta": {
                 "core": true
@@ -11895,10 +11906,7 @@
               "description": "Description of specimens tumour/normal status for data processing.",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Normal",
-                  "Tumour"
-                ]
+                "codeList": ["Normal", "Tumour"]
               },
               "meta": {
                 "core": true
@@ -11989,12 +11997,7 @@
               "description": "Donors last known state of living or deceased.",
               "name": "vital_status",
               "restrictions": {
-                "codeList": [
-                  "Alive",
-                  "Deceased",
-                  "Not reported",
-                  "Unknown"
-                ],
+                "codeList": ["Alive", "Deceased", "Not reported", "Unknown"],
                 "required": true
               },
               "valueType": "string",
@@ -12006,12 +12009,7 @@
               "description": "Description of the cause of a donor's death.",
               "name": "cause_of_death",
               "restrictions": {
-                "codeList": [
-                  "Died of cancer",
-                  "Died of other reasons",
-                  "Not reported",
-                  "Unknown"
-                ]
+                "codeList": ["Died of cancer", "Died of other reasons", "Not reported", "Unknown"]
               },
               "valueType": "string",
               "meta": {
@@ -12047,6 +12045,18 @@
               "description": "Unique identifier of the ARGO program.",
               "restrictions": {
                 "required": true
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -12088,14 +12098,7 @@
               "description": "Specify the tumour staging system used to stage the cancer at the time of primary diagnosis (prior to treatment).",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Binet",
-                  "Rai",
-                  "FIGO",
-                  "Ann Arbor",
-                  "Murphy",
-                  "Lugano"
-                ]
+                "codeList": ["Binet", "Rai", "FIGO", "Ann Arbor", "Murphy", "Lugano"]
               }
             },
             {
@@ -12148,13 +12151,7 @@
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
-                "codeList": [
-                  "Back Pain",
-                  "Nausea",
-                  "None",
-                  "Unknown",
-                  "Weight Loss"
-                ]
+                "codeList": ["Back Pain", "Nausea", "None", "Unknown", "Weight Loss"]
               }
             },
             {
@@ -12162,12 +12159,7 @@
               "description": "Indicate the menopause status of the patient at the time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
-                "codeList": [
-                  "Perimenopausal",
-                  "Postmenopausal",
-                  "Premenopausal",
-                  "Unknown"
-                ]
+                "codeList": ["Perimenopausal", "Postmenopausal", "Premenopausal", "Unknown"]
               }
             }
           ]
@@ -12191,6 +12183,19 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -12220,11 +12225,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Muscle",
-                  "Other",
-                  "Wrist"
-                ]
+                "codeList": ["Muscle", "Other", "Wrist"]
               }
             },
             {
@@ -12233,12 +12234,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Yes",
-                  "No",
-                  "Unknown",
-                  "Not reported"
-                ]
+                "codeList": ["Yes", "No", "Unknown", "Not reported"]
               },
               "meta": {
                 "core": true
@@ -12420,6 +12416,30 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
+              "name": "submitter_treatment_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
+              "meta": {
+                "primaryId": true,
+                "displayName": "Submitter Treatment ID"
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -12975,6 +12995,19 @@
               }
             },
             {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
               "name": "submitter_treatment_id",
               "valueType": "string",
               "description": "Unique identifier of the treatment, as assigned by the data provider.",
@@ -13026,10 +13059,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Yes",
-                  "No"
-                ]
+                "codeList": ["Yes", "No"]
               },
               "meta": {
                 "core": true
@@ -13130,20 +13160,31 @@
               }
             },
             {
-              "name": "chemotherapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the chemotherapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": [
-                  "Allopurinol",
-                  "Dronabinol",
-                  "Sucralfate",
-                  "Lapatinib"
-                ]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -13152,13 +13193,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "mg/m²",
-                  "IU/m²",
-                  "µg/m²",
-                  "g/m²",
-                  "kg"
-                ]
+                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg"]
               },
               "meta": {
                 "core": true
@@ -13225,12 +13260,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Electron",
-                  "Heavy Ions",
-                  "Photon",
-                  "Proton"
-                ]
+                "codeList": ["Electron", "Heavy Ions", "Photon", "Proton"]
               },
               "meta": {
                 "core": true
@@ -13242,10 +13272,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "External",
-                  "Internal (including Brachytherapy)"
-                ]
+                "codeList": ["External", "Internal (including Brachytherapy)"]
               },
               "meta": {
                 "core": true
@@ -13344,20 +13371,31 @@
               }
             },
             {
-              "name": "hormone_therapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the hormone therapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": [
-                  "Placeholder list 1",
-                  "Need list",
-                  "Still need it",
-                  "Other"
-                ]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -13366,13 +13404,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "mg/m²",
-                  "IU/m²",
-                  "µg/m²",
-                  "g/m²",
-                  "kg "
-                ]
+                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg "]
               },
               "meta": {
                 "core": true
@@ -13424,11 +13456,7 @@
               "description": "Description of the donor self-reported gender. Gender is described as the assemblage of properties that distinguish people on the basis of their societal roles.",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Male",
-                  "Female",
-                  "Other"
-                ]
+                "codeList": ["Male", "Female", "Other"]
               },
               "meta": {
                 "core": true
@@ -13479,10 +13507,7 @@
               "description": "Description of specimens tumour/normal status for data processing.",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Normal",
-                  "Tumour"
-                ]
+                "codeList": ["Normal", "Tumour"]
               },
               "meta": {
                 "core": true
@@ -13573,12 +13598,7 @@
               "description": "Donors last known state of living or deceased.",
               "name": "vital_status",
               "restrictions": {
-                "codeList": [
-                  "Alive",
-                  "Deceased",
-                  "Not reported",
-                  "Unknown"
-                ],
+                "codeList": ["Alive", "Deceased", "Not reported", "Unknown"],
                 "required": true
               },
               "valueType": "string",
@@ -13607,6 +13627,18 @@
               "description": "Unique identifier of the ARGO program.",
               "restrictions": {
                 "required": true
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -13648,14 +13680,7 @@
               "description": "Specify the tumour staging system used to stage the cancer at the time of primary diagnosis (prior to treatment).",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Binet",
-                  "Rai",
-                  "FIGO",
-                  "Ann Arbor",
-                  "Murphy",
-                  "Lugano"
-                ]
+                "codeList": ["Binet", "Rai", "FIGO", "Ann Arbor", "Murphy", "Lugano"]
               }
             },
             {
@@ -13708,13 +13733,7 @@
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
-                "codeList": [
-                  "Back Pain",
-                  "Nausea",
-                  "None",
-                  "Unknown",
-                  "Weight Loss"
-                ]
+                "codeList": ["Back Pain", "Nausea", "None", "Unknown", "Weight Loss"]
               }
             },
             {
@@ -13722,12 +13741,7 @@
               "description": "Indicate the menopause status of the patient at the time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
-                "codeList": [
-                  "Perimenopausal",
-                  "Postmenopausal",
-                  "Premenopausal",
-                  "Unknown"
-                ]
+                "codeList": ["Perimenopausal", "Postmenopausal", "Premenopausal", "Unknown"]
               }
             }
           ]
@@ -13751,6 +13765,19 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -13780,11 +13807,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Muscle",
-                  "Other",
-                  "Wrist"
-                ]
+                "codeList": ["Muscle", "Other", "Wrist"]
               }
             },
             {
@@ -13793,12 +13816,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Yes",
-                  "No",
-                  "Unknown",
-                  "Not reported"
-                ]
+                "codeList": ["Yes", "No", "Unknown", "Not reported"]
               },
               "meta": {
                 "core": true
@@ -13980,6 +13998,30 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
+              "name": "submitter_treatment_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
+              "meta": {
+                "primaryId": true,
+                "displayName": "Submitter Treatment ID"
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -14535,6 +14577,19 @@
               }
             },
             {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
               "name": "submitter_treatment_id",
               "valueType": "string",
               "description": "Unique identifier of the treatment, as assigned by the data provider.",
@@ -14586,10 +14641,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Yes",
-                  "No"
-                ]
+                "codeList": ["Yes", "No"]
               },
               "meta": {
                 "core": true
@@ -14690,20 +14742,31 @@
               }
             },
             {
-              "name": "chemotherapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the chemotherapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": [
-                  "Allopurinol",
-                  "Dronabinol",
-                  "Sucralfate",
-                  "Lapatinib"
-                ]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -14712,13 +14775,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "mg/m²",
-                  "IU/m²",
-                  "µg/m²",
-                  "g/m²",
-                  "kg"
-                ]
+                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg"]
               },
               "meta": {
                 "core": true
@@ -14785,12 +14842,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Electron",
-                  "Heavy Ions",
-                  "Photon",
-                  "Proton"
-                ]
+                "codeList": ["Electron", "Heavy Ions", "Photon", "Proton"]
               },
               "meta": {
                 "core": true
@@ -14802,10 +14854,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "External",
-                  "Internal (including Brachytherapy)"
-                ]
+                "codeList": ["External", "Internal (including Brachytherapy)"]
               },
               "meta": {
                 "core": true
@@ -14904,20 +14953,31 @@
               }
             },
             {
-              "name": "hormone_therapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the hormone therapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": [
-                  "Placeholder list 1",
-                  "Need list",
-                  "Still need it",
-                  "Other"
-                ]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -14926,13 +14986,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "mg/m²",
-                  "IU/m²",
-                  "µg/m²",
-                  "g/m²",
-                  "kg "
-                ]
+                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg "]
               },
               "meta": {
                 "core": true
@@ -14984,11 +15038,7 @@
               "description": "Description of the donor self-reported gender. Gender is described as the assemblage of properties that distinguish people on the basis of their societal roles.",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Male",
-                  "Female",
-                  "Other"
-                ]
+                "codeList": ["Male", "Female", "Other"]
               },
               "meta": {
                 "core": true
@@ -15039,10 +15089,7 @@
               "description": "Description of specimens tumour/normal status for data processing.",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Normal",
-                  "Tumour"
-                ]
+                "codeList": ["Normal", "Tumour"]
               },
               "meta": {
                 "core": true
@@ -15133,12 +15180,7 @@
               "description": "Donors last known state of living or deceased.",
               "name": "vital_status",
               "restrictions": {
-                "codeList": [
-                  "Alive",
-                  "Deceased",
-                  "Not reported",
-                  "Unknown"
-                ],
+                "codeList": ["Alive", "Deceased", "Not reported", "Unknown"],
                 "required": true
               },
               "valueType": "string",
@@ -15150,12 +15192,7 @@
               "description": "Description of the cause of a donor's death.",
               "name": "cause_of_death",
               "restrictions": {
-                "codeList": [
-                  "Died of cancer",
-                  "Died of other reasons",
-                  "Not reported",
-                  "Unknown"
-                ]
+                "codeList": ["Died of cancer", "Died of other reasons", "Not reported", "Unknown"]
               },
               "valueType": "string",
               "meta": {
@@ -15183,6 +15220,18 @@
               "description": "Unique identifier of the ARGO program.",
               "restrictions": {
                 "required": true
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -15227,14 +15276,7 @@
               "description": "Specify the tumour staging system used to stage the cancer at the time of primary diagnosis (prior to treatment).",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Binet",
-                  "Rai",
-                  "FIGO",
-                  "Ann Arbor",
-                  "Murphy",
-                  "Lugano"
-                ]
+                "codeList": ["Binet", "Rai", "FIGO", "Ann Arbor", "Murphy", "Lugano"]
               }
             },
             {
@@ -15287,13 +15329,7 @@
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
-                "codeList": [
-                  "Back Pain",
-                  "Nausea",
-                  "None",
-                  "Unknown",
-                  "Weight Loss"
-                ]
+                "codeList": ["Back Pain", "Nausea", "None", "Unknown", "Weight Loss"]
               }
             },
             {
@@ -15301,12 +15337,7 @@
               "description": "Indicate the menopause status of the patient at the time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
-                "codeList": [
-                  "Perimenopausal",
-                  "Postmenopausal",
-                  "Premenopausal",
-                  "Unknown"
-                ]
+                "codeList": ["Perimenopausal", "Postmenopausal", "Premenopausal", "Unknown"]
               }
             }
           ]
@@ -15330,6 +15361,19 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -15359,11 +15403,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Muscle",
-                  "Other",
-                  "Wrist"
-                ]
+                "codeList": ["Muscle", "Other", "Wrist"]
               }
             },
             {
@@ -15372,12 +15412,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Yes",
-                  "No",
-                  "Unknown",
-                  "Not reported"
-                ]
+                "codeList": ["Yes", "No", "Unknown", "Not reported"]
               },
               "meta": {
                 "core": true
@@ -15559,6 +15594,30 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
+              "name": "submitter_treatment_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
+              "meta": {
+                "primaryId": true,
+                "displayName": "Submitter Treatment ID"
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -16114,6 +16173,19 @@
               }
             },
             {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
               "name": "submitter_treatment_id",
               "valueType": "string",
               "description": "Unique identifier of the treatment, as assigned by the data provider.",
@@ -16165,10 +16237,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Yes",
-                  "No"
-                ]
+                "codeList": ["Yes", "No"]
               },
               "meta": {
                 "core": true
@@ -16269,20 +16338,31 @@
               }
             },
             {
-              "name": "chemotherapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the chemotherapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": [
-                  "Allopurinol",
-                  "Dronabinol",
-                  "Sucralfate",
-                  "Lapatinib"
-                ]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -16291,13 +16371,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "mg/m²",
-                  "IU/m²",
-                  "µg/m²",
-                  "g/m²",
-                  "kg"
-                ]
+                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg"]
               },
               "meta": {
                 "core": true
@@ -16364,12 +16438,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Electron",
-                  "Heavy Ions",
-                  "Photon",
-                  "Proton"
-                ]
+                "codeList": ["Electron", "Heavy Ions", "Photon", "Proton"]
               },
               "meta": {
                 "core": true
@@ -16381,10 +16450,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "External",
-                  "Internal (including Brachytherapy)"
-                ]
+                "codeList": ["External", "Internal (including Brachytherapy)"]
               },
               "meta": {
                 "core": true
@@ -16483,20 +16549,31 @@
               }
             },
             {
-              "name": "hormone_therapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the hormone therapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": [
-                  "Placeholder list 1",
-                  "Need list",
-                  "Still need it",
-                  "Other"
-                ]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -16505,13 +16582,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "mg/m²",
-                  "IU/m²",
-                  "µg/m²",
-                  "g/m²",
-                  "kg "
-                ]
+                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg "]
               },
               "meta": {
                 "core": true
@@ -16563,11 +16634,7 @@
               "description": "Description of the donor self-reported gender. Gender is described as the assemblage of properties that distinguish people on the basis of their societal roles.",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Male",
-                  "Female",
-                  "Other"
-                ]
+                "codeList": ["Male", "Female", "Other"]
               },
               "meta": {
                 "core": true
@@ -16618,10 +16685,7 @@
               "description": "Description of specimens tumour/normal status for data processing.",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Normal",
-                  "Tumour"
-                ]
+                "codeList": ["Normal", "Tumour"]
               },
               "meta": {
                 "core": true
@@ -16712,12 +16776,7 @@
               "description": "Donors last known state of living or deceased.",
               "name": "vital_status",
               "restrictions": {
-                "codeList": [
-                  "Alive",
-                  "Deceased",
-                  "Not reported",
-                  "Unknown"
-                ],
+                "codeList": ["Alive", "Deceased", "Not reported", "Unknown"],
                 "required": true
               },
               "valueType": "string",
@@ -16729,12 +16788,7 @@
               "description": "Description of the cause of a donor's death.",
               "name": "cause_of_death",
               "restrictions": {
-                "codeList": [
-                  "Died of cancer",
-                  "Died of other reasons",
-                  "Not reported",
-                  "Unknown"
-                ]
+                "codeList": ["Died of cancer", "Died of other reasons", "Not reported", "Unknown"]
               },
               "valueType": "string",
               "meta": {
@@ -16762,6 +16816,18 @@
               "description": "Unique identifier of the ARGO program.",
               "restrictions": {
                 "required": true
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -16803,14 +16869,7 @@
               "description": "Specify the tumour staging system used to stage the cancer at the time of primary diagnosis (prior to treatment).",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Binet",
-                  "Rai",
-                  "FIGO",
-                  "Ann Arbor",
-                  "Murphy",
-                  "Lugano"
-                ]
+                "codeList": ["Binet", "Rai", "FIGO", "Ann Arbor", "Murphy", "Lugano"]
               }
             },
             {
@@ -16863,13 +16922,7 @@
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
-                "codeList": [
-                  "Back Pain",
-                  "Nausea",
-                  "None",
-                  "Unknown",
-                  "Weight Loss"
-                ]
+                "codeList": ["Back Pain", "Nausea", "None", "Unknown", "Weight Loss"]
               }
             },
             {
@@ -16877,12 +16930,7 @@
               "description": "Indicate the menopause status of the patient at the time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
-                "codeList": [
-                  "Perimenopausal",
-                  "Postmenopausal",
-                  "Premenopausal",
-                  "Unknown"
-                ]
+                "codeList": ["Perimenopausal", "Postmenopausal", "Premenopausal", "Unknown"]
               }
             }
           ]
@@ -16906,6 +16954,19 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -16935,11 +16996,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Muscle",
-                  "Other",
-                  "Wrist"
-                ]
+                "codeList": ["Muscle", "Other", "Wrist"]
               }
             },
             {
@@ -16948,12 +17005,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Yes",
-                  "No",
-                  "Unknown",
-                  "Not reported"
-                ]
+                "codeList": ["Yes", "No", "Unknown", "Not reported"]
               },
               "meta": {
                 "core": true
@@ -17135,6 +17187,30 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
+              "name": "submitter_treatment_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
+              "meta": {
+                "primaryId": true,
+                "displayName": "Submitter Treatment ID"
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -17690,6 +17766,19 @@
               }
             },
             {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
               "name": "submitter_treatment_id",
               "valueType": "string",
               "description": "Unique identifier of the treatment, as assigned by the data provider.",
@@ -17741,10 +17830,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Yes",
-                  "No"
-                ]
+                "codeList": ["Yes", "No"]
               },
               "meta": {
                 "core": true
@@ -17845,20 +17931,31 @@
               }
             },
             {
-              "name": "chemotherapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the chemotherapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": [
-                  "Allopurinol",
-                  "Dronabinol",
-                  "Sucralfate",
-                  "Lapatinib"
-                ]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -17867,13 +17964,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "mg/m²",
-                  "IU/m²",
-                  "µg/m²",
-                  "g/m²",
-                  "kg"
-                ]
+                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg"]
               },
               "meta": {
                 "core": true
@@ -17940,12 +18031,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Electron",
-                  "Heavy Ions",
-                  "Photon",
-                  "Proton"
-                ]
+                "codeList": ["Electron", "Heavy Ions", "Photon", "Proton"]
               },
               "meta": {
                 "core": true
@@ -17957,10 +18043,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "External",
-                  "Internal (including Brachytherapy)"
-                ]
+                "codeList": ["External", "Internal (including Brachytherapy)"]
               },
               "meta": {
                 "core": true
@@ -18059,20 +18142,31 @@
               }
             },
             {
-              "name": "hormone_therapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the hormone therapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": [
-                  "Placeholder list 1",
-                  "Need list",
-                  "Still need it",
-                  "Other"
-                ]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -18081,13 +18175,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "mg/m²",
-                  "IU/m²",
-                  "µg/m²",
-                  "g/m²",
-                  "kg "
-                ]
+                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg "]
               },
               "meta": {
                 "core": true
@@ -18139,11 +18227,7 @@
               "description": "Description of the donor self-reported gender. Gender is described as the assemblage of properties that distinguish people on the basis of their societal roles.",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Male",
-                  "Female",
-                  "Other"
-                ]
+                "codeList": ["Male", "Female", "Other"]
               },
               "meta": {
                 "core": true
@@ -18194,10 +18278,7 @@
               "description": "Description of specimens tumour/normal status for data processing.",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Normal",
-                  "Tumour"
-                ]
+                "codeList": ["Normal", "Tumour"]
               },
               "meta": {
                 "core": true
@@ -18288,12 +18369,7 @@
               "description": "Donors last known state of living or deceased.",
               "name": "vital_status",
               "restrictions": {
-                "codeList": [
-                  "Alive",
-                  "Deceased",
-                  "Not reported",
-                  "Unknown"
-                ],
+                "codeList": ["Alive", "Deceased", "Not reported", "Unknown"],
                 "required": true
               },
               "valueType": "string",
@@ -18305,12 +18381,7 @@
               "description": "Description of the cause of a donor's death.",
               "name": "cause_of_death",
               "restrictions": {
-                "codeList": [
-                  "Died of cancer",
-                  "Died of other reasons",
-                  "Not reported",
-                  "Unknown"
-                ]
+                "codeList": ["Died of cancer", "Died of other reasons", "Not reported", "Unknown"]
               },
               "valueType": "string",
               "meta": {
@@ -18338,6 +18409,18 @@
               "description": "Unique identifier of the ARGO program.",
               "restrictions": {
                 "required": true
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -18379,14 +18462,7 @@
               "description": "Specify the tumour staging system used to stage the cancer at the time of primary diagnosis (prior to treatment).",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Binet",
-                  "Rai",
-                  "FIGO",
-                  "Ann Arbor",
-                  "Murphy",
-                  "Lugano"
-                ]
+                "codeList": ["Binet", "Rai", "FIGO", "Ann Arbor", "Murphy", "Lugano"]
               }
             },
             {
@@ -18439,13 +18515,7 @@
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
-                "codeList": [
-                  "Back Pain",
-                  "Nausea",
-                  "None",
-                  "Unknown",
-                  "Weight Loss"
-                ]
+                "codeList": ["Back Pain", "Nausea", "None", "Unknown", "Weight Loss"]
               }
             },
             {
@@ -18453,12 +18523,7 @@
               "description": "Indicate the menopause status of the patient at the time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
-                "codeList": [
-                  "Perimenopausal",
-                  "Postmenopausal",
-                  "Premenopausal",
-                  "Unknown"
-                ]
+                "codeList": ["Perimenopausal", "Postmenopausal", "Premenopausal", "Unknown"]
               }
             }
           ]
@@ -18482,6 +18547,19 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -18511,11 +18589,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Muscle",
-                  "Other",
-                  "Wrist"
-                ]
+                "codeList": ["Muscle", "Other", "Wrist"]
               }
             },
             {
@@ -18524,12 +18598,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Yes",
-                  "No",
-                  "Unknown",
-                  "Not reported"
-                ]
+                "codeList": ["Yes", "No", "Unknown", "Not reported"]
               },
               "meta": {
                 "core": true
@@ -18711,6 +18780,30 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
+              "name": "submitter_treatment_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
+              "meta": {
+                "primaryId": true,
+                "displayName": "Submitter Treatment ID"
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -19266,6 +19359,19 @@
               }
             },
             {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
               "name": "submitter_treatment_id",
               "valueType": "string",
               "description": "Unique identifier of the treatment, as assigned by the data provider.",
@@ -19317,10 +19423,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Yes",
-                  "No"
-                ]
+                "codeList": ["Yes", "No"]
               },
               "meta": {
                 "core": true
@@ -19421,20 +19524,31 @@
               }
             },
             {
-              "name": "chemotherapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the chemotherapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": [
-                  "Allopurinol",
-                  "Dronabinol",
-                  "Sucralfate",
-                  "Lapatinib"
-                ]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -19443,13 +19557,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "mg/m²",
-                  "IU/m²",
-                  "µg/m²",
-                  "g/m²",
-                  "kg"
-                ]
+                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg"]
               },
               "meta": {
                 "core": true
@@ -19516,12 +19624,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Electron",
-                  "Heavy Ions",
-                  "Photon",
-                  "Proton"
-                ]
+                "codeList": ["Electron", "Heavy Ions", "Photon", "Proton"]
               },
               "meta": {
                 "core": true
@@ -19533,10 +19636,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "External",
-                  "Internal (including Brachytherapy)"
-                ]
+                "codeList": ["External", "Internal (including Brachytherapy)"]
               },
               "meta": {
                 "core": true
@@ -19635,20 +19735,31 @@
               }
             },
             {
-              "name": "hormone_therapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the hormone therapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": [
-                  "Placeholder list 1",
-                  "Need list",
-                  "Still need it",
-                  "Other"
-                ]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -19657,13 +19768,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "mg/m²",
-                  "IU/m²",
-                  "µg/m²",
-                  "g/m²",
-                  "kg "
-                ]
+                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg "]
               },
               "meta": {
                 "core": true
@@ -19715,11 +19820,7 @@
               "description": "Description of the donor self-reported gender. Gender is described as the assemblage of properties that distinguish people on the basis of their societal roles.",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Male",
-                  "Female",
-                  "Other"
-                ]
+                "codeList": ["Male", "Female", "Other"]
               },
               "meta": {
                 "core": true
@@ -19770,10 +19871,7 @@
               "description": "Description of specimens tumour/normal status for data processing.",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Normal",
-                  "Tumour"
-                ]
+                "codeList": ["Normal", "Tumour"]
               },
               "meta": {
                 "core": true
@@ -19864,12 +19962,7 @@
               "description": "Donors last known state of living or deceased.",
               "name": "vital_status",
               "restrictions": {
-                "codeList": [
-                  "Alive",
-                  "Deceased",
-                  "Not reported",
-                  "Unknown"
-                ],
+                "codeList": ["Alive", "Deceased", "Not reported", "Unknown"],
                 "required": true
               },
               "valueType": "string",
@@ -19881,12 +19974,7 @@
               "description": "Description of the cause of a donor's death.",
               "name": "cause_of_death",
               "restrictions": {
-                "codeList": [
-                  "Died of cancer",
-                  "Died of other reasons",
-                  "Not reported",
-                  "Unknown"
-                ]
+                "codeList": ["Died of cancer", "Died of other reasons", "Not reported", "Unknown"]
               },
               "valueType": "string",
               "meta": {
@@ -19914,6 +20002,18 @@
               "description": "Unique identifier of the ARGO program.",
               "restrictions": {
                 "required": true
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -19955,14 +20055,7 @@
               "description": "Specify the tumour staging system used to stage the cancer at the time of primary diagnosis (prior to treatment).",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Binet",
-                  "Rai",
-                  "FIGO",
-                  "Ann Arbor",
-                  "Murphy",
-                  "Lugano"
-                ]
+                "codeList": ["Binet", "Rai", "FIGO", "Ann Arbor", "Murphy", "Lugano"]
               }
             },
             {
@@ -20015,13 +20108,7 @@
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
-                "codeList": [
-                  "Back Pain",
-                  "Nausea",
-                  "None",
-                  "Unknown",
-                  "Weight Loss"
-                ]
+                "codeList": ["Back Pain", "Nausea", "None", "Unknown", "Weight Loss"]
               }
             },
             {
@@ -20029,12 +20116,7 @@
               "description": "Indicate the menopause status of the patient at the time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
-                "codeList": [
-                  "Perimenopausal",
-                  "Postmenopausal",
-                  "Premenopausal",
-                  "Unknown"
-                ]
+                "codeList": ["Perimenopausal", "Postmenopausal", "Premenopausal", "Unknown"]
               }
             }
           ]
@@ -20058,6 +20140,19 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -20087,11 +20182,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Muscle",
-                  "Other",
-                  "Wrist"
-                ]
+                "codeList": ["Muscle", "Other", "Wrist"]
               }
             },
             {
@@ -20100,12 +20191,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Yes",
-                  "No",
-                  "Unknown",
-                  "Not reported"
-                ]
+                "codeList": ["Yes", "No", "Unknown", "Not reported"]
               },
               "meta": {
                 "core": true
@@ -20287,6 +20373,30 @@
               "restrictions": {
                 "required": true,
                 "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
+              "name": "submitter_treatment_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
+              "meta": {
+                "primaryId": true,
+                "displayName": "Submitter Treatment ID"
+              },
+              "restrictions": {
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
               }
             },
             {
@@ -20842,6 +20952,19 @@
               }
             },
             {
+              "name": "submitter_primary_diagnosis_id",
+              "valueType": "string",
+              "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
+              "meta": {
+                "displayName": "Submitter Primary Diagnosis ID",
+                "primaryId": true
+              },
+              "restrictions": {
+                "required": "true",
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
+              }
+            },
+            {
               "name": "submitter_treatment_id",
               "valueType": "string",
               "description": "Unique identifier of the treatment, as assigned by the data provider.",
@@ -20893,10 +21016,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Yes",
-                  "No"
-                ]
+                "codeList": ["Yes", "No"]
               },
               "meta": {
                 "core": true
@@ -20997,20 +21117,31 @@
               }
             },
             {
-              "name": "chemotherapy_drug_name",
-              "description": "Name of agent or drug administered to patient as part of the chemotherapy treatment regimen.",
+              "name": "drug_rxnormcui",
+              "description": "RxNormID assigned to the treatment regimen.",
               "valueType": "string",
               "restrictions": {
-                "required": true,
-                "codeList": [
-                  "Allopurinol",
-                  "Dronabinol",
-                  "Sucralfate",
-                  "Lapatinib"
-                ]
+                "required": true
               },
               "meta": {
-                "core": true
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the RxNorm database of drug names provided by the NIH (https://www.nlm.nih.gov/research/umls/rxnorm).",
+                "displayName": "RxNormCUI"
+              }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true
+              },
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses a controlled vocabulary gathered from the DrugBank database of drug names.",
+                "examples": "Allopurinol, Dronabinol, Sucralfate, Lapatinib"
               }
             },
             {
@@ -21019,13 +21150,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "mg/m²",
-                  "IU/m²",
-                  "µg/m²",
-                  "g/m²",
-                  "kg"
-                ]
+                "codeList": ["mg/m²", "IU/m²", "µg/m²", "g/m²", "kg"]
               },
               "meta": {
                 "core": true
@@ -21092,12 +21217,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Electron",
-                  "Heavy Ions",
-                  "Photon",
-                  "Proton"
-                ]
+                "codeList": ["Electron", "Heavy Ions", "Photon", "Proton"]
               },
               "meta": {
                 "core": true
@@ -21109,10 +21229,7 @@
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "External",
-                  "Internal (including Brachytherapy)"
-                ]
+                "codeList": ["External", "Internal (including Brachytherapy)"]
               },
               "meta": {
                 "core": true

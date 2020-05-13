@@ -7,7 +7,7 @@ import mongoose from 'mongoose';
 import { GenericContainer } from 'testcontainers';
 import { cleanCollection, findInDb } from '../testutils';
 import _ from 'lodash';
-import * as manager from '../../../src/submission/schema/schema-manager';
+import * as manager from '../../../src/dictionary/manager';
 import { promisify } from 'bluebird';
 import { SchemasDictionary } from '../../../src/lectern-client/schema-entities';
 const ServerMock: any = require('mock-http-server') as any;
@@ -36,7 +36,7 @@ describe('manager', () => {
   before(() => {
     return (async () => {
       try {
-        mongoContainer = await new GenericContainer('mongo').withExposedPorts(27017).start();
+        mongoContainer = await new GenericContainer('mongo', '4.0').withExposedPorts(27017).start();
         console.log('mongo test container started');
         dburl = `mongodb://${mongoContainer.getContainerIpAddress()}:${mongoContainer.getMappedPort(
           27017,

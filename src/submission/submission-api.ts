@@ -16,6 +16,7 @@ import { HasFullWriteAccess, HasProgramWriteAccess } from '../decorators';
 import _ from 'lodash';
 import { batchErrorMessage } from './submission-error-messages';
 import * as fs from 'fs';
+
 const L = loggerFor(__filename);
 const fsPromises = fs.promises;
 class SubmissionController {

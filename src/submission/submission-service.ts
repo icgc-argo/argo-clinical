@@ -1,5 +1,9 @@
 import * as dataValidator from './validation-clinical/validation';
-import { donorDao, FindByProgramAndSubmitterFilter, DONOR_FIELDS } from '../clinical/donor-repo';
+import {
+  donorDao,
+  FindByProgramAndSubmitterFilter,
+  DONOR_DOCUMENT_FIELDS,
+} from '../clinical/donor-repo';
 import _ from 'lodash';
 import { registrationRepository } from './registration-repo';
 import {
@@ -35,13 +39,13 @@ import {
   SubmissionBatchErrorTypes,
   ValidateSubmissionResult,
   NewClinicalEntities,
-  ClinicalEntitySchemaNames,
   BatchNameRegex,
   ClinicalSubmissionRecordsByDonorIdMap,
   RevalidateClinicalSubmissionCommand,
   LegacyICGCImportRecord,
+  DataValidationErrors,
 } from './submission-entities';
-import * as schemaManager from './schema/schema-manager';
+import * as dictionaryManager from '../dictionary/manager';
 import {
   SchemaValidationError,
   TypedDataRecord,
@@ -50,16 +54,24 @@ import {
   SchemasDictionary,
 } from '../lectern-client/schema-entities';
 import { loggerFor } from '../logger';
-import { Errors, F, isStringMatchRegex, toString, isEmptyString } from '../utils';
+import { Errors, F, isStringMatchRegex, toString, isEmptyString, isNotAbsent } from '../utils';
 import { DeepReadonly } from 'deep-freeze';
 import { submissionRepository } from './submission-repo';
 import { v1 as uuid } from 'uuid';
+import dbRxNormService from '../rxnorm/service';
+import { RxNormConcept } from '../rxnorm/api';
 import { validateSubmissionData, checkUniqueRecords } from './validation-clinical/validation';
-import { batchErrorMessage } from './submission-error-messages';
+import { batchErrorMessage, validationErrorMessage } from './submission-error-messages';
 import {
   ClinicalSubmissionRecordsOperations,
   usingInvalidProgramId,
 } from './validation-clinical/utils';
+import {
+  ClinicalEntitySchemaNames,
+  DonorFieldsEnum,
+  TherapyRxNormFields,
+} from '../common-model/entities';
+
 const L = loggerFor(__filename);
 
 const emptyStats = {
@@ -111,7 +123,7 @@ export namespace operations {
     // a loop that async loops through all records
     await Promise.all(
       command.records.map(async (r, index) => {
-        const schemaResult = await schemaManager
+        const schemaResult = await dictionaryManager
           .instance()
           .processAsync(ClinicalEntitySchemaNames.REGISTRATION, r, index);
 
@@ -155,16 +167,16 @@ export namespace operations {
 
     // all donors in a program, and build memory indexes for fast lookups by donor, specimen, sample submitter Ids
     const allDonors = await donorDao.findByProgramId(command.programId, {
-      [DONOR_FIELDS.DONOR_ID]: 1,
-      [DONOR_FIELDS.PROGRAM_ID]: 1,
-      [DONOR_FIELDS.SUBMITTER_ID]: 1,
-      [DONOR_FIELDS.GENDER]: 1,
-      [DONOR_FIELDS.SPECIMEN_SUBMITTER_ID]: 1,
-      [DONOR_FIELDS.SPECIMEN_TISSUE_SOURCE]: 1,
-      [DONOR_FIELDS.SPECIMEN_TYPE]: 1,
-      [DONOR_FIELDS.SPECIMEN_TUMOR_NORMAL_DESIGNATION]: 1,
-      [DONOR_FIELDS.SAMPLE_TYPE]: 1,
-      [DONOR_FIELDS.SPECIMEN_SAMPLE_SUBMITTER_ID]: 1,
+      [DONOR_DOCUMENT_FIELDS.DONOR_ID]: 1,
+      [DONOR_DOCUMENT_FIELDS.PROGRAM_ID]: 1,
+      [DONOR_DOCUMENT_FIELDS.SUBMITTER_ID]: 1,
+      [DONOR_DOCUMENT_FIELDS.GENDER]: 1,
+      [DONOR_DOCUMENT_FIELDS.SPECIMEN_SUBMITTER_ID]: 1,
+      [DONOR_DOCUMENT_FIELDS.SPECIMEN_TISSUE_SOURCE]: 1,
+      [DONOR_DOCUMENT_FIELDS.SPECIMEN_TYPE]: 1,
+      [DONOR_DOCUMENT_FIELDS.SPECIMEN_TUMOR_NORMAL_DESIGNATION]: 1,
+      [DONOR_DOCUMENT_FIELDS.SAMPLE_TYPE]: 1,
+      [DONOR_DOCUMENT_FIELDS.SPECIMEN_SAMPLE_SUBMITTER_ID]: 1,
     });
 
     const allDonorsMap: DonorBySubmitterIdMap = {};
@@ -204,7 +216,7 @@ export namespace operations {
     const stats = calculateUpdates(registrationRecords, allDonorsMap);
 
     // save the new registration object
-    const schemaVersion = schemaManager.instance().getCurrent().version;
+    const schemaVersion = dictionaryManager.instance().getCurrent().version;
     const registration = toActiveRegistration(command, registrationRecords, stats, schemaVersion);
     const savedRegistration = await registrationRepository.create(registration);
     return F({
@@ -355,7 +367,7 @@ export namespace operations {
           programId: command.programId,
           clinicalType: clinicalType,
         },
-        schemaManager.instance().getCurrent(),
+        dictionaryManager.instance().getCurrent(),
       );
 
       // because there was a requirement to not keep an open empty submission
@@ -680,7 +692,7 @@ export namespace operations {
       errorsList.push({
         index: schemaErr.index,
         type: schemaErr.errorType,
-        info: getSchemaValidationErrorInfoObject(type, schemaErr, records[schemaErr.index]),
+        info: getValidationErrorInfoObject(type, schemaErr, records[schemaErr.index]),
         fieldName: schemaErr.fieldName,
         message: schemaErr.message,
       });
@@ -805,43 +817,163 @@ export namespace operations {
     command: ClinicalSubmissionCommand,
     schema: SchemasDictionary,
   ) => {
+    const schemaName = command.clinicalType as ClinicalEntitySchemaNames;
     // check records are unique
-    const errors: SubmissionValidationError[] = checkUniqueRecords(
-      command.clinicalType as ClinicalEntitySchemaNames,
-      command.records,
-    );
+    const errors: SubmissionValidationError[] = checkUniqueRecords(schemaName, command.records);
 
     let errorsAccumulator: DeepReadonly<SubmissionValidationError[]> = [];
     const validRecordsAccumulator: any[] = [];
 
-    command.records.forEach((r, index) => {
-      const schemaResult = schemaManager.instance().process(command.clinicalType, r, index, schema);
+    await Promise.all(
+      command.records.map(async (record, index) => {
+        let processedRecord: any = {};
+        const schemaResult = dictionaryManager
+          .instance()
+          .process(command.clinicalType, record, index, schema);
 
-      if (schemaResult.validationErrors.length > 0) {
-        errorsAccumulator = errorsAccumulator.concat(
-          unifySchemaErrors(
-            command.clinicalType as ClinicalEntitySchemaNames,
-            schemaResult,
-            command.records,
-          ),
+        if (schemaResult.validationErrors.length > 0) {
+          errorsAccumulator = errorsAccumulator.concat(
+            unifySchemaErrors(schemaName, schemaResult, command.records),
+          );
+        }
+
+        processedRecord = schemaResult.processedRecord;
+        const programIdError = usingInvalidProgramId(
+          ClinicalEntitySchemaNames.REGISTRATION,
+          index,
+          record,
+          command.programId,
         );
-      }
+        errorsAccumulator = errorsAccumulator.concat(programIdError);
 
-      const programIdError = usingInvalidProgramId(
-        ClinicalEntitySchemaNames.REGISTRATION,
-        index,
-        r,
-        command.programId,
-      );
-      errorsAccumulator = errorsAccumulator.concat(programIdError);
-      validRecordsAccumulator.push(schemaResult.processedRecord);
-    });
+        // special case for therapies where we need to populate the rxnorm Ids, only do this step
+        // if the record is valid so far to avoid spending alot of time here
+        if (errorsAccumulator.length == 0 && isRxNormTherapy(command.clinicalType)) {
+          const result = await validateRxNormFields(processedRecord, index, schemaName);
+          if (result.error != undefined) {
+            errorsAccumulator = errorsAccumulator.concat([result.error]);
+          }
+          if (result.record != undefined) {
+            processedRecord = result.record;
+          }
+        }
+
+        // respect the original order of the records
+        validRecordsAccumulator[index] = processedRecord;
+      }),
+    );
 
     return {
       schemaErrorsTemp: errors.concat(errorsAccumulator),
       processedRecords: validRecordsAccumulator,
     };
   };
+
+  function isRxNormTherapy(entity: string) {
+    return (
+      entity == ClinicalEntitySchemaNames.CHEMOTHERAPY ||
+      entity == ClinicalEntitySchemaNames.HORMONE_THERAPY
+    );
+  }
+
+  async function validateRxNormFields(
+    r: TypedDataRecord,
+    index: number,
+    therapyType: ClinicalEntitySchemaNames,
+  ): Promise<{
+    record: TypedDataRecord | undefined;
+    error: SubmissionValidationError | undefined;
+  }> {
+    const rxnormConceptLookupResult = await lookupRxNormConcept(r, index);
+    if (rxnormConceptLookupResult.error != undefined) {
+      rxnormConceptLookupResult.error.info = getValidationErrorInfoObject(
+        therapyType,
+        rxnormConceptLookupResult.error,
+        r,
+      );
+      return { error: rxnormConceptLookupResult.error, record: undefined };
+    }
+    if (rxnormConceptLookupResult.rxNormRecord == undefined) {
+      throw new Error("shouldn't happen");
+    }
+    const recordWithRxNormPopulated = _.cloneDeep(r) as Record<string, any>;
+    // we replace the drug name to normalize the case
+    recordWithRxNormPopulated[TherapyRxNormFields.drug_name] =
+      rxnormConceptLookupResult.rxNormRecord.str;
+    recordWithRxNormPopulated[TherapyRxNormFields.drug_rxnormid] =
+      rxnormConceptLookupResult.rxNormRecord.rxcui;
+    return { record: recordWithRxNormPopulated as TypedDataRecord, error: undefined };
+  }
+
+  async function lookupRxNormConcept(
+    therapyRecord: TypedDataRecord,
+    index: number,
+  ): Promise<{
+    rxNormRecord: RxNormConcept | undefined;
+    error: SubmissionValidationError | undefined;
+  }> {
+    // if the id is provided we do a look up and double check against the name (if provided)
+    if (isNotAbsent(therapyRecord[TherapyRxNormFields.drug_rxnormid] as string)) {
+      const rxRecords = await dbRxNormService.lookupByRxcui(
+        therapyRecord[TherapyRxNormFields.drug_rxnormid] as string,
+      );
+      if (_.isEmpty(rxRecords)) {
+        const error: SubmissionValidationError = {
+          fieldName: TherapyRxNormFields.drug_rxnormid,
+          index: index,
+          info: {},
+          message: validationErrorMessage(DataValidationErrors.THERAPY_RXNORM_RXCUI_NOT_FOUND),
+          type: DataValidationErrors.THERAPY_RXNORM_RXCUI_NOT_FOUND,
+        };
+        return {
+          rxNormRecord: undefined,
+          error: error,
+        };
+      }
+
+      const matchingRecord = rxRecords.find(
+        rx =>
+          rx.str.toLowerCase() ==
+          (therapyRecord[TherapyRxNormFields.drug_name] as string).toLowerCase(),
+      );
+
+      if (matchingRecord != undefined) {
+        return {
+          rxNormRecord: matchingRecord,
+          error: undefined,
+        };
+      }
+
+      const foundNames = rxRecords.map(r => r.str);
+      const error: SubmissionValidationError = {
+        fieldName: TherapyRxNormFields.drug_rxnormid,
+        index: index,
+        info: {},
+        message: validationErrorMessage(DataValidationErrors.THERAPY_RXNORM_DRUG_NAME_INVALID, {
+          foundNames,
+        }),
+        type: DataValidationErrors.THERAPY_RXNORM_DRUG_NAME_INVALID,
+      };
+      return {
+        rxNormRecord: undefined,
+        error: error,
+      };
+    }
+
+    // nothing was provided
+    // this shouldn't happen unless the schema is not validating correctly
+    const error: SubmissionValidationError = {
+      fieldName: TherapyRxNormFields.drug_rxnormid,
+      index: index,
+      info: {},
+      message: `an rxcui id or drug name is required`,
+      type: DataValidationErrors.THERAPY_MISSING_RXNORM_FIELDS,
+    };
+    return {
+      rxNormRecord: undefined,
+      error: error,
+    };
+  }
 
   const getDonorsInProgram = async (
     filters: DeepReadonly<FindByProgramAndSubmitterFilter[]>,
@@ -925,13 +1057,14 @@ export namespace operations {
   const checkEntityFieldNames = (newClinicalEntitesMap: DeepReadonly<NewClinicalEntities>) => {
     const fieldNameErrors: SubmissionBatchError[] = [];
     const filteredClinicalEntites: NewClinicalEntities = {};
+
     for (const [clinicalType, newClinicalEnity] of Object.entries(newClinicalEntitesMap)) {
       if (!newClinicalEnity.fieldNames) {
         filteredClinicalEntites[clinicalType] = { ...(newClinicalEnity as NewClinicalEntity) };
         continue;
       }
       const commonFieldNamesSet = new Set(newClinicalEnity.fieldNames);
-      const clinicalFieldNamesByPriorityMap = schemaManager
+      const clinicalFieldNamesByPriorityMap = dictionaryManager
         .instance()
         .getSchemaFieldNamesWithPriority(clinicalType);
       const missingFields: string[] = [];
@@ -1037,8 +1170,8 @@ export namespace operations {
   export async function adminAddDonors(donors: Donor[]) {
     const schemaMetadata: SchemaMetadata = {
       isValid: true,
-      lastValidSchemaVersion: schemaManager.instance().getCurrent().version,
-      originalSchemaVersion: schemaManager.instance().getCurrent().version,
+      lastValidSchemaVersion: dictionaryManager.instance().getCurrent().version,
+      originalSchemaVersion: dictionaryManager.instance().getCurrent().version,
     };
 
     donors.forEach((d: any) => {
@@ -1198,10 +1331,10 @@ async function updateSubmissionWithVersionOrDeleteEmpty(
   );
 }
 
-const getSchemaValidationErrorInfoObject = (
+const getValidationErrorInfoObject = (
   type: ClinicalEntitySchemaNames,
-  schemaErr: DeepReadonly<SchemaValidationError>,
-  record: DeepReadonly<DataRecord>,
+  schemaErr: DeepReadonly<SchemaValidationError | SubmissionValidationError>,
+  record: DeepReadonly<DataRecord | TypedDataRecord>,
 ) => {
   switch (type) {
     case ClinicalEntitySchemaNames.REGISTRATION: {
@@ -1217,7 +1350,7 @@ const getSchemaValidationErrorInfoObject = (
       return F({
         ...schemaErr.info,
         value: record[schemaErr.fieldName],
-        donorSubmitterId: record[SampleRegistrationFieldsEnum.submitter_donor_id],
+        donorSubmitterId: record[DonorFieldsEnum.submitter_donor_id],
       });
     }
   }

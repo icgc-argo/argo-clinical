@@ -1,5 +1,5 @@
 // computed separately using lectern's diff tool
-import legacyStubSchemas from '../stub-schema.json';
+import legacyStubSchemas from '../../stub-schema.json';
 
 export const migrationDiffs = [
   legacyStubSchemas.diffs[0],
@@ -523,10 +523,10 @@ export const migrationDiffs = [
         },
       ],
       [
-        'hormone_therapy.hormone_therapy_drug_name',
+        'hormone_therapy.drug_name',
         {
           left: {
-            name: 'hormone_therapy_drug_name',
+            name: 'drug_name',
             description:
               'Name of agent or drug administered to patient as part of the hormone therapy treatment regimen.',
             valueType: 'string',
@@ -541,7 +541,7 @@ export const migrationDiffs = [
           diff: {
             type: 'deleted',
             data: {
-              name: 'hormone_therapy_drug_name',
+              name: 'drug_name',
               description:
                 'Name of agent or drug administered to patient as part of the hormone therapy treatment regimen.',
               valueType: 'string',
