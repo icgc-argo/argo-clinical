@@ -12,7 +12,7 @@ export const validate = async (
 ): Promise<SubmissionValidationError[]> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
   if (!primaryDiagnosisRecord || !existentDonor) {
-    throw new Error("Can't call this function without followup records");
+    throw new Error("Can't call this function without primary diagnosis records");
   }
 
   const errors: SubmissionValidationError[] = [];
