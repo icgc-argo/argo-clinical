@@ -969,7 +969,7 @@ describe('Submission Api', () => {
               age_at_diagnosis: 96,
               cancer_type_code: 'A11.1A',
               tumour_staging_system: 'Murphy',
-              presenting_symptoms: undefined, // tslint:disable-line
+              presenting_symptoms: ['Back Pain', 'Nausea'],
             },
           },
         ],
@@ -1425,7 +1425,7 @@ describe('Submission Api', () => {
       // To get submission into correct state (pending approval) we need to already have a completed submission...
       await uploadSubmission([
         'donor.tsv',
-        'primary_diagnosis-array_input.tsv',
+        'primary_diagnosis.tsv',
         'follow_up.tsv',
         'treatment.tsv',
         'chemotherapy.tsv',
