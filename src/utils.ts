@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import { SubmissionBatchError } from './submission/submission-entities';
 import _ from 'lodash';
+import { isArray } from 'util';
 
 const fsPromises = fs.promises;
 
@@ -256,6 +257,18 @@ export function deepFind(obj: any, path: string) {
 
   current && result.push(current);
   return result;
+}
+
+export function isValueEqual(value: any, other: any) {
+  if (isArray(value) && isArray(other)) {
+    return _.difference(value, other).length === 0; // check equal, ignore order
+  }
+
+  return _.isEqual(value, other);
+}
+
+export function isValueNotEqual(value: any, other: any) {
+  return !isValueEqual(value, other);
 }
 
 export const F = deepFreeze;
