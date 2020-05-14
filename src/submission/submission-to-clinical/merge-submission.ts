@@ -6,6 +6,7 @@ import {
   FollowUp,
   Therapy,
   ClinicalEntity,
+  PrimaryDiagnosis,
 } from '../../clinical/clinical-entities';
 import { ActiveClinicalSubmission, SubmittedClinicalRecordsMap } from '../submission-entities';
 import _ from 'lodash';
@@ -226,21 +227,21 @@ const findTherapy = (
 
 /*** Empty clinical object adders ***/
 const addNewTreatmentObj = (donor: Donor): Treatment => {
-  const newTreatement = { clinicalInfo: {}, therapies: [] };
+  const newTreatement = { clinicalInfo: {}, therapies: [], treatementId: undefined } as Treatment;
   donor.treatments = _.concat(donor.treatments || [], newTreatement);
   return _.last(donor.treatments) as Treatment;
 };
 
 const addNewFollowUpObj = (donor: Donor): FollowUp => {
-  const newFollowUp = { clinicalInfo: {} };
+  const newFollowUp = { clinicalInfo: {}, followUpId: undefined } as FollowUp;
   donor.followUps = _.concat(donor.followUps || [], newFollowUp);
   return _.last(donor.followUps) as FollowUp;
 };
 
 const addNewPrimaryDiagnosisObj = (donor: Donor): ClinicalEntity => {
-  const newPrimaryDiag = { clinicalInfo: {} };
+  const newPrimaryDiag = { clinicalInfo: {}, primaryDiagnosisId: undefined } as PrimaryDiagnosis;
   donor.primaryDiagnoses = _.concat(donor.primaryDiagnoses || [], newPrimaryDiag);
-  return _.last(donor.primaryDiagnoses) as FollowUp;
+  return _.last(donor.primaryDiagnoses) as PrimaryDiagnosis;
 };
 
 const addNewTherapyObj = (treatment: Treatment, therapyType: ClinicalTherapyType): Therapy => {

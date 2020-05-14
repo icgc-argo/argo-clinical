@@ -9,7 +9,7 @@ export interface Donor {
   programId: string;
   specimens: Array<Specimen>;
   clinicalInfo?: ClinicalInfo;
-  primaryDiagnoses?: Array<ClinicalEntity>;
+  primaryDiagnoses?: Array<PrimaryDiagnosis>;
   followUps?: Array<FollowUp>;
   treatments?: Array<Treatment>;
   createdAt?: string;
@@ -50,6 +50,7 @@ export interface Sample {
 }
 
 export interface Treatment extends ClinicalEntity {
+  treatementId: number | undefined;
   therapies: Array<Therapy>;
 }
 
@@ -57,9 +58,13 @@ export interface Therapy extends ClinicalEntity {
   therapyType: string;
 }
 
-export interface FollowUp extends ClinicalEntity {}
+export interface FollowUp extends ClinicalEntity {
+  followUpId: number | undefined;
+}
 
-export interface PrimaryDiagnosis extends ClinicalEntity {}
+export interface PrimaryDiagnosis extends ClinicalEntity {
+  primaryDiagnosisId: number | undefined;
+}
 
 export interface ClinicalInfo {
   [field: string]: string | number | boolean | undefined;
