@@ -71,6 +71,7 @@ async function connect(delayMillis: number, mongoUrl: string, username: string, 
       // https://mongoosejs.com/docs/deprecations.html
       useNewUrlParser: true,
       useFindAndModify: false,
+      useCreateIndex: true,
     });
     L.debug('mongoose connected');
   } catch (err) {

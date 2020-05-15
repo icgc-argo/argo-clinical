@@ -914,9 +914,8 @@ export namespace operations {
   }> {
     // if the id is provided we do a look up and double check against the name (if provided)
     if (isNotAbsent(therapyRecord[TherapyRxNormFields.drug_rxnormid] as string)) {
-      const rxRecords = await dbRxNormService.lookupByRxcui(
-        therapyRecord[TherapyRxNormFields.drug_rxnormid] as string,
-      );
+      const rxcui = therapyRecord[TherapyRxNormFields.drug_rxnormid] as string;
+      const rxRecords = await dbRxNormService.lookupByRxcui(rxcui.trim());
       if (_.isEmpty(rxRecords)) {
         const error: SubmissionValidationError = {
           fieldName: TherapyRxNormFields.drug_rxnormid,
@@ -933,8 +932,8 @@ export namespace operations {
 
       const matchingRecord = rxRecords.find(
         rx =>
-          rx.str.toLowerCase() ==
-          (therapyRecord[TherapyRxNormFields.drug_name] as string).toLowerCase(),
+          rx.str.toLowerCase().trim() ==
+          (therapyRecord[TherapyRxNormFields.drug_name] as string).toLowerCase().trim(),
       );
 
       if (matchingRecord != undefined) {

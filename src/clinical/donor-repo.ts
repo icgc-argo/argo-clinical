@@ -318,28 +318,28 @@ const TherapySchema = new mongoose.Schema(
 const TreatmentSchema = new mongoose.Schema(
   {
     clinicalInfo: {},
-    treatmentId: { type: Number, index: true, unique: true },
+    treatmentId: { type: Number },
     therapies: [TherapySchema],
   },
   { _id: false },
 );
-
+TreatmentSchema.index({ treatmentId: 1 }, { unique: true, sparse: true });
 const FollowUpSchema = new mongoose.Schema(
   {
-    followUpId: { type: Number, index: true, unique: true },
+    followUpId: { type: Number },
     clinicalInfo: {},
   },
   { _id: false },
 );
-
+FollowUpSchema.index({ followUpId: 1 }, { unique: true, sparse: true });
 const PrimaryDiagnosisSchema = new mongoose.Schema(
   {
-    primaryDiagnosisId: { type: Number, index: true, unique: true },
+    primaryDiagnosisId: { type: Number },
     clinicalInfo: {},
   },
   { _id: false },
 );
-
+PrimaryDiagnosisSchema.index({ primaryDiagnosisId: 1 }, { unique: true, sparse: true });
 const DonorSchema = new mongoose.Schema(
   {
     donorId: { type: Number, index: true, unique: true, get: prefixDonorId },
@@ -404,11 +404,6 @@ FollowUpSchema.plugin(AutoIncrement, {
 
 PrimaryDiagnosisSchema.plugin(AutoIncrement, {
   inc_field: 'primaryDiagnosisId',
-  start_seq: 1,
-});
-
-TherapySchema.plugin(AutoIncrement, {
-  inc_field: 'therapyId',
   start_seq: 1,
 });
 
