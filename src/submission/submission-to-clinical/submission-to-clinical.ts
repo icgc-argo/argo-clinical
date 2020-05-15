@@ -14,9 +14,12 @@ import {
   SampleRegistrationFieldsEnum,
   SUBMISSION_STATE,
 } from '../submission-entities';
-
 import { Errors } from '../../utils';
-import { donorDao, FindByProgramAndSubmitterFilter, DONOR_FIELDS } from '../../clinical/donor-repo';
+import {
+  donorDao,
+  FindByProgramAndSubmitterFilter,
+  DONOR_DOCUMENT_FIELDS,
+} from '../../clinical/donor-repo';
 import _ from 'lodash';
 import { F } from '../../utils';
 import { registrationRepository } from '../registration-repo';
@@ -179,7 +182,7 @@ export const commitRegisteration = async (command: Readonly<CommitRegistrationCo
 
   // batch fetch existing donors from db
   const existingDonors = (await donorDao.findByProgramAndSubmitterId(filters)) || [];
-  const existingDonorsIds = _.keyBy(existingDonors, DONOR_FIELDS.SUBMITTER_ID);
+  const existingDonorsIds = _.keyBy(existingDonors, DONOR_DOCUMENT_FIELDS.SUBMITTER_ID);
 
   // Performance refactor Note:
   // instead of awaiting to save donor documents one by one we batch the saving queries and await on the whole batch
@@ -230,7 +233,7 @@ const fromCreateDonorDtoToDonor = (createDonorDto: DeepReadonly<CreateDonorSampl
     programId: createDonorDto.programId,
     specimens: createDonorDto.specimens.map(toSpecimen),
     clinicalInfo: {},
-    primaryDiagnosis: undefined,
+    primaryDiagnoses: undefined,
     followUps: [],
     treatments: [],
   };

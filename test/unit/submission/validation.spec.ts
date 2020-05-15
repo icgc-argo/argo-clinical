@@ -23,6 +23,7 @@ import {
   TreatmentFieldsEnum,
   FollowupFieldsEnum,
   ClinicalUniqueIdentifier,
+  PrimaryDiagnosisFieldsEnum,
 } from '../../../src/common-model/entities';
 
 const genderMutatedErr: SubmissionValidationError = {
@@ -1218,6 +1219,7 @@ describe('data-validator', () => {
           index: 2,
         },
       );
+
       const newDonorAB2Records = {};
       ClinicalSubmissionRecordsOperations.addRecord(
         ClinicalEntitySchemaNames.SPECIMEN,
@@ -1292,6 +1294,7 @@ describe('data-validator', () => {
         {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
           [SampleRegistrationFieldsEnum.program_id]: 'PEME-CA',
+          [SpecimenFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
           [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP13',
           [SpecimenFieldsEnum.specimen_acquisition_interval]: 5020,
           index: 0,
@@ -1303,11 +1306,25 @@ describe('data-validator', () => {
         {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
           [SampleRegistrationFieldsEnum.program_id]: 'PEME-CA',
+          [SpecimenFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
           [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP14',
           [SpecimenFieldsEnum.specimen_acquisition_interval]: 9000,
           index: 1,
         },
       );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+        newDonorAB2Records,
+        {
+          [PrimaryDiagnosisFieldsEnum.submitter_donor_id]: 'AB2',
+          [PrimaryDiagnosisFieldsEnum.program_id]: 'PEME-CA',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
+          [PrimaryDiagnosisFieldsEnum.age_at_diagnosis]: 33,
+          index: 0,
+        },
+      );
+
       const newDonorAB3Records = {};
       ClinicalSubmissionRecordsOperations.addRecord(
         ClinicalEntitySchemaNames.SPECIMEN,
@@ -1315,11 +1332,25 @@ describe('data-validator', () => {
         {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB3',
           [SampleRegistrationFieldsEnum.program_id]: 'PEME-CA',
+          [SpecimenFieldsEnum.submitter_primary_diagnosis_id]: 'PP-3',
           [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP12',
           [SpecimenFieldsEnum.specimen_acquisition_interval]: 2000,
           index: 0,
         },
       );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+        newDonorAB3Records,
+        {
+          [PrimaryDiagnosisFieldsEnum.submitter_donor_id]: 'AB3',
+          [PrimaryDiagnosisFieldsEnum.program_id]: 'PEME-CA',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-3',
+          [PrimaryDiagnosisFieldsEnum.age_at_diagnosis]: 30,
+          index: 0,
+        },
+      );
+
       ClinicalSubmissionRecordsOperations.addRecord(
         ClinicalEntitySchemaNames.DONOR,
         newDonorAB3Records,
@@ -1408,7 +1439,19 @@ describe('data-validator', () => {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
           [SampleRegistrationFieldsEnum.program_id]: 'PEME-CA',
           [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP1',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
           [SpecimenFieldsEnum.specimen_acquisition_interval]: 5020,
+          index: 0,
+        },
+      );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+        submittedAB1Records,
+        {
+          [PrimaryDiagnosisFieldsEnum.submitter_donor_id]: 'AB2',
+          [PrimaryDiagnosisFieldsEnum.program_id]: 'PEME-CA',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
           index: 0,
         },
       );
@@ -1421,6 +1464,7 @@ describe('data-validator', () => {
       chai.expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors.length).to.eq(0);
       chai.expect(result[ClinicalEntitySchemaNames.SPECIMEN].dataErrors.length).to.eq(0);
     });
+
     it('should detect not enough info to validate specimen file', async () => {
       const existingDonorAB1Mock: Donor = stubs.validation.existingDonor01();
       const existingDonorAB2Mock: Donor = stubs.validation.existingDonor06();
@@ -1433,9 +1477,11 @@ describe('data-validator', () => {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
           [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP13',
           [SpecimenFieldsEnum.specimen_acquisition_interval]: 200,
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-1',
           index: 0,
         },
       );
+
       ClinicalSubmissionRecordsOperations.addRecord(
         ClinicalEntitySchemaNames.SPECIMEN,
         newDonorAB1Records,
@@ -1443,9 +1489,22 @@ describe('data-validator', () => {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
           [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP14',
           [SpecimenFieldsEnum.specimen_acquisition_interval]: 200,
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-1',
           index: 1,
         },
       );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+        newDonorAB1Records,
+        {
+          [PrimaryDiagnosisFieldsEnum.submitter_donor_id]: 'AB1',
+          [PrimaryDiagnosisFieldsEnum.program_id]: 'PEME-CA',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-1',
+          index: 0,
+        },
+      );
+
       // Donor AB2 here has clinicalInfo where vital_status===deceased but no survival_time is given
       const newDonorAB2Records = {};
       ClinicalSubmissionRecordsOperations.addRecord(
@@ -1455,7 +1514,19 @@ describe('data-validator', () => {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
           [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP1',
           [SpecimenFieldsEnum.specimen_acquisition_interval]: 200,
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
           index: 2,
+        },
+      );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+        newDonorAB2Records,
+        {
+          [PrimaryDiagnosisFieldsEnum.submitter_donor_id]: 'AB2',
+          [PrimaryDiagnosisFieldsEnum.program_id]: 'PEME-CA',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
+          index: 0,
         },
       );
 
@@ -1504,6 +1575,7 @@ describe('data-validator', () => {
 
       chai.expect(result.specimen.dataErrors).to.deep.include(specimenMissingDonorAB2FieldErr);
     });
+
     it("should detect forbidden fields in submission record for donor's registered normal specimen", async () => {
       const existingDonorAB1Mock: Donor = stubs.validation.existingDonor04();
 
@@ -1536,10 +1608,23 @@ describe('data-validator', () => {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
           [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP13',
           [SpecimenFieldsEnum.specimen_acquisition_interval]: 400,
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
           index: 0,
           ...specimenFields,
         },
       );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+        newDonorAB1Records,
+        {
+          [PrimaryDiagnosisFieldsEnum.submitter_donor_id]: 'AB2',
+          [PrimaryDiagnosisFieldsEnum.program_id]: 'PEME-CA',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
+          index: 0,
+        },
+      );
+
       const result = await dv
         .validateSubmissionData({ AB1: newDonorAB1Records }, { AB1: existingDonorAB1Mock })
         .catch((err: any) => fail(err));
@@ -1552,6 +1637,7 @@ describe('data-validator', () => {
           .to.equal(DataValidationErrors.FORBIDDEN_PROVIDED_VARIABLE_REQUIREMENT);
       });
     });
+
     it("should detect missing required fields in submitted record for donor's registered tumour specimen", async () => {
       const existingDonorAB1Mock: Donor = stubs.validation.existingDonor04();
 
@@ -1584,8 +1670,21 @@ describe('data-validator', () => {
           [SpecimenFieldsEnum.pathological_m_category]: 'EM',
           [SpecimenFieldsEnum.pathological_n_category]: 'EN',
           [SpecimenFieldsEnum.pathological_t_category]: 'TEE',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
         },
       );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+        newDonorAB1Records,
+        {
+          [PrimaryDiagnosisFieldsEnum.submitter_donor_id]: 'AB2',
+          [PrimaryDiagnosisFieldsEnum.program_id]: 'PEME-CA',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
+          index: 0,
+        },
+      );
+
       const result = await dv
         .validateSubmissionData({ AB1: newDonorAB1Records }, { AB1: existingDonorAB1Mock })
         .catch((err: any) => fail(err));
@@ -1606,15 +1705,29 @@ describe('data-validator', () => {
       );
       const donorAB1WithNoTreatments: Donor = stubs.validation.existingDonor01();
       const submissionRecordsMap = {};
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+        submissionRecordsMap,
+        {
+          [PrimaryDiagnosisFieldsEnum.submitter_donor_id]: 'AB2',
+          [PrimaryDiagnosisFieldsEnum.program_id]: 'PEME-CA',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-1',
+          index: 0,
+        },
+      );
+
       ClinicalSubmissionRecordsOperations.addRecord(
         ClinicalEntitySchemaNames.TREATMENT,
         submissionRecordsMap,
         {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-1',
           [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.TREATMENT]]: 'T_03',
           index: 0,
         },
       );
+
       const result = await dv
         .validateSubmissionData({ AB1: submissionRecordsMap }, { AB1: donorAB1WithNoTreatments })
         .catch((err: any) => fail(err));
@@ -1639,12 +1752,25 @@ describe('data-validator', () => {
     it('should detect treatment and missing therapy data', async () => {
       const existingDonorMock: Donor = stubs.validation.existingDonor01();
       const newDonorAB1Records = {};
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+        newDonorAB1Records,
+        {
+          [PrimaryDiagnosisFieldsEnum.submitter_donor_id]: 'AB2',
+          [PrimaryDiagnosisFieldsEnum.program_id]: 'PEME-CA',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
+          index: 0,
+        },
+      );
+
       ClinicalSubmissionRecordsOperations.addRecord(
         ClinicalEntitySchemaNames.TREATMENT,
         newDonorAB1Records,
         {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
           [TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
           [TreatmentFieldsEnum.treatment_type]: 'Combined chemo+radiation therapy',
           index: 0,
         },
@@ -1787,6 +1913,18 @@ describe('data-validator', () => {
     it('should detect hormone therapy record for treatment', async () => {
       const existingDonorMock: Donor = stubs.validation.existingDonor01();
       const newDonorAB1Records = {};
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+        newDonorAB1Records,
+        {
+          [PrimaryDiagnosisFieldsEnum.submitter_donor_id]: 'AB2',
+          [PrimaryDiagnosisFieldsEnum.program_id]: 'PEME-CA',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-1',
+          index: 0,
+        },
+      );
+
       ClinicalSubmissionRecordsOperations.addRecord(
         ClinicalEntitySchemaNames.TREATMENT,
         newDonorAB1Records,
@@ -1794,6 +1932,7 @@ describe('data-validator', () => {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
           [TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
           [TreatmentFieldsEnum.treatment_type]: 'Hormonal therapy',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-1',
           index: 0,
         },
       );

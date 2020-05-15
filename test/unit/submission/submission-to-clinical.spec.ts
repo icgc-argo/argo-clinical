@@ -165,7 +165,7 @@ describe('submission-to-clinical', () => {
           },
         ],
         clinicalInfo: {},
-        primaryDiagnosis: undefined,
+        primaryDiagnoses: undefined,
         followUps: [],
         treatments: [],
       };

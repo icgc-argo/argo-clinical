@@ -17,6 +17,7 @@ import * as utils from './utils';
 import _ from 'lodash';
 import { isEmptyString, isAbsent } from '../../utils';
 import { getSingleClinicalObjectFromDonor } from '../../common-model/functions';
+import { checkRelatedEntityExists } from './utils';
 
 export const validate = async (
   specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
@@ -36,20 +37,28 @@ export const validate = async (
     return errors;
   }
 
+  // validate allowed/unallowed fields
   checkRequiredFields(specimen, specimenRecord, errors);
 
+  // validate primary diagnosis exists
+  checkRelatedEntityExists(
+    ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+    specimenRecord,
+    mergedDonor,
+    errors,
+    true,
+  );
+
+  // validate time conflict if needed
   const donorDataToValidateWith = getDataFromDonorRecordOrDonor(
     specimenRecord,
     mergedDonor,
     errors,
   );
-  if (!donorDataToValidateWith) {
-    return errors;
+
+  if (donorDataToValidateWith) {
+    checkTimeConflictWithDonor(donorDataToValidateWith, specimenRecord, errors);
   }
-
-  checkTimeConflictWithDonor(donorDataToValidateWith, specimenRecord, errors);
-
-  // other checks here and add to `errors`
 
   return errors;
 };

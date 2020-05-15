@@ -58,11 +58,13 @@ export enum SpecimenFieldsEnum {
   percent_inflammatory_tissue = 'percent_inflammatory_tissue',
   central_pathology_confirmed = 'central_pathology_confirmed',
   tumour_histological_type = 'tumour_histological_type',
+  submitter_primary_diagnosis_id = 'submitter_primary_diagnosis_id',
 }
 
 export enum PrimaryDiagnosisFieldsEnum {
   program_id = 'program_id',
   submitter_donor_id = 'submitter_donor_id',
+  submitter_primary_diagnosis_id = 'submitter_primary_diagnosis_id',
   cancer_type_code = 'cancer_type_code',
   age_at_diagnosis = 'age_at_diagnosis',
 }
@@ -72,6 +74,7 @@ export enum TreatmentFieldsEnum {
   submitter_donor_id = 'submitter_donor_id',
   submitter_treatment_id = 'submitter_treatment_id',
   treatment_type = 'treatment_type',
+  submitter_primary_diagnosis_id = 'submitter_primary_diagnosis_id',
 }
 
 export enum TherapyRxNormFields {
@@ -93,6 +96,8 @@ export enum FollowupFieldsEnum {
   program_id = 'program_id',
   submitter_donor_id = 'submitter_donor_id',
   submitter_follow_up_id = 'submitter_follow_up_id',
+  submitter_primary_diagnosis_id = 'submitter_primary_diagnosis_id',
+  submitter_treatment_id = 'submitter_treatment_id',
 }
 
 // This needed to be added to differentiate between multiple or single fields for identifying
@@ -110,7 +115,8 @@ type TypeEntitySchemaNameToIndenfiterType = {
 export const ClinicalUniqueIdentifier: TypeEntitySchemaNameToIndenfiterType = {
   [ClinicalEntitySchemaNames.DONOR]: DonorFieldsEnum.submitter_donor_id,
   [ClinicalEntitySchemaNames.SPECIMEN]: SpecimenFieldsEnum.submitter_specimen_id,
-  [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: PrimaryDiagnosisFieldsEnum.submitter_donor_id,
+  [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]:
+    PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id,
   [ClinicalEntitySchemaNames.FOLLOW_UP]: FollowupFieldsEnum.submitter_follow_up_id,
   [ClinicalEntitySchemaNames.TREATMENT]: TreatmentFieldsEnum.submitter_treatment_id,
   [ClinicalEntitySchemaNames.CHEMOTHERAPY]: [
