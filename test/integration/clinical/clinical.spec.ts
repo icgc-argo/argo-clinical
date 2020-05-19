@@ -15,7 +15,7 @@ import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN, JWT_ABCDEF } from '../test.jwt';
 import mongoose from 'mongoose';
 import AdmZip from 'adm-zip';
 import { ClinicalEntitySchemaNames } from '../../../src/common-model/entities';
-import { TsvUtils, isNotEmptyString } from '../../../src/utils';
+import { TsvUtils, notEmpty } from '../../../src/utils';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../../../src/common-model/functions';
 import deepEqualInAnyOrder from 'deep-equal-in-any-order';
 import _ from 'lodash';
@@ -300,7 +300,7 @@ describe('clinical Api', () => {
               }
 
               chai
-                .expect(fileRecords.map(r => _.pickBy(r, isNotEmptyString))) // ignore empty fields
+                .expect(fileRecords.map(r => _.pickBy(r, notEmpty))) // ignore empty fields
                 .to.deep.equalInAnyOrder(donorEntityRecords);
             });
 

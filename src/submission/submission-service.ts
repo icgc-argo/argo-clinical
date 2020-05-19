@@ -1059,7 +1059,7 @@ export namespace operations {
 
     for (const [clinicalType, newClinicalEnity] of Object.entries(newClinicalEntitesMap)) {
       if (!newClinicalEnity.fieldNames) {
-        filteredClinicalEntites[clinicalType] = { ...newClinicalEnity };
+        filteredClinicalEntites[clinicalType] = { ...(newClinicalEnity as NewClinicalEntity) };
         continue;
       }
       const commonFieldNamesSet = new Set(newClinicalEnity.fieldNames);
@@ -1083,7 +1083,7 @@ export namespace operations {
       const unknownFields = Array.from(commonFieldNamesSet); // remaining are unknown
 
       if (missingFields.length === 0 && unknownFields.length === 0) {
-        filteredClinicalEntites[clinicalType] = { ...newClinicalEnity };
+        filteredClinicalEntites[clinicalType] = { ...(newClinicalEnity as NewClinicalEntity) };
         continue;
       }
 

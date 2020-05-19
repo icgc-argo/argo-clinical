@@ -453,6 +453,7 @@
             },
             {
               "name": "presenting_symptoms",
+              "isArray": true,
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
@@ -2050,6 +2051,7 @@
               "name": "presenting_symptoms",
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
+              "isArray": true,
               "restrictions": {
                 "codeList": ["Back Pain", "Nausea", "None", "Unknown", "Weight Loss"]
               }

@@ -316,4 +316,63 @@ describe('schema-functions', () => {
       info: {},
     });
   });
+
+  it('should validate number/integer array with field defined ranges', () => {
+    const result = schemaService.processRecords(schema, 'favorite_things', [
+      {
+        id: 'TH-ING',
+        fraction: ['0.2', '2'],
+        integers: ['-100', '-2'],
+      },
+    ]);
+    chai.expect(result.validationErrors.length).to.eq(2);
+    const baseInvalidValueErr = {
+      errorType: SchemaValidationErrorTypes.INVALID_BY_RANGE,
+      message: 'Value is out of permissible range',
+      index: 0,
+      info: {},
+    };
+    chai.expect(result.validationErrors).to.deep.include({
+      ...baseInvalidValueErr,
+      fieldName: 'fraction',
+    });
+    chai.expect(result.validationErrors).to.deep.include({
+      ...baseInvalidValueErr,
+      fieldName: 'integers',
+    });
+  });
+
+  it('should validate string array with field defined codelist', () => {
+    const result = schemaService.processRecords(schema, 'favorite_things', [
+      {
+        id: 'TH-ING',
+        fruit: ['Mango', '2'],
+      },
+    ]);
+    chai.expect(result.validationErrors.length).to.eq(1);
+    chai.expect(result.validationErrors).to.deep.include({
+      errorType: SchemaValidationErrorTypes.INVALID_ENUM_VALUE,
+      message: 'The value is not permissible for this field.',
+      fieldName: 'fruit',
+      index: 0,
+      info: {},
+    });
+  });
+
+  it('should validate string array with field defined regex', () => {
+    const result = schemaService.processRecords(schema, 'favorite_things', [
+      {
+        id: 'TH-ING',
+        qWords: ['que', 'not_q'],
+      },
+    ]);
+    chai.expect(result.validationErrors.length).to.eq(1);
+    chai.expect(result.validationErrors).to.deep.include({
+      errorType: SchemaValidationErrorTypes.INVALID_BY_REGEX,
+      message: 'The value is not permissible for this field.',
+      fieldName: 'qWords',
+      index: 0,
+      info: {},
+    });
+  });
 });

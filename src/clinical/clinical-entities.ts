@@ -67,7 +67,7 @@ export interface PrimaryDiagnosis extends ClinicalEntity {
 }
 
 export interface ClinicalInfo {
-  [field: string]: string | number | boolean | undefined;
+  [field: string]: string | number | boolean | string[] | number[] | boolean[] | undefined;
 }
 
 export type DonorMap = Readonly<{ [submitterId: string]: Donor }>;

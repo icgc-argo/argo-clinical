@@ -29,7 +29,7 @@ import {
   getEntitySubmitterIdFieldName,
 } from '../../common-model/functions';
 import { donorDao, DONOR_DOCUMENT_FIELDS } from '../../clinical/donor-repo';
-import { isEmptyString } from '../../utils';
+import { isEmptyString, isValueNotEqual } from '../../utils';
 
 export const buildSubmissionError = (
   newRecord: SubmittedClinicalRecord,
@@ -124,7 +124,7 @@ const getSubmissionUpdates = (
       if (fieldName == 'index' || (!clinicalObject[fieldName] && !record[fieldName])) continue;
 
       // field's value is different in clinicalObject and in record, so mark it as update
-      if (clinicalObject[fieldName] !== record[fieldName]) {
+      if (isValueNotEqual(clinicalObject[fieldName], record[fieldName])) {
         submissionUpdates.push(
           buildSubmissionUpdate(record, `${clinicalObject[fieldName] || ''}`, fieldName),
         );
