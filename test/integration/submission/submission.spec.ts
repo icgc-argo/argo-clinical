@@ -969,7 +969,7 @@ describe('Submission Api', () => {
               age_at_diagnosis: 96,
               cancer_type_code: 'A11.1A',
               tumour_staging_system: 'Murphy',
-              presenting_symptoms: undefined, // tslint:disable-line
+              presenting_symptoms: ['Back Pain', 'Nausea'],
             },
           },
         ],
@@ -1448,7 +1448,7 @@ describe('Submission Api', () => {
         cancer_type_code: 'A11.1A',
         submitter_primary_diagnosis_id: 'P-1',
         tumour_staging_system: 'Murphy',
-        presenting_symptoms: null, // tslint:disable-line
+        presenting_symptoms: ['Back Pain', 'Nausea'],
       };
 
       const donor = {
@@ -1501,10 +1501,8 @@ describe('Submission Api', () => {
             '__v', // ignore mongodb field
             'updatedAt', // ignore mongodb field
             'clinicalInfo', // donor clinicalInfo is being updated
-            'clinicalInfoStats', // donor clinicalInfoStats are being updated
             'treatments', // the treatments are being updated
             'followUps[0]', // this followUp is being updated
-            'aggregatedInfoStats', // aggregatedInfoStats are being updated
           ]);
           // these are set becuase they were updated and can be ignored in this chai.expect assert
           donorBeforeUpdates.followUps[0] = updatedDonor.followUps[0];

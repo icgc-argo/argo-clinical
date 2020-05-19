@@ -1,5 +1,5 @@
 import { DeepReadonly } from 'deep-freeze';
-import { SchemaValidationErrorTypes } from '../lectern-client/schema-entities';
+import { SchemaValidationErrorTypes, DataRecord } from '../lectern-client/schema-entities';
 import {
   ClinicalEntitySchemaNames,
   DonorFieldsEnum,
@@ -162,7 +162,7 @@ export interface CommitRegistrationCommand {
 export interface CreateRegistrationCommand {
   // we define the records as arbitrary key value pairs to be validated by the schema
   // before we put them in a CreateRegistrationRecord, in case a column is missing so we let dictionary handle error collection.
-  records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
+  records: ReadonlyArray<DataRecord>;
   readonly creator: string;
   readonly programId: string;
   readonly batchName: string;
@@ -181,7 +181,7 @@ export interface ValidationResult {
 }
 
 export interface ClinicalSubmissionCommand {
-  records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
+  records: ReadonlyArray<DataRecord>;
   readonly programId: string;
   readonly clinicalType: string;
 }
@@ -228,7 +228,7 @@ export interface NewClinicalEntities {
 export interface NewClinicalEntity {
   batchName: string;
   creator: string;
-  records: ReadonlyArray<Readonly<{ [key: string]: string }>>;
+  records: ReadonlyArray<DataRecord>;
   fieldNames?: ReadonlyArray<string>; // used if all records have common field names
 }
 
