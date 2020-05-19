@@ -1066,6 +1066,7 @@
             },
             {
               "name": "presenting_symptoms",
+              "isArray": true,
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
@@ -1349,6 +1350,15 @@
               }
             },
             {
+              "description": "Unique identifier for a follow-up event in a donors clincal record, assigned by the data provider.",
+              "name": "submitter_follow_up_id",
+              "valueType": "string",
+              "restrictions": {
+                "required": true,
+                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
               "name": "submitter_treatment_id",
               "valueType": "string",
               "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
@@ -1358,15 +1368,6 @@
               },
               "restrictions": {
                 "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
-              }
-            },
-            {
-              "description": "Unique identifier for a follow-up event in a donors clincal record, assigned by the data provider.",
-              "name": "submitter_follow_up_id",
-              "valueType": "string",
-              "restrictions": {
-                "required": true,
-                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
               }
             },
             {
@@ -2662,6 +2663,7 @@
               "name": "presenting_symptoms",
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
+              "isArray": true,
               "restrictions": {
                 "codeList": ["Back Pain", "Nausea", "None", "Unknown", "Weight Loss"]
               }
@@ -5749,6 +5751,7 @@
             },
             {
               "name": "presenting_symptoms",
+              "isArray": true,
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
@@ -6032,6 +6035,15 @@
               }
             },
             {
+              "description": "Unique identifier for a follow-up event in a donors clincal record, assigned by the data provider.",
+              "name": "submitter_follow_up_id",
+              "valueType": "string",
+              "restrictions": {
+                "required": true,
+                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
               "name": "submitter_treatment_id",
               "valueType": "string",
               "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
@@ -6041,15 +6053,6 @@
               },
               "restrictions": {
                 "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
-              }
-            },
-            {
-              "description": "Unique identifier for a follow-up event in a donors clincal record, assigned by the data provider.",
-              "name": "submitter_follow_up_id",
-              "valueType": "string",
-              "restrictions": {
-                "required": true,
-                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
               }
             },
             {
@@ -7350,6 +7353,7 @@
             },
             {
               "name": "presenting_symptoms",
+              "isArray": true,
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
@@ -7633,6 +7637,15 @@
               }
             },
             {
+              "description": "Unique identifier for a follow-up event in a donors clincal record, assigned by the data provider.",
+              "name": "submitter_follow_up_id",
+              "valueType": "string",
+              "restrictions": {
+                "required": true,
+                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
               "name": "submitter_treatment_id",
               "valueType": "string",
               "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
@@ -7642,15 +7655,6 @@
               },
               "restrictions": {
                 "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
-              }
-            },
-            {
-              "description": "Unique identifier for a follow-up event in a donors clincal record, assigned by the data provider.",
-              "name": "submitter_follow_up_id",
-              "valueType": "string",
-              "restrictions": {
-                "required": true,
-                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
               }
             },
             {
@@ -8943,6 +8947,7 @@
             },
             {
               "name": "presenting_symptoms",
+              "isArray": true,
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
@@ -9226,6 +9231,15 @@
               }
             },
             {
+              "description": "Unique identifier for a follow-up event in a donors clincal record, assigned by the data provider.",
+              "name": "submitter_follow_up_id",
+              "valueType": "string",
+              "restrictions": {
+                "required": true,
+                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
               "name": "submitter_treatment_id",
               "valueType": "string",
               "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
@@ -9235,15 +9249,6 @@
               },
               "restrictions": {
                 "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
-              }
-            },
-            {
-              "description": "Unique identifier for a follow-up event in a donors clincal record, assigned by the data provider.",
-              "name": "submitter_follow_up_id",
-              "valueType": "string",
-              "restrictions": {
-                "required": true,
-                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
               }
             },
             {
@@ -10547,6 +10552,7 @@
             },
             {
               "name": "presenting_symptoms",
+              "isArray": true,
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
@@ -10830,6 +10836,15 @@
               }
             },
             {
+              "description": "Unique identifier for a follow-up event in a donors clincal record, assigned by the data provider.",
+              "name": "submitter_follow_up_id",
+              "valueType": "string",
+              "restrictions": {
+                "required": true,
+                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
               "name": "submitter_treatment_id",
               "valueType": "string",
               "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
@@ -10839,15 +10854,6 @@
               },
               "restrictions": {
                 "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
-              }
-            },
-            {
-              "description": "Unique identifier for a follow-up event in a donors clincal record, assigned by the data provider.",
-              "name": "submitter_follow_up_id",
-              "valueType": "string",
-              "restrictions": {
-                "required": true,
-                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
               }
             },
             {
@@ -12148,6 +12154,7 @@
             },
             {
               "name": "presenting_symptoms",
+              "isArray": true,
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
@@ -12431,6 +12438,15 @@
               }
             },
             {
+              "description": "Unique identifier for a follow-up event in a donors clincal record, assigned by the data provider.",
+              "name": "submitter_follow_up_id",
+              "valueType": "string",
+              "restrictions": {
+                "required": true,
+                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
               "name": "submitter_treatment_id",
               "valueType": "string",
               "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
@@ -12440,15 +12456,6 @@
               },
               "restrictions": {
                 "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
-              }
-            },
-            {
-              "description": "Unique identifier for a follow-up event in a donors clincal record, assigned by the data provider.",
-              "name": "submitter_follow_up_id",
-              "valueType": "string",
-              "restrictions": {
-                "required": true,
-                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
               }
             },
             {
@@ -13730,6 +13737,7 @@
             },
             {
               "name": "presenting_symptoms",
+              "isArray": true,
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
@@ -14013,6 +14021,15 @@
               }
             },
             {
+              "description": "Unique identifier for a follow-up event in a donors clincal record, assigned by the data provider.",
+              "name": "submitter_follow_up_id",
+              "valueType": "string",
+              "restrictions": {
+                "required": true,
+                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
               "name": "submitter_treatment_id",
               "valueType": "string",
               "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
@@ -14022,15 +14039,6 @@
               },
               "restrictions": {
                 "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
-              }
-            },
-            {
-              "description": "Unique identifier for a follow-up event in a donors clincal record, assigned by the data provider.",
-              "name": "submitter_follow_up_id",
-              "valueType": "string",
-              "restrictions": {
-                "required": true,
-                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
               }
             },
             {
@@ -15326,6 +15334,7 @@
             },
             {
               "name": "presenting_symptoms",
+              "isArray": true,
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
@@ -15609,6 +15618,15 @@
               }
             },
             {
+              "description": "Unique identifier for a follow-up event in a donors clincal record, assigned by the data provider.",
+              "name": "submitter_follow_up_id",
+              "valueType": "string",
+              "restrictions": {
+                "required": true,
+                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
               "name": "submitter_treatment_id",
               "valueType": "string",
               "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
@@ -15618,15 +15636,6 @@
               },
               "restrictions": {
                 "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
-              }
-            },
-            {
-              "description": "Unique identifier for a follow-up event in a donors clincal record, assigned by the data provider.",
-              "name": "submitter_follow_up_id",
-              "valueType": "string",
-              "restrictions": {
-                "required": true,
-                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
               }
             },
             {
@@ -16919,6 +16928,7 @@
             },
             {
               "name": "presenting_symptoms",
+              "isArray": true,
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
@@ -17202,6 +17212,15 @@
               }
             },
             {
+              "description": "Unique identifier for a follow-up event in a donors clincal record, assigned by the data provider.",
+              "name": "submitter_follow_up_id",
+              "valueType": "string",
+              "restrictions": {
+                "required": true,
+                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
               "name": "submitter_treatment_id",
               "valueType": "string",
               "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
@@ -17211,15 +17230,6 @@
               },
               "restrictions": {
                 "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
-              }
-            },
-            {
-              "description": "Unique identifier for a follow-up event in a donors clincal record, assigned by the data provider.",
-              "name": "submitter_follow_up_id",
-              "valueType": "string",
-              "restrictions": {
-                "required": true,
-                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
               }
             },
             {
@@ -18512,6 +18522,7 @@
             },
             {
               "name": "presenting_symptoms",
+              "isArray": true,
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
@@ -18795,6 +18806,15 @@
               }
             },
             {
+              "description": "Unique identifier for a follow-up event in a donors clincal record, assigned by the data provider.",
+              "name": "submitter_follow_up_id",
+              "valueType": "string",
+              "restrictions": {
+                "required": true,
+                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
               "name": "submitter_treatment_id",
               "valueType": "string",
               "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
@@ -18804,15 +18824,6 @@
               },
               "restrictions": {
                 "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
-              }
-            },
-            {
-              "description": "Unique identifier for a follow-up event in a donors clincal record, assigned by the data provider.",
-              "name": "submitter_follow_up_id",
-              "valueType": "string",
-              "restrictions": {
-                "required": true,
-                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
               }
             },
             {
@@ -20105,6 +20116,7 @@
             },
             {
               "name": "presenting_symptoms",
+              "isArray": true,
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
@@ -20388,6 +20400,15 @@
               }
             },
             {
+              "description": "Unique identifier for a follow-up event in a donors clincal record, assigned by the data provider.",
+              "name": "submitter_follow_up_id",
+              "valueType": "string",
+              "restrictions": {
+                "required": true,
+                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
               "name": "submitter_treatment_id",
               "valueType": "string",
               "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
@@ -20397,15 +20418,6 @@
               },
               "restrictions": {
                 "regex": "^[A-Za-z0-9\\-\\._]{1,64}$"
-              }
-            },
-            {
-              "description": "Unique identifier for a follow-up event in a donors clincal record, assigned by the data provider.",
-              "name": "submitter_follow_up_id",
-              "valueType": "string",
-              "restrictions": {
-                "required": true,
-                "regex": "[A-Za-z0-9\\-\\._]{1,64}"
               }
             },
             {

@@ -191,5 +191,33 @@
         }
       }
     }
+  ],
+  [
+    "primary_diagnosis.presenting_symptoms",
+    {
+      "left": {
+        "name": "presenting_symptoms",
+        "description": "Indicate presenting symptoms at time of primary diagnosis.",
+        "valueType": "string",
+        "restrictions": {
+          "codeList": ["Abdominal Pain", "Anemia", "Diabetes", "Diarrhea", "Nausea", "None"]
+        }
+      },
+      "right": {
+        "name": "presenting_symptoms",
+        "description": "Indicate presenting symptoms at time of primary diagnosis.",
+        "valueType": "string",
+        "isArray": true,
+        "restrictions": {
+          "codeList": ["Abdominal Pain", "Anemia", "Diabetes", "Diarrhea", "Nausea", "None"]
+        }
+      },
+      "diff": {
+        "isArray": {
+          "type": "created",
+          "data": true
+        }
+      }
+    }
   ]
 ]

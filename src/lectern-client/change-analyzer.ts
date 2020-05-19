@@ -38,6 +38,7 @@ export const analyzeChanges = (schemasDiff: SchemasDictionaryDiffs): ChangeAnaly
       renamedFields: [],
       deletedFields: [],
     },
+    isArrayDesignationChanges: [],
     restrictionsChanges: {
       codeList: {
         created: [],
@@ -90,11 +91,26 @@ export const analyzeChanges = (schemasDiff: SchemasDictionaryDiffs): ChangeAnaly
         if (fieldDiff.restrictions) {
           categorizeRestrictionChanges(analysis, field, fieldDiff.restrictions);
         }
+
+        if (fieldDiff.isArray) {
+          categorizeFieldArrayDesignationChange(analysis, field, fieldDiff.isArray);
+        }
       }
     }
   }
 
   return analysis;
+};
+
+const categorizeFieldArrayDesignationChange = (
+  analysis: ChangeAnalysis,
+  field: string,
+  changes: { [field: string]: FieldChanges } | Change,
+) => {
+  // changing isArray designation is a relevant change for all cases except if it is created and set to false
+  if (!(changes.type === 'created' && changes.data === false)) {
+    analysis.isArrayDesignationChanges.push(field);
+  }
 };
 
 const categorizeRestrictionChanges = (

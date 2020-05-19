@@ -5,19 +5,20 @@ import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import { SubmissionBatchError } from './submission/submission-entities';
 import _ from 'lodash';
+import { isArray } from 'util';
 
 const fsPromises = fs.promises;
 
 export namespace TsvUtils {
-  export const tsvToJson = async (
-    file: string,
-  ): Promise<ReadonlyArray<{ [key: string]: string }>> => {
+  export type TsvRecordAsJsonObj = { [header: string]: string | string[] };
+
+  export const tsvToJson = async (file: string): Promise<ReadonlyArray<TsvRecordAsJsonObj>> => {
     const contents = await fsPromises.readFile(file, 'utf-8');
     const arr = parseTsvToJson(contents);
     return arr;
   };
 
-  export const parseTsvToJson = (content: string): ReadonlyArray<{ [key: string]: string }> => {
+  export const parseTsvToJson = (content: string): ReadonlyArray<TsvRecordAsJsonObj> => {
     const lines = content.split('\n');
     const headers = lines
       .slice(0, 1)[0]
@@ -29,8 +30,13 @@ export namespace TsvUtils {
         return undefined;
       }
       const data = line.split('\t');
-      return headers.reduce<{ [k: string]: string }>((obj, nextKey, index) => {
-        obj[nextKey] = (data[index] && data[index].trim()) || '';
+      return headers.reduce<TsvRecordAsJsonObj>((obj, nextKey, index) => {
+        const arrData = (data[index] || '')
+          .trim()
+          .split(',')
+          .map(s => s.trim());
+
+        obj[nextKey] = arrData.length === 1 ? arrData[0] : arrData;
         return obj;
       }, {});
     });
@@ -145,12 +151,32 @@ export function notEmpty<TValue>(value: TValue | null | undefined): value is TVa
   return value !== null && value !== undefined && !_.isEmpty(value);
 }
 
-export function isEmpty<TValue>(value: TValue | null | undefined): value is TValue {
+export function isEmpty<TValue>(value: TValue | null | undefined): value is undefined {
   return !notEmpty(value);
 }
 
+export const convertToArray = <T>(val: T | T[]): T[] => {
+  if (Array.isArray(val)) {
+    return val;
+  } else {
+    return [val];
+  }
+};
+
 export function isString(value: any): value is string {
-  return value instanceof String;
+  return typeof value === 'string' || value instanceof String;
+}
+
+export function isStringArray(value: any | undefined | null): value is string[] {
+  return Array.isArray(value) && value.every(isString);
+}
+
+export function isNumber(value: any): value is number {
+  return typeof value === 'number';
+}
+
+export function isNumberArray(values: any): values is number[] {
+  return Array.isArray(values) && values.every(isNumber);
 }
 
 // returns true if value matches at least one of the expressions
@@ -231,6 +257,18 @@ export function deepFind(obj: any, path: string) {
 
   current && result.push(current);
   return result;
+}
+
+export function isValueEqual(value: any, other: any) {
+  if (isArray(value) && isArray(other)) {
+    return _.difference(value, other).length === 0; // check equal, ignore order
+  }
+
+  return _.isEqual(value, other);
+}
+
+export function isValueNotEqual(value: any, other: any) {
+  return !isValueEqual(value, other);
 }
 
 export const F = deepFreeze;
