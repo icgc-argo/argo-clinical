@@ -266,7 +266,7 @@ export const stubs = {
       followUps: [],
       treatments: [
         {
-          treatementId: 1,
+          treatmentId: 1,
           clinicalInfo: {
             [TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
             fieldOne: 'field1',

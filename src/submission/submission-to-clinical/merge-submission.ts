@@ -227,7 +227,7 @@ const findTherapy = (
 
 /*** Empty clinical object adders ***/
 const addNewTreatmentObj = (donor: Donor): Treatment => {
-  const newTreatement = { clinicalInfo: {}, therapies: [], treatementId: undefined } as Treatment;
+  const newTreatement = { clinicalInfo: {}, therapies: [], treatmentId: undefined } as Treatment;
   donor.treatments = _.concat(donor.treatments || [], newTreatement);
   return _.last(donor.treatments) as Treatment;
 };
