@@ -1460,8 +1460,16 @@ describe('Submission Api', () => {
       };
       const pd = donorBeforeUpdate.primaryDiagnoses || [];
       pd[0].clinicalInfo.should.deep.eq(primary_diagnosis);
+      pd[0].primaryDiagnosisId?.should.deep.eq(1);
       donorBeforeUpdate.clinicalInfo?.should.deep.eq(donor);
 
+      const followUpId = donorBeforeUpdate.followUps?.[0].followUpId;
+      chai.expect(followUpId).to.be.gte(1);
+
+      const treatmentId = donorBeforeUpdate.treatments?.[0].treatmentId;
+      chai.expect(treatmentId).to.be.gte(1);
+
+      donorBeforeUpdate.clinicalInfo?.should.include(donor);
       // Now we need to have a submission with updates, and validate to get it into the correct state
       await uploadSubmissionWithUpdates([
         'donor-with-updates.tsv',
@@ -1482,7 +1490,10 @@ describe('Submission Api', () => {
       // data from primary_diagnosis.tsv
       donorBeforeApproveCommit.primaryDiagnoses[0].clinicalInfo.should.deep.eq(primary_diagnosis);
 
-      donorBeforeUpdate.clinicalInfo?.should.include(donor);
+      // assert no id changes after commit
+      chai.expect(donorBeforeApproveCommit.primaryDiagnoses[0].primaryDiagnosisId).to.eq(1);
+      chai.expect(donorBeforeApproveCommit.followUps?.[0].followUpId).to.eq(followUpId);
+      chai.expect(donorBeforeApproveCommit.treatments?.[0].treatmentId).to.eq(treatmentId);
 
       return chai
         .request(app)
@@ -1527,6 +1538,10 @@ describe('Submission Api', () => {
             _.omit(updatedDonor.followUps?.[0].clinicalInfo, ['interval_of_followup']),
           );
 
+          // assert no id changes after approve (update)
+          chai.expect(updatedDonor.primaryDiagnoses?.[0].primaryDiagnosisId).to.eq(1);
+          chai.expect(updatedDonor.followUps?.[0].followUpId).to.eq(followUpId);
+          chai.expect(updatedDonor.treatments?.[0].treatmentId).to.eq(treatmentId);
           // ** check treatment & therapy clinicalInfo updates **
           chai
             .expect(updatedDonor.treatments?.[0].clinicalInfo['therapeutic_intent'])

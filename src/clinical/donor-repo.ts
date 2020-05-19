@@ -258,7 +258,7 @@ function unsetIsNewFlagForUpdate(newDonor: Donor) {
   });
 
   newDonor.treatments?.forEach(tr => {
-    if (tr.treatementId) {
+    if (tr.treatmentId) {
       (tr as any).isNew = false;
     }
   });
