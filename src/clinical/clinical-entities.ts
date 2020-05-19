@@ -50,7 +50,7 @@ export interface Sample {
 }
 
 export interface Treatment extends ClinicalEntity {
-  treatementId: number | undefined;
+  treatmentId: number | undefined;
   therapies: Array<Therapy>;
 }
 
