@@ -106,7 +106,7 @@ export interface SchemaValidationError {
   readonly errorType: SchemaValidationErrorTypes;
   readonly index: number;
   readonly fieldName: string;
-  readonly info: any;
+  readonly info: Record<string, any>;
   readonly message: string;
 }
 
