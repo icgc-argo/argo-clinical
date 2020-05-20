@@ -1333,14 +1333,14 @@ async function updateSubmissionWithVersionOrDeleteEmpty(
 
 const getValidationErrorInfoObject = (
   type: ClinicalEntitySchemaNames,
-  schemaErr: DeepReadonly<SchemaValidationError | SubmissionValidationError>,
+  err: DeepReadonly<SchemaValidationError | SubmissionValidationError>,
   record: DeepReadonly<DataRecord | TypedDataRecord>,
 ) => {
   switch (type) {
     case ClinicalEntitySchemaNames.REGISTRATION: {
       return F({
-        ...schemaErr.info,
-        value: record[schemaErr.fieldName],
+        ...err.info,
+        value: err.info.value || record[err.fieldName], // use record value if error value is not specifed
         donorSubmitterId: record[SampleRegistrationFieldsEnum.submitter_donor_id],
         specimenSubmitterId: record[SampleRegistrationFieldsEnum.submitter_specimen_id],
         sampleSubmitterId: record[SampleRegistrationFieldsEnum.submitter_sample_id],
@@ -1348,8 +1348,8 @@ const getValidationErrorInfoObject = (
     }
     default: {
       return F({
-        ...schemaErr.info,
-        value: record[schemaErr.fieldName],
+        ...err.info,
+        value: err.info.value || record[err.fieldName], // use record value if error value is not specifed
         donorSubmitterId: record[DonorFieldsEnum.submitter_donor_id],
       });
     }
