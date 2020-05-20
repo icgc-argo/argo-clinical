@@ -321,7 +321,7 @@ describe('schema-functions', () => {
     const result = schemaService.processRecords(schema, 'favorite_things', [
       {
         id: 'TH-ING',
-        fraction: ['0.2', '2'],
+        fraction: ['0.2', '2', '3'],
         integers: ['-100', '-2'],
       },
     ]);
@@ -335,10 +335,12 @@ describe('schema-functions', () => {
     chai.expect(result.validationErrors).to.deep.include({
       ...baseInvalidValueErr,
       fieldName: 'fraction',
+      info: { value: [2, 3] },
     });
     chai.expect(result.validationErrors).to.deep.include({
       ...baseInvalidValueErr,
       fieldName: 'integers',
+      info: { value: [-100] },
     });
   });
 
@@ -355,7 +357,7 @@ describe('schema-functions', () => {
       message: 'The value is not permissible for this field.',
       fieldName: 'fruit',
       index: 0,
-      info: {},
+      info: { value: ['2'] },
     });
   });
 
@@ -372,7 +374,7 @@ describe('schema-functions', () => {
       message: 'The value is not permissible for this field.',
       fieldName: 'qWords',
       index: 0,
-      info: {},
+      info: { value: ['not_q'] },
     });
   });
 });
