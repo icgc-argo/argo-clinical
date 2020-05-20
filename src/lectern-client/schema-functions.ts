@@ -362,9 +362,10 @@ namespace validation {
         const regex = field.restrictions?.regex;
         if (isEmpty(regex)) return undefined;
 
-        const invalidVals = recordFieldValues.filter(v => isInvalidRegexValue(regex, v));
-        if (invalidVals.length !== 0) {
-          return buildError(SchemaValidationErrorTypes.INVALID_BY_REGEX, field.name, index);
+        const invalidValues = recordFieldValues.filter(v => isInvalidRegexValue(regex, v));
+        if (invalidValues.length !== 0) {
+          const info = field.isArray ? { value: invalidValues } : undefined;
+          return buildError(SchemaValidationErrorTypes.INVALID_BY_REGEX, field.name, index, info);
         }
         return undefined;
       })
@@ -384,9 +385,10 @@ namespace validation {
         const range = field.restrictions?.range;
         if (isEmpty(range)) return undefined;
 
-        const invalidVals = recordFieldValues.filter(v => isOutOfRange(range, v));
-        if (invalidVals.length !== 0) {
-          return buildError(SchemaValidationErrorTypes.INVALID_BY_RANGE, field.name, index);
+        const invalidValues = recordFieldValues.filter(v => isOutOfRange(range, v));
+        if (invalidValues.length !== 0) {
+          const info = field.isArray ? { value: invalidValues } : undefined;
+          return buildError(SchemaValidationErrorTypes.INVALID_BY_RANGE, field.name, index, info);
         }
         return undefined;
       })
@@ -427,7 +429,8 @@ namespace validation {
         const invalidValues = recordFieldValues.filter(val => isInvalidEnumValue(codeList, val));
 
         if (invalidValues.length !== 0) {
-          return buildError(SchemaValidationErrorTypes.INVALID_ENUM_VALUE, field.name, index);
+          const info = field.isArray ? { value: invalidValues } : undefined;
+          return buildError(SchemaValidationErrorTypes.INVALID_ENUM_VALUE, field.name, index, info);
         }
         return undefined;
       })
