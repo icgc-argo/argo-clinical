@@ -285,7 +285,7 @@ const SpecimenSchema = new mongoose.Schema(
   {
     specimenId: { type: Number, index: true, unique: true, get: prefixSpecimenId },
     specimenTissueSource: { type: String },
-    clinicalInfo: { type: Object, required: true, default: {} },
+    clinicalInfo: {},
     tumourNormalDesignation: String,
     specimenType: String,
     submitterId: { type: String, required: true },
@@ -296,7 +296,7 @@ const SpecimenSchema = new mongoose.Schema(
 
 const TherapySchema = new mongoose.Schema(
   {
-    clinicalInfo: { type: Object, required: true },
+    clinicalInfo: {},
     therapyType: { type: String, required: true },
   },
   { _id: false },
@@ -304,7 +304,7 @@ const TherapySchema = new mongoose.Schema(
 
 const TreatmentSchema = new mongoose.Schema(
   {
-    clinicalInfo: { type: Object, required: true },
+    clinicalInfo: {},
     therapies: [TherapySchema],
   },
   { _id: false },
@@ -312,14 +312,14 @@ const TreatmentSchema = new mongoose.Schema(
 
 const FollowUpSchema = new mongoose.Schema(
   {
-    clinicalInfo: { type: Object, required: true },
+    clinicalInfo: {},
   },
   { _id: false },
 );
 
 const PrimaryDiagnosisSchema = new mongoose.Schema(
   {
-    clinicalInfo: { type: Object, required: true },
+    clinicalInfo: {},
   },
   { _id: false },
 );
@@ -331,7 +331,7 @@ const DonorSchema = new mongoose.Schema(
     submitterId: { type: String, required: true },
     programId: { type: String, required: true },
     specimens: [SpecimenSchema],
-    clinicalInfo: { type: Object, required: true, default: {} },
+    clinicalInfo: {},
     primaryDiagnoses: [PrimaryDiagnosisSchema],
     followUps: [FollowUpSchema],
     treatments: [TreatmentSchema],
