@@ -1,4 +1,4 @@
-program_id	submitter_donor_id	vital_status	cause_of_death	survival_time
-TEST-CA	ICGC_0001.1	deceased	Died of other reasons	540
-TEST-CA	ICGC_0002	Alive		
-TEST-CA	ICGC_0003	deceased	died of cancer	522
+program_id	submitter_donor_id	vital_status	cause_of_death	survival_time	primary_site
+TEST-CA	ICGC_0001.1	deceased	Died of other reasons	540	Bladder
+TEST-CA	ICGC_0002	Alive			Bladder
+TEST-CA	ICGC_0003	deceased	died of cancer	522	Bladder

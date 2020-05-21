@@ -81,6 +81,7 @@ describe('schema migration api', () => {
     ],
     primaryDiagnoses: [
       {
+        primaryDiagnosisId: 1,
         clinicalInfo: {
           program_id: 'PACA-AU',
           submitter_donor_id: 'ICGC_0003',

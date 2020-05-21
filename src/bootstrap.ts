@@ -9,7 +9,6 @@ import * as persistedConfig from './submission/persisted-config/service';
 import * as submissionUpdatesMessenger from './submission/submission-updates-messenger';
 import { initPool } from './rxnorm/pool';
 import { promisify } from 'bluebird';
-import { cat } from 'shelljs';
 import { Pool } from 'mysql';
 
 const L = loggerFor(__filename);
@@ -71,6 +70,7 @@ async function connect(delayMillis: number, mongoUrl: string, username: string, 
       // https://mongoosejs.com/docs/deprecations.html
       useNewUrlParser: true,
       useFindAndModify: false,
+      useCreateIndex: true,
     });
     L.debug('mongoose connected');
   } catch (err) {

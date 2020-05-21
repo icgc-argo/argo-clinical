@@ -207,36 +207,16 @@ export const donorDao: DonorRepository = {
 
   async update(donor: DeepReadonly<Donor>) {
     const newDonor = new DonorModel(donor);
-    newDonor.isNew = false;
-    newDonor.specimens.forEach(sp => {
-      if (sp.specimenId) {
-        (sp as any).isNew = false;
-      }
+    unsetIsNewFlagForUpdate(newDonor);
 
-      sp.samples.forEach(sa => {
-        if (sa.sampleId) {
-          (sa as any).isNew = false;
-        }
-      });
-    });
     await newDonor.save();
     return F(MongooseUtils.toPojo(newDonor));
   },
+
   async updateAll(donors: DeepReadonly<Donor>[]) {
     const newDonors = donors.map(donor => {
       const newDonor = new DonorModel(donor);
-      newDonor.isNew = false;
-      newDonor.specimens.forEach(sp => {
-        if (sp.specimenId) {
-          (sp as any).isNew = false;
-        }
-
-        sp.samples.forEach(sa => {
-          if (sa.sampleId) {
-            (sa as any).isNew = false;
-          }
-        });
-      });
+      unsetIsNewFlagForUpdate(newDonor);
       return newDonor;
     });
 
@@ -250,6 +230,39 @@ export const donorDao: DonorRepository = {
     return F(MongooseUtils.toPojo(newDonor));
   },
 };
+
+function unsetIsNewFlagForUpdate(newDonor: Donor) {
+  (newDonor as any).isNew = false;
+  newDonor.specimens.forEach(sp => {
+    if (sp.specimenId) {
+      (sp as any).isNew = false;
+    }
+
+    sp.samples.forEach(sa => {
+      if (sa.sampleId) {
+        (sa as any).isNew = false;
+      }
+    });
+  });
+
+  newDonor.primaryDiagnoses?.forEach(pd => {
+    if (pd.primaryDiagnosisId) {
+      (pd as any).isNew = false;
+    }
+  });
+
+  newDonor.followUps?.forEach(fu => {
+    if (fu.followUpId) {
+      (fu as any).isNew = false;
+    }
+  });
+
+  newDonor.treatments?.forEach(tr => {
+    if (tr.treatmentId) {
+      (tr as any).isNew = false;
+    }
+  });
+}
 
 // Like findByProgramId, but DocQuery asks mongo to return PoJo without docIds for faster fetch
 async function findByProgramIdOmitMongoDocId(
@@ -305,25 +318,28 @@ const TherapySchema = new mongoose.Schema(
 const TreatmentSchema = new mongoose.Schema(
   {
     clinicalInfo: {},
+    treatmentId: { type: Number },
     therapies: [TherapySchema],
   },
   { _id: false },
 );
-
+TreatmentSchema.index({ treatmentId: 1 }, { unique: true, sparse: true });
 const FollowUpSchema = new mongoose.Schema(
   {
+    followUpId: { type: Number },
     clinicalInfo: {},
   },
   { _id: false },
 );
-
+FollowUpSchema.index({ followUpId: 1 }, { unique: true, sparse: true });
 const PrimaryDiagnosisSchema = new mongoose.Schema(
   {
+    primaryDiagnosisId: { type: Number },
     clinicalInfo: {},
   },
   { _id: false },
 );
-
+PrimaryDiagnosisSchema.index({ primaryDiagnosisId: 1 }, { unique: true, sparse: true });
 const DonorSchema = new mongoose.Schema(
   {
     donorId: { type: Number, index: true, unique: true, get: prefixDonorId },
@@ -379,6 +395,21 @@ SpecimenSchema.plugin(AutoIncrement, {
 SampleSchema.plugin(AutoIncrement, {
   inc_field: 'sampleId',
   start_seq: process.env.SAMPLE_ID_SEED || 610000,
+});
+
+FollowUpSchema.plugin(AutoIncrement, {
+  inc_field: 'followUpId',
+  start_seq: 1,
+});
+
+PrimaryDiagnosisSchema.plugin(AutoIncrement, {
+  inc_field: 'primaryDiagnosisId',
+  start_seq: 1,
+});
+
+TreatmentSchema.plugin(AutoIncrement, {
+  inc_field: 'treatmentId',
+  start_seq: 1,
 });
 
 export let DonorModel = mongoose.model<DonorDocument>('Donor', DonorSchema);
