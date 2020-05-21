@@ -961,6 +961,7 @@ describe('Submission Api', () => {
         ],
         primaryDiagnoses: [
           {
+            primaryDiagnosisId: 1,
             clinicalInfo: {
               program_id: 'ABCD-EF',
               submitter_primary_diagnosis_id: 'P-1',
@@ -1434,7 +1435,7 @@ describe('Submission Api', () => {
       ]);
       await validateSubmission();
       await commitActiveSubmission();
-      const [DonorBeforeUpdate] = (await findInDb(dburl, 'donors', {
+      const [donorBeforeUpdate] = (await findInDb(dburl, 'donors', {
         programId: programId,
         submitterId: 'ICGC_0001',
       })) as Donor[];
@@ -1457,10 +1458,18 @@ describe('Submission Api', () => {
         cause_of_death: 'Died of cancer',
         survival_time: 522,
       };
-      const pd = DonorBeforeUpdate.primaryDiagnoses || [];
+      const pd = donorBeforeUpdate.primaryDiagnoses || [];
       pd[0].clinicalInfo.should.deep.eq(primary_diagnosis);
-      DonorBeforeUpdate.clinicalInfo?.should.deep.eq(donor);
+      pd[0].primaryDiagnosisId?.should.deep.eq(1);
+      donorBeforeUpdate.clinicalInfo?.should.deep.eq(donor);
 
+      const followUpId = donorBeforeUpdate.followUps?.[0].followUpId;
+      chai.expect(followUpId).to.be.gte(1);
+
+      const treatmentId = donorBeforeUpdate.treatments?.[0].treatmentId;
+      chai.expect(treatmentId).to.be.gte(1);
+
+      donorBeforeUpdate.clinicalInfo?.should.include(donor);
       // Now we need to have a submission with updates, and validate to get it into the correct state
       await uploadSubmissionWithUpdates([
         'donor-with-updates.tsv',
@@ -1481,7 +1490,10 @@ describe('Submission Api', () => {
       // data from primary_diagnosis.tsv
       donorBeforeApproveCommit.primaryDiagnoses[0].clinicalInfo.should.deep.eq(primary_diagnosis);
 
-      DonorBeforeUpdate.clinicalInfo?.should.include(donor);
+      // assert no id changes after commit
+      chai.expect(donorBeforeApproveCommit.primaryDiagnoses[0].primaryDiagnosisId).to.eq(1);
+      chai.expect(donorBeforeApproveCommit.followUps?.[0].followUpId).to.eq(followUpId);
+      chai.expect(donorBeforeApproveCommit.treatments?.[0].treatmentId).to.eq(treatmentId);
 
       return chai
         .request(app)
@@ -1491,10 +1503,10 @@ describe('Submission Api', () => {
           res.should.have.status(200);
           res.body.should.be.empty;
           await assertDbCollectionEmpty(dburl, 'activesubmissions');
-          const [updatedDonor] = await findInDb(dburl, 'donors', {
+          const [updatedDonor] = (await findInDb(dburl, 'donors', {
             programId: programId,
             submitterId: 'ICGC_0001',
-          });
+          })) as Donor[];
 
           // ** merge shouldn't have mutated clinical entities except for the ones being updated **
           const donorBeforeUpdates = _.omit(donorBeforeApproveCommit, [
@@ -1505,7 +1517,7 @@ describe('Submission Api', () => {
             'followUps[0]', // this followUp is being updated
           ]);
           // these are set becuase they were updated and can be ignored in this chai.expect assert
-          donorBeforeUpdates.followUps[0] = updatedDonor.followUps[0];
+          donorBeforeUpdates.followUps[0] = updatedDonor?.followUps?.[0];
           donorBeforeUpdates.treatments = updatedDonor.treatments;
           // check nothing else in updatedDonor has changed from before update
           chai.expect(updatedDonor).to.deep.include(donorBeforeUpdates);
@@ -1521,25 +1533,37 @@ describe('Submission Api', () => {
           chai.expect(updatedDonor.clinicalInfo).to.deep.eq(updatedDonorExpectedInfo);
 
           // ** check followUps clinicalInfo updates **
-          updatedDonor.followUps[0].clinicalInfo['interval_of_followup'].should.eq(13);
+          updatedDonor.followUps?.[0].clinicalInfo['interval_of_followup']?.should.eq(13);
           donorBeforeApproveCommit.followUps[0].clinicalInfo.should.deep.include(
-            _.omit(updatedDonor.followUps[0].clinicalInfo, ['interval_of_followup']),
+            _.omit(updatedDonor.followUps?.[0].clinicalInfo, ['interval_of_followup']),
           );
 
+          // assert no id changes after approve (update)
+          chai.expect(updatedDonor.primaryDiagnoses?.[0].primaryDiagnosisId).to.eq(1);
+          chai.expect(updatedDonor.followUps?.[0].followUpId).to.eq(followUpId);
+          chai.expect(updatedDonor.treatments?.[0].treatmentId).to.eq(treatmentId);
           // ** check treatment & therapy clinicalInfo updates **
-          updatedDonor.treatments[0].clinicalInfo['therapeutic_intent'].should.eq('Curative');
+          chai
+            .expect(updatedDonor.treatments?.[0].clinicalInfo['therapeutic_intent'])
+            .to.eq('Curative');
           // chemotherapy therapy
-          updatedDonor.treatments[0].therapies[0].clinicalInfo['cumulative_drug_dosage'].should.eq(
-            15,
-          );
+          chai
+            .expect(
+              updatedDonor.treatments?.[0].therapies[0].clinicalInfo['cumulative_drug_dosage'],
+            )
+            .to.eq(15);
           // radiation therapy
-          updatedDonor.treatments[0].therapies[1].clinicalInfo[
-            'radiation_therapy_dosage'
-          ].should.eq(90);
+          chai
+            .expect(
+              updatedDonor.treatments?.[0].therapies[1].clinicalInfo['radiation_therapy_dosage'],
+            )
+            .to.eq(90);
           // hormone therapy
-          updatedDonor.treatments[1].therapies[0].clinicalInfo['cumulative_drug_dosage'].should.eq(
-            44,
-          );
+          chai
+            .expect(
+              updatedDonor.treatments?.[1].therapies[0].clinicalInfo['cumulative_drug_dosage'],
+            )
+            .to.eq(44);
         });
     });
 
@@ -1586,7 +1610,6 @@ describe('Submission Api', () => {
       ];
 
       await updateData(dburl, 'donors', DonorBeforeUpdate, donorFilter);
-
       await uploadSubmissionWithUpdates([
         'donor-with-updates.tsv',
         'follow_up.tsv',
@@ -1652,7 +1675,9 @@ describe('Submission Api', () => {
           },
           primaryDiagnoses: [
             {
+              primaryDiagnosisId: undefined,
               clinicalInfo: {
+                submitter_primary_diagnosis_id: 'P-1',
                 program_id: programId,
                 number_lymph_nodes_positive: 1,
                 submitter_donor_id: 'ICGC_0003',
@@ -1702,8 +1727,10 @@ describe('Submission Api', () => {
 
           // we expect the other invalid donor to be updated even that it remained invalid
           // due to not updating the invalid clinical file (donor.clinicalInfo)
-          chai.expect(updatedDonor2.primaryDiagnoses).to.deep.include({
+          chai.expect(updatedDonor2.primaryDiagnoses?.[0]).to.deep.eq({
+            primaryDiagnosisId: 1,
             clinicalInfo: {
+              submitter_primary_diagnosis_id: 'P-1',
               age_at_diagnosis: 96,
               cancer_type_code: 'A11.1A',
               number_lymph_nodes_examined: 2,
@@ -1722,6 +1749,7 @@ describe('Submission Api', () => {
         programId,
         primaryDiagnoses: [
           {
+            primaryDiagnosisId: 1,
             clinicalInfo: {
               submitter_primary_diagnosis_id: 'P-1',
               age_at_diagnosis: 96,
@@ -1764,7 +1792,6 @@ describe('Submission Api', () => {
               program_id: 'ABCD-EF',
               submitter_donor_id: 'ICGC_0001',
               submitter_specimen_id: 'ss123-sjdm-1',
-              // submitter_primary_diagnosis_id: 'P-1',
               specimen_acquisition_interval: 200,
               specimen_anatomic_location: 'Other',
               central_pathology_confirmed: 'No',
