@@ -160,8 +160,6 @@ export namespace MigrationManager {
 
     const migrationAfterDonorCheck = await checkDonorDocuments(migration, newTargetSchema);
 
-    sendMessagesForProgramWithDonorUpdates(migrationAfterDonorCheck.programsWithDonorUpdates);
-
     await revalidateOpenSubmissionsWithNewSchema(
       migrationAfterDonorCheck,
       newTargetSchema,
@@ -180,15 +178,22 @@ export namespace MigrationManager {
     migrationToClose.stage = 'COMPLETED';
     const closedMigration = await migrationRepo.update(migrationToClose);
 
-    await dictionaryManagerInstance().loadAndSaveNewVersion(
-      dictionaryManagerInstance().getCurrent().name,
-      newTargetSchema.version,
-    );
-    setStatus('schema', { status: Status.OK });
+    if (!migration.dryRun) {
+      await loadNewDictionary(newTargetSchema.version);
+      sendMessagesForProgramWithDonorUpdates(migrationAfterDonorCheck.programsWithDonorUpdates);
+    }
 
     await persistedConfig.setSubmissionDisabledState(false);
 
     return closedMigration;
+  };
+
+  const loadNewDictionary = async (version: string) => {
+    await dictionaryManagerInstance().loadAndSaveNewVersion(
+      dictionaryManagerInstance().getCurrent().name,
+      version,
+    );
+    setStatus('schema', { status: Status.OK });
   };
 
   const sendMessagesForProgramWithDonorUpdates = (programs: string[]) => {

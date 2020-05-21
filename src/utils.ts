@@ -58,9 +58,9 @@ export namespace TsvUtils {
           return undefined; // couldn't match field with expected headers so ignore it
         }
         if (Array.isArray(val)) {
-          tsvRecordAsArray[indexInTsvArray] = val.map(v => String(v || '').trim()).join(', ');
+          tsvRecordAsArray[indexInTsvArray] = val.map(convertToTrimmedString).join(', ');
         } else {
-          tsvRecordAsArray[indexInTsvArray] = String(val || '').trim();
+          tsvRecordAsArray[indexInTsvArray] = convertToTrimmedString(val);
         }
       });
       allTsvRecords[i] = tsvRecordAsArray.join('\t'); // hold order of recordsObjects
@@ -269,6 +269,12 @@ export function isValueEqual(value: any, other: any) {
 
 export function isValueNotEqual(value: any, other: any) {
   return !isValueEqual(value, other);
+}
+
+export function convertToTrimmedString(
+  val: unknown | undefined | string | number | boolean | null,
+) {
+  return val === undefined || val === null ? '' : String(val).trim();
 }
 
 export const F = deepFreeze;
