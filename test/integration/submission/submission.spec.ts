@@ -40,6 +40,7 @@ import {
   DonorFieldsEnum,
   ClinicalUniqueIdentifier,
   PrimaryDiagnosisFieldsEnum,
+  FollowupFieldsEnum,
 } from '../../../src/common-model/entities';
 import { TsvUtils } from '../../../src/utils';
 import { donorDao } from '../../../src/clinical/donor-repo';
@@ -637,6 +638,7 @@ describe('Submission Api', () => {
       try {
         files.push(fs.readFileSync(stubFilesDir + '/donor.invalid.tsv'));
         files.push(fs.readFileSync(stubFilesDir + '/radiation.invalid.tsv'));
+        files.push(fs.readFileSync(stubFilesDir + '/follow_up.invalid.tsv'));
       } catch (err) {
         return done(err);
       }
@@ -647,10 +649,14 @@ describe('Submission Api', () => {
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .attach('clinicalFiles', files[0], 'donor.invalid.tsv')
         .attach('clinicalFiles', files[1], 'radiation.invalid.tsv')
+        .attach('clinicalFiles', files[2], 'follow_up.invalid.tsv')
         .end((err: any, res: any) => {
           res.should.have.status(207);
           res.body.submission.clinicalEntities.donor.schemaErrors.should.deep.eq(
             expectedDonorBatchSubmissionSchemaErrors,
+          );
+          res.body.submission.clinicalEntities.follow_up.schemaErrors.should.deep.eq(
+            expectedFollowUpBatchSubmissionSchemaErrors,
           );
           res.body.submission.clinicalEntities.radiation.schemaErrors.should.deep.eq(
             expectedRadiationBatchSubmissionSchemaErrors,
@@ -2463,6 +2469,37 @@ const ABCD_REGISTRATION_DOC: ActiveRegistration = {
     },
   ],
 };
+const expectedFollowUpBatchSubmissionSchemaErrors = [
+  {
+    index: 0,
+    type: 'FOUND_IDENTICAL_IDS',
+    info: {
+      value: 'FLL1234',
+      donorSubmitterId: 'ICGC_0001',
+      useAllRecordValues: false,
+      conflictingRows: [1],
+      uniqueIdNames: [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.FOLLOW_UP]],
+    },
+    message:
+      'You are trying to submit the same [submitter_follow_up_id] in multiple rows. [submitter_follow_up_id] can only be submitted once per file.',
+    fieldName: FollowupFieldsEnum.submitter_follow_up_id,
+  },
+  {
+    index: 1,
+    type: 'FOUND_IDENTICAL_IDS',
+    info: {
+      value: 'FLL1234',
+      donorSubmitterId: 'ICGC_0002',
+      useAllRecordValues: false,
+      conflictingRows: [0],
+      uniqueIdNames: [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.FOLLOW_UP]],
+    },
+    message:
+      'You are trying to submit the same [submitter_follow_up_id] in multiple rows. [submitter_follow_up_id] can only be submitted once per file.',
+    fieldName: FollowupFieldsEnum.submitter_follow_up_id,
+  },
+];
+
 const expectedDonorBatchSubmissionSchemaErrors = [
   {
     index: 1,

@@ -231,9 +231,10 @@ export const checkUniqueRecords = (
         indexToErrorMap[recordIndex].info.conflictingRows.push(index);
         return;
       }
+      const errorRecord = newRecords[recordIndex] as any;
       // error object doesn't exist so add it
       indexToErrorMap[recordIndex] = buildSubmissionError(
-        { ...record, index: recordIndex },
+        { ...errorRecord, index: recordIndex },
         DataValidationErrors.FOUND_IDENTICAL_IDS,
         uniqueIdNames.length == 1 ? uniqueIdNames[0] : DonorFieldsEnum.submitter_donor_id, // use donor_id if using multiple fields
         {
