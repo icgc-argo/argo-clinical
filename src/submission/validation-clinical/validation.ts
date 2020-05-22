@@ -235,7 +235,7 @@ export const checkUniqueRecords = (
       indexToErrorMap[recordIndex] = buildSubmissionError(
         { ...record, index: recordIndex },
         DataValidationErrors.FOUND_IDENTICAL_IDS,
-        uniqueIdNames.length == 0 ? uniqueIdNames[0] : DonorFieldsEnum.submitter_donor_id, // use donor_id if using many fields
+        uniqueIdNames.length == 1 ? uniqueIdNames[0] : DonorFieldsEnum.submitter_donor_id, // use donor_id if using multiple fields
         {
           conflictingRows: sameIdentifiedRecordIndecies.filter(i => i !== recordIndex),
           useAllRecordValues,

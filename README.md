@@ -7,14 +7,20 @@
 - node 12+
 - Mongo 4.0
 
+## Design
+
+![clinical Arch](./clinicalArch.png)
+
 ## How to:
 
 Make scripts are provided to run this application and the required MongoDB using docker. In order for these scripts to start the dev server, you must have a debugger application waiting to attach on port `9229`. This is easily accomplished by running these commands in the VSCode terminal, and updating the `Debugger Auto Attach` setting in VSCode settings to `yes`.
 
-- run: `make debug`
+- run: `make` this will bootstrap everything, docker compose, and the service
+- `make debug` will only restart the clinical service, without docker compose
 - tests: `make verify`
 
 To run local without engaging the debugger, run `npm run local`. Since this will not run the docker-compose setup, this requires MongoDB to be running locally (connections configured in the .env file)
+See `Makefile` for more details and options.
 
 ## Debugging Notes:
 
