@@ -8,7 +8,7 @@ import {
 } from '../lectern-client/schema-entities';
 import * as changeAnalyzer from '../lectern-client/change-analyzer';
 import { schemaClient as schemaServiceAdapter } from '../lectern-client/schema-rest-client';
-import { schemaRepo } from './repo';
+import { schemaRepo, DATASCHEMA_DOCUMENT_FIELDS } from './repo';
 import { loggerFor } from '../logger';
 import { Donor } from '../clinical/clinical-entities';
 import { DeepReadonly } from 'deep-freeze';
@@ -20,27 +20,32 @@ const L = loggerFor(__filename);
 
 let manager: SchemaManager;
 
+type SchemaWithFields = {
+  name: string;
+  fields: string[];
+};
+
 class SchemaManager {
-  private currentSchemaDictionary: SchemasDictionary = {
-    schemas: [],
-    name: '',
-    version: '',
+  constructor(private schemaServiceUrl: string, private dictionaryName: string) {}
+
+  getCurrent = async (): Promise<SchemasDictionary> => {
+    const dictionary = await schemaRepo.get(this.dictionaryName);
+    if (!dictionary) {
+      throw new Error('schema manager not initialized correctly');
+    }
+    return dictionary;
   };
 
-  constructor(private schemaServiceUrl: string) {}
-
-  getCurrent = (): SchemasDictionary => {
-    return this.currentSchemaDictionary;
+  getCurrentVersion = async (): Promise<string> => {
+    return (await this.getCurrent()).version;
   };
 
-  getSchemasWithFields = (
+  getSchemasWithFields = async (
     schemaDefConstratint: object | Function = {}, // k-v SchemaDefinition property constraints; e.g. { name: 'donor' } or function executed on each schema def
     fieldDefConstraint: object | Function = {}, // k-v FieldDefinition property constraints; e.g. { restrictions: { required: true } }  or function executed on each field def
-  ): {
-    name: string;
-    fields: string[];
-  }[] => {
-    return _(this.currentSchemaDictionary.schemas)
+  ): Promise<SchemaWithFields[]> => {
+    const currentDictionary = await this.getCurrent();
+    return _(currentDictionary.schemas)
       .filter(schemaDefConstratint)
       .map(s => {
         return {
@@ -54,12 +59,16 @@ class SchemaManager {
       .value();
   };
 
-  getSchemas = (): string[] => {
-    return this.currentSchemaDictionary.schemas.map(s => s.name);
+  getSchemaNames = async (): Promise<string[]> => {
+    const currentDictionary = await this.getCurrent();
+    return currentDictionary.schemas.map(s => s.name);
   };
 
-  getSchemaFieldNamesWithPriority = (definition: string): FieldNamesByPriorityMap => {
-    return service.getSchemaFieldNamesWithPriority(this.currentSchemaDictionary, definition);
+  getSchemaFieldNamesWithPriority = (
+    definition: string,
+    dictionary: SchemasDictionary,
+  ): FieldNamesByPriorityMap => {
+    return service.getSchemaFieldNamesWithPriority(dictionary, definition);
   };
 
   /**
@@ -77,12 +86,9 @@ class SchemaManager {
     schemaName: string,
     record: Readonly<DataRecord>,
     index: number,
-    schema?: SchemasDictionary,
+    schemasDictionary: SchemasDictionary,
   ): SchemaProcessingResult => {
-    if (!schema && this.getCurrent() === undefined) {
-      throw new Error('schema manager not initialized correctly');
-    }
-    return service.process(schema || this.getCurrent(), schemaName, record, index);
+    return service.process(schemasDictionary, schemaName, record, index);
   };
 
   /**
@@ -98,45 +104,38 @@ class SchemaManager {
    * @returns promise object contains the validation errors
    *          and the valid processed records.
    */
-  processAsync = async (
+  processParallel = async (
     schemaName: string,
     record: Readonly<DataRecord>,
     index: number,
-    schemasDictionary?: SchemasDictionary,
+    schemasDictionary: SchemasDictionary,
   ): Promise<SchemaProcessingResult> => {
-    if (!schemasDictionary && this.getCurrent() === undefined) {
-      throw new Error('schema manager not initialized correctly');
-    }
-    return await parallelService.processRecord(
-      schemasDictionary || this.getCurrent(),
-      schemaName,
-      record,
-      index,
-    );
+    return await parallelService.processRecord(schemasDictionary, schemaName, record, index);
   };
 
   analyzeChanges = async (oldVersion: string, newVersion: string) => {
     const result = await changeAnalyzer.fetchDiffAndAnalyze(
       this.schemaServiceUrl,
-      this.currentSchemaDictionary.name,
+      this.dictionaryName,
       oldVersion,
       newVersion,
     );
     return result;
   };
 
-  loadAndSaveNewVersion = async (name: string, newVersion: string): Promise<SchemasDictionary> => {
-    const newSchema = await this.loadSchemaByVersion(name, newVersion);
-    const result = await schemaRepo.createOrUpdate(newSchema);
-    if (!result) {
-      throw new Error("couldn't save/update new schema.");
-    }
-    this.currentSchemaDictionary = result;
-    return this.currentSchemaDictionary;
+  loadAndSaveNewVersion = async (newVersion: string): Promise<SchemasDictionary> => {
+    const newSchema = await this.loadSchemaByVersion(newVersion);
+    const result = await this.replace(newSchema);
+    return result;
   };
 
-  loadSchemaByVersion = async (name: string, version: string): Promise<SchemasDictionary> => {
-    const newSchema = await schemaServiceAdapter.fetchSchema(this.schemaServiceUrl, name, version);
+  loadSchemaByVersion = async (version: string): Promise<SchemasDictionary> => {
+    const newSchema = await schemaServiceAdapter.fetchSchema(
+      this.schemaServiceUrl,
+      this.dictionaryName,
+      version,
+    );
+    L.info(`fetched schema ${newSchema.version}`);
     return newSchema;
   };
 
@@ -145,8 +144,7 @@ class SchemaManager {
     if (!result) {
       throw new Error("couldn't save/update new schema.");
     }
-    this.currentSchemaDictionary = result;
-    return this.currentSchemaDictionary;
+    return result;
   };
 
   loadSchemaAndSave = async (name: string, initialVersion: string): Promise<SchemasDictionary> => {
@@ -155,42 +153,28 @@ class SchemaManager {
       throw new Error('initial version cannot be empty.');
     }
     const storedSchema = await schemaRepo.get(name);
-    if (storedSchema === undefined) {
-      L.info(`schema not found in db`);
-      this.currentSchemaDictionary = {
-        schemas: [],
-        name: name,
-        version: initialVersion,
-      };
-    } else {
+    if (storedSchema !== undefined && storedSchema.schemas.length !== 0) {
       L.info(`schema found in db`);
-      this.currentSchemaDictionary = storedSchema;
+      return storedSchema;
     }
+
+    L.info(`schema not found in db`);
 
     // if the schema is not complete we need to load it from the
     // schema service (lectern)
-    if (
-      !this.currentSchemaDictionary.schemas ||
-      this.currentSchemaDictionary.schemas.length === 0
-    ) {
-      L.debug(`fetching schema from schema service.`);
-      const result = await this.loadSchemaByVersion(name, this.currentSchemaDictionary.version);
-      L.info(`fetched schema ${result.version}`);
-      this.currentSchemaDictionary.schemas = result.schemas;
-      const saved = await schemaRepo.createOrUpdate(this.currentSchemaDictionary);
-      if (!saved) {
-        throw new Error("couldn't save/update new schema");
-      }
-      L.info(`schema saved in db`);
-      return saved;
-    }
-    return this.currentSchemaDictionary;
+    L.debug(`fetching schema from schema service.`);
+    const result = await this.loadSchemaByVersion(initialVersion);
+    const saved = await this.replace(result);
+
+    L.info(`schema saved in db`);
+    return saved;
   };
 
   updateSchemaVersion = async (toVersion: string, updater: string, sync?: boolean) => {
     // submit the migration request
+    const currentDictionaryVersion = await this.getCurrentVersion();
     return await MigrationManager.submitMigration(
-      this.getCurrent().version,
+      currentDictionaryVersion,
       toVersion,
       updater,
       false,
@@ -255,6 +239,6 @@ export function instance() {
   return manager;
 }
 
-export function create(schemaServiceUrl: string) {
-  manager = new SchemaManager(schemaServiceUrl);
+export function create(schemaServiceUrl: string, dictionaryName: string) {
+  manager = new SchemaManager(schemaServiceUrl, dictionaryName);
 }

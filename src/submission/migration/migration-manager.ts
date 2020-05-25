@@ -42,12 +42,8 @@ export namespace MigrationManager {
   }
 
   export const dryRunSchemaUpgrade = async (toVersion: string, initiator: string) => {
-    return await submitMigration(
-      dictionaryManagerInstance().getCurrent().version,
-      toVersion,
-      initiator,
-      true,
-    );
+    const currVersion = await dictionaryManagerInstance().getCurrentVersion();
+    return await submitMigration(currVersion, toVersion, initiator, true);
   };
 
   export const getMigration = async (migrationId: string | undefined) => {
@@ -120,10 +116,7 @@ export namespace MigrationManager {
     }
 
     const newSchemaVersion = migrationToRun.toVersion;
-    const newTargetSchema = await dictionaryManagerInstance().loadSchemaByVersion(
-      dictionaryManagerInstance().getCurrent().name,
-      newSchemaVersion,
-    );
+    const newTargetSchema = await dictionaryManagerInstance().loadSchemaByVersion(newSchemaVersion);
 
     const preMigrateVerification = await verifyNewSchemaIsValidWithDataValidation(newTargetSchema);
     if (!_.isEmpty(preMigrateVerification)) {
@@ -189,10 +182,7 @@ export namespace MigrationManager {
   };
 
   const loadNewDictionary = async (version: string) => {
-    await dictionaryManagerInstance().loadAndSaveNewVersion(
-      dictionaryManagerInstance().getCurrent().name,
-      version,
-    );
+    await dictionaryManagerInstance().loadAndSaveNewVersion(version);
     setStatus('schema', { status: Status.OK });
   };
 

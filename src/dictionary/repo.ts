@@ -4,9 +4,16 @@ import { loggerFor } from '../logger';
 import { MongooseUtils } from '../utils';
 const L = loggerFor(__filename);
 
+export enum DATASCHEMA_DOCUMENT_FIELDS {
+  VERSION = 'version',
+}
+
 export interface SchemaRepository {
   createOrUpdate(schema: SchemasDictionary): Promise<SchemasDictionary | undefined>;
-  get(name: String): Promise<SchemasDictionary | undefined>;
+  get(
+    name: String,
+    projection?: Partial<Record<DATASCHEMA_DOCUMENT_FIELDS, number>>,
+  ): Promise<SchemasDictionary | undefined>;
 }
 
 export const schemaRepo: SchemaRepository = {
@@ -26,9 +33,9 @@ export const schemaRepo: SchemaRepository = {
     const resultObj = MongooseUtils.toPojo(result);
     return resultObj;
   },
-  get: async (name: String): Promise<SchemasDictionary | undefined> => {
+  get: async (name: String, projection?: any): Promise<SchemasDictionary | undefined> => {
     L.debug('in Schema repo get');
-    const doc = await DataSchemaModel.findOne({ name: name }).exec();
+    const doc = await DataSchemaModel.findOne({ name: name }, projection).exec();
     if (!doc) {
       return undefined;
     }

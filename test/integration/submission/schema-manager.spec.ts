@@ -60,7 +60,7 @@ describe('manager', () => {
 
   it('should load schema in db', async function() {
     // has to be done in every test to reset the state of the manager
-    manager.create('http://localhost:54321/lectern');
+    manager.create('http://localhost:54321/lectern', schemaName);
     const dictionaries: SchemasDictionary[] = require('./dictionary.response.1.json') as SchemasDictionary[];
     server.on({
       method: 'GET',
@@ -95,7 +95,7 @@ describe('manager', () => {
 
   it('should update schema version', async function() {
     // has to be done in every test to reset the state of the manager
-    manager.create('http://localhost:54321/lectern');
+    manager.create('http://localhost:54321/lectern', schemaName);
     const dictionaryV1: SchemasDictionary[] = require('./dictionary.response.1.json') as SchemasDictionary[];
     const dictionaryV2: SchemasDictionary[] = require('./dictionary.response.2.json') as SchemasDictionary[];
     server.on({
@@ -122,7 +122,7 @@ describe('manager', () => {
     }
     chai.expect(resultV1).to.not.be.undefined;
     try {
-      resultV2 = await manager.instance().loadAndSaveNewVersion(schemaName, '2.0');
+      resultV2 = await manager.instance().loadAndSaveNewVersion('2.0');
     } catch (er) {
       return er;
     }
