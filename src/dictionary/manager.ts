@@ -204,13 +204,6 @@ class SchemaManager {
   resumeMigration = async (sync: boolean) => {
     return await MigrationManager.resumeMigration(sync);
   };
-
-  getSchemasDictionaryToUse = async (passedSchemasDictionary: SchemasDictionary) => {
-    if (!passedSchemasDictionary || passedSchemasDictionary.schemas === []) {
-      return await this.getCurrent();
-    }
-    return passedSchemasDictionary;
-  };
 }
 
 export const revalidateAllDonorClinicalEntitiesAgainstSchema = (

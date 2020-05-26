@@ -35,7 +35,10 @@ export const schemaRepo: SchemaRepository = {
     const resultObj = MongooseUtils.toPojo(result);
     return resultObj;
   },
-  get: async (name: String, projection?: any): Promise<SchemasDictionary | undefined> => {
+  get: async (
+    name: String,
+    projection?: SchemasDictionaryProjection,
+  ): Promise<SchemasDictionary | undefined> => {
     L.debug('in Schema repo get');
     const doc = await DataSchemaModel.findOne({ name: name }, projection).exec();
     if (!doc) {
