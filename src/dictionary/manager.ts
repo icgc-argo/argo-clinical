@@ -8,7 +8,7 @@ import {
 } from '../lectern-client/schema-entities';
 import * as changeAnalyzer from '../lectern-client/change-analyzer';
 import { schemaClient as schemaServiceAdapter } from '../lectern-client/schema-rest-client';
-import { schemaRepo, DATASCHEMA_DOCUMENT_FIELDS } from './repo';
+import { schemaRepo, DATASCHEMA_DOCUMENT_FIELDS, SchemasDictionaryProjection } from './repo';
 import { loggerFor } from '../logger';
 import { Donor } from '../clinical/clinical-entities';
 import { DeepReadonly } from 'deep-freeze';
@@ -28,8 +28,8 @@ type SchemaWithFields = {
 class SchemaManager {
   constructor(private schemaServiceUrl: string, private dictionaryName: string) {}
 
-  getCurrent = async (): Promise<SchemasDictionary> => {
-    const dictionary = await schemaRepo.get(this.dictionaryName);
+  getCurrent = async (projection?: SchemasDictionaryProjection): Promise<SchemasDictionary> => {
+    const dictionary = await schemaRepo.get(this.dictionaryName, projection);
     if (!dictionary) {
       throw new Error('schema manager not initialized correctly');
     }
@@ -37,7 +37,9 @@ class SchemaManager {
   };
 
   getCurrentVersion = async (): Promise<string> => {
-    return (await this.getCurrent()).version;
+    const versionProjection = { [DATASCHEMA_DOCUMENT_FIELDS.VERSION]: 1 };
+    const schemaWithVersion = await this.getCurrent(versionProjection);
+    return schemaWithVersion.version;
   };
 
   getSchemasWithFields = async (
@@ -64,11 +66,11 @@ class SchemaManager {
     return currentDictionary.schemas.map(s => s.name);
   };
 
-  getSchemaFieldNamesWithPriority = (
-    definition: string,
+  extractSchemaFieldNamesByPriority = (
     dictionary: SchemasDictionary,
+    schemaName: string,
   ): FieldNamesByPriorityMap => {
-    return service.getSchemaFieldNamesWithPriority(dictionary, definition);
+    return service.extractSchemaFieldNamesByPriority(dictionary, schemaName);
   };
 
   /**
@@ -201,6 +203,13 @@ class SchemaManager {
 
   resumeMigration = async (sync: boolean) => {
     return await MigrationManager.resumeMigration(sync);
+  };
+
+  getSchemasDictionaryToUse = async (passedSchemasDictionary: SchemasDictionary) => {
+    if (!passedSchemasDictionary || passedSchemasDictionary.schemas === []) {
+      return await this.getCurrent();
+    }
+    return passedSchemasDictionary;
   };
 }
 

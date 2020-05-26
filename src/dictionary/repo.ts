@@ -8,11 +8,13 @@ export enum DATASCHEMA_DOCUMENT_FIELDS {
   VERSION = 'version',
 }
 
+export type SchemasDictionaryProjection = Partial<Record<DATASCHEMA_DOCUMENT_FIELDS, number>>;
+
 export interface SchemaRepository {
   createOrUpdate(schema: SchemasDictionary): Promise<SchemasDictionary | undefined>;
   get(
     name: String,
-    projection?: Partial<Record<DATASCHEMA_DOCUMENT_FIELDS, number>>,
+    projection?: SchemasDictionaryProjection,
   ): Promise<SchemasDictionary | undefined>;
 }
 

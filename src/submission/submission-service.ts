@@ -1073,7 +1073,7 @@ export namespace operations {
       const commonFieldNamesSet = new Set(newClinicalEnity.fieldNames);
       const clinicalFieldNamesByPriorityMap = dictionaryManager
         .instance()
-        .getSchemaFieldNamesWithPriority(clinicalType, dictionary);
+        .extractSchemaFieldNamesByPriority(dictionary, clinicalType);
       const missingFields: string[] = [];
 
       clinicalFieldNamesByPriorityMap.required.forEach(requriedField => {
