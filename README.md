@@ -9,7 +9,7 @@
 
 ## Design
 
-![clinical Arch](./clinicalArch.png)
+![clinical Arch](./ClinicalServiceArch.png)
 
 ## How to:
 
