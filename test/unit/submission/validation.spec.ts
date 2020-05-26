@@ -1494,17 +1494,6 @@ describe('data-validator', () => {
         },
       );
 
-      ClinicalSubmissionRecordsOperations.addRecord(
-        ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
-        newDonorAB1Records,
-        {
-          [PrimaryDiagnosisFieldsEnum.submitter_donor_id]: 'AB1',
-          [PrimaryDiagnosisFieldsEnum.program_id]: 'PEME-CA',
-          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-1',
-          index: 0,
-        },
-      );
-
       // Donor AB2 here has clinicalInfo where vital_status===deceased but no survival_time is given
       const newDonorAB2Records = {};
       ClinicalSubmissionRecordsOperations.addRecord(
@@ -1564,8 +1553,28 @@ describe('data-validator', () => {
         },
       };
 
-      chai.expect(result.specimen.dataErrors.length).to.eq(3);
+      const primaryDiagnosisMissingError = {
+        fieldName: 'submitter_primary_diagnosis_id',
+        info: {
+          childEntity: 'specimen',
+          donorSubmitterId: 'AB1',
+          fieldName: 'submitter_primary_diagnosis_id',
+          parentEntity: 'primary_diagnosis',
+          value: 'PP-1',
+        },
+        message:
+          "[submitter_primary_diagnosis_id] value in [specimen] file requires a matching [submitter_primary_diagnosis_id] in [primary_diagnosis] data. Check that it belongs to the same [submitter_donor_id] = AB1. It could have been previously submitted for a different donor, or if it's new in this submission, it's either missing in [primary_diagnosis] file or this [submitter_primary_diagnosis_id] is associated with different [submitter_donor_id] in the [primary_diagnosis] file.",
+        type: 'RELATED_ENTITY_MISSING_OR_CONFLICTING',
+      };
 
+      chai.expect(result.specimen.dataErrors.length).to.eq(5);
+
+      chai
+        .expect(result.specimen.dataErrors)
+        .to.deep.include({ ...primaryDiagnosisMissingError, index: 0 });
+      chai
+        .expect(result.specimen.dataErrors)
+        .to.deep.include({ ...primaryDiagnosisMissingError, index: 1 });
       chai
         .expect(result.specimen.dataErrors)
         .to.deep.include({ ...specimenMisisngDonorAB1FieldsErr, index: 0 });
