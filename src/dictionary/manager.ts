@@ -155,21 +155,17 @@ class SchemaManager {
 
   loadAndSaveNewVersion = async (name: string, newVersion: string): Promise<SchemasDictionary> => {
     const newSchema = await this.loadSchemaByVersion(name, newVersion);
-    return await this.replace(newSchema);
-  };
-
-  loadSchemaByVersion = async (name: string, version: string): Promise<SchemasDictionary> => {
-    const newSchema = await schemaServiceAdapter.fetchSchema(this.schemaServiceUrl, name, version);
-    return newSchema;
-  };
-
-  replace = async (newSchema: SchemasDictionary): Promise<SchemasDictionary> => {
     const result = await schemaRepo.createOrUpdate(newSchema);
     if (!result) {
       throw new Error("couldn't save/update new schema.");
     }
     this.currentSchemaDictionary = result;
     return this.currentSchemaDictionary;
+  };
+
+  loadSchemaByVersion = async (name: string, version: string): Promise<SchemasDictionary> => {
+    const newSchema = await schemaServiceAdapter.fetchSchema(this.schemaServiceUrl, name, version);
+    return newSchema;
   };
 
   loadSchemaAndSave = async (name: string, initialVersion: string): Promise<SchemasDictionary> => {
