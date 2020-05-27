@@ -26,6 +26,10 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
     `${errorData.info.value} has not yet been registered. Please register samples before submitting clinical data for this identifier.`,
   CONFLICTING_TIME_INTERVAL: () =>
     'survival_time cannot be less than Specimen specimen_acquisition_interval.',
+
+  RELATED_ENTITY_MISSING_OR_CONFLICTING: (errorData: { info: RelatedEntityErrorInfo }) =>
+    `[${errorData.info.fieldName}] value in [${errorData.info.childEntity}] file requires a matching [${errorData.info.fieldName}] in [${errorData.info.parentEntity}] data. Check that it belongs to the same [submitter_donor_id] = ${errorData.info.donorSubmitterId}. It could have been previously submitted for a different donor, or if it's new in this submission, it's either missing in [${errorData.info.parentEntity}] file or this [${errorData.info.fieldName}] is associated with different [submitter_donor_id] in the [${errorData.info.parentEntity}] file.`,
+
   NOT_ENOUGH_INFO_TO_VALIDATE: errorData =>
     `[${errorData.fieldName}] requires [${errorData.info.missingField.join(
       '], [',
@@ -104,3 +108,14 @@ export const batchErrorMessage = (
 ): string => {
   return BATCH_ERROR_MESSAGES[errorType](errorData);
 };
+
+export interface SubmissionErrorBaseInfo {
+  donorSubmitterId: string;
+  value: string;
+}
+
+export interface RelatedEntityErrorInfo extends SubmissionErrorBaseInfo {
+  fieldName: string;
+  childEntity: string;
+  parentEntity: string;
+}
