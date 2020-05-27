@@ -140,7 +140,7 @@ export const getClinicalData = async (programId: string) => {
   const start = new Date().getTime() / 1000;
 
   // worker-threads can't get dictionary instance so deal with it here and pass it to worker task
-  const schemasWithFields = dictionaryManager.instance().getSchemasWithFields();
+  const schemasWithFields = await dictionaryManager.instance().getSchemasWithFields();
 
   // async/await functions just hang in current library worker-thread setup, root cause is unknown
   const donors = await donorDao.findByProgramId(programId, {}, true);

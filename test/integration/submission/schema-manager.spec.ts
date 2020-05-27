@@ -5,7 +5,7 @@ import 'chai-http';
 import 'mocha';
 import mongoose from 'mongoose';
 import { GenericContainer } from 'testcontainers';
-import { cleanCollection, findInDb } from '../testutils';
+import { cleanCollection, findInDb, updateData } from '../testutils';
 import _ from 'lodash';
 import * as manager from '../../../src/dictionary/manager';
 import { promisify } from 'bluebird';
@@ -136,6 +136,33 @@ describe('manager', () => {
     // had to convert the id to string from bsonArray before comparison
     dbSchema[0]._id = dbSchema[0]._id.toString();
     chai.expect(resultV2).to.deep.eq(dbSchema[0]);
+  });
+
+  it('should re-load if version is different in db', async function() {
+    manager.create('http://localhost:54321/lectern');
+    const dictionaries: SchemasDictionary[] = require('./dictionary.response.1.json') as SchemasDictionary[];
+    server.on({
+      method: 'GET',
+      path: '/lectern/dictionaries',
+      reply: {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+        body: () => {
+          console.log('in mock server reply');
+          return JSON.stringify(dictionaries);
+        },
+      },
+    });
+    await manager.instance().loadSchemaAndSave(schemaName, '1.0');
+
+    const initialDictionary = await manager.instance().getCurrent();
+    chai.expect(initialDictionary.version).to.eq('1.0');
+
+    // imagine data in db was updated out side of the manager
+    await updateData(dburl, 'dataschemas', { ...initialDictionary, version: '4.0' });
+
+    const dictionaryAfter = await manager.instance().getCurrent();
+    chai.expect(dictionaryAfter.version).to.eq('4.0');
   });
 
   describe('migration apis', () => {
