@@ -100,7 +100,7 @@ export namespace operations {
 
     const currentDictionary = await dictionaryManager.instance().getCurrent();
 
-    const preCheckError = preCheckRegistrationFields(command, currentDictionary);
+    const preCheckError = await preCheckRegistrationFields(command, currentDictionary);
     if (preCheckError) {
       return {
         registration: existingActivRegistration,
@@ -351,7 +351,7 @@ export namespace operations {
     );
 
     // Step 2 filter entites with invalid fieldNames
-    const { filteredClinicalEntites, fieldNameErrors } = checkEntityFieldNames(
+    const { filteredClinicalEntites, fieldNameErrors } = await checkEntityFieldNames(
       newClinicalEntitesMap,
       currentDictionary,
     );
@@ -1058,7 +1058,7 @@ export namespace operations {
     return F({ newClinicalEntitesMap, dataToEntityMapErrors });
   };
 
-  const checkEntityFieldNames = (
+  const checkEntityFieldNames = async (
     newClinicalEntitesMap: DeepReadonly<NewClinicalEntities>,
     dictionary: SchemasDictionary,
   ) => {
@@ -1071,9 +1071,9 @@ export namespace operations {
         continue;
       }
       const commonFieldNamesSet = new Set(newClinicalEnity.fieldNames);
-      const clinicalFieldNamesByPriorityMap = dictionaryManager
+      const clinicalFieldNamesByPriorityMap = await dictionaryManager
         .instance()
-        .extractSchemaFieldNamesByPriority(dictionary, clinicalType);
+        .getSchemaFieldNamesWithPriority(clinicalType, dictionary);
       const missingFields: string[] = [];
 
       clinicalFieldNamesByPriorityMap.required.forEach(requriedField => {
@@ -1119,10 +1119,10 @@ export namespace operations {
   };
 
   // pre check registration create command
-  const preCheckRegistrationFields = (
+  const preCheckRegistrationFields = async (
     command: CreateRegistrationCommand,
     dictionary: SchemasDictionary,
-  ): DeepReadonly<SubmissionBatchError[] | undefined> => {
+  ): Promise<DeepReadonly<SubmissionBatchError[] | undefined>> => {
     const {
       newClinicalEntitesMap: registrationMapped,
       dataToEntityMapErrors,
@@ -1140,7 +1140,7 @@ export namespace operations {
     if (dataToEntityMapErrors.length !== 0) {
       return dataToEntityMapErrors;
     }
-    const { fieldNameErrors } = checkEntityFieldNames(registrationMapped, dictionary);
+    const { fieldNameErrors } = await checkEntityFieldNames(registrationMapped, dictionary);
     if (fieldNameErrors.length !== 0) {
       return fieldNameErrors;
     }

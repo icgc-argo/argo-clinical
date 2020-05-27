@@ -37,7 +37,7 @@ import { loggerFor } from '../logger';
 import { DeepReadonly } from 'deep-freeze';
 const L = loggerFor(__filename);
 
-export const extractSchemaFieldNamesByPriority = (
+export const getSchemaFieldNamesWithPriority = (
   schema: SchemasDictionary,
   definition: string,
 ): FieldNamesByPriorityMap => {

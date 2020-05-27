@@ -84,11 +84,12 @@ class SchemaManager {
     return currentDictionary.schemas.map(s => s.name);
   };
 
-  extractSchemaFieldNamesByPriority = (
-    dictionary: SchemasDictionary,
+  getSchemaFieldNamesWithPriority = async (
     schemaName: string,
-  ): FieldNamesByPriorityMap => {
-    return service.extractSchemaFieldNamesByPriority(dictionary, schemaName);
+    schemasDictionary?: SchemasDictionary,
+  ): Promise<FieldNamesByPriorityMap> => {
+    const dictionaryToUse = await this.checkSchemasDictionaryToUse(schemasDictionary);
+    return service.getSchemaFieldNamesWithPriority(dictionaryToUse, schemaName);
   };
 
   /**
