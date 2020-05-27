@@ -36,22 +36,19 @@ class SchemaManager {
   constructor(private schemaServiceUrl: string) {}
 
   getCurrent = async (): Promise<SchemasDictionary> => {
-    await this.updateManagerDitionary();
+    await this.updateManagerDitionaryIfNeeded();
     return this.currentSchemaDictionary;
   };
 
-  updateManagerDitionary = async () => {
-    const dictionaryName = this.currentSchemaDictionary.name;
-    const cachedDictionaryVer = this.currentSchemaDictionary.version;
+  updateManagerDitionaryIfNeeded = async () => {
+    const name = this.currentSchemaDictionary.name;
+    const verToIgnore = this.currentSchemaDictionary.version;
 
-    // check dictionary in db is same version as cached one
-    const otherDictionary = await schemaRepo.getSchemaWithOtherVersion(
-      dictionaryName,
-      cachedDictionaryVer,
-    );
-    // check other is valid
-    if (otherDictionary !== undefined) {
-      this.currentSchemaDictionary = otherDictionary;
+    // try to get dictionary with different version
+    const dictionaryWithDiffVer = await schemaRepo.get(name, verToIgnore);
+    if (dictionaryWithDiffVer !== undefined) {
+      // dictionaryWithDiffVer found so update manager dictionary
+      this.currentSchemaDictionary = dictionaryWithDiffVer;
     }
   };
 
@@ -138,10 +135,9 @@ class SchemaManager {
   };
 
   analyzeChanges = async (oldVersion: string, newVersion: string) => {
-    const dictionaryName = await this.getCurrentName();
     const result = await changeAnalyzer.fetchDiffAndAnalyze(
       this.schemaServiceUrl,
-      dictionaryName,
+      this.getCurrentName(),
       oldVersion,
       newVersion,
     );
