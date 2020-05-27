@@ -15,11 +15,13 @@ import {
   DonorFieldsEnum,
   ClinicalFields,
   ClinicalTherapyType,
-  PrimaryDiagnosisFieldsEnum,
-  TreatmentFieldsEnum,
 } from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
-import { validationErrorMessage } from '../submission-error-messages';
+import {
+  validationErrorMessage,
+  RelatedEntityErrorInfo,
+  SubmissionErrorBaseInfo,
+} from '../submission-error-messages';
 import _ from 'lodash';
 import { DataRecord } from '../../lectern-client/schema-entities';
 import { Donor, ClinicalInfo } from '../../clinical/clinical-entities';
@@ -47,7 +49,7 @@ export const buildSubmissionError = (
       ...info,
       donorSubmitterId: newRecord[SampleRegistrationFieldsEnum.submitter_donor_id],
       value: newRecord[fieldName],
-    },
+    } as SubmissionErrorBaseInfo,
   };
   return {
     ...errorData,
@@ -371,20 +373,24 @@ export function getAtPath(object: any, nodes: any[]) {
 }
 
 export function checkRelatedEntityExists(
-  entity: ClinicalEntitySchemaNames,
+  parentEntity: ClinicalEntitySchemaNames,
   record: SubmittedClinicalRecord,
+  childEntity: ClinicalEntitySchemaNames,
   mergedDonor: Donor,
   errors: SubmissionValidationError[],
   required: boolean,
 ) {
-  const entitySubmitterIdField = getEntitySubmitterIdFieldName(entity);
+  const entitySubmitterIdField = getEntitySubmitterIdFieldName(parentEntity);
   const error = buildSubmissionError(
     record,
-    DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
+    DataValidationErrors.RELATED_ENTITY_MISSING_OR_CONFLICTING,
     entitySubmitterIdField as ClinicalFields,
     {
-      missingField: [entity + '.' + entitySubmitterIdField],
-    },
+      fieldName: entitySubmitterIdField,
+      childEntity: childEntity,
+      parentEntity: parentEntity,
+      donorSubmitterId: record.submitter_donor_id,
+    } as RelatedEntityErrorInfo,
   );
 
   if (!required && isEmptyString(record[entitySubmitterIdField] as string)) {
@@ -397,7 +403,7 @@ export function checkRelatedEntityExists(
   }
 
   const relatedEntity = getRelatedEntityByFK(
-    entity,
+    parentEntity,
     record[entitySubmitterIdField] as string,
     mergedDonor,
   );

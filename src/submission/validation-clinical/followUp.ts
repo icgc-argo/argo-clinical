@@ -31,6 +31,7 @@ export const validate = async (
   checkRelatedEntityExists(
     ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
     followUpRecord,
+    ClinicalEntitySchemaNames.FOLLOW_UP,
     mergedDonor,
     errors,
     false,
@@ -40,6 +41,7 @@ export const validate = async (
   checkRelatedEntityExists(
     ClinicalEntitySchemaNames.TREATMENT,
     followUpRecord,
+    ClinicalEntitySchemaNames.FOLLOW_UP,
     mergedDonor,
     errors,
     false,
