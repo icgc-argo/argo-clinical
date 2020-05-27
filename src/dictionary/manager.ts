@@ -88,7 +88,7 @@ class SchemaManager {
     schemaName: string,
     schemasDictionary?: SchemasDictionary,
   ): Promise<FieldNamesByPriorityMap> => {
-    const dictionaryToUse = await this.checkSchemasDictionaryToUse(schemasDictionary);
+    const dictionaryToUse = await this.chooseSchemasDictionaryToUse(schemasDictionary);
     return service.getSchemaFieldNamesWithPriority(dictionaryToUse, schemaName);
   };
 
@@ -109,7 +109,7 @@ class SchemaManager {
     index: number,
     schemasDictionary?: SchemasDictionary,
   ): Promise<SchemaProcessingResult> => {
-    const dictionaryToUse = await this.checkSchemasDictionaryToUse(schemasDictionary);
+    const dictionaryToUse = await this.chooseSchemasDictionaryToUse(schemasDictionary);
     return service.process(dictionaryToUse, schemaName, record, index);
   };
 
@@ -132,11 +132,11 @@ class SchemaManager {
     index: number,
     schemasDictionary?: SchemasDictionary,
   ): Promise<SchemaProcessingResult> => {
-    const dictionaryToUse = await this.checkSchemasDictionaryToUse(schemasDictionary);
+    const dictionaryToUse = await this.chooseSchemasDictionaryToUse(schemasDictionary);
     return await parallelService.processRecord(dictionaryToUse, schemaName, record, index);
   };
 
-  checkSchemasDictionaryToUse = async (passedDictionary?: SchemasDictionary) => {
+  chooseSchemasDictionaryToUse = async (passedDictionary?: SchemasDictionary) => {
     if (!passedDictionary) {
       return await this.getCurrent();
     }
@@ -155,9 +155,7 @@ class SchemaManager {
 
   loadAndSaveNewVersion = async (name: string, newVersion: string): Promise<SchemasDictionary> => {
     const newSchema = await this.loadSchemaByVersion(name, newVersion);
-    const result = await this.replace(newSchema);
-    this.currentSchemaDictionary = result;
-    return this.currentSchemaDictionary;
+    return await this.replace(newSchema);
   };
 
   loadSchemaByVersion = async (name: string, version: string): Promise<SchemasDictionary> => {
@@ -199,7 +197,7 @@ class SchemaManager {
       this.currentSchemaDictionary.schemas.length === 0
     ) {
       L.debug(`fetching schema from schema service.`);
-      const result = await this.loadSchemaByVersion(name, initialVersion);
+      const result = await this.loadSchemaByVersion(name, this.currentSchemaDictionary.version);
       L.info(`fetched schema ${result.version}`);
       this.currentSchemaDictionary.schemas = result.schemas;
       const saved = await schemaRepo.createOrUpdate(this.currentSchemaDictionary);
