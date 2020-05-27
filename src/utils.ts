@@ -32,6 +32,7 @@ export namespace TsvUtils {
       const data = line.split('\t');
       return headers.reduce<TsvRecordAsJsonObj>((obj, nextKey, index) => {
         const arrData = (data[index] || '')
+          .replace(/"/g, '')
           .trim()
           .split(',')
           .map(s => s.trim());
