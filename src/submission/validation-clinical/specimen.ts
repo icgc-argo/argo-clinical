@@ -44,6 +44,7 @@ export const validate = async (
   checkRelatedEntityExists(
     ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
     specimenRecord,
+    ClinicalEntitySchemaNames.SPECIMEN,
     mergedDonor,
     errors,
     true,
