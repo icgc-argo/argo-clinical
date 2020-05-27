@@ -36,12 +36,12 @@ class SchemaManager {
   constructor(private schemaServiceUrl: string) {}
 
   getCurrent = async (): Promise<SchemasDictionary> => {
-    await this.updateCachedDitionary();
+    await this.updateManagerDitionary();
     return this.currentSchemaDictionary;
   };
 
-  updateCachedDitionary = async () => {
-    const dictionaryName = this.getCurrentName();
+  updateManagerDitionary = async () => {
+    const dictionaryName = this.currentSchemaDictionary.name;
     const cachedDictionaryVer = this.currentSchemaDictionary.version;
 
     // check dictionary in db is same version as cached one
@@ -56,16 +56,12 @@ class SchemaManager {
   };
 
   getCurrentName = (): string => {
-    const dictionaryName = this.currentSchemaDictionary.name;
-    if (isEmpty(dictionaryName)) {
-      throw new Error('schema manager not initialized correctly');
-    }
-    return dictionaryName;
+    return this.currentSchemaDictionary.name;
   };
 
   getCurrentVersion = async (): Promise<string> => {
-    const schemaWithVersion = await this.getCurrent();
-    return schemaWithVersion.version;
+    const currDictionary = await this.getCurrent();
+    return currDictionary.version;
   };
 
   getSchemasWithFields = async (
@@ -142,30 +138,25 @@ class SchemaManager {
   };
 
   analyzeChanges = async (oldVersion: string, newVersion: string) => {
+    const dictionaryName = await this.getCurrentName();
     const result = await changeAnalyzer.fetchDiffAndAnalyze(
       this.schemaServiceUrl,
-      this.getCurrentName(),
+      dictionaryName,
       oldVersion,
       newVersion,
     );
     return result;
   };
 
-  loadAndSaveNewVersion = async (newVersion: string): Promise<SchemasDictionary> => {
-    const newSchema = await this.loadSchemaByVersion(newVersion);
+  loadAndSaveNewVersion = async (name: string, newVersion: string): Promise<SchemasDictionary> => {
+    const newSchema = await this.loadSchemaByVersion(name, newVersion);
     const result = await this.replace(newSchema);
-
     this.currentSchemaDictionary = result;
     return this.currentSchemaDictionary;
   };
 
-  loadSchemaByVersion = async (version: string): Promise<SchemasDictionary> => {
-    const newSchema = await schemaServiceAdapter.fetchSchema(
-      this.schemaServiceUrl,
-      this.getCurrentName(),
-      version,
-    );
-    L.info(`fetched schema ${newSchema.version}`);
+  loadSchemaByVersion = async (name: string, version: string): Promise<SchemasDictionary> => {
+    const newSchema = await schemaServiceAdapter.fetchSchema(this.schemaServiceUrl, name, version);
     return newSchema;
   };
 
@@ -203,7 +194,7 @@ class SchemaManager {
       this.currentSchemaDictionary.schemas.length === 0
     ) {
       L.debug(`fetching schema from schema service.`);
-      const result = await this.loadSchemaByVersion(initialVersion);
+      const result = await this.loadSchemaByVersion(name, initialVersion);
       L.info(`fetched schema ${result.version}`);
       this.currentSchemaDictionary.schemas = result.schemas;
       const saved = await schemaRepo.createOrUpdate(this.currentSchemaDictionary);

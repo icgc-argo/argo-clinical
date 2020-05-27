@@ -116,7 +116,11 @@ export namespace MigrationManager {
     }
 
     const newSchemaVersion = migrationToRun.toVersion;
-    const newTargetSchema = await dictionaryManagerInstance().loadSchemaByVersion(newSchemaVersion);
+    const dictionaryName = dictionaryManagerInstance().getCurrentName();
+    const newTargetSchema = await dictionaryManagerInstance().loadSchemaByVersion(
+      dictionaryName,
+      newSchemaVersion,
+    );
 
     const preMigrateVerification = await verifyNewSchemaIsValidWithDataValidation(newTargetSchema);
     if (!_.isEmpty(preMigrateVerification)) {
@@ -182,7 +186,8 @@ export namespace MigrationManager {
   };
 
   const loadNewDictionary = async (version: string) => {
-    await dictionaryManagerInstance().loadAndSaveNewVersion(version);
+    const dictionaryName = dictionaryManagerInstance().getCurrentName();
+    await dictionaryManagerInstance().loadAndSaveNewVersion(dictionaryName, version);
     setStatus('schema', { status: Status.OK });
   };
 
