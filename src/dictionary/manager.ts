@@ -20,6 +20,11 @@ const L = loggerFor(__filename);
 
 let manager: SchemaManager;
 
+type SchemaWithFields = {
+  name: string;
+  fields: string[];
+};
+
 class SchemaManager {
   private currentSchemaDictionary: SchemasDictionary = {
     schemas: [],
@@ -29,18 +34,38 @@ class SchemaManager {
 
   constructor(private schemaServiceUrl: string) {}
 
-  getCurrent = (): SchemasDictionary => {
+  getCurrent = async (): Promise<SchemasDictionary> => {
+    await this.updateManagerDictionaryIfNeeded();
     return this.currentSchemaDictionary;
   };
 
-  getSchemasWithFields = (
+  updateManagerDictionaryIfNeeded = async () => {
+    const name = this.currentSchemaDictionary.name;
+    const verToIgnore = this.currentSchemaDictionary.version;
+
+    // try to get dictionary with different version
+    const dictionaryWithDiffVer = await schemaRepo.get(name, verToIgnore);
+    if (dictionaryWithDiffVer !== undefined) {
+      // dictionaryWithDiffVer found so update manager dictionary
+      this.currentSchemaDictionary = dictionaryWithDiffVer;
+    }
+  };
+
+  getCurrentName = (): string => {
+    return this.currentSchemaDictionary.name;
+  };
+
+  getCurrentVersion = async (): Promise<string> => {
+    const currDictionary = await this.getCurrent();
+    return currDictionary.version;
+  };
+
+  getSchemasWithFields = async (
     schemaDefConstratint: object | Function = {}, // k-v SchemaDefinition property constraints; e.g. { name: 'donor' } or function executed on each schema def
     fieldDefConstraint: object | Function = {}, // k-v FieldDefinition property constraints; e.g. { restrictions: { required: true } }  or function executed on each field def
-  ): {
-    name: string;
-    fields: string[];
-  }[] => {
-    return _(this.currentSchemaDictionary.schemas)
+  ): Promise<SchemaWithFields[]> => {
+    const currentDictionary = await this.getCurrent();
+    return _(currentDictionary.schemas)
       .filter(schemaDefConstratint)
       .map(s => {
         return {
@@ -54,12 +79,17 @@ class SchemaManager {
       .value();
   };
 
-  getSchemas = (): string[] => {
-    return this.currentSchemaDictionary.schemas.map(s => s.name);
+  getSchemaNames = async (): Promise<string[]> => {
+    const currentDictionary = await this.getCurrent();
+    return currentDictionary.schemas.map(s => s.name);
   };
 
-  getSchemaFieldNamesWithPriority = (definition: string): FieldNamesByPriorityMap => {
-    return service.getSchemaFieldNamesWithPriority(this.currentSchemaDictionary, definition);
+  getSchemaFieldNamesWithPriority = async (
+    schemaName: string,
+    schemasDictionary?: SchemasDictionary,
+  ): Promise<FieldNamesByPriorityMap> => {
+    const dictionaryToUse = await this.chooseSchemasDictionaryToUse(schemasDictionary);
+    return service.getSchemaFieldNamesWithPriority(dictionaryToUse, schemaName);
   };
 
   /**
@@ -71,18 +101,16 @@ class SchemaManager {
    * @param schemaName the schema we want to process records for
    * @param records the raw records list
    *
-   * @returns object contains the validation errors and the valid processed records.
+   * @returns promise object contains the validation errors and the valid processed records.
    */
-  process = (
+  process = async (
     schemaName: string,
     record: Readonly<DataRecord>,
     index: number,
-    schema?: SchemasDictionary,
-  ): SchemaProcessingResult => {
-    if (!schema && this.getCurrent() === undefined) {
-      throw new Error('schema manager not initialized correctly');
-    }
-    return service.process(schema || this.getCurrent(), schemaName, record, index);
+    schemasDictionary?: SchemasDictionary,
+  ): Promise<SchemaProcessingResult> => {
+    const dictionaryToUse = await this.chooseSchemasDictionaryToUse(schemasDictionary);
+    return service.process(dictionaryToUse, schemaName, record, index);
   };
 
   /**
@@ -98,27 +126,27 @@ class SchemaManager {
    * @returns promise object contains the validation errors
    *          and the valid processed records.
    */
-  processAsync = async (
+  processParallel = async (
     schemaName: string,
     record: Readonly<DataRecord>,
     index: number,
     schemasDictionary?: SchemasDictionary,
   ): Promise<SchemaProcessingResult> => {
-    if (!schemasDictionary && this.getCurrent() === undefined) {
-      throw new Error('schema manager not initialized correctly');
+    const dictionaryToUse = await this.chooseSchemasDictionaryToUse(schemasDictionary);
+    return await parallelService.processRecord(dictionaryToUse, schemaName, record, index);
+  };
+
+  chooseSchemasDictionaryToUse = async (passedDictionary?: SchemasDictionary) => {
+    if (!passedDictionary) {
+      return await this.getCurrent();
     }
-    return await parallelService.processRecord(
-      schemasDictionary || this.getCurrent(),
-      schemaName,
-      record,
-      index,
-    );
+    return passedDictionary;
   };
 
   analyzeChanges = async (oldVersion: string, newVersion: string) => {
     const result = await changeAnalyzer.fetchDiffAndAnalyze(
       this.schemaServiceUrl,
-      this.currentSchemaDictionary.name,
+      this.getCurrentName(),
       oldVersion,
       newVersion,
     );
@@ -138,15 +166,6 @@ class SchemaManager {
   loadSchemaByVersion = async (name: string, version: string): Promise<SchemasDictionary> => {
     const newSchema = await schemaServiceAdapter.fetchSchema(this.schemaServiceUrl, name, version);
     return newSchema;
-  };
-
-  replace = async (newSchema: SchemasDictionary): Promise<SchemasDictionary> => {
-    const result = await schemaRepo.createOrUpdate(newSchema);
-    if (!result) {
-      throw new Error("couldn't save/update new schema.");
-    }
-    this.currentSchemaDictionary = result;
-    return this.currentSchemaDictionary;
   };
 
   loadSchemaAndSave = async (name: string, initialVersion: string): Promise<SchemasDictionary> => {
@@ -189,8 +208,9 @@ class SchemaManager {
 
   updateSchemaVersion = async (toVersion: string, updater: string, sync?: boolean) => {
     // submit the migration request
+    const currentDictionaryVersion = await this.getCurrentVersion();
     return await MigrationManager.submitMigration(
-      this.getCurrent().version,
+      currentDictionaryVersion,
       toVersion,
       updater,
       false,
