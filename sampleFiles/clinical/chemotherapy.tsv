@@ -1,4 +1,4 @@
 program_id	submitter_donor_id	submitter_treatment_id	drug_name	drug_rxnormcui	chemotherapy_dosage_units	cumulative_drug_dosage
 TEST-CA	ICGC_0002	T_02	aminobenzoic acid	74	mg/m2	4
-TEST-CA	ICGC_0003	T_03	mesna	44	µg/m2	20
+TEST-CA	ICGC_0003	T_03	mesna 	44	µg/m2	20
 TEST-CA	ICGC_0001.1	T_04	17-hydroxycorticosteroid (substance)	19	µg/m2	35
