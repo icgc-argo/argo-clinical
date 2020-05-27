@@ -35,11 +35,11 @@ class SchemaManager {
   constructor(private schemaServiceUrl: string) {}
 
   getCurrent = async (): Promise<SchemasDictionary> => {
-    await this.updateManagerDitionaryIfNeeded();
+    await this.updateManagerDictionaryIfNeeded();
     return this.currentSchemaDictionary;
   };
 
-  updateManagerDitionaryIfNeeded = async () => {
+  updateManagerDictionaryIfNeeded = async () => {
     const name = this.currentSchemaDictionary.name;
     const verToIgnore = this.currentSchemaDictionary.version;
 
