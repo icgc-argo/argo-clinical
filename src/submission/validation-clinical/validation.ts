@@ -217,6 +217,11 @@ export const checkUniqueRecords = (
       ? JSON.stringify(record)
       : uniqueIdNames.reduce((acc, curr) => acc + record[curr], '');
 
+    // if the id is empty then we don't want a non unique error to show since the id is missing to begin with and that causes double error.
+    if (uniqueIdentiferValue.trim() === '') {
+      return;
+    }
+
     // only one index so not duplicate
     if (!identifierToIndexMap[uniqueIdentiferValue]) {
       identifierToIndexMap[uniqueIdentiferValue] = [index];
