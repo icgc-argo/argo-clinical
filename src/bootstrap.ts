@@ -173,7 +173,7 @@ export const run = async (config: AppConfig) => {
 
   // setup schema manager
   try {
-    dictionaryManager.create(config.schemaServiceUrl(), config.schemaName());
+    dictionaryManager.create(config.schemaServiceUrl());
     await loadSchema(config.schemaName(), config.initialSchemaVersion());
   } catch (err) {
     L.error('failed to load schema', err);

@@ -8,7 +8,7 @@ import {
 } from '../lectern-client/schema-entities';
 import * as changeAnalyzer from '../lectern-client/change-analyzer';
 import { schemaClient as schemaServiceAdapter } from '../lectern-client/schema-rest-client';
-import { schemaRepo, DATASCHEMA_DOCUMENT_FIELDS, SchemasDictionaryProjection } from './repo';
+import { schemaRepo } from './repo';
 import { loggerFor } from '../logger';
 import { Donor } from '../clinical/clinical-entities';
 import { DeepReadonly } from 'deep-freeze';
@@ -16,6 +16,7 @@ import { ClinicalEntitySchemaNames } from '../common-model/entities';
 import _ from 'lodash';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../common-model/functions';
 import { MigrationManager } from '../submission/migration/migration-manager';
+import { isEmpty } from '../utils';
 const L = loggerFor(__filename);
 
 let manager: SchemaManager;
@@ -26,19 +27,44 @@ type SchemaWithFields = {
 };
 
 class SchemaManager {
-  constructor(private schemaServiceUrl: string, private dictionaryName: string) {}
+  private currentSchemaDictionary: SchemasDictionary = {
+    schemas: [],
+    name: '',
+    version: '',
+  };
 
-  getCurrent = async (projection?: SchemasDictionaryProjection): Promise<SchemasDictionary> => {
-    const dictionary = await schemaRepo.get(this.dictionaryName, projection);
-    if (!dictionary) {
+  constructor(private schemaServiceUrl: string) {}
+
+  getCurrent = async (): Promise<SchemasDictionary> => {
+    await this.updateCachedDitionary();
+    return this.currentSchemaDictionary;
+  };
+
+  updateCachedDitionary = async () => {
+    const dictionaryName = this.getCurrentName();
+    const cachedDictionaryVer = this.currentSchemaDictionary.version;
+
+    // check dictionary in db is same version as cached one
+    const otherDictionary = await schemaRepo.getSchemaWithOtherVersion(
+      dictionaryName,
+      cachedDictionaryVer,
+    );
+    // check other is valid
+    if (otherDictionary !== undefined) {
+      this.currentSchemaDictionary = otherDictionary;
+    }
+  };
+
+  getCurrentName = (): string => {
+    const dictionaryName = this.currentSchemaDictionary.name;
+    if (isEmpty(dictionaryName)) {
       throw new Error('schema manager not initialized correctly');
     }
-    return dictionary;
+    return dictionaryName;
   };
 
   getCurrentVersion = async (): Promise<string> => {
-    const versionProjection = { [DATASCHEMA_DOCUMENT_FIELDS.VERSION]: 1 };
-    const schemaWithVersion = await this.getCurrent(versionProjection);
+    const schemaWithVersion = await this.getCurrent();
     return schemaWithVersion.version;
   };
 
@@ -118,7 +144,7 @@ class SchemaManager {
   analyzeChanges = async (oldVersion: string, newVersion: string) => {
     const result = await changeAnalyzer.fetchDiffAndAnalyze(
       this.schemaServiceUrl,
-      this.dictionaryName,
+      this.getCurrentName(),
       oldVersion,
       newVersion,
     );
@@ -128,13 +154,15 @@ class SchemaManager {
   loadAndSaveNewVersion = async (newVersion: string): Promise<SchemasDictionary> => {
     const newSchema = await this.loadSchemaByVersion(newVersion);
     const result = await this.replace(newSchema);
-    return result;
+
+    this.currentSchemaDictionary = result;
+    return this.currentSchemaDictionary;
   };
 
   loadSchemaByVersion = async (version: string): Promise<SchemasDictionary> => {
     const newSchema = await schemaServiceAdapter.fetchSchema(
       this.schemaServiceUrl,
-      this.dictionaryName,
+      this.getCurrentName(),
       version,
     );
     L.info(`fetched schema ${newSchema.version}`);
@@ -146,7 +174,8 @@ class SchemaManager {
     if (!result) {
       throw new Error("couldn't save/update new schema.");
     }
-    return result;
+    this.currentSchemaDictionary = result;
+    return this.currentSchemaDictionary;
   };
 
   loadSchemaAndSave = async (name: string, initialVersion: string): Promise<SchemasDictionary> => {
@@ -155,21 +184,36 @@ class SchemaManager {
       throw new Error('initial version cannot be empty.');
     }
     const storedSchema = await schemaRepo.get(name);
-    if (storedSchema !== undefined && storedSchema.schemas.length !== 0) {
+    if (storedSchema === undefined) {
+      L.info(`schema not found in db`);
+      this.currentSchemaDictionary = {
+        schemas: [],
+        name: name,
+        version: initialVersion,
+      };
+    } else {
       L.info(`schema found in db`);
-      return storedSchema;
+      this.currentSchemaDictionary = storedSchema;
     }
-
-    L.info(`schema not found in db`);
 
     // if the schema is not complete we need to load it from the
     // schema service (lectern)
-    L.debug(`fetching schema from schema service.`);
-    const result = await this.loadSchemaByVersion(initialVersion);
-    const saved = await this.replace(result);
-
-    L.info(`schema saved in db`);
-    return saved;
+    if (
+      !this.currentSchemaDictionary.schemas ||
+      this.currentSchemaDictionary.schemas.length === 0
+    ) {
+      L.debug(`fetching schema from schema service.`);
+      const result = await this.loadSchemaByVersion(initialVersion);
+      L.info(`fetched schema ${result.version}`);
+      this.currentSchemaDictionary.schemas = result.schemas;
+      const saved = await schemaRepo.createOrUpdate(this.currentSchemaDictionary);
+      if (!saved) {
+        throw new Error("couldn't save/update new schema");
+      }
+      L.info(`schema saved in db`);
+      return saved;
+    }
+    return this.currentSchemaDictionary;
   };
 
   updateSchemaVersion = async (toVersion: string, updater: string, sync?: boolean) => {
@@ -241,6 +285,6 @@ export function instance() {
   return manager;
 }
 
-export function create(schemaServiceUrl: string, dictionaryName: string) {
-  manager = new SchemaManager(schemaServiceUrl, dictionaryName);
+export function create(schemaServiceUrl: string) {
+  manager = new SchemaManager(schemaServiceUrl);
 }
