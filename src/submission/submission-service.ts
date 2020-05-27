@@ -832,7 +832,7 @@ export namespace operations {
     await Promise.all(
       command.records.map(async (record, index) => {
         let processedRecord: any = {};
-        const schemaResult = dictionaryManager
+        const schemaResult = await dictionaryManager
           .instance()
           .process(command.clinicalType, record, index, schema);
 

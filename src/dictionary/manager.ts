@@ -16,7 +16,6 @@ import { ClinicalEntitySchemaNames } from '../common-model/entities';
 import _ from 'lodash';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../common-model/functions';
 import { MigrationManager } from '../submission/migration/migration-manager';
-import { isEmpty } from '../utils';
 const L = loggerFor(__filename);
 
 let manager: SchemaManager;
@@ -101,15 +100,16 @@ class SchemaManager {
    * @param schemaName the schema we want to process records for
    * @param records the raw records list
    *
-   * @returns object contains the validation errors and the valid processed records.
+   * @returns promise object contains the validation errors and the valid processed records.
    */
-  process = (
+  process = async (
     schemaName: string,
     record: Readonly<DataRecord>,
     index: number,
-    schemasDictionary: SchemasDictionary,
-  ): SchemaProcessingResult => {
-    return service.process(schemasDictionary, schemaName, record, index);
+    schemasDictionary?: SchemasDictionary,
+  ): Promise<SchemaProcessingResult> => {
+    const dictionaryToUse = await this.checkSchemasDictionaryToUse(schemasDictionary);
+    return service.process(dictionaryToUse, schemaName, record, index);
   };
 
   /**
@@ -129,9 +129,17 @@ class SchemaManager {
     schemaName: string,
     record: Readonly<DataRecord>,
     index: number,
-    schemasDictionary: SchemasDictionary,
+    schemasDictionary?: SchemasDictionary,
   ): Promise<SchemaProcessingResult> => {
-    return await parallelService.processRecord(schemasDictionary, schemaName, record, index);
+    const dictionaryToUse = await this.checkSchemasDictionaryToUse(schemasDictionary);
+    return await parallelService.processRecord(dictionaryToUse, schemaName, record, index);
+  };
+
+  checkSchemasDictionaryToUse = async (passedDictionary?: SchemasDictionary) => {
+    if (!passedDictionary) {
+      return await this.getCurrent();
+    }
+    return passedDictionary;
   };
 
   analyzeChanges = async (oldVersion: string, newVersion: string) => {

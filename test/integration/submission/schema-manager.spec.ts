@@ -138,7 +138,7 @@ describe('manager', () => {
     chai.expect(resultV2).to.deep.eq(dbSchema[0]);
   });
 
-  it.only('should re-load if version is different in db', async function() {
+  it('should re-load if version is different in db', async function() {
     manager.create('http://localhost:54321/lectern');
     const dictionaries: SchemasDictionary[] = require('./dictionary.response.1.json') as SchemasDictionary[];
     server.on({
