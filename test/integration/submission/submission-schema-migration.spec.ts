@@ -36,6 +36,7 @@ chai.should();
 
 // legacy field name
 const TUMOUR_STAGING_SYSTEM = 'tumour_staging_system';
+const PRESENTING_SYMPTOMS = 'presenting_symptoms';
 const schemaName = 'ARGO Clinical Submission';
 const startingSchemaVersion = '1.0';
 
@@ -89,6 +90,7 @@ describe('schema migration api', () => {
           age_at_diagnosis: 96,
           cancer_type_code: 'A11.1A',
           tumour_staging_system: 'Murphy',
+          presenting_symptoms: ['Nausea', 'Back Pain'],
         },
       },
     ],
@@ -371,11 +373,20 @@ describe('schema migration api', () => {
       assertNoMigrationErrors(res, VERSION);
 
       migration.invalidDonorsErrors.length.should.equal(1);
-      const errorObj = migration.invalidDonorsErrors[0].errors[0].primary_diagnosis[0];
+
+      const tumourStagingError = migration.invalidDonorsErrors[0].errors[0].primary_diagnosis[0];
       chai
-        .expect(errorObj)
+        .expect(tumourStagingError)
         .to.have.property('errorType', SchemaValidationErrorTypes.INVALID_ENUM_VALUE);
-      chai.expect(errorObj).to.have.property('fieldName', TUMOUR_STAGING_SYSTEM);
+      chai.expect(tumourStagingError).to.have.property('fieldName', TUMOUR_STAGING_SYSTEM);
+
+      const presentingSymptomError =
+        migration.invalidDonorsErrors[0].errors[0].primary_diagnosis[1];
+      chai.expect(presentingSymptomError).to.deep.include({
+        errorType: SchemaValidationErrorTypes.INVALID_ENUM_VALUE,
+        fieldName: PRESENTING_SYMPTOMS,
+        info: { value: ['Nausea'] },
+      });
     });
     it('should update the schema after a new required field is added, and make all donors invalid', async () => {
       const VERSION = '8.0';

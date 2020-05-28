@@ -53,7 +53,7 @@ class SchemaController {
 export const schemaController = new SchemaController();
 
 export const get = async (req: Request, res: Response) => {
-  const schema = manager.instance().getCurrent();
+  const schema = await manager.instance().getCurrent();
   if (!schema) {
     setStatus('schema', { status: Status.ERROR });
     return res.status(404).send('no schema found');
