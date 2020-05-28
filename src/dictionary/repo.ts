@@ -6,7 +6,7 @@ const L = loggerFor(__filename);
 
 export interface SchemaRepository {
   createOrUpdate(schema: SchemasDictionary): Promise<SchemasDictionary | undefined>;
-  get(name: String): Promise<SchemasDictionary | undefined>;
+  get(name: string, versionToIgnore?: string): Promise<SchemasDictionary | undefined>;
 }
 
 export const schemaRepo: SchemaRepository = {
@@ -26,9 +26,12 @@ export const schemaRepo: SchemaRepository = {
     const resultObj = MongooseUtils.toPojo(result);
     return resultObj;
   },
-  get: async (name: String): Promise<SchemasDictionary | undefined> => {
+  get: async (name: string, versionToIgnore?: string): Promise<SchemasDictionary | undefined> => {
     L.debug('in Schema repo get');
-    const doc = await DataSchemaModel.findOne({ name: name }).exec();
+    const doc = await DataSchemaModel.findOne({
+      name: name,
+      version: { $ne: versionToIgnore },
+    }).exec();
     if (!doc) {
       return undefined;
     }

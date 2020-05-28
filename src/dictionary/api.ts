@@ -64,25 +64,19 @@ export const get = async (req: Request, res: Response) => {
 export const getClinicalEntities = async (req: Request, res: Response) => {
   const includeFields = req.query.includeFields as string;
   if (includeFields && includeFields.toLowerCase() === 'true') {
-    return res.status(200).send(
-      manager
-        .instance()
-        .getSchemasWithFields()
-        .filter(s => s.name !== ClinicalEntitySchemaNames.REGISTRATION),
-    );
+    const schemasWithFields = await manager.instance().getSchemasWithFields();
+    return res
+      .status(200)
+      .send(schemasWithFields.filter(s => s.name !== ClinicalEntitySchemaNames.REGISTRATION));
   }
 
-  return res.status(200).send(
-    manager
-      .instance()
-      .getSchemas()
-      .filter(s => s !== ClinicalEntitySchemaNames.REGISTRATION),
-  );
+  const schemas = await manager.instance().getSchemaNames();
+  return res.status(200).send(schemas.filter(s => s !== ClinicalEntitySchemaNames.REGISTRATION));
 };
 
 export const getTemplate = async (req: Request, res: Response) => {
   const schemaName: string = req.params.schemaName;
-  const schemasDictionary = manager.instance().getCurrent();
+  const schemasDictionary = await manager.instance().getCurrent();
   const schema = schemasDictionary.schemas.find(schema => {
     return schema.name == schemaName;
   });
@@ -101,7 +95,7 @@ export const getTemplate = async (req: Request, res: Response) => {
 };
 
 export const getAllTemplates = async (req: Request, res: Response) => {
-  const schemasDictionary = manager.instance().getCurrent();
+  const schemasDictionary = await manager.instance().getCurrent();
   const zip = new AdmZip();
   res
     .status(200)
