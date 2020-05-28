@@ -46,6 +46,7 @@ export const buildDynamicStubSchema = () => {
     ClinicalEntitySchemaNames.DONOR,
     fieldNames.donor.CAUSE_OF_DEATH,
   ).restrictions?.codeList?.push('Died from disease');
+
   // Change #8.1.1.2 adding non-required field
 
   const schemaV5 = _.cloneDeep(dictionaryV1);
@@ -82,6 +83,14 @@ export const buildDynamicStubSchema = () => {
       fieldNames.primaryDiagnosis.TUMOUR_STAGING_SYSTEM,
     ).restrictions?.codeList || [];
   _.remove(s7_tumourStagingSystemCodeList, code => code === 'Murphy');
+
+  const s7_presentingSymptomsCodeList =
+    getField(
+      schemaV7,
+      ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+      fieldNames.primaryDiagnosis.PRESENTING_SYMPTOMS,
+    ).restrictions?.codeList || [];
+  _.remove(s7_presentingSymptomsCodeList, code => code === 'Nausea');
 
   // Change #8.1.2.2 adding a new required field
 

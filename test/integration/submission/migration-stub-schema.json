@@ -286,6 +286,46 @@
               }
             }
           }
+        ],
+        [
+          "primary_diagnosis.presenting_symptoms",
+          {
+            "left": {
+              "name": "presenting_symptoms",
+              "description": "Indicate presenting symptoms at time of primary diagnosis.",
+              "valueType": "string",
+              "isArray": true,
+              "restrictions": {
+                "codeList": ["Back Pain", "Nausea", "None", "Unknown", "Weight Loss"]
+              },
+              "meta": {
+                "displayName": "Presenting Symptoms"
+              }
+            },
+            "right": {
+              "name": "presenting_symptoms",
+              "description": "Indicate presenting symptoms at time of primary diagnosis.",
+              "valueType": "string",
+              "isArray": true,
+              "restrictions": {
+                "codeList": ["Back Pain", "None", "Unknown", "Weight Loss"]
+              },
+              "meta": {
+                "displayName": "Presenting Symptoms"
+              }
+            },
+            "diff": {
+              "restrictions": {
+                "codeList": {
+                  "type": "updated",
+                  "data": {
+                    "added": [],
+                    "deleted": ["Nausea"]
+                  }
+                }
+              }
+            }
+          }
         ]
       ]
     },
@@ -10556,7 +10596,7 @@
               "description": "Indicate presenting symptoms at time of primary diagnosis.",
               "valueType": "string",
               "restrictions": {
-                "codeList": ["Back Pain", "Nausea", "None", "Unknown", "Weight Loss"]
+                "codeList": ["Back Pain", "None", "Unknown", "Weight Loss"]
               }
             },
             {

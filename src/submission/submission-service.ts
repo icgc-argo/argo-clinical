@@ -98,7 +98,9 @@ export namespace operations {
       command.programId,
     );
 
-    const preCheckError = preCheckRegistrationFields(command);
+    const currentDictionary = await dictionaryManager.instance().getCurrent();
+
+    const preCheckError = await preCheckRegistrationFields(command, currentDictionary);
     if (preCheckError) {
       return {
         registration: existingActivRegistration,
@@ -125,7 +127,7 @@ export namespace operations {
       command.records.map(async (r, index) => {
         const schemaResult = await dictionaryManager
           .instance()
-          .processAsync(ClinicalEntitySchemaNames.REGISTRATION, r, index);
+          .processParallel(ClinicalEntitySchemaNames.REGISTRATION, r, index, currentDictionary);
 
         if (anyErrors(schemaResult.validationErrors)) {
           unifiedSchemaErrors = unifiedSchemaErrors.concat(
@@ -216,7 +218,7 @@ export namespace operations {
     const stats = calculateUpdates(registrationRecords, allDonorsMap);
 
     // save the new registration object
-    const schemaVersion = dictionaryManager.instance().getCurrent().version;
+    const schemaVersion = currentDictionary.version;
     const registration = toActiveRegistration(command, registrationRecords, stats, schemaVersion);
     const savedRegistration = await registrationRepository.create(registration);
     return F({
@@ -338,6 +340,8 @@ export namespace operations {
       });
     }
 
+    const currentDictionary = await dictionaryManager.instance().getCurrent();
+
     // Step 1 map dataArray to entitesMap
     const { newClinicalEntitesMap, dataToEntityMapErrors } = mapClinicalDataToEntity(
       command.newClinicalData,
@@ -347,8 +351,9 @@ export namespace operations {
     );
 
     // Step 2 filter entites with invalid fieldNames
-    const { filteredClinicalEntites, fieldNameErrors } = checkEntityFieldNames(
+    const { filteredClinicalEntites, fieldNameErrors } = await checkEntityFieldNames(
       newClinicalEntitesMap,
+      currentDictionary,
     );
 
     const updatedClinicalEntites: ClinicalEntities = clearClinicalEnitytStats(
@@ -367,7 +372,7 @@ export namespace operations {
           programId: command.programId,
           clinicalType: clinicalType,
         },
-        dictionaryManager.instance().getCurrent(),
+        currentDictionary,
       );
 
       // because there was a requirement to not keep an open empty submission
@@ -827,7 +832,7 @@ export namespace operations {
     await Promise.all(
       command.records.map(async (record, index) => {
         let processedRecord: any = {};
-        const schemaResult = dictionaryManager
+        const schemaResult = await dictionaryManager
           .instance()
           .process(command.clinicalType, record, index, schema);
 
@@ -1053,7 +1058,10 @@ export namespace operations {
     return F({ newClinicalEntitesMap, dataToEntityMapErrors });
   };
 
-  const checkEntityFieldNames = (newClinicalEntitesMap: DeepReadonly<NewClinicalEntities>) => {
+  const checkEntityFieldNames = async (
+    newClinicalEntitesMap: DeepReadonly<NewClinicalEntities>,
+    dictionary: SchemasDictionary,
+  ) => {
     const fieldNameErrors: SubmissionBatchError[] = [];
     const filteredClinicalEntites: NewClinicalEntities = {};
 
@@ -1063,9 +1071,9 @@ export namespace operations {
         continue;
       }
       const commonFieldNamesSet = new Set(newClinicalEnity.fieldNames);
-      const clinicalFieldNamesByPriorityMap = dictionaryManager
+      const clinicalFieldNamesByPriorityMap = await dictionaryManager
         .instance()
-        .getSchemaFieldNamesWithPriority(clinicalType);
+        .getSchemaFieldNamesWithPriority(clinicalType, dictionary);
       const missingFields: string[] = [];
 
       clinicalFieldNamesByPriorityMap.required.forEach(requriedField => {
@@ -1111,9 +1119,10 @@ export namespace operations {
   };
 
   // pre check registration create command
-  const preCheckRegistrationFields = (
+  const preCheckRegistrationFields = async (
     command: CreateRegistrationCommand,
-  ): DeepReadonly<SubmissionBatchError[] | undefined> => {
+    dictionary: SchemasDictionary,
+  ): Promise<DeepReadonly<SubmissionBatchError[] | undefined>> => {
     const {
       newClinicalEntitesMap: registrationMapped,
       dataToEntityMapErrors,
@@ -1131,7 +1140,7 @@ export namespace operations {
     if (dataToEntityMapErrors.length !== 0) {
       return dataToEntityMapErrors;
     }
-    const { fieldNameErrors } = checkEntityFieldNames(registrationMapped);
+    const { fieldNameErrors } = await checkEntityFieldNames(registrationMapped, dictionary);
     if (fieldNameErrors.length !== 0) {
       return fieldNameErrors;
     }
@@ -1167,10 +1176,11 @@ export namespace operations {
   }
 
   export async function adminAddDonors(donors: Donor[]) {
+    const currentDictionaryVersion = await dictionaryManager.instance().getCurrentVersion();
     const schemaMetadata: SchemaMetadata = {
       isValid: true,
-      lastValidSchemaVersion: dictionaryManager.instance().getCurrent().version,
-      originalSchemaVersion: dictionaryManager.instance().getCurrent().version,
+      lastValidSchemaVersion: currentDictionaryVersion,
+      originalSchemaVersion: currentDictionaryVersion,
     };
 
     donors.forEach((d: any) => {

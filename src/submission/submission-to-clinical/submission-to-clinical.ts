@@ -122,20 +122,19 @@ const performCommitSubmission = async (
   const updatedDonorDTOs = await mergeActiveSubmissionWithDonors(activeSubmission, donorDTOs);
 
   const verifiedDonorDTOs: Donor[] = [];
-  // check donor if was invalid against latest schema
+  // check donor if was invalid against current dictionary
+  const currentDictionary = await dictionaryManager.instance().getCurrent();
   updatedDonorDTOs.forEach(ud => {
     if (ud.schemaMetadata.isValid === false) {
       L.debug('Donor is invalid, revalidating if valid now');
       const isValid = dictionaryManager.revalidateAllDonorClinicalEntitiesAgainstSchema(
         ud,
-        dictionaryManager.instance().getCurrent(),
+        currentDictionary,
       );
       if (isValid) {
         L.info(`donor ${ud._id} is now valid`);
         ud.schemaMetadata.isValid = true;
-        ud.schemaMetadata.lastValidSchemaVersion = dictionaryManager
-          .instance()
-          .getCurrent().version;
+        ud.schemaMetadata.lastValidSchemaVersion = currentDictionary.version;
         // recalculate the donors stats
         verifiedDonorDTOs.push(recalculateDonorStatsHoldOverridden(ud));
         return;
