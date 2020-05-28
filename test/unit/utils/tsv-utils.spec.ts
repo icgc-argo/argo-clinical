@@ -6,7 +6,7 @@ chai.use(require('deep-equal-in-any-order'));
 
 describe('tsv-utils', () => {
   describe('tsv-parser', () => {
-    it.only('should remove qouble quotes for excel compatibility', () => {
+    it('should remove qouble quotes for excel compatibility', () => {
       // some example values after exported out of excel
       const content = ` \
          header1\theader2 \n \
