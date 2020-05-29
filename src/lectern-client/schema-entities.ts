@@ -55,7 +55,7 @@ export interface FieldDefinition {
   name: string;
   valueType: ValueType;
   description: string;
-  meta?: { key?: boolean; default?: SchemaTypes; core?: boolean };
+  meta?: { key?: boolean; default?: SchemaTypes; core?: boolean; examples?: string };
   restrictions?: {
     codeList?: CodeListRestriction;
     regex?: string;

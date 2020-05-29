@@ -137,12 +137,16 @@ describe('schema-functions', () => {
         sample_type: 'ctDNA',
       },
     ]);
-    chai.expect(result.validationErrors).to.deep.include({
+    chai.expect(result.validationErrors[0]).to.deep.eq({
       errorType: SchemaValidationErrorTypes.INVALID_BY_REGEX,
       fieldName: 'program_id',
       index: 0,
-      info: {},
-      message: VALUE_NOT_ALLOWED,
+      info: {
+        examples: 'PACA-CA, BASHAR-LA',
+        regex: '^[A-Z1-9][-_A-Z1-9]{2,7}(-[A-Z][A-Z])$',
+      },
+      message:
+        'The value is not a permissible for this field, it must meet the regular expression: "^[A-Z1-9][-_A-Z1-9]{2,7}(-[A-Z][A-Z])$". Examples: PACA-CA, BASHAR-LA',
     });
   });
 
@@ -369,12 +373,13 @@ describe('schema-functions', () => {
       },
     ]);
     chai.expect(result.validationErrors.length).to.eq(1);
-    chai.expect(result.validationErrors).to.deep.include({
+    chai.expect(result.validationErrors[0]).to.deep.eq({
       errorType: SchemaValidationErrorTypes.INVALID_BY_REGEX,
-      message: 'The value is not permissible for this field.',
+      message:
+        'The value is not a permissible for this field, it must meet the regular expression: "^q.*$".',
       fieldName: 'qWords',
       index: 0,
-      info: { value: ['not_q'] },
+      info: { value: ['not_q'], regex: '^q.*$', examples: undefined },
     });
   });
 });

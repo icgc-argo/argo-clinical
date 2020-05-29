@@ -169,7 +169,7 @@ const checkRequiredFields = (
     'percent_necrosis',
     'percent_inflammatory_tissue',
     'tumour_histological_type',
-    'central_pathology_confirmed',
+    'reference_pathology_confirmed',
   ];
 
   const optionalFieldsForTumour: Array<keyof typeof SpecimenFieldsEnum> = [

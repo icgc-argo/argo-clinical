@@ -37,7 +37,7 @@ export const specimen = {
   SUBMITTER_SPECIMEN_ID: 'submitter_specimen_id',
   SPECIMEN_ACQUISITION_INTERVAL: 'specimen_acquisition_interval',
   SPECIMEN_ANATOMIC_LOCATION: 'specimen_anatomic_location',
-  CENTRAL_PATHOLOGY_CONFIRMED: 'central_pathology_confirmed',
+  reference_pathology_confirmed: 'reference_pathology_confirmed',
   TUMOUR_HISTOLOGICAL_TYPE: 'tumour_histological_type',
   TUMOUR_GRADING_SYSTEM: 'tumour_grading_system',
   TUMOUR_GRADE: 'tumour_grade',
