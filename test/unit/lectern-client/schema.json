@@ -11,7 +11,8 @@
             "valueType": "string",
             "description": "Unique identifier for program",
             "meta": {
-              "key": true
+              "key": true,
+              "examples": "PACA-CA, BASHAR-LA"
             },
             "restrictions": {
               "required": true,
