@@ -12,7 +12,7 @@ const fsPromises = fs.promises;
 export namespace TsvUtils {
   export type TsvRecordAsJsonObj = { [header: string]: string | string[] };
 
-  const arrayDelimiterChar = '|';
+  export const ARRAY_DELIMITER_CHAR = '|';
 
   export const tsvToJson = async (file: string): Promise<ReadonlyArray<TsvRecordAsJsonObj>> => {
     const contents = await fsPromises.readFile(file, 'utf-8');
@@ -37,7 +37,7 @@ export namespace TsvUtils {
         const formattedData = formatForExcelCompatibility(dataStr);
         const dataAsArray: string[] = formattedData
           .trim()
-          .split(arrayDelimiterChar)
+          .split(ARRAY_DELIMITER_CHAR)
           .map(s => s.trim());
 
         obj[nextKey] = dataAsArray.length === 1 ? dataAsArray[0] : dataAsArray;
@@ -64,7 +64,7 @@ export namespace TsvUtils {
         if (Array.isArray(val)) {
           tsvRecordAsArray[indexInTsvArray] = val
             .map(convertToTrimmedString)
-            .join(arrayDelimiterChar);
+            .join(ARRAY_DELIMITER_CHAR);
         } else {
           tsvRecordAsArray[indexInTsvArray] = convertToTrimmedString(val);
         }
