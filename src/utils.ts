@@ -12,6 +12,8 @@ const fsPromises = fs.promises;
 export namespace TsvUtils {
   export type TsvRecordAsJsonObj = { [header: string]: string | string[] };
 
+  const arrayDelimiterChar = '|';
+
   export const tsvToJson = async (file: string): Promise<ReadonlyArray<TsvRecordAsJsonObj>> => {
     const contents = await fsPromises.readFile(file, 'utf-8');
     const arr = parseTsvToJson(contents);
@@ -35,7 +37,7 @@ export namespace TsvUtils {
         const formattedData = formatForExcelCompatibility(dataStr);
         const dataAsArray: string[] = formattedData
           .trim()
-          .split(',')
+          .split(arrayDelimiterChar)
           .map(s => s.trim());
 
         obj[nextKey] = dataAsArray.length === 1 ? dataAsArray[0] : dataAsArray;
@@ -60,7 +62,9 @@ export namespace TsvUtils {
           return undefined; // couldn't match field with expected headers so ignore it
         }
         if (Array.isArray(val)) {
-          tsvRecordAsArray[indexInTsvArray] = val.map(convertToTrimmedString).join(', ');
+          tsvRecordAsArray[indexInTsvArray] = val
+            .map(convertToTrimmedString)
+            .join(arrayDelimiterChar);
         } else {
           tsvRecordAsArray[indexInTsvArray] = convertToTrimmedString(val);
         }
