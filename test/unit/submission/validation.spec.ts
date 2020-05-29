@@ -1602,7 +1602,7 @@ describe('data-validator', () => {
         SpecimenFieldsEnum.pathological_t_category,
         SpecimenFieldsEnum.pathological_n_category,
         SpecimenFieldsEnum.tumour_histological_type,
-        SpecimenFieldsEnum.central_pathology_confirmed,
+        SpecimenFieldsEnum.reference_pathology_confirmed,
       ];
 
       const newDonorAB1Records = {};
@@ -1661,7 +1661,7 @@ describe('data-validator', () => {
         SpecimenFieldsEnum.percent_inflammatory_tissue,
         SpecimenFieldsEnum.percent_necrosis,
         SpecimenFieldsEnum.tumour_histological_type,
-        SpecimenFieldsEnum.central_pathology_confirmed,
+        SpecimenFieldsEnum.reference_pathology_confirmed,
       ];
 
       const newDonorAB1Records = {};
