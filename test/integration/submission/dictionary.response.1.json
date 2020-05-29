@@ -330,7 +330,7 @@
             }
           },
           {
-            "name": "central_pathology_confirmed",
+            "name": "reference_pathology_confirmed",
             "description": "Indicate whether the histologic description of tissue or cells was confirmed by a pathology review of frozen or formalin fixed slide(s) completed after the diagnostic pathology review of the tumour sample used to extract analyte(s).",
             "valueType": "string",
             "restrictions": {
