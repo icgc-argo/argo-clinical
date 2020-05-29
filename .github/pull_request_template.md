@@ -7,6 +7,7 @@
 - [ ] Bug
 - [ ] Refactor
 - [ ] New Feature
+- [ ] Release Candidate
 
 **Checklist before requesting review:**
 
@@ -15,3 +16,4 @@
 - [ ] Regression tests completed and passing (double check number of tests).
 - [ ] Spelling has been checked.
 - [ ] Updated swagger docs accordingly (check it's still valid)
+- [ ] Set `validationDependency` in meta tag for [Argo Dictionary](https://github.com/icgc-argo/argo-dictionary) fields used in code
