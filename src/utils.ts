@@ -31,12 +31,14 @@ export namespace TsvUtils {
       }
       const data = line.split('\t');
       return headers.reduce<TsvRecordAsJsonObj>((obj, nextKey, index) => {
-        const arrData = (data[index] || '')
+        const dataStr = data[index] || '';
+        const formattedData = formatForExcelCompatibility(dataStr);
+        const dataAsArray: string[] = formattedData
           .trim()
           .split(',')
           .map(s => s.trim());
 
-        obj[nextKey] = arrData.length === 1 ? arrData[0] : arrData;
+        obj[nextKey] = dataAsArray.length === 1 ? dataAsArray[0] : dataAsArray;
         return obj;
       }, {});
     });
@@ -69,6 +71,18 @@ export namespace TsvUtils {
     const headersStr = headers.join('\t');
     return headersStr + '\n' + allTsvRecords.join('\n');
   };
+
+  function formatForExcelCompatibility(data: string) {
+    // tsv exported from excel might add double quotations to indicate string and escape double quotes
+    // this function removes those extra double quatations from a given string
+
+    return data
+      .trim()
+      .replace(/^"/, '') // excel might add a beginning double quotes to indicate string
+      .replace(/"$/, '') // excel might add a trailing double quote to indicate string
+      .replace(/""/g, '"') // excel might've used a second double quote to escape a double quote in a string
+      .trim();
+  }
 }
 
 export namespace ControllerUtils {
