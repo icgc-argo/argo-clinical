@@ -9,6 +9,7 @@ paths:
     get:
       tags:
         - Health
+      summary: get status of app and various app components
       responses:
         '500':
           description: 'app is not fully healthy'
@@ -59,6 +60,7 @@ paths:
     get:
       tags:
         - Dictionary
+      summary: Get current ARGO dictionary used by clinical
       responses:
         '200':
           description: 'the current loaded schema by the clinical submission'
@@ -73,6 +75,7 @@ paths:
       tags:
         - Dictionary Migration
         - Admin
+      summary: Run dicitonary migration to update clinical dictionary (use dry-run-update to verify migration behavior first)
       description: 'update and load a new schema version from lectern to be used.'
       requestBody:
         content:
@@ -95,6 +98,7 @@ paths:
       tags:
         - Dictionary Migration
         - Admin
+      summary: Dry-Run a migration to verify expected result (doesn't make donors invalid)
       requestBody:
         content:
           application/json:
@@ -109,27 +113,29 @@ paths:
           description: na
           content:
             application/json:
+              description: 'the dry-run-update dictionary migration'
               schema:
-                type: object
+                $ref: '#/components/schemas/DictionaryMigration'
   /dictionary/migration/resume:
     post:
       tags:
         - Dictionary Migration
         - Admin
+      summary: Resume open migration (there can only be one open migration)
       responses:
         '200':
           description: 'Resume an active migration'
           content:
             application/json:
+              description: 'the resumed dictionary migration'
               schema:
-                type: array
-                items:
-                  type: object
+                $ref: '#/components/schemas/DictionaryMigration'
   /dictionary/migration/{migrationId}:
     get:
       tags:
         - Dictionary Migration
         - Admin
+      summary: Fetch migration document for given id
       parameters:
         - name: migrationId
           description: the id of a specific migration to fetch
@@ -143,14 +149,13 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: object
+                $ref: '#/components/schemas/DictionaryMigration'
   /dictionary/migration/:
     get:
       tags:
         - Dictionary Migration
         - Admin
+      summary: Fetch all migration documents
       responses:
         '200':
           description: 'A list of all migrations'
@@ -159,11 +164,12 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
+                  $ref: '#/components/schemas/DictionaryMigration'
   /dictionary/changes:
     get:
       tags:
         - Dictionary
+      summary: See analysis & breaking changes between two dictionary versions
       parameters:
         - name: from
           description: the old version
@@ -188,6 +194,7 @@ paths:
     get:
       tags:
         - Dictionary
+      summary: Get list of schema names in dictionary, with option to get schema field names (excludes sample_registration)
       parameters:
         - name: includeFields
           description: include fields of each schema in the response
@@ -209,6 +216,7 @@ paths:
     get:
       tags:
         - Dictionary
+      summary: Get a zip file with tsv templates for all dictionary schemas
       responses:
         '200':
           description: 'A zip file with all schemas'
@@ -229,6 +237,7 @@ paths:
     get:
       tags:
         - Dictionary
+      summary: Get a tsv template file for specified schema name
       responses:
         '200':
           description: 'A tsv template file for the given schemaName'
@@ -240,12 +249,7 @@ paths:
 
   /submission/program/{programId}/registration:
     parameters:
-      - name: programId
-        description: the short name of the program
-        in: path
-        required: true
-        schema:
-          type: string
+      - $ref: '#/components/parameters/PathProgramId'
     get:
       tags:
         - Sample Registration
@@ -309,6 +313,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CreateRegistration'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
   /submission/program/{programId}/registration/{id}:
     delete:
       tags:
@@ -316,18 +322,8 @@ paths:
       summary: Clear active registration
       description: Removes all active registration data for this program
       parameters:
-        - name: id
-          description: the id of the registration
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: programId
-          description: the short name of the program
-          in: path
-          required: true
-          schema:
-            type: string
+        - $ref: '#/components/parameters/PathRegistrationId'
+        - $ref: '#/components/parameters/PathProgramId'
       responses:
         '401':
           $ref: '#/components/responses/UnauthorizedError'
@@ -339,6 +335,8 @@ paths:
           $ref: '#/components/responses/ServerError'
         '200':
           description: 'the registration was deleted from db'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
   /submission/program/{programId}/registration/{id}/commit:
     post:
       tags:
@@ -346,18 +344,8 @@ paths:
       summary: Commit registration
       description: Save the active registration data for this program, registering IDs for all new Samples, Specimens, and Donors introduced
       parameters:
-        - name: id
-          description: the id of the registration
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: programId
-          description: the short name of the program
-          in: path
-          required: true
-          schema:
-            type: string
+        - $ref: '#/components/parameters/PathRegistrationId'
+        - $ref: '#/components/parameters/PathProgramId'
       responses:
         '200':
           description: 'The registration was committed and the donors / specimens / samples added to the clinical db'
@@ -374,19 +362,18 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
         '403':
           $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
         '500':
           $ref: '#/components/responses/ServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
   /submission/program/{programId}/clinical/:
     get:
       tags:
         - Submission
       parameters:
-        - name: programId
-          description: the short name of the program
-          in: path
-          required: true
-          schema:
-            type: string
+        - $ref: '#/components/parameters/PathProgramId'
       summary: Get active submission for a program
       description: returns the current in progress submission for a program if any
       responses:
@@ -435,12 +422,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CreateSubmission'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
         '422':
           description: 'unsuccessful schema validation failed on files'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CreateSubmission'
+        '500':
+          $ref: '#/components/responses/ServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
   /submission/program/{programId}/clinical/{versionId}/{fileType}:
     delete:
       tags:
@@ -475,6 +470,8 @@ paths:
           description: Active submission is not in a state that can be cleared (ex. PENDING_APPROVAL)
         '500':
           $ref: '#/components/responses/ServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
   /submission/program/{programId}/clinical/{versionId}/all:
     delete:
       tags:
@@ -503,6 +500,8 @@ paths:
           description: Active submission is not in a state that can be cleared (ex. PENDING_APPROVAL)
         '500':
           $ref: '#/components/responses/ServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
   /submission/program/{programId}/clinical/validate/{versionId}:
     post:
       tags:
@@ -518,6 +517,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ClinicalSubmission'
+        '400':
+          description: Version ID does not match version of active submission.
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: Active submission is not in a state that can be cleared (ex. OPEN)
         '422':
           description: 'invalid clinical submission, see error messages'
           content:
@@ -532,6 +541,10 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/ValidationError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
   /submission/program/{programId}/clinical/commit/{versionId}:
     post:
       tags:
@@ -556,6 +569,8 @@ paths:
           description: Active submission is not in VALID state and cannot be commited, or another data issue was found that prevented successfully committing the data.
         '500':
           $ref: '#/components/responses/ServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
   /submission/program/{programId}/clinical/approve/{versionId}:
     post:
       tags:
@@ -580,6 +595,8 @@ paths:
           description: Active submission is not in PENDING_APPROVAL state and cannot be commited, or another data issue was found that prevented successfully committing the data.
         '500':
           $ref: '#/components/responses/ServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
   /submission/program/{programId}/clinical/reopen/{versionId}:
     post:
       tags:
@@ -608,15 +625,12 @@ paths:
           description: Active submission is not in PENDING_APPROVAL state and cannot be reopned
         '500':
           $ref: '#/components/responses/ServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
 
   /submission/icgc-import/preprocess/{programId}:
     parameters:
-      - name: programId
-        description: the short name of the program as it will be in argo (a new name or same name)
-        in: path
-        required: true
-        schema:
-          type: string
+      - $ref: '#/components/parameters/PathProgramId'
     post:
       tags:
         - ICGC Import
@@ -648,7 +662,6 @@ paths:
         - ICGC Import
         - Admin
       summary: imports the json body (donors) to the clinical donors collection obtained from the preprocess api
-      description:
       requestBody:
         content:
           multipart/form-data:
@@ -666,13 +679,9 @@ paths:
     get:
       tags:
         - Clinical Data
+      summary: Get all program donors from db
       parameters:
-        - name: programId
-          description: the short name of the program
-          in: query
-          required: false
-          schema:
-            type: string
+        - $ref: '#/components/parameters/QueryProgramId'
       responses:
         '401':
           $ref: '#/components/responses/UnauthorizedError'
@@ -691,13 +700,9 @@ paths:
     delete:
       tags:
         - Clinical Data
+      summary: Test endpoint to delete program donors in db (disabled in prod)
       parameters:
-        - name: programId
-          description: the short name of the program
-          in: query
-          required: false
-          schema:
-            type: string
+        - $ref: '#/components/parameters/QueryProgramId'
       responses:
         '401':
           $ref: '#/components/responses/UnauthorizedError'
@@ -709,12 +714,7 @@ paths:
           description: 'all donors deleted'
   /clinical/program/{programId}/tsv-export:
     parameters:
-      - name: programId
-        description: the short name of the program
-        in: path
-        required: true
-        schema:
-          type: string
+      - $ref: '#/components/parameters/PathProgramId'
     get:
       tags:
         - Clinical Data
@@ -740,6 +740,7 @@ paths:
     get:
       tags:
         - Clinical Data
+      summary: Get ARGO ID of donor given program and submitter_donor_id
       parameters:
         - $ref: '#/components/parameters/QueryProgramId'
         - $ref: '#/components/parameters/QuerySubmitterId'
@@ -756,6 +757,7 @@ paths:
     get:
       tags:
         - Clinical Data
+      summary: Get ARGO ID of donor specimen given program and submitter_specimen_id
       parameters:
         - $ref: '#/components/parameters/QueryProgramId'
         - $ref: '#/components/parameters/QuerySubmitterId'
@@ -772,6 +774,7 @@ paths:
     get:
       tags:
         - Clinical Data
+      summary: Get ARGO ID of donor sample given program and submitter_sample_id
       parameters:
         - $ref: '#/components/parameters/QueryProgramId'
         - $ref: '#/components/parameters/QuerySubmitterId'
@@ -931,6 +934,13 @@ components:
       required: true
       schema:
         type: string
+    PathRegistrationId:
+      name: id
+      description: the id of the registration
+      in: path
+      required: true
+      schema:
+        type: string
     PathVersionId:
       name: versionId
       description: UUID used to confirm the registration/submission version
@@ -939,6 +949,8 @@ components:
       schema:
         type: string
   responses:
+    ServiceUnavailableError:
+      description: Endpoint service unavailable
     UnauthorizedError:
       description: Access token is missing or invalid
     ServerError:
@@ -1040,12 +1052,26 @@ components:
             - NOT_ENOUGH_INFO_TO_VALIDATE
             - SAMPLE_BELONGS_TO_OTHER_SPECIMEN
             - SPECIMEN_BELONGS_TO_OTHER_DONOR
+            - RELATED_ENTITY_MISSING_OR_CONFLICTING
+            - FOUND_IDENTICAL_IDS
+            - MISSING_THERAPY_DATA
+            - INVALID_THERAPY_DATA
+            - INCOMPATIBLE_PARENT_TREATMENT_TYPE
+            - TREATMENT_ID_NOT_FOUND
+            - CLINICAL_ENTITY_BELONGS_TO_OTHER_DONOR
+            - MISSING_VARIABLE_REQUIREMENT
+            - FORBIDDEN_PROVIDED_VARIABLE_REQUIREMENT
+            - THERAPY_RXNORM_RXCUI_NOT_FOUND
+            - THERAPY_RXNORM_DRUG_NAME_INVALID
+            - THERAPY_MISSING_RXNORM_FIELDS
             # dictionary schema errors
             - MISSING_REQUIRED_FIELD
             - INVALID_FIELD_VALUE_TYPE
             - INVALID_BY_REGEX
             - INVALID_BY_SCRIPT
             - INVALID_ENUM_VALUE
+            - INVALID_BY_RANGE
+            - UNRECOGNIZED_FIELD
     RegistrationValidationError: # "extends" ValidationError
       allOf:
         - $ref: '#/components/schemas/ValidationError'
@@ -1147,7 +1173,7 @@ components:
         state:
           type: string
           description: the state of the submission
-          enum: ['OPEN', 'VALID', 'INVALID', 'PENDING_APPROVAL']
+          enum: ['OPEN', 'VALID', 'INVALID', 'INVALID_BY_MIGRATION', 'PENDING_APPROVAL']
         version:
           type: string
           description: uuid used to ensure that correct version of submission is being updated
@@ -1180,6 +1206,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Record'
+        schemaErrors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
         dataErrors:
           type: array
           items:
@@ -1188,6 +1218,25 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ValidationUpdate'
+        stats:
+          type: object
+          properties:
+            new:
+              type: array
+              items:
+                type: integer
+            noUpdate:
+              type: array
+              items:
+                type: integer
+            updated:
+              type: array
+              items:
+                type: integer
+            errorsFound:
+              type: array
+              items:
+                type: integer
 
     Record:
       required:
@@ -1265,3 +1314,63 @@ components:
           description: list of all batch related errors, should be empty on success
           items:
             $ref: '#/components/schemas/BatchError'
+
+    DictionaryMigration:
+      type: object
+      properties:
+        _id?:
+          type: string
+        fromVersion:
+          type: string
+        toVersion:
+          type: string
+        state:
+          type: string
+          enum: ['OPEN', 'CLOSED']
+        stage:
+          type: string
+          enum: ['SUBMITTED', 'ANALYZED', 'IN_PROGRESS', 'COMPLETED', 'FAILED']
+        dryRun:
+          type: boolean
+        analysis:
+          type: object
+        stats:
+          type: object
+          properties:
+            totalProcessed:
+              type: number
+            validDocumentsCount:
+              type: number
+            invalidDocumentsCount:
+              type: number
+        invalidDonorsErrors:
+          type: object
+        checkedSubmissions:
+          type: object
+        invalidSubmissions:
+          type: object
+        programsWithDonorUpdates:
+          type: array
+          items:
+            type: string
+        createdBy:
+          type: string
+        newSchemaErrors:
+          type: object
+          properties:
+            clinicalType:
+              type: object
+              properties:
+                missingFields:
+                  type: array
+                  items:
+                    type: string
+                invalidFieldCodeLists:
+                  type: object
+                  properties:
+                    fieldName:
+                      type: string
+                    missingCodeListValue:
+                      type: array
+                      items:
+                        type: string
