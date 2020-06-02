@@ -12,6 +12,7 @@
 **Checklist before requesting review:**
 
 - [ ] Check branch (code change PRs go to `develop` not master)
+- [ ] Check copyrights for new files
 - [ ] Manual testing
 - [ ] Regression tests completed and passing (double check number of tests).
 - [ ] Spelling has been checked.
