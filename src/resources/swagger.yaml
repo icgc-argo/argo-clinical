@@ -67,9 +67,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: object
+                type: object
   /dictionary/migration/run:
     post:
       tags:
@@ -88,11 +86,11 @@ paths:
                   type: string
       responses:
         '200':
-          description: 'the new schema contents'
+          description: 'a dictioary migration object describing the migration run'
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/DictionaryMigration'
   /dictionary/migration/dry-run-update:
     post:
       tags:
@@ -110,10 +108,9 @@ paths:
                   type: string
       responses:
         '200':
-          description: na
+          description: 'the dry-run-update migration details'
           content:
             application/json:
-              description: 'the dry-run-update dictionary migration'
               schema:
                 $ref: '#/components/schemas/DictionaryMigration'
   /dictionary/migration/resume:
@@ -122,12 +119,12 @@ paths:
         - Dictionary Migration
         - Admin
       summary: Resume open migration (there can only be one open migration)
+      description: 'Resume an active migration'
       responses:
         '200':
-          description: 'Resume an active migration'
+          description: 'the resumed migration details'
           content:
             application/json:
-              description: 'the resumed dictionary migration'
               schema:
                 $ref: '#/components/schemas/DictionaryMigration'
   /dictionary/migration/{migrationId}:
@@ -208,9 +205,20 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: object
+                oneOf:
+                  - type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        fields:
+                          type: array
+                          items:
+                            type: string
+                  - type: array
+                    items:
+                      type: string
 
   /dictionary/template/all:
     get:
@@ -650,10 +658,11 @@ paths:
           multipart/form-data:
             schema:
               type: object
+              required:
+                - samples
               properties:
                 samples:
                   description: 'TSV file exported from song containing samples for a program, see wiki for how to get it.'
-                  required: true
                   type: string
                   format: binary
   /submission/icgc-import/:
@@ -667,9 +676,10 @@ paths:
           multipart/form-data:
             schema:
               type: object
+              required:
+                - donors
               properties:
                 donors:
-                  required: true
                   type: string
                   format: binary
       responses:
