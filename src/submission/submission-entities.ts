@@ -375,13 +375,13 @@ export const ClinicalEntityToEnumFieldsMap: Record<ClinicalEntitySchemaNames, st
 export const TreatmentTypeValuesMappedByTherapy: Record<ClinicalTherapyType, string[]> = {
   [ClinicalEntitySchemaNames.CHEMOTHERAPY]: [
     'Chemotherapy',
-    'Combined chemo+immunotherapy',
-    'Combined chemo+radiation therapy',
-    'Combined chemo-radiotherapy and surgery',
+    'Combined chemotherapy and immunotherapy',
+    'Combined chemotherapy and radiation therapy',
+    'Combined chemotherapy, radiation therapy and surgery',
   ],
   [ClinicalEntitySchemaNames.RADIATION]: [
     'Radiation therapy',
-    'Combined chemo+radiation therapy',
+    'Combined chemotherapy, radiation therapy and surgery',
     'Photodynamic therapy',
   ],
   [ClinicalEntitySchemaNames.HORMONE_THERAPY]: ['Hormonal therapy'],

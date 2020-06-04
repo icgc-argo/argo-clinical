@@ -1799,7 +1799,7 @@ describe('data-validator', () => {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
           [TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
           [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
-          [TreatmentFieldsEnum.treatment_type]: 'Combined chemo+radiation therapy',
+          [TreatmentFieldsEnum.treatment_type]: 'Combined chemotherapy and radiation therapy',
           index: 0,
         },
       );
@@ -1810,23 +1810,23 @@ describe('data-validator', () => {
 
       const treatmentTherapyErr: SubmissionValidationError = {
         fieldName: TreatmentFieldsEnum.treatment_type,
-        message: `Treatments of type [Combined chemo+radiation therapy] need a corresponding [chemotherapy] record.`,
+        message: `Treatments of type [Combined chemotherapy and radiation therapy] need a corresponding [chemotherapy] record.`,
         type: DataValidationErrors.MISSING_THERAPY_DATA,
         index: 0,
         info: {
           donorSubmitterId: 'AB1',
-          value: 'Combined chemo+radiation therapy',
+          value: 'Combined chemotherapy and radiation therapy',
           therapyType: ClinicalEntitySchemaNames.CHEMOTHERAPY,
         },
       };
       const treatmentTherapyErr2: SubmissionValidationError = {
         fieldName: TreatmentFieldsEnum.treatment_type,
-        message: `Treatments of type [Combined chemo+radiation therapy] need a corresponding [radiation] record.`,
+        message: `Treatments of type [Combined chemotherapy and radiation therapy] need a corresponding [radiation] record.`,
         type: DataValidationErrors.MISSING_THERAPY_DATA,
         index: 0,
         info: {
           donorSubmitterId: 'AB1',
-          value: 'Combined chemo+radiation therapy',
+          value: 'Combined chemotherapy and radiation therapy',
           therapyType: ClinicalEntitySchemaNames.RADIATION,
         },
       };
