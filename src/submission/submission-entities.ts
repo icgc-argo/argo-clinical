@@ -381,8 +381,8 @@ export const TreatmentTypeValuesMappedByTherapy: Record<ClinicalTherapyType, str
   ],
   [ClinicalEntitySchemaNames.RADIATION]: [
     'Radiation therapy',
+    'Combined chemotherapy and radiation therapy',
     'Combined chemotherapy, radiation therapy and surgery',
-    'Photodynamic therapy',
   ],
   [ClinicalEntitySchemaNames.HORMONE_THERAPY]: ['Hormonal therapy'],
 };
