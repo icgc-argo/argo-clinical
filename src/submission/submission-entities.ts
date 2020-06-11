@@ -372,10 +372,10 @@ export const ClinicalEntityToEnumFieldsMap: Record<ClinicalEntitySchemaNames, st
   ) as string[]).concat(Object.values(CommonTherapyFields)),
 };
 
-export const TreatmentTypeValuesMappedByTherapy: Record<ClinicalTherapyType, string[]> = {
-  [ClinicalEntitySchemaNames.CHEMOTHERAPY]: ['Chemotherapy'],
-  [ClinicalEntitySchemaNames.RADIATION]: ['Radiation therapy'],
-  [ClinicalEntitySchemaNames.HORMONE_THERAPY]: ['Hormonal therapy'],
+export const TreatmentTypeValuesMappedByTherapy: Record<ClinicalTherapyType, string> = {
+  [ClinicalEntitySchemaNames.CHEMOTHERAPY]: 'Chemotherapy',
+  [ClinicalEntitySchemaNames.RADIATION]: 'Radiation therapy',
+  [ClinicalEntitySchemaNames.HORMONE_THERAPY]: 'Hormonal therapy',
 };
 
 export const DonorVitalStatusValues = { deceased: 'Deceased' };
