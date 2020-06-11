@@ -1799,7 +1799,7 @@ describe('data-validator', () => {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
           [TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
           [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
-          [TreatmentFieldsEnum.treatment_type]: 'Combined chemotherapy and radiation therapy',
+          [TreatmentFieldsEnum.treatment_type]: ['Chemotherapy', 'Radiation therapy'],
           index: 0,
         },
       );
@@ -1810,23 +1810,23 @@ describe('data-validator', () => {
 
       const treatmentTherapyErr: SubmissionValidationError = {
         fieldName: TreatmentFieldsEnum.treatment_type,
-        message: `Treatments of type [Combined chemotherapy and radiation therapy] need a corresponding [chemotherapy] record.`,
+        message: `Treatments of type [Chemotherapy,Radiation therapy] need a corresponding [chemotherapy] record.`,
         type: DataValidationErrors.MISSING_THERAPY_DATA,
         index: 0,
         info: {
           donorSubmitterId: 'AB1',
-          value: 'Combined chemotherapy and radiation therapy',
+          value: ['Chemotherapy', 'Radiation therapy'],
           therapyType: ClinicalEntitySchemaNames.CHEMOTHERAPY,
         },
       };
       const treatmentTherapyErr2: SubmissionValidationError = {
         fieldName: TreatmentFieldsEnum.treatment_type,
-        message: `Treatments of type [Combined chemotherapy and radiation therapy] need a corresponding [radiation] record.`,
+        message: `Treatments of type [Chemotherapy,Radiation therapy] need a corresponding [radiation] record.`,
         type: DataValidationErrors.MISSING_THERAPY_DATA,
         index: 0,
         info: {
           donorSubmitterId: 'AB1',
-          value: 'Combined chemotherapy and radiation therapy',
+          value: ['Chemotherapy', 'Radiation therapy'],
           therapyType: ClinicalEntitySchemaNames.RADIATION,
         },
       };
@@ -1843,7 +1843,7 @@ describe('data-validator', () => {
         {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
           [TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
-          [TreatmentFieldsEnum.treatment_type]: 'Ablation',
+          [TreatmentFieldsEnum.treatment_type]: ['Ablation'],
           index: 0,
         },
       );
@@ -1888,7 +1888,7 @@ describe('data-validator', () => {
         info: {
           donorSubmitterId: 'AB1',
           value: 'T_02',
-          treatment_type: 'Ablation',
+          treatment_type: ['Ablation'],
           therapyType: ClinicalEntitySchemaNames.CHEMOTHERAPY,
         },
       };
@@ -1905,7 +1905,7 @@ describe('data-validator', () => {
         {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
           [TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
-          [TreatmentFieldsEnum.treatment_type]: 'Ablation',
+          [TreatmentFieldsEnum.treatment_type]: ['Ablation'],
           index: 0,
         },
       );
@@ -1931,7 +1931,7 @@ describe('data-validator', () => {
         info: {
           donorSubmitterId: 'AB1',
           value: 'T_02',
-          treatment_type: 'Ablation',
+          treatment_type: ['Ablation'],
           therapyType: ClinicalEntitySchemaNames.RADIATION,
         },
       };
@@ -1959,7 +1959,7 @@ describe('data-validator', () => {
         {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
           [TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
-          [TreatmentFieldsEnum.treatment_type]: 'Hormonal therapy',
+          [TreatmentFieldsEnum.treatment_type]: ['Hormonal therapy'],
           [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-1',
           index: 0,
         },
@@ -1976,7 +1976,7 @@ describe('data-validator', () => {
         index: 0,
         info: {
           donorSubmitterId: 'AB1',
-          value: 'Hormonal therapy',
+          value: ['Hormonal therapy'],
           therapyType: ClinicalEntitySchemaNames.HORMONE_THERAPY,
         },
       };

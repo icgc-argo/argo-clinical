@@ -112,7 +112,7 @@ function getSpecimenFromDonor(
 
 function checkTimeConflictWithDonor(
   donorDataToValidateWith: { [k: string]: any },
-  specimenRecord: SubmittedClinicalRecord,
+  specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
   errors: SubmissionValidationError[],
 ) {
   if (
@@ -197,8 +197,9 @@ const checkRequiredFields = (
     'pathological_m_category',
   ];
 
-  const isValueMissing = (value: string | number | boolean | undefined) =>
-    isAbsent(value) || (typeof value === 'string' && isEmptyString(value));
+  const isValueMissing = (
+    value: any, // type better
+  ) => isAbsent(value) || (typeof value === 'string' && isEmptyString(value));
 
   const errorInfo = {
     submitter_specimen_id: specimenRecord[SpecimenFieldsEnum.submitter_specimen_id],

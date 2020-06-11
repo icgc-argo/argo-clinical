@@ -294,7 +294,7 @@ export interface ClinicalEntities {
 export interface SubmittedClinicalRecord {
   readonly submitter_donor_id: string;
   readonly index: number;
-  [fieldName: string]: string | number;
+  [fieldName: string]: string | number | string[];
 }
 
 /**
@@ -373,17 +373,8 @@ export const ClinicalEntityToEnumFieldsMap: Record<ClinicalEntitySchemaNames, st
 };
 
 export const TreatmentTypeValuesMappedByTherapy: Record<ClinicalTherapyType, string[]> = {
-  [ClinicalEntitySchemaNames.CHEMOTHERAPY]: [
-    'Chemotherapy',
-    'Combined chemotherapy and immunotherapy',
-    'Combined chemotherapy and radiation therapy',
-    'Combined chemotherapy, radiation therapy and surgery',
-  ],
-  [ClinicalEntitySchemaNames.RADIATION]: [
-    'Radiation therapy',
-    'Combined chemotherapy and radiation therapy',
-    'Combined chemotherapy, radiation therapy and surgery',
-  ],
+  [ClinicalEntitySchemaNames.CHEMOTHERAPY]: ['Chemotherapy'],
+  [ClinicalEntitySchemaNames.RADIATION]: ['Radiation therapy'],
   [ClinicalEntitySchemaNames.HORMONE_THERAPY]: ['Hormonal therapy'],
 };
 

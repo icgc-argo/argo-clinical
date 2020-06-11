@@ -53,7 +53,7 @@ import { donorDao, DONOR_DOCUMENT_FIELDS } from '../../clinical/donor-repo';
 import { isEmptyString, isValueNotEqual } from '../../utils';
 
 export const buildSubmissionError = (
-  newRecord: SubmittedClinicalRecord,
+  newRecord: DeepReadonly<SubmittedClinicalRecord>,
   type: DataValidationErrors,
   fieldName: ClinicalFields,
   info: object = {},
@@ -77,7 +77,7 @@ export const buildSubmissionError = (
 };
 
 export const buildSubmissionUpdate = (
-  newRecord: SubmittedClinicalRecord,
+  newRecord: DeepReadonly<SubmittedClinicalRecord>,
   oldValue: string,
   fieldName: SampleRegistrationFieldsEnum | string,
 ): SubmissionValidationUpdate => {
@@ -95,7 +95,7 @@ export const buildSubmissionUpdate = (
 };
 
 export const buildRecordValidationResult = (
-  record: SubmittedClinicalRecord,
+  record: DeepReadonly<SubmittedClinicalRecord>,
   errors: SubmissionValidationError | SubmissionValidationError[],
   existentDonor: DeepReadonly<Donor>,
   clinicalEntitySchemaName: ClinicalEntitySchemaNames,
@@ -104,10 +104,11 @@ export const buildRecordValidationResult = (
   if (errors.length > 0) {
     return { type: ModificationType.ERRORSFOUND, index: record.index, resultArray: errors };
   }
+
   const clinicalInfo = getSingleClinicalEntityFromDonorBySchemanName(
     existentDonor,
     clinicalEntitySchemaName,
-    record,
+    record as ClinicalInfo,
   );
   return checkForUpdates(record, clinicalInfo);
 };
@@ -136,7 +137,7 @@ const checkForUpdates = (
 
 const getSubmissionUpdates = (
   clinicalObject: DeepReadonly<ClinicalInfo> | undefined,
-  record: SubmittedClinicalRecord,
+  record: DeepReadonly<SubmittedClinicalRecord>,
 ) => {
   const submissionUpdates: SubmissionValidationUpdate[] = [];
   if (clinicalObject) {
@@ -182,7 +183,7 @@ export const buildClinicalValidationResult = (results: RecordValidationResult[])
 };
 
 export const buildRecordValidationError = (
-  record: SubmittedClinicalRecord,
+  record: DeepReadonly<SubmittedClinicalRecord>,
   errors: SubmissionValidationError | SubmissionValidationError[],
 ): RecordValidationResult => {
   errors = _.concat([], errors); // make sure errors is array
@@ -190,7 +191,7 @@ export const buildRecordValidationError = (
 };
 
 export const buildMultipleRecordValidationErrors = (
-  records: ReadonlyArray<SubmittedClinicalRecord>,
+  records: DeepReadonly<SubmittedClinicalRecord[]>,
   commonErrorProperties: {
     type: DataValidationErrors;
     fieldName: ClinicalFields;
@@ -319,10 +320,12 @@ const getSubmissionErrorInfoObject = (
 
 // ******* common resued functions *******
 export function treatmentTypeNotMatchTherapyType(
-  treatmentType: string,
+  treatmentTypes: string[],
   therapyType: ClinicalTherapyType,
 ): boolean {
-  return !TreatmentTypeValuesMappedByTherapy[therapyType].some(ttv => ttv === treatmentType);
+  return !TreatmentTypeValuesMappedByTherapy[therapyType].some(ttv =>
+    treatmentTypes.find(t => t === ttv),
+  );
 }
 
 const ClinicalEntitySchemaNameToDonoFieldsMap: { [clinicalType: string]: DONOR_DOCUMENT_FIELDS } = {
@@ -338,7 +341,7 @@ export async function checkClinicalEntityDoesntBelongToOtherDonor(
     ClinicalEntitySchemaNames,
     ClinicalTherapyType | ClinicalEntitySchemaNames.REGISTRATION
   >,
-  record: SubmittedClinicalRecord,
+  record: DeepReadonly<SubmittedClinicalRecord>,
   existentDonor: DeepReadonly<Donor>,
   errors: SubmissionValidationError[],
 ) {
@@ -365,35 +368,9 @@ export async function checkClinicalEntityDoesntBelongToOtherDonor(
   }
 }
 
-// how to use example:
-// for - existentDonor.specimens[submitterId === specimenRecord[submitter_specimen_id]].clinicalInfo
-// const specimenClinicalInfo = utils.getAtPath(existentDonor, [
-//   'specimens',
-//   {
-//     submitterId: specimenRecord[FieldsEnum.submitter_specimen_id],
-//   },
-//   'clinicalInfo',
-// ]);
-export function getAtPath(object: any, nodes: any[]) {
-  let objectAtNode: any = { ...object };
-
-  nodes.forEach((n: any) => {
-    if (!objectAtNode) return undefined; // no object so stop
-
-    if (typeof n === 'object') {
-      if (!Array.isArray(objectAtNode)) throw new Error("Can't apply object node with out array");
-      objectAtNode = _.find(objectAtNode, n) || undefined;
-    } else if (typeof n === 'string' || typeof n === 'number') {
-      objectAtNode = objectAtNode[n] || undefined;
-    }
-  });
-
-  return objectAtNode || {};
-}
-
 export function checkRelatedEntityExists(
   parentEntity: ClinicalEntitySchemaNames,
-  record: SubmittedClinicalRecord,
+  record: DeepReadonly<SubmittedClinicalRecord>,
   childEntity: ClinicalEntitySchemaNames,
   mergedDonor: Donor,
   errors: SubmissionValidationError[],
@@ -450,25 +427,4 @@ function getRelatedEntityByFK(
     clinicalInfo: { [ClinicalUniqueIdentifier[relatedEntityName]]: fk as string },
   });
   return entity;
-}
-
-export function getValuesFromRecordOrClinicalInfo(
-  record: any,
-  clinicalInfo: any,
-  desiredValueNames: string[],
-) {
-  const sourceObj = { ...clinicalInfo, ...record };
-
-  const desiredValuesMap: { [valueName: string]: any } = {};
-  const missingFields: string[] = [];
-
-  desiredValueNames.forEach(vn => {
-    if (sourceObj[vn]) {
-      desiredValuesMap[vn] = sourceObj[vn];
-    } else {
-      missingFields.push(vn);
-    }
-  });
-
-  return { desiredValuesMap, missingFields };
 }

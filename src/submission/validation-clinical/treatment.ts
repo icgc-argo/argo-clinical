@@ -70,7 +70,7 @@ export const validate = async (
 };
 
 async function checkTreatmentDoesntBelongToOtherDonor(
-  treatmentRecord: SubmittedClinicalRecord,
+  treatmentRecord: DeepReadonly<SubmittedClinicalRecord>,
   existentDonor: DeepReadonly<Donor>,
   errors: SubmissionValidationError[],
 ) {
@@ -87,12 +87,12 @@ async function checkTreatmentDoesntBelongToOtherDonor(
 }
 
 function checkTherapyFileNeeded(
-  treatmentRecord: SubmittedClinicalRecord,
+  treatmentRecord: DeepReadonly<SubmittedClinicalRecord>,
   mergedDonor: Donor,
   therapyType: ClinicalTherapyType,
   errors: SubmissionValidationError[],
 ) {
-  const treatmentType = treatmentRecord[TreatmentFieldsEnum.treatment_type] as string;
+  const treatmentType = treatmentRecord[TreatmentFieldsEnum.treatment_type] as string[];
   if (utils.treatmentTypeNotMatchTherapyType(treatmentType, therapyType)) return;
 
   const treatment = getTreatment(treatmentRecord, mergedDonor);
@@ -113,7 +113,10 @@ function checkTherapyFileNeeded(
   }
 }
 
-function getTreatment(treatmentRecord: SubmittedClinicalRecord, donor: DeepReadonly<Donor>) {
+function getTreatment(
+  treatmentRecord: DeepReadonly<SubmittedClinicalRecord>,
+  donor: DeepReadonly<Donor>,
+) {
   const idFieldName = ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.TREATMENT];
   const treatmentId = treatmentRecord[idFieldName];
 
