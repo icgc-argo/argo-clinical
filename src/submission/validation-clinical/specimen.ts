@@ -34,7 +34,7 @@ import { DeepReadonly } from 'deep-freeze';
 import { Donor, Specimen } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
-import { isEmptyString, isEmpty } from '../../utils';
+import { isEmptyString, isEmpty, notEmpty } from '../../utils';
 import { getSingleClinicalObjectFromDonor } from '../../common-model/functions';
 import { checkRelatedEntityExists } from './utils';
 
@@ -222,8 +222,8 @@ const checkRequiredFields = (
     });
   } else if (specimen.tumourNormalDesignation === 'Normal') {
     const forbiddenFieldsForNormal = [...requiredFieldsForTumour, ...optionalFieldsForTumour];
-    const existingForbiddenFields = forbiddenFieldsForNormal.filter(
-      field => !isEmpty(specimenRecord[field]),
+    const existingForbiddenFields = forbiddenFieldsForNormal.filter(field =>
+      notEmpty(specimenRecord[field]),
     );
     existingForbiddenFields.forEach(field => {
       errors.push(

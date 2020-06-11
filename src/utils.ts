@@ -185,9 +185,12 @@ export namespace MongooseUtils {
 // type gaurd to filter out undefined and null
 // https://stackoverflow.com/questions/43118692/typescript-filter-out-nulls-from-an-array
 export function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
-  // lodash isEmpty returns true for empty object, array and string
-  // so _.isEmpty([]) _.isEmpty({}) _.isEmpty('') are all true
-  return value !== null && value !== undefined && !_.isEmpty(value);
+  // lodash 4.14 behavior note, these are all evaluated to true:
+  // _.isEmpty(null) _.isEmpty(undefined) _.isEmpty([])
+  // _.isEmpty({}) _.isEmpty('') _.isEmpty(12) & _.isEmpty(NaN)
+
+  // so check number seperately since it will evaluate to isEmpty=true
+  return (isNumber(value) && !isNaN(value)) || !_.isEmpty(value);
 }
 
 export function isEmpty<TValue>(value: TValue | null | undefined): value is undefined {
