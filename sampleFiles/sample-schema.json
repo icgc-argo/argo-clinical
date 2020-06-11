@@ -1707,15 +1707,13 @@
               "name": "treatment_type",
               "description": "Indicate the type of treatment regimen that the donor completed.",
               "valueType": "string",
+              "isArray": true,
               "restrictions": {
                 "required": true,
                 "codeList": [
                   "Ablation",
                   "Bone marrow transplant",
                   "Chemotherapy",
-                  "Combined chemotherapy and immunotherapy",
-                  "Combined chemotherapy and radiation therapy",
-                  "Combined chemotherapy, radiation therapy and surgery",
                   "Endoscopic therapy",
                   "Hormonal therapy",
                   "Immunotherapy",

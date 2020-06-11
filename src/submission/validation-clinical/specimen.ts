@@ -34,7 +34,7 @@ import { DeepReadonly } from 'deep-freeze';
 import { Donor, Specimen } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
-import { isEmptyString, isAbsent } from '../../utils';
+import { isEmptyString, isEmpty, notEmpty } from '../../utils';
 import { getSingleClinicalObjectFromDonor } from '../../common-model/functions';
 import { checkRelatedEntityExists } from './utils';
 
@@ -112,7 +112,7 @@ function getSpecimenFromDonor(
 
 function checkTimeConflictWithDonor(
   donorDataToValidateWith: { [k: string]: any },
-  specimenRecord: SubmittedClinicalRecord,
+  specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
   errors: SubmissionValidationError[],
 ) {
   if (
@@ -197,9 +197,6 @@ const checkRequiredFields = (
     'pathological_m_category',
   ];
 
-  const isValueMissing = (value: string | number | boolean | undefined) =>
-    isAbsent(value) || (typeof value === 'string' && isEmptyString(value));
-
   const errorInfo = {
     submitter_specimen_id: specimenRecord[SpecimenFieldsEnum.submitter_specimen_id],
     referenceSchema: ClinicalEntitySchemaNames.REGISTRATION,
@@ -211,7 +208,7 @@ const checkRequiredFields = (
 
   if (specimen.tumourNormalDesignation === 'Tumour') {
     const missingRequiredFields = requiredFieldsForTumour.filter(field =>
-      isValueMissing(specimenRecord[field]),
+      isEmpty(specimenRecord[field]),
     );
     missingRequiredFields.forEach(field => {
       errors.push(
@@ -225,8 +222,8 @@ const checkRequiredFields = (
     });
   } else if (specimen.tumourNormalDesignation === 'Normal') {
     const forbiddenFieldsForNormal = [...requiredFieldsForTumour, ...optionalFieldsForTumour];
-    const existingForbiddenFields = forbiddenFieldsForNormal.filter(
-      field => !isValueMissing(specimenRecord[field]),
+    const existingForbiddenFields = forbiddenFieldsForNormal.filter(field =>
+      notEmpty(specimenRecord[field]),
     );
     existingForbiddenFields.forEach(field => {
       errors.push(
