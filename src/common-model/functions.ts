@@ -23,10 +23,9 @@ import {
   ClinicalEntitySchemaNames,
   ClinicalUniqueIdentifier,
   ClinicalTherapySchemaNames,
-  ClinicalFields,
 } from './entities';
 import _ from 'lodash';
-import { notEmpty } from '../utils';
+import { notEmpty, convertToArray } from '../utils';
 
 export function getSingleClinicalObjectFromDonor(
   donor: DeepReadonly<Donor>,
@@ -102,7 +101,7 @@ export function getSingleClinicalEntityFromDonorBySchemanName(
   if (clinicalEntityType === ClinicalEntitySchemaNames.REGISTRATION) {
     throw new Error('Sample_registration has no clincal info to return');
   }
-  const uniqueIdNames: string[] = _.concat([], ClinicalUniqueIdentifier[clinicalEntityType]);
+  const uniqueIdNames: string[] = convertToArray(ClinicalUniqueIdentifier[clinicalEntityType]);
   if (_.isEmpty(uniqueIdNames)) {
     throw new Error("illegale state, couldn't find entity id field name");
   }

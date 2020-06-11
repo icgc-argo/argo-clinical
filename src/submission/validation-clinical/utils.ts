@@ -50,7 +50,7 @@ import {
   getEntitySubmitterIdFieldName,
 } from '../../common-model/functions';
 import { donorDao, DONOR_DOCUMENT_FIELDS } from '../../clinical/donor-repo';
-import { isEmptyString, isValueNotEqual } from '../../utils';
+import { isEmptyString, isValueNotEqual, convertToArray } from '../../utils';
 
 export const buildSubmissionError = (
   newRecord: DeepReadonly<SubmittedClinicalRecord>,
@@ -100,9 +100,9 @@ export const buildRecordValidationResult = (
   existentDonor: DeepReadonly<Donor>,
   clinicalEntitySchemaName: ClinicalEntitySchemaNames,
 ): RecordValidationResult => {
-  errors = _.concat([], errors); // make sure errors is array
-  if (errors.length > 0) {
-    return { type: ModificationType.ERRORSFOUND, index: record.index, resultArray: errors };
+  const errorsArr = convertToArray(errors);
+  if (errorsArr.length > 0) {
+    return { type: ModificationType.ERRORSFOUND, index: record.index, resultArray: errorsArr };
   }
 
   const clinicalInfo = getSingleClinicalEntityFromDonorBySchemanName(
@@ -186,8 +186,8 @@ export const buildRecordValidationError = (
   record: DeepReadonly<SubmittedClinicalRecord>,
   errors: SubmissionValidationError | SubmissionValidationError[],
 ): RecordValidationResult => {
-  errors = _.concat([], errors); // make sure errors is array
-  return { type: ModificationType.ERRORSFOUND, index: record.index, resultArray: errors };
+  const errorsArr = convertToArray(errors);
+  return { type: ModificationType.ERRORSFOUND, index: record.index, resultArray: errorsArr };
 };
 
 export const buildMultipleRecordValidationErrors = (
