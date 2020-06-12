@@ -32,6 +32,7 @@ import { Donor, Treatment } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
 import { getSingleClinicalObjectFromDonor } from '../../common-model/functions';
+import { isValueEqual } from '../../utils';
 
 export const validate = async (
   therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
@@ -51,13 +52,14 @@ export const validate = async (
 };
 
 function checkTreatementHasCorrectTypeForTherapy(
-  therapyRecord: SubmittedClinicalRecord,
+  therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
   treatment: DeepReadonly<Treatment>,
   errors: SubmissionValidationError[],
 ) {
-  const treatmentType = treatment.clinicalInfo[TreatmentFieldsEnum.treatment_type] as string;
-  const therapyType = treatment.therapies.find(therapy => therapy.clinicalInfo === therapyRecord)
-    ?.therapyType;
+  const treatmentType = treatment.clinicalInfo[TreatmentFieldsEnum.treatment_type] as string[];
+  const therapyType = treatment.therapies.find(therapy =>
+    isValueEqual(therapy.clinicalInfo, therapyRecord),
+  )?.therapyType;
 
   if (utils.treatmentTypeNotMatchTherapyType(treatmentType, therapyType as ClinicalTherapyType)) {
     errors.push(
@@ -75,7 +77,7 @@ function checkTreatementHasCorrectTypeForTherapy(
 }
 
 function getTreatment(
-  chemoRecord: SubmittedClinicalRecord,
+  chemoRecord: DeepReadonly<SubmittedClinicalRecord>,
   mergedDonor: Donor,
   errors: SubmissionValidationError[],
 ) {

@@ -1,2 +1,2 @@
 program_id	submitter_donor_id	submitter_primary_diagnosis_id	submitter_treatment_id	treatment_type	age_at_consent_for_treatment	is_primary_treatment	treatment_start_interval	treatment_duration	therapeutic_intent	response_to_therapy
-ABCD-EF	ICGC_0001	P-1	T_02	Combined chemotherapy and radiation therapy	99	Yes	5	6	Curative	NED
+ABCD-EF	ICGC_0001	P-1	T_02	chemotherapy|radiation therapy	99	Yes	5	6	Curative	NED
