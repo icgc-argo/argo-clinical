@@ -20,7 +20,7 @@
 import * as manager from './manager';
 import { Request, Response } from 'express';
 import { loggerFor } from '../logger';
-import { SchemaDefinition } from '../lectern-client/schema-entities';
+import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
 import { setStatus, Status } from '../app-health';
 import { ControllerUtils } from '../utils';
 import { ClinicalEntitySchemaNames } from '../common-model/entities';
@@ -134,7 +134,7 @@ export const getAllTemplates = async (req: Request, res: Response) => {
   return res.send(zip.toBuffer());
 };
 
-function createTemplate(schema: SchemaDefinition): string {
+function createTemplate(schema: dictionaryEntities.SchemaDefinition): string {
   const header =
     schema.fields
       .map((f): string => {

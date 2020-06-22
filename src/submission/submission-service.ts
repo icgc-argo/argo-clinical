@@ -65,13 +65,7 @@ import {
   DataValidationErrors,
 } from './submission-entities';
 import * as dictionaryManager from '../dictionary/manager';
-import {
-  SchemaValidationError,
-  TypedDataRecord,
-  DataRecord,
-  SchemaProcessingResult,
-  SchemasDictionary,
-} from '../lectern-client/schema-entities';
+
 import { loggerFor } from '../logger';
 import { Errors, F, isStringMatchRegex, toString, isEmptyString, isNotAbsent } from '../utils';
 import { DeepReadonly } from 'deep-freeze';
@@ -90,6 +84,8 @@ import {
   DonorFieldsEnum,
   TherapyRxNormFields,
 } from '../common-model/entities';
+
+import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
 
 const L = loggerFor(__filename);
 
@@ -464,7 +460,7 @@ export namespace operations {
    */
   export const revalidateClinicalSubmission = async (
     command: RevalidateClinicalSubmissionCommand,
-    targetSchema: SchemasDictionary,
+    targetSchema: dictionaryEntities.SchemasDictionary,
     dryRun = false,
   ): Promise<CreateSubmissionResult> => {
     // get program or create new one
@@ -708,8 +704,8 @@ export namespace operations {
 
   const unifySchemaErrors = (
     type: ClinicalEntitySchemaNames,
-    result: SchemaProcessingResult,
-    records: ReadonlyArray<DataRecord>,
+    result: dictionaryEntities.SchemaProcessingResult,
+    records: ReadonlyArray<dictionaryEntities.DataRecord>,
   ) => {
     const errorsList = new Array<SubmissionValidationError>();
     result.validationErrors.forEach(schemaErr => {
@@ -812,11 +808,11 @@ export namespace operations {
     });
   };
 
-  const anyErrors = (schemaErrors: DeepReadonly<SchemaValidationError[]>) => {
+  const anyErrors = (schemaErrors: DeepReadonly<dictionaryEntities.SchemaValidationError[]>) => {
     return schemaErrors.length > 0 || schemaErrors.length > 0;
   };
 
-  function mapToRegistrationRecord(records: DeepReadonly<TypedDataRecord[]>) {
+  function mapToRegistrationRecord(records: DeepReadonly<dictionaryEntities.TypedDataRecord[]>) {
     return F(
       records.map(r => {
         const rec: CreateRegistrationRecord = {
@@ -839,7 +835,7 @@ export namespace operations {
 
   const checkClinicalEntity = async (
     command: ClinicalSubmissionCommand,
-    schema: SchemasDictionary,
+    schema: dictionaryEntities.SchemasDictionary,
   ) => {
     const schemaName = command.clinicalType as ClinicalEntitySchemaNames;
     // check records are unique
@@ -901,11 +897,11 @@ export namespace operations {
   }
 
   async function validateRxNormFields(
-    r: TypedDataRecord,
+    r: dictionaryEntities.TypedDataRecord,
     index: number,
     therapyType: ClinicalEntitySchemaNames,
   ): Promise<{
-    record: TypedDataRecord | undefined;
+    record: dictionaryEntities.TypedDataRecord | undefined;
     error: SubmissionValidationError | undefined;
   }> {
     const rxnormConceptLookupResult = await lookupRxNormConcept(r, index);
@@ -926,11 +922,14 @@ export namespace operations {
       rxnormConceptLookupResult.rxNormRecord.str;
     recordWithRxNormPopulated[TherapyRxNormFields.drug_rxnormid] =
       rxnormConceptLookupResult.rxNormRecord.rxcui;
-    return { record: recordWithRxNormPopulated as TypedDataRecord, error: undefined };
+    return {
+      record: recordWithRxNormPopulated as dictionaryEntities.TypedDataRecord,
+      error: undefined,
+    };
   }
 
   async function lookupRxNormConcept(
-    therapyRecord: TypedDataRecord,
+    therapyRecord: dictionaryEntities.TypedDataRecord,
     index: number,
   ): Promise<{
     rxNormRecord: RxNormConcept | undefined;
@@ -1079,7 +1078,7 @@ export namespace operations {
 
   const checkEntityFieldNames = async (
     newClinicalEntitesMap: DeepReadonly<NewClinicalEntities>,
-    dictionary: SchemasDictionary,
+    dictionary: dictionaryEntities.SchemasDictionary,
   ) => {
     const fieldNameErrors: SubmissionBatchError[] = [];
     const filteredClinicalEntites: NewClinicalEntities = {};
@@ -1140,7 +1139,7 @@ export namespace operations {
   // pre check registration create command
   const preCheckRegistrationFields = async (
     command: CreateRegistrationCommand,
-    dictionary: SchemasDictionary,
+    dictionary: dictionaryEntities.SchemasDictionary,
   ): Promise<DeepReadonly<SubmissionBatchError[] | undefined>> => {
     const {
       newClinicalEntitesMap: registrationMapped,
@@ -1361,8 +1360,8 @@ async function updateSubmissionWithVersionOrDeleteEmpty(
 
 const getValidationErrorInfoObject = (
   type: ClinicalEntitySchemaNames,
-  err: DeepReadonly<SchemaValidationError | SubmissionValidationError>,
-  record: DeepReadonly<DataRecord | TypedDataRecord>,
+  err: DeepReadonly<dictionaryEntities.SchemaValidationError | SubmissionValidationError>,
+  record: DeepReadonly<dictionaryEntities.DataRecord | dictionaryEntities.TypedDataRecord>,
 ) => {
   switch (type) {
     case ClinicalEntitySchemaNames.REGISTRATION: {
