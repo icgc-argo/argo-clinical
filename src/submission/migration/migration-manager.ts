@@ -17,12 +17,10 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import * as service from '../../lectern-client/schema-functions';
 import {
-  SchemasDictionary,
-  ChangeAnalysis,
-  SchemaDefinition,
-} from '../../lectern-client/schema-entities';
+  functions as dictionaryService,
+  entities as dictionaryEntities,
+} from '@overturebio-stack/lectern-client';
 import { loggerFor } from '../../logger';
 import { migrationRepo } from './migration-repo';
 import {
@@ -164,7 +162,7 @@ export namespace MigrationManager {
 
   const runMigration = async (
     roMigration: DeepReadonly<DictionaryMigration>,
-    newTargetSchema: SchemasDictionary,
+    newTargetSchema: dictionaryEntities.SchemasDictionary,
   ) => {
     const migration = _.cloneDeep(roMigration) as DictionaryMigration;
 
@@ -221,7 +219,7 @@ export namespace MigrationManager {
   };
 
   const verifyNewSchemaIsValidWithDataValidation = async (
-    newSchemaDictionary: SchemasDictionary,
+    newSchemaDictionary: dictionaryEntities.SchemasDictionary,
   ): Promise<NewSchemaVerificationResult> => {
     const verificationResult: NewSchemaVerificationResult = {};
 
@@ -253,7 +251,7 @@ export namespace MigrationManager {
 
   function checkClinicalEntityNewSchemaHasRequiredFields(
     clinicalEntityName: ClinicalEntitySchemaNames,
-    clinicalEntityNewSchemaDef: SchemaDefinition | undefined,
+    clinicalEntityNewSchemaDef: dictionaryEntities.SchemaDefinition | undefined,
   ): string[] {
     return _.difference(
       ClinicalEntityToEnumFieldsMap[clinicalEntityName],
@@ -263,7 +261,7 @@ export namespace MigrationManager {
 
   function checkClinicalEntityNewSchemaHasFieldCodeListValues(
     clinicalSchemaName: ClinicalEntitySchemaNames,
-    clinicalEntityNewSchemaDef: SchemaDefinition | undefined,
+    clinicalEntityNewSchemaDef: dictionaryEntities.SchemaDefinition | undefined,
   ) {
     const invalidFields: any = [];
     Object.entries(ClinicalEntityKnownFieldCodeLists[clinicalSchemaName] || {}).forEach(
@@ -303,7 +301,7 @@ export namespace MigrationManager {
 
   const revalidateOpenSubmissionsWithNewSchema = async (
     migration: DictionaryMigration,
-    newSchema: SchemasDictionary,
+    newSchema: dictionaryEntities.SchemasDictionary,
     dryRun: boolean,
   ) => {
     const submissions = await submissionService.operations.findActiveClinicalSubmissions();
@@ -359,7 +357,7 @@ export namespace MigrationManager {
   // start iterating over paged donor documents records (that weren't checked before)
   const checkDonorDocuments = async (
     migration: DictionaryMigration,
-    newSchema: SchemasDictionary,
+    newSchema: dictionaryEntities.SchemasDictionary,
   ) => {
     let migrationDone = false;
     if (!migration._id) {
@@ -456,7 +454,7 @@ export namespace MigrationManager {
 
   const updateCaches = async (
     donor: DeepReadonly<Donor>,
-    newSchema: SchemasDictionary,
+    newSchema: dictionaryEntities.SchemasDictionary,
     coreFieldUpdatedSchemaNamesCache: { [versionsKey: string]: ClinicalEntitySchemaNames[] },
     breakingChangesEntitesCache: { [versionsKey: string]: ClinicalEntitySchemaNames[] },
   ) => {
@@ -494,7 +492,7 @@ export namespace MigrationManager {
 
   const revalidateDonorClinicalEntities = async (
     donor: DeepReadonly<Donor>,
-    newSchema: SchemasDictionary,
+    newSchema: dictionaryEntities.SchemasDictionary,
     breakingChangesEntitesCache: { [versions: string]: ClinicalEntitySchemaNames[] },
   ) => {
     const donorSchemaErrors: DonorMigrationSchemaErrors = [];
@@ -535,7 +533,7 @@ export namespace MigrationManager {
 
   export const validateDonorEntityAgainstNewSchema = (
     schemaName: ClinicalEntitySchemaNames,
-    schema: SchemasDictionary,
+    schema: dictionaryEntities.SchemasDictionary,
     donor: DeepReadonly<Donor>,
   ) => {
     L.debug(`checking donor ${donor.submitterId} for schema: ${schemaName}`);
@@ -552,7 +550,7 @@ export namespace MigrationManager {
         return prepareForSchemaReProcessing(cr);
       })
       .filter(notEmpty);
-    const result = service.processRecords(schema, schemaName, stringifyedRecords);
+    const result = dictionaryService.processRecords(schema, schemaName, stringifyedRecords);
     if (result.validationErrors.length > 0) {
       return result.validationErrors;
     }
@@ -586,7 +584,9 @@ export namespace MigrationManager {
     return await clinicalService.updateMigrationId(donor, migrationId);
   };
 
-  export const findInvalidatingChangesFields = (changeAnalysis: ChangeAnalysis) => {
+  export const findInvalidatingChangesFields = (
+    changeAnalysis: dictionaryEntities.ChangeAnalysis,
+  ) => {
     const invalidatingFields: any = [];
 
     /**************
@@ -724,7 +724,9 @@ export namespace MigrationManager {
     return invalidatingFields;
   };
 
-  const findEntitiesWithCoreDesignationChanges = (changeAnalysis: ChangeAnalysis) => {
+  const findEntitiesWithCoreDesignationChanges = (
+    changeAnalysis: dictionaryEntities.ChangeAnalysis,
+  ) => {
     const fieldPathsChangingCoreValue: string[] = [];
 
     //  schema with added fields that are core need to be recalculated

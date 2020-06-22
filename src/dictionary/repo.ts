@@ -18,18 +18,25 @@
  */
 
 import mongoose from 'mongoose';
-import { SchemasDictionary } from '../lectern-client/schema-entities';
+import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
 import { loggerFor } from '../logger';
 import { MongooseUtils } from '../utils';
 const L = loggerFor(__filename);
 
 export interface SchemaRepository {
-  createOrUpdate(schema: SchemasDictionary): Promise<SchemasDictionary | undefined>;
-  get(name: string, versionToIgnore?: string): Promise<SchemasDictionary | undefined>;
+  createOrUpdate(
+    schema: dictionaryEntities.SchemasDictionary,
+  ): Promise<dictionaryEntities.SchemasDictionary | undefined>;
+  get(
+    name: string,
+    versionToIgnore?: string,
+  ): Promise<dictionaryEntities.SchemasDictionary | undefined>;
 }
 
 export const schemaRepo: SchemaRepository = {
-  createOrUpdate: async (schema: SchemasDictionary): Promise<SchemasDictionary | undefined> => {
+  createOrUpdate: async (
+    schema: dictionaryEntities.SchemasDictionary,
+  ): Promise<dictionaryEntities.SchemasDictionary | undefined> => {
     const result = await DataSchemaModel.findOneAndUpdate(
       {
         name: schema.name,
@@ -45,7 +52,10 @@ export const schemaRepo: SchemaRepository = {
     const resultObj = MongooseUtils.toPojo(result);
     return resultObj;
   },
-  get: async (name: string, versionToIgnore?: string): Promise<SchemasDictionary | undefined> => {
+  get: async (
+    name: string,
+    versionToIgnore?: string,
+  ): Promise<dictionaryEntities.SchemasDictionary | undefined> => {
     L.debug('in Schema repo get');
     const doc = await DataSchemaModel.findOne({
       name: name,
@@ -58,7 +68,7 @@ export const schemaRepo: SchemaRepository = {
   },
 };
 
-type DataSchemaDocument = mongoose.Document & SchemasDictionary;
+type DataSchemaDocument = mongoose.Document & dictionaryEntities.SchemasDictionary;
 
 const DataSchemaMongooseSchema = new mongoose.Schema(
   {

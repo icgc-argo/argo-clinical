@@ -17,16 +17,13 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import * as service from '../lectern-client/schema-functions';
-import * as parallelService from '../lectern-client/parallel';
 import {
-  SchemasDictionary,
-  DataRecord,
-  SchemaProcessingResult,
-  FieldNamesByPriorityMap,
-} from '../lectern-client/schema-entities';
-import * as changeAnalyzer from '../lectern-client/change-analyzer';
-import { schemaClient as schemaServiceAdapter } from '../lectern-client/schema-rest-client';
+  entities as dictionaryEntities,
+  functions as dictionaryService,
+  parallel,
+  analyzer,
+  restClient as dictionaryRestClient,
+} from '@overturebio-stack/lectern-client';
 import { schemaRepo } from './repo';
 import { loggerFor } from '../logger';
 import { Donor } from '../clinical/clinical-entities';
@@ -45,7 +42,7 @@ type SchemaWithFields = {
 };
 
 class SchemaManager {
-  private currentSchemaDictionary: SchemasDictionary = {
+  private currentSchemaDictionary: dictionaryEntities.SchemasDictionary = {
     schemas: [],
     name: '',
     version: '',
@@ -53,7 +50,7 @@ class SchemaManager {
 
   constructor(private schemaServiceUrl: string) {}
 
-  getCurrent = async (): Promise<SchemasDictionary> => {
+  getCurrent = async (): Promise<dictionaryEntities.SchemasDictionary> => {
     await this.updateManagerDictionaryIfNeeded();
     return this.currentSchemaDictionary;
   };
@@ -105,10 +102,10 @@ class SchemaManager {
 
   getSchemaFieldNamesWithPriority = async (
     schemaName: string,
-    schemasDictionary?: SchemasDictionary,
-  ): Promise<FieldNamesByPriorityMap> => {
+    schemasDictionary?: dictionaryEntities.SchemasDictionary,
+  ): Promise<dictionaryEntities.FieldNamesByPriorityMap> => {
     const dictionaryToUse = await this.chooseSchemasDictionaryToUse(schemasDictionary);
-    return service.getSchemaFieldNamesWithPriority(dictionaryToUse, schemaName);
+    return dictionaryService.getSchemaFieldNamesWithPriority(dictionaryToUse, schemaName);
   };
 
   /**
@@ -124,12 +121,12 @@ class SchemaManager {
    */
   process = async (
     schemaName: string,
-    record: Readonly<DataRecord>,
+    record: Readonly<dictionaryEntities.DataRecord>,
     index: number,
-    schemasDictionary?: SchemasDictionary,
-  ): Promise<SchemaProcessingResult> => {
+    schemasDictionary?: dictionaryEntities.SchemasDictionary,
+  ): Promise<dictionaryEntities.SchemaProcessingResult> => {
     const dictionaryToUse = await this.chooseSchemasDictionaryToUse(schemasDictionary);
-    return service.process(dictionaryToUse, schemaName, record, index);
+    return dictionaryService.process(dictionaryToUse, schemaName, record, index);
   };
 
   /**
@@ -147,15 +144,17 @@ class SchemaManager {
    */
   processParallel = async (
     schemaName: string,
-    record: Readonly<DataRecord>,
+    record: Readonly<dictionaryEntities.DataRecord>,
     index: number,
-    schemasDictionary?: SchemasDictionary,
-  ): Promise<SchemaProcessingResult> => {
+    schemasDictionary?: dictionaryEntities.SchemasDictionary,
+  ): Promise<dictionaryEntities.SchemaProcessingResult> => {
     const dictionaryToUse = await this.chooseSchemasDictionaryToUse(schemasDictionary);
-    return await parallelService.processRecord(dictionaryToUse, schemaName, record, index);
+    return await parallel.processRecord(dictionaryToUse, schemaName, record, index);
   };
 
-  chooseSchemasDictionaryToUse = async (passedDictionary?: SchemasDictionary) => {
+  chooseSchemasDictionaryToUse = async (
+    passedDictionary?: dictionaryEntities.SchemasDictionary,
+  ) => {
     if (!passedDictionary) {
       return await this.getCurrent();
     }
@@ -163,7 +162,7 @@ class SchemaManager {
   };
 
   analyzeChanges = async (oldVersion: string, newVersion: string) => {
-    const result = await changeAnalyzer.fetchDiffAndAnalyze(
+    const result = await analyzer.fetchDiffAndAnalyze(
       this.schemaServiceUrl,
       this.getCurrentName(),
       oldVersion,
@@ -172,7 +171,10 @@ class SchemaManager {
     return result;
   };
 
-  loadAndSaveNewVersion = async (name: string, newVersion: string): Promise<SchemasDictionary> => {
+  loadAndSaveNewVersion = async (
+    name: string,
+    newVersion: string,
+  ): Promise<dictionaryEntities.SchemasDictionary> => {
     const newSchema = await this.loadSchemaByVersion(name, newVersion);
     const result = await schemaRepo.createOrUpdate(newSchema);
     if (!result) {
@@ -182,12 +184,18 @@ class SchemaManager {
     return this.currentSchemaDictionary;
   };
 
-  loadSchemaByVersion = async (name: string, version: string): Promise<SchemasDictionary> => {
-    const newSchema = await schemaServiceAdapter.fetchSchema(this.schemaServiceUrl, name, version);
+  loadSchemaByVersion = async (
+    name: string,
+    version: string,
+  ): Promise<dictionaryEntities.SchemasDictionary> => {
+    const newSchema = await dictionaryRestClient.fetchSchema(this.schemaServiceUrl, name, version);
     return newSchema;
   };
 
-  loadSchemaAndSave = async (name: string, initialVersion: string): Promise<SchemasDictionary> => {
+  loadSchemaAndSave = async (
+    name: string,
+    initialVersion: string,
+  ): Promise<dictionaryEntities.SchemasDictionary> => {
     L.debug(`in loadSchema ${initialVersion}`);
     if (!initialVersion) {
       throw new Error('initial version cannot be empty.');
@@ -261,7 +269,7 @@ class SchemaManager {
 
 export const revalidateAllDonorClinicalEntitiesAgainstSchema = (
   donor: DeepReadonly<Donor>,
-  schema: SchemasDictionary,
+  schema: dictionaryEntities.SchemasDictionary,
 ) => {
   const clinicalSchemaNames = getSchemaNamesForDonorClinicalEntities(donor);
   let isValid = true;

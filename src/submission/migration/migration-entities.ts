@@ -17,7 +17,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { SchemaValidationError } from '../../lectern-client/schema-entities';
+import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
 
 export type MigrationStage = 'SUBMITTED' | 'ANALYZED' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
 export type MigrationState = 'OPEN' | 'CLOSED';
@@ -52,5 +52,5 @@ export type NewSchemaVerificationResult = {
 };
 
 export type DonorMigrationSchemaErrors = Array<{
-  [clinicalType: string]: ReadonlyArray<SchemaValidationError>;
+  [clinicalType: string]: ReadonlyArray<dictionaryEntities.SchemaValidationError>;
 }>;

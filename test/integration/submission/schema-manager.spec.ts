@@ -28,7 +28,7 @@ import { cleanCollection, findInDb, updateData } from '../testutils';
 import _ from 'lodash';
 import * as manager from '../../../src/dictionary/manager';
 import { promisify } from 'bluebird';
-import { SchemasDictionary } from '../../../src/lectern-client/schema-entities';
+import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
 const ServerMock: any = require('mock-http-server') as any;
 
 chai.use(require('chai-http'));
@@ -80,7 +80,7 @@ describe('manager', () => {
   it('should load schema in db', async function() {
     // has to be done in every test to reset the state of the manager
     manager.create('http://localhost:54321/lectern');
-    const dictionaries: SchemasDictionary[] = require('./dictionary.response.1.json') as SchemasDictionary[];
+    const dictionaries: dictionaryEntities.SchemasDictionary[] = require('./dictionary.response.1.json') as dictionaryEntities.SchemasDictionary[];
     server.on({
       method: 'GET',
       path: '/lectern/dictionaries',
@@ -94,7 +94,7 @@ describe('manager', () => {
       },
     });
 
-    let result: SchemasDictionary | undefined = undefined;
+    let result: dictionaryEntities.SchemasDictionary | undefined = undefined;
     try {
       result = await manager.instance().loadSchemaAndSave(schemaName, '1.0');
     } catch (er) {
@@ -115,8 +115,8 @@ describe('manager', () => {
   it('should update schema version', async function() {
     // has to be done in every test to reset the state of the manager
     manager.create('http://localhost:54321/lectern');
-    const dictionaryV1: SchemasDictionary[] = require('./dictionary.response.1.json') as SchemasDictionary[];
-    const dictionaryV2: SchemasDictionary[] = require('./dictionary.response.2.json') as SchemasDictionary[];
+    const dictionaryV1: dictionaryEntities.SchemasDictionary[] = require('./dictionary.response.1.json') as dictionaryEntities.SchemasDictionary[];
+    const dictionaryV2: dictionaryEntities.SchemasDictionary[] = require('./dictionary.response.2.json') as dictionaryEntities.SchemasDictionary[];
     server.on({
       method: 'GET',
       path: '/lectern/dictionaries',
@@ -132,8 +132,8 @@ describe('manager', () => {
         },
       },
     });
-    let resultV1: SchemasDictionary | undefined = undefined;
-    let resultV2: SchemasDictionary | undefined = undefined;
+    let resultV1: dictionaryEntities.SchemasDictionary | undefined = undefined;
+    let resultV2: dictionaryEntities.SchemasDictionary | undefined = undefined;
     try {
       resultV1 = await manager.instance().loadSchemaAndSave(schemaName, '1.0');
     } catch (er) {
@@ -159,7 +159,7 @@ describe('manager', () => {
 
   it('should re-load if version is different in db', async function() {
     manager.create('http://localhost:54321/lectern');
-    const dictionaries: SchemasDictionary[] = require('./dictionary.response.1.json') as SchemasDictionary[];
+    const dictionaries: dictionaryEntities.SchemasDictionary[] = require('./dictionary.response.1.json') as dictionaryEntities.SchemasDictionary[];
     server.on({
       method: 'GET',
       path: '/lectern/dictionaries',

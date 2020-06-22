@@ -27,10 +27,7 @@ import {
   DonorFieldsEnum,
 } from '../../../src/common-model/entities';
 import { SampleRegistrationFieldsEnum } from '../../../src/submission/submission-entities';
-import {
-  SchemasDictionary,
-  SchemaValidationErrorTypes,
-} from '../../../src/lectern-client/schema-entities';
+import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
 import {
   DictionaryMigration,
   MigrationStage,
@@ -237,7 +234,11 @@ describe('schema migration api', () => {
 
   const assertSuccessfulMigration = async (res: any, version: string) => {
     res.should.have.status(200);
-    const schema = (await findInDb(dburl, 'dataschemas', {})) as SchemasDictionary[];
+    const schema = (await findInDb(
+      dburl,
+      'dataschemas',
+      {},
+    )) as dictionaryEntities.SchemasDictionary[];
     schema[0].version.should.eq(version);
   };
 
@@ -268,7 +269,11 @@ describe('schema migration api', () => {
   it('should update the schema', async () => {
     await migrateSyncTo('2.0').then(async (res: any) => {
       res.should.have.status(200);
-      const schema = (await findInDb(dburl, 'dataschemas', {})) as SchemasDictionary[];
+      const schema = (await findInDb(
+        dburl,
+        'dataschemas',
+        {},
+      )) as dictionaryEntities.SchemasDictionary[];
       schema[0].version.should.eq('2.0');
     });
 
@@ -396,13 +401,16 @@ describe('schema migration api', () => {
       const tumourStagingError = migration.invalidDonorsErrors[0].errors[0].primary_diagnosis[0];
       chai
         .expect(tumourStagingError)
-        .to.have.property('errorType', SchemaValidationErrorTypes.INVALID_ENUM_VALUE);
+        .to.have.property(
+          'errorType',
+          dictionaryEntities.SchemaValidationErrorTypes.INVALID_ENUM_VALUE,
+        );
       chai.expect(tumourStagingError).to.have.property('fieldName', TUMOUR_STAGING_SYSTEM);
 
       const presentingSymptomError =
         migration.invalidDonorsErrors[0].errors[0].primary_diagnosis[1];
       chai.expect(presentingSymptomError).to.deep.include({
-        errorType: SchemaValidationErrorTypes.INVALID_ENUM_VALUE,
+        errorType: dictionaryEntities.SchemaValidationErrorTypes.INVALID_ENUM_VALUE,
         fieldName: PRESENTING_SYMPTOMS,
         info: { value: ['Nausea'] },
       });
@@ -425,7 +433,10 @@ describe('schema migration api', () => {
         const errorObj = donorErrObj.errors[0].donor[0];
         chai
           .expect(errorObj)
-          .to.have.property('errorType', SchemaValidationErrorTypes.MISSING_REQUIRED_FIELD);
+          .to.have.property(
+            'errorType',
+            dictionaryEntities.SchemaValidationErrorTypes.MISSING_REQUIRED_FIELD,
+          );
         chai.expect(errorObj).to.have.property('fieldName', 'eye_colour');
       });
       migration.stats.invalidDocumentsCount.should.equal(donors.length);
@@ -439,7 +450,11 @@ describe('schema migration api', () => {
       const VERSION = '9.0';
       await migrateSyncTo(VERSION).then(async (res: any) => {
         res.should.have.status(200);
-        const schema = (await findInDb(dburl, 'dataschemas', {})) as SchemasDictionary[];
+        const schema = (await findInDb(
+          dburl,
+          'dataschemas',
+          {},
+        )) as dictionaryEntities.SchemasDictionary[];
         // migration will fail
         schema[0].version.should.eq(startingSchemaVersion);
       });
@@ -470,14 +485,20 @@ describe('schema migration api', () => {
       errorObj.should.have.property(ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS);
       chai
         .expect(errorObj.primary_diagnosis[0])
-        .to.have.property('errorType', SchemaValidationErrorTypes.INVALID_BY_REGEX);
+        .to.have.property(
+          'errorType',
+          dictionaryEntities.SchemaValidationErrorTypes.INVALID_BY_REGEX,
+        );
       chai
         .expect(errorObj.primary_diagnosis[0])
         .to.have.property('fieldName', PrimaryDiagnosisFieldsEnum.cancer_type_code);
 
       chai
         .expect(errorObj.primary_diagnosis[1])
-        .to.have.property('errorType', SchemaValidationErrorTypes.INVALID_BY_SCRIPT);
+        .to.have.property(
+          'errorType',
+          dictionaryEntities.SchemaValidationErrorTypes.INVALID_BY_SCRIPT,
+        );
       chai
         .expect(errorObj.primary_diagnosis[1])
         .to.have.property('fieldName', PrimaryDiagnosisFieldsEnum.age_at_diagnosis);

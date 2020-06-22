@@ -42,7 +42,7 @@ import {
   SubmissionErrorBaseInfo,
 } from '../submission-error-messages';
 import _ from 'lodash';
-import { DataRecord } from '../../lectern-client/schema-entities';
+import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
 import { Donor, ClinicalInfo } from '../../clinical/clinical-entities';
 import {
   getSingleClinicalEntityFromDonorBySchemanName,
@@ -273,7 +273,7 @@ export namespace ClinicalSubmissionRecordsOperations {
 export const usingInvalidProgramId = (
   type: ClinicalEntitySchemaNames,
   newDonorIndex: number,
-  record: DataRecord,
+  record: dictionaryEntities.DataRecord,
   expectedProgram: string,
 ) => {
   const errors: SubmissionValidationError[] = [];
@@ -295,7 +295,7 @@ export const usingInvalidProgramId = (
 
 const getSubmissionErrorInfoObject = (
   type: ClinicalEntitySchemaNames,
-  record: DeepReadonly<DataRecord>,
+  record: DeepReadonly<dictionaryEntities.DataRecord>,
   expectedProgram: string,
 ) => {
   switch (type) {
