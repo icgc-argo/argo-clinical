@@ -20,36 +20,35 @@
 import { migrationDiffs } from './stub-diffs';
 import _ from 'lodash';
 import fs from 'fs';
-import {
-  FieldDefinition,
-  SchemasDictionary,
-  ValueType,
-} from '../../../../src/lectern-client/schema-entities';
+import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
 import legacyStubSchemas from '../../stub-schema.json';
 import { ClinicalEntitySchemaNames } from '../../../../src/common-model/entities';
 import * as fieldNames from './fields';
 
 const DICTIONARY_NAME = 'ARGO Clinical Submission';
 // all new dynamic schemas will be extended upon from this base version
-const dictionaryV1 = legacyStubSchemas.dictionaries[0] as SchemasDictionary;
+const dictionaryV1 = legacyStubSchemas.dictionaries[0] as dictionaryEntities.SchemasDictionary;
 
 interface MutableSchemaDefinition {
   name: string;
   description: string;
-  fields: Array<FieldDefinition>;
+  fields: Array<dictionaryEntities.FieldDefinition>;
 }
 
-const getSchema = (dictionary: SchemasDictionary, schemaName: string): MutableSchemaDefinition => {
+const getSchema = (
+  dictionary: dictionaryEntities.SchemasDictionary,
+  schemaName: string,
+): MutableSchemaDefinition => {
   const schema = dictionary.schemas.find(s => s.name == schemaName);
   if (!schema) throw new Error('schema not found');
   return schema as MutableSchemaDefinition;
 };
 
 const getField = (
-  dictionary: SchemasDictionary,
+  dictionary: dictionaryEntities.SchemasDictionary,
   schemaName: string,
   fieldName: string,
-): FieldDefinition => {
+): dictionaryEntities.FieldDefinition => {
   const field = getSchema(dictionary, schemaName)?.fields?.find(f => f.name == fieldName);
   if (!field) throw new Error('field not found');
   return field;
@@ -76,7 +75,7 @@ export const buildDynamicStubSchema = () => {
     restrictions: {
       required: false,
     },
-    valueType: ValueType.STRING,
+    valueType: dictionaryEntities.ValueType.STRING,
   });
 
   // Change #8.1.1.3 adding new file (dictionary schema)
@@ -87,7 +86,13 @@ export const buildDynamicStubSchema = () => {
   schemaV6.schemas.push({
     name: 'lifestyle_factors',
     description: 'Extra lifestyle factors',
-    fields: [{ description: 'the diet they eat', name: 'diet', valueType: ValueType.STRING }],
+    fields: [
+      {
+        description: 'the diet they eat',
+        name: 'diet',
+        valueType: dictionaryEntities.ValueType.STRING,
+      },
+    ],
   });
 
   // Change #8.1.2.1 removing a value from enum
@@ -122,7 +127,7 @@ export const buildDynamicStubSchema = () => {
     restrictions: {
       required: true,
     },
-    valueType: ValueType.STRING,
+    valueType: dictionaryEntities.ValueType.STRING,
   });
 
   // Change #8.1.2.3 removing field
@@ -166,7 +171,7 @@ export const buildDynamicStubSchema = () => {
   schemaV11.version = '11.0';
 
   getField(schemaV11, ClinicalEntitySchemaNames.DONOR, fieldNames.donor.SURVIVAL_TIME).valueType =
-    ValueType.STRING;
+    dictionaryEntities.ValueType.STRING;
 
   // Change #8.1.3.2 renaming field
   const schemaV12 = _.cloneDeep(dictionaryV1);
@@ -183,7 +188,7 @@ export const buildDynamicStubSchema = () => {
   _.remove(schemaV13.schemas, schema => schema.name === ClinicalEntitySchemaNames.HORMONE_THERAPY);
 
   const newDictionaries = _.concat(
-    legacyStubSchemas.dictionaries.slice(0, 3) as Array<SchemasDictionary>,
+    legacyStubSchemas.dictionaries.slice(0, 3) as Array<dictionaryEntities.SchemasDictionary>,
     [
       schemaV4,
       schemaV5,

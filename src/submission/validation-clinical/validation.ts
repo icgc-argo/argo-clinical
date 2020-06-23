@@ -45,7 +45,7 @@ import {
 } from '../../common-model/entities';
 import { donorDao } from '../../clinical/donor-repo';
 import { DeepReadonly } from 'deep-freeze';
-import { DataRecord } from '../../lectern-client/schema-entities';
+import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
 import { submissionValidator } from './index';
 import { validationErrorMessage } from '../submission-error-messages';
 import {
@@ -218,7 +218,7 @@ function addErrorsForNoDonor(
 
 export const checkUniqueRecords = (
   clinicalType: ClinicalEntitySchemaNames,
-  newRecords: DeepReadonly<DataRecord[]>,
+  newRecords: DeepReadonly<dictionaryEntities.DataRecord[]>,
   useAllRecordValues: boolean = false, // use all record properties so it behaves like duplicate check
 ): SubmissionValidationError[] => {
   if (clinicalType === ClinicalEntitySchemaNames.REGISTRATION) {

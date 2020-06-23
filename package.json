@@ -1,6 +1,6 @@
 {
   "name": "argo-clinical",
-  "version": "1.30.0",
+  "version": "1.31.0",
   "description": "Clinical submission system and repo",
   "scripts": {
     "start": "npm run serve",
@@ -87,7 +87,7 @@
     "sinon": "^7.3.2",
     "testcontainers": "^1.1.19",
     "tslint": "^5.20.1",
-    "typescript": "^3.7.3"
+    "typescript": "^3.9.5"
   },
   "dependencies": {
     "adm-zip": "^0.4.13",
@@ -119,6 +119,7 @@
     "node-fetch": "^2.6.0",
     "node-vault": "^0.9.11",
     "node-worker-threads-pool": "^1.2.2",
+    "@overturebio-stack/lectern-client": "0.1.8",
     "nodemailer": "^6.2.1",
     "promise-tools": "^2.1.0",
     "response-time": "^2.3.2",

@@ -18,7 +18,7 @@
  */
 
 import { DeepReadonly } from 'deep-freeze';
-import { SchemaValidationErrorTypes, DataRecord } from '../lectern-client/schema-entities';
+import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
 import {
   ClinicalEntitySchemaNames,
   DonorFieldsEnum,
@@ -86,7 +86,7 @@ export const RegistrationToCreateRegistrationFieldsMap: SubmittedRegistrationToC
 };
 
 export type SubmissionValidationError = {
-  type: DataValidationErrors | SchemaValidationErrorTypes;
+  type: DataValidationErrors | dictionaryEntities.SchemaValidationErrorTypes;
   fieldName: string;
   info: any;
   index: number;
@@ -106,7 +106,7 @@ export type SubmissionValidationUpdate = {
 export type SubmissionBatchError = {
   message: string;
   batchNames: string[];
-  code: SubmissionBatchErrorTypes | SchemaValidationErrorTypes;
+  code: SubmissionBatchErrorTypes | dictionaryEntities.SchemaValidationErrorTypes;
 };
 
 export enum SubmissionBatchErrorTypes {
@@ -182,7 +182,7 @@ export interface CommitRegistrationCommand {
 export interface CreateRegistrationCommand {
   // we define the records as arbitrary key value pairs to be validated by the schema
   // before we put them in a CreateRegistrationRecord, in case a column is missing so we let dictionary handle error collection.
-  records: ReadonlyArray<DataRecord>;
+  records: ReadonlyArray<dictionaryEntities.DataRecord>;
   readonly creator: string;
   readonly programId: string;
   readonly batchName: string;
@@ -201,7 +201,7 @@ export interface ValidationResult {
 }
 
 export interface ClinicalSubmissionCommand {
-  records: ReadonlyArray<DataRecord>;
+  records: ReadonlyArray<dictionaryEntities.DataRecord>;
   readonly programId: string;
   readonly clinicalType: string;
 }
@@ -248,7 +248,7 @@ export interface NewClinicalEntities {
 export interface NewClinicalEntity {
   batchName: string;
   creator: string;
-  records: ReadonlyArray<DataRecord>;
+  records: ReadonlyArray<dictionaryEntities.DataRecord>;
   fieldNames?: ReadonlyArray<string>; // used if all records have common field names
 }
 
