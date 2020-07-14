@@ -187,6 +187,38 @@ export const buildDynamicStubSchema = () => {
 
   _.remove(schemaV13.schemas, schema => schema.name === ClinicalEntitySchemaNames.HORMONE_THERAPY);
 
+  const schemaV14 = _.cloneDeep(dictionaryV1);
+  schemaV14.version = '14.0';
+
+  getField(
+    schemaV14,
+    ClinicalEntitySchemaNames.REGISTRATION,
+    fieldNames.sampleRegistration.PROGRAM_ID,
+  ).valueType = dictionaryEntities.ValueType.INTEGER;
+
+  getField(
+    schemaV14,
+    ClinicalEntitySchemaNames.REGISTRATION,
+    fieldNames.sampleRegistration.SUBMITTER_DONOR_ID,
+  ).valueType = dictionaryEntities.ValueType.INTEGER;
+
+  getField(schemaV14, ClinicalEntitySchemaNames.DONOR, fieldNames.donor.PROGRAM_ID).valueType =
+    dictionaryEntities.ValueType.INTEGER;
+
+  getField(
+    schemaV14,
+    ClinicalEntitySchemaNames.DONOR,
+    fieldNames.donor.SUBMITTER_DONOR_ID,
+  ).valueType = dictionaryEntities.ValueType.INTEGER;
+
+  const schemaV15 = _.cloneDeep(dictionaryV1);
+  schemaV15.version = '15.0';
+
+  _.remove(
+    getSchema(schemaV15, ClinicalEntitySchemaNames.REGISTRATION).fields,
+    field => field.name === fieldNames.sampleRegistration.SPECIMEN_TYPE,
+  );
+
   const newDictionaries = _.concat(
     legacyStubSchemas.dictionaries.slice(0, 3) as Array<dictionaryEntities.SchemasDictionary>,
     [
@@ -200,6 +232,8 @@ export const buildDynamicStubSchema = () => {
       schemaV11,
       schemaV12,
       schemaV13,
+      schemaV14,
+      schemaV15,
     ],
   );
   // only want extend beyond the first three legacy schemas

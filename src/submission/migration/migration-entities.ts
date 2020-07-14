@@ -47,6 +47,7 @@ export type NewSchemaVerificationResult = {
   [clinicalEntity: string]: {
     missingFields?: string[];
     invalidFieldCodeLists?: { fieldName: string; missingCodeListValue: string[] }[];
+    valueTypeChanges?: string[];
     // invalidFieldRegex?: { name: string; expectedRegex: RegExp };
   };
 };

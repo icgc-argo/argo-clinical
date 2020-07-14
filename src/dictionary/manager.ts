@@ -192,6 +192,20 @@ class SchemaManager {
     return newSchema;
   };
 
+  fetchDiff = async (
+    name: string,
+    fromVersion: string,
+    toVersion: string,
+  ): Promise<dictionaryEntities.SchemasDictionaryDiffs> => {
+    const diff = await dictionaryRestClient.fetchDiff(
+      this.schemaServiceUrl,
+      name,
+      fromVersion,
+      toVersion,
+    );
+    return diff;
+  };
+
   loadSchemaAndSave = async (
     name: string,
     initialVersion: string,
