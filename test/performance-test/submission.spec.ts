@@ -27,7 +27,6 @@ import chai from 'chai';
 import fs from 'fs';
 // needed for types
 import 'chai-http';
-import 'sampleFiles/src/types/deep-equal-in-any-order';
 import 'mocha';
 import winston from 'winston';
 import mongoose from 'mongoose';
@@ -36,7 +35,11 @@ import app from '../../src/app';
 import * as bootstrap from '../../src/bootstrap';
 import { cleanCollection, resetCounters } from '../integration/testutils';
 import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN } from '../integration/test.jwt';
-import { CreateRegistrationResult } from '../../src/submission/submission-entities';
+import {
+  CreateRegistrationResult,
+  CreateSubmissionResult,
+  ValidateSubmissionResult,
+} from '../../src/submission/submission-entities';
 import { ClinicalEntitySchemaNames } from '../../src/common-model/entities';
 
 // create a different logger to avoid noise from application
@@ -114,7 +117,7 @@ describe('Submission Api', () => {
             return '';
           },
           schemaServiceUrl() {
-            return 'file://' + path.resolve(__dirname + `/../../sampleFiles/sample-schema.json`);
+            return 'file://' + path.resolve(__dirname + `/../../sampleFiles/newschema.json`);
           },
           testApisDisabled() {
             return false;
@@ -163,14 +166,31 @@ describe('Submission Api', () => {
     await mongoContainer.stop();
   });
 
-  describe('sample registration', function() {
+  describe('clinical submission', function() {
+    const num = 300;
+
     this.beforeEach(async () => {
-      await clearCollections(dburl, ['donors', 'activeregistrations', 'counters']);
+      await clearCollections(dburl, [
+        'donors',
+        'activeregistrations',
+        'activesubmissions',
+        'counters',
+      ]);
     });
 
-    let file: Buffer;
+    let sampleRegFile: Buffer, donor: Buffer, pd: Buffer, specimen: Buffer;
+
     try {
-      file = fs.readFileSync(`${__dirname}/${ClinicalEntitySchemaNames.REGISTRATION}.3k.tsv`);
+      sampleRegFile = fs.readFileSync(
+        `${__dirname}/files/${num}/${ClinicalEntitySchemaNames.REGISTRATION}.tsv`,
+      );
+      donor = fs.readFileSync(`${__dirname}/files/${num}/${ClinicalEntitySchemaNames.DONOR}.tsv`);
+      pd = fs.readFileSync(
+        `${__dirname}/files/${num}/${ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS}.tsv`,
+      );
+      specimen = fs.readFileSync(
+        `${__dirname}/files/${num}/${ClinicalEntitySchemaNames.SPECIMEN}.tsv`,
+      );
       console.log('Loaded data file');
     } catch (err) {
       return err;
@@ -179,14 +199,14 @@ describe('Submission Api', () => {
     /////////////////////////
     // Use Cases
     ////////////////////////
-    const register3k = async () => {
+    const register = async () => {
       let registrationId: string | undefined;
       await chai
         .request(app)
         .post('/submission/program/TEST-CA/registration')
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
         .type('form')
-        .attach('registrationFile', file, `${ClinicalEntitySchemaNames.REGISTRATION}.300.tsv`)
+        .attach('registrationFile', sampleRegFile, `${ClinicalEntitySchemaNames.REGISTRATION}.tsv`)
         .then((res: any) => {
           registrationId = (res.body as CreateRegistrationResult).registration?._id;
           res.should.have.status(201);
@@ -204,32 +224,76 @@ describe('Submission Api', () => {
           res.should.have.status(200);
         });
     };
-    ////////////////////////////
+
+    const uploadClinical = async () => {
+      let version: string | undefined;
+      await chai
+        .request(app)
+        .post('/submission/program/TEST-CA/clinical/upload')
+        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+        // .attach('clinicalFiles', donor, `${ClinicalEntitySchemaNames.DONOR}.tsv`)
+        .attach('clinicalFiles', pd, `${ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS}..tsv`)
+        // .attach('clinicalFiles', specimen, `${ClinicalEntitySchemaNames.SPECIMEN}.tsv`)
+        .then((res: any) => {
+          version = (res.body as CreateSubmissionResult).submission?.version;
+          res.should.have.status(200);
+        });
+      if (!version) throw new Error('upload clinical failed');
+      return version;
+    };
+
+    const validateSubmission = async (version: string) => {
+      if (!version) throw new Error('cannot validate');
+      let newVersion: string | undefined;
+      await chai
+        .request(app)
+        .post(`/submission/program/TEST-CA/clinical/validate/${version}`)
+        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+        .then((res: any) => {
+          newVersion = (res.body as ValidateSubmissionResult).submission?.version;
+          res.should.have.status(200);
+        });
+      if (!newVersion) throw new Error('upload clinical failed');
+      return newVersion;
+    };
 
     //////////////////////////
     /// Scenarios
     /////////////////////////
     /**
-     * submit 3000 unique new samples, then resubmit them for the same program.
+     * submit ${num}0 unique new samples, then resubmit them for the same program.
      * in this scenario we will load all donors from db into memory and index them
      * this will also cover the cases where we check against existing data.
      */
-    it('Commit 3000 new samples, then resubmit and commit the same 3k samples', async function() {
-      L.profile('register.3k.new');
-      const regId = await register3k();
-      L.profile('register.3k.new');
+    it(`Commit ${num} new samples, then resubmit and commit the same ${num} samples`, async function() {
+      L.profile(`register.${num}.new`);
+      const regId = await register();
+      L.profile(`register.${num}.new`);
 
-      L.profile('commitRegistration.3k.new');
+      L.profile(`commitRegistration.${num}.new`);
       await commitRegistration(regId);
-      L.profile('commitRegistration.3k.new');
+      L.profile(`commitRegistration.${num}.new`);
 
-      L.profile('register.3k.existing');
-      const regId2 = await register3k();
-      L.profile('register.3k.existing');
+      L.profile(`register.${num}.existing`);
+      const regId2 = await register();
+      L.profile(`register.${num}.existing`);
 
-      L.profile('commitRegistration.3k.existing');
+      L.profile(`commitRegistration.${num}.existing`);
       await commitRegistration(regId2);
-      L.profile('commitRegistration.3k.existing');
+      L.profile(`commitRegistration.${num}.existing`);
+    });
+
+    it(`Commit ${num} new samples, submit clinical data`, async function() {
+      const regId = await register();
+      await commitRegistration(regId);
+
+      L.profile(`uploadClinical.${num}.new`);
+      const version = await uploadClinical();
+      L.profile(`uploadClinical.${num}.new`);
+
+      L.profile('validate submission ');
+      const valVersion = await validateSubmission(version);
+      L.profile('validate submission ');
     });
   });
 });

@@ -1,0 +1,301 @@
+program_id	submitter_donor_id	vital_status	cause_of_death	survival_time	primary_site	prior_malignancy	cancer_type_prior_malignancy	age_at_prior_malignancy	laterality_of_prior_malignancy	height	weight	bmi	menopause_status	age_at_menarche	number_of_pregnancies	number_of_children
+TEST-CA	ICGC_0	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_1	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_2	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_3	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_4	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_5	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_6	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_7	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_8	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_9	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_10	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_11	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_12	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_13	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_14	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_15	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_16	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_17	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_18	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_19	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_20	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_21	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_22	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_23	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_24	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_25	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_26	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_27	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_28	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_29	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_30	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_31	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_32	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_33	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_34	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_35	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_36	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_37	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_38	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_39	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_40	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_41	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_42	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_43	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_44	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_45	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_46	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_47	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_48	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_49	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_50	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_51	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_52	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_53	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_54	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_55	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_56	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_57	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_58	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_59	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_60	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_61	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_62	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_63	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_64	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_65	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_66	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_67	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_68	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_69	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_70	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_71	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_72	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_73	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_74	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_75	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_76	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_77	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_78	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_79	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_80	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_81	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_82	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_83	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_84	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_85	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_86	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_87	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_88	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_89	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_90	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_91	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_92	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_93	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_94	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_95	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_96	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_97	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_98	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_99	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_100	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_101	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_102	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_103	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_104	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_105	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_106	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_107	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_108	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_109	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_110	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_111	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_112	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_113	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_114	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_115	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_116	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_117	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_118	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_119	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_120	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_121	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_122	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_123	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_124	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_125	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_126	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_127	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_128	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_129	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_130	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_131	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_132	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_133	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_134	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_135	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_136	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_137	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_138	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_139	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_140	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_141	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_142	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_143	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_144	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_145	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_146	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_147	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_148	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_149	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_150	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_151	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_152	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_153	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_154	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_155	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_156	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_157	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_158	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_159	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_160	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_161	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_162	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_163	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_164	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_165	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_166	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_167	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_168	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_169	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_170	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_171	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_172	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_173	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_174	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_175	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_176	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_177	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_178	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_179	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_180	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_181	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_182	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_183	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_184	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_185	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_186	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_187	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_188	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_189	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_190	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_191	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_192	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_193	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_194	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_195	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_196	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_197	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_198	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_199	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_200	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_201	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_202	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_203	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_204	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_205	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_206	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_207	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_208	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_209	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_210	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_211	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_212	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_213	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_214	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_215	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_216	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_217	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_218	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_219	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_220	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_221	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_222	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_223	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_224	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_225	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_226	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_227	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_228	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_229	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_230	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_231	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_232	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_233	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_234	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_235	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_236	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_237	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_238	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_239	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_240	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_241	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_242	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_243	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_244	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_245	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_246	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_247	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_248	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_249	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_250	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_251	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_252	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_253	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_254	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_255	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_256	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_257	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_258	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_259	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_260	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_261	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_262	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_263	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_264	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_265	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_266	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_267	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_268	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_269	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_270	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_271	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_272	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_273	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_274	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_275	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_276	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_277	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_278	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_279	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_280	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_281	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_282	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_283	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_284	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_285	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_286	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_287	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_288	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_289	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_290	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_291	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_292	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_293	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_294	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_295	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_296	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_297	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_298	Alive			Unknown	Unknown				170	70		Not applicable		1	1
+TEST-CA	ICGC_299	Deceased	Died of cancer	365	Unknown	Unknown				170	70		Not applicable		1	1

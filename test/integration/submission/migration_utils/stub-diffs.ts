@@ -21,7 +21,6 @@
 import legacyStubSchemas from '../../stub-schema.json';
 
 export const migrationDiffs = [
-  legacyStubSchemas.diffs[0],
   {
     fromVersion: '1.0',
     toVersion: '4.0',
