@@ -1,2 +1,2 @@
 program_id	submitter_donor_id	submitter_treatment_id	drug_name	drug_rxnormcui	hormone_drug_dosage_units	cumulative_drug_dosage
-ABCD-EF	ICGC_0001	T_03	drug B	22323	mg/m²	44
+ABCD-EF	ICGC_0001	T_03	drug B	22323	mg/m2	44

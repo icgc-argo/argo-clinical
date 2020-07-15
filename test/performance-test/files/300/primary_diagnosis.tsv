@@ -1,0 +1,301 @@
+program_id	number_lymph_nodes_positive	submitter_donor_id	submitter_primary_diagnosis_id	age_at_diagnosis	cancer_type_code	clinical_tumour_staging_system	presenting_symptoms	clinical_stage_group	clinical_t_category	clinical_n_category	clinical_m_category
+TEST-CA	1	ICGC_0	s__pd_0	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_1	s__pd_1	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_2	s__pd_2	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_3	s__pd_3	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_4	s__pd_4	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_5	s__pd_5	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_6	s__pd_6	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_7	s__pd_7	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_8	s__pd_8	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_9	s__pd_9	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_10	s__pd_10	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_11	s__pd_11	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_12	s__pd_12	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_13	s__pd_13	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_14	s__pd_14	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_15	s__pd_15	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_16	s__pd_16	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_17	s__pd_17	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_18	s__pd_18	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_19	s__pd_19	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_20	s__pd_20	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_21	s__pd_21	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_22	s__pd_22	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_23	s__pd_23	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_24	s__pd_24	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_25	s__pd_25	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_26	s__pd_26	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_27	s__pd_27	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_28	s__pd_28	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_29	s__pd_29	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_30	s__pd_30	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_31	s__pd_31	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_32	s__pd_32	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_33	s__pd_33	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_34	s__pd_34	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_35	s__pd_35	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_36	s__pd_36	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_37	s__pd_37	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_38	s__pd_38	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_39	s__pd_39	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_40	s__pd_40	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_41	s__pd_41	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_42	s__pd_42	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_43	s__pd_43	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_44	s__pd_44	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_45	s__pd_45	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_46	s__pd_46	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_47	s__pd_47	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_48	s__pd_48	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_49	s__pd_49	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_50	s__pd_50	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_51	s__pd_51	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_52	s__pd_52	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_53	s__pd_53	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_54	s__pd_54	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_55	s__pd_55	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_56	s__pd_56	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_57	s__pd_57	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_58	s__pd_58	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_59	s__pd_59	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_60	s__pd_60	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_61	s__pd_61	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_62	s__pd_62	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_63	s__pd_63	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_64	s__pd_64	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_65	s__pd_65	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_66	s__pd_66	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_67	s__pd_67	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_68	s__pd_68	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_69	s__pd_69	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_70	s__pd_70	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_71	s__pd_71	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_72	s__pd_72	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_73	s__pd_73	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_74	s__pd_74	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_75	s__pd_75	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_76	s__pd_76	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_77	s__pd_77	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_78	s__pd_78	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_79	s__pd_79	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_80	s__pd_80	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_81	s__pd_81	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_82	s__pd_82	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_83	s__pd_83	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_84	s__pd_84	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_85	s__pd_85	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_86	s__pd_86	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_87	s__pd_87	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_88	s__pd_88	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_89	s__pd_89	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_90	s__pd_90	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_91	s__pd_91	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_92	s__pd_92	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_93	s__pd_93	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_94	s__pd_94	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_95	s__pd_95	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_96	s__pd_96	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_97	s__pd_97	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_98	s__pd_98	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_99	s__pd_99	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_100	s__pd_100	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_101	s__pd_101	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_102	s__pd_102	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_103	s__pd_103	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_104	s__pd_104	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_105	s__pd_105	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_106	s__pd_106	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_107	s__pd_107	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_108	s__pd_108	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_109	s__pd_109	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_110	s__pd_110	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_111	s__pd_111	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_112	s__pd_112	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_113	s__pd_113	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_114	s__pd_114	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_115	s__pd_115	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_116	s__pd_116	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_117	s__pd_117	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_118	s__pd_118	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_119	s__pd_119	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_120	s__pd_120	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_121	s__pd_121	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_122	s__pd_122	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_123	s__pd_123	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_124	s__pd_124	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_125	s__pd_125	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_126	s__pd_126	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_127	s__pd_127	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_128	s__pd_128	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_129	s__pd_129	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_130	s__pd_130	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_131	s__pd_131	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_132	s__pd_132	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_133	s__pd_133	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_134	s__pd_134	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_135	s__pd_135	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_136	s__pd_136	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_137	s__pd_137	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_138	s__pd_138	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_139	s__pd_139	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_140	s__pd_140	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_141	s__pd_141	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_142	s__pd_142	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_143	s__pd_143	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_144	s__pd_144	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_145	s__pd_145	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_146	s__pd_146	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_147	s__pd_147	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_148	s__pd_148	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_149	s__pd_149	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_150	s__pd_150	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_151	s__pd_151	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_152	s__pd_152	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_153	s__pd_153	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_154	s__pd_154	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_155	s__pd_155	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_156	s__pd_156	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_157	s__pd_157	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_158	s__pd_158	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_159	s__pd_159	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_160	s__pd_160	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_161	s__pd_161	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_162	s__pd_162	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_163	s__pd_163	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_164	s__pd_164	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_165	s__pd_165	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_166	s__pd_166	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_167	s__pd_167	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_168	s__pd_168	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_169	s__pd_169	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_170	s__pd_170	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_171	s__pd_171	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_172	s__pd_172	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_173	s__pd_173	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_174	s__pd_174	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_175	s__pd_175	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_176	s__pd_176	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_177	s__pd_177	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_178	s__pd_178	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_179	s__pd_179	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_180	s__pd_180	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_181	s__pd_181	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_182	s__pd_182	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_183	s__pd_183	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_184	s__pd_184	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_185	s__pd_185	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_186	s__pd_186	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_187	s__pd_187	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_188	s__pd_188	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_189	s__pd_189	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_190	s__pd_190	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_191	s__pd_191	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_192	s__pd_192	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_193	s__pd_193	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_194	s__pd_194	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_195	s__pd_195	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_196	s__pd_196	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_197	s__pd_197	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_198	s__pd_198	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_199	s__pd_199	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_200	s__pd_200	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_201	s__pd_201	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_202	s__pd_202	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_203	s__pd_203	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_204	s__pd_204	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_205	s__pd_205	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_206	s__pd_206	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_207	s__pd_207	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_208	s__pd_208	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_209	s__pd_209	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_210	s__pd_210	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_211	s__pd_211	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_212	s__pd_212	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_213	s__pd_213	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_214	s__pd_214	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_215	s__pd_215	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_216	s__pd_216	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_217	s__pd_217	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_218	s__pd_218	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_219	s__pd_219	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_220	s__pd_220	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_221	s__pd_221	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_222	s__pd_222	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_223	s__pd_223	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_224	s__pd_224	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_225	s__pd_225	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_226	s__pd_226	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_227	s__pd_227	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_228	s__pd_228	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_229	s__pd_229	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_230	s__pd_230	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_231	s__pd_231	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_232	s__pd_232	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_233	s__pd_233	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_234	s__pd_234	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_235	s__pd_235	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_236	s__pd_236	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_237	s__pd_237	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_238	s__pd_238	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_239	s__pd_239	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_240	s__pd_240	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_241	s__pd_241	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_242	s__pd_242	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_243	s__pd_243	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_244	s__pd_244	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_245	s__pd_245	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_246	s__pd_246	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_247	s__pd_247	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_248	s__pd_248	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_249	s__pd_249	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_250	s__pd_250	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_251	s__pd_251	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_252	s__pd_252	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_253	s__pd_253	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_254	s__pd_254	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_255	s__pd_255	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_256	s__pd_256	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_257	s__pd_257	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_258	s__pd_258	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_259	s__pd_259	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_260	s__pd_260	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_261	s__pd_261	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_262	s__pd_262	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_263	s__pd_263	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_264	s__pd_264	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_265	s__pd_265	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_266	s__pd_266	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_267	s__pd_267	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_268	s__pd_268	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_269	s__pd_269	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_270	s__pd_270	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_271	s__pd_271	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_272	s__pd_272	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_273	s__pd_273	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_274	s__pd_274	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_275	s__pd_275	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_276	s__pd_276	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_277	s__pd_277	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_278	s__pd_278	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_279	s__pd_279	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_280	s__pd_280	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_281	s__pd_281	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_282	s__pd_282	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_283	s__pd_283	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_284	s__pd_284	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_285	s__pd_285	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_286	s__pd_286	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_287	s__pd_287	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_288	s__pd_288	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_289	s__pd_289	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_290	s__pd_290	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_291	s__pd_291	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_292	s__pd_292	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_293	s__pd_293	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_294	s__pd_294	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_295	s__pd_295	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_296	s__pd_296	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_297	s__pd_297	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1
+TEST-CA	1	ICGC_298	s__pd_298	30	D46.2	Binet staging system	None	stage a
+TEST-CA	2	ICGC_299	s__pd_299	55	C41.1	AJCC 8th edition	None|Unknown	stage 0	T0	N0	M1

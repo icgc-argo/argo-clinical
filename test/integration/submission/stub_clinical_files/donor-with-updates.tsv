@@ -1,2 +1,2 @@
-program_id	submitter_donor_id	vital_status	cause_of_death	survival_time
-ABCD-EF	ICGC_0001	alive
+program_id	submitter_donor_id	primary_site	vital_status	cause_of_death	survival_time
+ABCD-EF	ICGC_0001	Gum	alive

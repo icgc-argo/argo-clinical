@@ -50,7 +50,7 @@ const getField = (
   fieldName: string,
 ): dictionaryEntities.FieldDefinition => {
   const field = getSchema(dictionary, schemaName)?.fields?.find(f => f.name == fieldName);
-  if (!field) throw new Error('field not found');
+  if (!field) throw new Error(`field ${fieldName} not found`);
   return field;
 };
 
@@ -99,14 +99,6 @@ export const buildDynamicStubSchema = () => {
 
   const schemaV7 = _.cloneDeep(dictionaryV1);
   schemaV7.version = '7.0';
-
-  const s7_tumourStagingSystemCodeList =
-    getField(
-      schemaV7,
-      ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
-      fieldNames.primaryDiagnosis.TUMOUR_STAGING_SYSTEM,
-    ).restrictions?.codeList || [];
-  _.remove(s7_tumourStagingSystemCodeList, code => code === 'Murphy');
 
   const s7_presentingSymptomsCodeList =
     getField(

@@ -149,6 +149,7 @@ export namespace operations {
             unifySchemaErrors(
               ClinicalEntitySchemaNames.REGISTRATION,
               schemaResult,
+              index,
               command.records,
             ),
           );
@@ -705,12 +706,13 @@ export namespace operations {
   const unifySchemaErrors = (
     type: ClinicalEntitySchemaNames,
     result: dictionaryEntities.SchemaProcessingResult,
+    index: number,
     records: ReadonlyArray<dictionaryEntities.DataRecord>,
   ) => {
     const errorsList = new Array<SubmissionValidationError>();
     result.validationErrors.forEach(schemaErr => {
       errorsList.push({
-        index: schemaErr.index,
+        index: index,
         type: schemaErr.errorType,
         info: getValidationErrorInfoObject(type, schemaErr, records[schemaErr.index]),
         fieldName: schemaErr.fieldName,
@@ -849,11 +851,11 @@ export namespace operations {
         let processedRecord: any = {};
         const schemaResult = await dictionaryManager
           .instance()
-          .process(command.clinicalType, record, index, schema);
+          .processParallel(command.clinicalType, record, index, schema);
 
         if (schemaResult.validationErrors.length > 0) {
           errorsAccumulator = errorsAccumulator.concat(
-            unifySchemaErrors(schemaName, schemaResult, command.records),
+            unifySchemaErrors(schemaName, schemaResult, index, command.records),
           );
         }
 

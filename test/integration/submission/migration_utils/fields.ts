@@ -35,12 +35,13 @@ export const donor = {
   CAUSE_OF_DEATH: 'cause_of_death',
   SURVIVAL_TIME: 'survival_time',
 };
+
 export const primaryDiagnosis = {
   PROGRAM_ID: 'program_id',
   SUBMITTER_DONOR_ID: 'submitter_donor_id',
   AGE_AT_DIAGNOSIS: 'age_at_diagnosis',
   CANCER_TYPE_CODE: 'cancer_type_code',
-  TUMOUR_STAGING_SYSTEM: 'tumour_staging_system',
+  TUMOUR_STAGING_SYSTEM: 'clinical_tumour_staging_system',
   CLINICAL_STAGE_GROUP: 'clinical_stage_group',
   STAGE_SUFFIX: 'stage_suffix',
   CLINICAL_T_CATEGORY: 'clinical_t_category',
@@ -50,6 +51,7 @@ export const primaryDiagnosis = {
   PRESENTING_SYMPTOMS: 'presenting_symptoms',
   MENOPAUSE_STATUS: 'menopause_status',
 };
+
 export const specimen = {
   PROGRAM_ID: 'program_id',
   SUBMITTER_DONOR_ID: 'submitter_donor_id',

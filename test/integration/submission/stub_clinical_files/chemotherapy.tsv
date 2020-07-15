@@ -1,2 +1,2 @@
 program_id	submitter_donor_id	submitter_treatment_id	drug_name	drug_rxnormcui	chemotherapy_dosage_units	cumulative_drug_dosage
-ABCD-EF	ICGC_0001	T_02	drugA	423	mg/m²	4
+ABCD-EF	ICGC_0001	T_02	drugA	423	mg/m2	4

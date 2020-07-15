@@ -1,2 +1,2 @@
-program_id	submitter_primary_diagnosis_id	number_lymph_nodes_examined	submitter_donor_id	age_at_diagnosis	cancer_type_code	tumour_staging_system	
-ABCD-EF	P-1	2	ICGC_0003	96	A11.1A	Murphy
+program_id	submitter_primary_diagnosis_id	number_lymph_nodes_examined	submitter_donor_id	age_at_diagnosis	cancer_type_code	clinical_tumour_staging_system	number_lymph_nodes_positive	clinical_stage_group
+ABCD-EF	P-1	2	ICGC_0003	96	C11.1A	Binet staging system	2	Stage A
