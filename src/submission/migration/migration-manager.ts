@@ -223,6 +223,16 @@ export namespace MigrationManager {
   ): Promise<NewSchemaVerificationResult> => {
     const verificationResult: NewSchemaVerificationResult = {};
 
+    const currVersion = await dictionaryManagerInstance().getCurrentVersion();
+    const toVersion = newSchemaDictionary.version;
+
+    const analysis = await dictionaryManagerInstance().analyzeChanges(currVersion, toVersion);
+
+    let valueTypeChanges: string[] = [];
+    if (!_.isEmpty(analysis.valueTypeChanges)) {
+      valueTypeChanges = analysis.valueTypeChanges;
+    }
+
     Object.values(ClinicalEntitySchemaNames).forEach(clinicalEntityName => {
       const clinicalEntityNewSchemaDef = newSchemaDictionary.schemas.find(
         s => s.name === clinicalEntityName,
@@ -238,10 +248,20 @@ export namespace MigrationManager {
         clinicalEntityNewSchemaDef,
       );
 
-      if (missingDataValidationFields.length !== 0 || invalidDataValidationFields.length !== 0) {
+      const changedValueTypes: string[] = checkValueTypeChanges(
+        valueTypeChanges,
+        clinicalEntityName as ClinicalEntitySchemaNames,
+      );
+
+      if (
+        missingDataValidationFields.length !== 0 ||
+        invalidDataValidationFields.length !== 0 ||
+        changedValueTypes.length !== 0
+      ) {
         verificationResult[clinicalEntityName] = {
           missingFields: missingDataValidationFields,
           invalidFieldCodeLists: invalidDataValidationFields,
+          valueTypeChanges: changedValueTypes,
         };
       }
     });
@@ -279,6 +299,21 @@ export namespace MigrationManager {
       },
     );
     return invalidFields;
+  }
+
+  function checkValueTypeChanges(
+    valueTypeChanges: string[],
+    clinicalEntityName: ClinicalEntitySchemaNames,
+  ): string[] {
+    const changedFields: string[] = [];
+    valueTypeChanges.forEach(change => {
+      const changedSchema = change.split('.')[0];
+      if (clinicalEntityName === changedSchema) {
+        const field: string = change.split('.')[1];
+        changedFields.push(field);
+      }
+    });
+    return changedFields;
   }
 
   const abortMigration = async (

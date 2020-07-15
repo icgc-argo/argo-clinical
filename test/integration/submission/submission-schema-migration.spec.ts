@@ -214,6 +214,7 @@ describe('schema migration api', () => {
   after(async () => {
     await mongoose.disconnect();
     await mongoContainer.stop();
+    await mysqlContainer.stop();
   });
 
   beforeEach(async () => {
@@ -467,6 +468,7 @@ describe('schema migration api', () => {
         [ClinicalEntitySchemaNames.DONOR]: {
           missingFields: [DonorFieldsEnum.cause_of_death],
           invalidFieldCodeLists: [],
+          valueTypeChanges: [],
         },
       });
     });
@@ -507,26 +509,44 @@ describe('schema migration api', () => {
 
   describe('Prohibited changes which should be rejected', () => {
     it('should check new schema is valid with data validation fields', async () => {
-      await migrateSyncTo('3.0');
+      await migrateSyncTo('15.0');
       const res = await getAllMigrationDocs();
       const [migration] = res.body;
+
+      assertMigrationErrors(res, '15.0');
+
       migration.newSchemaErrors.should.deep.eq({
-        [ClinicalEntitySchemaNames.DONOR]: {
-          missingFields: [],
-          invalidFieldCodeLists: [
-            { fieldName: DonorFieldsEnum.vital_status, missingCodeListValues: ['Deceased'] },
-          ],
-        },
         [ClinicalEntitySchemaNames.REGISTRATION]: {
           missingFields: [SampleRegistrationFieldsEnum.specimen_type],
           invalidFieldCodeLists: [],
+          valueTypeChanges: [],
         },
       });
     });
 
-    it('should reject the new schema where the field type was changed', () => {
+    it('should reject the new schema where the field value type was changed', async () => {
       // https://github.com/icgc-argo/argo-clinical/issues/446
-      console.info('tbd');
+      await migrateSyncTo('14.0');
+      const res = await getAllMigrationDocs();
+      const [migration] = res.body;
+
+      assertMigrationErrors(res, '14.0');
+
+      migration.newSchemaErrors.should.deep.eq({
+        [ClinicalEntitySchemaNames.REGISTRATION]: {
+          missingFields: [],
+          invalidFieldCodeLists: [],
+          valueTypeChanges: [
+            SampleRegistrationFieldsEnum.program_id,
+            SampleRegistrationFieldsEnum.submitter_donor_id,
+          ],
+        },
+        [ClinicalEntitySchemaNames.DONOR]: {
+          missingFields: [],
+          invalidFieldCodeLists: [],
+          valueTypeChanges: [DonorFieldsEnum.program_id, DonorFieldsEnum.submitter_donor_id],
+        },
+      });
     });
 
     it('should reject the new schema where the field name was changed', async () => {
@@ -543,6 +563,7 @@ describe('schema migration api', () => {
         [ClinicalEntitySchemaNames.DONOR]: {
           missingFields: [DonorFieldsEnum.program_id],
           invalidFieldCodeLists: [],
+          valueTypeChanges: [DonorFieldsEnum.program_id],
         },
       });
 
@@ -570,6 +591,7 @@ describe('schema migration api', () => {
             CommonTherapyFields.submitter_treatment_id,
           ],
           invalidFieldCodeLists: [],
+          valueTypeChanges: [],
         },
       });
     });
