@@ -1,7 +1,7 @@
 {
   "name": "argo-clinical",
-  "version": "1.31.0",
-  "description": "Clinical submission system and repo",
+  "version": "1.32.0",
+  "description": "Clinical submission system and repo.",
   "scripts": {
     "start": "npm run serve",
     "stop": "pkill --signal 9 clinical",
