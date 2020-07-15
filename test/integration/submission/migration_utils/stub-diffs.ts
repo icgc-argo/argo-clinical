@@ -401,40 +401,6 @@ export const migrationDiffs = [
   },
   {
     fromVersion: '1.0',
-    toVersion: '12.0',
-
-    data: [
-      [
-        'donor.program_id',
-        {
-          left: {
-            name: 'program_id',
-            valueType: 'string',
-            description: 'Unique identifier of the ARGO program.',
-            restrictions: {
-              required: true,
-            },
-          },
-          right: {
-            name: 'program_id',
-            valueType: 'program_identification_code',
-            description: 'Unique identifier of the ARGO program.',
-            restrictions: {
-              required: true,
-            },
-          },
-          diff: {
-            valueType: {
-              type: 'updated',
-              data: 'program_identification_code',
-            },
-          },
-        },
-      ],
-    ],
-  },
-  {
-    fromVersion: '1.0',
     toVersion: '13.0',
 
     data: [
@@ -633,6 +599,262 @@ export const migrationDiffs = [
               },
               meta: {
                 core: true,
+              },
+            },
+          },
+        },
+      ],
+    ],
+  },
+  {
+    fromVersion: '1.0',
+    toVersion: '14.0',
+    data: [
+      [
+        'sample_registration.program_id',
+        {
+          left: {
+            name: 'program_id',
+            valueType: 'string',
+            description: 'Unique identifier of the ARGO program.',
+            meta: {
+              validationDependency: true,
+              primaryId: true,
+              examples: 'PACA-AU,BR-CA',
+              notes:
+                'This is the unique id that is assigned to your program.  If you have logged into the platform, this is the Program Id that you see in the Submission area. For example, PACA-CA is a Program ID.',
+              displayName: 'Program ID',
+            },
+            restrictions: {
+              required: true,
+            },
+          },
+          right: {
+            name: 'program_id',
+            valueType: 'integer',
+            description: 'Unique identifier of the ARGO program.',
+            meta: {
+              validationDependency: true,
+              primaryId: true,
+              examples: 'PACA-AU,BR-CA',
+              notes:
+                'This is the unique id that is assigned to your program.  If you have logged into the platform, this is the Program Id that you see in the Submission area. For example, PACA-CA is a Program ID.',
+              displayName: 'Program ID',
+            },
+            restrictions: {
+              required: true,
+            },
+          },
+          diff: {
+            valueType: {
+              type: 'updated',
+              data: 'integer',
+            },
+          },
+        },
+      ],
+      [
+        'sample_registration.submitter_donor_id',
+        {
+          left: {
+            name: 'submitter_donor_id',
+            valueType: 'string',
+            description: 'Unique identifier of the donor, assigned by the data provider.',
+            meta: {
+              validationDependency: true,
+              primaryId: true,
+              examples: '90234,BLD_donor_89,AML-90',
+              displayName: 'Submitter Donor ID',
+            },
+            restrictions: {
+              required: true,
+              regex:
+                '\b(?!([Dd][Oo])|([Ss][Pp])|([Ss][Aa])|([Tt][Rr])|([pP][Dd])|([Ff][Uu]))\b^[A-Za-z0-9\\-\\._]{1,64}',
+            },
+          },
+          right: {
+            name: 'submitter_donor_id',
+            valueType: 'integer',
+            description: 'Unique identifier of the donor, assigned by the data provider.',
+            meta: {
+              validationDependency: true,
+              primaryId: true,
+              examples: '90234,BLD_donor_89,AML-90',
+              displayName: 'Submitter Donor ID',
+            },
+            restrictions: {
+              required: true,
+              regex:
+                '\b(?!([Dd][Oo])|([Ss][Pp])|([Ss][Aa])|([Tt][Rr])|([pP][Dd])|([Ff][Uu]))\b^[A-Za-z0-9\\-\\._]{1,64}',
+            },
+          },
+          diff: {
+            valueType: {
+              type: 'updated',
+              data: 'integer',
+            },
+          },
+        },
+      ],
+      [
+        'donor.program_id',
+        {
+          left: {
+            name: 'program_id',
+            valueType: 'string',
+            description: 'Unique identifier of the ARGO program.',
+            meta: {
+              validationDependency: true,
+              primaryId: true,
+              foreignKey: 'sample_registration.program_id',
+              displayName: 'Program ID',
+            },
+            restrictions: {
+              required: true,
+            },
+          },
+          right: {
+            name: 'program_id',
+            valueType: 'integer',
+            description: 'Unique identifier of the ARGO program.',
+            meta: {
+              validationDependency: true,
+              primaryId: true,
+              foreignKey: 'sample_registration.program_id',
+              displayName: 'Program ID',
+            },
+            restrictions: {
+              required: true,
+            },
+          },
+          diff: {
+            valueType: {
+              type: 'updated',
+              data: 'integer',
+            },
+          },
+        },
+      ],
+      [
+        'donor.submitter_donor_id',
+        {
+          left: {
+            description: 'Unique identifier of the donor, assigned by the data provider.',
+            name: 'submitter_donor_id',
+            valueType: 'string',
+            meta: {
+              validationDependency: true,
+              primaryId: true,
+              foreignKey: 'sample_registration.submitter_donor_id',
+              displayName: 'Submitter Donor ID',
+            },
+            restrictions: {
+              required: true,
+              regex:
+                '\b(?!([Dd][Oo])|([Ss][Pp])|([Ss][Aa])|([Tt][Rr])|([pP][Dd])|([Ff][Uu]))\b^[A-Za-z0-9\\-\\._]{1,64}',
+            },
+          },
+          right: {
+            description: 'Unique identifier of the donor, assigned by the data provider.',
+            name: 'submitter_donor_id',
+            valueType: 'integer',
+            meta: {
+              validationDependency: true,
+              primaryId: true,
+              foreignKey: 'sample_registration.submitter_donor_id',
+              displayName: 'Submitter Donor ID',
+            },
+            restrictions: {
+              required: true,
+              regex:
+                '\b(?!([Dd][Oo])|([Ss][Pp])|([Ss][Aa])|([Tt][Rr])|([pP][Dd])|([Ff][Uu]))\b^[A-Za-z0-9\\-\\._]{1,64}',
+            },
+          },
+          diff: {
+            valueType: {
+              type: 'updated',
+              data: 'integer',
+            },
+          },
+        },
+      ],
+    ],
+  },
+  {
+    fromVersion: '1.0',
+    toVersion: '15.0',
+    data: [
+      [
+        'sample_registration.specimen_type',
+        {
+          left: {
+            name: 'specimen_type',
+            valueType: 'string',
+            description:
+              'Description of the kind of specimen that was collected with respect to tumour/normal tissue origin.',
+            restrictions: {
+              required: true,
+              codeList: [
+                'Cell line - derived from normal',
+                'Cell line - derived from tumour',
+                'Cell line - derived from xenograft tumour',
+                'Metastatic tumour - additional metastatic',
+                'Metastatic tumour - metastasis local to lymph node',
+                'Metastatic tumour - metastasis to distant location',
+                'Metastatic tumour',
+                'Normal - tissue adjacent to primary tumour',
+                'Normal',
+                'Primary tumour - additional new primary',
+                'Primary tumour - adjacent to normal',
+                'Primary tumour',
+                'Recurrent tumour',
+                'Xenograft - derived from primary tumour',
+                'Xenograft - derived from tumour cell line',
+              ],
+              script: [
+                '(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      const row = $row;\n      let result = {valid: true, message: "Ok"};\n      \n      const designation = row.tumour_normal_designation.trim().toLowerCase();\n      const specimen_type = $field.trim().toLowerCase();\n      \n      if (designation === "normal"){\n          const validTypes = ["normal", "normal - tissue adjacent to primary tumour", "cell line - derived from normal"];\n          if (!validTypes.includes(specimen_type)){\n              result = {valid: false, message: "Invalid specimen_type. Specimen_type can only be set to a normal type value (Normal, Normal - tissue adjacent to primary tumour, or Cell line - derived from normal) when tumour_normal_designation is set to Normal."};\n          }\n      }\n      else if (designation === "tumour") {\n          const invalidTypes = ["normal", "cell line - derived from normal"];\n          if (invalidTypes.includes(specimen_type)){\n              result = {valid: false, message: "Invalid specimen_type. Specimen_type cannot be set to normal type value (Normal or Cell line - derived from normal) when tumour_normal_designation is set to Tumour."};\n          }\n      }\n      return result;\n    })',
+              ],
+            },
+            meta: {
+              validationDependency: true,
+              core: true,
+              displayName: 'Specimen Type',
+            },
+          },
+          diff: {
+            type: 'deleted',
+            data: {
+              name: 'specimen_type',
+              valueType: 'string',
+              description:
+                'Description of the kind of specimen that was collected with respect to tumour/normal tissue origin.',
+              restrictions: {
+                required: true,
+                codeList: [
+                  'Cell line - derived from normal',
+                  'Cell line - derived from tumour',
+                  'Cell line - derived from xenograft tumour',
+                  'Metastatic tumour - additional metastatic',
+                  'Metastatic tumour - metastasis local to lymph node',
+                  'Metastatic tumour - metastasis to distant location',
+                  'Metastatic tumour',
+                  'Normal - tissue adjacent to primary tumour',
+                  'Normal',
+                  'Primary tumour - additional new primary',
+                  'Primary tumour - adjacent to normal',
+                  'Primary tumour',
+                  'Recurrent tumour',
+                  'Xenograft - derived from primary tumour',
+                  'Xenograft - derived from tumour cell line',
+                ],
+                script: [
+                  '(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      const row = $row;\n      let result = {valid: true, message: "Ok"};\n      \n      const designation = row.tumour_normal_designation.trim().toLowerCase();\n      const specimen_type = $field.trim().toLowerCase();\n      \n      if (designation === "normal"){\n          const validTypes = ["normal", "normal - tissue adjacent to primary tumour", "cell line - derived from normal"];\n          if (!validTypes.includes(specimen_type)){\n              result = {valid: false, message: "Invalid specimen_type. Specimen_type can only be set to a normal type value (Normal, Normal - tissue adjacent to primary tumour, or Cell line - derived from normal) when tumour_normal_designation is set to Normal."};\n          }\n      }\n      else if (designation === "tumour") {\n          const invalidTypes = ["normal", "cell line - derived from normal"];\n          if (invalidTypes.includes(specimen_type)){\n              result = {valid: false, message: "Invalid specimen_type. Specimen_type cannot be set to normal type value (Normal or Cell line - derived from normal) when tumour_normal_designation is set to Tumour."};\n          }\n      }\n      return result;\n    })',
+                ],
+              },
+              meta: {
+                validationDependency: true,
+                core: true,
+                displayName: 'Specimen Type',
               },
             },
           },
