@@ -117,7 +117,7 @@ describe('Submission Api', () => {
             return '';
           },
           schemaServiceUrl() {
-            return 'file://' + path.resolve(__dirname + `/../../sampleFiles/newschema.json`);
+            return 'file://' + path.resolve(__dirname + `/../../sampleFiles/sample-schema.json`);
           },
           testApisDisabled() {
             return false;
@@ -164,10 +164,11 @@ describe('Submission Api', () => {
   after(async () => {
     await mongoose.disconnect();
     await mongoContainer.stop();
+    mysqlContainer.stop();
   });
 
   describe('clinical submission', function() {
-    const num = 300;
+    const num = 3000;
 
     this.beforeEach(async () => {
       await clearCollections(dburl, [
@@ -231,9 +232,9 @@ describe('Submission Api', () => {
         .request(app)
         .post('/submission/program/TEST-CA/clinical/upload')
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-        // .attach('clinicalFiles', donor, `${ClinicalEntitySchemaNames.DONOR}.tsv`)
+        .attach('clinicalFiles', donor, `${ClinicalEntitySchemaNames.DONOR}.tsv`)
         .attach('clinicalFiles', pd, `${ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS}..tsv`)
-        // .attach('clinicalFiles', specimen, `${ClinicalEntitySchemaNames.SPECIMEN}.tsv`)
+        .attach('clinicalFiles', specimen, `${ClinicalEntitySchemaNames.SPECIMEN}.tsv`)
         .then((res: any) => {
           version = (res.body as CreateSubmissionResult).submission?.version;
           res.should.have.status(200);
