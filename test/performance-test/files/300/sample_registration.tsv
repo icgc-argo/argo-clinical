@@ -1,0 +1,301 @@
+program_id	submitter_donor_id	gender	submitter_specimen_id	specimen_tissue_source	tumour_normal_designation	specimen_type	submitter_sample_id	sample_type
+TEST-CA	ICGC_0	Other	s_specimen_ICGC_0	Other	Normal	Normal	s_sample_ICGC_0	Total DNA
+TEST-CA	ICGC_1	Other	s_specimen_ICGC_1	Other	Tumour	Primary tumour	s_sample_ICGC_1	Total RNA
+TEST-CA	ICGC_2	Other	s_specimen_ICGC_2	Other	Normal	Normal	s_sample_ICGC_2	Total DNA
+TEST-CA	ICGC_3	Other	s_specimen_ICGC_3	Other	Tumour	Primary tumour	s_sample_ICGC_3	Total RNA
+TEST-CA	ICGC_4	Other	s_specimen_ICGC_4	Other	Normal	Normal	s_sample_ICGC_4	Total DNA
+TEST-CA	ICGC_5	Other	s_specimen_ICGC_5	Other	Tumour	Primary tumour	s_sample_ICGC_5	Total RNA
+TEST-CA	ICGC_6	Other	s_specimen_ICGC_6	Other	Normal	Normal	s_sample_ICGC_6	Total DNA
+TEST-CA	ICGC_7	Other	s_specimen_ICGC_7	Other	Tumour	Primary tumour	s_sample_ICGC_7	Total RNA
+TEST-CA	ICGC_8	Other	s_specimen_ICGC_8	Other	Normal	Normal	s_sample_ICGC_8	Total DNA
+TEST-CA	ICGC_9	Other	s_specimen_ICGC_9	Other	Tumour	Primary tumour	s_sample_ICGC_9	Total RNA
+TEST-CA	ICGC_10	Other	s_specimen_ICGC_10	Other	Normal	Normal	s_sample_ICGC_10	Total DNA
+TEST-CA	ICGC_11	Other	s_specimen_ICGC_11	Other	Tumour	Primary tumour	s_sample_ICGC_11	Total RNA
+TEST-CA	ICGC_12	Other	s_specimen_ICGC_12	Other	Normal	Normal	s_sample_ICGC_12	Total DNA
+TEST-CA	ICGC_13	Other	s_specimen_ICGC_13	Other	Tumour	Primary tumour	s_sample_ICGC_13	Total RNA
+TEST-CA	ICGC_14	Other	s_specimen_ICGC_14	Other	Normal	Normal	s_sample_ICGC_14	Total DNA
+TEST-CA	ICGC_15	Other	s_specimen_ICGC_15	Other	Tumour	Primary tumour	s_sample_ICGC_15	Total RNA
+TEST-CA	ICGC_16	Other	s_specimen_ICGC_16	Other	Normal	Normal	s_sample_ICGC_16	Total DNA
+TEST-CA	ICGC_17	Other	s_specimen_ICGC_17	Other	Tumour	Primary tumour	s_sample_ICGC_17	Total RNA
+TEST-CA	ICGC_18	Other	s_specimen_ICGC_18	Other	Normal	Normal	s_sample_ICGC_18	Total DNA
+TEST-CA	ICGC_19	Other	s_specimen_ICGC_19	Other	Tumour	Primary tumour	s_sample_ICGC_19	Total RNA
+TEST-CA	ICGC_20	Other	s_specimen_ICGC_20	Other	Normal	Normal	s_sample_ICGC_20	Total DNA
+TEST-CA	ICGC_21	Other	s_specimen_ICGC_21	Other	Tumour	Primary tumour	s_sample_ICGC_21	Total RNA
+TEST-CA	ICGC_22	Other	s_specimen_ICGC_22	Other	Normal	Normal	s_sample_ICGC_22	Total DNA
+TEST-CA	ICGC_23	Other	s_specimen_ICGC_23	Other	Tumour	Primary tumour	s_sample_ICGC_23	Total RNA
+TEST-CA	ICGC_24	Other	s_specimen_ICGC_24	Other	Normal	Normal	s_sample_ICGC_24	Total DNA
+TEST-CA	ICGC_25	Other	s_specimen_ICGC_25	Other	Tumour	Primary tumour	s_sample_ICGC_25	Total RNA
+TEST-CA	ICGC_26	Other	s_specimen_ICGC_26	Other	Normal	Normal	s_sample_ICGC_26	Total DNA
+TEST-CA	ICGC_27	Other	s_specimen_ICGC_27	Other	Tumour	Primary tumour	s_sample_ICGC_27	Total RNA
+TEST-CA	ICGC_28	Other	s_specimen_ICGC_28	Other	Normal	Normal	s_sample_ICGC_28	Total DNA
+TEST-CA	ICGC_29	Other	s_specimen_ICGC_29	Other	Tumour	Primary tumour	s_sample_ICGC_29	Total RNA
+TEST-CA	ICGC_30	Other	s_specimen_ICGC_30	Other	Normal	Normal	s_sample_ICGC_30	Total DNA
+TEST-CA	ICGC_31	Other	s_specimen_ICGC_31	Other	Tumour	Primary tumour	s_sample_ICGC_31	Total RNA
+TEST-CA	ICGC_32	Other	s_specimen_ICGC_32	Other	Normal	Normal	s_sample_ICGC_32	Total DNA
+TEST-CA	ICGC_33	Other	s_specimen_ICGC_33	Other	Tumour	Primary tumour	s_sample_ICGC_33	Total RNA
+TEST-CA	ICGC_34	Other	s_specimen_ICGC_34	Other	Normal	Normal	s_sample_ICGC_34	Total DNA
+TEST-CA	ICGC_35	Other	s_specimen_ICGC_35	Other	Tumour	Primary tumour	s_sample_ICGC_35	Total RNA
+TEST-CA	ICGC_36	Other	s_specimen_ICGC_36	Other	Normal	Normal	s_sample_ICGC_36	Total DNA
+TEST-CA	ICGC_37	Other	s_specimen_ICGC_37	Other	Tumour	Primary tumour	s_sample_ICGC_37	Total RNA
+TEST-CA	ICGC_38	Other	s_specimen_ICGC_38	Other	Normal	Normal	s_sample_ICGC_38	Total DNA
+TEST-CA	ICGC_39	Other	s_specimen_ICGC_39	Other	Tumour	Primary tumour	s_sample_ICGC_39	Total RNA
+TEST-CA	ICGC_40	Other	s_specimen_ICGC_40	Other	Normal	Normal	s_sample_ICGC_40	Total DNA
+TEST-CA	ICGC_41	Other	s_specimen_ICGC_41	Other	Tumour	Primary tumour	s_sample_ICGC_41	Total RNA
+TEST-CA	ICGC_42	Other	s_specimen_ICGC_42	Other	Normal	Normal	s_sample_ICGC_42	Total DNA
+TEST-CA	ICGC_43	Other	s_specimen_ICGC_43	Other	Tumour	Primary tumour	s_sample_ICGC_43	Total RNA
+TEST-CA	ICGC_44	Other	s_specimen_ICGC_44	Other	Normal	Normal	s_sample_ICGC_44	Total DNA
+TEST-CA	ICGC_45	Other	s_specimen_ICGC_45	Other	Tumour	Primary tumour	s_sample_ICGC_45	Total RNA
+TEST-CA	ICGC_46	Other	s_specimen_ICGC_46	Other	Normal	Normal	s_sample_ICGC_46	Total DNA
+TEST-CA	ICGC_47	Other	s_specimen_ICGC_47	Other	Tumour	Primary tumour	s_sample_ICGC_47	Total RNA
+TEST-CA	ICGC_48	Other	s_specimen_ICGC_48	Other	Normal	Normal	s_sample_ICGC_48	Total DNA
+TEST-CA	ICGC_49	Other	s_specimen_ICGC_49	Other	Tumour	Primary tumour	s_sample_ICGC_49	Total RNA
+TEST-CA	ICGC_50	Other	s_specimen_ICGC_50	Other	Normal	Normal	s_sample_ICGC_50	Total DNA
+TEST-CA	ICGC_51	Other	s_specimen_ICGC_51	Other	Tumour	Primary tumour	s_sample_ICGC_51	Total RNA
+TEST-CA	ICGC_52	Other	s_specimen_ICGC_52	Other	Normal	Normal	s_sample_ICGC_52	Total DNA
+TEST-CA	ICGC_53	Other	s_specimen_ICGC_53	Other	Tumour	Primary tumour	s_sample_ICGC_53	Total RNA
+TEST-CA	ICGC_54	Other	s_specimen_ICGC_54	Other	Normal	Normal	s_sample_ICGC_54	Total DNA
+TEST-CA	ICGC_55	Other	s_specimen_ICGC_55	Other	Tumour	Primary tumour	s_sample_ICGC_55	Total RNA
+TEST-CA	ICGC_56	Other	s_specimen_ICGC_56	Other	Normal	Normal	s_sample_ICGC_56	Total DNA
+TEST-CA	ICGC_57	Other	s_specimen_ICGC_57	Other	Tumour	Primary tumour	s_sample_ICGC_57	Total RNA
+TEST-CA	ICGC_58	Other	s_specimen_ICGC_58	Other	Normal	Normal	s_sample_ICGC_58	Total DNA
+TEST-CA	ICGC_59	Other	s_specimen_ICGC_59	Other	Tumour	Primary tumour	s_sample_ICGC_59	Total RNA
+TEST-CA	ICGC_60	Other	s_specimen_ICGC_60	Other	Normal	Normal	s_sample_ICGC_60	Total DNA
+TEST-CA	ICGC_61	Other	s_specimen_ICGC_61	Other	Tumour	Primary tumour	s_sample_ICGC_61	Total RNA
+TEST-CA	ICGC_62	Other	s_specimen_ICGC_62	Other	Normal	Normal	s_sample_ICGC_62	Total DNA
+TEST-CA	ICGC_63	Other	s_specimen_ICGC_63	Other	Tumour	Primary tumour	s_sample_ICGC_63	Total RNA
+TEST-CA	ICGC_64	Other	s_specimen_ICGC_64	Other	Normal	Normal	s_sample_ICGC_64	Total DNA
+TEST-CA	ICGC_65	Other	s_specimen_ICGC_65	Other	Tumour	Primary tumour	s_sample_ICGC_65	Total RNA
+TEST-CA	ICGC_66	Other	s_specimen_ICGC_66	Other	Normal	Normal	s_sample_ICGC_66	Total DNA
+TEST-CA	ICGC_67	Other	s_specimen_ICGC_67	Other	Tumour	Primary tumour	s_sample_ICGC_67	Total RNA
+TEST-CA	ICGC_68	Other	s_specimen_ICGC_68	Other	Normal	Normal	s_sample_ICGC_68	Total DNA
+TEST-CA	ICGC_69	Other	s_specimen_ICGC_69	Other	Tumour	Primary tumour	s_sample_ICGC_69	Total RNA
+TEST-CA	ICGC_70	Other	s_specimen_ICGC_70	Other	Normal	Normal	s_sample_ICGC_70	Total DNA
+TEST-CA	ICGC_71	Other	s_specimen_ICGC_71	Other	Tumour	Primary tumour	s_sample_ICGC_71	Total RNA
+TEST-CA	ICGC_72	Other	s_specimen_ICGC_72	Other	Normal	Normal	s_sample_ICGC_72	Total DNA
+TEST-CA	ICGC_73	Other	s_specimen_ICGC_73	Other	Tumour	Primary tumour	s_sample_ICGC_73	Total RNA
+TEST-CA	ICGC_74	Other	s_specimen_ICGC_74	Other	Normal	Normal	s_sample_ICGC_74	Total DNA
+TEST-CA	ICGC_75	Other	s_specimen_ICGC_75	Other	Tumour	Primary tumour	s_sample_ICGC_75	Total RNA
+TEST-CA	ICGC_76	Other	s_specimen_ICGC_76	Other	Normal	Normal	s_sample_ICGC_76	Total DNA
+TEST-CA	ICGC_77	Other	s_specimen_ICGC_77	Other	Tumour	Primary tumour	s_sample_ICGC_77	Total RNA
+TEST-CA	ICGC_78	Other	s_specimen_ICGC_78	Other	Normal	Normal	s_sample_ICGC_78	Total DNA
+TEST-CA	ICGC_79	Other	s_specimen_ICGC_79	Other	Tumour	Primary tumour	s_sample_ICGC_79	Total RNA
+TEST-CA	ICGC_80	Other	s_specimen_ICGC_80	Other	Normal	Normal	s_sample_ICGC_80	Total DNA
+TEST-CA	ICGC_81	Other	s_specimen_ICGC_81	Other	Tumour	Primary tumour	s_sample_ICGC_81	Total RNA
+TEST-CA	ICGC_82	Other	s_specimen_ICGC_82	Other	Normal	Normal	s_sample_ICGC_82	Total DNA
+TEST-CA	ICGC_83	Other	s_specimen_ICGC_83	Other	Tumour	Primary tumour	s_sample_ICGC_83	Total RNA
+TEST-CA	ICGC_84	Other	s_specimen_ICGC_84	Other	Normal	Normal	s_sample_ICGC_84	Total DNA
+TEST-CA	ICGC_85	Other	s_specimen_ICGC_85	Other	Tumour	Primary tumour	s_sample_ICGC_85	Total RNA
+TEST-CA	ICGC_86	Other	s_specimen_ICGC_86	Other	Normal	Normal	s_sample_ICGC_86	Total DNA
+TEST-CA	ICGC_87	Other	s_specimen_ICGC_87	Other	Tumour	Primary tumour	s_sample_ICGC_87	Total RNA
+TEST-CA	ICGC_88	Other	s_specimen_ICGC_88	Other	Normal	Normal	s_sample_ICGC_88	Total DNA
+TEST-CA	ICGC_89	Other	s_specimen_ICGC_89	Other	Tumour	Primary tumour	s_sample_ICGC_89	Total RNA
+TEST-CA	ICGC_90	Other	s_specimen_ICGC_90	Other	Normal	Normal	s_sample_ICGC_90	Total DNA
+TEST-CA	ICGC_91	Other	s_specimen_ICGC_91	Other	Tumour	Primary tumour	s_sample_ICGC_91	Total RNA
+TEST-CA	ICGC_92	Other	s_specimen_ICGC_92	Other	Normal	Normal	s_sample_ICGC_92	Total DNA
+TEST-CA	ICGC_93	Other	s_specimen_ICGC_93	Other	Tumour	Primary tumour	s_sample_ICGC_93	Total RNA
+TEST-CA	ICGC_94	Other	s_specimen_ICGC_94	Other	Normal	Normal	s_sample_ICGC_94	Total DNA
+TEST-CA	ICGC_95	Other	s_specimen_ICGC_95	Other	Tumour	Primary tumour	s_sample_ICGC_95	Total RNA
+TEST-CA	ICGC_96	Other	s_specimen_ICGC_96	Other	Normal	Normal	s_sample_ICGC_96	Total DNA
+TEST-CA	ICGC_97	Other	s_specimen_ICGC_97	Other	Tumour	Primary tumour	s_sample_ICGC_97	Total RNA
+TEST-CA	ICGC_98	Other	s_specimen_ICGC_98	Other	Normal	Normal	s_sample_ICGC_98	Total DNA
+TEST-CA	ICGC_99	Other	s_specimen_ICGC_99	Other	Tumour	Primary tumour	s_sample_ICGC_99	Total RNA
+TEST-CA	ICGC_100	Other	s_specimen_ICGC_100	Other	Normal	Normal	s_sample_ICGC_100	Total DNA
+TEST-CA	ICGC_101	Other	s_specimen_ICGC_101	Other	Tumour	Primary tumour	s_sample_ICGC_101	Total RNA
+TEST-CA	ICGC_102	Other	s_specimen_ICGC_102	Other	Normal	Normal	s_sample_ICGC_102	Total DNA
+TEST-CA	ICGC_103	Other	s_specimen_ICGC_103	Other	Tumour	Primary tumour	s_sample_ICGC_103	Total RNA
+TEST-CA	ICGC_104	Other	s_specimen_ICGC_104	Other	Normal	Normal	s_sample_ICGC_104	Total DNA
+TEST-CA	ICGC_105	Other	s_specimen_ICGC_105	Other	Tumour	Primary tumour	s_sample_ICGC_105	Total RNA
+TEST-CA	ICGC_106	Other	s_specimen_ICGC_106	Other	Normal	Normal	s_sample_ICGC_106	Total DNA
+TEST-CA	ICGC_107	Other	s_specimen_ICGC_107	Other	Tumour	Primary tumour	s_sample_ICGC_107	Total RNA
+TEST-CA	ICGC_108	Other	s_specimen_ICGC_108	Other	Normal	Normal	s_sample_ICGC_108	Total DNA
+TEST-CA	ICGC_109	Other	s_specimen_ICGC_109	Other	Tumour	Primary tumour	s_sample_ICGC_109	Total RNA
+TEST-CA	ICGC_110	Other	s_specimen_ICGC_110	Other	Normal	Normal	s_sample_ICGC_110	Total DNA
+TEST-CA	ICGC_111	Other	s_specimen_ICGC_111	Other	Tumour	Primary tumour	s_sample_ICGC_111	Total RNA
+TEST-CA	ICGC_112	Other	s_specimen_ICGC_112	Other	Normal	Normal	s_sample_ICGC_112	Total DNA
+TEST-CA	ICGC_113	Other	s_specimen_ICGC_113	Other	Tumour	Primary tumour	s_sample_ICGC_113	Total RNA
+TEST-CA	ICGC_114	Other	s_specimen_ICGC_114	Other	Normal	Normal	s_sample_ICGC_114	Total DNA
+TEST-CA	ICGC_115	Other	s_specimen_ICGC_115	Other	Tumour	Primary tumour	s_sample_ICGC_115	Total RNA
+TEST-CA	ICGC_116	Other	s_specimen_ICGC_116	Other	Normal	Normal	s_sample_ICGC_116	Total DNA
+TEST-CA	ICGC_117	Other	s_specimen_ICGC_117	Other	Tumour	Primary tumour	s_sample_ICGC_117	Total RNA
+TEST-CA	ICGC_118	Other	s_specimen_ICGC_118	Other	Normal	Normal	s_sample_ICGC_118	Total DNA
+TEST-CA	ICGC_119	Other	s_specimen_ICGC_119	Other	Tumour	Primary tumour	s_sample_ICGC_119	Total RNA
+TEST-CA	ICGC_120	Other	s_specimen_ICGC_120	Other	Normal	Normal	s_sample_ICGC_120	Total DNA
+TEST-CA	ICGC_121	Other	s_specimen_ICGC_121	Other	Tumour	Primary tumour	s_sample_ICGC_121	Total RNA
+TEST-CA	ICGC_122	Other	s_specimen_ICGC_122	Other	Normal	Normal	s_sample_ICGC_122	Total DNA
+TEST-CA	ICGC_123	Other	s_specimen_ICGC_123	Other	Tumour	Primary tumour	s_sample_ICGC_123	Total RNA
+TEST-CA	ICGC_124	Other	s_specimen_ICGC_124	Other	Normal	Normal	s_sample_ICGC_124	Total DNA
+TEST-CA	ICGC_125	Other	s_specimen_ICGC_125	Other	Tumour	Primary tumour	s_sample_ICGC_125	Total RNA
+TEST-CA	ICGC_126	Other	s_specimen_ICGC_126	Other	Normal	Normal	s_sample_ICGC_126	Total DNA
+TEST-CA	ICGC_127	Other	s_specimen_ICGC_127	Other	Tumour	Primary tumour	s_sample_ICGC_127	Total RNA
+TEST-CA	ICGC_128	Other	s_specimen_ICGC_128	Other	Normal	Normal	s_sample_ICGC_128	Total DNA
+TEST-CA	ICGC_129	Other	s_specimen_ICGC_129	Other	Tumour	Primary tumour	s_sample_ICGC_129	Total RNA
+TEST-CA	ICGC_130	Other	s_specimen_ICGC_130	Other	Normal	Normal	s_sample_ICGC_130	Total DNA
+TEST-CA	ICGC_131	Other	s_specimen_ICGC_131	Other	Tumour	Primary tumour	s_sample_ICGC_131	Total RNA
+TEST-CA	ICGC_132	Other	s_specimen_ICGC_132	Other	Normal	Normal	s_sample_ICGC_132	Total DNA
+TEST-CA	ICGC_133	Other	s_specimen_ICGC_133	Other	Tumour	Primary tumour	s_sample_ICGC_133	Total RNA
+TEST-CA	ICGC_134	Other	s_specimen_ICGC_134	Other	Normal	Normal	s_sample_ICGC_134	Total DNA
+TEST-CA	ICGC_135	Other	s_specimen_ICGC_135	Other	Tumour	Primary tumour	s_sample_ICGC_135	Total RNA
+TEST-CA	ICGC_136	Other	s_specimen_ICGC_136	Other	Normal	Normal	s_sample_ICGC_136	Total DNA
+TEST-CA	ICGC_137	Other	s_specimen_ICGC_137	Other	Tumour	Primary tumour	s_sample_ICGC_137	Total RNA
+TEST-CA	ICGC_138	Other	s_specimen_ICGC_138	Other	Normal	Normal	s_sample_ICGC_138	Total DNA
+TEST-CA	ICGC_139	Other	s_specimen_ICGC_139	Other	Tumour	Primary tumour	s_sample_ICGC_139	Total RNA
+TEST-CA	ICGC_140	Other	s_specimen_ICGC_140	Other	Normal	Normal	s_sample_ICGC_140	Total DNA
+TEST-CA	ICGC_141	Other	s_specimen_ICGC_141	Other	Tumour	Primary tumour	s_sample_ICGC_141	Total RNA
+TEST-CA	ICGC_142	Other	s_specimen_ICGC_142	Other	Normal	Normal	s_sample_ICGC_142	Total DNA
+TEST-CA	ICGC_143	Other	s_specimen_ICGC_143	Other	Tumour	Primary tumour	s_sample_ICGC_143	Total RNA
+TEST-CA	ICGC_144	Other	s_specimen_ICGC_144	Other	Normal	Normal	s_sample_ICGC_144	Total DNA
+TEST-CA	ICGC_145	Other	s_specimen_ICGC_145	Other	Tumour	Primary tumour	s_sample_ICGC_145	Total RNA
+TEST-CA	ICGC_146	Other	s_specimen_ICGC_146	Other	Normal	Normal	s_sample_ICGC_146	Total DNA
+TEST-CA	ICGC_147	Other	s_specimen_ICGC_147	Other	Tumour	Primary tumour	s_sample_ICGC_147	Total RNA
+TEST-CA	ICGC_148	Other	s_specimen_ICGC_148	Other	Normal	Normal	s_sample_ICGC_148	Total DNA
+TEST-CA	ICGC_149	Other	s_specimen_ICGC_149	Other	Tumour	Primary tumour	s_sample_ICGC_149	Total RNA
+TEST-CA	ICGC_150	Other	s_specimen_ICGC_150	Other	Normal	Normal	s_sample_ICGC_150	Total DNA
+TEST-CA	ICGC_151	Other	s_specimen_ICGC_151	Other	Tumour	Primary tumour	s_sample_ICGC_151	Total RNA
+TEST-CA	ICGC_152	Other	s_specimen_ICGC_152	Other	Normal	Normal	s_sample_ICGC_152	Total DNA
+TEST-CA	ICGC_153	Other	s_specimen_ICGC_153	Other	Tumour	Primary tumour	s_sample_ICGC_153	Total RNA
+TEST-CA	ICGC_154	Other	s_specimen_ICGC_154	Other	Normal	Normal	s_sample_ICGC_154	Total DNA
+TEST-CA	ICGC_155	Other	s_specimen_ICGC_155	Other	Tumour	Primary tumour	s_sample_ICGC_155	Total RNA
+TEST-CA	ICGC_156	Other	s_specimen_ICGC_156	Other	Normal	Normal	s_sample_ICGC_156	Total DNA
+TEST-CA	ICGC_157	Other	s_specimen_ICGC_157	Other	Tumour	Primary tumour	s_sample_ICGC_157	Total RNA
+TEST-CA	ICGC_158	Other	s_specimen_ICGC_158	Other	Normal	Normal	s_sample_ICGC_158	Total DNA
+TEST-CA	ICGC_159	Other	s_specimen_ICGC_159	Other	Tumour	Primary tumour	s_sample_ICGC_159	Total RNA
+TEST-CA	ICGC_160	Other	s_specimen_ICGC_160	Other	Normal	Normal	s_sample_ICGC_160	Total DNA
+TEST-CA	ICGC_161	Other	s_specimen_ICGC_161	Other	Tumour	Primary tumour	s_sample_ICGC_161	Total RNA
+TEST-CA	ICGC_162	Other	s_specimen_ICGC_162	Other	Normal	Normal	s_sample_ICGC_162	Total DNA
+TEST-CA	ICGC_163	Other	s_specimen_ICGC_163	Other	Tumour	Primary tumour	s_sample_ICGC_163	Total RNA
+TEST-CA	ICGC_164	Other	s_specimen_ICGC_164	Other	Normal	Normal	s_sample_ICGC_164	Total DNA
+TEST-CA	ICGC_165	Other	s_specimen_ICGC_165	Other	Tumour	Primary tumour	s_sample_ICGC_165	Total RNA
+TEST-CA	ICGC_166	Other	s_specimen_ICGC_166	Other	Normal	Normal	s_sample_ICGC_166	Total DNA
+TEST-CA	ICGC_167	Other	s_specimen_ICGC_167	Other	Tumour	Primary tumour	s_sample_ICGC_167	Total RNA
+TEST-CA	ICGC_168	Other	s_specimen_ICGC_168	Other	Normal	Normal	s_sample_ICGC_168	Total DNA
+TEST-CA	ICGC_169	Other	s_specimen_ICGC_169	Other	Tumour	Primary tumour	s_sample_ICGC_169	Total RNA
+TEST-CA	ICGC_170	Other	s_specimen_ICGC_170	Other	Normal	Normal	s_sample_ICGC_170	Total DNA
+TEST-CA	ICGC_171	Other	s_specimen_ICGC_171	Other	Tumour	Primary tumour	s_sample_ICGC_171	Total RNA
+TEST-CA	ICGC_172	Other	s_specimen_ICGC_172	Other	Normal	Normal	s_sample_ICGC_172	Total DNA
+TEST-CA	ICGC_173	Other	s_specimen_ICGC_173	Other	Tumour	Primary tumour	s_sample_ICGC_173	Total RNA
+TEST-CA	ICGC_174	Other	s_specimen_ICGC_174	Other	Normal	Normal	s_sample_ICGC_174	Total DNA
+TEST-CA	ICGC_175	Other	s_specimen_ICGC_175	Other	Tumour	Primary tumour	s_sample_ICGC_175	Total RNA
+TEST-CA	ICGC_176	Other	s_specimen_ICGC_176	Other	Normal	Normal	s_sample_ICGC_176	Total DNA
+TEST-CA	ICGC_177	Other	s_specimen_ICGC_177	Other	Tumour	Primary tumour	s_sample_ICGC_177	Total RNA
+TEST-CA	ICGC_178	Other	s_specimen_ICGC_178	Other	Normal	Normal	s_sample_ICGC_178	Total DNA
+TEST-CA	ICGC_179	Other	s_specimen_ICGC_179	Other	Tumour	Primary tumour	s_sample_ICGC_179	Total RNA
+TEST-CA	ICGC_180	Other	s_specimen_ICGC_180	Other	Normal	Normal	s_sample_ICGC_180	Total DNA
+TEST-CA	ICGC_181	Other	s_specimen_ICGC_181	Other	Tumour	Primary tumour	s_sample_ICGC_181	Total RNA
+TEST-CA	ICGC_182	Other	s_specimen_ICGC_182	Other	Normal	Normal	s_sample_ICGC_182	Total DNA
+TEST-CA	ICGC_183	Other	s_specimen_ICGC_183	Other	Tumour	Primary tumour	s_sample_ICGC_183	Total RNA
+TEST-CA	ICGC_184	Other	s_specimen_ICGC_184	Other	Normal	Normal	s_sample_ICGC_184	Total DNA
+TEST-CA	ICGC_185	Other	s_specimen_ICGC_185	Other	Tumour	Primary tumour	s_sample_ICGC_185	Total RNA
+TEST-CA	ICGC_186	Other	s_specimen_ICGC_186	Other	Normal	Normal	s_sample_ICGC_186	Total DNA
+TEST-CA	ICGC_187	Other	s_specimen_ICGC_187	Other	Tumour	Primary tumour	s_sample_ICGC_187	Total RNA
+TEST-CA	ICGC_188	Other	s_specimen_ICGC_188	Other	Normal	Normal	s_sample_ICGC_188	Total DNA
+TEST-CA	ICGC_189	Other	s_specimen_ICGC_189	Other	Tumour	Primary tumour	s_sample_ICGC_189	Total RNA
+TEST-CA	ICGC_190	Other	s_specimen_ICGC_190	Other	Normal	Normal	s_sample_ICGC_190	Total DNA
+TEST-CA	ICGC_191	Other	s_specimen_ICGC_191	Other	Tumour	Primary tumour	s_sample_ICGC_191	Total RNA
+TEST-CA	ICGC_192	Other	s_specimen_ICGC_192	Other	Normal	Normal	s_sample_ICGC_192	Total DNA
+TEST-CA	ICGC_193	Other	s_specimen_ICGC_193	Other	Tumour	Primary tumour	s_sample_ICGC_193	Total RNA
+TEST-CA	ICGC_194	Other	s_specimen_ICGC_194	Other	Normal	Normal	s_sample_ICGC_194	Total DNA
+TEST-CA	ICGC_195	Other	s_specimen_ICGC_195	Other	Tumour	Primary tumour	s_sample_ICGC_195	Total RNA
+TEST-CA	ICGC_196	Other	s_specimen_ICGC_196	Other	Normal	Normal	s_sample_ICGC_196	Total DNA
+TEST-CA	ICGC_197	Other	s_specimen_ICGC_197	Other	Tumour	Primary tumour	s_sample_ICGC_197	Total RNA
+TEST-CA	ICGC_198	Other	s_specimen_ICGC_198	Other	Normal	Normal	s_sample_ICGC_198	Total DNA
+TEST-CA	ICGC_199	Other	s_specimen_ICGC_199	Other	Tumour	Primary tumour	s_sample_ICGC_199	Total RNA
+TEST-CA	ICGC_200	Other	s_specimen_ICGC_200	Other	Normal	Normal	s_sample_ICGC_200	Total DNA
+TEST-CA	ICGC_201	Other	s_specimen_ICGC_201	Other	Tumour	Primary tumour	s_sample_ICGC_201	Total RNA
+TEST-CA	ICGC_202	Other	s_specimen_ICGC_202	Other	Normal	Normal	s_sample_ICGC_202	Total DNA
+TEST-CA	ICGC_203	Other	s_specimen_ICGC_203	Other	Tumour	Primary tumour	s_sample_ICGC_203	Total RNA
+TEST-CA	ICGC_204	Other	s_specimen_ICGC_204	Other	Normal	Normal	s_sample_ICGC_204	Total DNA
+TEST-CA	ICGC_205	Other	s_specimen_ICGC_205	Other	Tumour	Primary tumour	s_sample_ICGC_205	Total RNA
+TEST-CA	ICGC_206	Other	s_specimen_ICGC_206	Other	Normal	Normal	s_sample_ICGC_206	Total DNA
+TEST-CA	ICGC_207	Other	s_specimen_ICGC_207	Other	Tumour	Primary tumour	s_sample_ICGC_207	Total RNA
+TEST-CA	ICGC_208	Other	s_specimen_ICGC_208	Other	Normal	Normal	s_sample_ICGC_208	Total DNA
+TEST-CA	ICGC_209	Other	s_specimen_ICGC_209	Other	Tumour	Primary tumour	s_sample_ICGC_209	Total RNA
+TEST-CA	ICGC_210	Other	s_specimen_ICGC_210	Other	Normal	Normal	s_sample_ICGC_210	Total DNA
+TEST-CA	ICGC_211	Other	s_specimen_ICGC_211	Other	Tumour	Primary tumour	s_sample_ICGC_211	Total RNA
+TEST-CA	ICGC_212	Other	s_specimen_ICGC_212	Other	Normal	Normal	s_sample_ICGC_212	Total DNA
+TEST-CA	ICGC_213	Other	s_specimen_ICGC_213	Other	Tumour	Primary tumour	s_sample_ICGC_213	Total RNA
+TEST-CA	ICGC_214	Other	s_specimen_ICGC_214	Other	Normal	Normal	s_sample_ICGC_214	Total DNA
+TEST-CA	ICGC_215	Other	s_specimen_ICGC_215	Other	Tumour	Primary tumour	s_sample_ICGC_215	Total RNA
+TEST-CA	ICGC_216	Other	s_specimen_ICGC_216	Other	Normal	Normal	s_sample_ICGC_216	Total DNA
+TEST-CA	ICGC_217	Other	s_specimen_ICGC_217	Other	Tumour	Primary tumour	s_sample_ICGC_217	Total RNA
+TEST-CA	ICGC_218	Other	s_specimen_ICGC_218	Other	Normal	Normal	s_sample_ICGC_218	Total DNA
+TEST-CA	ICGC_219	Other	s_specimen_ICGC_219	Other	Tumour	Primary tumour	s_sample_ICGC_219	Total RNA
+TEST-CA	ICGC_220	Other	s_specimen_ICGC_220	Other	Normal	Normal	s_sample_ICGC_220	Total DNA
+TEST-CA	ICGC_221	Other	s_specimen_ICGC_221	Other	Tumour	Primary tumour	s_sample_ICGC_221	Total RNA
+TEST-CA	ICGC_222	Other	s_specimen_ICGC_222	Other	Normal	Normal	s_sample_ICGC_222	Total DNA
+TEST-CA	ICGC_223	Other	s_specimen_ICGC_223	Other	Tumour	Primary tumour	s_sample_ICGC_223	Total RNA
+TEST-CA	ICGC_224	Other	s_specimen_ICGC_224	Other	Normal	Normal	s_sample_ICGC_224	Total DNA
+TEST-CA	ICGC_225	Other	s_specimen_ICGC_225	Other	Tumour	Primary tumour	s_sample_ICGC_225	Total RNA
+TEST-CA	ICGC_226	Other	s_specimen_ICGC_226	Other	Normal	Normal	s_sample_ICGC_226	Total DNA
+TEST-CA	ICGC_227	Other	s_specimen_ICGC_227	Other	Tumour	Primary tumour	s_sample_ICGC_227	Total RNA
+TEST-CA	ICGC_228	Other	s_specimen_ICGC_228	Other	Normal	Normal	s_sample_ICGC_228	Total DNA
+TEST-CA	ICGC_229	Other	s_specimen_ICGC_229	Other	Tumour	Primary tumour	s_sample_ICGC_229	Total RNA
+TEST-CA	ICGC_230	Other	s_specimen_ICGC_230	Other	Normal	Normal	s_sample_ICGC_230	Total DNA
+TEST-CA	ICGC_231	Other	s_specimen_ICGC_231	Other	Tumour	Primary tumour	s_sample_ICGC_231	Total RNA
+TEST-CA	ICGC_232	Other	s_specimen_ICGC_232	Other	Normal	Normal	s_sample_ICGC_232	Total DNA
+TEST-CA	ICGC_233	Other	s_specimen_ICGC_233	Other	Tumour	Primary tumour	s_sample_ICGC_233	Total RNA
+TEST-CA	ICGC_234	Other	s_specimen_ICGC_234	Other	Normal	Normal	s_sample_ICGC_234	Total DNA
+TEST-CA	ICGC_235	Other	s_specimen_ICGC_235	Other	Tumour	Primary tumour	s_sample_ICGC_235	Total RNA
+TEST-CA	ICGC_236	Other	s_specimen_ICGC_236	Other	Normal	Normal	s_sample_ICGC_236	Total DNA
+TEST-CA	ICGC_237	Other	s_specimen_ICGC_237	Other	Tumour	Primary tumour	s_sample_ICGC_237	Total RNA
+TEST-CA	ICGC_238	Other	s_specimen_ICGC_238	Other	Normal	Normal	s_sample_ICGC_238	Total DNA
+TEST-CA	ICGC_239	Other	s_specimen_ICGC_239	Other	Tumour	Primary tumour	s_sample_ICGC_239	Total RNA
+TEST-CA	ICGC_240	Other	s_specimen_ICGC_240	Other	Normal	Normal	s_sample_ICGC_240	Total DNA
+TEST-CA	ICGC_241	Other	s_specimen_ICGC_241	Other	Tumour	Primary tumour	s_sample_ICGC_241	Total RNA
+TEST-CA	ICGC_242	Other	s_specimen_ICGC_242	Other	Normal	Normal	s_sample_ICGC_242	Total DNA
+TEST-CA	ICGC_243	Other	s_specimen_ICGC_243	Other	Tumour	Primary tumour	s_sample_ICGC_243	Total RNA
+TEST-CA	ICGC_244	Other	s_specimen_ICGC_244	Other	Normal	Normal	s_sample_ICGC_244	Total DNA
+TEST-CA	ICGC_245	Other	s_specimen_ICGC_245	Other	Tumour	Primary tumour	s_sample_ICGC_245	Total RNA
+TEST-CA	ICGC_246	Other	s_specimen_ICGC_246	Other	Normal	Normal	s_sample_ICGC_246	Total DNA
+TEST-CA	ICGC_247	Other	s_specimen_ICGC_247	Other	Tumour	Primary tumour	s_sample_ICGC_247	Total RNA
+TEST-CA	ICGC_248	Other	s_specimen_ICGC_248	Other	Normal	Normal	s_sample_ICGC_248	Total DNA
+TEST-CA	ICGC_249	Other	s_specimen_ICGC_249	Other	Tumour	Primary tumour	s_sample_ICGC_249	Total RNA
+TEST-CA	ICGC_250	Other	s_specimen_ICGC_250	Other	Normal	Normal	s_sample_ICGC_250	Total DNA
+TEST-CA	ICGC_251	Other	s_specimen_ICGC_251	Other	Tumour	Primary tumour	s_sample_ICGC_251	Total RNA
+TEST-CA	ICGC_252	Other	s_specimen_ICGC_252	Other	Normal	Normal	s_sample_ICGC_252	Total DNA
+TEST-CA	ICGC_253	Other	s_specimen_ICGC_253	Other	Tumour	Primary tumour	s_sample_ICGC_253	Total RNA
+TEST-CA	ICGC_254	Other	s_specimen_ICGC_254	Other	Normal	Normal	s_sample_ICGC_254	Total DNA
+TEST-CA	ICGC_255	Other	s_specimen_ICGC_255	Other	Tumour	Primary tumour	s_sample_ICGC_255	Total RNA
+TEST-CA	ICGC_256	Other	s_specimen_ICGC_256	Other	Normal	Normal	s_sample_ICGC_256	Total DNA
+TEST-CA	ICGC_257	Other	s_specimen_ICGC_257	Other	Tumour	Primary tumour	s_sample_ICGC_257	Total RNA
+TEST-CA	ICGC_258	Other	s_specimen_ICGC_258	Other	Normal	Normal	s_sample_ICGC_258	Total DNA
+TEST-CA	ICGC_259	Other	s_specimen_ICGC_259	Other	Tumour	Primary tumour	s_sample_ICGC_259	Total RNA
+TEST-CA	ICGC_260	Other	s_specimen_ICGC_260	Other	Normal	Normal	s_sample_ICGC_260	Total DNA
+TEST-CA	ICGC_261	Other	s_specimen_ICGC_261	Other	Tumour	Primary tumour	s_sample_ICGC_261	Total RNA
+TEST-CA	ICGC_262	Other	s_specimen_ICGC_262	Other	Normal	Normal	s_sample_ICGC_262	Total DNA
+TEST-CA	ICGC_263	Other	s_specimen_ICGC_263	Other	Tumour	Primary tumour	s_sample_ICGC_263	Total RNA
+TEST-CA	ICGC_264	Other	s_specimen_ICGC_264	Other	Normal	Normal	s_sample_ICGC_264	Total DNA
+TEST-CA	ICGC_265	Other	s_specimen_ICGC_265	Other	Tumour	Primary tumour	s_sample_ICGC_265	Total RNA
+TEST-CA	ICGC_266	Other	s_specimen_ICGC_266	Other	Normal	Normal	s_sample_ICGC_266	Total DNA
+TEST-CA	ICGC_267	Other	s_specimen_ICGC_267	Other	Tumour	Primary tumour	s_sample_ICGC_267	Total RNA
+TEST-CA	ICGC_268	Other	s_specimen_ICGC_268	Other	Normal	Normal	s_sample_ICGC_268	Total DNA
+TEST-CA	ICGC_269	Other	s_specimen_ICGC_269	Other	Tumour	Primary tumour	s_sample_ICGC_269	Total RNA
+TEST-CA	ICGC_270	Other	s_specimen_ICGC_270	Other	Normal	Normal	s_sample_ICGC_270	Total DNA
+TEST-CA	ICGC_271	Other	s_specimen_ICGC_271	Other	Tumour	Primary tumour	s_sample_ICGC_271	Total RNA
+TEST-CA	ICGC_272	Other	s_specimen_ICGC_272	Other	Normal	Normal	s_sample_ICGC_272	Total DNA
+TEST-CA	ICGC_273	Other	s_specimen_ICGC_273	Other	Tumour	Primary tumour	s_sample_ICGC_273	Total RNA
+TEST-CA	ICGC_274	Other	s_specimen_ICGC_274	Other	Normal	Normal	s_sample_ICGC_274	Total DNA
+TEST-CA	ICGC_275	Other	s_specimen_ICGC_275	Other	Tumour	Primary tumour	s_sample_ICGC_275	Total RNA
+TEST-CA	ICGC_276	Other	s_specimen_ICGC_276	Other	Normal	Normal	s_sample_ICGC_276	Total DNA
+TEST-CA	ICGC_277	Other	s_specimen_ICGC_277	Other	Tumour	Primary tumour	s_sample_ICGC_277	Total RNA
+TEST-CA	ICGC_278	Other	s_specimen_ICGC_278	Other	Normal	Normal	s_sample_ICGC_278	Total DNA
+TEST-CA	ICGC_279	Other	s_specimen_ICGC_279	Other	Tumour	Primary tumour	s_sample_ICGC_279	Total RNA
+TEST-CA	ICGC_280	Other	s_specimen_ICGC_280	Other	Normal	Normal	s_sample_ICGC_280	Total DNA
+TEST-CA	ICGC_281	Other	s_specimen_ICGC_281	Other	Tumour	Primary tumour	s_sample_ICGC_281	Total RNA
+TEST-CA	ICGC_282	Other	s_specimen_ICGC_282	Other	Normal	Normal	s_sample_ICGC_282	Total DNA
+TEST-CA	ICGC_283	Other	s_specimen_ICGC_283	Other	Tumour	Primary tumour	s_sample_ICGC_283	Total RNA
+TEST-CA	ICGC_284	Other	s_specimen_ICGC_284	Other	Normal	Normal	s_sample_ICGC_284	Total DNA
+TEST-CA	ICGC_285	Other	s_specimen_ICGC_285	Other	Tumour	Primary tumour	s_sample_ICGC_285	Total RNA
+TEST-CA	ICGC_286	Other	s_specimen_ICGC_286	Other	Normal	Normal	s_sample_ICGC_286	Total DNA
+TEST-CA	ICGC_287	Other	s_specimen_ICGC_287	Other	Tumour	Primary tumour	s_sample_ICGC_287	Total RNA
+TEST-CA	ICGC_288	Other	s_specimen_ICGC_288	Other	Normal	Normal	s_sample_ICGC_288	Total DNA
+TEST-CA	ICGC_289	Other	s_specimen_ICGC_289	Other	Tumour	Primary tumour	s_sample_ICGC_289	Total RNA
+TEST-CA	ICGC_290	Other	s_specimen_ICGC_290	Other	Normal	Normal	s_sample_ICGC_290	Total DNA
+TEST-CA	ICGC_291	Other	s_specimen_ICGC_291	Other	Tumour	Primary tumour	s_sample_ICGC_291	Total RNA
+TEST-CA	ICGC_292	Other	s_specimen_ICGC_292	Other	Normal	Normal	s_sample_ICGC_292	Total DNA
+TEST-CA	ICGC_293	Other	s_specimen_ICGC_293	Other	Tumour	Primary tumour	s_sample_ICGC_293	Total RNA
+TEST-CA	ICGC_294	Other	s_specimen_ICGC_294	Other	Normal	Normal	s_sample_ICGC_294	Total DNA
+TEST-CA	ICGC_295	Other	s_specimen_ICGC_295	Other	Tumour	Primary tumour	s_sample_ICGC_295	Total RNA
+TEST-CA	ICGC_296	Other	s_specimen_ICGC_296	Other	Normal	Normal	s_sample_ICGC_296	Total DNA
+TEST-CA	ICGC_297	Other	s_specimen_ICGC_297	Other	Tumour	Primary tumour	s_sample_ICGC_297	Total RNA
+TEST-CA	ICGC_298	Other	s_specimen_ICGC_298	Other	Normal	Normal	s_sample_ICGC_298	Total DNA
+TEST-CA	ICGC_299	Other	s_specimen_ICGC_299	Other	Tumour	Primary tumour	s_sample_ICGC_299	Total RNA

@@ -1,0 +1,301 @@
+program_id	submitter_donor_id	submitter_primary_diagnosis_id	submitter_specimen_id	specimen_acquisition_interval	specimen_anatomic_location	reference_pathology_confirmed	tumour_histological_type	tumour_grading_system	tumour_grade	pathological_tumour_staging_system	pathological_stage_group	percent_tumour_cells	percent_proliferating_cells	percent_inflammatory_tissue	percent_stromal_cells	percent_necrosis	pathological_m_category	pathological_n_category	pathological_t_category
+TEST-CA	ICGC_0	s__pd_0	s_specimen_ICGC_0	50	C50.1
+TEST-CA	ICGC_1	s__pd_1	s_specimen_ICGC_1	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_2	s__pd_2	s_specimen_ICGC_2	50	C50.1
+TEST-CA	ICGC_3	s__pd_3	s_specimen_ICGC_3	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_4	s__pd_4	s_specimen_ICGC_4	50	C50.1
+TEST-CA	ICGC_5	s__pd_5	s_specimen_ICGC_5	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_6	s__pd_6	s_specimen_ICGC_6	50	C50.1
+TEST-CA	ICGC_7	s__pd_7	s_specimen_ICGC_7	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_8	s__pd_8	s_specimen_ICGC_8	50	C50.1
+TEST-CA	ICGC_9	s__pd_9	s_specimen_ICGC_9	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_10	s__pd_10	s_specimen_ICGC_10	50	C50.1
+TEST-CA	ICGC_11	s__pd_11	s_specimen_ICGC_11	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_12	s__pd_12	s_specimen_ICGC_12	50	C50.1
+TEST-CA	ICGC_13	s__pd_13	s_specimen_ICGC_13	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_14	s__pd_14	s_specimen_ICGC_14	50	C50.1
+TEST-CA	ICGC_15	s__pd_15	s_specimen_ICGC_15	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_16	s__pd_16	s_specimen_ICGC_16	50	C50.1
+TEST-CA	ICGC_17	s__pd_17	s_specimen_ICGC_17	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_18	s__pd_18	s_specimen_ICGC_18	50	C50.1
+TEST-CA	ICGC_19	s__pd_19	s_specimen_ICGC_19	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_20	s__pd_20	s_specimen_ICGC_20	50	C50.1
+TEST-CA	ICGC_21	s__pd_21	s_specimen_ICGC_21	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_22	s__pd_22	s_specimen_ICGC_22	50	C50.1
+TEST-CA	ICGC_23	s__pd_23	s_specimen_ICGC_23	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_24	s__pd_24	s_specimen_ICGC_24	50	C50.1
+TEST-CA	ICGC_25	s__pd_25	s_specimen_ICGC_25	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_26	s__pd_26	s_specimen_ICGC_26	50	C50.1
+TEST-CA	ICGC_27	s__pd_27	s_specimen_ICGC_27	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_28	s__pd_28	s_specimen_ICGC_28	50	C50.1
+TEST-CA	ICGC_29	s__pd_29	s_specimen_ICGC_29	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_30	s__pd_30	s_specimen_ICGC_30	50	C50.1
+TEST-CA	ICGC_31	s__pd_31	s_specimen_ICGC_31	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_32	s__pd_32	s_specimen_ICGC_32	50	C50.1
+TEST-CA	ICGC_33	s__pd_33	s_specimen_ICGC_33	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_34	s__pd_34	s_specimen_ICGC_34	50	C50.1
+TEST-CA	ICGC_35	s__pd_35	s_specimen_ICGC_35	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_36	s__pd_36	s_specimen_ICGC_36	50	C50.1
+TEST-CA	ICGC_37	s__pd_37	s_specimen_ICGC_37	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_38	s__pd_38	s_specimen_ICGC_38	50	C50.1
+TEST-CA	ICGC_39	s__pd_39	s_specimen_ICGC_39	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_40	s__pd_40	s_specimen_ICGC_40	50	C50.1
+TEST-CA	ICGC_41	s__pd_41	s_specimen_ICGC_41	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_42	s__pd_42	s_specimen_ICGC_42	50	C50.1
+TEST-CA	ICGC_43	s__pd_43	s_specimen_ICGC_43	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_44	s__pd_44	s_specimen_ICGC_44	50	C50.1
+TEST-CA	ICGC_45	s__pd_45	s_specimen_ICGC_45	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_46	s__pd_46	s_specimen_ICGC_46	50	C50.1
+TEST-CA	ICGC_47	s__pd_47	s_specimen_ICGC_47	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_48	s__pd_48	s_specimen_ICGC_48	50	C50.1
+TEST-CA	ICGC_49	s__pd_49	s_specimen_ICGC_49	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_50	s__pd_50	s_specimen_ICGC_50	50	C50.1
+TEST-CA	ICGC_51	s__pd_51	s_specimen_ICGC_51	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_52	s__pd_52	s_specimen_ICGC_52	50	C50.1
+TEST-CA	ICGC_53	s__pd_53	s_specimen_ICGC_53	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_54	s__pd_54	s_specimen_ICGC_54	50	C50.1
+TEST-CA	ICGC_55	s__pd_55	s_specimen_ICGC_55	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_56	s__pd_56	s_specimen_ICGC_56	50	C50.1
+TEST-CA	ICGC_57	s__pd_57	s_specimen_ICGC_57	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_58	s__pd_58	s_specimen_ICGC_58	50	C50.1
+TEST-CA	ICGC_59	s__pd_59	s_specimen_ICGC_59	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_60	s__pd_60	s_specimen_ICGC_60	50	C50.1
+TEST-CA	ICGC_61	s__pd_61	s_specimen_ICGC_61	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_62	s__pd_62	s_specimen_ICGC_62	50	C50.1
+TEST-CA	ICGC_63	s__pd_63	s_specimen_ICGC_63	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_64	s__pd_64	s_specimen_ICGC_64	50	C50.1
+TEST-CA	ICGC_65	s__pd_65	s_specimen_ICGC_65	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_66	s__pd_66	s_specimen_ICGC_66	50	C50.1
+TEST-CA	ICGC_67	s__pd_67	s_specimen_ICGC_67	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_68	s__pd_68	s_specimen_ICGC_68	50	C50.1
+TEST-CA	ICGC_69	s__pd_69	s_specimen_ICGC_69	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_70	s__pd_70	s_specimen_ICGC_70	50	C50.1
+TEST-CA	ICGC_71	s__pd_71	s_specimen_ICGC_71	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_72	s__pd_72	s_specimen_ICGC_72	50	C50.1
+TEST-CA	ICGC_73	s__pd_73	s_specimen_ICGC_73	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_74	s__pd_74	s_specimen_ICGC_74	50	C50.1
+TEST-CA	ICGC_75	s__pd_75	s_specimen_ICGC_75	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_76	s__pd_76	s_specimen_ICGC_76	50	C50.1
+TEST-CA	ICGC_77	s__pd_77	s_specimen_ICGC_77	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_78	s__pd_78	s_specimen_ICGC_78	50	C50.1
+TEST-CA	ICGC_79	s__pd_79	s_specimen_ICGC_79	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_80	s__pd_80	s_specimen_ICGC_80	50	C50.1
+TEST-CA	ICGC_81	s__pd_81	s_specimen_ICGC_81	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_82	s__pd_82	s_specimen_ICGC_82	50	C50.1
+TEST-CA	ICGC_83	s__pd_83	s_specimen_ICGC_83	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_84	s__pd_84	s_specimen_ICGC_84	50	C50.1
+TEST-CA	ICGC_85	s__pd_85	s_specimen_ICGC_85	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_86	s__pd_86	s_specimen_ICGC_86	50	C50.1
+TEST-CA	ICGC_87	s__pd_87	s_specimen_ICGC_87	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_88	s__pd_88	s_specimen_ICGC_88	50	C50.1
+TEST-CA	ICGC_89	s__pd_89	s_specimen_ICGC_89	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_90	s__pd_90	s_specimen_ICGC_90	50	C50.1
+TEST-CA	ICGC_91	s__pd_91	s_specimen_ICGC_91	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_92	s__pd_92	s_specimen_ICGC_92	50	C50.1
+TEST-CA	ICGC_93	s__pd_93	s_specimen_ICGC_93	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_94	s__pd_94	s_specimen_ICGC_94	50	C50.1
+TEST-CA	ICGC_95	s__pd_95	s_specimen_ICGC_95	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_96	s__pd_96	s_specimen_ICGC_96	50	C50.1
+TEST-CA	ICGC_97	s__pd_97	s_specimen_ICGC_97	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_98	s__pd_98	s_specimen_ICGC_98	50	C50.1
+TEST-CA	ICGC_99	s__pd_99	s_specimen_ICGC_99	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_100	s__pd_100	s_specimen_ICGC_100	50	C50.1
+TEST-CA	ICGC_101	s__pd_101	s_specimen_ICGC_101	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_102	s__pd_102	s_specimen_ICGC_102	50	C50.1
+TEST-CA	ICGC_103	s__pd_103	s_specimen_ICGC_103	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_104	s__pd_104	s_specimen_ICGC_104	50	C50.1
+TEST-CA	ICGC_105	s__pd_105	s_specimen_ICGC_105	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_106	s__pd_106	s_specimen_ICGC_106	50	C50.1
+TEST-CA	ICGC_107	s__pd_107	s_specimen_ICGC_107	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_108	s__pd_108	s_specimen_ICGC_108	50	C50.1
+TEST-CA	ICGC_109	s__pd_109	s_specimen_ICGC_109	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_110	s__pd_110	s_specimen_ICGC_110	50	C50.1
+TEST-CA	ICGC_111	s__pd_111	s_specimen_ICGC_111	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_112	s__pd_112	s_specimen_ICGC_112	50	C50.1
+TEST-CA	ICGC_113	s__pd_113	s_specimen_ICGC_113	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_114	s__pd_114	s_specimen_ICGC_114	50	C50.1
+TEST-CA	ICGC_115	s__pd_115	s_specimen_ICGC_115	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_116	s__pd_116	s_specimen_ICGC_116	50	C50.1
+TEST-CA	ICGC_117	s__pd_117	s_specimen_ICGC_117	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_118	s__pd_118	s_specimen_ICGC_118	50	C50.1
+TEST-CA	ICGC_119	s__pd_119	s_specimen_ICGC_119	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_120	s__pd_120	s_specimen_ICGC_120	50	C50.1
+TEST-CA	ICGC_121	s__pd_121	s_specimen_ICGC_121	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_122	s__pd_122	s_specimen_ICGC_122	50	C50.1
+TEST-CA	ICGC_123	s__pd_123	s_specimen_ICGC_123	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_124	s__pd_124	s_specimen_ICGC_124	50	C50.1
+TEST-CA	ICGC_125	s__pd_125	s_specimen_ICGC_125	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_126	s__pd_126	s_specimen_ICGC_126	50	C50.1
+TEST-CA	ICGC_127	s__pd_127	s_specimen_ICGC_127	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_128	s__pd_128	s_specimen_ICGC_128	50	C50.1
+TEST-CA	ICGC_129	s__pd_129	s_specimen_ICGC_129	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_130	s__pd_130	s_specimen_ICGC_130	50	C50.1
+TEST-CA	ICGC_131	s__pd_131	s_specimen_ICGC_131	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_132	s__pd_132	s_specimen_ICGC_132	50	C50.1
+TEST-CA	ICGC_133	s__pd_133	s_specimen_ICGC_133	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_134	s__pd_134	s_specimen_ICGC_134	50	C50.1
+TEST-CA	ICGC_135	s__pd_135	s_specimen_ICGC_135	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_136	s__pd_136	s_specimen_ICGC_136	50	C50.1
+TEST-CA	ICGC_137	s__pd_137	s_specimen_ICGC_137	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_138	s__pd_138	s_specimen_ICGC_138	50	C50.1
+TEST-CA	ICGC_139	s__pd_139	s_specimen_ICGC_139	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_140	s__pd_140	s_specimen_ICGC_140	50	C50.1
+TEST-CA	ICGC_141	s__pd_141	s_specimen_ICGC_141	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_142	s__pd_142	s_specimen_ICGC_142	50	C50.1
+TEST-CA	ICGC_143	s__pd_143	s_specimen_ICGC_143	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_144	s__pd_144	s_specimen_ICGC_144	50	C50.1
+TEST-CA	ICGC_145	s__pd_145	s_specimen_ICGC_145	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_146	s__pd_146	s_specimen_ICGC_146	50	C50.1
+TEST-CA	ICGC_147	s__pd_147	s_specimen_ICGC_147	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_148	s__pd_148	s_specimen_ICGC_148	50	C50.1
+TEST-CA	ICGC_149	s__pd_149	s_specimen_ICGC_149	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_150	s__pd_150	s_specimen_ICGC_150	50	C50.1
+TEST-CA	ICGC_151	s__pd_151	s_specimen_ICGC_151	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_152	s__pd_152	s_specimen_ICGC_152	50	C50.1
+TEST-CA	ICGC_153	s__pd_153	s_specimen_ICGC_153	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_154	s__pd_154	s_specimen_ICGC_154	50	C50.1
+TEST-CA	ICGC_155	s__pd_155	s_specimen_ICGC_155	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_156	s__pd_156	s_specimen_ICGC_156	50	C50.1
+TEST-CA	ICGC_157	s__pd_157	s_specimen_ICGC_157	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_158	s__pd_158	s_specimen_ICGC_158	50	C50.1
+TEST-CA	ICGC_159	s__pd_159	s_specimen_ICGC_159	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_160	s__pd_160	s_specimen_ICGC_160	50	C50.1
+TEST-CA	ICGC_161	s__pd_161	s_specimen_ICGC_161	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_162	s__pd_162	s_specimen_ICGC_162	50	C50.1
+TEST-CA	ICGC_163	s__pd_163	s_specimen_ICGC_163	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_164	s__pd_164	s_specimen_ICGC_164	50	C50.1
+TEST-CA	ICGC_165	s__pd_165	s_specimen_ICGC_165	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_166	s__pd_166	s_specimen_ICGC_166	50	C50.1
+TEST-CA	ICGC_167	s__pd_167	s_specimen_ICGC_167	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_168	s__pd_168	s_specimen_ICGC_168	50	C50.1
+TEST-CA	ICGC_169	s__pd_169	s_specimen_ICGC_169	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_170	s__pd_170	s_specimen_ICGC_170	50	C50.1
+TEST-CA	ICGC_171	s__pd_171	s_specimen_ICGC_171	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_172	s__pd_172	s_specimen_ICGC_172	50	C50.1
+TEST-CA	ICGC_173	s__pd_173	s_specimen_ICGC_173	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_174	s__pd_174	s_specimen_ICGC_174	50	C50.1
+TEST-CA	ICGC_175	s__pd_175	s_specimen_ICGC_175	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_176	s__pd_176	s_specimen_ICGC_176	50	C50.1
+TEST-CA	ICGC_177	s__pd_177	s_specimen_ICGC_177	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_178	s__pd_178	s_specimen_ICGC_178	50	C50.1
+TEST-CA	ICGC_179	s__pd_179	s_specimen_ICGC_179	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_180	s__pd_180	s_specimen_ICGC_180	50	C50.1
+TEST-CA	ICGC_181	s__pd_181	s_specimen_ICGC_181	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_182	s__pd_182	s_specimen_ICGC_182	50	C50.1
+TEST-CA	ICGC_183	s__pd_183	s_specimen_ICGC_183	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_184	s__pd_184	s_specimen_ICGC_184	50	C50.1
+TEST-CA	ICGC_185	s__pd_185	s_specimen_ICGC_185	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_186	s__pd_186	s_specimen_ICGC_186	50	C50.1
+TEST-CA	ICGC_187	s__pd_187	s_specimen_ICGC_187	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_188	s__pd_188	s_specimen_ICGC_188	50	C50.1
+TEST-CA	ICGC_189	s__pd_189	s_specimen_ICGC_189	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_190	s__pd_190	s_specimen_ICGC_190	50	C50.1
+TEST-CA	ICGC_191	s__pd_191	s_specimen_ICGC_191	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_192	s__pd_192	s_specimen_ICGC_192	50	C50.1
+TEST-CA	ICGC_193	s__pd_193	s_specimen_ICGC_193	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_194	s__pd_194	s_specimen_ICGC_194	50	C50.1
+TEST-CA	ICGC_195	s__pd_195	s_specimen_ICGC_195	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_196	s__pd_196	s_specimen_ICGC_196	50	C50.1
+TEST-CA	ICGC_197	s__pd_197	s_specimen_ICGC_197	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_198	s__pd_198	s_specimen_ICGC_198	50	C50.1
+TEST-CA	ICGC_199	s__pd_199	s_specimen_ICGC_199	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_200	s__pd_200	s_specimen_ICGC_200	50	C50.1
+TEST-CA	ICGC_201	s__pd_201	s_specimen_ICGC_201	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_202	s__pd_202	s_specimen_ICGC_202	50	C50.1
+TEST-CA	ICGC_203	s__pd_203	s_specimen_ICGC_203	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_204	s__pd_204	s_specimen_ICGC_204	50	C50.1
+TEST-CA	ICGC_205	s__pd_205	s_specimen_ICGC_205	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_206	s__pd_206	s_specimen_ICGC_206	50	C50.1
+TEST-CA	ICGC_207	s__pd_207	s_specimen_ICGC_207	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_208	s__pd_208	s_specimen_ICGC_208	50	C50.1
+TEST-CA	ICGC_209	s__pd_209	s_specimen_ICGC_209	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_210	s__pd_210	s_specimen_ICGC_210	50	C50.1
+TEST-CA	ICGC_211	s__pd_211	s_specimen_ICGC_211	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_212	s__pd_212	s_specimen_ICGC_212	50	C50.1
+TEST-CA	ICGC_213	s__pd_213	s_specimen_ICGC_213	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_214	s__pd_214	s_specimen_ICGC_214	50	C50.1
+TEST-CA	ICGC_215	s__pd_215	s_specimen_ICGC_215	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_216	s__pd_216	s_specimen_ICGC_216	50	C50.1
+TEST-CA	ICGC_217	s__pd_217	s_specimen_ICGC_217	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_218	s__pd_218	s_specimen_ICGC_218	50	C50.1
+TEST-CA	ICGC_219	s__pd_219	s_specimen_ICGC_219	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_220	s__pd_220	s_specimen_ICGC_220	50	C50.1
+TEST-CA	ICGC_221	s__pd_221	s_specimen_ICGC_221	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_222	s__pd_222	s_specimen_ICGC_222	50	C50.1
+TEST-CA	ICGC_223	s__pd_223	s_specimen_ICGC_223	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_224	s__pd_224	s_specimen_ICGC_224	50	C50.1
+TEST-CA	ICGC_225	s__pd_225	s_specimen_ICGC_225	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_226	s__pd_226	s_specimen_ICGC_226	50	C50.1
+TEST-CA	ICGC_227	s__pd_227	s_specimen_ICGC_227	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_228	s__pd_228	s_specimen_ICGC_228	50	C50.1
+TEST-CA	ICGC_229	s__pd_229	s_specimen_ICGC_229	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_230	s__pd_230	s_specimen_ICGC_230	50	C50.1
+TEST-CA	ICGC_231	s__pd_231	s_specimen_ICGC_231	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_232	s__pd_232	s_specimen_ICGC_232	50	C50.1
+TEST-CA	ICGC_233	s__pd_233	s_specimen_ICGC_233	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_234	s__pd_234	s_specimen_ICGC_234	50	C50.1
+TEST-CA	ICGC_235	s__pd_235	s_specimen_ICGC_235	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_236	s__pd_236	s_specimen_ICGC_236	50	C50.1
+TEST-CA	ICGC_237	s__pd_237	s_specimen_ICGC_237	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_238	s__pd_238	s_specimen_ICGC_238	50	C50.1
+TEST-CA	ICGC_239	s__pd_239	s_specimen_ICGC_239	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_240	s__pd_240	s_specimen_ICGC_240	50	C50.1
+TEST-CA	ICGC_241	s__pd_241	s_specimen_ICGC_241	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_242	s__pd_242	s_specimen_ICGC_242	50	C50.1
+TEST-CA	ICGC_243	s__pd_243	s_specimen_ICGC_243	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_244	s__pd_244	s_specimen_ICGC_244	50	C50.1
+TEST-CA	ICGC_245	s__pd_245	s_specimen_ICGC_245	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_246	s__pd_246	s_specimen_ICGC_246	50	C50.1
+TEST-CA	ICGC_247	s__pd_247	s_specimen_ICGC_247	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_248	s__pd_248	s_specimen_ICGC_248	50	C50.1
+TEST-CA	ICGC_249	s__pd_249	s_specimen_ICGC_249	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_250	s__pd_250	s_specimen_ICGC_250	50	C50.1
+TEST-CA	ICGC_251	s__pd_251	s_specimen_ICGC_251	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_252	s__pd_252	s_specimen_ICGC_252	50	C50.1
+TEST-CA	ICGC_253	s__pd_253	s_specimen_ICGC_253	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_254	s__pd_254	s_specimen_ICGC_254	50	C50.1
+TEST-CA	ICGC_255	s__pd_255	s_specimen_ICGC_255	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_256	s__pd_256	s_specimen_ICGC_256	50	C50.1
+TEST-CA	ICGC_257	s__pd_257	s_specimen_ICGC_257	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_258	s__pd_258	s_specimen_ICGC_258	50	C50.1
+TEST-CA	ICGC_259	s__pd_259	s_specimen_ICGC_259	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_260	s__pd_260	s_specimen_ICGC_260	50	C50.1
+TEST-CA	ICGC_261	s__pd_261	s_specimen_ICGC_261	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_262	s__pd_262	s_specimen_ICGC_262	50	C50.1
+TEST-CA	ICGC_263	s__pd_263	s_specimen_ICGC_263	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_264	s__pd_264	s_specimen_ICGC_264	50	C50.1
+TEST-CA	ICGC_265	s__pd_265	s_specimen_ICGC_265	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_266	s__pd_266	s_specimen_ICGC_266	50	C50.1
+TEST-CA	ICGC_267	s__pd_267	s_specimen_ICGC_267	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_268	s__pd_268	s_specimen_ICGC_268	50	C50.1
+TEST-CA	ICGC_269	s__pd_269	s_specimen_ICGC_269	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_270	s__pd_270	s_specimen_ICGC_270	50	C50.1
+TEST-CA	ICGC_271	s__pd_271	s_specimen_ICGC_271	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_272	s__pd_272	s_specimen_ICGC_272	50	C50.1
+TEST-CA	ICGC_273	s__pd_273	s_specimen_ICGC_273	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_274	s__pd_274	s_specimen_ICGC_274	50	C50.1
+TEST-CA	ICGC_275	s__pd_275	s_specimen_ICGC_275	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_276	s__pd_276	s_specimen_ICGC_276	50	C50.1
+TEST-CA	ICGC_277	s__pd_277	s_specimen_ICGC_277	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_278	s__pd_278	s_specimen_ICGC_278	50	C50.1
+TEST-CA	ICGC_279	s__pd_279	s_specimen_ICGC_279	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_280	s__pd_280	s_specimen_ICGC_280	50	C50.1
+TEST-CA	ICGC_281	s__pd_281	s_specimen_ICGC_281	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_282	s__pd_282	s_specimen_ICGC_282	50	C50.1
+TEST-CA	ICGC_283	s__pd_283	s_specimen_ICGC_283	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_284	s__pd_284	s_specimen_ICGC_284	50	C50.1
+TEST-CA	ICGC_285	s__pd_285	s_specimen_ICGC_285	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_286	s__pd_286	s_specimen_ICGC_286	50	C50.1
+TEST-CA	ICGC_287	s__pd_287	s_specimen_ICGC_287	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_288	s__pd_288	s_specimen_ICGC_288	50	C50.1
+TEST-CA	ICGC_289	s__pd_289	s_specimen_ICGC_289	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_290	s__pd_290	s_specimen_ICGC_290	50	C50.1
+TEST-CA	ICGC_291	s__pd_291	s_specimen_ICGC_291	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_292	s__pd_292	s_specimen_ICGC_292	50	C50.1
+TEST-CA	ICGC_293	s__pd_293	s_specimen_ICGC_293	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_294	s__pd_294	s_specimen_ICGC_294	50	C50.1
+TEST-CA	ICGC_295	s__pd_295	s_specimen_ICGC_295	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_296	s__pd_296	s_specimen_ICGC_296	50	C50.1
+TEST-CA	ICGC_297	s__pd_297	s_specimen_ICGC_297	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65
+TEST-CA	ICGC_298	s__pd_298	s_specimen_ICGC_298	50	C50.1
+TEST-CA	ICGC_299	s__pd_299	s_specimen_ICGC_299	200	C18	Yes	9691/36	Four-tier grading system	GX	Rai staging system	stage 0	0.35	0.5	0.6	0.65	0.65

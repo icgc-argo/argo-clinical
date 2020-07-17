@@ -1,2 +1,2 @@
-program_id	submitter_primary_diagnosis_id	number_lymph_nodes_examined	submitter_donor_id	age_at_diagnosis	cancer_type_code	tumour_staging_system	presenting_symptoms
-ABCD-EF	P-1	2	ICGC_0001	96	A11.1A	Murphy	Back Pain|Nausea
+program_id	submitter_primary_diagnosis_id	number_lymph_nodes_examined	submitter_donor_id	age_at_diagnosis	cancer_type_code	clinical_tumour_staging_system	presenting_symptoms	number_lymph_nodes_positive	clinical_stage_group
+ABCD-EF	P-1	2	ICGC_0001	96	C41.1	Binet staging system	Back Pain|Nausea	1	Stage A

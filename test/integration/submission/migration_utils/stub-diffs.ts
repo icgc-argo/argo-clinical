@@ -21,7 +21,6 @@
 import legacyStubSchemas from '../../stub-schema.json';
 
 export const migrationDiffs = [
-  legacyStubSchemas.diffs[0],
   {
     fromVersion: '1.0',
     toVersion: '4.0',
@@ -135,26 +134,85 @@ export const migrationDiffs = [
 
     data: [
       [
-        'primary_diagnosis.tumour_staging_system',
+        'primary_diagnosis.presenting_symptoms',
         {
           left: {
-            name: 'tumour_staging_system',
+            name: 'presenting_symptoms',
+            description: 'Indicate presenting symptoms at time of primary diagnosis.',
             valueType: 'string',
-            description:
-              'Specify the tumour staging system used to stage the cancer at the time of primary diagnosis (prior to treatment).',
+            isArray: true,
             restrictions: {
-              required: true,
-              codeList: ['Binet', 'Rai', 'FIGO', 'Ann Arbor', 'Murphy', 'Lugano'],
+              codeList: [
+                'Abdominal Pain',
+                'Anemia',
+                'Back Pain',
+                'Bloating',
+                'Cholangitis',
+                'Constipation',
+                'Dark Urine',
+                'Decreased Appetite',
+                'Diabetes',
+                'Diarrhea',
+                'Fatigue',
+                'Fever',
+                'Hypoglycemia',
+                'Jaundice',
+                'Loss of Appetite',
+                'Nausea',
+                'None',
+                'Pale Stools',
+                'Pancreatitis',
+                'Pruritus/Itchiness',
+                'Steatorrhea',
+                'Unknown',
+                'Vomiting',
+                'Weight Loss',
+              ],
+            },
+            meta: {
+              displayName: 'Presenting Symptoms',
+              notes:
+                "To include multiple values, separate values with a pipe delimiter '|' within your file.",
+              examples: 'Anemia|Bloating|Diabetes',
             },
           },
           right: {
-            name: 'tumour_staging_system',
+            name: 'presenting_symptoms',
+            description: 'Indicate presenting symptoms at time of primary diagnosis.',
             valueType: 'string',
-            description:
-              'Specify the tumour staging system used to stage the cancer at the time of primary diagnosis (prior to treatment).',
+            isArray: true,
             restrictions: {
-              required: true,
-              codeList: ['Binet', 'Rai', 'FIGO', 'Ann Arbor', 'Lugano'],
+              codeList: [
+                'Abdominal Pain',
+                'Anemia',
+                'Back Pain',
+                'Bloating',
+                'Cholangitis',
+                'Constipation',
+                'Dark Urine',
+                'Decreased Appetite',
+                'Diabetes',
+                'Diarrhea',
+                'Fatigue',
+                'Fever',
+                'Hypoglycemia',
+                'Jaundice',
+                'Loss of Appetite',
+                'None',
+                'Pale Stools',
+                'Pancreatitis',
+                'Pruritus/Itchiness',
+                'Steatorrhea',
+                'Unknown',
+                'Vomiting',
+                'Weight Loss',
+              ],
+            },
+            meta: {
+              displayName: 'Presenting Symptoms',
+              notes:
+                "To include multiple values, separate values with a pipe delimiter '|' within your file.",
+              examples: 'Anemia|Bloating|Diabetes',
             },
           },
           diff: {
@@ -163,7 +221,7 @@ export const migrationDiffs = [
                 type: 'updated',
                 data: {
                   added: [],
-                  deleted: ['Murphy'],
+                  deleted: ['Nausea'],
                 },
               },
             },
@@ -813,7 +871,7 @@ export const migrationDiffs = [
                 'Xenograft - derived from tumour cell line',
               ],
               script: [
-                '(function validate() {\n\n        const row = $row;\n        let result = {valid: true, message: "Ok"};\n        \n        const designation = row.tumour_normal_designation.trim().toLowerCase();\n        const specimen_type = $field.trim().toLowerCase();\n        \n        if (designation === "normal"){\n            const validTypes = ["normal", "normal - tissue adjacent to primary tumour", "cell line - derived from normal"];\n            if (!validTypes.includes(specimen_type)){\n                result = {valid: false, message: "Invalid specimen_type. Specimen_type can only be set to a normal type value (Normal, Normal - tissue adjacent to primary tumour, or Cell line - derived from normal) when tumour_normal_designation is set to Normal."};\n            }\n        }\n        else if (designation === "tumour") {\n            const invalidTypes = ["normal", "cell line - derived from normal"];\n            if (invalidTypes.includes(specimen_type)){\n                result = {valid: false, message: "Invalid specimen_type. Specimen_type cannot be set to normal type value (Normal or Cell line - derived from normal) when tumour_normal_designation is set to Tumour."};\n            }\n        }\n        return result;\n    })()',
+                '(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      const row = $row;\n      let result = {valid: true, message: "Ok"};\n      \n      const designation = row.tumour_normal_designation.trim().toLowerCase();\n      const specimen_type = $field.trim().toLowerCase();\n      \n      if (designation === "normal"){\n          const validTypes = ["normal", "normal - tissue adjacent to primary tumour", "cell line - derived from normal"];\n          if (!validTypes.includes(specimen_type)){\n              result = {valid: false, message: "Invalid specimen_type. Specimen_type can only be set to a normal type value (Normal, Normal - tissue adjacent to primary tumour, or Cell line - derived from normal) when tumour_normal_designation is set to Normal."};\n          }\n      }\n      else if (designation === "tumour") {\n          const invalidTypes = ["normal", "cell line - derived from normal"];\n          if (invalidTypes.includes(specimen_type)){\n              result = {valid: false, message: "Invalid specimen_type. Specimen_type cannot be set to normal type value (Normal or Cell line - derived from normal) when tumour_normal_designation is set to Tumour."};\n          }\n      }\n      return result;\n    })',
               ],
             },
             meta: {
@@ -849,7 +907,7 @@ export const migrationDiffs = [
                   'Xenograft - derived from tumour cell line',
                 ],
                 script: [
-                  '(function validate() {\n\n        const row = $row;\n        let result = {valid: true, message: "Ok"};\n        \n        const designation = row.tumour_normal_designation.trim().toLowerCase();\n        const specimen_type = $field.trim().toLowerCase();\n        \n        if (designation === "normal"){\n            const validTypes = ["normal", "normal - tissue adjacent to primary tumour", "cell line - derived from normal"];\n            if (!validTypes.includes(specimen_type)){\n                result = {valid: false, message: "Invalid specimen_type. Specimen_type can only be set to a normal type value (Normal, Normal - tissue adjacent to primary tumour, or Cell line - derived from normal) when tumour_normal_designation is set to Normal."};\n            }\n        }\n        else if (designation === "tumour") {\n            const invalidTypes = ["normal", "cell line - derived from normal"];\n            if (invalidTypes.includes(specimen_type)){\n                result = {valid: false, message: "Invalid specimen_type. Specimen_type cannot be set to normal type value (Normal or Cell line - derived from normal) when tumour_normal_designation is set to Tumour."};\n            }\n        }\n        return result;\n    })()',
+                  '(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      const row = $row;\n      let result = {valid: true, message: "Ok"};\n      \n      const designation = row.tumour_normal_designation.trim().toLowerCase();\n      const specimen_type = $field.trim().toLowerCase();\n      \n      if (designation === "normal"){\n          const validTypes = ["normal", "normal - tissue adjacent to primary tumour", "cell line - derived from normal"];\n          if (!validTypes.includes(specimen_type)){\n              result = {valid: false, message: "Invalid specimen_type. Specimen_type can only be set to a normal type value (Normal, Normal - tissue adjacent to primary tumour, or Cell line - derived from normal) when tumour_normal_designation is set to Normal."};\n          }\n      }\n      else if (designation === "tumour") {\n          const invalidTypes = ["normal", "cell line - derived from normal"];\n          if (invalidTypes.includes(specimen_type)){\n              result = {valid: false, message: "Invalid specimen_type. Specimen_type cannot be set to normal type value (Normal or Cell line - derived from normal) when tumour_normal_designation is set to Tumour."};\n          }\n      }\n      return result;\n    })',
                 ],
               },
               meta: {

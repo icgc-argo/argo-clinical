@@ -671,12 +671,14 @@ describe('Submission Api', () => {
         .attach('clinicalFiles', files[2], 'follow_up.invalid.tsv')
         .end((err: any, res: any) => {
           res.should.have.status(207);
-          res.body.submission.clinicalEntities.donor.schemaErrors.should.deep.eq(
-            expectedDonorBatchSubmissionSchemaErrors,
-          );
           res.body.submission.clinicalEntities.follow_up.schemaErrors.should.deep.eq(
             expectedFollowUpBatchSubmissionSchemaErrors,
           );
+
+          res.body.submission.clinicalEntities.donor.schemaErrors.should.deep.eq(
+            expectedDonorBatchSubmissionSchemaErrors,
+          );
+
           res.body.submission.clinicalEntities.radiation.schemaErrors.should.deep.eq(
             expectedRadiationBatchSubmissionSchemaErrors,
           );
@@ -747,7 +749,7 @@ describe('Submission Api', () => {
               code: 'INVALID_FILE_NAME',
             },
             {
-              message: `Missing required headers: [${SampleRegistrationFieldsEnum.submitter_donor_id}], [${PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id}], [${SampleRegistrationFieldsEnum.submitter_specimen_id}]`,
+              message: `Missing required headers: [${SampleRegistrationFieldsEnum.submitter_donor_id}], [${SampleRegistrationFieldsEnum.submitter_specimen_id}], [${PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id}]`,
               batchNames: ['specimen-invalid-headers.tsv'],
               code: SubmissionBatchErrorTypes.MISSING_REQUIRED_HEADER,
             },
@@ -943,13 +945,13 @@ describe('Submission Api', () => {
               submitter_specimen_id: '8013861',
               submitter_primary_diagnosis_id: 'P-1',
               specimen_acquisition_interval: 200,
-              specimen_anatomic_location: 'Other',
+              specimen_anatomic_location: 'C50.1',
               reference_pathology_confirmed: 'No',
-              tumour_histological_type: 'M-1111/22',
-              tumour_grading_system: 'Default',
-              tumour_grade: 'aStringValue',
-              pathological_tumour_staging_system: 'Murphy',
-              pathological_stage_group: 'aStringValue',
+              tumour_histological_type: '8260/3',
+              tumour_grading_system: 'Gleason grade group system',
+              tumour_grade: 'Grade Group 1',
+              pathological_tumour_staging_system: 'Binet staging system',
+              pathological_stage_group: 'Stage A',
               percent_proliferating_cells: 0.5,
               percent_inflammatory_tissue: 0.6,
               percent_stromal_cells: 0.65,
@@ -969,13 +971,13 @@ describe('Submission Api', () => {
               submitter_specimen_id: '8013862',
               submitter_primary_diagnosis_id: 'P-1',
               specimen_acquisition_interval: 230,
-              specimen_anatomic_location: 'Other',
+              specimen_anatomic_location: 'C50.1',
               reference_pathology_confirmed: 'No',
-              tumour_histological_type: 'M-1111/22',
-              tumour_grading_system: 'Default',
-              tumour_grade: 'aStringValue',
-              pathological_tumour_staging_system: 'Murphy',
-              pathological_stage_group: 'aStringValue',
+              tumour_histological_type: '8260/3',
+              tumour_grading_system: 'Gleason grade group system',
+              tumour_grade: 'Grade Group 1',
+              pathological_tumour_staging_system: 'Binet staging system',
+              pathological_stage_group: 'Stage A',
               percent_proliferating_cells: 0.3,
               percent_inflammatory_tissue: 0.2,
               percent_stromal_cells: 0.2,
@@ -993,9 +995,11 @@ describe('Submission Api', () => {
               number_lymph_nodes_examined: 2,
               submitter_donor_id: 'ICGC_0001',
               age_at_diagnosis: 96,
-              cancer_type_code: 'A11.1A',
-              tumour_staging_system: 'Murphy',
+              number_lymph_nodes_positive: 1,
+              cancer_type_code: 'C41.1',
+              clinical_tumour_staging_system: 'Binet staging system',
               presenting_symptoms: ['Back Pain', 'Nausea'],
+              clinical_stage_group: 'Stage A',
             },
           },
         ],
@@ -1470,16 +1474,19 @@ describe('Submission Api', () => {
       const primary_diagnosis = {
         ...entityBase,
         number_lymph_nodes_examined: 2,
+        number_lymph_nodes_positive: 1,
+        clinical_stage_group: 'Stage A',
         age_at_diagnosis: 96,
-        cancer_type_code: 'A11.1A',
+        cancer_type_code: 'C41.1',
         submitter_primary_diagnosis_id: 'P-1',
-        tumour_staging_system: 'Murphy',
+        clinical_tumour_staging_system: 'Binet staging system',
         presenting_symptoms: ['Back Pain', 'Nausea'],
       };
 
       const donor = {
         ...entityBase,
         vital_status: 'Deceased',
+        primary_site: 'Gum',
         cause_of_death: 'Died of cancer',
         survival_time: 522,
       };
@@ -1551,6 +1558,7 @@ describe('Submission Api', () => {
           const updatedDonorExpectedInfo = {
             program_id: programId,
             submitter_donor_id: 'ICGC_0001',
+            primary_site: 'Gum',
             cause_of_death: null, // tslint:disable-line
             survival_time: null, // tslint:disable-line
             vital_status: 'Alive',
@@ -1757,11 +1765,13 @@ describe('Submission Api', () => {
             clinicalInfo: {
               submitter_primary_diagnosis_id: 'P-1',
               age_at_diagnosis: 96,
-              cancer_type_code: 'A11.1A',
+              cancer_type_code: 'C11.1A',
+              clinical_stage_group: 'Stage A',
               number_lymph_nodes_examined: 2,
+              number_lymph_nodes_positive: 2,
               program_id: 'ABCD-EF',
               submitter_donor_id: 'ICGC_0003',
-              tumour_staging_system: 'Murphy',
+              clinical_tumour_staging_system: 'Binet staging system',
             },
           });
         });
@@ -1778,11 +1788,13 @@ describe('Submission Api', () => {
             clinicalInfo: {
               submitter_primary_diagnosis_id: 'P-1',
               age_at_diagnosis: 96,
-              cancer_type_code: 'A11.1A',
+              cancer_type_code: 'C11.1A',
               number_lymph_nodes_examined: 2,
+              clinical_stage_group: 'Stage A',
               program_id: 'ABCD-EF',
               submitter_donor_id: 'ICGC_0001',
-              tumour_staging_system: 'Murphy',
+              clinical_tumour_staging_system: 'Binet staging system',
+              number_lymph_nodes_positive: 1,
             },
           },
         ],
@@ -1793,6 +1805,7 @@ describe('Submission Api', () => {
         },
         clinicalInfo: {
           program_id: 'ABCD-EF',
+          primary_site: 'Gum',
           vital_status: 'DoDa', // invalid with new schema
           cause_of_death: 'DaDo', // invalid with new schema
           submitter_donor_id: 'ICGC_0001',
@@ -1818,13 +1831,13 @@ describe('Submission Api', () => {
               submitter_donor_id: 'ICGC_0001',
               submitter_specimen_id: 'ss123-sjdm-1',
               specimen_acquisition_interval: 200,
-              specimen_anatomic_location: 'Other',
+              specimen_anatomic_location: 'C11.1',
               reference_pathology_confirmed: 'No',
-              tumour_histological_type: 'M-1111/22',
-              tumour_grading_system: 'Default',
-              tumour_grade: 'aStringValue',
-              pathological_tumour_staging_system: 'Murphy',
-              pathological_stage_group: 'aStringValue',
+              tumour_histological_type: '8260/3',
+              tumour_grading_system: 'Gleason grade group system',
+              tumour_grade: 'grade group 1',
+              pathological_tumour_staging_system: 'Binet staging system',
+              pathological_stage_group: 'Stage a',
               percent_proliferating_cells: 0.5,
               percent_inflammatory_tissue: 0.6,
               percent_stromal_cells: 0.65,
@@ -2547,16 +2560,6 @@ const expectedDonorBatchSubmissionSchemaErrors = [
     message:
       'You are trying to submit the same [submitter_donor_id] in multiple rows. [submitter_donor_id] can only be submitted once per file.',
     fieldName: DonorFieldsEnum.submitter_donor_id,
-  },
-  {
-    index: 0,
-    type: 'INVALID_FIELD_VALUE_TYPE',
-    info: {
-      value: 'acdc',
-      donorSubmitterId: 'ICGC_0002',
-    },
-    message: 'The value is not permissible for this field.',
-    fieldName: DonorFieldsEnum.survival_time,
   },
   {
     index: 0,
