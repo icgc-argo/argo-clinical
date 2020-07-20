@@ -64,3 +64,18 @@ it's recommended to use mysql 5.7, 5.6. or 5.5 mysql 8 has issues, but works non
 - move all mysql scripts from scripts folder to rrf folder.
 
 the job to import this: https://jenkins.qa.cancercollaboratory.org/job/ARGO/job/devops/job/rxnorm-import/
+
+# Lectern client
+
+## work live with overture client without publishing new versions
+
+in clinical package json:
+1- "@overturebio-stack/lectern-client": "file:/home/ballabadi/dev/repos/overture/js-lectern-client",
+2- go to lectern client, update code and `npm run build`
+3- install the updated version `npm i`
+
+## how to debug schema client :
+
+1- put debug point here: manager.ts function
+2- when break point hits, step into lectern client func
+3- place break point in lectern client file
