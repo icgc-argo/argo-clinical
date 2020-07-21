@@ -39,6 +39,7 @@ import {
   ClinicalTherapySchemaNames,
   DonorFieldsEnum,
   ClinicalTherapyType,
+  TreatmentFieldsEnum,
 } from '../../common-model/entities';
 
 const L = loggerFor(__filename);
@@ -171,6 +172,14 @@ const updateOrAddTreatementInfo = (donor: Donor, record: ClinicalInfo): Treatmen
     treatment = addNewTreatmentObj(donor);
   }
   treatment.clinicalInfo = record;
+
+  // remove any therapy that no longer exists in the treatment type lists if any
+  _.remove(treatment.therapies, (therapy: Therapy) => {
+    const therapies = treatment.clinicalInfo[TreatmentFieldsEnum.treatment_type] as string[];
+    if (therapies == undefined) return;
+    therapies.find((treatmentType: string) => treatmentType == therapy.therapyType) == undefined;
+  });
+
   return treatment;
 };
 

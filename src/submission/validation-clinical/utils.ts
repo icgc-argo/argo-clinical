@@ -76,6 +76,30 @@ export const buildSubmissionError = (
   };
 };
 
+export const buildSubmissionWarning = (
+  newRecord: DeepReadonly<SubmittedClinicalRecord>,
+  type: DataValidationErrors,
+  fieldName: ClinicalFields,
+  info: object = {},
+): SubmissionValidationError => {
+  // typescript refused to take this directly
+  const index: number = newRecord.index;
+  const errorData = {
+    type,
+    fieldName,
+    index,
+    info: {
+      ...info,
+      donorSubmitterId: newRecord[SampleRegistrationFieldsEnum.submitter_donor_id],
+      value: newRecord[fieldName],
+    } as SubmissionErrorBaseInfo,
+  };
+  return {
+    ...errorData,
+    message: validationErrorMessage(type, errorData),
+  };
+};
+
 export const buildSubmissionUpdate = (
   newRecord: DeepReadonly<SubmittedClinicalRecord>,
   oldValue: string,
@@ -97,12 +121,19 @@ export const buildSubmissionUpdate = (
 export const buildRecordValidationResult = (
   record: DeepReadonly<SubmittedClinicalRecord>,
   errors: SubmissionValidationError | SubmissionValidationError[],
+  warnings: SubmissionValidationError[],
   existentDonor: DeepReadonly<Donor>,
   clinicalEntitySchemaName: ClinicalEntitySchemaNames,
 ): RecordValidationResult => {
   const errorsArr = convertToArray(errors);
   if (errorsArr.length > 0) {
-    return { type: ModificationType.ERRORSFOUND, index: record.index, resultArray: errorsArr };
+    return {
+      status: ModificationType.ERRORSFOUND,
+      index: record.index,
+      errors: errorsArr,
+      updates: [],
+      warnings: warnings,
+    };
   }
 
   const clinicalInfo = getSingleClinicalEntityFromDonorBySchemanName(
@@ -110,20 +141,26 @@ export const buildRecordValidationResult = (
     clinicalEntitySchemaName,
     record as ClinicalInfo,
   );
-  return checkForUpdates(record, clinicalInfo);
+
+  const rvr = addUpdateStatus(record, clinicalInfo);
+  return addWarnings(rvr, warnings);
+};
+
+const addWarnings = (rvr: RecordValidationResult, warnings: SubmissionValidationError[]) => {
+  return { ...rvr, warnings };
 };
 
 // cases
 // 1 new clinicalInfo <=> new
 // 2 changing clinicalInfo <=> update
 // 3 not new or update <=> noUpdate
-const checkForUpdates = (
+const addUpdateStatus = (
   record: DeepReadonly<SubmittedClinicalRecord>,
   clinicalInfo: DeepReadonly<ClinicalInfo> | undefined,
 ): RecordValidationResult => {
   // clinicalInfo empty so new
   if (_.isEmpty(clinicalInfo)) {
-    return { type: ModificationType.NEW, index: record.index };
+    return { status: ModificationType.NEW, index: record.index, warnings: [], updates: [] };
   }
 
   // check changing fields
@@ -131,8 +168,13 @@ const checkForUpdates = (
 
   // if no updates and not new return noUpdate
   return submissionUpdates.length === 0
-    ? { type: ModificationType.NOUPDATE, index: record.index }
-    : { type: ModificationType.UPDATED, index: record.index, resultArray: submissionUpdates };
+    ? { status: ModificationType.NOUPDATE, index: record.index, warnings: [], updates: [] }
+    : {
+        status: ModificationType.UPDATED,
+        index: record.index,
+        updates: submissionUpdates,
+        warnings: [],
+      };
 };
 
 const getSubmissionUpdates = (
@@ -165,18 +207,20 @@ export const buildClinicalValidationResult = (results: RecordValidationResult[])
   };
   let dataErrors: SubmissionValidationError[] = [];
   let dataUpdates: SubmissionValidationUpdate[] = [];
-
+  let dataWarnings: SubmissionValidationError[] = [];
   results.forEach(result => {
-    stats[result.type].push(result.index);
-    if (result.type === ModificationType.UPDATED) {
-      dataUpdates = dataUpdates.concat(result.resultArray as SubmissionValidationUpdate[]);
-    } else if (result.type === ModificationType.ERRORSFOUND) {
-      dataErrors = dataErrors.concat(result.resultArray as SubmissionValidationError[]);
+    stats[result.status].push(result.index);
+    dataWarnings = dataWarnings.concat(result.warnings);
+    if (result.status === ModificationType.UPDATED) {
+      dataUpdates = dataUpdates.concat(result.updates as SubmissionValidationUpdate[]);
+    } else if (result.status === ModificationType.ERRORSFOUND) {
+      dataErrors = dataErrors.concat(result.errors as SubmissionValidationError[]);
     }
   });
 
   return {
     stats: stats,
+    dataWarnings: dataWarnings,
     dataErrors: dataErrors,
     dataUpdates: dataUpdates,
   };
@@ -187,7 +231,13 @@ export const buildRecordValidationError = (
   errors: SubmissionValidationError | SubmissionValidationError[],
 ): RecordValidationResult => {
   const errorsArr = convertToArray(errors);
-  return { type: ModificationType.ERRORSFOUND, index: record.index, resultArray: errorsArr };
+  return {
+    status: ModificationType.ERRORSFOUND,
+    index: record.index,
+    errors: errorsArr,
+    warnings: [],
+    updates: [],
+  };
 };
 
 export const buildMultipleRecordValidationErrors = (

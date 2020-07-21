@@ -17,7 +17,11 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { SubmissionValidationError, SubmittedClinicalRecord } from '../submission-entities';
+import {
+  SubmissionValidationError,
+  SubmittedClinicalRecord,
+  SubmissionValidationOutput,
+} from '../submission-entities';
 import { ClinicalEntitySchemaNames, PrimaryDiagnosisFieldsEnum } from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
@@ -28,7 +32,7 @@ import { checkClinicalEntityDoesntBelongToOtherDonor } from './utils';
 export const validate = async (
   primaryDiagnosisRecord: DeepReadonly<SubmittedClinicalRecord>,
   existentDonor: DeepReadonly<Donor>,
-): Promise<SubmissionValidationError[]> => {
+): Promise<SubmissionValidationOutput> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
   if (!primaryDiagnosisRecord || !existentDonor) {
     throw new Error("Can't call this function without primary diagnosis records");
@@ -48,7 +52,7 @@ export const validate = async (
     );
   }
 
-  return errors;
+  return { errors };
 };
 
 function getExisting(
