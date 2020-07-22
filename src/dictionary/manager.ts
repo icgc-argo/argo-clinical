@@ -191,9 +191,17 @@ class SchemaManager {
     name: string,
     version: string,
   ): Promise<dictionaryEntities.SchemasDictionary | undefined> => {
-    return await dictionaryRestClient
-      .fetchSchema(this.schemaServiceUrl, name, version)
-      .catch(err => undefined);
+    try {
+      const newSchema = await dictionaryRestClient.fetchSchema(
+        this.schemaServiceUrl,
+        name,
+        version,
+      );
+      return newSchema;
+    } catch (err) {
+      L.debug(err.message);
+      return Promise.resolve(undefined);
+    }
   };
 
   loadSchemaAndSave = async (
