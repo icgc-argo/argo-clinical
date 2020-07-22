@@ -139,6 +139,10 @@ export namespace MigrationManager {
       newSchemaVersion,
     );
 
+    if (newTargetSchema == undefined) {
+      return await abortMigration(migrationToRun);
+    }
+
     const preMigrateVerification = await verifyNewSchemaIsValidWithDataValidation(newTargetSchema);
     if (!_.isEmpty(preMigrateVerification)) {
       return await abortMigration(migrationToRun, preMigrateVerification);

@@ -176,6 +176,9 @@ class SchemaManager {
     newVersion: string,
   ): Promise<dictionaryEntities.SchemasDictionary> => {
     const newSchema = await this.loadSchemaByVersion(name, newVersion);
+    if (newSchema == undefined) {
+      throw new Error("couldn't save/update new schema, schema is undefined.");
+    }
     const result = await schemaRepo.createOrUpdate(newSchema);
     if (!result) {
       throw new Error("couldn't save/update new schema.");
@@ -187,9 +190,10 @@ class SchemaManager {
   loadSchemaByVersion = async (
     name: string,
     version: string,
-  ): Promise<dictionaryEntities.SchemasDictionary> => {
-    const newSchema = await dictionaryRestClient.fetchSchema(this.schemaServiceUrl, name, version);
-    return newSchema;
+  ): Promise<dictionaryEntities.SchemasDictionary | undefined> => {
+    return await dictionaryRestClient
+      .fetchSchema(this.schemaServiceUrl, name, version)
+      .catch(err => undefined);
   };
 
   loadSchemaAndSave = async (
@@ -221,6 +225,9 @@ class SchemaManager {
     ) {
       L.debug(`fetching schema from schema service.`);
       const result = await this.loadSchemaByVersion(name, this.currentSchemaDictionary.version);
+      if (result == undefined) {
+        throw new Error("couldn't save/update new schema, schema is undefined.");
+      }
       L.info(`fetched schema ${result.version}`);
       this.currentSchemaDictionary.schemas = result.schemas;
       const saved = await schemaRepo.createOrUpdate(this.currentSchemaDictionary);
