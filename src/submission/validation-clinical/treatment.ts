@@ -97,6 +97,10 @@ function checkForDeletedTreatmentTherapies(
   warnings: SubmissionValidationError[],
 ) {
   const treatment = getTreatment(treatmentRecord, existentDonor);
+  // treatment not created yet. no need to check then
+  if (treatment == undefined) {
+    return;
+  }
   // if treatment isn't present in this existentDonor, it could exist in another donor
   if (
     treatment.clinicalInfo[TreatmentFieldsEnum.treatment_type] !=

@@ -602,6 +602,9 @@ export namespace operations {
       const updates = validateResult[clinicalType].dataUpdates as SubmissionValidationUpdate[];
       validatedClinicalEntities[clinicalType].dataUpdates = updates;
 
+      const warnings = validateResult[clinicalType].dataWarnings;
+      validatedClinicalEntities[clinicalType].dataWarnings = warnings;
+
       const errors = validateResult[clinicalType].dataErrors as SubmissionValidationError[];
       invalid = invalid || (errors && errors.length > 0);
       validatedClinicalEntities[clinicalType].dataErrors = errors;
