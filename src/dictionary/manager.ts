@@ -199,8 +199,8 @@ class SchemaManager {
       );
       return newSchema;
     } catch (err) {
-      L.error('Failed to load fetch schema', err);
-      return Promise.resolve(undefined);
+      L.error('Failed to fetch schema: ', err);
+      return undefined;
     }
   };
 
