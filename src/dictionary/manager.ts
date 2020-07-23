@@ -199,7 +199,7 @@ class SchemaManager {
       );
       return newSchema;
     } catch (err) {
-      L.debug(err.message);
+      L.error('Failed to load fetch schema', err);
       return Promise.resolve(undefined);
     }
   };
