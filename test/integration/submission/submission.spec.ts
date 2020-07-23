@@ -1455,7 +1455,7 @@ describe('Submission Api', () => {
         });
     });
 
-    it.only('should return 200 when commit is completed', async () => {
+    it('should return 200 when commit is completed', async () => {
       // To get submission into correct state (pending approval) we need to already have a completed submission...
       await uploadSubmission([
         'donor.tsv',
@@ -1611,7 +1611,11 @@ describe('Submission Api', () => {
 
           chai
             .expect(updatedDonor.treatments?.[0].clinicalInfo[TreatmentFieldsEnum.treatment_type])
-            .to.eq(['Chemotherapy', 'Surgery']);
+            .to.deep.eq(['Chemotherapy', 'Surgery']);
+
+          chai.expect(updatedDonor.treatments?.[0].therapies.length).to.eq(1);
+
+          chai.expect(updatedDonor.treatments?.[0].therapies[0].therapyType).to.eq('chemotherapy');
 
           chai
             .expect(
