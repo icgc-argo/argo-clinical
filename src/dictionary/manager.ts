@@ -190,7 +190,7 @@ class SchemaManager {
   loadSchemaByVersion = async (
     name: string,
     version: string,
-  ): Promise<dictionaryEntities.SchemasDictionary | undefined> => {
+  ): Promise<dictionaryEntities.SchemasDictionary> => {
     try {
       const newSchema = await dictionaryRestClient.fetchSchema(
         this.schemaServiceUrl,
@@ -200,7 +200,7 @@ class SchemaManager {
       return newSchema;
     } catch (err) {
       L.error('Failed to fetch schema: ', err);
-      return undefined;
+      throw new Error('Failed to fetch schema: ' + err.message);
     }
   };
 

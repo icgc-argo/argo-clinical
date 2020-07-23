@@ -134,12 +134,13 @@ export namespace MigrationManager {
 
     const newSchemaVersion = migrationToRun.toVersion;
     const dictionaryName = dictionaryManagerInstance().getCurrentName();
-    const newTargetSchema = await dictionaryManagerInstance().loadSchemaByVersion(
-      dictionaryName,
-      newSchemaVersion,
-    );
-
-    if (newTargetSchema == undefined) {
+    let newTargetSchema: dictionaryEntities.SchemasDictionary;
+    try {
+      newTargetSchema = await dictionaryManagerInstance().loadSchemaByVersion(
+        dictionaryName,
+        newSchemaVersion,
+      );
+    } catch (err) {
       return await abortMigration(migrationToRun);
     }
 
