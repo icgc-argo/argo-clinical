@@ -141,7 +141,10 @@ export namespace MigrationManager {
         newSchemaVersion,
       );
     } catch (err) {
-      return await abortMigration(migrationToRun);
+      const message: string =
+        "couldn't load new schema, check if the version is correct and try again, " +
+        'if problem persists check the logs';
+      return await abortMigration(migrationToRun, undefined, message);
     }
 
     const preMigrateVerification = await verifyNewSchemaIsValidWithDataValidation(newTargetSchema);
@@ -324,12 +327,14 @@ export namespace MigrationManager {
   const abortMigration = async (
     migration: DeepReadonly<DictionaryMigration>,
     newSchemaAnalysis?: NewSchemaVerificationResult,
+    errorMessage?: string,
   ) => {
     const migrationToFail = _.cloneDeep(migration) as DictionaryMigration;
     migrationToFail.stage = 'FAILED';
     migrationToFail.state = 'CLOSED';
-    if (newSchemaAnalysis) {
-      migrationToFail.newSchemaErrors = newSchemaAnalysis;
+    if (newSchemaAnalysis != undefined || errorMessage) {
+      const newSchemaError = newSchemaAnalysis || errorMessage;
+      migrationToFail.newSchemaErrors = newSchemaError;
     }
 
     const updatedMigration = await migrationRepo.update(migrationToFail);
