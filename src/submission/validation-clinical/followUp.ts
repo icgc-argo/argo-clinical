@@ -21,6 +21,7 @@ import {
   SubmissionValidationError,
   SubmittedClinicalRecord,
   DataValidationErrors,
+  SubmissionValidationOutput,
 } from '../submission-entities';
 import {
   ClinicalEntitySchemaNames,
@@ -39,7 +40,7 @@ export const validate = async (
   followUpRecord: DeepReadonly<SubmittedClinicalRecord>,
   existentDonor: DeepReadonly<Donor>,
   mergedDonor: Donor,
-): Promise<SubmissionValidationError[]> => {
+): Promise<SubmissionValidationOutput> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
   if (!followUpRecord || !existentDonor) {
     throw new Error("Can't call this function without followup records");
@@ -77,7 +78,7 @@ export const validate = async (
       errors,
     );
   }
-  return errors;
+  return { errors };
 };
 
 function getExistingFollowUp(

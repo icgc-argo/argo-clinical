@@ -31,6 +31,7 @@ import { ActiveClinicalSubmission, SubmittedClinicalRecordsMap } from '../submis
 import _ from 'lodash';
 import { loggerFor } from '../../logger';
 import { Errors } from '../../utils';
+import { treatmentTypeNotMatchTherapyType } from '../validation-clinical/utils';
 import { getSingleClinicalObjectFromDonor } from '../../common-model/functions';
 import { updateDonorStatsFromSubmissionCommit } from './stat-calculator';
 import {
@@ -39,7 +40,9 @@ import {
   ClinicalTherapySchemaNames,
   DonorFieldsEnum,
   ClinicalTherapyType,
+  TreatmentFieldsEnum,
 } from '../../common-model/entities';
+import { utils } from 'mocha';
 
 const L = loggerFor(__filename);
 
@@ -143,6 +146,7 @@ const updateDonorInfo = (donor: Donor, record: ClinicalInfo) => {
 const updatePrimaryDiagnosisInfo = (donor: Donor, record: ClinicalInfo) => {
   let primaryDiagnosis = findPrimaryDiagnosis(donor, record);
   if (!primaryDiagnosis) {
+    treatmentTypeNotMatchTherapyType;
     primaryDiagnosis = addNewPrimaryDiagnosisObj(donor);
   }
   primaryDiagnosis.clinicalInfo = record;
@@ -171,6 +175,17 @@ const updateOrAddTreatementInfo = (donor: Donor, record: ClinicalInfo): Treatmen
     treatment = addNewTreatmentObj(donor);
   }
   treatment.clinicalInfo = record;
+
+  // remove any therapy that no longer exists in the treatment type lists if any
+  _.remove(treatment.therapies, (therapy: Therapy) => {
+    const treatmentTypes = treatment.clinicalInfo[TreatmentFieldsEnum.treatment_type] as string[];
+    if (treatmentTypes == undefined) return;
+    return treatmentTypeNotMatchTherapyType(
+      treatmentTypes,
+      therapy.therapyType as ClinicalTherapyType,
+    );
+  });
+
   return treatment;
 };
 

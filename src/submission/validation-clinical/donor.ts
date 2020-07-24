@@ -22,6 +22,7 @@ import {
   SubmittedClinicalRecord,
   SubmissionValidationError,
   DonorVitalStatusValues,
+  SubmissionValidationOutput,
 } from '../submission-entities';
 import { SpecimenFieldsEnum, DonorFieldsEnum } from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
@@ -33,7 +34,7 @@ export const validate = async (
   submittedDonorClinicalRecord: DeepReadonly<SubmittedClinicalRecord>,
   existentDonor: DeepReadonly<Donor>,
   mergedDonor: Donor,
-): Promise<SubmissionValidationError[]> => {
+): Promise<SubmissionValidationOutput> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
 
   if (!existentDonor || !mergedDonor || !submittedDonorClinicalRecord) {
@@ -47,7 +48,7 @@ export const validate = async (
 
   // other checks here and add to `errors`
 
-  return errors;
+  return { errors };
 };
 
 function checkTimeConflictWithSpecimens(

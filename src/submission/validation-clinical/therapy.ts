@@ -21,6 +21,7 @@ import {
   SubmissionValidationError,
   SubmittedClinicalRecord,
   DataValidationErrors,
+  SubmissionValidationOutput,
 } from '../submission-entities';
 import {
   ClinicalEntitySchemaNames,
@@ -38,7 +39,7 @@ export const validate = async (
   therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
   existentDonor: DeepReadonly<Donor>,
   mergedDonor: Donor,
-): Promise<SubmissionValidationError[]> => {
+): Promise<SubmissionValidationOutput> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
   if (!therapyRecord || !mergedDonor || !existentDonor) {
     throw new Error("Can't call this function without a registerd donor & therapy record");
@@ -46,9 +47,9 @@ export const validate = async (
 
   const errors: SubmissionValidationError[] = [];
   const treatment = getTreatment(therapyRecord, mergedDonor, errors);
-  if (!treatment) return errors;
+  if (!treatment) return { errors };
   checkTreatementHasCorrectTypeForTherapy(therapyRecord, treatment, errors);
-  return errors;
+  return { errors };
 };
 
 function checkTreatementHasCorrectTypeForTherapy(

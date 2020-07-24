@@ -22,6 +22,9 @@ import {
   DonorFieldsEnum,
   FollowupFieldsEnum,
   TreatmentFieldsEnum,
+  TherapyRxNormFields,
+  PrimaryDiagnosisFieldsEnum,
+  ClinicalTherapyType,
 } from '../../../src/common-model/entities';
 
 /**
@@ -291,6 +294,75 @@ export const stubs = {
             fieldOne: 'field1',
           },
           therapies: [],
+        },
+      ],
+    }),
+
+    existingDonor10: (): Donor => ({
+      schemaMetadata: {
+        isValid: true,
+        lastValidSchemaVersion: '1.0',
+        originalSchemaVersion: '1.0',
+      },
+      _id: '22f23223f',
+      submitterId: 'AB10',
+      programId: 'PEME-CA',
+      donorId: 10,
+      primaryDiagnoses: [
+        {
+          primaryDiagnosisId: 1,
+          clinicalInfo: {
+            [PrimaryDiagnosisFieldsEnum.submitter_donor_id]: 'AB10',
+            [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP1',
+          },
+        },
+      ],
+      clinicalInfo: {
+        [DonorFieldsEnum.vital_status]: 'Deceased',
+      },
+      gender: 'Female',
+      specimens: [
+        {
+          submitterId: 'SPID1',
+          specimenTissueSource: 'Other',
+          clinicalInfo: {},
+          tumourNormalDesignation: 'Normal',
+          specimenType: 'Normal',
+          samples: [
+            {
+              sampleType: 'Other',
+              submitterId: 'SID1',
+            },
+          ],
+        },
+      ],
+      followUps: [],
+      treatments: [
+        {
+          treatmentId: 1,
+          clinicalInfo: {
+            [TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+            [TreatmentFieldsEnum.submitter_donor_id]: 'AB10',
+            [TreatmentFieldsEnum.submitter_primary_diagnosis_id]: 'PP1',
+            [TreatmentFieldsEnum.treatment_type]: ['Chemotherapy', 'Radiation therapy'],
+          },
+          therapies: [
+            {
+              therapyType: 'radiation',
+              clinicalInfo: {
+                [TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+              },
+            },
+            {
+              therapyType: 'chemotherapy',
+              clinicalInfo: {
+                [TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+                [TreatmentFieldsEnum.submitter_donor_id]: 'AB10',
+                [TherapyRxNormFields.drug_name]: 'd1',
+                [TherapyRxNormFields.drug_rxnormid]: '1234',
+              },
+            },
+          ],
         },
       ],
     }),

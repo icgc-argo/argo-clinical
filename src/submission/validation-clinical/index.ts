@@ -42,7 +42,7 @@ export const submissionValidator = (clinicalType: string): any => {
   const validator = availableValidators[clinicalType];
   if (!validator) {
     // return a dummy validator if one doesn't exist
-    return { validate: () => [] };
+    return { validate: () => ({ errors: [], warnings: [] }) };
   }
   return validator;
 };

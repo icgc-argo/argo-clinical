@@ -1777,6 +1777,7 @@ describe('data-validator', () => {
         .expect(result[ClinicalEntitySchemaNames.TREATMENT].dataErrors[0])
         .to.deep.eq(treatmentError);
     });
+
     it('should detect treatment and missing therapy data', async () => {
       const existingDonorMock: Donor = stubs.validation.existingDonor01();
       const newDonorAB1Records = {};
@@ -1834,6 +1835,7 @@ describe('data-validator', () => {
       chai.expect(result.treatment.dataErrors).to.deep.include(treatmentTherapyErr);
       chai.expect(result.treatment.dataErrors).to.deep.include(treatmentTherapyErr2);
     });
+
     it('should detect missing or invalid treatment for chemotherapy', async () => {
       const existingDonorMock: Donor = stubs.validation.existingDonor01();
       const newDonorAB1Records = {};
@@ -1896,6 +1898,48 @@ describe('data-validator', () => {
       chai.expect(result.chemotherapy.dataErrors).to.deep.include(chemoTretmentIdErr);
       chai.expect(result.chemotherapy.dataErrors).to.deep.include(chemoTretmentInvalidErr);
     });
+
+    it('should detect deleted therapies from treatement', async () => {
+      // a donor with Chemo, Radiation therapies in treatement T_03
+      const existingDonorMock: Donor = stubs.validation.existingDonor10();
+      const newDonorRecords = {};
+      const DonorSubmitterId = 'AB10';
+      // delete Radiation therapy and add Ablation therapy
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.TREATMENT,
+        newDonorRecords,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB10',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+          [TreatmentFieldsEnum.submitter_primary_diagnosis_id]: 'PP1',
+          [TreatmentFieldsEnum.treatment_type]: ['Ablation', 'Chemotherapy'],
+          index: 0,
+        },
+      );
+
+      const result = await dv
+        .validateSubmissionData(
+          { [DonorSubmitterId]: newDonorRecords },
+          { [DonorSubmitterId]: existingDonorMock },
+        )
+        .catch((err: any) => fail(err));
+
+      const chemoTretmentInvalidErr: SubmissionValidationError = {
+        fieldName: TreatmentFieldsEnum.treatment_type,
+        message: `The previously submitted treatment data for Radiation therapy will be deleted`,
+        type: DataValidationErrors.DELETING_THERAPY,
+        index: 0,
+        info: {
+          donorSubmitterId: 'AB10',
+          deleted: ['Radiation therapy'],
+          value: ['Ablation', 'Chemotherapy'],
+        },
+      };
+
+      chai.expect(result.treatment.dataErrors.length).to.eq(0);
+      chai.expect(result.treatment.dataWarnings[0]).to.deep.eq(chemoTretmentInvalidErr);
+    });
+
     it('should detect invalid treatment for radiation', async () => {
       const existingDonorMock: Donor = stubs.validation.existingDonor01();
       const newDonorAB1Records = {};
