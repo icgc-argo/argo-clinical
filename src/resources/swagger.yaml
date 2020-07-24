@@ -1050,6 +1050,7 @@ components:
           type: string
           description: the type of error
           enum:
+            - DELETING_THERAPY
             - CONFLICTING_TIME_INTERVAL
             - ID_NOT_REGISTERED
             - INVALID_PROGRAM_ID
@@ -1221,6 +1222,10 @@ components:
           items:
             $ref: '#/components/schemas/ValidationError'
         dataErrors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
+        dataWarnings:
           type: array
           items:
             $ref: '#/components/schemas/ValidationError'

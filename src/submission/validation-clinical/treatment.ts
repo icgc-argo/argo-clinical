@@ -101,15 +101,13 @@ function checkForDeletedTreatmentTherapies(
   if (treatment == undefined) {
     return;
   }
-  // if treatment isn't present in this existentDonor, it could exist in another donor
-  if (
-    treatment.clinicalInfo[TreatmentFieldsEnum.treatment_type] !=
-    treatmentRecord[TreatmentFieldsEnum.treatment_type]
-  ) {
-    const deleted = _.difference(
-      treatment.clinicalInfo[TreatmentFieldsEnum.treatment_type] as string[],
-      treatmentRecord[TreatmentFieldsEnum.treatment_type] as any,
-    );
+
+  const deleted = _.difference(
+    treatment.clinicalInfo[TreatmentFieldsEnum.treatment_type] as string[],
+    treatmentRecord[TreatmentFieldsEnum.treatment_type] as any,
+  );
+
+  if (!_.isEmpty(deleted)) {
     warnings.push(
       utils.buildSubmissionWarning(
         treatmentRecord,
