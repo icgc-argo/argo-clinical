@@ -170,7 +170,7 @@ export const validateSubmissionData = async (
     for (const clinicalType in submittedRecords) {
       const clinicalRecords = submittedRecords[clinicalType];
       for (const record of clinicalRecords) {
-        const errors = await submissionValidator(clinicalType).validate(
+        const { errors, warnings } = await submissionValidator(clinicalType).validate(
           record,
           existentDonor,
           mergedDonor,
@@ -179,6 +179,7 @@ export const validateSubmissionData = async (
         const result = buildRecordValidationResult(
           record,
           errors,
+          warnings,
           existentDonor,
           clinicalType as ClinicalEntitySchemaNames,
         );

@@ -23,6 +23,7 @@ import {
   SubmittedClinicalRecord,
   DonorVitalStatusValues,
   SampleRegistrationFieldsEnum,
+  SubmissionValidationOutput,
 } from '../submission-entities';
 import {
   ClinicalEntitySchemaNames,
@@ -42,7 +43,7 @@ export const validate = async (
   specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
   existentDonor: DeepReadonly<Donor>,
   mergedDonor: Donor,
-): Promise<SubmissionValidationError[]> => {
+): Promise<SubmissionValidationOutput> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
 
   if (!specimenRecord || !existentDonor || !mergedDonor) {
@@ -53,7 +54,7 @@ export const validate = async (
 
   const specimen = getSpecimenFromDonor(existentDonor, specimenRecord, errors);
   if (!specimen) {
-    return errors;
+    return { errors };
   }
 
   // validate allowed/unallowed fields
@@ -80,7 +81,7 @@ export const validate = async (
     checkTimeConflictWithDonor(donorDataToValidateWith, specimenRecord, errors);
   }
 
-  return errors;
+  return { errors };
 };
 
 function getSpecimenFromDonor(

@@ -53,6 +53,7 @@ import {
   DataValidationErrors,
   SubmissionBatchErrorTypes,
   ClinicalEntities,
+  ValidateSubmissionResult,
 } from '../../../src/submission/submission-entities';
 import {
   ClinicalEntitySchemaNames,
@@ -60,6 +61,7 @@ import {
   ClinicalUniqueIdentifier,
   PrimaryDiagnosisFieldsEnum,
   FollowupFieldsEnum,
+  TreatmentFieldsEnum,
 } from '../../../src/common-model/entities';
 import { TsvUtils } from '../../../src/utils';
 import { donorDao } from '../../../src/clinical/donor-repo';
@@ -1326,6 +1328,7 @@ describe('Submission Api', () => {
     const programId = 'ABCD-EF';
     let donor: any;
     let submissionVersion: string;
+    let validateResult: ValidateSubmissionResult;
 
     const uploadSubmission = async (fileNames: string[] = ['donor.tsv']) => {
       const files: Buffer[] = [];
@@ -1363,6 +1366,7 @@ describe('Submission Api', () => {
         .then((res: any) => {
           submissionVersion = res.body.submission.version;
           res.should.have.status(200);
+          validateResult = res.body;
         });
     };
 
@@ -1508,10 +1512,28 @@ describe('Submission Api', () => {
         'follow_up_update.tsv',
         'treatment_update.tsv',
         'chemotherapy_update.tsv',
-        'radiation_update.tsv',
         'hormone_therapy_update.tsv',
       ]);
+
+      const [submission] = (await findInDb(dburl, 'activesubmissions', {
+        programId: programId,
+        submitterId: 'ICGC_0001',
+      })) as Donor[];
+
       await validateSubmission();
+      validateResult.submission?.clinicalEntities.treatment.dataWarnings.length.should.eq(1);
+      validateResult.submission?.clinicalEntities.treatment.dataWarnings[0].should.deep.eq({
+        type: 'DELETING_THERAPY',
+        fieldName: 'treatment_type',
+        index: 0,
+        info: {
+          deleted: ['Radiation therapy'],
+          donorSubmitterId: 'ICGC_0001',
+          value: ['Chemotherapy', 'Surgery'],
+        },
+        message: 'The previously submitted treatment data for Radiation therapy will be deleted',
+      });
+
       await commitActiveSubmission();
 
       const [donorBeforeApproveCommit] = await findInDb(dburl, 'donors', {
@@ -1579,18 +1601,28 @@ describe('Submission Api', () => {
           chai
             .expect(updatedDonor.treatments?.[0].clinicalInfo['therapeutic_intent'])
             .to.eq('Curative');
+
           // chemotherapy therapy
           chai
             .expect(
               updatedDonor.treatments?.[0].therapies[0].clinicalInfo['cumulative_drug_dosage'],
             )
             .to.eq(15);
-          // radiation therapy
+
+          chai
+            .expect(updatedDonor.treatments?.[0].clinicalInfo[TreatmentFieldsEnum.treatment_type])
+            .to.deep.eq(['Chemotherapy', 'Surgery']);
+
+          chai.expect(updatedDonor.treatments?.[0].therapies.length).to.eq(1);
+
+          chai.expect(updatedDonor.treatments?.[0].therapies[0].therapyType).to.eq('chemotherapy');
+
           chai
             .expect(
-              updatedDonor.treatments?.[0].therapies[1].clinicalInfo['radiation_therapy_dosage'],
+              updatedDonor.treatments?.[0].therapies[0].clinicalInfo['cumulative_drug_dosage'],
             )
-            .to.eq(90);
+            .to.eq(15);
+
           // hormone therapy
           chai
             .expect(

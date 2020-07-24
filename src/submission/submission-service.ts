@@ -32,6 +32,7 @@ import {
   Sample,
   SchemaMetadata,
   DonorBySubmitterIdMap,
+  ClinicalEntity,
 } from '../clinical/clinical-entities';
 import {
   ActiveRegistration,
@@ -89,9 +90,10 @@ import { entities as dictionaryEntities } from '@overturebio-stack/lectern-clien
 
 const L = loggerFor(__filename);
 
-const emptyStats = {
+const emptySubmission = {
   dataErrors: [],
   dataUpdates: [],
+  dataWarnings: [],
   stats: {
     new: [],
     noUpdate: [],
@@ -306,7 +308,7 @@ export namespace operations {
           updatedClinicalEntities[clinicalType] = {
             ...activeSubmission.clinicalEntities[clinicalType],
             schemaErrors: [],
-            ...emptyStats,
+            ...emptySubmission,
           };
         }
       }
@@ -408,7 +410,7 @@ export namespace operations {
         createdAt: createdAt,
         schemaErrors: [],
         records: processedRecords as any,
-        ...emptyStats,
+        ...emptySubmission,
       };
     }
 
@@ -600,6 +602,9 @@ export namespace operations {
       const updates = validateResult[clinicalType].dataUpdates as SubmissionValidationUpdate[];
       validatedClinicalEntities[clinicalType].dataUpdates = updates;
 
+      const warnings = validateResult[clinicalType].dataWarnings;
+      validatedClinicalEntities[clinicalType].dataWarnings = warnings;
+
       const errors = validateResult[clinicalType].dataErrors as SubmissionValidationError[];
       invalid = invalid || (errors && errors.length > 0);
       validatedClinicalEntities[clinicalType].dataErrors = errors;
@@ -673,7 +678,7 @@ export namespace operations {
     Object.entries(clinicalEntities).forEach(([clinicalType, clinicalEntity]) => {
       statClearedClinicalEntites[clinicalType] = {
         ...clinicalEntity,
-        ...emptyStats,
+        ...emptySubmission,
       };
     });
     return statClearedClinicalEntites;

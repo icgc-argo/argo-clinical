@@ -63,6 +63,11 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
     const donorId = errorData.info.otherDonorSubmitterId;
     return `This ${clinicalType} has already been associated to donor ${donorId}. Please correct your file.`;
   },
+  DELETING_THERAPY: data => {
+    return `The previously submitted treatment data for ${data.info.deleted.join(
+      ',',
+    )} will be deleted`;
+  },
   MISSING_THERAPY_DATA: errorData => {
     const therapyType = errorData.info.therapyType;
     const treatmentType = errorData.info.value;

@@ -93,6 +93,11 @@ export type SubmissionValidationError = {
   message: string;
 };
 
+export type SubmissionValidationOutput = {
+  errors: Array<SubmissionValidationError>;
+  warnings?: Array<SubmissionValidationError>;
+};
+
 export type SubmissionValidationUpdate = {
   fieldName: string;
   info: {
@@ -119,6 +124,7 @@ export enum SubmissionBatchErrorTypes {
 }
 
 export enum DataValidationErrors {
+  DELETING_THERAPY = 'DELETING_THERAPY',
   MUTATING_EXISTING_DATA = 'MUTATING_EXISTING_DATA',
   SAMPLE_BELONGS_TO_OTHER_SPECIMEN = 'SAMPLE_BELONGS_TO_OTHER_SPECIMEN',
   SPECIMEN_BELONGS_TO_OTHER_DONOR = 'SPECIMEN_BELONGS_TO_OTHER_DONOR',
@@ -259,6 +265,7 @@ export interface SavedClinicalEntity {
   createdAt: DeepReadonly<Date>;
   schemaErrors: DeepReadonly<SubmissionValidationError[]>;
   dataErrors: SubmissionValidationError[];
+  dataWarnings: SubmissionValidationError[];
   dataUpdates: SubmissionValidationUpdate[];
   stats: {
     new: number[];
@@ -314,9 +321,11 @@ export enum SampleRegistrationFieldsEnum {
 }
 
 export interface RecordValidationResult {
-  type: ModificationType;
+  status: ModificationType;
   index: number;
-  resultArray?: SubmissionValidationError[] | SubmissionValidationUpdate[];
+  errors?: SubmissionValidationError[] | SubmissionValidationUpdate[];
+  updates: SubmissionValidationUpdate[];
+  warnings: SubmissionValidationError[];
 }
 
 export enum ModificationType {
@@ -327,7 +336,10 @@ export enum ModificationType {
 }
 
 export type ClinicalTypeValidateResult = {
-  [clinicalType: string]: Pick<SavedClinicalEntity, 'dataErrors' | 'dataUpdates' | 'stats'>;
+  [clinicalType: string]: Pick<
+    SavedClinicalEntity,
+    'dataErrors' | 'dataWarnings' | 'dataUpdates' | 'stats'
+  >;
 };
 
 // batchNameRegex are arrays, so we can just add new file name regex when needed

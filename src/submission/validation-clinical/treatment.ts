@@ -21,6 +21,7 @@ import {
   SubmissionValidationError,
   SubmittedClinicalRecord,
   DataValidationErrors,
+  SubmissionValidationOutput,
 } from '../submission-entities';
 import {
   ClinicalEntitySchemaNames,
@@ -40,7 +41,7 @@ export const validate = async (
   treatmentRecord: DeepReadonly<SubmittedClinicalRecord>,
   existentDonor: DeepReadonly<Donor>,
   mergedDonor: Donor,
-): Promise<SubmissionValidationError[]> => {
+): Promise<SubmissionValidationOutput> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
   if (!treatmentRecord || !existentDonor || !mergedDonor) {
     throw new Error("Can't call this function without a registerd donor & treatment record");
@@ -66,7 +67,11 @@ export const validate = async (
     errors,
     true,
   );
-  return errors;
+
+  const warnings: SubmissionValidationError[] = [];
+  checkForDeletedTreatmentTherapies(treatmentRecord, existentDonor, warnings);
+
+  return { errors, warnings: warnings };
 };
 
 async function checkTreatmentDoesntBelongToOtherDonor(
@@ -82,6 +87,36 @@ async function checkTreatmentDoesntBelongToOtherDonor(
       treatmentRecord,
       existentDonor,
       errors,
+    );
+  }
+}
+
+function checkForDeletedTreatmentTherapies(
+  treatmentRecord: DeepReadonly<SubmittedClinicalRecord>,
+  existentDonor: DeepReadonly<Donor>,
+  warnings: SubmissionValidationError[],
+) {
+  const treatment = getTreatment(treatmentRecord, existentDonor);
+  // treatment not created yet. no need to check then
+  if (treatment == undefined) {
+    return;
+  }
+  // if treatment isn't present in this existentDonor, it could exist in another donor
+  if (
+    treatment.clinicalInfo[TreatmentFieldsEnum.treatment_type] !=
+    treatmentRecord[TreatmentFieldsEnum.treatment_type]
+  ) {
+    const deleted = _.difference(
+      treatment.clinicalInfo[TreatmentFieldsEnum.treatment_type] as string[],
+      treatmentRecord[TreatmentFieldsEnum.treatment_type] as any,
+    );
+    warnings.push(
+      utils.buildSubmissionWarning(
+        treatmentRecord,
+        DataValidationErrors.DELETING_THERAPY,
+        TreatmentFieldsEnum.treatment_type,
+        { deleted },
+      ),
     );
   }
 }
