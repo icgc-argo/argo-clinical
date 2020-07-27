@@ -90,7 +90,7 @@
     "typescript": "^3.9.5"
   },
   "dependencies": {
-    "@overturebio-stack/lectern-client": "1.0.0",
+    "@overturebio-stack/lectern-client": "1.1.0",
     "adm-zip": "^0.4.13",
     "async": "^3.0.1",
     "bcrypt-nodejs": "^0.0.3",
