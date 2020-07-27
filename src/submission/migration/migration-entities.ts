@@ -40,7 +40,7 @@ export interface DictionaryMigration {
   invalidSubmissions: any[];
   programsWithDonorUpdates: string[];
   createdBy: string;
-  newSchemaErrors?: NewSchemaVerificationResult;
+  newSchemaErrors?: NewSchemaVerificationResult | string;
 }
 
 export type NewSchemaVerificationResult = {
@@ -48,7 +48,7 @@ export type NewSchemaVerificationResult = {
     missingFields?: string[];
     invalidFieldCodeLists?: { fieldName: string; missingCodeListValue: string[] }[];
     valueTypeChanges?: string[];
-    // invalidFieldRegex?: { name: string; expectedRegex: RegExp };
+    errorMessage?: string;
   };
 };
 
