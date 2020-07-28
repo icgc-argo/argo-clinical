@@ -130,8 +130,9 @@ let server: Server;
     const migrated = await up(connection.db);
     migrated.forEach((fileName: string) => console.log('Migrated:', fileName));
   } catch (err) {
-    console.log('failed to start migration', err);
+    console.error('failed to do migration', err);
     process.exit(-10);
+    return;
   }
   await bootstrap.run(defaultAppConfigImpl);
   /**
