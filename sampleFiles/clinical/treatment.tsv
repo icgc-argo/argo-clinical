@@ -1,6 +1,6 @@
-program_id	submitter_donor_id	submitter_treatment_id	submitter_primary_diagnosis_id	treatment_type	age_at_consent_for_treatment	is_primary_treatment	treatment_start_interval	treatment_duration	therapeutic_intent	response_to_therapy
-TEST-CA	ICGC_0001.1	T_01	P1	Hormonal therapy	99	Yes	5	6	Unknown	NED
-TEST-CA	ICGC_0001.1	T_04	P2	Chemotherapy	13	Yes	192	204	Concurrent	Partial response
-TEST-CA	ICGC_0001.1	T_05	P1	Radiation therapy	15	Yes	192	204	Concurrent	Partial response
-TEST-CA	ICGC_0002	T_02	P4	chemotherapy|immunotherapy	99	Yes	5	6	Unknown	NED
-TEST-CA	ICGC_0003	T_03	P3	chemotherapy|radiation therapy	01	No	12	10	Curative	Partial response
+program_id	submitter_donor_id	submitter_treatment_id	submitter_primary_diagnosis_id	treatment_type	age_at_consent_for_treatment	is_primary_treatment	treatment_start_interval	treatment_duration	treatment_intent	response_to_treatment	treatment_setting 
+TEST-CA	ICGC_0001.1	T_01	P1	Hormonal therapy	99	Yes	5	6	Unknown	NED	Adjuvant
+TEST-CA	ICGC_0001.1	T_04	P2	Chemotherapy	13	Yes	192	204	Curative	Partial response	Adjuvant
+TEST-CA	ICGC_0001.1	T_05	P1	Radiation therapy	15	Yes	192	204	Curative	Partial response	Adjuvant
+TEST-CA	ICGC_0002	T_02	P4	chemotherapy|immunotherapy	99	Yes	5	6	Unknown	NED	Adjuvant
+TEST-CA	ICGC_0003	T_03	P3	chemotherapy|radiation therapy	01	No	12	10	Curative	Partial response	Adjuvant

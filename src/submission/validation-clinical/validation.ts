@@ -175,11 +175,10 @@ export const validateSubmissionData = async (
           existentDonor,
           mergedDonor,
         );
-
         const result = buildRecordValidationResult(
           record,
           errors,
-          warnings,
+          warnings || [],
           existentDonor,
           clinicalType as ClinicalEntitySchemaNames,
         );
