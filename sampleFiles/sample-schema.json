@@ -3042,28 +3042,33 @@
               }
             },
             {
-              "name": "therapeutic_intent",
-              "description": "The therapeutic intent, the reason behind the choice of a therapy, of the treatment.",
+              "name": "treatment_intent",
+              "description": "Indicate the intended disease outcome for which the treatment is given. (Reference: CDISC [NCIt code: C124307])",
               "valueType": "string",
               "restrictions": {
                 "required": true,
-                "codeList": [
-                  "Adjuvant",
-                  "Concurrent",
-                  "Curative",
-                  "Neoadjuvant",
-                  "Not applicable",
-                  "Palliative",
-                  "Unknown"
-                ]
+                "codeList": ["Curative", "Palliative", "Unknown"]
               },
               "meta": {
                 "core": true,
-                "displayName": "Therapeutic Intent"
+                "displayName": "Treatment Intent"
               }
             },
             {
-              "name": "response_to_therapy",
+              "name": "treatment_setting",
+              "description": "Indicate the treatment setting, which describes the treatment's purpose in relation to the primary treatment. (Reference: CDISC [NCIt code: C124308])",
+              "valueType": "string",
+              "restrictions": {
+                "required": true,
+                "codeList": ["Adjuvant", "Advanced/Metastatic", "Neoadjuvant", "Not applicable"]
+              },
+              "meta": {
+                "core": true,
+                "displayName": "Treatment Setting"
+              }
+            },
+            {
+              "name": "response_to_treatment",
               "description": "The donor's response to the applied treatment regimen. (Source: RECIST)",
               "valueType": "string",
               "restrictions": {
@@ -3078,11 +3083,11 @@
               },
               "meta": {
                 "core": true,
-                "displayName": "Response To Therapy"
+                "displayName": "Response To Treatment"
               }
             },
             {
-              "name": "outcome_of_therapy",
+              "name": "outcome_of_treatment",
               "description": "Indicate the donor's outcome of the prescribed treatment.",
               "valueType": "string",
               "restrictions": {
@@ -3100,7 +3105,7 @@
                 ]
               },
               "meta": {
-                "displayName": "Outcome Of Therapy"
+                "displayName": "Outcome Of Treatment"
               }
             },
             {
