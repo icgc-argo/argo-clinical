@@ -2070,5 +2070,51 @@ describe('data-validator', () => {
         .expect(result[ClinicalEntitySchemaNames.FOLLOW_UP].dataErrors[0])
         .to.deep.eq(followUpError);
     });
+    it('should error when follow up interval_of_followup is less than Treatment treatment_start_interval', async () => {
+      const existingDonor = stubs.validation.existingDonor08();
+      const submissionRecordsMap = {};
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.FOLLOW_UP,
+        submissionRecordsMap,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'ICGC_0002',
+          [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.FOLLOW_UP]]: 'FLL1234',
+          [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.TREATMENT]]: 'T_02',
+          interval_of_followup: 10,
+          index: 0,
+        },
+      );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.FOLLOW_UP,
+        submissionRecordsMap,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'ICGC_0002',
+          [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.FOLLOW_UP]]: 'FLL1235',
+          [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.TREATMENT]]: 'T_02',
+          interval_of_followup: 3,
+          index: 0,
+        },
+      );
+
+      const result = await dv
+        .validateSubmissionData({ ICGC_0002: submissionRecordsMap }, { ICGC_0002: existingDonor })
+        .catch((err: any) => fail(err));
+
+      const followUpError: SubmissionValidationError = {
+        fieldName: FollowupFieldsEnum.interval_of_followup,
+        message: 'interval_of_followup cannot be less than Treatment treatment_start_interval.',
+        type: DataValidationErrors.FOLLOW_UP_CONFLICING_INTERVAL,
+        index: 0,
+        info: {
+          donorSubmitterId: 'ICGC_0002',
+          value: 3,
+        },
+      };
+
+      chai
+        .expect(result[ClinicalEntitySchemaNames.FOLLOW_UP].dataErrors[0])
+        .to.deep.eq(followUpError);
+    });
   });
 });

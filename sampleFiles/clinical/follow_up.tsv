@@ -1,4 +1,5 @@
 program_id	submitter_donor_id	submitter_follow_up_id	submitter_treatment_id	submitter_primary_diagnosis_id	interval_of_followup	disease_status_at_followup	relapse_type	relapse_interval	method_of_progression_status	anatomic_site_progression_or_recurrences	recurrence_tumour_staging_system	recurrence_t_category	recurrence_n_category	recurrence_m_category	recurrence_stage_group	posttherapy_tumour_staging_system	posttherapy_t_category	posttherapy_n_category	posttherapy_m_category	posttherapy_stage_group
-TEST-CA	ICGC_0002	FLL1234	T_02		10	Stable	Local recurrence		Biopsy	Ankle	Binet	
-TEST-CA	ICGC_0002	FLL1235		P4	13	Stable	Local recurrence		Biopsy	Ankle	Binet	
-TEST-CA	ICGC_0003	FLL1239		P3	13	Stable	Local recurrence		Biopsy	Ankle	Binet	
+TEST-CA	ICGC_0002	FLL1234	T_02		10	Stable
+TEST-CA	ICGC_0002	FLL1235	T_02		45	Stable
+TEST-CA	ICGC_0003	FLL1239	T_03		14	Stable
+TEST-CA	ICGC_0003	FLL1236			13	Stable

@@ -94,6 +94,7 @@ export enum TreatmentFieldsEnum {
   submitter_treatment_id = 'submitter_treatment_id',
   treatment_type = 'treatment_type',
   submitter_primary_diagnosis_id = 'submitter_primary_diagnosis_id',
+  treatment_start_interval = 'treatment_start_interval',
 }
 
 export enum TherapyRxNormFields {
@@ -117,6 +118,7 @@ export enum FollowupFieldsEnum {
   submitter_follow_up_id = 'submitter_follow_up_id',
   submitter_primary_diagnosis_id = 'submitter_primary_diagnosis_id',
   submitter_treatment_id = 'submitter_treatment_id',
+  interval_of_followup = 'interval_of_followup',
 }
 
 // This needed to be added to differentiate between multiple or single fields for identifying

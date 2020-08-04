@@ -458,7 +458,7 @@ export function checkRelatedEntityExists(
   }
 }
 
-function getRelatedEntityByFK(
+export function getRelatedEntityByFK(
   relatedEntityName: ClinicalEntitySchemaNames,
   fk: string,
   mergedDonor: Donor,
