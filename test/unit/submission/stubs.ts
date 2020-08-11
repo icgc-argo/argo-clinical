@@ -25,6 +25,7 @@ import {
   TherapyRxNormFields,
   PrimaryDiagnosisFieldsEnum,
   ClinicalTherapyType,
+  SpecimenFieldsEnum,
 } from '../../../src/common-model/entities';
 
 /**
@@ -384,6 +385,120 @@ export const stubs = {
       specimens: [],
       followUps: [],
       treatments: [],
+    }),
+    existingDonor08: (): Donor => ({
+      schemaMetadata: {
+        isValid: true,
+        lastValidSchemaVersion: '1.0',
+        originalSchemaVersion: '1.0',
+      },
+      _id: '22f23223f',
+      submitterId: 'ICGC_0002',
+      programId: 'TEST-CA',
+      donorId: 250001,
+      clinicalInfo: {
+        [DonorFieldsEnum.program_id]: 'TEST-CA',
+        [DonorFieldsEnum.submitter_donor_id]: 'ICGC_0002',
+        [DonorFieldsEnum.vital_status]: 'Alive',
+      },
+      gender: 'Female',
+      specimens: [
+        {
+          specimenId: 210001,
+          submitterId: 'sub-sp-pacaau-124',
+          specimenTissueSource: 'Saliva',
+          clinicalInfo: {
+            [SpecimenFieldsEnum.program_id]: 'TEST-CA',
+            [SpecimenFieldsEnum.submitter_donor_id]: 'ICGC_0002',
+            [SpecimenFieldsEnum.submitter_primary_diagnosis_id]: 'P4',
+            [SpecimenFieldsEnum.submitter_specimen_id]: 'sub-sp-pacaau-124',
+            [SpecimenFieldsEnum.specimen_acquisition_interval]: 200,
+          },
+          tumourNormalDesignation: 'Tumour',
+          specimenType: 'Primary tumour',
+          samples: [
+            {
+              sampleType: 'Total RNA',
+              submitterId: 'sm123-2',
+              sampleId: 610003,
+            },
+          ],
+        },
+        {
+          specimenId: 210002,
+          submitterId: 'sub-sp-2-220',
+          specimenTissueSource: 'Saliva',
+          clinicalInfo: {},
+          tumourNormalDesignation: 'Tumour',
+          specimenType: 'Primary tumour',
+          samples: [
+            {
+              sampleType: 'Total RNA',
+              submitterId: 'sm-2-220-1',
+              sampleId: 610001,
+            },
+          ],
+        },
+      ],
+      followUps: [
+        {
+          followUpId: 1,
+          clinicalInfo: {
+            [FollowupFieldsEnum.program_id]: 'TEST-CA',
+            [FollowupFieldsEnum.submitter_donor_id]: 'ICGC_0002',
+            [FollowupFieldsEnum.submitter_follow_up_id]: 'FLL1234',
+            [FollowupFieldsEnum.submitter_treatment_id]: 'T_02',
+            [FollowupFieldsEnum.interval_of_followup]: 10,
+          },
+        },
+        {
+          followUpId: 2,
+          clinicalInfo: {
+            [FollowupFieldsEnum.program_id]: 'TEST-CA',
+            [FollowupFieldsEnum.submitter_donor_id]: 'ICGC_0002',
+            [FollowupFieldsEnum.submitter_treatment_id]: 'T_02',
+            [FollowupFieldsEnum.submitter_follow_up_id]: 'FLL1235',
+            [FollowupFieldsEnum.interval_of_followup]: 45,
+          },
+        },
+      ],
+      treatments: [
+        {
+          treatmentId: 3,
+          clinicalInfo: {
+            [TreatmentFieldsEnum.program_id]: 'TEST-CA',
+            [TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
+            [TreatmentFieldsEnum.submitter_donor_id]: 'ICGC_0002',
+            [TreatmentFieldsEnum.submitter_primary_diagnosis_id]: 'P4',
+            [TreatmentFieldsEnum.treatment_type]: ['Chemotherapy', 'Immunotherapy'],
+            [TreatmentFieldsEnum.treatment_start_interval]: 5,
+          },
+          therapies: [
+            {
+              therapyType: 'chemotherapy',
+              clinicalInfo: {
+                [TreatmentFieldsEnum.program_id]: 'TEST-CA',
+                [TreatmentFieldsEnum.submitter_donor_id]: 'ICGC_0002',
+                [TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
+                [TherapyRxNormFields.drug_name]: 'Aminobenzoic Acid',
+                [TherapyRxNormFields.drug_rxnormid]: '74',
+              },
+            },
+          ],
+        },
+      ],
+      primaryDiagnoses: [
+        {
+          primaryDiagnosisId: 3,
+          clinicalInfo: {
+            [PrimaryDiagnosisFieldsEnum.program_id]: 'TEST-CA',
+            [PrimaryDiagnosisFieldsEnum.submitter_donor_id]: 'ICGC_0002',
+            [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'P4',
+            [PrimaryDiagnosisFieldsEnum.age_at_diagnosis]: 96,
+            [PrimaryDiagnosisFieldsEnum.cancer_type_code]: 'C41.1',
+          },
+        },
+      ],
     }),
   },
 };
