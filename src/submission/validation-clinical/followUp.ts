@@ -30,12 +30,11 @@ import {
   PrimaryDiagnosisFieldsEnum,
 } from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
-import { Donor } from '../../clinical/clinical-entities';
+import { Donor, Treatment } from '../../clinical/clinical-entities';
 import _ from 'lodash';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../../common-model/functions';
-
-import { checkClinicalEntityDoesntBelongToOtherDonor, checkRelatedEntityExists } from './utils';
-
+import { getEntitySubmitterIdFieldName } from '../../common-model/functions';
+import * as utils from './utils';
 export const validate = async (
   followUpRecord: DeepReadonly<SubmittedClinicalRecord>,
   existentDonor: DeepReadonly<Donor>,
@@ -48,7 +47,7 @@ export const validate = async (
   const errors: SubmissionValidationError[] = [];
 
   // check if a primary diagnosis is specified that it exists
-  checkRelatedEntityExists(
+  utils.checkRelatedEntityExists(
     ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
     followUpRecord,
     ClinicalEntitySchemaNames.FOLLOW_UP,
@@ -58,7 +57,7 @@ export const validate = async (
   );
 
   // check if a treatment is specified that it exists
-  checkRelatedEntityExists(
+  utils.checkRelatedEntityExists(
     ClinicalEntitySchemaNames.TREATMENT,
     followUpRecord,
     ClinicalEntitySchemaNames.FOLLOW_UP,
@@ -67,11 +66,20 @@ export const validate = async (
     false,
   );
 
+  const entitySubmitterIdField = getEntitySubmitterIdFieldName(ClinicalEntitySchemaNames.TREATMENT);
+  const treatment = utils.getRelatedEntityByFK(
+    ClinicalEntitySchemaNames.TREATMENT,
+    followUpRecord[entitySubmitterIdField] as string,
+    mergedDonor,
+  ) as DeepReadonly<Treatment>;
+
+  checkTreatmentTimeConflict(followUpRecord, treatment, errors);
+
   const followUpClinicalInfo = getExistingFollowUp(existentDonor, followUpRecord);
   // adding new follow up to this donor ?
   if (!followUpClinicalInfo) {
     // check it is unique in this program
-    await checkClinicalEntityDoesntBelongToOtherDonor(
+    await utils.checkClinicalEntityDoesntBelongToOtherDonor(
       ClinicalEntitySchemaNames.FOLLOW_UP,
       followUpRecord,
       existentDonor,
@@ -80,6 +88,31 @@ export const validate = async (
   }
   return { errors };
 };
+
+function checkTreatmentTimeConflict(
+  followUpRecord: DeepReadonly<SubmittedClinicalRecord>,
+  treatment: DeepReadonly<Treatment>,
+  errors: SubmissionValidationError[],
+) {
+  // A follow up may or may not be associated with treatment
+  if (treatment == undefined) return;
+
+  if (
+    followUpRecord.interval_of_followup &&
+    treatment.clinicalInfo &&
+    treatment.clinicalInfo.treatment_start_interval &&
+    followUpRecord.interval_of_followup <= treatment.clinicalInfo.treatment_start_interval
+  ) {
+    errors.push(
+      utils.buildSubmissionError(
+        followUpRecord,
+        DataValidationErrors.FOLLOW_UP_CONFLICING_INTERVAL,
+        FollowupFieldsEnum.interval_of_followup,
+        [],
+      ),
+    );
+  }
+}
 
 function getExistingFollowUp(
   existingDonor: DeepReadonly<Donor>,

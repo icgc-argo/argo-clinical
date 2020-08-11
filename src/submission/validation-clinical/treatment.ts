@@ -31,10 +31,14 @@ import {
   ClinicalTherapySchemaNames,
 } from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
-import { Donor, Treatment } from '../../clinical/clinical-entities';
+import { Donor, Treatment, FollowUp } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
-import { getSingleClinicalObjectFromDonor } from '../../common-model/functions';
+import {
+  getSingleClinicalObjectFromDonor,
+  getEntitySubmitterIdFieldName,
+  getClinicalObjectsFromDonor,
+} from '../../common-model/functions';
 import { checkClinicalEntityDoesntBelongToOtherDonor, checkRelatedEntityExists } from './utils';
 
 export const validate = async (
@@ -67,6 +71,19 @@ export const validate = async (
     errors,
     true,
   );
+
+  // Find existing follow ups for this donor
+  const followUps = getClinicalObjectsFromDonor(
+    mergedDonor,
+    ClinicalEntitySchemaNames.FOLLOW_UP,
+  ) as [FollowUp];
+
+  // find follow ups that are associated with this treatment
+  const results = followUps.filter(followUp => {
+    return followUp.clinicalInfo.submitter_treatment_id == treatmentRecord.submitter_treatment_id;
+  });
+
+  results.forEach(followUp => checkFollowUpTimeConflict(treatmentRecord, followUp, errors));
 
   const warnings: SubmissionValidationError[] = [];
   checkForDeletedTreatmentTherapies(treatmentRecord, existentDonor, warnings);
@@ -156,4 +173,28 @@ function getTreatment(
   return getSingleClinicalObjectFromDonor(donor, ClinicalEntitySchemaNames.TREATMENT, {
     clinicalInfo: { [idFieldName]: treatmentId as string },
   }) as DeepReadonly<Treatment>;
+}
+
+function checkFollowUpTimeConflict(
+  treatmentRecord: DeepReadonly<SubmittedClinicalRecord>,
+  followUp: DeepReadonly<FollowUp>,
+  errors: SubmissionValidationError[],
+) {
+  if (followUp == undefined) return;
+
+  if (
+    treatmentRecord.treatment_start_interval &&
+    followUp.clinicalInfo &&
+    followUp.clinicalInfo.interval_of_followup &&
+    followUp.clinicalInfo.interval_of_followup <= treatmentRecord.treatment_start_interval
+  ) {
+    errors.push(
+      utils.buildSubmissionError(
+        treatmentRecord,
+        DataValidationErrors.TREATMENT_TIME_CONFLICT,
+        TreatmentFieldsEnum.treatment_start_interval,
+        [],
+      ),
+    );
+  }
 }
