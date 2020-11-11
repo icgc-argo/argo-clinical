@@ -184,10 +184,6 @@ const checkRequiredFields = (
     'tumour_grading_system',
     'tumour_grade',
     'percent_tumour_cells',
-    'percent_proliferating_cells',
-    'percent_stromal_cells',
-    'percent_necrosis',
-    'percent_inflammatory_tissue',
     'tumour_histological_type',
     'reference_pathology_confirmed',
   ];
@@ -196,6 +192,10 @@ const checkRequiredFields = (
     'pathological_t_category',
     'pathological_n_category',
     'pathological_m_category',
+    'percent_proliferating_cells',
+    'percent_stromal_cells',
+    'percent_necrosis',
+    'percent_inflammatory_tissue',
   ];
 
   const errorInfo = {
