@@ -56,6 +56,7 @@ export interface DonorRepository {
     submitterIdFieldName: DONOR_DOCUMENT_FIELDS,
   ): Promise<DeepReadonly<Donor> | undefined>;
   insertDonors(donors: Donor[]): Promise<void>;
+  updateDonor(donor: Donor): Promise<void>;
   findBy(criteria: any, limit: number): Promise<DeepReadonly<Donor[]>>;
   findByProgramId(
     programId: string,
@@ -86,6 +87,11 @@ export interface DonorRepository {
 export const donorDao: DonorRepository = {
   async insertDonors(donors: Donor[]) {
     await mongoose.connection.db.collection('donors').insertMany(donors);
+  },
+  async updateDonor(donor: Donor) {
+    await mongoose.connection.db
+      .collection('donors')
+      .findOneAndUpdate({ donorId: donor.donorId }, { $set: donor });
   },
   async countBy(filter: any) {
     return await DonorModel.count(filter).exec();

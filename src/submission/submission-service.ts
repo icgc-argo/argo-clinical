@@ -1200,7 +1200,16 @@ export namespace operations {
     return result;
   }
 
-  export async function adminAddDonors(donors: Donor[]) {
+  /* importLegacyDonors
+   *   Used for importing donor/specimen/sample data from ICGC.
+   *   Primary intent is to add entities with original ICGC Ids (not generated IDs by clinical)
+   *   Ideally, this is run once per program. Situations have come up where new ICGC data needs to be added
+   *    to a program that was already imported, so this is able to process existing donors by adding new
+   *    samples/specimens to a donor that already exists without modifying the existing donor/sample/specimen.
+   */
+  export async function importLegacyDonors(donors: Donor[]) {
+    const actionPromises = []; // ensure all mongo actions complete before return by tracking them here.
+
     const currentDictionaryVersion = await dictionaryManager.instance().getCurrentVersion();
     const schemaMetadata: SchemaMetadata = {
       isValid: true,
@@ -1208,15 +1217,75 @@ export namespace operations {
       originalSchemaVersion: currentDictionaryVersion,
     };
 
-    donors.forEach((d: any) => {
+    const programsIncluded = _.uniq(donors.map(donor => donor.programId));
+
+    // Check if existing donor or new:
+    const dbReads = programsIncluded.map(programId => donorDao.findByProgramId(programId));
+    const dbDonors = _.flatten(await Promise.all(dbReads));
+    const dbDonorIds = dbDonors.map(donor => donor.donorId);
+
+    const newDonors = donors.filter(donor => !dbDonorIds.includes(donor.donorId));
+
+    newDonors.forEach((d: any) => {
       d.createdAt = new Date();
       d.__v = 1;
       d.updatedAt = new Date();
-      d.createBy = 'dcc-admin';
+      d.createdBy = 'dcc-admin';
       d.schemaMetadata = schemaMetadata;
     });
 
-    return await donorDao.insertDonors(donors);
+    if (!_.isEmpty(newDonors)) {
+      actionPromises.push(donorDao.insertDonors(newDonors));
+    }
+
+    const existingDonors = donors.filter(donor => dbDonorIds.includes(donor.donorId));
+
+    existingDonors.forEach(donor => {
+      // The donor is already in the DB, so we need to loop through its Specimens and Samples to find any new ones to add.
+
+      const dbDonor = dbDonors.find(i => i.donorId === donor.donorId);
+      if (dbDonor) {
+        // Will be found because of above filter, do this check to keep TS happy
+
+        const updatedDonor = _.cloneDeep(dbDonor) as Donor;
+        let updated = false;
+
+        donor.specimens.forEach(specimen => {
+          const existingSpecimen = updatedDonor.specimens.find(
+            s => s.specimenId === specimen.specimenId,
+          );
+
+          if (existingSpecimen) {
+            // Found existing specimen, check samples for it
+            specimen.samples.forEach(sample => {
+              const existingSample = existingSpecimen.samples.find(
+                s => s.sampleId === sample.sampleId,
+              );
+              if (!existingSample) {
+                // found a new sample, need to add to donor
+                existingSpecimen.samples.push(sample);
+                updated = true;
+              }
+            });
+          } else {
+            updatedDonor.specimens.push(specimen);
+            updated = true;
+          }
+        });
+
+        if (updated) {
+          updatedDonor.updatedAt = new Date().toDateString();
+          delete updatedDonor._id;
+          actionPromises.push(donorDao.updateDonor(updatedDonor));
+        }
+      }
+    });
+
+    await Promise.all(actionPromises); // let all mongo actions finish, will catch errors.
+    return {
+      newDonors: newDonors.length,
+      updates: actionPromises.length - (newDonors.length ? 1 : 0), // weird math to not double count the insert(newDonors) action
+    };
   }
 }
 
