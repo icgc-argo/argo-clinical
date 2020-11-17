@@ -684,7 +684,7 @@ paths:
                   format: binary
       responses:
         '201':
-          description: imported successfully
+          description: imported successfully - will indicate number of new donors and number of updated donors
   /clinical/donors:
     get:
       tags:
