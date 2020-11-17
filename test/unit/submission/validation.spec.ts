@@ -1674,11 +1674,7 @@ describe('data-validator', () => {
         SpecimenFieldsEnum.tumour_grade,
         SpecimenFieldsEnum.pathological_tumour_staging_system,
         SpecimenFieldsEnum.pathological_stage_group,
-        SpecimenFieldsEnum.percent_stromal_cells,
         SpecimenFieldsEnum.percent_tumour_cells,
-        SpecimenFieldsEnum.percent_proliferating_cells,
-        SpecimenFieldsEnum.percent_inflammatory_tissue,
-        SpecimenFieldsEnum.percent_necrosis,
         SpecimenFieldsEnum.tumour_histological_type,
         SpecimenFieldsEnum.reference_pathology_confirmed,
       ];
