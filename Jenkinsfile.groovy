@@ -19,6 +19,9 @@
 
 def commit = "UNKNOWN"
 def version = "UNKNOWN"
+def serviceName = "clinical"
+def repoName = "icgc-argo"
+def dockerRepo = "ghcr.io/${repoName}/${serviceName}"
 
 pipeline {
     agent {
@@ -68,7 +71,6 @@ spec:
                     version = sh(returnStdout: true, script: 'cat package.json | grep version | cut -d \':\' -f2 | sed -e \'s/"//\' -e \'s/",//\'').trim()
                 }
             }
-
         }
 
         stage('Test') {
@@ -92,15 +94,15 @@ spec:
             }
             steps {
                 container('docker') {
-                    withCredentials([usernamePassword(credentialsId:'argoDockerHub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        sh 'docker login -u $USERNAME -p $PASSWORD'
+                    withCredentials([usernamePassword(credentialsId:'argoContainers', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                        sh 'docker login ghcr.io -u $USERNAME -p $PASSWORD'
                     }
 
                     // the network=host needed to download dependencies using the host network (since we are inside 'docker'
                     // container)
-                    sh "docker build --build-arg COMMIT_ID=${commit} --build-arg VERSION=${version} --network=host -f Dockerfile . -t icgcargo/clinical:edge -t icgcargo/clinical:${version}-${commit}"
-                    sh "docker push icgcargo/clinical:${version}-${commit}"
-                    sh "docker push icgcargo/clinical:edge"
+                    sh "docker build --build-arg COMMIT_ID=${commit} --build-arg VERSION=${version} --network=host -f Dockerfile . -t ${dockerRepo}:edge -t ${dockerRepo}:${version}-${commit}"
+                    sh "docker push ${dockerRepo}:${version}-${commit}"
+                    sh "docker push ${dockerRepo}:edge"
                }
             }
         }
@@ -127,12 +129,12 @@ spec:
                       sh "git tag ${version}"
                       sh "git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/icgc-argo/argo-clinical --tags"
                   }
-                  withCredentials([usernamePassword(credentialsId:'argoDockerHub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                      sh 'docker login -u $USERNAME -p $PASSWORD'
+                  withCredentials([usernamePassword(credentialsId:'argoContainers', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                      sh 'docker login ghcr.io -u $USERNAME -p $PASSWORD'
                   }
-                  sh "docker  build --build-arg COMMIT_ID=${commit} --build-arg VERSION=${version} --network=host -f Dockerfile . -t icgcargo/clinical:latest -t icgcargo/clinical:${version}"
-                  sh "docker push icgcargo/clinical:${version}"
-                  sh "docker push icgcargo/clinical:latest"
+                  sh "docker  build --build-arg COMMIT_ID=${commit} --build-arg VERSION=${version} --network=host -f Dockerfile . -t ${dockerRepo}:latest -t ${dockerRepo}:${version}"
+                  sh "docker push ${dockerRepo}:${version}"
+                  sh "docker push ${dockerRepo}:latest"
              }
           }
         }
