@@ -91,7 +91,7 @@
   },
   "dependencies": {
     "@overturebio-stack/lectern-client": "1.1.0",
-    "adm-zip": "^0.4.13",
+    "adm-zip": "^0.4.16",
     "async": "^3.0.1",
     "bcrypt-nodejs": "^0.0.3",
     "bluebird": "^3.5.5",
