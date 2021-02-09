@@ -41,6 +41,7 @@ import {
   getSingleClinicalObjectFromDonor,
 } from '../../common-model/functions';
 import { checkRelatedEntityExists } from './utils';
+import _ from 'lodash';
 
 export const validate = async (
   specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
