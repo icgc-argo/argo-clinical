@@ -86,6 +86,11 @@ export enum PrimaryDiagnosisFieldsEnum {
   submitter_primary_diagnosis_id = 'submitter_primary_diagnosis_id',
   cancer_type_code = 'cancer_type_code',
   age_at_diagnosis = 'age_at_diagnosis',
+  clinical_tumour_staging_system = 'clinical_tumour_staging_system',
+  clinical_stage_group = 'clinical_stage_group',
+  clinical_t_category = 'clinical_t_category',
+  clinical_n_category = 'clinical_n_category',
+  clinical_m_category = 'clinical_m_category',
 }
 
 export enum TreatmentFieldsEnum {
