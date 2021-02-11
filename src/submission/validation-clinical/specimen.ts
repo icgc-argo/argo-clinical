@@ -177,25 +177,6 @@ const getDataFromDonorRecordOrDonor = (
   return { donorVitalStatus, donorSurvivalTime };
 };
 
-// This is the only scenario where less than 5 fields can be submitted in a file and it can be valid
-const validatePartialFields = (
-  specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
-  primaryDiagnosisEntity: DeepReadonly<PrimaryDiagnosis>,
-) => {
-  if (
-    !isEmpty(specimenRecord[SpecimenFieldsEnum.pathological_tumour_staging_system]) &&
-    !isEmpty(specimenRecord[SpecimenFieldsEnum.pathological_stage_group]) &&
-    !isEmpty(
-      primaryDiagnosisEntity.clinicalInfo[
-        PrimaryDiagnosisFieldsEnum.clinical_tumour_staging_system
-      ],
-    ) &&
-    !isEmpty(primaryDiagnosisEntity.clinicalInfo[PrimaryDiagnosisFieldsEnum.clinical_stage_group])
-  ) {
-    return true;
-  } else return false;
-};
-
 const checkRequiredFields = (
   specimen: DeepReadonly<Specimen>,
   specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
@@ -211,18 +192,15 @@ const checkRequiredFields = (
   ];
 
   const optionalFieldsForTumour: Array<keyof typeof SpecimenFieldsEnum> = [
-    'percent_proliferating_cells',
-    'percent_stromal_cells',
-    'percent_necrosis',
-    'percent_inflammatory_tissue',
-  ];
-
-  const pathologicalStageFields: Array<keyof typeof SpecimenFieldsEnum> = [
     'pathological_tumour_staging_system',
     'pathological_stage_group',
     'pathological_t_category',
     'pathological_n_category',
     'pathological_m_category',
+    'percent_proliferating_cells',
+    'percent_stromal_cells',
+    'percent_necrosis',
+    'percent_inflammatory_tissue',
   ];
 
   const errorInfo = {
@@ -250,12 +228,7 @@ const checkRequiredFields = (
       );
     });
 
-    // ------ specimen pathological stage fields and primary diagnosis clinical stage fields validation ----
-    // Either specimen or primary diagnosis must have all phological stage or clinical stage fields:
-    const missingPathologicalStageFields = pathologicalStageFields.filter(field =>
-      isEmpty(specimenRecord[field]),
-    );
-
+    // Either specimen or primary diagnosis must have pathological_tumour_staging_system field or clinical_tumour_staging_system fields:
     const entitySubmitterIdField = getEntitySubmitterIdFieldName(
       ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
     );
@@ -266,137 +239,25 @@ const checkRequiredFields = (
       mergedDonor,
     ) as DeepReadonly<PrimaryDiagnosis>;
 
-    const clinicalStageFields: Array<keyof typeof PrimaryDiagnosisFieldsEnum> = [
-      'clinical_tumour_staging_system',
-      'clinical_stage_group',
-      'clinical_t_category',
-      'clinical_n_category',
-      'clinical_m_category',
-    ];
-
-    const missingClinicalStageFields = clinicalStageFields.filter(field =>
-      isEmpty(primaryDiagnosisEntity.clinicalInfo[field]),
-    );
-
-    const numMissingPathologicalFields = missingPathologicalStageFields.length;
-    const numMissingClinicalFields = missingClinicalStageFields.length;
-    // 1. specimen is missing all fields, primary diagnosis is missing all fields, invalid
     if (
-      numMissingPathologicalFields == pathologicalStageFields.length &&
-      numMissingClinicalFields == clinicalStageFields.length
+      isEmpty(specimenRecord[SpecimenFieldsEnum.pathological_tumour_staging_system]) &&
+      isEmpty(
+        primaryDiagnosisEntity.clinicalInfo[
+          PrimaryDiagnosisFieldsEnum.clinical_tumour_staging_system
+        ],
+      )
     ) {
-      missingPathologicalStageFields.forEach(field => {
-        errors.push(
-          utils.buildSubmissionError(
-            specimenRecord,
-            DataValidationErrors.TNM_STAGING_FIELDS_MISSING,
-            SpecimenFieldsEnum[field],
-            { submitter_specimen_id: specimenRecord[SpecimenFieldsEnum.submitter_specimen_id] },
-          ),
-        );
-      });
-
-      missingClinicalStageFields.forEach(field => {
-        errors.push(
-          utils.buildSubmissionError(
-            specimenRecord,
-            DataValidationErrors.TNM_STAGING_FIELDS_MISSING,
-            PrimaryDiagnosisFieldsEnum[field],
-            {
-              submitter_primary_diagnosis_id:
-                primaryDiagnosisEntity.clinicalInfo[
-                  PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id
-                ],
-            },
-          ),
-        );
-      });
-    } else if (
-      numMissingPathologicalFields != pathologicalStageFields.length &&
-      numMissingClinicalFields == clinicalStageFields.length
-    ) {
-      // 2. primary diagnosis is missing all clinical fields, it's only valid when specimen has all pathological fields:
-      if (numMissingPathologicalFields != 0) {
-        missingPathologicalStageFields.forEach(field => {
-          errors.push(
-            utils.buildSubmissionError(
-              specimenRecord,
-              DataValidationErrors.TNM_STAGING_FIELDS_MISSING,
-              SpecimenFieldsEnum[field],
-              { submitter_specimen_id: specimenRecord[SpecimenFieldsEnum.submitter_specimen_id] },
-            ),
-          );
-        });
-      }
-    } else if (
-      numMissingPathologicalFields == pathologicalStageFields.length &&
-      numMissingClinicalFields != clinicalStageFields.length
-    ) {
-      // 3. specimen is missing all pathological fields, it's only valid when primary diagnosis has all clnical fields:
-      if (numMissingClinicalFields != 0) {
-        missingClinicalStageFields.forEach(field => {
-          errors.push(
-            utils.buildSubmissionError(
-              specimenRecord,
-              DataValidationErrors.TNM_STAGING_FIELDS_MISSING,
-              PrimaryDiagnosisFieldsEnum[field],
-              {
-                submitter_primary_diagnosis_id:
-                  primaryDiagnosisEntity.clinicalInfo[
-                    PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id
-                  ],
-              },
-            ),
-          );
-        });
-      }
-    } else if (
-      numMissingPathologicalFields != pathologicalStageFields.length &&
-      numMissingClinicalFields != clinicalStageFields.length
-    ) {
-      // 4. both specimen and primary diagnosis might have missing fields, it's only valid when both have no missing fields or a special case
-      // when some fields are provided:
-      const valid =
-        (numMissingPathologicalFields == 0 && numMissingClinicalFields == 0) ||
-        validatePartialFields(specimenRecord, primaryDiagnosisEntity)
-          ? true
-          : false;
-      if (!valid) {
-        missingPathologicalStageFields.forEach(field => {
-          errors.push(
-            utils.buildSubmissionError(
-              specimenRecord,
-              DataValidationErrors.TNM_STAGING_FIELDS_MISSING,
-              SpecimenFieldsEnum[field],
-              { submitter_specimen_id: specimenRecord[SpecimenFieldsEnum.submitter_specimen_id] },
-            ),
-          );
-        });
-
-        missingClinicalStageFields.forEach(field => {
-          errors.push(
-            utils.buildSubmissionError(
-              specimenRecord,
-              DataValidationErrors.TNM_STAGING_FIELDS_MISSING,
-              PrimaryDiagnosisFieldsEnum[field],
-              {
-                submitter_primary_diagnosis_id:
-                  primaryDiagnosisEntity.clinicalInfo[
-                    PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id
-                  ],
-              },
-            ),
-          );
-        });
-      }
+      errors.push(
+        utils.buildSubmissionError(
+          specimenRecord,
+          DataValidationErrors.TNM_STAGING_FIELDS_MISSING,
+          SpecimenFieldsEnum.pathological_tumour_staging_system,
+          { submitter_specimen_id: specimenRecord[SpecimenFieldsEnum.submitter_specimen_id] },
+        ),
+      );
     }
-    // ------ End of specimen pathological stage fields and primary diagnosis clinical stage fields validation ----
   } else if (specimen.tumourNormalDesignation === 'Normal') {
-    const forbiddenFieldsForNormal = [
-      ...requiredFieldsForTumour,
-      ...optionalFieldsForTumour,
-      ...pathologicalStageFields,
-    ];
+    const forbiddenFieldsForNormal = [...requiredFieldsForTumour, ...optionalFieldsForTumour];
     const existingForbiddenFields = forbiddenFieldsForNormal.filter(field =>
       notEmpty(specimenRecord[field]),
     );
