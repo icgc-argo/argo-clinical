@@ -1740,6 +1740,19 @@ describe('data-validator', () => {
         },
       );
 
+      // should not validate primary diagnosis against a normal specimen:
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.SPECIMEN,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
+          [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP15.1',
+          [SpecimenFieldsEnum.specimen_acquisition_interval]: 400,
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
+          index: 1,
+        },
+      );
+
       ClinicalSubmissionRecordsOperations.addRecord(
         ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
         newDonorAB1Records,
