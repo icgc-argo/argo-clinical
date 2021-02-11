@@ -85,8 +85,9 @@ const checkRequiredFields = (
 
   const specimenEntities = specimens.filter(specimen => {
     return (
+      specimen.tumourNormalDesignation === 'Tumour' &&
       specimen.clinicalInfo[SpecimenFieldsEnum.submitter_primary_diagnosis_id] ===
-      primaryDiagnosisRecord[PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]
+        primaryDiagnosisRecord[PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]
     );
   });
 
