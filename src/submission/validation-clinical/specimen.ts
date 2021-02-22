@@ -30,14 +30,18 @@ import {
   DonorFieldsEnum,
   SpecimenFieldsEnum,
   ClinicalUniqueIdentifier,
+  PrimaryDiagnosisFieldsEnum,
 } from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
-import { Donor, Specimen } from '../../clinical/clinical-entities';
+import { Donor, PrimaryDiagnosis, Specimen } from '../../clinical/clinical-entities';
 import * as utils from './utils';
-import _ from 'lodash';
 import { isEmptyString, isEmpty, notEmpty } from '../../utils';
-import { getSingleClinicalObjectFromDonor } from '../../common-model/functions';
+import {
+  getEntitySubmitterIdFieldName,
+  getSingleClinicalObjectFromDonor,
+} from '../../common-model/functions';
 import { checkRelatedEntityExists } from './utils';
+import _ from 'lodash';
 
 export const validate = async (
   specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
@@ -57,10 +61,7 @@ export const validate = async (
     return { errors };
   }
 
-  // validate allowed/unallowed fields
-  checkRequiredFields(specimen, specimenRecord, errors);
-
-  // validate primary diagnosis exists
+  // Primary diagnosis must exist beccause a specimen needs to be associated with a primary diagnosis
   checkRelatedEntityExists(
     ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
     specimenRecord,
@@ -69,6 +70,9 @@ export const validate = async (
     errors,
     true,
   );
+
+  // validate allowed/unallowed fields
+  checkRequiredFields(specimen, specimenRecord, mergedDonor, errors);
 
   // validate time conflict if needed
   const donorDataToValidateWith = getDataFromDonorRecordOrDonor(
@@ -176,11 +180,10 @@ const getDataFromDonorRecordOrDonor = (
 const checkRequiredFields = (
   specimen: DeepReadonly<Specimen>,
   specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
+  mergedDonor: Donor,
   errors: SubmissionValidationError[],
 ) => {
   const requiredFieldsForTumour: Array<keyof typeof SpecimenFieldsEnum> = [
-    'pathological_tumour_staging_system',
-    'pathological_stage_group',
     'tumour_grading_system',
     'tumour_grade',
     'percent_tumour_cells',
@@ -189,6 +192,8 @@ const checkRequiredFields = (
   ];
 
   const optionalFieldsForTumour: Array<keyof typeof SpecimenFieldsEnum> = [
+    'pathological_tumour_staging_system',
+    'pathological_stage_group',
     'pathological_t_category',
     'pathological_n_category',
     'pathological_m_category',
@@ -211,6 +216,7 @@ const checkRequiredFields = (
     const missingRequiredFields = requiredFieldsForTumour.filter(field =>
       isEmpty(specimenRecord[field]),
     );
+
     missingRequiredFields.forEach(field => {
       errors.push(
         utils.buildSubmissionError(
@@ -221,6 +227,35 @@ const checkRequiredFields = (
         ),
       );
     });
+
+    // Either specimen or primary diagnosis must have pathological_tumour_staging_system field or clinical_tumour_staging_system fields:
+    const entitySubmitterIdField = getEntitySubmitterIdFieldName(
+      ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+    );
+
+    const primaryDiagnosisEntity = utils.getRelatedEntityByFK(
+      ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+      specimenRecord[entitySubmitterIdField] as string,
+      mergedDonor,
+    ) as DeepReadonly<PrimaryDiagnosis>;
+
+    if (
+      isEmpty(specimenRecord[SpecimenFieldsEnum.pathological_tumour_staging_system]) &&
+      isEmpty(
+        primaryDiagnosisEntity.clinicalInfo[
+          PrimaryDiagnosisFieldsEnum.clinical_tumour_staging_system
+        ],
+      )
+    ) {
+      errors.push(
+        utils.buildSubmissionError(
+          specimenRecord,
+          DataValidationErrors.TNM_STAGING_FIELDS_MISSING,
+          SpecimenFieldsEnum.pathological_tumour_staging_system,
+          { submitter_specimen_id: specimenRecord[SpecimenFieldsEnum.submitter_specimen_id] },
+        ),
+      );
+    }
   } else if (specimen.tumourNormalDesignation === 'Normal') {
     const forbiddenFieldsForNormal = [...requiredFieldsForTumour, ...optionalFieldsForTumour];
     const existingForbiddenFields = forbiddenFieldsForNormal.filter(field =>

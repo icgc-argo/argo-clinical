@@ -21,20 +21,35 @@ import {
   SubmissionValidationError,
   SubmittedClinicalRecord,
   SubmissionValidationOutput,
+  DataValidationErrors,
 } from '../submission-entities';
-import { ClinicalEntitySchemaNames, PrimaryDiagnosisFieldsEnum } from '../../common-model/entities';
+import {
+  ClinicalEntitySchemaNames,
+  PrimaryDiagnosisFieldsEnum,
+  SpecimenFieldsEnum,
+} from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
-import { Donor } from '../../clinical/clinical-entities';
+import { Donor, Specimen } from '../../clinical/clinical-entities';
 import _ from 'lodash';
-import { getClinicalEntitiesFromDonorBySchemaName } from '../../common-model/functions';
-import { checkClinicalEntityDoesntBelongToOtherDonor } from './utils';
+import {
+  getClinicalEntitiesFromDonorBySchemaName,
+  getClinicalObjectsFromDonor,
+  getEntitySubmitterIdFieldName,
+} from '../../common-model/functions';
+import {
+  buildSubmissionError,
+  checkClinicalEntityDoesntBelongToOtherDonor,
+  getRelatedEntityByFK,
+} from './utils';
+import { isEmpty } from '../../utils';
 
 export const validate = async (
   primaryDiagnosisRecord: DeepReadonly<SubmittedClinicalRecord>,
   existentDonor: DeepReadonly<Donor>,
+  mergedDonor: Donor,
 ): Promise<SubmissionValidationOutput> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
-  if (!primaryDiagnosisRecord || !existentDonor) {
+  if (!primaryDiagnosisRecord || !existentDonor || !mergedDonor) {
     throw new Error("Can't call this function without primary diagnosis records");
   }
 
@@ -52,7 +67,48 @@ export const validate = async (
     );
   }
 
+  checkRequiredFields(primaryDiagnosisRecord, mergedDonor, errors);
+
   return { errors };
+};
+
+// Either specimen or primary diagnosis must have pathological_tumour_staging_system field or clinical_tumour_staging_system fields:
+const checkRequiredFields = (
+  primaryDiagnosisRecord: DeepReadonly<SubmittedClinicalRecord>,
+  mergedDonor: DeepReadonly<Donor>,
+  errors: SubmissionValidationError[],
+) => {
+  const specimens = getClinicalObjectsFromDonor(
+    mergedDonor,
+    ClinicalEntitySchemaNames.SPECIMEN,
+  ) as [Specimen];
+
+  const specimenEntities = specimens.filter(specimen => {
+    return (
+      specimen.tumourNormalDesignation === 'Tumour' &&
+      specimen.clinicalInfo[SpecimenFieldsEnum.submitter_primary_diagnosis_id] ===
+        primaryDiagnosisRecord[PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]
+    );
+  });
+
+  for (const specimen of specimenEntities) {
+    if (
+      isEmpty(specimen.clinicalInfo[SpecimenFieldsEnum.pathological_tumour_staging_system]) &&
+      isEmpty(primaryDiagnosisRecord[PrimaryDiagnosisFieldsEnum.clinical_tumour_staging_system])
+    ) {
+      errors.push(
+        buildSubmissionError(
+          primaryDiagnosisRecord,
+          DataValidationErrors.TNM_STAGING_FIELDS_MISSING,
+          PrimaryDiagnosisFieldsEnum.clinical_tumour_staging_system,
+          {
+            submitter_primary_diagnosis_id:
+              primaryDiagnosisRecord[PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id],
+          },
+        ),
+      );
+    }
+  }
 };
 
 function getExisting(

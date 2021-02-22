@@ -191,6 +191,19 @@ export const stubs = {
             },
           ],
         },
+        {
+          submitterId: 'SP15.1',
+          specimenTissueSource: 'Other',
+          clinicalInfo: {},
+          tumourNormalDesignation: 'Normal',
+          specimenType: 'Normal',
+          samples: [
+            {
+              sampleType: 'ST10',
+              submitterId: 'AM2',
+            },
+          ],
+        },
       ],
     }),
 

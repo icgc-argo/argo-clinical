@@ -1672,8 +1672,6 @@ describe('data-validator', () => {
       const requiredFields = [
         SpecimenFieldsEnum.tumour_grading_system,
         SpecimenFieldsEnum.tumour_grade,
-        SpecimenFieldsEnum.pathological_tumour_staging_system,
-        SpecimenFieldsEnum.pathological_stage_group,
         SpecimenFieldsEnum.percent_tumour_cells,
         SpecimenFieldsEnum.tumour_histological_type,
         SpecimenFieldsEnum.reference_pathology_confirmed,
@@ -1691,6 +1689,8 @@ describe('data-validator', () => {
           [SpecimenFieldsEnum.specimen_acquisition_interval]: 400,
           index: 0,
           ...specimenFields,
+          [SpecimenFieldsEnum.pathological_tumour_staging_system]: 'Ann Arbor staging system',
+          [SpecimenFieldsEnum.pathological_stage_group]: 'Stage I',
           [SpecimenFieldsEnum.pathological_m_category]: 'EM',
           [SpecimenFieldsEnum.pathological_n_category]: 'EN',
           [SpecimenFieldsEnum.pathological_t_category]: 'TEE',
@@ -1717,6 +1717,61 @@ describe('data-validator', () => {
       result.specimen.dataErrors.forEach(dataError => {
         chai.expect(requiredFields).includes(dataError.fieldName);
         chai.expect(dataError.type).to.equal(DataValidationErrors.MISSING_VARIABLE_REQUIREMENT);
+      });
+    });
+
+    it('should error when pathological_tumour_staging_system is missing in specimen, and clinical_tumour_staging_system is missing in primary diagnosis', async () => {
+      const existingDonorAB1Mock: Donor = stubs.validation.existingDonor04();
+      const newDonorAB1Records = {};
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.SPECIMEN,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
+          [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP15',
+          [SpecimenFieldsEnum.specimen_acquisition_interval]: 400,
+          index: 0,
+          [SpecimenFieldsEnum.tumour_grading_system]: 'WHO grading system for CNS tumours',
+          [SpecimenFieldsEnum.tumour_grade]: 'Grade III',
+          [SpecimenFieldsEnum.percent_tumour_cells]: 0.2,
+          [SpecimenFieldsEnum.tumour_histological_type]: '9691/36',
+          [SpecimenFieldsEnum.reference_pathology_confirmed]: 'Yes',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
+        },
+      );
+
+      // should not validate primary diagnosis against a normal specimen:
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.SPECIMEN,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
+          [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP15.1',
+          [SpecimenFieldsEnum.specimen_acquisition_interval]: 400,
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
+          index: 1,
+        },
+      );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+        newDonorAB1Records,
+        {
+          [PrimaryDiagnosisFieldsEnum.submitter_donor_id]: 'AB2',
+          [PrimaryDiagnosisFieldsEnum.program_id]: 'PEME-CA',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
+          index: 0,
+        },
+      );
+
+      const result = await dv
+        .validateSubmissionData({ AB1: newDonorAB1Records }, { AB1: existingDonorAB1Mock })
+        .catch((err: any) => fail(err));
+
+      chai.expect(result.specimen.dataErrors.length).to.eq(1);
+      chai.expect(result.primary_diagnosis.dataErrors.length).to.eq(1);
+      result.specimen.dataErrors.forEach(dataError => {
+        chai.expect(dataError.type).to.equal(DataValidationErrors.TNM_STAGING_FIELDS_MISSING);
       });
     });
   });
