@@ -52,7 +52,7 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
   RELATED_ENTITY_MISSING_OR_CONFLICTING: (errorData: { info: RelatedEntityErrorInfo }) =>
     `[${errorData.info.fieldName}] value in [${errorData.info.childEntity}] file requires a matching [${errorData.info.fieldName}] in [${errorData.info.parentEntity}] data. Check that it belongs to the same [submitter_donor_id] = ${errorData.info.donorSubmitterId}. It could have been previously submitted for a different donor, or if it's new in this submission, it's either missing in [${errorData.info.parentEntity}] file or this [${errorData.info.fieldName}] is associated with different [submitter_donor_id] in the [${errorData.info.parentEntity}] file.`,
   TNM_STAGING_FIELDS_MISSING: () =>
-    'TNM staging is required for either clinical or pathological staging for a sample. Please submit either the [clinical_tumour_staging_system] value in the [primary_diagnosis] OR the [pathological_tumour_staging_system] value in the [specimen] file.',
+    'A tumour staging system is required for either clinical or pathological staging for a sample. Please submit either the [clinical_tumour_staging_system] value in the [primary_diagnosis] file OR the [pathological_tumour_staging_system] value in the [specimen] file.',
   NOT_ENOUGH_INFO_TO_VALIDATE: errorData =>
     `[${errorData.fieldName}] requires [${errorData.info.missingField.join(
       '], [',
