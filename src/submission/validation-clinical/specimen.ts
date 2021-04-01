@@ -240,6 +240,7 @@ const checkRequiredFields = (
     ) as DeepReadonly<PrimaryDiagnosis>;
 
     if (
+      primaryDiagnosisEntity &&
       isEmpty(specimenRecord[SpecimenFieldsEnum.pathological_tumour_staging_system]) &&
       isEmpty(
         primaryDiagnosisEntity.clinicalInfo[
