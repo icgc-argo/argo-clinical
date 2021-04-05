@@ -237,9 +237,9 @@ const checkRequiredFields = (
       ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
       specimenRecord[entitySubmitterIdField] as string,
       mergedDonor,
-    ) as DeepReadonly<PrimaryDiagnosis>;
-
+    ) as DeepReadonly<PrimaryDiagnosis | undefined>;
     if (
+      // already checking primary diagnosis existence in checkRelatedEntityExists function
       primaryDiagnosisEntity &&
       isEmpty(specimenRecord[SpecimenFieldsEnum.pathological_tumour_staging_system]) &&
       isEmpty(
