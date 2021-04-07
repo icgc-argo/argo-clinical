@@ -1434,11 +1434,8 @@
             "Wrist fracture"
           ]
         },
-        "regex": {
-          "submitter_id": "\\b(?!([Dd][Oo])|([Ss][Pp])|([Ss][Aa])|([Tt][Rr])|([pP][Dd])|([Ff][Uu]))\\b^[A-Za-z0-9\\-\\._]{1,64}"
-        },
+        "regex": { "submitter_id": "^[A-Za-z0-9\\-\\._]{1,64}" },
         "notes": {
-          "submitter_id": "To prevent data collisions, submitter_id cannot begin with any of the ARGO ID prefixes.  The restricted prefixes include: `DO`, `SP`, `SA`,`TR`,`FU`, `PD`.",
           "if_tumour": "This field is only required if the specimen is a tumour.",
           "disease_status_requirement": "This field is required to be submitted if disease_status_at_followup indicates a state of progression, relapse, or recurrence.",
           "multiple_values": "To include multiple values, separate values with a pipe delimiter '|' within your file."
@@ -1460,9 +1457,7 @@
                 "notes": "This is the unique id that is assigned to your program.  If you have logged into the platform, this is the Program Id that you see in the Program Services area. For example, TEST-CA is a Program ID.",
                 "displayName": "Program ID"
               },
-              "restrictions": {
-                "required": true
-              }
+              "restrictions": { "required": true }
             },
             {
               "name": "submitter_donor_id",
@@ -1472,27 +1467,16 @@
                 "validationDependency": true,
                 "primaryId": true,
                 "examples": "90234,BLD_donor_89,AML-90",
-                "displayName": "Submitter Donor ID",
-                "notes": "To prevent data collisions, submitter_id cannot begin with any of the ARGO ID prefixes.  The restricted prefixes include: `DO`, `SP`, `SA`,`TR`,`FU`, `PD`."
+                "displayName": "Submitter Donor ID"
               },
-              "restrictions": {
-                "required": true,
-                "regex": "\\b(?!([Dd][Oo])|([Ss][Pp])|([Ss][Aa])|([Tt][Rr])|([pP][Dd])|([Ff][Uu]))\\b^[A-Za-z0-9\\-\\._]{1,64}"
-              }
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
             },
             {
               "name": "gender",
               "valueType": "string",
               "description": "Description of the donor self-reported gender. Gender is described as the assemblage of properties that distinguish people on the basis of their societal roles.",
-              "meta": {
-                "validationDependency": true,
-                "core": true,
-                "displayName": "Gender"
-              },
-              "restrictions": {
-                "required": true,
-                "codeList": ["Female", "Male", "Other"]
-              }
+              "meta": { "validationDependency": true, "core": true, "displayName": "Gender" },
+              "restrictions": { "required": true, "codeList": ["Female", "Male", "Other"] }
             },
             {
               "name": "submitter_specimen_id",
@@ -1502,13 +1486,9 @@
                 "validationDependency": true,
                 "primaryId": true,
                 "examples": "LAML_PO,00445,THY_099-tumour",
-                "displayName": "Submitter Specimen ID",
-                "notes": "To prevent data collisions, submitter_id cannot begin with any of the ARGO ID prefixes.  The restricted prefixes include: `DO`, `SP`, `SA`,`TR`,`FU`, `PD`."
+                "displayName": "Submitter Specimen ID"
               },
-              "restrictions": {
-                "required": true,
-                "regex": "\\b(?!([Dd][Oo])|([Ss][Pp])|([Ss][Aa])|([Tt][Rr])|([pP][Dd])|([Ff][Uu]))\\b^[A-Za-z0-9\\-\\._]{1,64}"
-              }
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
             },
             {
               "name": "specimen_tissue_source",
@@ -1555,10 +1535,7 @@
               "name": "tumour_normal_designation",
               "valueType": "string",
               "description": "Description of specimens tumour/normal status for data processing.",
-              "restrictions": {
-                "required": true,
-                "codeList": ["Normal", "Tumour"]
-              },
+              "restrictions": { "required": true, "codeList": ["Normal", "Tumour"] },
               "meta": {
                 "validationDependency": true,
                 "core": true,
@@ -1592,11 +1569,7 @@
                   "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      const row = $row;\n      let result = {valid: true, message: \"Ok\"};\n      \n      const designation = row.tumour_normal_designation.trim().toLowerCase();\n      const specimen_type = $field.trim().toLowerCase();\n      \n      if (designation === \"normal\"){\n          const validTypes = [\"normal\", \"normal - tissue adjacent to primary tumour\", \"cell line - derived from normal\"];\n          if (!validTypes.includes(specimen_type)){\n              result = {valid: false, message: \"Invalid specimen_type. Specimen_type can only be set to a normal type value (Normal, Normal - tissue adjacent to primary tumour, or Cell line - derived from normal) when tumour_normal_designation is set to Normal.\"};\n          }\n      }\n      else if (designation === \"tumour\") {\n          const invalidTypes = [\"normal\", \"cell line - derived from normal\"];\n          if (invalidTypes.includes(specimen_type)){\n              result = {valid: false, message: \"Invalid specimen_type. Specimen_type cannot be set to normal type value (Normal or Cell line - derived from normal) when tumour_normal_designation is set to Tumour.\"};\n          }\n      }\n      return result;\n    })"
                 ]
               },
-              "meta": {
-                "validationDependency": true,
-                "core": true,
-                "displayName": "Specimen Type"
-              }
+              "meta": { "validationDependency": true, "core": true, "displayName": "Specimen Type" }
             },
             {
               "name": "submitter_sample_id",
@@ -1606,23 +1579,15 @@
                 "validationDependency": true,
                 "primaryId": true,
                 "examples": "hnc_12,CCG_34_94583,BRCA47832-3239",
-                "displayName": "Submitter Sample ID",
-                "notes": "To prevent data collisions, submitter_id cannot begin with any of the ARGO ID prefixes.  The restricted prefixes include: `DO`, `SP`, `SA`,`TR`,`FU`, `PD`."
+                "displayName": "Submitter Sample ID"
               },
-              "restrictions": {
-                "required": true,
-                "regex": "\\b(?!([Dd][Oo])|([Ss][Pp])|([Ss][Aa])|([Tt][Rr])|([pP][Dd])|([Ff][Uu]))\\b^[A-Za-z0-9\\-\\._]{1,64}"
-              }
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
             },
             {
               "name": "sample_type",
               "valueType": "string",
               "description": "Description of the type of molecular sample used for testing.",
-              "meta": {
-                "validationDependency": true,
-                "core": true,
-                "displayName": "Sample Type"
-              },
+              "meta": { "validationDependency": true, "core": true, "displayName": "Sample Type" },
               "restrictions": {
                 "required": true,
                 "codeList": [
@@ -1642,9 +1607,7 @@
         {
           "name": "donor",
           "description": "The collection of data elements related to a specific donor in an ARGO program.",
-          "meta": {
-            "parent": "specimen"
-          },
+          "meta": { "parent": "specimen" },
           "fields": [
             {
               "name": "program_id",
@@ -1656,9 +1619,7 @@
                 "foreignKey": "sample_registration.program_id",
                 "displayName": "Program ID"
               },
-              "restrictions": {
-                "required": true
-              }
+              "restrictions": { "required": true }
             },
             {
               "description": "Unique identifier of the donor, assigned by the data provider.",
@@ -1668,27 +1629,16 @@
                 "validationDependency": true,
                 "primaryId": true,
                 "foreignKey": "sample_registration.submitter_donor_id",
-                "displayName": "Submitter Donor ID",
-                "notes": "To prevent data collisions, submitter_id cannot begin with any of the ARGO ID prefixes.  The restricted prefixes include: `DO`, `SP`, `SA`,`TR`,`FU`, `PD`."
+                "displayName": "Submitter Donor ID"
               },
-              "restrictions": {
-                "required": true,
-                "regex": "\\b(?!([Dd][Oo])|([Ss][Pp])|([Ss][Aa])|([Tt][Rr])|([pP][Dd])|([Ff][Uu]))\\b^[A-Za-z0-9\\-\\._]{1,64}"
-              }
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
             },
             {
               "description": "Donor's last known state of living or deceased.",
               "name": "vital_status",
-              "restrictions": {
-                "codeList": ["Alive", "Deceased", "Unknown"],
-                "required": true
-              },
+              "restrictions": { "codeList": ["Alive", "Deceased", "Unknown"], "required": true },
               "valueType": "string",
-              "meta": {
-                "validationDependency": true,
-                "core": true,
-                "displayName": "Vital Status"
-              }
+              "meta": { "validationDependency": true, "core": true, "displayName": "Vital Status" }
             },
             {
               "description": "Indicate the cause of a donor's death.",
@@ -1729,10 +1679,7 @@
               "name": "primary_site",
               "valueType": "string",
               "description": "The text term used to describe the primary site of disease, as categorized by the World Health Organization's (WHO) International Classification of Diseases for Oncology (ICD-O). This categorization groups cases into general categories.",
-              "meta": {
-                "displayName": "Primary Site",
-                "core": true
-              },
+              "meta": { "displayName": "Primary Site", "core": true },
               "restrictions": {
                 "required": true,
                 "codeList": [
@@ -1865,28 +1812,22 @@
               "description": "Indicate the donor's height, in centimeters (cm).",
               "name": "height",
               "valueType": "integer",
-              "meta": {
-                "displayName": "Height"
-              }
+              "meta": { "displayName": "Height" }
             },
             {
               "description": "Indicate the donor's weight, in kilograms (kg).",
               "name": "weight",
               "valueType": "integer",
-              "meta": {
-                "displayName": "Weight"
-              }
+              "meta": { "displayName": "Weight" }
             },
             {
               "description": "Indicate the donor's Body Mass Index (BMI) in kg/m².",
               "name": "bmi",
               "valueType": "integer",
-              "meta": {
-                "displayName": "BMI"
-              }
+              "meta": { "displayName": "BMI" }
             },
             {
-              "description": "Indicate the donor's menopause status at the time of primary diagnosis. (Codelist reference: NCI CDE ID: 2434914)",
+              "description": "Indicate the donor's menopause status at the time of primary diagnosis. (Reference: caDSR CDE ID 2434914)",
               "name": "menopause_status",
               "restrictions": {
                 "codeList": [
@@ -1898,42 +1839,32 @@
                 ]
               },
               "valueType": "string",
-              "meta": {
-                "displayName": "Menopause Status"
-              }
+              "meta": { "displayName": "Menopause Status" }
             },
             {
               "description": "Indicate the donor's age of menarche, the first occurrence of menstruation.",
               "name": "age_at_menarche",
               "valueType": "integer",
-              "meta": {
-                "displayName": "Age at Menarche"
-              }
+              "meta": { "displayName": "Age at Menarche" }
             },
             {
               "description": "Indicate the number of pregnancies a donor has had.",
               "name": "number_of_pregnancies",
               "valueType": "integer",
-              "meta": {
-                "displayName": "Number of Pregnancies"
-              }
+              "meta": { "displayName": "Number of Pregnancies" }
             },
             {
               "description": "Indicate the number of children the donor has birthed.",
               "name": "number_of_children",
               "valueType": "integer",
-              "meta": {
-                "displayName": "Number of Children"
-              }
+              "meta": { "displayName": "Number of Children" }
             }
           ]
         },
         {
           "name": "specimen",
           "description": "The collection of data elements related to a donor's specimen. A specimen is any material sample taken for testing, diagnostic or research purposes.",
-          "meta": {
-            "parent": "sample_registration"
-          },
+          "meta": { "parent": "sample_registration" },
           "fields": [
             {
               "name": "program_id",
@@ -1945,9 +1876,7 @@
                 "foreignKey": "sample_registration.program_id",
                 "displayName": "Program ID"
               },
-              "restrictions": {
-                "required": true
-              }
+              "restrictions": { "required": true }
             },
             {
               "name": "submitter_donor_id",
@@ -1957,13 +1886,9 @@
                 "validationDependency": true,
                 "primaryId": true,
                 "foreignKey": "sample_registration.submitter_donor_id",
-                "displayName": "Submitter Donor ID",
-                "notes": "To prevent data collisions, submitter_id cannot begin with any of the ARGO ID prefixes.  The restricted prefixes include: `DO`, `SP`, `SA`,`TR`,`FU`, `PD`."
+                "displayName": "Submitter Donor ID"
               },
-              "restrictions": {
-                "required": true,
-                "regex": "\\b(?!([Dd][Oo])|([Ss][Pp])|([Ss][Aa])|([Tt][Rr])|([pP][Dd])|([Ff][Uu]))\\b^[A-Za-z0-9\\-\\._]{1,64}"
-              }
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
             },
             {
               "name": "submitter_specimen_id",
@@ -1973,33 +1898,23 @@
                 "validationDependency": true,
                 "primaryId": true,
                 "foreignKey": "sample_registration.submitter_specimen_id",
-                "displayName": "Submitter Specimen ID",
-                "notes": "To prevent data collisions, submitter_id cannot begin with any of the ARGO ID prefixes.  The restricted prefixes include: `DO`, `SP`, `SA`,`TR`,`FU`, `PD`."
+                "displayName": "Submitter Specimen ID"
               },
-              "restrictions": {
-                "required": true,
-                "regex": "\\b(?!([Dd][Oo])|([Ss][Pp])|([Ss][Aa])|([Tt][Rr])|([pP][Dd])|([Ff][Uu]))\\b^[A-Za-z0-9\\-\\._]{1,64}"
-              }
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
             },
             {
               "name": "submitter_primary_diagnosis_id",
               "valueType": "string",
               "description": "Indicate the primary diagnosis event in the clinical timeline that this specimen acquisition was related to.",
-              "meta": {
-                "primaryId": true,
-                "displayName": "Submitter Primary Diagnosis ID",
-                "notes": "To prevent data collisions, submitter_id cannot begin with any of the ARGO ID prefixes.  The restricted prefixes include: `DO`, `SP`, `SA`,`TR`,`FU`, `PD`."
-              },
-              "restrictions": {
-                "required": true,
-                "regex": "\\b(?!([Dd][Oo])|([Ss][Pp])|([Ss][Aa])|([Tt][Rr])|([pP][Dd])|([Ff][Uu]))\\b^[A-Za-z0-9\\-\\._]{1,64}"
-              }
+              "meta": { "primaryId": true, "displayName": "Submitter Primary Diagnosis ID" },
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
             },
             {
               "name": "pathological_tumour_staging_system",
               "description": "Specify the tumour staging system used to assess the cancer at the time the tumour specimen was resected. Pathological classification is based on the clinical stage information (acquired before treatment) and supplemented/modified by operative findings and pathological evaluation of the resected specimen.",
               "valueType": "string",
               "meta": {
+                "validationDependency": true,
                 "core": true,
                 "dependsOn": "sample_registration.tumour_normal_designation",
                 "notes": "This field is only required if the specimen is a tumour.",
@@ -2244,9 +2159,7 @@
                 "notes": "The associated primary diagnosis is used as the reference point for this interval. To calculate this, find the number of days since the date of primary diagnosis.",
                 "displayName": "Specimen Acquisition Interval"
               },
-              "restrictions": {
-                "required": true
-              }
+              "restrictions": { "required": true }
             },
             {
               "name": "tumour_histological_type",
@@ -2260,9 +2173,7 @@
                 "examples": "8260/3,9691/36",
                 "displayName": "Tumour Histological Type"
               },
-              "restrictions": {
-                "regex": "^[8,9]{1}[0-9]{3}/[0,1,2,3,6,9]{1}[1-9]{0,1}$"
-              }
+              "restrictions": { "regex": "^[8,9]{1}[0-9]{3}/[0,1,2,3,6,9]{1}[1-9]{0,1}$" }
             },
             {
               "name": "specimen_anatomic_location",
@@ -2273,10 +2184,7 @@
                 "displayName": "Specimen Anatomic Location",
                 "examples": "C50.1,C18"
               },
-              "restrictions": {
-                "required": true,
-                "regex": "^[C][0-9]{2}(.[0-9]{1})?$"
-              }
+              "restrictions": { "required": true, "regex": "^[C][0-9]{2}(.[0-9]{1})?$" }
             },
             {
               "name": "specimen_processing",
@@ -2295,9 +2203,7 @@
                   "Other"
                 ]
               },
-              "meta": {
-                "displayName": "Specimen Processing"
-              }
+              "meta": { "displayName": "Specimen Processing" }
             },
             {
               "name": "specimen_storage",
@@ -2331,9 +2237,7 @@
                 "notes": "This field is only required if the specimen is a tumour.",
                 "displayName": "Reference Pathology Confirmed"
               },
-              "restrictions": {
-                "codeList": ["Yes", "No", "Unknown"]
-              }
+              "restrictions": { "codeList": ["Yes", "No", "Unknown"] }
             },
             {
               "name": "tumour_grading_system",
@@ -2413,9 +2317,8 @@
               "description": "Indicate a value, in decimals, that represents the count of proliferating cells determined during pathologic review of the specimen.",
               "valueType": "number",
               "meta": {
-                "core": true,
                 "dependsOn": "sample_registration.tumour_normal_designation",
-                "notes": "This field is only required if the specimen is a tumour.",
+                "notes": "",
                 "displayName": "Percent Proliferating Cells"
               }
             },
@@ -2424,9 +2327,8 @@
               "description": "Indicate a value, in decimals, that represents local response to cellular injury, marked by capillary dilatation, edema and leukocyte infiltration; clinically, inflammation is manifest by redness, heat, pain, swelling and loss of function, with the need to heal damaged tissue.",
               "valueType": "number",
               "meta": {
-                "core": true,
                 "dependsOn": "sample_registration.tumour_normal_designation",
-                "notes": "This field is only required if the specimen is a tumour.",
+                "notes": "",
                 "displayName": "Percent Inflammatory Tissue"
               }
             },
@@ -2435,9 +2337,8 @@
               "description": "Indicate a value, in decimals, that represents the percentage of reactive cells that are present in a malignant tumour specimen but are not malignant such as fibroblasts, vascular structures, etc.",
               "valueType": "number",
               "meta": {
-                "core": true,
                 "dependsOn": "sample_registration.tumour_normal_designation",
-                "notes": "This field is only required if the specimen is a tumour.",
+                "notes": "",
                 "displayName": "Percent Stromal Cells"
               }
             },
@@ -2446,9 +2347,8 @@
               "description": "Indicate a value, in decimals, that represents the percentage of cell death in a malignant tumour specimen.",
               "valueType": "number",
               "meta": {
-                "core": true,
                 "dependsOn": "sample_registration.tumour_normal_designation",
-                "notes": "This field is only required if the specimen is a tumour.",
+                "notes": "",
                 "displayName": "Percent Necrosis"
               }
             }
@@ -2457,9 +2357,7 @@
         {
           "name": "primary_diagnosis",
           "description": "The collection of data elements related to a donor's primary diagnosis. The primary diagnosis is the first diagnosed case of cancer in a donor. To submit multiple primary diagnoses for a single donor, submit multiple rows in the primary diagnosis file for this donor.",
-          "meta": {
-            "parent": "donor"
-          },
+          "meta": { "parent": "donor" },
           "fields": [
             {
               "name": "program_id",
@@ -2471,9 +2369,7 @@
                 "foreignKey": "sample_registration.program_id",
                 "displayName": "Program ID"
               },
-              "restrictions": {
-                "required": true
-              }
+              "restrictions": { "required": true }
             },
             {
               "name": "submitter_donor_id",
@@ -2483,40 +2379,23 @@
                 "validationDependency": true,
                 "primaryId": true,
                 "foreignKey": "sample_registration.submitter_donor_id",
-                "displayName": "Submitter Donor ID",
-                "notes": "To prevent data collisions, submitter_id cannot begin with any of the ARGO ID prefixes.  The restricted prefixes include: `DO`, `SP`, `SA`,`TR`,`FU`, `PD`."
+                "displayName": "Submitter Donor ID"
               },
-              "restrictions": {
-                "required": true,
-                "regex": "\\b(?!([Dd][Oo])|([Ss][Pp])|([Ss][Aa])|([Tt][Rr])|([pP][Dd])|([Ff][Uu]))\\b^[A-Za-z0-9\\-\\._]{1,64}"
-              }
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
             },
             {
               "name": "submitter_primary_diagnosis_id",
               "valueType": "string",
               "description": "Unique identifier of the primary diagnosis event, assigned by the data provider.",
-              "meta": {
-                "primaryId": true,
-                "displayName": "Submitter Primary Diagnosis ID",
-                "notes": "To prevent data collisions, submitter_id cannot begin with any of the ARGO ID prefixes.  The restricted prefixes include: `DO`, `SP`, `SA`,`TR`,`FU`, `PD`."
-              },
-              "restrictions": {
-                "required": true,
-                "regex": "\\b(?!([Dd][Oo])|([Ss][Pp])|([Ss][Aa])|([Tt][Rr])|([pP][Dd])|([Ff][Uu]))\\b^[A-Za-z0-9\\-\\._]{1,64}"
-              }
+              "meta": { "primaryId": true, "displayName": "Submitter Primary Diagnosis ID" },
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
             },
             {
               "name": "age_at_diagnosis",
               "valueType": "integer",
-              "description": "Age that the donor was first diagnosed with cancer, in years.",
-              "restrictions": {
-                "required": true
-              },
-              "meta": {
-                "units": "years",
-                "core": true,
-                "displayName": "Age at Diagnosis"
-              }
+              "description": "Age that the donor was first diagnosed with cancer, in years. This should be based on the earliest diagnosis of cancer.",
+              "restrictions": { "required": true },
+              "meta": { "units": "years", "core": true, "displayName": "Age at Diagnosis" }
             },
             {
               "name": "cancer_type_code",
@@ -2536,9 +2415,7 @@
               "name": "cancer_type_additional_information",
               "valueType": "string",
               "description": "Additional details related to the cancer type that are not covered by the ICD-10 code provided in the cancer_type field.",
-              "meta": {
-                "displayName": "Cancer Type Additional Information"
-              }
+              "meta": { "displayName": "Cancer Type Additional Information" }
             },
             {
               "name": "basis_of_diagnosis",
@@ -2563,23 +2440,16 @@
             },
             {
               "name": "number_lymph_nodes_positive",
-              "description": "The number of regional lymph nodes reported as being positive for tumour metastases. (Reference: NCI CDE ID: 6113694)",
+              "description": "The number of regional lymph nodes reported as being positive for tumour metastases. (Reference: caDSR CDE ID 6113694)",
               "valueType": "integer",
-              "restrictions": {
-                "required": true
-              },
-              "meta": {
-                "core": true,
-                "displayName": "Number Of Lymph Nodes Positive"
-              }
+              "restrictions": { "required": true },
+              "meta": { "core": true, "displayName": "Number Of Lymph Nodes Positive" }
             },
             {
               "name": "number_lymph_nodes_examined",
-              "description": "The total number of lymph nodes tested for the presence of cancer. (Reference: NCI CDE ID: 3)",
+              "description": "The total number of lymph nodes tested for the presence of cancer. (Reference: caDSR CDE ID 3)",
               "valueType": "integer",
-              "meta": {
-                "displayName": "Number Of Lymph Nodes Examined"
-              }
+              "meta": { "displayName": "Number Of Lymph Nodes Examined" }
             },
             {
               "name": "clinical_tumour_staging_system",
@@ -2589,7 +2459,6 @@
                 "script": [
                   "(function validate(inputs) {\n    const {$row, $name, $field} = inputs;\n    let result = { valid: true, message: 'Ok' };\n    const arrayFormatter = arr => `\\n${arr.map(entry => `- \"${entry}\"`).join('\\n')}`;\n    /* This is not a required field, so first ensure that it exists */\n    if ($field) {\n      /* Contingent on the naming system for tumour staging systems to remain consistent */\n      const stagingName = $name\n        .trim()\n        .toLowerCase()\n        .split('_tumour_staging_system')[0];\n      const requiredFields = [\n        `${stagingName}_m_category`,\n        `${stagingName}_n_category`,\n        `${stagingName}_t_category`,\n      ];\n      const convertedRow = Object.fromEntries(\n        Object.entries($row).map(([fieldName, fieldVal]) => [fieldName.toLowerCase(), fieldVal]),\n      );\n      /* Check for contigous spaces wrapped with quotes (empty strings) */\n      const checkforEmpty = entry => {\n        return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'));\n      };\n\n      /* search for fields with falsy values*/\n      const emptyFields = requiredFields.filter(\n        field => !convertedRow[field] || checkforEmpty(convertedRow[field]),\n      );\n\n      /* The fields should be provided IF and ONLY IF the AJCC regex passes */\n      if (/^(AJCC)\\b/i.test($field) && emptyFields.length) {\n        result = {\n          valid: false,\n          message: `The following fields are required when ${$name} is set to an AJCC option: ${arrayFormatter(\n            emptyFields,\n          )}`,\n        };\n      } else if (!/^(AJCC)\\b/i.test($field) && emptyFields.length != requiredFields.length) {\n        const errorFields = requiredFields.filter(fieldName => !emptyFields.includes(fieldName));\n        result = {\n          valid: false,\n          message: `The following fields cannot be provided when ${$name} is not set to an AJCC option: ${arrayFormatter(\n            errorFields,\n          )}`,\n        };\n      }\n    }\n    return result;\n  })"
                 ],
-                "required": true,
                 "codeList": [
                   "AJCC 8th edition",
                   "AJCC 7th edition",
@@ -2604,6 +2473,7 @@
                 ]
               },
               "meta": {
+                "validationDependency": true,
                 "core": true,
                 "displayName": "Clinical Tumour Staging System"
               }
@@ -2613,7 +2483,6 @@
               "description": "Stage group of the tumour, as assigned by the reporting clinical_tumour_staging_system, that indicates the overall prognostic tumour stage (ie. Stage I, Stage II, Stage III etc.).",
               "valueType": "string",
               "restrictions": {
-                "required": true,
                 "codeList": [
                   "Stage 0",
                   "Stage 0a",
@@ -2843,10 +2712,12 @@
                   "Loss of Appetite",
                   "Nausea",
                   "None",
+                  "Not Reported",
                   "Pale Stools",
                   "Pancreatitis",
                   "Pruritus/Itchiness",
                   "Steatorrhea",
+                  "Swelling in the Neck",
                   "Unknown",
                   "Vomiting",
                   "Weight Loss"
@@ -2860,7 +2731,7 @@
             },
             {
               "name": "performance_status",
-              "description": "Indicate the donor's performance status grade at the time of primary diagnosis. (Reference source: ECOG performance score grades from https://ecog-acrin.org/resources/ecog-performance-status).",
+              "description": "Indicate the donor's performance status grade at the time of primary diagnosis. (Reference: ECOG performance score grades from https://ecog-acrin.org/resources/ecog-performance-status).",
               "valueType": "string",
               "restrictions": {
                 "codeList": ["Grade 0", "Grade 1", "Grade 2", "Grade 3", "Grade 4"]
@@ -2875,9 +2746,7 @@
         {
           "name": "treatment",
           "description": "The collection of data elements related to a donor's treatment at a specific point in the clinical record. To submit multiple treatments for a single donor, please submit treatment rows in the treatment file for this donor.",
-          "meta": {
-            "parent": "donor"
-          },
+          "meta": { "parent": "donor" },
           "fields": [
             {
               "name": "program_id",
@@ -2889,9 +2758,7 @@
                 "foreignKey": "sample_registration.program_id",
                 "displayName": "Program ID"
               },
-              "restrictions": {
-                "required": true
-              }
+              "restrictions": { "required": true }
             },
             {
               "name": "submitter_donor_id",
@@ -2901,13 +2768,9 @@
                 "validationDependency": true,
                 "primaryId": true,
                 "foreignKey": "sample_registration.submitter_donor_id",
-                "displayName": "Submitter Donor ID",
-                "notes": "To prevent data collisions, submitter_id cannot begin with any of the ARGO ID prefixes.  The restricted prefixes include: `DO`, `SP`, `SA`,`TR`,`FU`, `PD`."
+                "displayName": "Submitter Donor ID"
               },
-              "restrictions": {
-                "required": true,
-                "regex": "\\b(?!([Dd][Oo])|([Ss][Pp])|([Ss][Aa])|([Tt][Rr])|([pP][Dd])|([Ff][Uu]))\\b^[A-Za-z0-9\\-\\._]{1,64}"
-              }
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
             },
             {
               "name": "submitter_treatment_id",
@@ -2916,27 +2779,16 @@
               "meta": {
                 "validationDependency": true,
                 "primaryId": true,
-                "displayName": "Submitter Treatment ID",
-                "notes": "To prevent data collisions, submitter_id cannot begin with any of the ARGO ID prefixes.  The restricted prefixes include: `DO`, `SP`, `SA`,`TR`,`FU`, `PD`."
+                "displayName": "Submitter Treatment ID"
               },
-              "restrictions": {
-                "required": true,
-                "regex": "\\b(?!([Dd][Oo])|([Ss][Pp])|([Ss][Aa])|([Tt][Rr])|([pP][Dd])|([Ff][Uu]))\\b^[A-Za-z0-9\\-\\._]{1,64}"
-              }
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
             },
             {
               "name": "submitter_primary_diagnosis_id",
               "valueType": "string",
               "description": "Indicate the primary diagnosis event in the clinical timeline that this treatment was related to.",
-              "meta": {
-                "primaryId": true,
-                "displayName": "Submitter Primary Diagnosis ID",
-                "notes": "To prevent data collisions, submitter_id cannot begin with any of the ARGO ID prefixes.  The restricted prefixes include: `DO`, `SP`, `SA`,`TR`,`FU`, `PD`."
-              },
-              "restrictions": {
-                "required": true,
-                "regex": "\\b(?!([Dd][Oo])|([Ss][Pp])|([Ss][Aa])|([Tt][Rr])|([pP][Dd])|([Ff][Uu]))\\b^[A-Za-z0-9\\-\\._]{1,64}"
-              }
+              "meta": { "primaryId": true, "displayName": "Submitter Primary Diagnosis ID" },
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
             },
             {
               "name": "treatment_type",
@@ -2972,39 +2824,26 @@
               "name": "age_at_consent_for_treatment",
               "description": "Indicate the age of donor when consent was given for treatment.",
               "valueType": "integer",
-              "meta": {
-                "displayName": "Age At Consent For Treatment"
-              }
+              "meta": { "displayName": "Age At Consent For Treatment" }
             },
             {
               "name": "is_primary_treatment",
               "description": "Indicate if the treatment was the primary treatment following the initial diagnosis.",
               "valueType": "string",
-              "restrictions": {
-                "required": true,
-                "codeList": ["Yes", "No", "Unknown"]
-              },
-              "meta": {
-                "core": true,
-                "displayName": "Is Primary Treatment"
-              }
+              "restrictions": { "required": true, "codeList": ["Yes", "No", "Unknown"] },
+              "meta": { "core": true, "displayName": "Is Primary Treatment" }
             },
             {
               "name": "line_of_treatment",
               "description": "Indicate the line of treatment if it is not the primary treatment.",
               "valueType": "integer",
-              "meta": {
-                "displayName": "Line Of treatment",
-                "examples": "2,3,4"
-              }
+              "meta": { "displayName": "Line Of treatment", "examples": "2,3,4" }
             },
             {
               "name": "treatment_start_interval",
               "description": "The interval between the primary diagnosis and initiation of treatment, in days.",
               "valueType": "integer",
-              "restrictions": {
-                "required": true
-              },
+              "restrictions": { "required": true },
               "meta": {
                 "core": true,
                 "units": "days",
@@ -3016,56 +2855,40 @@
               "name": "treatment_duration",
               "description": "The duration of treatment regimen, in days.",
               "valueType": "integer",
-              "restrictions": {
-                "required": true
-              },
-              "meta": {
-                "core": true,
-                "units": "days",
-                "displayName": "Treatment Duration"
-              }
+              "restrictions": { "required": true },
+              "meta": { "core": true, "units": "days", "displayName": "Treatment Duration" }
             },
             {
               "name": "days_per_cycle",
               "description": "Indicate the number of days in a treatment cycle.",
               "valueType": "integer",
-              "meta": {
-                "displayName": "Days Per Cycle"
-              }
+              "meta": { "displayName": "Days Per Cycle" }
             },
             {
               "name": "number_of_cycles",
               "description": "Indicate the number of treatment cycles.",
               "valueType": "integer",
-              "meta": {
-                "displayName": "Number Of Cycles"
-              }
+              "meta": { "displayName": "Number Of Cycles" }
             },
             {
               "name": "treatment_intent",
-              "description": "Indicate the intended disease outcome for which the treatment is given. (Reference: CDISC [NCIt code: C124307])",
+              "description": "Indicate the intended disease outcome for which the treatment is given. (Reference: NCIt C124307)",
               "valueType": "string",
               "restrictions": {
                 "required": true,
                 "codeList": ["Curative", "Palliative", "Unknown"]
               },
-              "meta": {
-                "core": true,
-                "displayName": "Treatment Intent"
-              }
+              "meta": { "core": true, "displayName": "Treatment Intent" }
             },
             {
               "name": "treatment_setting",
-              "description": "Indicate the treatment setting, which describes the treatment's purpose in relation to the primary treatment. (Reference: CDISC [NCIt code: C124308])",
+              "description": "Indicate the treatment setting, which describes the treatment's purpose in relation to the primary treatment. (Reference: NCIt C124308)",
               "valueType": "string",
               "restrictions": {
                 "required": true,
                 "codeList": ["Adjuvant", "Advanced/Metastatic", "Neoadjuvant", "Not applicable"]
               },
-              "meta": {
-                "core": true,
-                "displayName": "Treatment Setting"
-              }
+              "meta": { "core": true, "displayName": "Treatment Setting" }
             },
             {
               "name": "response_to_treatment",
@@ -3081,10 +2904,7 @@
                   "Stable disease"
                 ]
               },
-              "meta": {
-                "core": true,
-                "displayName": "Response To Treatment"
-              }
+              "meta": { "core": true, "displayName": "Response To Treatment" }
             },
             {
               "name": "outcome_of_treatment",
@@ -3104,20 +2924,14 @@
                   "Unknown"
                 ]
               },
-              "meta": {
-                "displayName": "Outcome Of Treatment"
-              }
+              "meta": { "displayName": "Outcome Of Treatment" }
             },
             {
               "name": "toxicity_type",
               "description": "If the treatment was terminated early due to acute toxicity, indicate whether it was due to hemotological toxicity or non-hemotological toxicity.",
               "valueType": "string",
-              "restrictions": {
-                "codeList": ["Hemotological", "Non-hemotological"]
-              },
-              "meta": {
-                "displayName": "Toxicity Type"
-              }
+              "restrictions": { "codeList": ["Hemotological", "Non-hemotological"] },
+              "meta": { "displayName": "Toxicity Type" }
             },
             {
               "name": "hemotological_toxicity",
@@ -3997,12 +3811,8 @@
               "name": "clinical_trials_database",
               "description": "If the donor is a participant in a clinical trial, indicate the clinical trial database where the clinical trial is registered.",
               "valueType": "string",
-              "meta": {
-                "display name": "Clinical Trials Database"
-              },
-              "restrictions": {
-                "codeList": ["NCI Clinical Trials", "EU Clinical Trials Register"]
-              }
+              "meta": { "display name": "Clinical Trials Database" },
+              "restrictions": { "codeList": ["NCI Clinical Trials", "EU Clinical Trials Register"] }
             },
             {
               "name": "clinical_trial_number",
@@ -4024,9 +3834,7 @@
         {
           "name": "chemotherapy",
           "description": "The collection of data elements describing the details of a chemotherapy treatment regimen completed by a donor. To submit multiple treatment drugs for a single regimen, submit multiple rows in the chemotherapy file.",
-          "meta": {
-            "parent": "treatment"
-          },
+          "meta": { "parent": "treatment" },
           "fields": [
             {
               "name": "program_id",
@@ -4038,9 +3846,7 @@
                 "foreignKey": "sample_registration.program_id",
                 "displayName": "Program ID"
               },
-              "restrictions": {
-                "required": true
-              }
+              "restrictions": { "required": true }
             },
             {
               "name": "submitter_donor_id",
@@ -4050,13 +3856,9 @@
                 "validationDependency": true,
                 "primaryId": true,
                 "foreignKey": "sample_registration.submitter_donor_id",
-                "displayName": "Submitter Donor ID",
-                "notes": "To prevent data collisions, submitter_id cannot begin with any of the ARGO ID prefixes.  The restricted prefixes include: `DO`, `SP`, `SA`,`TR`,`FU`, `PD`."
+                "displayName": "Submitter Donor ID"
               },
-              "restrictions": {
-                "required": true,
-                "regex": "\\b(?!([Dd][Oo])|([Ss][Pp])|([Ss][Aa])|([Tt][Rr])|([pP][Dd])|([Ff][Uu]))\\b^[A-Za-z0-9\\-\\._]{1,64}"
-              }
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
             },
             {
               "name": "submitter_treatment_id",
@@ -4066,13 +3868,9 @@
                 "validationDependency": true,
                 "primaryId": true,
                 "foreignKey": "treatment.submitter_treatment_id",
-                "displayName": "Submitter Treatment ID",
-                "notes": "To prevent data collisions, submitter_id cannot begin with any of the ARGO ID prefixes.  The restricted prefixes include: `DO`, `SP`, `SA`,`TR`,`FU`, `PD`."
+                "displayName": "Submitter Treatment ID"
               },
-              "restrictions": {
-                "required": true,
-                "regex": "\\b(?!([Dd][Oo])|([Ss][Pp])|([Ss][Aa])|([Tt][Rr])|([pP][Dd])|([Ff][Uu]))\\b^[A-Za-z0-9\\-\\._]{1,64}"
-              }
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
             },
             {
               "name": "drug_rxnormcui",
@@ -4084,9 +3882,7 @@
                 "notes": "This field uses standardized vocabulary from the RxNorm database (https://www.nlm.nih.gov/research/umls/rxnorm), provided by the NIH.\n\nYou can search for RX Norm values through the web interface (https://mor.nlm.nih.gov/RxNav/) or API (https://mor.nlm.nih.gov/download/rxnav/RxNormAPIs.html).\n\nFor example, to find the rxnormcui based on drug name, you can use: https://rxnav.nlm.nih.gov/REST/rxcui.json?name=leucovorin or https://mor.nlm.nih.gov/RxNav/search?searchBy=String&searchTerm=leucovorin",
                 "displayName": "RxNormCUI"
               },
-              "restrictions": {
-                "required": true
-              }
+              "restrictions": { "required": true }
             },
             {
               "name": "drug_name",
@@ -4098,9 +3894,7 @@
                 "notes": "This field uses standardized vocabulary from the RxNorm database (https://www.nlm.nih.gov/research/umls/rxnorm), provided by the NIH.\n\nYou can search for RX Norm values through the web interface (https://mor.nlm.nih.gov/RxNav/) or API (https://mor.nlm.nih.gov/download/rxnav/RxNormAPIs.html).\n\nFor example, to find the rxnormcui based on drug name, you can use: https://rxnav.nlm.nih.gov/REST/rxcui.json?name=leucovorin or https://mor.nlm.nih.gov/RxNav/search?searchBy=String&searchTerm=leucovorin",
                 "displayName": "Chemotherapy Drug Name"
               },
-              "restrictions": {
-                "required": true
-              }
+              "restrictions": { "required": true }
             },
             {
               "name": "chemotherapy_dosage_units",
@@ -4110,31 +3904,21 @@
                 "required": true,
                 "codeList": ["mg/m2", "IU/m2", "ug/m2", "g/m2", "mg/kg"]
               },
-              "meta": {
-                "core": true,
-                "displayName": "Chemotherapy Dosage Units"
-              }
+              "meta": { "core": true, "displayName": "Chemotherapy Dosage Units" }
             },
             {
               "name": "cumulative_drug_dosage",
-              "description": "Indicate the total drug dose in the same units specified in chemotherapy_dosage_units.",
+              "description": "Indicate the total actual drug dose in the same units specified in chemotherapy_dosage_units.",
               "valueType": "number",
-              "restrictions": {
-                "required": true
-              },
-              "meta": {
-                "core": true,
-                "displayName": "Cumulative Drug Dosage"
-              }
+              "restrictions": { "required": true },
+              "meta": { "core": true, "displayName": "Cumulative Drug Dosage" }
             }
           ]
         },
         {
           "name": "hormone_therapy",
           "description": "The collection of data elements describing the details of a hormone treatment therapy completed by a donor. To submit multiple treatment drugs for a single regimen, submit multiple rows in the hormone_therapy file.",
-          "meta": {
-            "parent": "treatment"
-          },
+          "meta": { "parent": "treatment" },
           "fields": [
             {
               "name": "program_id",
@@ -4146,9 +3930,7 @@
                 "foreignKey": "sample_registration.program_id",
                 "displayName": "Program ID"
               },
-              "restrictions": {
-                "required": true
-              }
+              "restrictions": { "required": true }
             },
             {
               "name": "submitter_donor_id",
@@ -4158,13 +3940,9 @@
                 "validationDependency": true,
                 "primaryId": true,
                 "foreignKey": "sample_registration.submitter_donor_id",
-                "displayName": "Submitter Donor ID",
-                "notes": "To prevent data collisions, submitter_id cannot begin with any of the ARGO ID prefixes.  The restricted prefixes include: `DO`, `SP`, `SA`,`TR`,`FU`, `PD`."
+                "displayName": "Submitter Donor ID"
               },
-              "restrictions": {
-                "required": true,
-                "regex": "\\b(?!([Dd][Oo])|([Ss][Pp])|([Ss][Aa])|([Tt][Rr])|([pP][Dd])|([Ff][Uu]))\\b^[A-Za-z0-9\\-\\._]{1,64}"
-              }
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
             },
             {
               "name": "submitter_treatment_id",
@@ -4174,13 +3952,9 @@
                 "validationDependency": true,
                 "primaryId": true,
                 "foreignKey": "treatment.submitter_treatment_id",
-                "displayName": "Submitter Treatment ID",
-                "notes": "To prevent data collisions, submitter_id cannot begin with any of the ARGO ID prefixes.  The restricted prefixes include: `DO`, `SP`, `SA`,`TR`,`FU`, `PD`."
+                "displayName": "Submitter Treatment ID"
               },
-              "restrictions": {
-                "required": true,
-                "regex": "\\b(?!([Dd][Oo])|([Ss][Pp])|([Ss][Aa])|([Tt][Rr])|([pP][Dd])|([Ff][Uu]))\\b^[A-Za-z0-9\\-\\._]{1,64}"
-              }
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
             },
             {
               "name": "drug_rxnormcui",
@@ -4191,9 +3965,7 @@
                 "notes": "This field uses standardized vocabulary from the RxNorm database (https://www.nlm.nih.gov/research/umls/rxnorm), provided by the NIH.\n\nYou can search for RX Norm values through the web interface (https://mor.nlm.nih.gov/RxNav/) or API (https://mor.nlm.nih.gov/download/rxnav/RxNormAPIs.html).\n\nFor example, to find the rxnormcui based on drug name, you can use: https://rxnav.nlm.nih.gov/REST/rxcui.json?name=leucovorin or https://mor.nlm.nih.gov/RxNav/search?searchBy=String&searchTerm=leucovorin",
                 "displayName": "RxNormCUI"
               },
-              "restrictions": {
-                "required": true
-              }
+              "restrictions": { "required": true }
             },
             {
               "name": "drug_name",
@@ -4204,9 +3976,7 @@
                 "notes": "This field uses standardized vocabulary from the RxNorm database (https://www.nlm.nih.gov/research/umls/rxnorm), provided by the NIH.\n\nYou can search for RX Norm values through the web interface (https://mor.nlm.nih.gov/RxNav/) or API (https://mor.nlm.nih.gov/download/rxnav/RxNormAPIs.html).\n\nFor example, to find the rxnormcui based on drug name, you can use: https://rxnav.nlm.nih.gov/REST/rxcui.json?name=leucovorin or https://mor.nlm.nih.gov/RxNav/search?searchBy=String&searchTerm=leucovorin",
                 "displayName": "Hormone Therapy Drug Name"
               },
-              "restrictions": {
-                "required": true
-              }
+              "restrictions": { "required": true }
             },
             {
               "name": "hormone_drug_dosage_units",
@@ -4216,31 +3986,21 @@
                 "required": true,
                 "codeList": ["mg/m2", "IU/m2", "ug/m2", "g/m2", "mg/kg"]
               },
-              "meta": {
-                "core": true,
-                "displayName": "Hormone Therapy Dosage Units"
-              }
+              "meta": { "core": true, "displayName": "Hormone Therapy Dosage Units" }
             },
             {
               "name": "cumulative_drug_dosage",
               "description": "Indicate total drug dose in units specified in hormone_drug_dosage_units.",
               "valueType": "number",
-              "restrictions": {
-                "required": true
-              },
-              "meta": {
-                "core": true,
-                "displayName": "Cumulative Drug Dosage"
-              }
+              "restrictions": { "required": true },
+              "meta": { "core": true, "displayName": "Cumulative Drug Dosage" }
             }
           ]
         },
         {
           "name": "radiation",
           "description": "The collection of data elements describing the details of a radiation treatment completed by a donor.",
-          "meta": {
-            "parent": "treatment"
-          },
+          "meta": { "parent": "treatment" },
           "fields": [
             {
               "name": "program_id",
@@ -4252,9 +4012,7 @@
                 "foreignKey": "sample_registration.program_id",
                 "displayName": "Program ID"
               },
-              "restrictions": {
-                "required": true
-              }
+              "restrictions": { "required": true }
             },
             {
               "name": "submitter_donor_id",
@@ -4264,13 +4022,9 @@
                 "validationDependency": true,
                 "primaryId": true,
                 "foreignKey": "sample_registration.submitter_donor_id",
-                "displayName": "Submitter Donor ID",
-                "notes": "To prevent data collisions, submitter_id cannot begin with any of the ARGO ID prefixes.  The restricted prefixes include: `DO`, `SP`, `SA`,`TR`,`FU`, `PD`."
+                "displayName": "Submitter Donor ID"
               },
-              "restrictions": {
-                "required": true,
-                "regex": "\\b(?!([Dd][Oo])|([Ss][Pp])|([Ss][Aa])|([Tt][Rr])|([pP][Dd])|([Ff][Uu]))\\b^[A-Za-z0-9\\-\\._]{1,64}"
-              }
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
             },
             {
               "name": "submitter_treatment_id",
@@ -4280,13 +4034,9 @@
                 "validationDependency": true,
                 "primaryId": true,
                 "foreignKey": "treatment.submitter_treatment_id",
-                "displayName": "Submitter Treatment ID",
-                "notes": "To prevent data collisions, submitter_id cannot begin with any of the ARGO ID prefixes.  The restricted prefixes include: `DO`, `SP`, `SA`,`TR`,`FU`, `PD`."
+                "displayName": "Submitter Treatment ID"
               },
-              "restrictions": {
-                "required": true,
-                "regex": "\\b(?!([Dd][Oo])|([Ss][Pp])|([Ss][Aa])|([Tt][Rr])|([pP][Dd])|([Ff][Uu]))\\b^[A-Za-z0-9\\-\\._]{1,64}"
-              }
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
             },
             {
               "name": "radiation_therapy_modality",
@@ -4306,10 +4056,7 @@
               "name": "radiation_therapy_type",
               "description": "Indicate type of radiation therapy administered.",
               "valueType": "string",
-              "restrictions": {
-                "required": true,
-                "codeList": ["External", "Internal"]
-              },
+              "restrictions": { "required": true, "codeList": ["External", "Internal"] },
               "meta": {
                 "core": true,
                 "displayName": "Type of Radiation Therapy",
@@ -4320,25 +4067,15 @@
               "name": "radiation_therapy_fractions",
               "description": "Indicate the total number of fractions delivered as part of treatment.",
               "valueType": "integer",
-              "restrictions": {
-                "required": true
-              },
-              "meta": {
-                "core": true,
-                "displayName": "Radiation Therapy Fractions"
-              }
+              "restrictions": { "required": true },
+              "meta": { "core": true, "displayName": "Radiation Therapy Fractions" }
             },
             {
               "name": "radiation_therapy_dosage",
               "description": "Indicate the total dose given in units of Gray (Gy).",
               "valueType": "integer",
-              "restrictions": {
-                "required": true
-              },
-              "meta": {
-                "core": true,
-                "displayName": "Radiation Therapy Dosage"
-              }
+              "restrictions": { "required": true },
+              "meta": { "core": true, "displayName": "Radiation Therapy Dosage" }
             },
             {
               "name": "anatomical_site_irradiated",
@@ -4361,19 +4098,14 @@
                   "Thorax"
                 ]
               },
-              "meta": {
-                "core": true,
-                "displayName": "Anatomical Site Irradiated"
-              }
+              "meta": { "core": true, "displayName": "Anatomical Site Irradiated" }
             }
           ]
         },
         {
           "name": "follow_up",
           "description": "The collection of data elements related to a specific follow-up visit to a donor. A follow-up is defined as any point of contact with a patient after primary diagnosis. To submit multiple follow-ups for a single donor, please submit multiple rows in the follow-up file for this donor.",
-          "meta": {
-            "parent": "donor"
-          },
+          "meta": { "parent": "donor" },
           "fields": [
             {
               "name": "program_id",
@@ -4385,9 +4117,7 @@
                 "foreignKey": "sample_registration.program_id",
                 "displayName": "Program ID"
               },
-              "restrictions": {
-                "required": true
-              }
+              "restrictions": { "required": true }
             },
             {
               "description": "Unique identifier of the donor, assigned by the data provider.",
@@ -4397,13 +4127,9 @@
                 "validationDependency": true,
                 "primaryId": true,
                 "foreignKey": "sample_registration.submitter_donor_id",
-                "displayName": "Submitter Donor ID",
-                "notes": "To prevent data collisions, submitter_id cannot begin with any of the ARGO ID prefixes.  The restricted prefixes include: `DO`, `SP`, `SA`,`TR`,`FU`, `PD`."
+                "displayName": "Submitter Donor ID"
               },
-              "restrictions": {
-                "required": true,
-                "regex": "\\b(?!([Dd][Oo])|([Ss][Pp])|([Ss][Aa])|([Tt][Rr])|([pP][Dd])|([Ff][Uu]))\\b^[A-Za-z0-9\\-\\._]{1,64}"
-              }
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
             },
             {
               "description": "Unique identifier for a follow-up event in a donor's clinical record, assigned by the data provider.",
@@ -4412,21 +4138,15 @@
               "meta": {
                 "validationDependency": true,
                 "primaryId": true,
-                "displayName": "Submitter Follow-Up ID",
-                "notes": "To prevent data collisions, submitter_id cannot begin with any of the ARGO ID prefixes.  The restricted prefixes include: `DO`, `SP`, `SA`,`TR`,`FU`, `PD`."
+                "displayName": "Submitter Follow-Up ID"
               },
-              "restrictions": {
-                "required": true,
-                "regex": "\\b(?!([Dd][Oo])|([Ss][Pp])|([Ss][Aa])|([Tt][Rr])|([pP][Dd])|([Ff][Uu]))\\b^[A-Za-z0-9\\-\\._]{1,64}"
-              }
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
             },
             {
               "description": "Interval from the primary diagnosis date to the follow-up date, in days.",
               "name": "interval_of_followup",
               "valueType": "integer",
-              "restrictions": {
-                "required": true
-              },
+              "restrictions": { "required": true },
               "meta": {
                 "core": true,
                 "units": "days",
@@ -4435,7 +4155,7 @@
               }
             },
             {
-              "description": "Indicate the donor's disease status at time of follow-up.",
+              "description": "Indicate the donor's disease status at time of follow-up. (Reference: RECIST)",
               "name": "disease_status_at_followup",
               "valueType": "string",
               "restrictions": {
@@ -4446,49 +4166,33 @@
                   "Loco-regional progression",
                   "No evidence of disease",
                   "Partial remission",
+                  "Progression NOS",
                   "Relapse or recurrence",
                   "Stable"
                 ]
               },
-              "meta": {
-                "core": true,
-                "displayName": "Disease Status at Follow-Up"
-              }
+              "meta": { "core": true, "displayName": "Disease Status at Follow-Up" }
             },
             {
               "name": "submitter_primary_diagnosis_id",
               "valueType": "string",
               "description": "Indicate if the follow-up is related to a specific primary diagnosis event in the clinical timeline.",
-              "meta": {
-                "displayName": "Submitter Primary Diagnosis ID",
-                "primaryId": true,
-                "notes": "To prevent data collisions, submitter_id cannot begin with any of the ARGO ID prefixes.  The restricted prefixes include: `DO`, `SP`, `SA`,`TR`,`FU`, `PD`."
-              },
-              "restrictions": {
-                "regex": "\\b(?!([Dd][Oo])|([Ss][Pp])|([Ss][Aa])|([Tt][Rr])|([pP][Dd])|([Ff][Uu]))\\b^[A-Za-z0-9\\-\\._]{1,64}"
-              }
+              "meta": { "displayName": "Submitter Primary Diagnosis ID", "primaryId": true },
+              "restrictions": { "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
             },
             {
               "name": "submitter_treatment_id",
               "valueType": "string",
               "description": "Indicate if the follow-up is related to a specific treatment event in the clinical timeline.",
-              "meta": {
-                "primaryId": true,
-                "displayName": "Submitter Treatment ID",
-                "notes": "To prevent data collisions, submitter_id cannot begin with any of the ARGO ID prefixes.  The restricted prefixes include: `DO`, `SP`, `SA`,`TR`,`FU`, `PD`."
-              },
-              "restrictions": {
-                "regex": "\\b(?!([Dd][Oo])|([Ss][Pp])|([Ss][Aa])|([Tt][Rr])|([pP][Dd])|([Ff][Uu]))\\b^[A-Za-z0-9\\-\\._]{1,64}"
-              }
+              "meta": { "primaryId": true, "displayName": "Submitter Treatment ID" },
+              "restrictions": { "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
             },
             {
               "description": "Indicate the donor's weight, in kilograms (kg), at the time of follow-up.",
               "name": "weight_at_followup",
               "valueType": "integer",
               "restrictions": {},
-              "meta": {
-                "displayName": "Weight at Follow-Up"
-              }
+              "meta": { "displayName": "Weight at Follow-Up" }
             },
             {
               "description": "Indicate the donor's relapse type.",
@@ -4530,7 +4234,7 @@
               }
             },
             {
-              "description": "Indicate the method(s) used to confirm the donor's progression or relapse or recurrence disease status. (Codelist reference: NCI CDE ID: 6161031)",
+              "description": "Indicate the method(s) used to confirm the donor's progression or relapse or recurrence disease status. (Reference: caDSR CDE ID 6161031)",
               "name": "method_of_progression_status",
               "valueType": "string",
               "isArray": true,
@@ -4850,9 +4554,7 @@
                   "St Jude staging system"
                 ]
               },
-              "meta": {
-                "displayName": "Post-therapy Tumour Staging System"
-              }
+              "meta": { "displayName": "Post-therapy Tumour Staging System" }
             },
             {
               "name": "posttherapy_t_category",
@@ -5059,6 +4761,87 @@
                   "(function validate(inputs) {\n    const {$row, $field} = inputs;\n    let result = { valid: true, message: 'Ok' };\n    if ($row.posttherapy_tumour_staging_system && $field) {\n      let codeList = [];\n      switch ($row.posttherapy_tumour_staging_system && $row.posttherapy_tumour_staging_system.trim().toLowerCase()) {\n        case 'revised international staging system (riss)':\n          codeList = [\n            'stage i',\n            'stage ii',\n            'stage iii'\n          ];\n          break;\n        case 'lugano staging system':\n          codeList = [\n             'stage i',\n             'stage ia',\n             'stage ib',\n             'stage ie',\n             'stage iea',\n             'stage ieb',\n             'stage ii',\n             'stage iia',\n             'stage iib',\n             'stage iie',\n             'stage iiea',\n             'stage iieb',\n             'stage iii',\n             'stage iiia',\n             'stage iiib',\n             'stage iv',\n             'stage iva',\n             'stage ivb'\n          ];\n          break;\n        case 'st jude staging system':\n          codeList = [\n            'stage i',\n            'stage ii',\n            'stage iii',\n            'stage iv'\n          ];\n          break;\n        case 'ann arbor staging system':\n          codeList = [\n            'stage i',\n            'stage ia',\n            'stage ib',\n            'stage ie',\n            'stage is',\n            'stage ii',\n            'stage iia',\n            'stage iib',\n            'stage iie',\n            'stage iis',\n            'stage iii',\n            'stage iiia',\n            'stage iiib',\n            'stage iiie',\n            'stage iiis',\n            'stage iv',\n            'stage iva',\n            'stage ivb',\n            'stage ive',\n            'stage ivs'\n          ];\n          break;\n        case 'rai staging system':\n          codeList = [\n             'stage 0',\n             'stage i',\n             'stage ii',\n             'stage iii',\n             'stage iv'\n          ];\n          break;\n        case 'durie-salmon staging system':\n          codeList = [\n            'stage 1',\n            'stage 1a',\n            'stage 1b',\n            'stage ii',\n            'stage iia',\n            'stage iib',\n            'stage iii',\n            'stage iiia',\n            'stage iiib'\n          ];\n          break;\n        case 'figo staging system':\n          codeList = [\n            'stage ia',\n            'stage ia1',\n            'stage ia2',\n            'stage ib',\n            'stage ib1',\n            'stage ib2',\n            'stage iia',\n            'stage iab',\n            'stage iiia',\n            'stage iiib',\n            'stage iva',\n            'stage ivb'\n          ];\n          break;\n        case 'binet staging system':\n          codeList = [\n             'stage a',\n             'stage b',\n             'stage c'\n         ];\n          break;\n        case 'ajcc 8th edition':\n          codeList = ['stage 0','stage 0a','stage 0is','stage i','stage ia','stage ia1','stage ia2','stage ia3','stage ib','stage ib1','stage ib2','stage ic','stage ie','stage is','stage ii','stage iia','stage iia1','stage iia2','stage iib','stage iic','stage iie','stage iii','stage iiia','stage iiia1','stage iiia2','stage iiib','stage iiic','stage iiic1','stage iiic2','stage iiid','stage iv','stage iva','stage iva1','stage iva2','stage ivb','stage ivc','occult carcinoma','stage 1'];\n          break;\n        case 'ajcc 7th edition':\n          codeList = ['stage 0','stage 0a','stage 0is','stage i','stage ia','stage ia1','stage ia2','stage ib','stage ib1','stage ib2','stage ic','stage is','stage ii','stage iia','stage iia1','stage iia2','stage iib','stage iic','stage iii','stage iiia','stage iiib','stage iiic','stage iiic1','stage iiic2','stage iv','stage iva','stage iva1','stage iva2','stage ivb','stage ivc','occult carcinoma','stage 1'\n];\n          break;\n        default:\n          codelist = [];\n      }\n\n      if (!codeList.includes($field.trim().toLowerCase()) && codeList.length) {\n        const msg = `'${$field}' is not a permissible value. When 'posttherapy_tumour_staging_system' is set to '${\n          $row.posttherapy_tumour_staging_system\n        }', 'posttherapy_stage_group' must be one of the following: \\n${codeList\n          .map(code => `- \"${code}\"`)\n          .join('\\n')}`;\n\n        result.valid = false;\n        result.message = msg;\n      }\n    }\n    return result;\n  })"
                 ]
               }
+            }
+          ]
+        },
+        {
+          "name": "immunotherapy",
+          "description": "The collection of data elements describing the details of an immunotherapy treatment completed by a donor.",
+          "meta": { "parent": "treatment" },
+          "fields": [
+            {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.program_id",
+                "displayName": "Program ID"
+              },
+              "restrictions": { "required": true }
+            },
+            {
+              "name": "submitter_donor_id",
+              "valueType": "string",
+              "description": "Unique identifier of the donor, assigned by the data provider.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.submitter_donor_id",
+                "displayName": "Submitter Donor ID"
+              },
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
+            },
+            {
+              "name": "submitter_treatment_id",
+              "valueType": "string",
+              "description": "Unique identifier of the treatment, assigned by the data provider.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "treatment.submitter_treatment_id",
+                "displayName": "Submitter Treatment ID"
+              },
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
+            },
+            {
+              "name": "immunotherapy_type",
+              "valueType": "string",
+              "description": "Indicate the type of immunotherapy administered to patient.",
+              "meta": { "displayName": "Immunotherapy Type" },
+              "restrictions": {
+                "codeList": [
+                  "Cell-based",
+                  "Immune checkpoint inhibitors",
+                  "Monoclonal antibodies other than immune checkpoint inhibitors",
+                  "Other immunomodulatory substances"
+                ]
+              }
+            },
+            {
+              "name": "drug_rxnormcui",
+              "description": "The unique RxNormID assigned to the treatment regimen drug.",
+              "valueType": "string",
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses standardized vocabulary from the RxNorm database (https://www.nlm.nih.gov/research/umls/rxnorm), provided by the NIH.\n\nYou can search for RX Norm values through the web interface (https://mor.nlm.nih.gov/RxNav/) or API (https://mor.nlm.nih.gov/download/rxnav/RxNormAPIs.html).\n\nFor example, to find the rxnormcui based on drug name, you can use: https://rxnav.nlm.nih.gov/REST/rxcui.json?name=leucovorin or https://mor.nlm.nih.gov/RxNav/search?searchBy=String&searchTerm=leucovorin",
+                "displayName": "RxNormCUI"
+              },
+              "restrictions": { "required": true }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses standardized vocabulary from the RxNorm database (https://www.nlm.nih.gov/research/umls/rxnorm), provided by the NIH.\n\nYou can search for RX Norm values through the web interface (https://mor.nlm.nih.gov/RxNav/) or API (https://mor.nlm.nih.gov/download/rxnav/RxNormAPIs.html).\n\nFor example, to find the rxnormcui based on drug name, you can use: https://rxnav.nlm.nih.gov/REST/rxcui.json?name=leucovorin or https://mor.nlm.nih.gov/RxNav/search?searchBy=String&searchTerm=leucovorin",
+                "displayName": "Immunotherapy Drug Name"
+              },
+              "restrictions": { "required": true }
             }
           ]
         }
