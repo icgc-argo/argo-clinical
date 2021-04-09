@@ -3613,6 +3613,87 @@
               }
             }
           ]
+        },
+        {
+          "name": "immunotherapy",
+          "description": "The collection of data elements describing the details of an immunotherapy treatment completed by a donor.",
+          "meta": { "parent": "treatment" },
+          "fields": [
+            {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.program_id",
+                "displayName": "Program ID"
+              },
+              "restrictions": { "required": true }
+            },
+            {
+              "name": "submitter_donor_id",
+              "valueType": "string",
+              "description": "Unique identifier of the donor, assigned by the data provider.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.submitter_donor_id",
+                "displayName": "Submitter Donor ID"
+              },
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
+            },
+            {
+              "name": "submitter_treatment_id",
+              "valueType": "string",
+              "description": "Unique identifier of the treatment, assigned by the data provider.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "treatment.submitter_treatment_id",
+                "displayName": "Submitter Treatment ID"
+              },
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
+            },
+            {
+              "name": "immunotherapy_type",
+              "valueType": "string",
+              "description": "Indicate the type of immunotherapy administered to patient.",
+              "meta": { "displayName": "Immunotherapy Type" },
+              "restrictions": {
+                "codeList": [
+                  "Cell-based",
+                  "Immune checkpoint inhibitors",
+                  "Monoclonal antibodies other than immune checkpoint inhibitors",
+                  "Other immunomodulatory substances"
+                ]
+              }
+            },
+            {
+              "name": "drug_rxnormcui",
+              "description": "The unique RxNormID assigned to the treatment regimen drug.",
+              "valueType": "string",
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses standardized vocabulary from the RxNorm database (https://www.nlm.nih.gov/research/umls/rxnorm), provided by the NIH.\n\nYou can search for RX Norm values through the web interface (https://mor.nlm.nih.gov/RxNav/) or API (https://mor.nlm.nih.gov/download/rxnav/RxNormAPIs.html).\n\nFor example, to find the rxnormcui based on drug name, you can use: https://rxnav.nlm.nih.gov/REST/rxcui.json?name=leucovorin or https://mor.nlm.nih.gov/RxNav/search?searchBy=String&searchTerm=leucovorin",
+                "displayName": "RxNormCUI"
+              },
+              "restrictions": { "required": true }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses standardized vocabulary from the RxNorm database (https://www.nlm.nih.gov/research/umls/rxnorm), provided by the NIH.\n\nYou can search for RX Norm values through the web interface (https://mor.nlm.nih.gov/RxNav/) or API (https://mor.nlm.nih.gov/download/rxnav/RxNormAPIs.html).\n\nFor example, to find the rxnormcui based on drug name, you can use: https://rxnav.nlm.nih.gov/REST/rxcui.json?name=leucovorin or https://mor.nlm.nih.gov/RxNav/search?searchBy=String&searchTerm=leucovorin",
+                "displayName": "Immunotherapy Drug Name"
+              },
+              "restrictions": { "required": true }
+            }
+          ]
         }
       ],
       "name": "ARGO Clinical Submission",

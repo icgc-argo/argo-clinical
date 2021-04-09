@@ -42,7 +42,6 @@ import {
   ClinicalTherapyType,
   TreatmentFieldsEnum,
 } from '../../common-model/entities';
-import { utils } from 'mocha';
 
 const L = loggerFor(__filename);
 

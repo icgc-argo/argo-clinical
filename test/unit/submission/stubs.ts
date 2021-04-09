@@ -483,7 +483,7 @@ export const stubs = {
             [TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
             [TreatmentFieldsEnum.submitter_donor_id]: 'ICGC_0002',
             [TreatmentFieldsEnum.submitter_primary_diagnosis_id]: 'P4',
-            [TreatmentFieldsEnum.treatment_type]: ['Chemotherapy', 'Immunotherapy'],
+            [TreatmentFieldsEnum.treatment_type]: ['Chemotherapy'],
             [TreatmentFieldsEnum.treatment_start_interval]: 5,
           },
           therapies: [
