@@ -2177,7 +2177,7 @@ describe('data-validator', () => {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'ICGC_0002',
           [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.FOLLOW_UP]]: 'FLL1234',
           [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.TREATMENT]]: 'T_02',
-          [TreatmentFieldsEnum.treatment_type]: ['Chemotherapy', 'Immunotherapy'],
+          [TreatmentFieldsEnum.treatment_type]: ['Chemotherapy'],
           [TreatmentFieldsEnum.submitter_primary_diagnosis_id]: 'P4',
           [TreatmentFieldsEnum.treatment_start_interval]: 50,
           index: 0,

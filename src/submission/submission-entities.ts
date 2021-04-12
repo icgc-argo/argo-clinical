@@ -30,6 +30,7 @@ import {
   CommonTherapyFields,
   RadiationFieldsEnum,
   ClinicalTherapyType,
+  ImmunotherapyFields,
 } from '../common-model/entities';
 
 /**
@@ -357,6 +358,7 @@ export const BatchNameRegex: Record<ClinicalEntitySchemaNames, RegExp[]> = {
   [ClinicalEntitySchemaNames.CHEMOTHERAPY]: [/^chemotherapy.*\.tsv$/i],
   [ClinicalEntitySchemaNames.RADIATION]: [/^radiation.*\.tsv$/i],
   [ClinicalEntitySchemaNames.HORMONE_THERAPY]: [/^hormone_therapy.*\.tsv$/i],
+  [ClinicalEntitySchemaNames.IMMUNOTHERAPY]: [/^immunotherapy.*\.tsv$/i],
 };
 
 export interface ClinicalSubmissionRecordsByDonorIdMap {
@@ -385,12 +387,16 @@ export const ClinicalEntityToEnumFieldsMap: Record<ClinicalEntitySchemaNames, st
   [ClinicalEntitySchemaNames.HORMONE_THERAPY]: (Object.values(
     TherapyRxNormFields,
   ) as string[]).concat(Object.values(CommonTherapyFields)),
+  [ClinicalEntitySchemaNames.IMMUNOTHERAPY]: (Object.values(TherapyRxNormFields) as string[])
+    .concat(Object.values(CommonTherapyFields))
+    .concat(Object.values(ImmunotherapyFields) as string[]),
 };
 
 export const TreatmentTypeValuesMappedByTherapy: Record<ClinicalTherapyType, string> = {
   [ClinicalEntitySchemaNames.CHEMOTHERAPY]: 'Chemotherapy',
   [ClinicalEntitySchemaNames.RADIATION]: 'Radiation therapy',
   [ClinicalEntitySchemaNames.HORMONE_THERAPY]: 'Hormonal therapy',
+  [ClinicalEntitySchemaNames.IMMUNOTHERAPY]: 'Immunotherapy',
 };
 
 export const DonorVitalStatusValues = { deceased: 'Deceased' };

@@ -899,7 +899,8 @@ export namespace operations {
   function isRxNormTherapy(entity: string) {
     return (
       entity == ClinicalEntitySchemaNames.CHEMOTHERAPY ||
-      entity == ClinicalEntitySchemaNames.HORMONE_THERAPY
+      entity == ClinicalEntitySchemaNames.HORMONE_THERAPY ||
+      entity == ClinicalEntitySchemaNames.IMMUNOTHERAPY
     );
   }
 
