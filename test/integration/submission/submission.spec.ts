@@ -185,6 +185,7 @@ describe('Submission Api', () => {
   after(async () => {
     await mongoose.disconnect();
     await mongoContainer.stop();
+    await mysqlContainer.stop();
   });
 
   describe('registration', function() {
@@ -1615,11 +1616,11 @@ describe('Submission Api', () => {
             .expect(updatedDonor.treatments?.[0].clinicalInfo[TreatmentFieldsEnum.treatment_type])
             .to.deep.eq(['Chemotherapy', 'Surgery']);
 
-          chai.expect(updatedDonor.treatments?.[0].therapies.length).to.eq(2);
+          chai.expect(updatedDonor.treatments?.[0].therapies.length).to.eq(1);
 
           chai.expect(updatedDonor.treatments?.[0].therapies[0].therapyType).to.eq('chemotherapy');
 
-          chai.expect(updatedDonor.treatments?.[0].therapies[1].therapyType).to.eq('immunotherapy');
+          chai.expect(updatedDonor.treatments?.[2].therapies[0].therapyType).to.eq('immunotherapy');
           chai
             .expect(
               updatedDonor.treatments?.[0].therapies[0].clinicalInfo['cumulative_drug_dosage'],
@@ -1628,7 +1629,7 @@ describe('Submission Api', () => {
 
           // immunotherapy
           chai
-            .expect(updatedDonor.treatments?.[0].therapies[1].clinicalInfo['immunotherapy_type'])
+            .expect(updatedDonor.treatments?.[2].therapies[0].clinicalInfo['immunotherapy_type'])
             .to.equal('Immune checkpoint inhibitors');
 
           // hormone therapy
