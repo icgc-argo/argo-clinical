@@ -78,11 +78,11 @@ function checkTreatementHasCorrectTypeForTherapy(
 }
 
 function getTreatment(
-  chemoRecord: DeepReadonly<SubmittedClinicalRecord>,
+  therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
   mergedDonor: Donor,
   errors: SubmissionValidationError[],
 ) {
-  const treatmentId = chemoRecord[TreatmentFieldsEnum.submitter_treatment_id];
+  const treatmentId = therapyRecord[TreatmentFieldsEnum.submitter_treatment_id];
   const treatment = getSingleClinicalObjectFromDonor(
     mergedDonor,
     ClinicalEntitySchemaNames.TREATMENT,
@@ -91,7 +91,7 @@ function getTreatment(
   if (!treatment || treatment.clinicalInfo === {}) {
     errors.push(
       utils.buildSubmissionError(
-        chemoRecord,
+        therapyRecord,
         DataValidationErrors.TREATMENT_ID_NOT_FOUND,
         TreatmentFieldsEnum.submitter_treatment_id,
       ),
