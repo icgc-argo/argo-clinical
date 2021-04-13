@@ -1,2 +1,2 @@
 program_id	submitter_donor_id	submitter_treatment_id	drug_rxnormcui	drug_name	immunotherapy_type
-ABCD-EF	ICGC_0001	T_02	423	drugA	Immune checkpoint inhibitors
+ABCD-EF	ICGC_0001	T_01	423	drugA	Immune checkpoint inhibitors

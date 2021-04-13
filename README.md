@@ -37,6 +37,20 @@ Add new entity in the following files:
 - update `test/integration/stub-schema.json` if a new schema is added
 - add a new sample tsv to `sampleFiles/clinical`
 
+Add submission validation for the new entity in the following files:
+
+- `src/submission/validation-clinical/index.ts`:
+
+```
+const availableValidators: { [k: string]: any } = {
+  [ClinicalEntitySchemaNames.DONOR]: donor,
+  [ClinicalEntitySchemaNames.SPECIMEN]: specimen,
+  [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: primaryDiagnosis,
+  [ClinicalEntitySchemaNames.FOLLOW_UP]: follow_up,
+  [ClinicalEntitySchemaNames.NEW_ENTITY]: new_entity <--------- add here to trigger validation
+}
+```
+
 ## Debugging Notes:
 
 If file upload fails with the error `TypeError: Cannot read property 'readFile' of undefined`, make sure you are running Node 12+
