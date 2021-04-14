@@ -1851,7 +1851,11 @@ describe('data-validator', () => {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
           [TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
           [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
-          [TreatmentFieldsEnum.treatment_type]: ['Chemotherapy', 'Radiation therapy'],
+          [TreatmentFieldsEnum.treatment_type]: [
+            'Chemotherapy',
+            'Radiation therapy',
+            'Immunotherapy',
+          ],
           index: 0,
         },
       );
@@ -1862,29 +1866,41 @@ describe('data-validator', () => {
 
       const treatmentTherapyErr: SubmissionValidationError = {
         fieldName: TreatmentFieldsEnum.treatment_type,
-        message: `Treatments of type [Chemotherapy,Radiation therapy] need a corresponding [chemotherapy] record.`,
+        message: `Treatments of type [Chemotherapy,Radiation therapy,Immunotherapy] need a corresponding [chemotherapy] record.`,
         type: DataValidationErrors.MISSING_THERAPY_DATA,
         index: 0,
         info: {
           donorSubmitterId: 'AB1',
-          value: ['Chemotherapy', 'Radiation therapy'],
+          value: ['Chemotherapy', 'Radiation therapy', 'Immunotherapy'],
           therapyType: ClinicalEntitySchemaNames.CHEMOTHERAPY,
         },
       };
       const treatmentTherapyErr2: SubmissionValidationError = {
         fieldName: TreatmentFieldsEnum.treatment_type,
-        message: `Treatments of type [Chemotherapy,Radiation therapy] need a corresponding [radiation] record.`,
+        message: `Treatments of type [Chemotherapy,Radiation therapy,Immunotherapy] need a corresponding [radiation] record.`,
         type: DataValidationErrors.MISSING_THERAPY_DATA,
         index: 0,
         info: {
           donorSubmitterId: 'AB1',
-          value: ['Chemotherapy', 'Radiation therapy'],
+          value: ['Chemotherapy', 'Radiation therapy', 'Immunotherapy'],
           therapyType: ClinicalEntitySchemaNames.RADIATION,
         },
       };
-      chai.expect(result.treatment.dataErrors.length).to.eq(2);
+      const treatmentTherapyErr3: SubmissionValidationError = {
+        fieldName: TreatmentFieldsEnum.treatment_type,
+        message: `Treatments of type [Chemotherapy,Radiation therapy,Immunotherapy] need a corresponding [immunotherapy] record.`,
+        type: DataValidationErrors.MISSING_THERAPY_DATA,
+        index: 0,
+        info: {
+          donorSubmitterId: 'AB1',
+          value: ['Chemotherapy', 'Radiation therapy', 'Immunotherapy'],
+          therapyType: ClinicalEntitySchemaNames.IMMUNOTHERAPY,
+        },
+      };
+      chai.expect(result.treatment.dataErrors.length).to.eq(3);
       chai.expect(result.treatment.dataErrors).to.deep.include(treatmentTherapyErr);
       chai.expect(result.treatment.dataErrors).to.deep.include(treatmentTherapyErr2);
+      chai.expect(result.treatment.dataErrors).to.deep.include(treatmentTherapyErr3);
     });
 
     it('should detect missing or invalid treatment for chemotherapy', async () => {
@@ -1923,7 +1939,7 @@ describe('data-validator', () => {
         .validateSubmissionData({ AB1: newDonorAB1Records }, { AB1: existingDonorMock })
         .catch((err: any) => fail(err));
 
-      const chemoTretmentIdErr: SubmissionValidationError = {
+      const chemoTreatmentIdErr: SubmissionValidationError = {
         fieldName: TreatmentFieldsEnum.submitter_treatment_id,
         message: `Treatment and treatment_type files are required to be initialized together. Please upload a corresponding treatment file in this submission.`,
         type: DataValidationErrors.TREATMENT_ID_NOT_FOUND,
@@ -1933,7 +1949,7 @@ describe('data-validator', () => {
           value: 'T_03',
         },
       };
-      const chemoTretmentInvalidErr: SubmissionValidationError = {
+      const chemoTreatmentInvalidErr: SubmissionValidationError = {
         fieldName: TreatmentFieldsEnum.submitter_treatment_id,
         message: `[Chemotherapy] records can not be submitted for treatment types of [Ablation].`,
         type: DataValidationErrors.INCOMPATIBLE_PARENT_TREATMENT_TYPE,
@@ -1946,8 +1962,76 @@ describe('data-validator', () => {
         },
       };
       chai.expect(result.chemotherapy.dataErrors.length).to.eq(2);
-      chai.expect(result.chemotherapy.dataErrors).to.deep.include(chemoTretmentIdErr);
-      chai.expect(result.chemotherapy.dataErrors).to.deep.include(chemoTretmentInvalidErr);
+      chai.expect(result.chemotherapy.dataErrors).to.deep.include(chemoTreatmentIdErr);
+      chai.expect(result.chemotherapy.dataErrors).to.deep.include(chemoTreatmentInvalidErr);
+    });
+
+    it('should detect missing or invalid treatment for immunotheraoy', async () => {
+      const existingDonorMock: Donor = stubs.validation.existingDonor01();
+      const newDonorAB1Records = {};
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.TREATMENT,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
+          [TreatmentFieldsEnum.treatment_type]: ['Ablation'],
+          index: 0,
+        },
+      );
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.IMMUNOTHERAPY,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+          index: 0,
+        },
+      );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.IMMUNOTHERAPY,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
+          index: 1,
+        },
+      );
+
+      const result = await dv
+        .validateSubmissionData({ AB1: newDonorAB1Records }, { AB1: existingDonorMock })
+        .catch((err: any) => fail(err));
+
+      const immunotherapyTreatmentIdErr: SubmissionValidationError = {
+        fieldName: TreatmentFieldsEnum.submitter_treatment_id,
+        message: `Treatment and treatment_type files are required to be initialized together. Please upload a corresponding treatment file in this submission.`,
+        type: DataValidationErrors.TREATMENT_ID_NOT_FOUND,
+        index: 0,
+        info: {
+          donorSubmitterId: 'AB1',
+          value: 'T_03',
+        },
+      };
+
+      const immunotherapyTreatmentInvalidErr: SubmissionValidationError = {
+        fieldName: TreatmentFieldsEnum.submitter_treatment_id,
+        message: `[Immunotherapy] records can not be submitted for treatment types of [Ablation].`,
+        type: DataValidationErrors.INCOMPATIBLE_PARENT_TREATMENT_TYPE,
+        index: 1,
+        info: {
+          donorSubmitterId: 'AB1',
+          value: 'T_02',
+          treatment_type: ['Ablation'],
+          therapyType: ClinicalEntitySchemaNames.IMMUNOTHERAPY,
+        },
+      };
+
+      chai.expect(result.immunotherapy.dataErrors.length).to.eq(2);
+      chai.expect(result.immunotherapy.dataErrors).to.deep.include(immunotherapyTreatmentIdErr);
+      chai
+        .expect(result.immunotherapy.dataErrors)
+        .to.deep.include(immunotherapyTreatmentInvalidErr);
     });
 
     it('should detect deleted therapies from treatement', async () => {
@@ -2177,7 +2261,7 @@ describe('data-validator', () => {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'ICGC_0002',
           [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.FOLLOW_UP]]: 'FLL1234',
           [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.TREATMENT]]: 'T_02',
-          [TreatmentFieldsEnum.treatment_type]: ['Chemotherapy', 'Immunotherapy'],
+          [TreatmentFieldsEnum.treatment_type]: ['Chemotherapy'],
           [TreatmentFieldsEnum.submitter_primary_diagnosis_id]: 'P4',
           [TreatmentFieldsEnum.treatment_start_interval]: 50,
           index: 0,

@@ -467,7 +467,8 @@ export function getRelatedEntityByFK(
     relatedEntityName == ClinicalEntitySchemaNames.REGISTRATION ||
     relatedEntityName == ClinicalEntitySchemaNames.CHEMOTHERAPY ||
     relatedEntityName == ClinicalEntitySchemaNames.RADIATION ||
-    relatedEntityName == ClinicalEntitySchemaNames.HORMONE_THERAPY
+    relatedEntityName == ClinicalEntitySchemaNames.HORMONE_THERAPY ||
+    relatedEntityName == ClinicalEntitySchemaNames.IMMUNOTHERAPY
   ) {
     throw new Error('method only supports single submitterId as FK');
   }

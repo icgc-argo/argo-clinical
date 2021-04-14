@@ -22,6 +22,35 @@ Make scripts are provided to run this application and the required MongoDB using
 To run local without engaging the debugger, run `npm run local`. Since this will not run the docker-compose setup, this requires MongoDB to be running locally (connections configured in the .env file)
 See `Makefile` for more details and options.
 
+## How to add new clinical entity:
+
+Add new entity in the following files:
+
+- `src/common-model/entities.ts`:
+  - add to `enum ClinicalEntitySchemaNames`
+  - add to `type TypeEntitySchemaNameToIndenfiterType`
+  - add to `ClinicalUniqueIdentifier: TypeEntitySchemaNameToIndenfiterType`
+  -
+- `src/submission/submission-entities.ts`:
+  - add to `const BatchNameRegex: Record<ClinicalEntitySchemaNames, RegExp[]>`
+- update `src/submission/validation-clinical/utils.ts` - `function getRelatedEntityByFK`
+- update `test/integration/stub-schema.json` if a new schema is added
+- add a new sample tsv to `sampleFiles/clinical`
+
+Add submission validation for the new entity in the following files:
+
+- `src/submission/validation-clinical/index.ts`:
+
+```
+const availableValidators: { [k: string]: any } = {
+  [ClinicalEntitySchemaNames.DONOR]: donor,
+  [ClinicalEntitySchemaNames.SPECIMEN]: specimen,
+  [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: primaryDiagnosis,
+  [ClinicalEntitySchemaNames.FOLLOW_UP]: follow_up,
+  [ClinicalEntitySchemaNames.NEW_ENTITY]: new_entity <--------- add here to trigger validation
+}
+```
+
 ## Debugging Notes:
 
 If file upload fails with the error `TypeError: Cannot read property 'readFile' of undefined`, make sure you are running Node 12+

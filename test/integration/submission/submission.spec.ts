@@ -185,6 +185,7 @@ describe('Submission Api', () => {
   after(async () => {
     await mongoose.disconnect();
     await mongoContainer.stop();
+    await mysqlContainer.stop();
   });
 
   describe('registration', function() {
@@ -1465,6 +1466,7 @@ describe('Submission Api', () => {
         'chemotherapy.tsv',
         'radiation.tsv',
         'hormone_therapy.tsv',
+        'immunotherapy.tsv',
       ]);
       await validateSubmission();
       await commitActiveSubmission();
@@ -1513,6 +1515,7 @@ describe('Submission Api', () => {
         'treatment_update.tsv',
         'chemotherapy_update.tsv',
         'hormone_therapy_update.tsv',
+        'immunotherapy_update.tsv',
       ]);
 
       const [submission] = (await findInDb(dburl, 'activesubmissions', {
@@ -1617,11 +1620,17 @@ describe('Submission Api', () => {
 
           chai.expect(updatedDonor.treatments?.[0].therapies[0].therapyType).to.eq('chemotherapy');
 
+          chai.expect(updatedDonor.treatments?.[2].therapies[0].therapyType).to.eq('immunotherapy');
           chai
             .expect(
               updatedDonor.treatments?.[0].therapies[0].clinicalInfo['cumulative_drug_dosage'],
             )
             .to.eq(15);
+
+          // immunotherapy
+          chai
+            .expect(updatedDonor.treatments?.[2].therapies[0].clinicalInfo['immunotherapy_type'])
+            .to.equal('Immune checkpoint inhibitors');
 
           // hormone therapy
           chai
@@ -1642,6 +1651,7 @@ describe('Submission Api', () => {
         'chemotherapy.tsv',
         'radiation.tsv',
         'hormone_therapy.tsv',
+        'immunotherapy.tsv',
       ]);
       await validateSubmission();
       await commitActiveSubmission();

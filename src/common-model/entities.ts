@@ -24,6 +24,7 @@ export enum ClinicalEntitySchemaNames {
   PRIMARY_DIAGNOSIS = 'primary_diagnosis',
   TREATMENT = 'treatment',
   CHEMOTHERAPY = 'chemotherapy',
+  IMMUNOTHERAPY = 'immunotherapy',
   RADIATION = 'radiation',
   FOLLOW_UP = 'follow_up',
   HORMONE_THERAPY = 'hormone_therapy',
@@ -42,12 +43,14 @@ export type ClinicalFields =
 export type ClinicalTherapyType =
   | ClinicalEntitySchemaNames.CHEMOTHERAPY
   | ClinicalEntitySchemaNames.RADIATION
-  | ClinicalEntitySchemaNames.HORMONE_THERAPY;
+  | ClinicalEntitySchemaNames.HORMONE_THERAPY
+  | ClinicalEntitySchemaNames.IMMUNOTHERAPY;
 
 export const ClinicalTherapySchemaNames: ClinicalTherapyType[] = [
   ClinicalEntitySchemaNames.CHEMOTHERAPY,
   ClinicalEntitySchemaNames.HORMONE_THERAPY,
   ClinicalEntitySchemaNames.RADIATION,
+  ClinicalEntitySchemaNames.IMMUNOTHERAPY,
 ];
 
 export enum DonorFieldsEnum {
@@ -117,6 +120,10 @@ export enum RadiationFieldsEnum {
   radiation_therapy_modality = 'radiation_therapy_modality',
 }
 
+export enum ImmunotherapyFields {
+  immunotherapy_type = 'immunotherapy_type',
+}
+
 export enum FollowupFieldsEnum {
   program_id = 'program_id',
   submitter_donor_id = 'submitter_donor_id',
@@ -134,6 +141,7 @@ type TypeEntitySchemaNameToIndenfiterType = {
   [ClinicalEntitySchemaNames.FOLLOW_UP]: ClinicalFields;
   [ClinicalEntitySchemaNames.TREATMENT]: ClinicalFields;
   [ClinicalEntitySchemaNames.CHEMOTHERAPY]: ClinicalFields[];
+  [ClinicalEntitySchemaNames.IMMUNOTHERAPY]: ClinicalFields[];
   [ClinicalEntitySchemaNames.RADIATION]: ClinicalFields[];
   [ClinicalEntitySchemaNames.HORMONE_THERAPY]: ClinicalFields[];
 };
@@ -146,6 +154,11 @@ export const ClinicalUniqueIdentifier: TypeEntitySchemaNameToIndenfiterType = {
   [ClinicalEntitySchemaNames.FOLLOW_UP]: FollowupFieldsEnum.submitter_follow_up_id,
   [ClinicalEntitySchemaNames.TREATMENT]: TreatmentFieldsEnum.submitter_treatment_id,
   [ClinicalEntitySchemaNames.CHEMOTHERAPY]: [
+    CommonTherapyFields.submitter_donor_id,
+    CommonTherapyFields.submitter_treatment_id,
+    TherapyRxNormFields.drug_rxnormid,
+  ],
+  [ClinicalEntitySchemaNames.IMMUNOTHERAPY]: [
     CommonTherapyFields.submitter_donor_id,
     CommonTherapyFields.submitter_treatment_id,
     TherapyRxNormFields.drug_rxnormid,
