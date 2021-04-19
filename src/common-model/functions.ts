@@ -54,6 +54,12 @@ export function getClinicalObjectsFromDonor(
     }
   }
 
+  if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.FAMILY_HISTORY) {
+    if (donor.familyHistory) {
+      return donor.familyHistory;
+    }
+  }
+
   if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.TREATMENT) {
     if (donor.treatments) {
       return donor.treatments;

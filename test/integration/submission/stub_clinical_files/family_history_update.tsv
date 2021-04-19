@@ -1,0 +1,3 @@
+program_id	submitter_donor_id	family_relative_id	relative_with_cancer_history	relationship_type	gender_of_relative	age_of_relative_at_diagnosis	cancer_type_code_of_relative	cause_of_death_of_relative	relative_survival_time
+ABCD-EF	ICGC_0001	1	yes	Cousin	Male	52	C41.1	Died of cancer	5
+ABCD-EF	ICGC_0001	2	yes	Father	Male	75	C41.1	Died of cancer	5
