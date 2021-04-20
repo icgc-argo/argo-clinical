@@ -29,6 +29,7 @@ export interface Donor {
   specimens: Array<Specimen>;
   clinicalInfo?: ClinicalInfo;
   primaryDiagnoses?: Array<PrimaryDiagnosis>;
+  familyHistory?: Array<FamilyHistory>;
   followUps?: Array<FollowUp>;
   treatments?: Array<Treatment>;
   createdAt?: string;
@@ -85,6 +86,10 @@ export interface PrimaryDiagnosis extends ClinicalEntity {
   primaryDiagnosisId: number | undefined;
 }
 
+export interface FamilyHistory extends ClinicalEntity {
+  familyHistoryId: number | undefined;
+}
+
 export interface ClinicalInfo {
   [field: string]: string | number | boolean | string[] | number[] | boolean[] | undefined;
 }
@@ -97,6 +102,7 @@ export interface CoreCompletionStats {
   donor: number;
   specimens: number;
   primaryDiagnosis: number;
+  familyHistory: number;
   followUps: number;
   treatments: number;
 }

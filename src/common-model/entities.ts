@@ -22,6 +22,7 @@ export enum ClinicalEntitySchemaNames {
   DONOR = 'donor',
   SPECIMEN = 'specimen',
   PRIMARY_DIAGNOSIS = 'primary_diagnosis',
+  FAMILY_HISTORY = 'family_history',
   TREATMENT = 'treatment',
   CHEMOTHERAPY = 'chemotherapy',
   IMMUNOTHERAPY = 'immunotherapy',
@@ -35,6 +36,7 @@ export type ClinicalFields =
   | SpecimenFieldsEnum
   | FollowupFieldsEnum
   | PrimaryDiagnosisFieldsEnum
+  | FamilyHistoryFieldsEnum
   | TreatmentFieldsEnum
   | TherapyRxNormFields
   | RadiationFieldsEnum
@@ -96,6 +98,12 @@ export enum PrimaryDiagnosisFieldsEnum {
   clinical_m_category = 'clinical_m_category',
 }
 
+export enum FamilyHistoryFieldsEnum {
+  program_id = 'program_id',
+  submitter_donor_id = 'submitter_donor_id',
+  family_relative_id = 'family_relative_id',
+}
+
 export enum TreatmentFieldsEnum {
   program_id = 'program_id',
   submitter_donor_id = 'submitter_donor_id',
@@ -138,6 +146,7 @@ type TypeEntitySchemaNameToIndenfiterType = {
   [ClinicalEntitySchemaNames.DONOR]: ClinicalFields;
   [ClinicalEntitySchemaNames.SPECIMEN]: ClinicalFields;
   [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: ClinicalFields;
+  [ClinicalEntitySchemaNames.FAMILY_HISTORY]: ClinicalFields[];
   [ClinicalEntitySchemaNames.FOLLOW_UP]: ClinicalFields;
   [ClinicalEntitySchemaNames.TREATMENT]: ClinicalFields;
   [ClinicalEntitySchemaNames.CHEMOTHERAPY]: ClinicalFields[];
@@ -151,6 +160,12 @@ export const ClinicalUniqueIdentifier: TypeEntitySchemaNameToIndenfiterType = {
   [ClinicalEntitySchemaNames.SPECIMEN]: SpecimenFieldsEnum.submitter_specimen_id,
   [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]:
     PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id,
+  // Family history is an independent entity, but it must be uniquely identified by 2 ids,
+  // because family_relative_id field is NOT unique within a program, it's only unique within a donor.
+  [ClinicalEntitySchemaNames.FAMILY_HISTORY]: [
+    FamilyHistoryFieldsEnum.submitter_donor_id,
+    FamilyHistoryFieldsEnum.family_relative_id,
+  ],
   [ClinicalEntitySchemaNames.FOLLOW_UP]: FollowupFieldsEnum.submitter_follow_up_id,
   [ClinicalEntitySchemaNames.TREATMENT]: TreatmentFieldsEnum.submitter_treatment_id,
   [ClinicalEntitySchemaNames.CHEMOTHERAPY]: [

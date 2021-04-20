@@ -382,13 +382,16 @@ const ClinicalEntitySchemaNameToDonoFieldsMap: { [clinicalType: string]: DONOR_D
   [ClinicalEntitySchemaNames.FOLLOW_UP]: DONOR_DOCUMENT_FIELDS.FOLLOWUP_SUBMITTER_ID,
   [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]:
     DONOR_DOCUMENT_FIELDS.PRIMARY_DIAGNOSIS_SUBMITTER_ID,
+  [ClinicalEntitySchemaNames.FAMILY_HISTORY]: DONOR_DOCUMENT_FIELDS.FAMILY_HISTORY_ID,
 };
 
 // check that a donor is not found with the same clinical entity unique identifier
 export async function checkClinicalEntityDoesntBelongToOtherDonor(
   clinicalType: Exclude<
     ClinicalEntitySchemaNames,
-    ClinicalTherapyType | ClinicalEntitySchemaNames.REGISTRATION
+    | ClinicalTherapyType
+    | ClinicalEntitySchemaNames.FAMILY_HISTORY
+    | ClinicalEntitySchemaNames.REGISTRATION
   >,
   record: DeepReadonly<SubmittedClinicalRecord>,
   existentDonor: DeepReadonly<Donor>,
@@ -468,7 +471,8 @@ export function getRelatedEntityByFK(
     relatedEntityName == ClinicalEntitySchemaNames.CHEMOTHERAPY ||
     relatedEntityName == ClinicalEntitySchemaNames.RADIATION ||
     relatedEntityName == ClinicalEntitySchemaNames.HORMONE_THERAPY ||
-    relatedEntityName == ClinicalEntitySchemaNames.IMMUNOTHERAPY
+    relatedEntityName == ClinicalEntitySchemaNames.IMMUNOTHERAPY ||
+    relatedEntityName == ClinicalEntitySchemaNames.FAMILY_HISTORY
   ) {
     throw new Error('method only supports single submitterId as FK');
   }

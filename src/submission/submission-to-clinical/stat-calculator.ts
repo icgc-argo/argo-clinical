@@ -38,6 +38,7 @@ type ForceRecaculateFlags = {
 type CoreClinicalSchemaName =
   | ClinicalEntitySchemaNames.DONOR
   | ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS
+  | ClinicalEntitySchemaNames.FAMILY_HISTORY
   | ClinicalEntitySchemaNames.TREATMENT
   | ClinicalEntitySchemaNames.FOLLOW_UP
   | ClinicalEntitySchemaNames.SPECIMEN;
@@ -48,6 +49,7 @@ const schemaNameToCoreCompletenessStat: Record<
 > = {
   [ClinicalEntitySchemaNames.DONOR]: 'donor',
   [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: 'primaryDiagnosis',
+  [ClinicalEntitySchemaNames.FAMILY_HISTORY]: 'familyHistory',
   [ClinicalEntitySchemaNames.TREATMENT]: 'treatments',
   [ClinicalEntitySchemaNames.FOLLOW_UP]: 'followUps',
   [ClinicalEntitySchemaNames.SPECIMEN]: 'specimens',
@@ -205,6 +207,7 @@ const getEmptyCoreStats = (): CoreCompletionStats => {
     donor: 0,
     specimens: 0,
     primaryDiagnosis: 0,
+    familyHistory: 0,
     followUps: 0,
     treatments: 0,
   });

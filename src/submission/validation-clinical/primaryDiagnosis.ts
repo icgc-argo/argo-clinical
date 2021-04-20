@@ -34,13 +34,8 @@ import _ from 'lodash';
 import {
   getClinicalEntitiesFromDonorBySchemaName,
   getClinicalObjectsFromDonor,
-  getEntitySubmitterIdFieldName,
 } from '../../common-model/functions';
-import {
-  buildSubmissionError,
-  checkClinicalEntityDoesntBelongToOtherDonor,
-  getRelatedEntityByFK,
-} from './utils';
+import { buildSubmissionError, checkClinicalEntityDoesntBelongToOtherDonor } from './utils';
 import { isEmpty } from '../../utils';
 
 export const validate = async (
