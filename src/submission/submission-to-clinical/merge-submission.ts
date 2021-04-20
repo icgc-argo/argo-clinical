@@ -26,6 +26,7 @@ import {
   Therapy,
   ClinicalEntity,
   PrimaryDiagnosis,
+  FamilyHistory,
 } from '../../clinical/clinical-entities';
 import { ActiveClinicalSubmission, SubmittedClinicalRecordsMap } from '../submission-entities';
 import _ from 'lodash';
@@ -74,6 +75,9 @@ export const mergeActiveSubmissionWithDonors = async (
         case ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS:
           entityWithUpdatedInfo = updatePrimaryDiagnosisInfo(donor, record);
           break;
+        case ClinicalEntitySchemaNames.FAMILY_HISTORY:
+          entityWithUpdatedInfo = updateFamilyHistoryInfo(donor, record);
+          break;
         case ClinicalEntitySchemaNames.TREATMENT:
           entityWithUpdatedInfo = updateOrAddTreatementInfo(donor, record);
           break;
@@ -113,6 +117,10 @@ export const mergeRecordsMapIntoDonor = (
     updatePrimaryDiagnosisInfo(mergedDonor, r),
   );
 
+  submittedRecordsMap[ClinicalEntitySchemaNames.FAMILY_HISTORY]?.forEach(r =>
+    updateFamilyHistoryInfo(mergedDonor, r),
+  );
+
   submittedRecordsMap[ClinicalEntitySchemaNames.SPECIMEN]?.forEach(r =>
     updateSpecimenInfo(mergedDonor, r),
   );
@@ -145,11 +153,19 @@ const updateDonorInfo = (donor: Donor, record: ClinicalInfo) => {
 const updatePrimaryDiagnosisInfo = (donor: Donor, record: ClinicalInfo) => {
   let primaryDiagnosis = findPrimaryDiagnosis(donor, record);
   if (!primaryDiagnosis) {
-    treatmentTypeNotMatchTherapyType;
     primaryDiagnosis = addNewPrimaryDiagnosisObj(donor);
   }
   primaryDiagnosis.clinicalInfo = record;
   return primaryDiagnosis;
+};
+
+const updateFamilyHistoryInfo = (donor: Donor, record: ClinicalInfo) => {
+  let familyHistory = findFamilyHistory(donor, record);
+  if (!familyHistory) {
+    familyHistory = addNewFamilyHistoryObj(donor);
+  }
+  familyHistory.clinicalInfo = record;
+  return familyHistory;
 };
 
 const updateSpecimenInfo = (donor: Donor, record: ClinicalInfo) => {
@@ -233,12 +249,18 @@ const findPrimaryDiagnosis = (donor: Donor, record: ClinicalInfo) => {
   return findClinicalObject(donor, record, ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS);
 };
 
+const findFamilyHistory = (donor: Donor, record: ClinicalInfo) => {
+  return findFamilyHistoryObj(donor, record);
+};
+
 const findClinicalObject = (
   donor: Donor,
   newRecord: ClinicalInfo,
   entityType: Exclude<
     ClinicalEntitySchemaNames,
-    ClinicalTherapyType | ClinicalEntitySchemaNames.REGISTRATION
+    | ClinicalTherapyType
+    | ClinicalEntitySchemaNames.FAMILY_HISTORY
+    | ClinicalEntitySchemaNames.REGISTRATION
   >,
 ): ClinicalEntity | undefined => {
   const uniqueIdName = ClinicalUniqueIdentifier[entityType];
@@ -261,6 +283,14 @@ const findTherapy = (
   return _(treatment.therapies || []).find({ clinicalInfo: constraints, therapyType });
 };
 
+const findFamilyHistoryObj = (donor: Donor, record: ClinicalInfo): ClinicalEntity | undefined => {
+  const uniqueIdNames = ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.FAMILY_HISTORY];
+  const constraints: ClinicalInfo = {};
+  uniqueIdNames.forEach(idN => (constraints[idN] = record[idN]));
+
+  return _(donor.familyHistory || []).find({ clinicalInfo: constraints });
+};
+
 /*** Empty clinical object adders ***/
 const addNewTreatmentObj = (donor: Donor): Treatment => {
   const newTreatement = { clinicalInfo: {}, therapies: [], treatmentId: undefined } as Treatment;
@@ -278,6 +308,12 @@ const addNewPrimaryDiagnosisObj = (donor: Donor): ClinicalEntity => {
   const newPrimaryDiag = { clinicalInfo: {}, primaryDiagnosisId: undefined } as PrimaryDiagnosis;
   donor.primaryDiagnoses = _.concat(donor.primaryDiagnoses || [], newPrimaryDiag);
   return _.last(donor.primaryDiagnoses) as PrimaryDiagnosis;
+};
+
+const addNewFamilyHistoryObj = (donor: Donor): ClinicalEntity => {
+  const newFamilyHistory = { clinicalInfo: {}, familyHistoryId: undefined } as FamilyHistory;
+  donor.familyHistory = _.concat(donor.familyHistory || [], newFamilyHistory);
+  return _.last(donor.familyHistory) as FamilyHistory;
 };
 
 const addNewTherapyObj = (treatment: Treatment, therapyType: ClinicalTherapyType): Therapy => {

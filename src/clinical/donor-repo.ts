@@ -43,6 +43,7 @@ export enum DONOR_DOCUMENT_FIELDS {
   SPECIMEN_TUMOR_NORMAL_DESIGNATION = 'specimens.tumourNormalDesignation',
   SAMPLE_TYPE = 'specimens.samples.sampleType',
   PRIMARY_DIAGNOSIS_SUBMITTER_ID = 'primaryDiagnoses.clinicalInfo.submitter_primary_diagnosis_id',
+  FAMILY_HISTORY_ID = 'familyHistory.clinicalInfo.family_relative_id',
 }
 
 export type FindByProgramAndSubmitterFilter = DeepReadonly<{
@@ -276,6 +277,12 @@ function unsetIsNewFlagForUpdate(newDonor: Donor) {
     }
   });
 
+  newDonor.familyHistory?.forEach(fh => {
+    if (fh.familyHistoryId) {
+      (fh as any).isNew = false;
+    }
+  });
+
   newDonor.followUps?.forEach(fu => {
     if (fu.followUpId) {
       (fu as any).isNew = false;
@@ -364,7 +371,19 @@ const PrimaryDiagnosisSchema = new mongoose.Schema(
   },
   { _id: false },
 );
+
 PrimaryDiagnosisSchema.index({ primaryDiagnosisId: 1 }, { unique: true, sparse: true });
+
+const FamilyHistorySchema = new mongoose.Schema(
+  {
+    familyHistoryId: { type: Number },
+    clinicalInfo: {},
+  },
+  { _id: false },
+);
+
+FamilyHistorySchema.index({ familyHistoryId: 1 }, { unique: true, spare: true });
+
 const DonorSchema = new mongoose.Schema(
   {
     donorId: { type: Number, index: true, unique: true, get: prefixDonorId },
@@ -374,6 +393,7 @@ const DonorSchema = new mongoose.Schema(
     specimens: [SpecimenSchema],
     clinicalInfo: {},
     primaryDiagnoses: [PrimaryDiagnosisSchema],
+    familyHistory: [FamilyHistorySchema],
     followUps: [FollowUpSchema],
     treatments: [TreatmentSchema],
     schemaMetadata: {},
@@ -429,6 +449,11 @@ FollowUpSchema.plugin(AutoIncrement, {
 
 PrimaryDiagnosisSchema.plugin(AutoIncrement, {
   inc_field: 'primaryDiagnosisId',
+  start_seq: 1,
+});
+
+FamilyHistorySchema.plugin(AutoIncrement, {
+  inc_field: 'familyHistoryId',
   start_seq: 1,
 });
 

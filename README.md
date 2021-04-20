@@ -27,19 +27,66 @@ See `Makefile` for more details and options.
 Add new entity in the following files:
 
 - `src/common-model/entities.ts`:
+
   - add to `enum ClinicalEntitySchemaNames`
   - add to `type TypeEntitySchemaNameToIndenfiterType`
   - add to `ClinicalUniqueIdentifier: TypeEntitySchemaNameToIndenfiterType`
-  -
+
+- `src/common-model/functions.ts`:
+
+  - update function `getClinicalObjectsFromDonor` to return proper entity from donor, similar to `primary diagnosis`
+
+- `src/clinical/clinical-entities.ts`:
+
+  - add a new entity that extends `ClinicalEntity`:
+    ```
+    export interface NewEntity extends ClinicalEntity {
+       entityId: number | undefined;
+    }
+    ```
+  - update `interface Donor` to include the new entity
+  - update `interface CoreCompletionStats` to include the new entity
+
+- `src/clinical/donor-repo.ts`:
+  - define the new schema for the new entity:
+    ```
+    const newSchema = new mongoose.Schema(
+      {
+        id: { type: Number },
+        clinicalInfo: {},
+      },
+      { _id: false },
+    );
+    ```
+  - add `newSchema` to `const DonorSchema`
+  - define an id field for the new schema:
+    ```
+      newSchema.plugin(AutoIncrement, {
+        inc_field: 'submitter_entity_id',
+        start_seq: 1,
+      });
+    ```
 - `src/submission/submission-entities.ts`:
   - add to `const BatchNameRegex: Record<ClinicalEntitySchemaNames, RegExp[]>`
 - update `src/submission/validation-clinical/utils.ts` - `function getRelatedEntityByFK`
 - update `test/integration/stub-schema.json` if a new schema is added
+
+- `src/submission/submission-to-clinical/stat-calculator.ts`
+
+  - update `getEmptyCoreStats` function to include new entity
+  - update `schemaNameToCoreCompletenessStat` to include new entity
+
+- `src/submission/submission-to-clinical/merge-submission.ts`
+
+  - add a new entity update function into function `mergeRecordsMapIntoDonor`, similiar to `updatePrimaryDiagnosisInfo`
+  - update function `mergeActiveSubmissionWithDonors` switch-case to make sure the new entity is updated when committing submission, similar to primary_diagnosis
+
+- update `sampleFiles/sample-schema.json` to include the new schema if you are using a local schema for development
 - add a new sample tsv to `sampleFiles/clinical`
 
-Add submission validation for the new entity in the following files:
+- Add submission validation for the new entity in the following files:
 
-- `src/submission/validation-clinical/index.ts`:
+  - `src/submission/validation-clinical/index.ts`:
 
 ```
 const availableValidators: { [k: string]: any } = {

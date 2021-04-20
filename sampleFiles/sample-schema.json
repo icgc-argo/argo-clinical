@@ -1758,57 +1758,6 @@
               }
             },
             {
-              "description": "Prior malignancy affecting donor.",
-              "name": "prior_malignancy",
-              "restrictions": {
-                "codeList": ["Yes", "No", "Unknown"]
-              },
-              "valueType": "string",
-              "meta": {
-                "displayName": "Prior Malignancy",
-                "examples": "C41.1, C16.9, C00.5, D46.9"
-              }
-            },
-            {
-              "description": "The code to represent the cancer type of a prior malignancy using the WHO ICD-10 code (https://icd.who.int/browse10/2019/en) classification.",
-              "name": "cancer_type_prior_malignancy",
-              "restrictions": {
-                "regex": "^[C|D][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$"
-              },
-              "valueType": "string",
-              "meta": {
-                "displayName": "Cancer Type Prior Malignancy"
-              }
-            },
-            {
-              "description": "If donor has history of prior malignancy, indicate age at previous diagnosis, in years.",
-              "name": "age_at_prior_malignancy",
-              "valueType": "integer",
-              "meta": {
-                "displayName": "Age at Prior Malignancy"
-              }
-            },
-            {
-              "description": "If donor has history of prior malignancy, indicate laterality of previous diagnosis. (Codelist reference: NCI CDE: 4122391)",
-              "name": "laterality_of_prior_malignancy",
-              "valueType": "string",
-              "restrictions": {
-                "codeList": [
-                  "Bilateral",
-                  "Left",
-                  "Midline",
-                  "Not applicable",
-                  "Right",
-                  "Unilateral",
-                  "Unilateral, side not specified",
-                  "Unknown"
-                ]
-              },
-              "meta": {
-                "displayName": "Laterality at Prior Malignancy"
-              }
-            },
-            {
               "description": "Indicate the donor's height, in centimeters (cm).",
               "name": "height",
               "valueType": "integer",
@@ -4103,6 +4052,87 @@
           ]
         },
         {
+          "name": "immunotherapy",
+          "description": "The collection of data elements describing the details of an immunotherapy treatment completed by a donor.",
+          "meta": { "parent": "treatment" },
+          "fields": [
+            {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.program_id",
+                "displayName": "Program ID"
+              },
+              "restrictions": { "required": true }
+            },
+            {
+              "name": "submitter_donor_id",
+              "valueType": "string",
+              "description": "Unique identifier of the donor, assigned by the data provider.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.submitter_donor_id",
+                "displayName": "Submitter Donor ID"
+              },
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
+            },
+            {
+              "name": "submitter_treatment_id",
+              "valueType": "string",
+              "description": "Unique identifier of the treatment, assigned by the data provider.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "treatment.submitter_treatment_id",
+                "displayName": "Submitter Treatment ID"
+              },
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
+            },
+            {
+              "name": "immunotherapy_type",
+              "valueType": "string",
+              "description": "Indicate the type of immunotherapy administered to patient.",
+              "meta": { "displayName": "Immunotherapy Type" },
+              "restrictions": {
+                "codeList": [
+                  "Cell-based",
+                  "Immune checkpoint inhibitors",
+                  "Monoclonal antibodies other than immune checkpoint inhibitors",
+                  "Other immunomodulatory substances"
+                ]
+              }
+            },
+            {
+              "name": "drug_rxnormcui",
+              "description": "The unique RxNormID assigned to the treatment regimen drug.",
+              "valueType": "string",
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses standardized vocabulary from the RxNorm database (https://www.nlm.nih.gov/research/umls/rxnorm), provided by the NIH.\n\nYou can search for RX Norm values through the web interface (https://mor.nlm.nih.gov/RxNav/) or API (https://mor.nlm.nih.gov/download/rxnav/RxNormAPIs.html).\n\nFor example, to find the rxnormcui based on drug name, you can use: https://rxnav.nlm.nih.gov/REST/rxcui.json?name=leucovorin or https://mor.nlm.nih.gov/RxNav/search?searchBy=String&searchTerm=leucovorin",
+                "displayName": "RxNormCUI"
+              },
+              "restrictions": { "required": true }
+            },
+            {
+              "name": "drug_name",
+              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
+              "valueType": "string",
+              "meta": {
+                "validationDependency": true,
+                "core": true,
+                "notes": "This field uses standardized vocabulary from the RxNorm database (https://www.nlm.nih.gov/research/umls/rxnorm), provided by the NIH.\n\nYou can search for RX Norm values through the web interface (https://mor.nlm.nih.gov/RxNav/) or API (https://mor.nlm.nih.gov/download/rxnav/RxNormAPIs.html).\n\nFor example, to find the rxnormcui based on drug name, you can use: https://rxnav.nlm.nih.gov/REST/rxcui.json?name=leucovorin or https://mor.nlm.nih.gov/RxNav/search?searchBy=String&searchTerm=leucovorin",
+                "displayName": "Immunotherapy Drug Name"
+              },
+              "restrictions": { "required": true }
+            }
+          ]
+        },
+        {
           "name": "follow_up",
           "description": "The collection of data elements related to a specific follow-up visit to a donor. A follow-up is defined as any point of contact with a patient after primary diagnosis. To submit multiple follow-ups for a single donor, please submit multiple rows in the follow-up file for this donor.",
           "meta": { "parent": "donor" },
@@ -4765,9 +4795,9 @@
           ]
         },
         {
-          "name": "immunotherapy",
-          "description": "The collection of data elements describing the details of an immunotherapy treatment completed by a donor.",
-          "meta": { "parent": "treatment" },
+          "name": "family_history",
+          "description": "The collection of data elements describing a donors familial relationships and familial cancer history.",
+          "meta": { "parent": "donor" },
           "fields": [
             {
               "name": "program_id",
@@ -4782,9 +4812,9 @@
               "restrictions": { "required": true }
             },
             {
+              "description": "Unique identifier of the donor, assigned by the data provider.",
               "name": "submitter_donor_id",
               "valueType": "string",
-              "description": "Unique identifier of the donor, assigned by the data provider.",
               "meta": {
                 "validationDependency": true,
                 "primaryId": true,
@@ -4794,54 +4824,99 @@
               "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
             },
             {
-              "name": "submitter_treatment_id",
+              "description": "Unique identifier of the relative, assigned by the data provider.",
+              "name": "family_relative_id",
               "valueType": "string",
-              "description": "Unique identifier of the treatment, assigned by the data provider.",
               "meta": {
-                "validationDependency": true,
-                "primaryId": true,
-                "foreignKey": "treatment.submitter_treatment_id",
-                "displayName": "Submitter Treatment ID"
+                "displayName": "Family Relative ID",
+                "notes": "This field is required to ensure that family members are identified in unique records.  Ids can be as simple as an incremented numeral to ensure uniqueness."
               },
               "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
             },
             {
-              "name": "immunotherapy_type",
+              "description": "Indicate if patient has any genetic relatives with a history of cancer. (Reference: NCIt C159104, caDSR CDE ID 6161023)",
+              "name": "relative_with_cancer_history",
+              "restrictions": { "codeList": ["Yes", "No", "Unknown"] },
               "valueType": "string",
-              "description": "Indicate the type of immunotherapy administered to patient.",
-              "meta": { "displayName": "Immunotherapy Type" },
+              "meta": { "displayName": "Relative with Cancer History" }
+            },
+            {
+              "description": "Indicate genetic relationship of the relative to patient. (Reference: caDSR CDE ID 2179937)",
+              "name": "relationship_type",
               "restrictions": {
                 "codeList": [
-                  "Cell-based",
-                  "Immune checkpoint inhibitors",
-                  "Monoclonal antibodies other than immune checkpoint inhibitors",
-                  "Other immunomodulatory substances"
+                  "Aunt",
+                  "Brother",
+                  "Cousin",
+                  "Daughter",
+                  "Father",
+                  "Grandchild",
+                  "Grandfather",
+                  "Grandmother",
+                  "Maternal Aunt",
+                  "Maternal Cousin",
+                  "Maternal Grandfather",
+                  "Maternal Grandmother",
+                  "Maternal Half-brother",
+                  "Maternal Half-sister",
+                  "Mother",
+                  "Nephew",
+                  "Niece",
+                  "Other",
+                  "Paternal Aunt",
+                  "Paternal Cousin",
+                  "Paternal Grandfather",
+                  "Paternal Grandmother",
+                  "Paternal Half-brother",
+                  "Paternal Half-sister",
+                  "Sister",
+                  "Son",
+                  "Unknown"
                 ]
+              },
+              "valueType": "string",
+              "displayName": "Relationship Type"
+            },
+            {
+              "description": "The self-reported gender of related individual.",
+              "name": "gender_of_relative",
+              "restrictions": { "codeList": ["Female", "Male", "Other", "Unknown"] },
+              "valueType": "string",
+              "displayName": "Gender of Relative"
+            },
+            {
+              "description": "The age (in years) when the patient's relative was first diagnosed. (Reference: caDSR CDE ID 5300571)",
+              "name": "age_of_relative_at_diagnosis",
+              "restrictions": {},
+              "valueType": "integer",
+              "displayName": "Age Of Relative At Diagnosis"
+            },
+            {
+              "name": "cancer_type_code_of_relative",
+              "valueType": "string",
+              "description": "The code to describe the malignant diagnosis of the patient's relative with a history of cancer using the WHO ICD-10 code (https://icd.who.int/browse10/2019/en) classification.",
+              "restrictions": { "regex": "^[C|D][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$" },
+              "meta": {
+                "core": true,
+                "examples": "C41.1,C16.9,C00.5,D46.9",
+                "displayName": "Cancer Type Code (ICD-10) of Relative"
               }
             },
             {
-              "name": "drug_rxnormcui",
-              "description": "The unique RxNormID assigned to the treatment regimen drug.",
-              "valueType": "string",
-              "meta": {
-                "validationDependency": true,
-                "core": true,
-                "notes": "This field uses standardized vocabulary from the RxNorm database (https://www.nlm.nih.gov/research/umls/rxnorm), provided by the NIH.\n\nYou can search for RX Norm values through the web interface (https://mor.nlm.nih.gov/RxNav/) or API (https://mor.nlm.nih.gov/download/rxnav/RxNormAPIs.html).\n\nFor example, to find the rxnormcui based on drug name, you can use: https://rxnav.nlm.nih.gov/REST/rxcui.json?name=leucovorin or https://mor.nlm.nih.gov/RxNav/search?searchBy=String&searchTerm=leucovorin",
-                "displayName": "RxNormCUI"
+              "description": "Indicate the cause of the death of the relative.",
+              "name": "cause_of_death_of_relative",
+              "restrictions": {
+                "codeList": ["Died of cancer", "Died of other reasons", "Unknown"]
               },
-              "restrictions": { "required": true }
+              "valueType": "string",
+              "meta": { "core": true, "displayName": "Cause of Death of Relative" }
             },
             {
-              "name": "drug_name",
-              "description": "Name of agent or drug administered to patient as part of the treatment regimen.",
-              "valueType": "string",
-              "meta": {
-                "validationDependency": true,
-                "core": true,
-                "notes": "This field uses standardized vocabulary from the RxNorm database (https://www.nlm.nih.gov/research/umls/rxnorm), provided by the NIH.\n\nYou can search for RX Norm values through the web interface (https://mor.nlm.nih.gov/RxNav/) or API (https://mor.nlm.nih.gov/download/rxnav/RxNormAPIs.html).\n\nFor example, to find the rxnormcui based on drug name, you can use: https://rxnav.nlm.nih.gov/REST/rxcui.json?name=leucovorin or https://mor.nlm.nih.gov/RxNav/search?searchBy=String&searchTerm=leucovorin",
-                "displayName": "Immunotherapy Drug Name"
-              },
-              "restrictions": { "required": true }
+              "description": "Indicate how long, in years, the relative survived from the time of diagnosis if the patient's relative died from the cancer they were diagnosed with.",
+              "name": "relative_survival_time",
+              "restrictions": {},
+              "valueType": "integer",
+              "displayName": "Survival Time Of Relative"
             }
           ]
         }

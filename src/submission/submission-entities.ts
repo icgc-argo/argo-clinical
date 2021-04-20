@@ -31,6 +31,7 @@ import {
   RadiationFieldsEnum,
   ClinicalTherapyType,
   ImmunotherapyFields,
+  FamilyHistoryFieldsEnum,
 } from '../common-model/entities';
 
 /**
@@ -353,6 +354,7 @@ export const BatchNameRegex: Record<ClinicalEntitySchemaNames, RegExp[]> = {
   [ClinicalEntitySchemaNames.DONOR]: [/^donor.*\.tsv$/i],
   [ClinicalEntitySchemaNames.SPECIMEN]: [/^specimen.*\.tsv$/i],
   [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: [/^primary_diagnosis.*\.tsv$/i],
+  [ClinicalEntitySchemaNames.FAMILY_HISTORY]: [/^family_history.*\.tsv$/i],
   [ClinicalEntitySchemaNames.FOLLOW_UP]: [/^follow_up.*\.tsv$/i],
   [ClinicalEntitySchemaNames.TREATMENT]: [/^treatment.*\.tsv$/i],
   [ClinicalEntitySchemaNames.CHEMOTHERAPY]: [/^chemotherapy.*\.tsv$/i],
@@ -376,6 +378,7 @@ export const ClinicalEntityToEnumFieldsMap: Record<ClinicalEntitySchemaNames, st
   [ClinicalEntitySchemaNames.DONOR]: Object.values(DonorFieldsEnum),
   [ClinicalEntitySchemaNames.SPECIMEN]: Object.values(SpecimenFieldsEnum),
   [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: Object.values(PrimaryDiagnosisFieldsEnum),
+  [ClinicalEntitySchemaNames.FAMILY_HISTORY]: Object.values(FamilyHistoryFieldsEnum),
   [ClinicalEntitySchemaNames.FOLLOW_UP]: Object.values(FollowupFieldsEnum),
   [ClinicalEntitySchemaNames.TREATMENT]: Object.values(TreatmentFieldsEnum),
   [ClinicalEntitySchemaNames.CHEMOTHERAPY]: (Object.values(TherapyRxNormFields) as string[]).concat(
