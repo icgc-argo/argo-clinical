@@ -38,8 +38,8 @@ export interface Donor {
 }
 
 export interface CompletionStats {
-  coreCompletion: CoreCompletionStats;
-  overriddenCoreCompletion: CoreClinicalEntites[];
+  coreCompletion: CoreCompletionFields;
+  overriddenCoreCompletion: CoreClinicalEntities[];
 }
 
 export interface SchemaMetadata {
@@ -98,13 +98,18 @@ export type DonorMap = Readonly<{ [submitterId: string]: Donor }>;
 
 export type DonorBySubmitterIdMap = { [k: string]: DeepReadonly<Donor> };
 
-export interface CoreCompletionStats {
+export interface CoreCompletionFields {
   donor: number;
   specimens: number;
   primaryDiagnosis: number;
   familyHistory: number;
   followUps: number;
   treatments: number;
-}
+};
 
-export type CoreClinicalEntites = keyof CoreCompletionStats;
+export type CoreClinicalEntities = keyof CoreCompletionFields;
+
+export interface CoreCompletionStats {
+  coreCompletionDate?: string;
+  coreCompletionPercentage: number;
+};

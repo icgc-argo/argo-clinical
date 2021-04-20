@@ -18,9 +18,9 @@
  */
 
 import {
+  CoreClinicalEntities,
+  CoreCompletionFields,
   Donor,
-  CoreCompletionStats,
-  CoreClinicalEntites,
 } from '../../../src/clinical/clinical-entities';
 import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 import { notEmpty, F } from '../../../src/utils';
@@ -45,7 +45,7 @@ type CoreClinicalSchemaName =
 
 const schemaNameToCoreCompletenessStat: Record<
   CoreClinicalSchemaName,
-  keyof CoreCompletionStats
+  keyof CoreCompletionFields
 > = {
   [ClinicalEntitySchemaNames.DONOR]: 'donor',
   [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: 'primaryDiagnosis',
@@ -173,7 +173,7 @@ export const forceRecalcDonorCoreEntityStats = (
   donorUpdated.completionStats = {
     ...donorUpdated.completionStats,
     coreCompletion: newCoreCompletion,
-    overriddenCoreCompletion: Object.keys(coreStatOverride || {}) as CoreClinicalEntites[],
+    overriddenCoreCompletion: Object.keys(coreStatOverride || {}) as CoreClinicalEntities[],
   };
 
   return donorUpdated;
@@ -202,7 +202,7 @@ export const setInvalidCoreEntityStatsForMigration = (
   return mutableDonor;
 };
 
-const getEmptyCoreStats = (): CoreCompletionStats => {
+const getEmptyCoreStats = (): CoreCompletionFields => {
   return cloneDeep({
     donor: 0,
     specimens: 0,
@@ -249,7 +249,7 @@ function noNeedToCalcCoreStat(
   return false;
 }
 
-function isValidCoreStatOverride(updatedCompletion: any): updatedCompletion is CoreCompletionStats {
+function isValidCoreStatOverride(updatedCompletion: any): updatedCompletion is CoreCompletionFields {
   return Object.entries(updatedCompletion).every(
     ([type, val]) =>
       Object.values(schemaNameToCoreCompletenessStat).find(field => type === field) &&
