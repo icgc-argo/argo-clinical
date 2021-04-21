@@ -171,6 +171,16 @@ class SchemaManager {
     return result;
   };
 
+  fetchDiff = async (oldVersion: string, newVersion: string) => {
+    const result = await dictionaryRestClient.fetchDiff(
+      this.schemaServiceUrl,
+      this.getCurrentName(),
+      oldVersion,
+      newVersion,
+    );
+    return result;
+  };
+
   loadAndSaveNewVersion = async (
     name: string,
     newVersion: string,

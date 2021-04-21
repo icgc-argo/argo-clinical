@@ -298,6 +298,14 @@ describe('schema migration api', () => {
       const res = await getAllMigrationDocs();
       assertNoDonorImpacts(res, VERSION);
     });
+    it('should allow schema field value type to change from integer to number', async () => {
+      const VERSION = '16.0';
+      await migrateSyncTo(VERSION).then(async (res: any) => {
+        await assertSuccessfulMigration(res, VERSION);
+      });
+      const res = await getAllMigrationDocs();
+      assertNoDonorImpacts(res, VERSION);
+    });
   });
 
   describe('Changes that can affect existing donors', () => {

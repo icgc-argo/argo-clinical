@@ -50,6 +50,7 @@ import { setStatus, Status } from '../../app-health';
 import * as messenger from '../submission-updates-messenger';
 import * as dictionaryManager from '../../dictionary/manager';
 import { ClinicalEntitySchemaNames } from '../../common-model/entities';
+import { SchemasDictionaryDiffs } from '@overturebio-stack/lectern-client/lib/schema-entities';
 
 const L = loggerFor(__filename);
 
@@ -236,6 +237,8 @@ export namespace MigrationManager {
 
     const analysis = await dictionaryManagerInstance().analyzeChanges(currVersion, toVersion);
 
+    const diff = await dictionaryManagerInstance().fetchDiff(currVersion, toVersion);
+
     let valueTypeChanges: string[] = [];
     if (!_.isEmpty(analysis.valueTypeChanges)) {
       valueTypeChanges = analysis.valueTypeChanges;
@@ -257,6 +260,7 @@ export namespace MigrationManager {
       );
 
       const changedValueTypes: string[] = checkValueTypeChanges(
+        diff,
         valueTypeChanges,
         clinicalEntityName as ClinicalEntitySchemaNames,
       );
@@ -310,18 +314,31 @@ export namespace MigrationManager {
   }
 
   function checkValueTypeChanges(
+    diffs: SchemasDictionaryDiffs,
     valueTypeChanges: string[],
     clinicalEntityName: ClinicalEntitySchemaNames,
   ): string[] {
-    const changedFields: string[] = [];
+    const prohibitedChangedFields: string[] = [];
     valueTypeChanges.forEach(change => {
       const changedSchema = change.split('.')[0];
-      if (clinicalEntityName === changedSchema) {
+      if (clinicalEntityName === changedSchema && !allowValueTypeUpdate(diffs, change)) {
         const field: string = change.split('.')[1];
-        changedFields.push(field);
+        prohibitedChangedFields.push(field);
       }
     });
-    return changedFields;
+    return prohibitedChangedFields;
+  }
+
+  function allowValueTypeUpdate(diffs: SchemasDictionaryDiffs, valueTypeChange: string): boolean {
+    if (diffs.hasOwnProperty(valueTypeChange)) {
+      const before = diffs[valueTypeChange]?.before?.valueType;
+      const after = diffs[valueTypeChange]?.after?.valueType;
+
+      if (after === 'number' && before === 'integer') {
+        return true;
+      }
+    }
+    return false;
   }
 
   const abortMigration = async (
