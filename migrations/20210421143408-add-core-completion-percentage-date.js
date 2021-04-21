@@ -17,6 +17,8 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+const mean = require('lodash/mean');
+
 const getCoreCompletionPercentage = (fields) =>
   mean(Object.values(fields || {})) || 0;
 
