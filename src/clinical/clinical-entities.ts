@@ -39,6 +39,8 @@ export interface Donor {
 
 export interface CompletionStats {
   coreCompletion: CoreCompletionFields;
+  coreCompletionDate?: string;
+  coreCompletionPercentage: number;
   overriddenCoreCompletion: CoreClinicalEntities[];
 }
 
@@ -105,11 +107,6 @@ export interface CoreCompletionFields {
   familyHistory: number;
   followUps: number;
   treatments: number;
-};
+}
 
 export type CoreClinicalEntities = keyof CoreCompletionFields;
-
-export interface CoreCompletionStats {
-  coreCompletionDate?: string;
-  coreCompletionPercentage: number;
-};

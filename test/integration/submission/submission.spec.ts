@@ -1911,6 +1911,7 @@ describe('Submission Api', () => {
             followUps: 0,
             specimens: 0.5,
           },
+          coreCompletionPercentage: 41.6,
           overriddenCoreCompletion: ['treatments'],
         },
       });

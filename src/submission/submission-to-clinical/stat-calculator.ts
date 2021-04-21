@@ -27,8 +27,7 @@ import { notEmpty, F } from '../../../src/utils';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../../common-model/functions';
 
 import { DeepReadonly } from 'deep-freeze';
-import { cloneDeep, pull } from 'lodash';
-import { isNumber } from 'util';
+import { cloneDeep, mean, pull } from 'lodash';
 
 type ForceRecaculateFlags = {
   recalcEvenIfComplete?: boolean; // used to force recalculate if stat is already 100%
@@ -42,6 +41,14 @@ type CoreClinicalSchemaName =
   | ClinicalEntitySchemaNames.TREATMENT
   | ClinicalEntitySchemaNames.FOLLOW_UP
   | ClinicalEntitySchemaNames.SPECIMEN;
+
+const getCoreCompletionPercentage = (fields: CoreCompletionFields) =>
+  mean(Object.values(fields || {})) || 0;
+
+const getCoreCompletionDate = (donor: Donor, percentage: number) =>
+  percentage === 1
+    ? donor.completionStats?.coreCompletionDate || donor.updatedAt || new Date().toDateString()
+    : undefined;
 
 const schemaNameToCoreCompletenessStat: Record<
   CoreClinicalSchemaName,
@@ -90,9 +97,14 @@ const calcDonorCoreEntityStats = (
     coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = entites.length >= 1 ? 1 : 0;
   }
 
+  const coreCompletionPercentage = getCoreCompletionPercentage(coreStats);
+  const coreCompletionDate = getCoreCompletionDate(donor, coreCompletionPercentage);
+
   donor.completionStats = {
     ...donor.completionStats,
     coreCompletion: coreStats,
+    coreCompletionDate,
+    coreCompletionPercentage,
     overriddenCoreCompletion: pull(
       donor.completionStats?.overriddenCoreCompletion || [],
       schemaNameToCoreCompletenessStat[clinicalType],
@@ -170,9 +182,14 @@ export const forceRecalcDonorCoreEntityStats = (
     ...coreStatOverride, // merge coreStatOverride
   };
 
+  const coreCompletionPercentage = getCoreCompletionPercentage(newCoreCompletion);
+  const coreCompletionDate = getCoreCompletionDate(donorUpdated, coreCompletionPercentage);
+
   donorUpdated.completionStats = {
     ...donorUpdated.completionStats,
     coreCompletion: newCoreCompletion,
+    coreCompletionDate,
+    coreCompletionPercentage,
     overriddenCoreCompletion: Object.keys(coreStatOverride || {}) as CoreClinicalEntities[],
   };
 
@@ -194,9 +211,14 @@ export const setInvalidCoreEntityStatsForMigration = (
     pull(overriddenCoreEntities, schemaNameToCoreCompletenessStat[coreEntity]);
   });
 
+  const coreCompletionPercentage = getCoreCompletionPercentage(coreCompletion);
+  const coreCompletionDate = getCoreCompletionDate(mutableDonor, coreCompletionPercentage);
+
   mutableDonor.completionStats = {
     ...mutableDonor.completionStats,
-    coreCompletion: coreCompletion,
+    coreCompletion,
+    coreCompletionDate,
+    coreCompletionPercentage,
     overriddenCoreCompletion: overriddenCoreEntities,
   };
   return mutableDonor;
@@ -253,7 +275,7 @@ function isValidCoreStatOverride(updatedCompletion: any): updatedCompletion is C
   return Object.entries(updatedCompletion).every(
     ([type, val]) =>
       Object.values(schemaNameToCoreCompletenessStat).find(field => type === field) &&
-      isNumber(val) &&
+      typeof val === 'number' &&
       val >= 0 &&
       val <= 1,
   );
