@@ -321,6 +321,7 @@ describe('schema migration api', () => {
             followUps: 0,
             specimens: 0,
           },
+          coreCompletionPercentage: 33.3,
           overriddenCoreCompletion: ['treatments'],
         },
       });
