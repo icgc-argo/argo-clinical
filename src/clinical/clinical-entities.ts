@@ -104,7 +104,6 @@ export interface CoreCompletionFields {
   donor: number;
   specimens: number;
   primaryDiagnosis: number;
-  familyHistory: number;
   followUps: number;
   treatments: number;
 }

@@ -1672,7 +1672,6 @@ describe('Submission Api', () => {
       DonorBeforeUpdate.completionStats.coreCompletion.should.deep.include({
         donor: 1,
         primaryDiagnosis: 1,
-        familyHistory: 0,
         treatments: 1,
         followUps: 0,
         specimens: 0,
@@ -1906,7 +1905,6 @@ describe('Submission Api', () => {
           coreCompletion: {
             donor: 0,
             primaryDiagnosis: 1,
-            familyHistory: 0,
             treatments: 1, // overridden stat
             followUps: 0,
             specimens: 0.5,
@@ -1937,7 +1935,6 @@ describe('Submission Api', () => {
           updatedDonor.completionStats.coreCompletion.should.deep.include({
             donor: 1,
             primaryDiagnosis: 1,
-            familyHistory: 0,
             treatments: 1, // overridden field is same as before, despite no treatment record
             followUps: 0,
             specimens: 0.5, // one of the tumour/normal specimen has record

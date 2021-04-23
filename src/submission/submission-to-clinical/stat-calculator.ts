@@ -37,7 +37,6 @@ type ForceRecaculateFlags = {
 type CoreClinicalSchemaName =
   | ClinicalEntitySchemaNames.DONOR
   | ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS
-  | ClinicalEntitySchemaNames.FAMILY_HISTORY
   | ClinicalEntitySchemaNames.TREATMENT
   | ClinicalEntitySchemaNames.FOLLOW_UP
   | ClinicalEntitySchemaNames.SPECIMEN;
@@ -56,7 +55,6 @@ const schemaNameToCoreCompletenessStat: Record<
 > = {
   [ClinicalEntitySchemaNames.DONOR]: 'donor',
   [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: 'primaryDiagnosis',
-  [ClinicalEntitySchemaNames.FAMILY_HISTORY]: 'familyHistory',
   [ClinicalEntitySchemaNames.TREATMENT]: 'treatments',
   [ClinicalEntitySchemaNames.FOLLOW_UP]: 'followUps',
   [ClinicalEntitySchemaNames.SPECIMEN]: 'specimens',
@@ -229,7 +227,6 @@ const getEmptyCoreStats = (): CoreCompletionFields => {
     donor: 0,
     specimens: 0,
     primaryDiagnosis: 0,
-    familyHistory: 0,
     followUps: 0,
     treatments: 0,
   });
@@ -271,7 +268,9 @@ function noNeedToCalcCoreStat(
   return false;
 }
 
-function isValidCoreStatOverride(updatedCompletion: any): updatedCompletion is CoreCompletionFields {
+function isValidCoreStatOverride(
+  updatedCompletion: any,
+): updatedCompletion is CoreCompletionFields {
   return Object.entries(updatedCompletion).every(
     ([type, val]) =>
       Object.values(schemaNameToCoreCompletenessStat).find(field => type === field) &&
