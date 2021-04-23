@@ -316,7 +316,6 @@ describe('schema migration api', () => {
           coreCompletion: {
             donor: 1,
             primaryDiagnosis: 0,
-            familyHistory: 0,
             treatments: 1, // treatment has been overridden because donor never got any treatment
             followUps: 0,
             specimens: 0,
