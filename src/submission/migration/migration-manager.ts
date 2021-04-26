@@ -50,7 +50,7 @@ import { setStatus, Status } from '../../app-health';
 import * as messenger from '../submission-updates-messenger';
 import * as dictionaryManager from '../../dictionary/manager';
 import { ClinicalEntitySchemaNames } from '../../common-model/entities';
-import { SchemasDictionaryDiffs } from '@overturebio-stack/lectern-client/lib/schema-entities';
+import { ValueType } from '@overturebio-stack/lectern-client/lib/schema-entities';
 
 const L = loggerFor(__filename);
 
@@ -233,11 +233,10 @@ export namespace MigrationManager {
     const verificationResult: NewSchemaVerificationResult = {};
 
     const currVersion = await dictionaryManagerInstance().getCurrentVersion();
+    const currentSchema = await dictionaryManagerInstance().getCurrent();
     const toVersion = newSchemaDictionary.version;
 
     const analysis = await dictionaryManagerInstance().analyzeChanges(currVersion, toVersion);
-
-    const diff = await dictionaryManagerInstance().fetchDiff(currVersion, toVersion);
 
     let valueTypeChanges: string[] = [];
     if (!_.isEmpty(analysis.valueTypeChanges)) {
@@ -260,9 +259,10 @@ export namespace MigrationManager {
       );
 
       const changedValueTypes: string[] = checkValueTypeChanges(
-        diff,
         valueTypeChanges,
         clinicalEntityName as ClinicalEntitySchemaNames,
+        currentSchema,
+        clinicalEntityNewSchemaDef,
       );
 
       if (
@@ -314,31 +314,34 @@ export namespace MigrationManager {
   }
 
   function checkValueTypeChanges(
-    diffs: SchemasDictionaryDiffs,
     valueTypeChanges: string[],
     clinicalEntityName: ClinicalEntitySchemaNames,
+    currentSchema: dictionaryEntities.SchemasDictionary,
+    newSchemaEntity: dictionaryEntities.SchemaDefinition | undefined,
   ): string[] {
     const prohibitedChangedFields: string[] = [];
     valueTypeChanges.forEach(change => {
       const changedSchema = change.split('.')[0];
-      if (clinicalEntityName === changedSchema && !allowValueTypeUpdate(diffs, change)) {
+      if (clinicalEntityName === changedSchema) {
         const field: string = change.split('.')[1];
-        prohibitedChangedFields.push(field);
+        const changedSchema_before = currentSchema.schemas.find(s => s.name === changedSchema);
+        const changedField_before = changedSchema_before?.fields.find(f => f.name === field);
+        const changedValueType_before = changedField_before?.valueType;
+
+        const changedField_after = newSchemaEntity?.fields.find(f => f.name === field);
+        const changedValueType_after = changedField_after?.valueType;
+        // Only allow valut type change fron intger to number
+        if (
+          !(
+            changedValueType_before === ValueType.INTEGER &&
+            changedValueType_after === ValueType.NUMBER
+          )
+        ) {
+          prohibitedChangedFields.push(field);
+        }
       }
     });
     return prohibitedChangedFields;
-  }
-
-  function allowValueTypeUpdate(diffs: SchemasDictionaryDiffs, valueTypeChange: string): boolean {
-    if (diffs.hasOwnProperty(valueTypeChange)) {
-      const before = diffs[valueTypeChange]?.before?.valueType;
-      const after = diffs[valueTypeChange]?.after?.valueType;
-
-      if (after === 'number' && before === 'integer') {
-        return true;
-      }
-    }
-    return false;
   }
 
   const abortMigration = async (
