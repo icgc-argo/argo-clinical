@@ -248,6 +248,12 @@ export namespace MigrationManager {
         s => s.name === clinicalEntityName,
       );
 
+      if (!clinicalEntityNewSchemaDef) {
+        throw new Error(
+          `New dictionary is missing schema: ${clinicalEntityName}, please make sure the dictinary contains all clinical entities.`,
+        );
+      }
+
       const missingDataValidationFields: string[] = checkClinicalEntityNewSchemaHasRequiredFields(
         clinicalEntityName as ClinicalEntitySchemaNames,
         clinicalEntityNewSchemaDef,
@@ -317,7 +323,7 @@ export namespace MigrationManager {
     valueTypeChanges: string[],
     clinicalEntityName: ClinicalEntitySchemaNames,
     currentSchema: dictionaryEntities.SchemasDictionary,
-    newSchemaEntity: dictionaryEntities.SchemaDefinition | undefined,
+    newSchemaEntity: dictionaryEntities.SchemaDefinition,
   ): string[] {
     const prohibitedChangedFields: string[] = [];
     valueTypeChanges.forEach(change => {
@@ -333,17 +339,17 @@ export namespace MigrationManager {
         if (!(changedValueTypeBefore && changedValueTypeAfter)) {
           const msg = `Field ${field} in schema ${changedSchema} has value type change, but field or schema are missing in current and new dictionary.`;
           L.error(msg, new Error(msg));
-        } else {
-          // Only allow valut type change fron intger to number
-          if (
-            !(
-              changedValueTypeBefore === ValueType.INTEGER &&
-              changedValueTypeAfter === ValueType.NUMBER
-            )
-          ) {
-            prohibitedChangedFields.push(field);
-          }
+          throw new Error(msg);
         }
+        // Only allow valut type change fron intger to number
+        if (
+          changedValueTypeBefore === ValueType.INTEGER &&
+          changedValueTypeAfter === ValueType.NUMBER
+        ) {
+          return;
+        }
+
+        prohibitedChangedFields.push(field);
       }
     });
     return prohibitedChangedFields;

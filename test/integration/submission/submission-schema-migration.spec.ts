@@ -539,7 +539,7 @@ describe('schema migration api', () => {
         [ClinicalEntitySchemaNames.DONOR]: {
           missingFields: [DonorFieldsEnum.program_id],
           invalidFieldCodeLists: [],
-          valueTypeChanges: [DonorFieldsEnum.program_id],
+          valueTypeChanges: [],
         },
       });
 
