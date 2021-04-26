@@ -330,16 +330,19 @@ export namespace MigrationManager {
 
         const changedFieldAfter = newSchemaEntity?.fields.find(f => f.name === field);
         const changedValueTypeAfter = changedFieldAfter?.valueType;
-        // Only allow valut type change fron intger to number
-        if (
-          !(
-            changedValueTypeBefore &&
-            changedValueTypeAfter &&
-            changedValueTypeBefore === ValueType.INTEGER &&
-            changedValueTypeAfter === ValueType.NUMBER
-          )
-        ) {
-          prohibitedChangedFields.push(field);
+        if (!(changedValueTypeBefore && changedValueTypeAfter)) {
+          const msg = `Field ${field} in schema ${changedSchema} has value type change, but field or schema are missing in current and new dictionary.`;
+          L.error(msg, new Error(msg));
+        } else {
+          // Only allow valut type change fron intger to number
+          if (
+            !(
+              changedValueTypeBefore === ValueType.INTEGER &&
+              changedValueTypeAfter === ValueType.NUMBER
+            )
+          ) {
+            prohibitedChangedFields.push(field);
+          }
         }
       }
     });
