@@ -324,17 +324,19 @@ export namespace MigrationManager {
       const changedSchema = change.split('.')[0];
       if (clinicalEntityName === changedSchema) {
         const field: string = change.split('.')[1];
-        const changedSchema_before = currentSchema.schemas.find(s => s.name === changedSchema);
-        const changedField_before = changedSchema_before?.fields.find(f => f.name === field);
-        const changedValueType_before = changedField_before?.valueType;
+        const changedSchemaBefore = currentSchema.schemas.find(s => s.name === changedSchema);
+        const changedFieldBefore = changedSchemaBefore?.fields.find(f => f.name === field);
+        const changedValueTypeBefore = changedFieldBefore?.valueType;
 
-        const changedField_after = newSchemaEntity?.fields.find(f => f.name === field);
-        const changedValueType_after = changedField_after?.valueType;
+        const changedFieldAfter = newSchemaEntity?.fields.find(f => f.name === field);
+        const changedValueTypeAfter = changedFieldAfter?.valueType;
         // Only allow valut type change fron intger to number
         if (
           !(
-            changedValueType_before === ValueType.INTEGER &&
-            changedValueType_after === ValueType.NUMBER
+            changedValueTypeBefore &&
+            changedValueTypeAfter &&
+            changedValueTypeBefore === ValueType.INTEGER &&
+            changedValueTypeAfter === ValueType.NUMBER
           )
         ) {
           prohibitedChangedFields.push(field);
