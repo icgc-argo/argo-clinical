@@ -50,6 +50,7 @@ import { setStatus, Status } from '../../app-health';
 import * as messenger from '../submission-updates-messenger';
 import * as dictionaryManager from '../../dictionary/manager';
 import { ClinicalEntitySchemaNames } from '../../common-model/entities';
+import { ValueType } from '@overturebio-stack/lectern-client/lib/schema-entities';
 
 const L = loggerFor(__filename);
 
@@ -232,6 +233,7 @@ export namespace MigrationManager {
     const verificationResult: NewSchemaVerificationResult = {};
 
     const currVersion = await dictionaryManagerInstance().getCurrentVersion();
+    const currentSchema = await dictionaryManagerInstance().getCurrent();
     const toVersion = newSchemaDictionary.version;
 
     const analysis = await dictionaryManagerInstance().analyzeChanges(currVersion, toVersion);
@@ -246,6 +248,12 @@ export namespace MigrationManager {
         s => s.name === clinicalEntityName,
       );
 
+      if (!clinicalEntityNewSchemaDef) {
+        throw new Error(
+          `New dictionary is missing schema: ${clinicalEntityName}, please make sure the dictinary contains all clinical entities.`,
+        );
+      }
+
       const missingDataValidationFields: string[] = checkClinicalEntityNewSchemaHasRequiredFields(
         clinicalEntityName as ClinicalEntitySchemaNames,
         clinicalEntityNewSchemaDef,
@@ -259,6 +267,8 @@ export namespace MigrationManager {
       const changedValueTypes: string[] = checkValueTypeChanges(
         valueTypeChanges,
         clinicalEntityName as ClinicalEntitySchemaNames,
+        currentSchema,
+        clinicalEntityNewSchemaDef,
       );
 
       if (
@@ -312,16 +322,37 @@ export namespace MigrationManager {
   function checkValueTypeChanges(
     valueTypeChanges: string[],
     clinicalEntityName: ClinicalEntitySchemaNames,
+    currentSchema: dictionaryEntities.SchemasDictionary,
+    newSchemaEntity: dictionaryEntities.SchemaDefinition,
   ): string[] {
-    const changedFields: string[] = [];
+    const prohibitedChangedFields: string[] = [];
     valueTypeChanges.forEach(change => {
       const changedSchema = change.split('.')[0];
       if (clinicalEntityName === changedSchema) {
         const field: string = change.split('.')[1];
-        changedFields.push(field);
+        const changedSchemaBefore = currentSchema.schemas.find(s => s.name === changedSchema);
+        const changedFieldBefore = changedSchemaBefore?.fields.find(f => f.name === field);
+        const changedValueTypeBefore = changedFieldBefore?.valueType;
+
+        const changedFieldAfter = newSchemaEntity?.fields.find(f => f.name === field);
+        const changedValueTypeAfter = changedFieldAfter?.valueType;
+        if (!(changedValueTypeBefore && changedValueTypeAfter)) {
+          const msg = `Field ${field} in schema ${changedSchema} has value type change, but field or schema are missing in current and new dictionary.`;
+          L.error(msg, new Error(msg));
+          throw new Error(msg);
+        }
+        // Only allow valut type change fron intger to number
+        if (
+          changedValueTypeBefore === ValueType.INTEGER &&
+          changedValueTypeAfter === ValueType.NUMBER
+        ) {
+          return;
+        }
+
+        prohibitedChangedFields.push(field);
       }
     });
-    return changedFields;
+    return prohibitedChangedFields;
   }
 
   const abortMigration = async (
