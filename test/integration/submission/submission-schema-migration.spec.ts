@@ -551,24 +551,11 @@ describe('schema migration api', () => {
       // the removal of a schema, is currently just considered as removal of all the fields
       // how this change is analyzed and what error state to produce is subject to change
       const VERSION = '13.0';
-      await migrateSyncTo(VERSION);
-      const res = await getAllMigrationDocs();
-
-      const [migration] = res.body;
-      assertMigrationErrors(res, VERSION);
-
-      migration.newSchemaErrors.should.deep.eq({
-        [ClinicalEntitySchemaNames.HORMONE_THERAPY]: {
-          missingFields: [
-            TherapyRxNormFields.drug_name,
-            TherapyRxNormFields.drug_rxnormid,
-            CommonTherapyFields.program_id,
-            CommonTherapyFields.submitter_donor_id,
-            CommonTherapyFields.submitter_treatment_id,
-          ],
-          invalidFieldCodeLists: [],
-          valueTypeChanges: [],
-        },
+      await migrateSyncTo(VERSION).then((res: any) => {
+        res.should.have.status(500);
+        res.body.message.should.eq(
+          'New dictionary is missing schema: hormone_therapy, please make sure the dictinary contains all clinical entities.',
+        );
       });
     });
   });
