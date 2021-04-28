@@ -211,6 +211,22 @@ export const buildDynamicStubSchema = () => {
     field => field.name === fieldNames.sampleRegistration.SPECIMEN_TYPE,
   );
 
+  /** Version 16.0  */
+  const schemaV16 = _.cloneDeep(dictionaryV1);
+  schemaV16.version = '16.0';
+
+  getField(
+    schemaV16,
+    ClinicalEntitySchemaNames.TREATMENT,
+    fieldNames.treatment.TREATMENT_DURATION,
+  ).valueType = dictionaryEntities.ValueType.NUMBER;
+
+  getField(
+    schemaV16,
+    ClinicalEntitySchemaNames.TREATMENT,
+    fieldNames.treatment.DAYS_PER_CYCLE,
+  ).valueType = dictionaryEntities.ValueType.NUMBER;
+
   const newDictionaries = _.concat(
     legacyStubSchemas.dictionaries.slice(0, 3) as Array<dictionaryEntities.SchemasDictionary>,
     [
@@ -226,6 +242,7 @@ export const buildDynamicStubSchema = () => {
       schemaV13,
       schemaV14,
       schemaV15,
+      schemaV16,
     ],
   );
   // only want extend beyond the first three legacy schemas

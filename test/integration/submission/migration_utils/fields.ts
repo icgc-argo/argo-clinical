@@ -104,6 +104,7 @@ export const treatment = {
   IS_PRIMARY_TREATMENT: 'is_primary_treatment',
   TREATMENT_START_INTERVAL: 'treatment_start_interval',
   TREATMENT_DURATION: 'treatment_duration',
+  DAYS_PER_CYCLE: 'days_per_cycle',
   THERAPEUTIC_INTENT: 'therapeutic_intent',
   RESPONSE_TO_THERAPY: 'response_to_therapy',
 };
