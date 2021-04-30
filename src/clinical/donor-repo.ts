@@ -21,11 +21,9 @@ import { Donor } from './clinical-entities';
 import mongoose from 'mongoose';
 import { DeepReadonly } from 'deep-freeze';
 import { F, MongooseUtils, notEmpty } from '../utils';
-import { loggerFor } from '../logger';
 export const SUBMITTER_ID = 'submitterId';
 export const SPECIMEN_SUBMITTER_ID = 'specimen.submitterId';
 export const SPECIMEN_SAMPLE_SUBMITTER_ID = 'specimen.sample.submitterId';
-const L = loggerFor(__filename);
 const AutoIncrement = require('mongoose-sequence')(mongoose);
 
 export enum DONOR_DOCUMENT_FIELDS {
@@ -44,6 +42,7 @@ export enum DONOR_DOCUMENT_FIELDS {
   SAMPLE_TYPE = 'specimens.samples.sampleType',
   PRIMARY_DIAGNOSIS_SUBMITTER_ID = 'primaryDiagnoses.clinicalInfo.submitter_primary_diagnosis_id',
   FAMILY_HISTORY_ID = 'familyHistory.clinicalInfo.family_relative_id',
+  EXPOSURE_ID = 'exposure.clinicalInfo.',
 }
 
 export type FindByProgramAndSubmitterFilter = DeepReadonly<{
@@ -294,6 +293,12 @@ function unsetIsNewFlagForUpdate(newDonor: Donor) {
       (tr as any).isNew = false;
     }
   });
+
+  newDonor.exposure?.forEach(ex => {
+    if (ex.exposureId) {
+      (ex as any).isNew = false;
+    }
+  });
 }
 
 // Like findByProgramId, but DocQuery asks mongo to return PoJo without docIds for faster fetch
@@ -384,6 +389,16 @@ const FamilyHistorySchema = new mongoose.Schema(
 
 FamilyHistorySchema.index({ familyHistoryId: 1 }, { unique: true, spare: true });
 
+const ExposureSchema = new mongoose.Schema(
+  {
+    exposureId: { type: Number },
+    clinicalInfo: {},
+  },
+  { _id: false },
+);
+
+ExposureSchema.index({ exposureId: 1 }, { unique: true, spare: true });
+
 const DonorSchema = new mongoose.Schema(
   {
     donorId: { type: Number, index: true, unique: true, get: prefixDonorId },
@@ -396,6 +411,7 @@ const DonorSchema = new mongoose.Schema(
     familyHistory: [FamilyHistorySchema],
     followUps: [FollowUpSchema],
     treatments: [TreatmentSchema],
+    exposure: [ExposureSchema],
     schemaMetadata: {},
     completionStats: {},
   },
@@ -454,6 +470,11 @@ PrimaryDiagnosisSchema.plugin(AutoIncrement, {
 
 FamilyHistorySchema.plugin(AutoIncrement, {
   inc_field: 'familyHistoryId',
+  start_seq: 1,
+});
+
+ExposureSchema.plugin(AutoIncrement, {
+  inc_field: 'exposureId',
   start_seq: 1,
 });
 

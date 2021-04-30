@@ -27,6 +27,7 @@ import {
   ClinicalEntity,
   PrimaryDiagnosis,
   FamilyHistory,
+  Exposure,
 } from '../../clinical/clinical-entities';
 import { ActiveClinicalSubmission, SubmittedClinicalRecordsMap } from '../submission-entities';
 import _ from 'lodash';
@@ -78,6 +79,9 @@ export const mergeActiveSubmissionWithDonors = async (
         case ClinicalEntitySchemaNames.FAMILY_HISTORY:
           entityWithUpdatedInfo = updateFamilyHistoryInfo(donor, record);
           break;
+        case ClinicalEntitySchemaNames.EXPOSURE:
+          entityWithUpdatedInfo = updateExposureInfo(donor, record);
+          break;
         case ClinicalEntitySchemaNames.TREATMENT:
           entityWithUpdatedInfo = updateOrAddTreatementInfo(donor, record);
           break;
@@ -119,6 +123,10 @@ export const mergeRecordsMapIntoDonor = (
 
   submittedRecordsMap[ClinicalEntitySchemaNames.FAMILY_HISTORY]?.forEach(r =>
     updateFamilyHistoryInfo(mergedDonor, r),
+  );
+
+  submittedRecordsMap[ClinicalEntitySchemaNames.EXPOSURE]?.forEach(r =>
+    updateExposureInfo(mergedDonor, r),
   );
 
   submittedRecordsMap[ClinicalEntitySchemaNames.SPECIMEN]?.forEach(r =>
@@ -166,6 +174,15 @@ const updateFamilyHistoryInfo = (donor: Donor, record: ClinicalInfo) => {
   }
   familyHistory.clinicalInfo = record;
   return familyHistory;
+};
+
+const updateExposureInfo = (donor: Donor, record: ClinicalInfo) => {
+  let exposure = findExposure(donor, record);
+  if (!exposure) {
+    exposure = addNewExposureObj(donor);
+  }
+  exposure.clinicalInfo = record;
+  return exposure;
 };
 
 const updateSpecimenInfo = (donor: Donor, record: ClinicalInfo) => {
@@ -253,6 +270,10 @@ const findFamilyHistory = (donor: Donor, record: ClinicalInfo) => {
   return findFamilyHistoryObj(donor, record);
 };
 
+const findExposure = (donor: Donor, record: ClinicalInfo) => {
+  return findClinicalObject(donor, record, ClinicalEntitySchemaNames.EXPOSURE);
+};
+
 const findClinicalObject = (
   donor: Donor,
   newRecord: ClinicalInfo,
@@ -314,6 +335,12 @@ const addNewFamilyHistoryObj = (donor: Donor): ClinicalEntity => {
   const newFamilyHistory = { clinicalInfo: {}, familyHistoryId: undefined } as FamilyHistory;
   donor.familyHistory = _.concat(donor.familyHistory || [], newFamilyHistory);
   return _.last(donor.familyHistory) as FamilyHistory;
+};
+
+const addNewExposureObj = (donor: Donor): ClinicalEntity => {
+  const newExposure = { clinicalInfo: {}, exposureId: undefined } as Exposure;
+  donor.exposure = _.concat(donor.exposure || [], newExposure);
+  return _.last(donor.exposure) as Exposure;
 };
 
 const addNewTherapyObj = (treatment: Treatment, therapyType: ClinicalTherapyType): Therapy => {

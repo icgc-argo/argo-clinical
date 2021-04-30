@@ -427,7 +427,6 @@ export const migrationDiffs = [
   {
     fromVersion: '1.0',
     toVersion: '12.0',
-
     data: [
       [
         'donor.program_id',
@@ -441,15 +440,15 @@ export const migrationDiffs = [
             },
           },
           right: {
-            name: 'program_id',
-            valueType: 'program_identification_code',
+            name: 'program_identification_code',
+            valueType: 'string',
             description: 'Unique identifier of the ARGO program.',
             restrictions: {
               required: true,
             },
           },
           diff: {
-            valueType: {
+            name: {
               type: 'updated',
               data: 'program_identification_code',
             },
