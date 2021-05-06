@@ -31,6 +31,7 @@ Add new entity in the following files:
   - add to `enum ClinicalEntitySchemaNames`
   - add to `type TypeEntitySchemaNameToIndenfiterType`
   - add to `ClinicalUniqueIdentifier: TypeEntitySchemaNameToIndenfiterType`
+  - add all the `required` fields as an enum obj
 
 - `src/common-model/functions.ts`:
 
