@@ -42,7 +42,6 @@ export enum DONOR_DOCUMENT_FIELDS {
   SAMPLE_TYPE = 'specimens.samples.sampleType',
   PRIMARY_DIAGNOSIS_SUBMITTER_ID = 'primaryDiagnoses.clinicalInfo.submitter_primary_diagnosis_id',
   FAMILY_HISTORY_ID = 'familyHistory.clinicalInfo.family_relative_id',
-  EXPOSURE_ID = 'exposure.clinicalInfo.',
 }
 
 export type FindByProgramAndSubmitterFilter = DeepReadonly<{
