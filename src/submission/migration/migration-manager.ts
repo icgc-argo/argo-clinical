@@ -341,7 +341,7 @@ export namespace MigrationManager {
           L.error(msg, new Error(msg));
           throw new Error(msg);
         }
-        // Only allow valut type change fron intger to number
+        // Only allow value type change from integer to number
         if (
           changedValueTypeBefore === ValueType.INTEGER &&
           changedValueTypeAfter === ValueType.NUMBER

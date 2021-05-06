@@ -31,6 +31,7 @@ Add new entity in the following files:
   - add to `enum ClinicalEntitySchemaNames`
   - add to `type TypeEntitySchemaNameToIndenfiterType`
   - add to `ClinicalUniqueIdentifier: TypeEntitySchemaNameToIndenfiterType`
+  - add all the `required` fields as an enum obj
 
 - `src/common-model/functions.ts`:
 
@@ -68,10 +69,14 @@ Add new entity in the following files:
     ```
 - `src/submission/submission-entities.ts`:
   - add to `const BatchNameRegex: Record<ClinicalEntitySchemaNames, RegExp[]>`
-- update `src/submission/validation-clinical/utils.ts` - `function getRelatedEntityByFK`
+- update `src/submission/validation-clinical/utils.ts`
+  - `function getRelatedEntityByFK`
+    - Exclude entities that do not have a submitterId.
+  - `function checkClinicalEntityDoesntBelongToOtherDonor`
+    - Exclude entities that do not have a submitterId
 - update `test/integration/stub-schema.json` if a new schema is added
 
-- `src/submission/submission-to-clinical/stat-calculator.ts`
+- Only add the new entity to `src/submission/submission-to-clinical/stat-calculator.ts` when it is a core clinical schema
 
   - update `getEmptyCoreStats` function to include new entity
   - update `schemaNameToCoreCompletenessStat` to include new entity
@@ -97,6 +102,8 @@ const availableValidators: { [k: string]: any } = {
   [ClinicalEntitySchemaNames.NEW_ENTITY]: new_entity <--------- add here to trigger validation
 }
 ```
+
+- Add the new schema to `stub-schema.json` and generate the latest `migration-stub-schema.json` using `schema_builder.ts`
 
 ## Debugging Notes:
 

@@ -124,6 +124,9 @@
             ]
           },
           "primary_diagnosis": {
+            "lymphNodesExamined": [
+              "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      /* checks for a string just consisting of whitespacei */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      \n      const lymphNodesExaminedStatus = $row.lymph_nodes_examined_status.trim().toLowerCase();\n      const numberLymphNodesExamined = $row.number_lymph_nodes_examined;\n      const numberLymphNodesPositive = $row.number_lymph_nodes_positive;\n           \n      /* if lymph nodes were examined and number_lymph_nodes_examined is submitted, it must be a value greater than 0. Otherwise, this field should be 0 or left blank. */\n      if (($name === \"number_lymph_nodes_examined\") && (!(checkforEmpty($field)))) {\n         if (lymphNodesExaminedStatus === \"yes\") { \n            if (parseInt($field) <= 0) {\n               result = {\n                 valid: false,\n                 message: `The '${$name}' field must be a value greater than 0 if 'lymph_nodes_examined_status' is '${lymphNodesExaminedStatus}'`\n               };\n            }\n         }\n         else if (parseInt($field) > 0) {\n            result = {\n              valid: false,\n              message: `The '${$name}' field must be submitted as 0 or left blank if 'lymph_nodes_examined_status' is '${lymphNodesExaminedStatus}'`\n           };\n        }\n     }\n      \n      /* If lymph nodes were examined, number_lymph_nodes_positive must be submitted and it must be a value less than or equal to number_lymph_nodes_examined (if it is submitted). Otherwise, this field should not be submitted.*/\n      else if ($name === \"number_lymph_nodes_positive\") {\n         if (lymphNodesExaminedStatus === \"yes\") {\n            if (checkforEmpty($field) || $field == null) {\n               result = {\n                  valid: false,\n                  message: `The '${$name}' field must be submitted if 'lymph_nodes_examined_status' is '${lymphNodesExaminedStatus}'`\n               };\n            }\n            else if (parseInt($field) < 0) {\n               result = {\n                  valid: false,\n                  message: `The '${$name}' field must be a value greater than or equal to 0 if 'lymph_nodes_examined_status' is '${lymphNodesExaminedStatus}'`\n               };\n            }\n            else if ((!(checkforEmpty(numberLymphNodesExamined)) && ((parseInt($field) > parseInt(numberLymphNodesExamined))))) {\n               result = {\n                  valid: false,\n                  message: `The '${$name}' field must be a value less than or equal to 'number_lymph_nodes_examined' if 'lymph_nodes_examined_status' is '${lymphNodesExaminedStatus}'`\n               };\n            }\n         }\n         else if ($field || $field != null) {\n            result = {\n               valid: false,\n               message: `The '${$name}' field should not be submitted if 'lymph_nodes_examined_status' is '${lymphNodesExaminedStatus}'`\n            };\n         }\n     }\n     return result;\n})"
+            ],
             "stageGroup": [
               "(function validate(inputs) {\n    const {$row, $name, $field} = inputs;\n    let result = { valid: true, message: 'Ok' };\n    if ($row.clinical_tumour_staging_system && $field) {\n      let codeList = [];\n      switch ($row.clinical_tumour_staging_system && $row.clinical_tumour_staging_system.trim().toLowerCase()) {\n        case 'revised international staging system (riss)':\n          codeList = [\n            'stage i',\n            'stage ii',\n            'stage iii'\n          ];\n          break;\n        case 'lugano staging system':\n          codeList = [\n             'stage i',\n             'stage ia',\n             'stage ib',\n             'stage ie',\n             'stage iea',\n             'stage ieb',\n             'stage ii',\n             'stage iia',\n             'stage iib',\n             'stage iie',\n             'stage iiea',\n             'stage iieb',\n             'stage iii',\n             'stage iiia',\n             'stage iiib',\n             'stage iv',\n             'stage iva',\n             'stage ivb'\n          ];\n          break;\n        case 'st jude staging system':\n          codeList = [\n            'stage i',\n            'stage ii',\n            'stage iii',\n            'stage iv'\n          ];\n          break;\n        case 'ann arbor staging system':\n          codeList = [\n            'stage i',\n            'stage ia',\n            'stage ib',\n            'stage ie',\n            'stage is',\n            'stage ii',\n            'stage iia',\n            'stage iib',\n            'stage iie',\n            'stage iis',\n            'stage iii',\n            'stage iiia',\n            'stage iiib',\n            'stage iiie',\n            'stage iiis',\n            'stage iv',\n            'stage iva',\n            'stage ivb',\n            'stage ive',\n            'stage ivs'\n          ];\n          break;\n        case 'rai staging system':\n          codeList = [\n             'stage 0',\n             'stage i',\n             'stage ii',\n             'stage iii',\n             'stage iv'\n          ];\n          break;\n        case 'durie-salmon staging system':\n          codeList = [\n            'stage 1',\n            'stage 1a',\n            'stage 1b',\n            'stage ii',\n            'stage iia',\n            'stage iib',\n            'stage iii',\n            'stage iiia',\n            'stage iiib'\n          ];\n          break;\n        case 'figo staging system':\n          codeList = [\n            'stage ia',\n            'stage ia1',\n            'stage ia2',\n            'stage ib',\n            'stage ib1',\n            'stage ib2',\n            'stage iia',\n            'stage iab',\n            'stage iiia',\n            'stage iiib',\n            'stage iva',\n            'stage ivb'\n          ];\n          break;\n        case 'binet staging system':\n          codeList = [\n             'stage a',\n             'stage b',\n             'stage c'\n         ];\n          break;\n        case 'ajcc 8th edition':\n          codeList = ['stage 0','stage 0a','stage 0is','stage i','stage ia','stage ia1','stage ia2','stage ia3','stage ib','stage ib1','stage ib2','stage ic','stage ie','stage is','stage ii','stage iia','stage iia1','stage iia2','stage iib','stage iic','stage iie','stage iii','stage iiia','stage iiia1','stage iiia2','stage iiib','stage iiic','stage iiic1','stage iiic2','stage iiid','stage iv','stage iva','stage iva1','stage iva2','stage ivb','stage ivc','occult carcinoma','stage 1'];\n          break;\n        case 'ajcc 7th edition':\n          codeList = ['stage 0','stage 0a','stage 0is','stage i','stage ia','stage ia1','stage ia2','stage ib','stage ib1','stage ib2','stage ic','stage is','stage ii','stage iia','stage iia1','stage iia2','stage iib','stage iic','stage iii','stage iiia','stage iiib','stage iiic','stage iiic1','stage iiic2','stage iv','stage iva','stage iva1','stage iva2','stage ivb','stage ivc','occult carcinoma','stage 1'\n];\n          break;\n        default:\n          codelist = [];\n      }\n\n      if (!codeList.includes($field.trim().toLowerCase()) && codeList.length) {\n        const msg = `'${$field}' is not a permissible value. When 'clinical_tumour_staging_system' is set to '${\n          $row.clinical_tumour_staging_system\n        }', 'clinical_stage_group' must be one of the following: \\n${codeList\n          .map(code => `- \"${code}\"`)\n          .join('\\n')}`;\n\n        result.valid = false;\n        result.message = msg;\n      }\n    }\n    return result;\n  })"
             ]
@@ -149,6 +152,16 @@
         },
         "list": {
           "yes_no": ["Yes", "No", "Unknown"],
+          "exposure_usage": ["Never", "Unknown", "Yes, currently", "Yes, only in the past"],
+          "exposure_frequency": [
+            "Never",
+            "Less than once a month",
+            "1-3 times a month",
+            "Once or twice a week",
+            "Most days but not every day",
+            "Every day",
+            "Unknown"
+          ],
           "anatomic_locations": [
             "Abdomen",
             "Abdominal wall",
@@ -2385,6 +2398,25 @@
               "meta": {
                 "notes": "0: Death certificate only: Information provided is from a death certificate.\n1: Clinical: Diagnosis made before death.\n2: Clinical investigation: All diagnostic techniques, including X-ray, endoscopy, imaging, ultrasound, exploratory surgery (such as laparotomy), and autopsy, without a tissue diagnosis.\n4: Specific tumour markers: Including biochemical and/or immunologic markers that are specific for a tumour site.\n5: Cytology: Examination of cells from a primary or secondary site, including fluids aspirated by endoscopy or needle; also includes the microscopic examination of peripheral blood and bone marrow aspirates.\n6: Histology of a metastasis: Histologic examination of tissue from a metastasis, including autopsy specimens.\n7: Histology of a primary tumour: Histologic examination of tissue from primary tumour, however obtained, including all cutting techniques and bone marrow biopsies; also includes autopsy specimens of primary tumour.\n9: Unknown: No information on how the diagnosis has been made.",
                 "displayName": "Basis of Diagnosis"
+              }
+            },
+            {
+              "name": "lymph_nodes_examined_status",
+              "description": "Indicate if lymph nodes were examined for metastases.",
+              "valueType": "string",
+              "restrictions": {
+                "required": true,
+                "codeList": [
+                  "Cannot be determined",
+                  "No",
+                  "No lymph nodes found in resected specimen",
+                  "Not applicable",
+                  "Yes"
+                ]
+              },
+              "meta": {
+                "core": true,
+                "displayName": "Lymph Nodes Examined Status"
               }
             },
             {
@@ -4917,6 +4949,221 @@
               "restrictions": {},
               "valueType": "integer",
               "displayName": "Survival Time Of Relative"
+            }
+          ]
+        },
+        {
+          "name": "exposure",
+          "description": "The collection of data elements related to a donor's clinically relevant information not immediately resulting from genetic predispositions.",
+          "meta": { "parent": "donor" },
+          "fields": [
+            {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.program_id",
+                "displayName": "Program ID"
+              },
+              "restrictions": { "required": true }
+            },
+            {
+              "description": "Unique identifier of the donor, assigned by the data provider.",
+              "name": "submitter_donor_id",
+              "valueType": "string",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.submitter_donor_id",
+                "displayName": "Submitter Donor ID"
+              },
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
+            },
+            {
+              "description": "Indicate the type(s) of tobacco used by donor. (Reference: NCIT)",
+              "name": "tobacco_type",
+              "valueType": "string",
+              "meta": {
+                "displayName": "Tobacco Type",
+                "notes": "To include multiple values, separate values with a pipe delimiter '|' within your file."
+              },
+              "isArray": true,
+              "restrictions": {
+                "codeList": [
+                  "Chewing Tobacco",
+                  "Cigar",
+                  "Cigarettes",
+                  "Electronic cigarettes",
+                  "Roll-ups",
+                  "Snuff",
+                  "Unknown",
+                  "Waterpipe"
+                ]
+              }
+            },
+            {
+              "description": "Indicate donor's self-reported smoking status and history. (Reference: caDSR CDE ID 2181650)",
+              "name": "tobacco_smoking_status",
+              "valueType": "string",
+              "meta": {
+                "displayName": "Tobacco Smoking Status",
+                "notes": "Current smoker: Has smoked 100 cigarettes in their lifetime and who currently smokes. Includes daily smokers and non-daily smokers (also known as occassional smokers). Current reformed smoker for >15 years: A person who currently does not smoke and has been a non-smoker for more than 15 years, but has smoked at least 100 cigarettes in their life. Current reformed smoker for <= 15 years: A person who currently does not smoke and has been a non-smoker for less than 15 years, but has smoked at least 100 cigarettes in their life. Current reformed smoker, duration not specified: A person who currently does not smoke and has been a non-smoker for unspecified time, but has smoked at least 100 cigarettes in their lifetime. Smoking history not documented: Smoking history has not be recorded or is unknown."
+              },
+              "restrictions": {
+                "codeList": [
+                  "Current reformed smoker for <= 15 years",
+                  "Current reformed smoker for > 15 years",
+                  "Current reformed smoker, duration not specified",
+                  "Current smoker",
+                  "Lifelong non-smoker (<100 cigarettes smoked in lifetime)",
+                  "Smoking history not documented"
+                ]
+              }
+            },
+            {
+              "description": "This field applies to cigarettes. Indicate the smoking intensity in Pack Years, where the number of pack years is defined as the number of cigarettes smoked per day times (x) the number of years smoked divided (/) by 20. (Reference: caDSR CDE ID 2955385)",
+              "name": "pack_years_smoked",
+              "valueType": "number",
+              "meta": {
+                "displayName": "Pack Years Smoked",
+                "notes": "Current smoker: Has smoked 100 cigarettes in their lifetime and who currently smokes. Includes daily smokers and non-daily smokers (also known as occassional smokers). Current reformed smoker for >15 years: A person who currently does not smoke and has been a non-smoker for more than 15 years, but has smoked at least 100 cigarettes in their life. Current reformed smoker for <= 15 years: A person who currently does not smoke and has been a non-smoker for less than 15 years, but has smoked at least 100 cigarettes in their life. Current reformed smoker, duration not specified: A person who currently does not smoke and has been a non-smoker for unspecified time, but has smoked at least 100 cigarettes in their lifetime. Smoking history not documented: Smoking history has not be recorded or is unknown."
+              },
+              "restrictions": { "min": 0 }
+            },
+            {
+              "description": "Indicate if the donor has consumed at least 12 drinks of any alcoholic beverage in their lifetime. (Reference: caDSR CDE ID 2201918)",
+              "name": "alcohol_history",
+              "valueType": "string",
+              "meta": { "displayName": "Alcohol History" },
+              "restrictions": { "codeList": ["Yes", "No", "Unknown"] }
+            },
+            {
+              "description": "Describe the donor's current level of alcohol use as self-reported by the donor. (Reference: caDSR CDE ID 3457767)",
+              "name": "alcohol_consumption_category",
+              "valueType": "string",
+              "meta": { "displayName": "Alcohol Consumption Category", "notes": "" },
+              "restrictions": {
+                "codeList": [
+                  "Daily Drinker",
+                  "None",
+                  "Not Documented",
+                  "Occasional Drinker (< once a month)",
+                  "Social Drinker (> once a month, < once a week)",
+                  "Weekly Drinker (>=1x a week)"
+                ]
+              }
+            },
+            {
+              "description": "Indicate the type(s) of alcohol the donor consumed. (Reference: NCIt CDE C173647)",
+              "name": "alcohol_type",
+              "valueType": "string",
+              "meta": {
+                "displayName": "Alcohol Type",
+                "notes": "To include multiple values, separate values with a pipe delimiter '|' within your file."
+              },
+              "isArray": true,
+              "restrictions": { "codeList": ["Beer", "Liquor", "Other", "Unknown", "Wine"] }
+            },
+            {
+              "description": "Indicate if the donor has ever used opium or other opiates like opium juice, heroin, or Sukhteh regularly (at least weekly over a 6-month period).",
+              "name": "opiate_use",
+              "valueType": "string",
+              "meta": { "displayName": "Opiate Use" },
+              "restrictions": {
+                "codeList": ["Never", "Unknown", "Yes, currently", "Yes, only in the past"]
+              }
+            },
+            {
+              "description": "Indicate if the donor regularly drinks tea, coffee, or other hot drinks.",
+              "name": "hot_drinks",
+              "valueType": "string",
+              "meta": { "displayName": "Hot Drink Consumption" },
+              "restrictions": {
+                "codeList": ["Never", "Unknown", "Yes, currently", "Yes, only in the past"]
+              }
+            },
+            {
+              "description": "Indicate how frequently the donor eats red meat. Examples of red meat include beef, veal, pork, lamb, mutton, horse, or goat meat.",
+              "name": "red_meat",
+              "valueType": "string",
+              "meta": { "displayName": "Red Meat Consumption Frequency" },
+              "restrictions": {
+                "codeList": [
+                  "Never",
+                  "Less than once a month",
+                  "1-3 times a month",
+                  "Once or twice a week",
+                  "Most days but not every day",
+                  "Every day",
+                  "Unknown"
+                ]
+              }
+            },
+            {
+              "description": "Indicate how frequently the patient eats processed meat. Examples of processed meat include hams, salamis, or sausages.",
+              "name": "processed_meat",
+              "valueType": "string",
+              "meta": { "displayName": "Processed Meat Consumption Frequency" },
+              "restrictions": {
+                "codeList": [
+                  "Never",
+                  "Less than once a month",
+                  "1-3 times a month",
+                  "Once or twice a week",
+                  "Most days but not every day",
+                  "Every day",
+                  "Unknown"
+                ]
+              }
+            },
+            {
+              "description": "Indicate the frequency of soft drink consumption by the donor.",
+              "name": "soft_drinks",
+              "valueType": "string",
+              "meta": { "displayName": "Soft Drink Consumption Frequency" },
+              "restrictions": {
+                "codeList": [
+                  "Never",
+                  "Less than once a month",
+                  "1-3 times a month",
+                  "Once or twice a week",
+                  "Most days but not every day",
+                  "Every day",
+                  "Unknown"
+                ]
+              }
+            },
+            {
+              "description": "Indicate how many times per week the donor exercises for at least 30 minutes. (Reference: NCIt CDE C25367)",
+              "name": "exercise_frequency",
+              "valueType": "string",
+              "meta": { "displayName": "Exercise Frequency" },
+              "restrictions": {
+                "codeList": [
+                  "Never",
+                  "Less than once a month",
+                  "1-3 times a month",
+                  "Once or twice a week",
+                  "Most days but not every day",
+                  "Every day",
+                  "Unknown"
+                ]
+              }
+            },
+            {
+              "description": "Indicate the intensity of exercise. (Reference: NCIt CDE C25539)",
+              "name": "exercise_intensity",
+              "valueType": "string",
+              "meta": { "displayName": "Exercise Intensity" },
+              "restrictions": {
+                "codeList": [
+                  "Low: No increase in the heart beat, and no perspiration",
+                  "Moderate: Increase in the heart beat slightly with some light perspiration",
+                  "Vigorous: Increase in the heart beat substantially with heavy perspiration"
+                ]
+              }
             }
           ]
         }

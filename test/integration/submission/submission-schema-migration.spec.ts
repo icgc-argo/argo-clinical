@@ -22,8 +22,6 @@ import * as bootstrap from '../../../src/bootstrap';
 import {
   ClinicalEntitySchemaNames,
   PrimaryDiagnosisFieldsEnum,
-  CommonTherapyFields,
-  TherapyRxNormFields,
   DonorFieldsEnum,
 } from '../../../src/common-model/entities';
 import { SampleRegistrationFieldsEnum } from '../../../src/submission/submission-entities';
