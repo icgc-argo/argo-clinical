@@ -29,6 +29,7 @@ export enum ClinicalEntitySchemaNames {
   RADIATION = 'radiation',
   FOLLOW_UP = 'follow_up',
   HORMONE_THERAPY = 'hormone_therapy',
+  EXPOSURE = 'exposure',
 }
 
 export type ClinicalFields =
@@ -40,7 +41,8 @@ export type ClinicalFields =
   | TreatmentFieldsEnum
   | TherapyRxNormFields
   | RadiationFieldsEnum
-  | CommonTherapyFields;
+  | CommonTherapyFields
+  | ExposureFieldsEnum;
 
 export type ClinicalTherapyType =
   | ClinicalEntitySchemaNames.CHEMOTHERAPY
@@ -141,11 +143,17 @@ export enum FollowupFieldsEnum {
   interval_of_followup = 'interval_of_followup',
 }
 
+export enum ExposureFieldsEnum {
+  program_id = 'program_id',
+  submitter_donor_id = 'submitter_donor_id',
+}
+
 // This needed to be added to differentiate between multiple or single fields for identifying
 type TypeEntitySchemaNameToIndenfiterType = {
   [ClinicalEntitySchemaNames.DONOR]: ClinicalFields;
   [ClinicalEntitySchemaNames.SPECIMEN]: ClinicalFields;
   [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: ClinicalFields;
+  [ClinicalEntitySchemaNames.EXPOSURE]: ClinicalFields;
   [ClinicalEntitySchemaNames.FAMILY_HISTORY]: ClinicalFields[];
   [ClinicalEntitySchemaNames.FOLLOW_UP]: ClinicalFields;
   [ClinicalEntitySchemaNames.TREATMENT]: ClinicalFields;
@@ -160,6 +168,7 @@ export const ClinicalUniqueIdentifier: TypeEntitySchemaNameToIndenfiterType = {
   [ClinicalEntitySchemaNames.SPECIMEN]: SpecimenFieldsEnum.submitter_specimen_id,
   [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]:
     PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id,
+  [ClinicalEntitySchemaNames.EXPOSURE]: ExposureFieldsEnum.submitter_donor_id,
   // Family history is an independent entity, but it must be uniquely identified by 2 ids,
   // because family_relative_id field is NOT unique within a program, it's only unique within a donor.
   [ClinicalEntitySchemaNames.FAMILY_HISTORY]: [

@@ -72,6 +72,12 @@ export function getClinicalObjectsFromDonor(
     }
   }
 
+  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.EXPOSURE) {
+    if (donor.exposure) {
+      return donor.exposure;
+    }
+  }
+
   if (ClinicalTherapySchemaNames.find(tsn => tsn === clinicalEntitySchemaName)) {
     if (donor.treatments) {
       return donor.treatments
