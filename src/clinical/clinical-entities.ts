@@ -30,6 +30,7 @@ export interface Donor {
   clinicalInfo?: ClinicalInfo;
   primaryDiagnoses?: Array<PrimaryDiagnosis>;
   familyHistory?: Array<FamilyHistory>;
+  comorbidity?: Array<Comorbidity>;
   followUps?: Array<FollowUp>;
   treatments?: Array<Treatment>;
   exposure?: Array<Exposure>;
@@ -95,6 +96,10 @@ export interface FamilyHistory extends ClinicalEntity {
 
 export interface Exposure extends ClinicalEntity {
   exposureId: number | undefined;
+}
+
+export interface Comorbidity extends ClinicalEntity {
+  comorbidityId: number | undefined;
 }
 
 export interface ClinicalInfo {

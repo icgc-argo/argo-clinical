@@ -920,4 +920,75 @@ export const migrationDiffs = [
       ],
     ],
   },
+  {
+    name: 'ARGO Clinical Submission',
+    fromVersion: '1.0',
+    toVersion: '16.0',
+    data: [
+      [
+        'treatment.treatment_duration',
+        {
+          left: {
+            name: 'treatment_duration',
+            description: 'The duration of treatment regimen, in days.',
+            valueType: 'integer',
+            restrictions: {
+              required: true,
+            },
+            meta: {
+              core: true,
+              units: 'days',
+              displayName: 'Treatment Duration',
+            },
+          },
+          right: {
+            name: 'treatment_duration',
+            description: 'The duration of treatment regimen, in days.',
+            valueType: 'number',
+            restrictions: {
+              required: true,
+            },
+            meta: {
+              core: true,
+              units: 'days',
+              displayName: 'Treatment Duration',
+            },
+          },
+          diff: {
+            valueType: {
+              type: 'updated',
+              data: 'number',
+            },
+          },
+        },
+      ],
+      [
+        'treatment.days_per_cycle',
+        {
+          left: {
+            name: 'days_per_cycle',
+            description: 'Indicate the number of days in a treatment cycle.',
+            valueType: 'integer',
+            meta: {
+              displayName: 'Days Per Cycle',
+            },
+          },
+          right: {
+            name: 'days_per_cycle',
+            description: 'Indicate the number of days in a treatment cycle.',
+            valueType: 'number',
+            meta: {
+              displayName: 'Days Per Cycle',
+            },
+          },
+          diff: {
+            valueType: {
+              type: 'updated',
+              data: 'number',
+            },
+          },
+        },
+      ],
+    ],
+  },
 ];

@@ -281,6 +281,12 @@ function unsetIsNewFlagForUpdate(newDonor: Donor) {
     }
   });
 
+  newDonor.comorbidity?.forEach(cm => {
+    if (cm.comorbidityId) {
+      (cm as any).isNew = false;
+    }
+  });
+
   newDonor.followUps?.forEach(fu => {
     if (fu.followUpId) {
       (fu as any).isNew = false;
@@ -398,6 +404,16 @@ const ExposureSchema = new mongoose.Schema(
 
 ExposureSchema.index({ exposureId: 1 }, { unique: true, spare: true });
 
+const ComorbiditySchema = new mongoose.Schema(
+  {
+    comorbidityId: { type: Number },
+    clinicalInfo: {},
+  },
+  { _id: false },
+);
+
+ComorbiditySchema.index({ comorbidityId: 1 }, { unique: true, spare: true });
+
 const DonorSchema = new mongoose.Schema(
   {
     donorId: { type: Number, index: true, unique: true, get: prefixDonorId },
@@ -408,6 +424,7 @@ const DonorSchema = new mongoose.Schema(
     clinicalInfo: {},
     primaryDiagnoses: [PrimaryDiagnosisSchema],
     familyHistory: [FamilyHistorySchema],
+    comorbidity: [ComorbiditySchema],
     followUps: [FollowUpSchema],
     treatments: [TreatmentSchema],
     exposure: [ExposureSchema],
@@ -474,6 +491,11 @@ FamilyHistorySchema.plugin(AutoIncrement, {
 
 ExposureSchema.plugin(AutoIncrement, {
   inc_field: 'exposureId',
+  start_seq: 1,
+});
+
+ComorbiditySchema.plugin(AutoIncrement, {
+  inc_field: 'comorbidityId',
   start_seq: 1,
 });
 
