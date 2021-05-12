@@ -246,7 +246,6 @@ export const buildDynamicStubSchema = () => {
     ],
   );
   // only want extend beyond the first three legacy schemas
-
   const stub_schema = {
     diffs: migrationDiffs.map(diffObj => {
       return { name: DICTIONARY_NAME, ...diffObj };

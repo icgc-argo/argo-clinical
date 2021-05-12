@@ -28,6 +28,7 @@ import {
   PrimaryDiagnosis,
   FamilyHistory,
   Exposure,
+  Comorbidity,
 } from '../../clinical/clinical-entities';
 import { ActiveClinicalSubmission, SubmittedClinicalRecordsMap } from '../submission-entities';
 import _ from 'lodash';
@@ -82,6 +83,9 @@ export const mergeActiveSubmissionWithDonors = async (
         case ClinicalEntitySchemaNames.EXPOSURE:
           entityWithUpdatedInfo = updateExposureInfo(donor, record);
           break;
+        case ClinicalEntitySchemaNames.COMORBIDITY:
+          entityWithUpdatedInfo = updateComorbidityInfo(donor, record);
+          break;
         case ClinicalEntitySchemaNames.TREATMENT:
           entityWithUpdatedInfo = updateOrAddTreatementInfo(donor, record);
           break;
@@ -123,6 +127,10 @@ export const mergeRecordsMapIntoDonor = (
 
   submittedRecordsMap[ClinicalEntitySchemaNames.FAMILY_HISTORY]?.forEach(r =>
     updateFamilyHistoryInfo(mergedDonor, r),
+  );
+
+  submittedRecordsMap[ClinicalEntitySchemaNames.COMORBIDITY]?.forEach(r =>
+    updateComorbidityInfo(mergedDonor, r),
   );
 
   submittedRecordsMap[ClinicalEntitySchemaNames.EXPOSURE]?.forEach(r =>
@@ -183,6 +191,15 @@ const updateExposureInfo = (donor: Donor, record: ClinicalInfo) => {
   }
   exposure.clinicalInfo = record;
   return exposure;
+};
+
+const updateComorbidityInfo = (donor: Donor, record: ClinicalInfo) => {
+  let comorbidity = findComorbidity(donor, record);
+  if (!comorbidity) {
+    comorbidity = addNewComorbidityObj(donor);
+  }
+  comorbidity.clinicalInfo = record;
+  return comorbidity;
 };
 
 const updateSpecimenInfo = (donor: Donor, record: ClinicalInfo) => {
@@ -270,6 +287,10 @@ const findFamilyHistory = (donor: Donor, record: ClinicalInfo) => {
   return findFamilyHistoryObj(donor, record);
 };
 
+const findComorbidity = (donor: Donor, record: ClinicalInfo) => {
+  return findComorbidityObj(donor, record);
+};
+
 const findExposure = (donor: Donor, record: ClinicalInfo) => {
   return findClinicalObject(donor, record, ClinicalEntitySchemaNames.EXPOSURE);
 };
@@ -282,6 +303,7 @@ const findClinicalObject = (
     | ClinicalTherapyType
     | ClinicalEntitySchemaNames.FAMILY_HISTORY
     | ClinicalEntitySchemaNames.REGISTRATION
+    | ClinicalEntitySchemaNames.COMORBIDITY
   >,
 ): ClinicalEntity | undefined => {
   const uniqueIdName = ClinicalUniqueIdentifier[entityType];
@@ -310,6 +332,14 @@ const findFamilyHistoryObj = (donor: Donor, record: ClinicalInfo): ClinicalEntit
   uniqueIdNames.forEach(idN => (constraints[idN] = record[idN]));
 
   return _(donor.familyHistory || []).find({ clinicalInfo: constraints });
+};
+
+const findComorbidityObj = (donor: Donor, record: ClinicalInfo): ClinicalEntity | undefined => {
+  const uniqueIdNames = ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.COMORBIDITY];
+  const constraints: ClinicalInfo = {};
+  uniqueIdNames.forEach(idN => (constraints[idN] = record[idN]));
+
+  return _(donor.comorbidity || []).find({ clinicalInfo: constraints });
 };
 
 /*** Empty clinical object adders ***/
@@ -341,6 +371,12 @@ const addNewExposureObj = (donor: Donor): ClinicalEntity => {
   const newExposure = { clinicalInfo: {}, exposureId: undefined } as Exposure;
   donor.exposure = _.concat(donor.exposure || [], newExposure);
   return _.last(donor.exposure) as Exposure;
+};
+
+const addNewComorbidityObj = (donor: Donor): ClinicalEntity => {
+  const newComorbidity = { clinicalInfo: {}, comorbidityId: undefined } as Comorbidity;
+  donor.comorbidity = _.concat(donor.comorbidity || [], newComorbidity);
+  return _.last(donor.comorbidity) as Comorbidity;
 };
 
 const addNewTherapyObj = (treatment: Treatment, therapyType: ClinicalTherapyType): Therapy => {
