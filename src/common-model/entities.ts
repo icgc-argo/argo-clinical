@@ -30,6 +30,7 @@ export enum ClinicalEntitySchemaNames {
   FOLLOW_UP = 'follow_up',
   HORMONE_THERAPY = 'hormone_therapy',
   EXPOSURE = 'exposure',
+  COMORBIDITY = 'comorbidity',
 }
 
 export type ClinicalFields =
@@ -42,7 +43,8 @@ export type ClinicalFields =
   | TherapyRxNormFields
   | RadiationFieldsEnum
   | CommonTherapyFields
-  | ExposureFieldsEnum;
+  | ExposureFieldsEnum
+  | ComorbidityFieldsEnum;
 
 export type ClinicalTherapyType =
   | ClinicalEntitySchemaNames.CHEMOTHERAPY
@@ -106,6 +108,12 @@ export enum FamilyHistoryFieldsEnum {
   family_relative_id = 'family_relative_id',
 }
 
+export enum ComorbidityFieldsEnum {
+  program_id = 'program_id',
+  submitter_donor_id = 'submitter_donor_id',
+  comorbidity_type_code = 'comorbidity_type_code',
+}
+
 export enum TreatmentFieldsEnum {
   program_id = 'program_id',
   submitter_donor_id = 'submitter_donor_id',
@@ -161,6 +169,7 @@ type TypeEntitySchemaNameToIndenfiterType = {
   [ClinicalEntitySchemaNames.IMMUNOTHERAPY]: ClinicalFields[];
   [ClinicalEntitySchemaNames.RADIATION]: ClinicalFields[];
   [ClinicalEntitySchemaNames.HORMONE_THERAPY]: ClinicalFields[];
+  [ClinicalEntitySchemaNames.COMORBIDITY]: ClinicalFields[];
 };
 
 export const ClinicalUniqueIdentifier: TypeEntitySchemaNameToIndenfiterType = {
@@ -196,5 +205,9 @@ export const ClinicalUniqueIdentifier: TypeEntitySchemaNameToIndenfiterType = {
     CommonTherapyFields.submitter_donor_id,
     CommonTherapyFields.submitter_treatment_id,
     TherapyRxNormFields.drug_rxnormid,
+  ],
+  [ClinicalEntitySchemaNames.COMORBIDITY]: [
+    ComorbidityFieldsEnum.submitter_donor_id,
+    ComorbidityFieldsEnum.comorbidity_type_code,
   ],
 };

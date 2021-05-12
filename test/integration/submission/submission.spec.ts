@@ -2161,6 +2161,7 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dburl: 
         primaryDiagnoses: undefined,
         familyHistory: undefined,
         exposure: undefined,
+        comorbidity: undefined,
         submitterId: r[SampleRegistrationFieldsEnum.submitter_donor_id],
         programId: r[SampleRegistrationFieldsEnum.program_id],
         specimens: [
@@ -2230,6 +2231,7 @@ function assertSameDonorWithoutGeneratedIds(actual: Donor, expected: Donor) {
       'primaryDiagnoses',
       'familyHistory',
       'exposure',
+      'comorbidity',
       'updatedAt',
       'createdAt',
     ])
