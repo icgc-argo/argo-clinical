@@ -392,7 +392,7 @@ const FamilyHistorySchema = new mongoose.Schema(
   { _id: false },
 );
 
-FamilyHistorySchema.index({ familyHistoryId: 1 }, { unique: true, spare: true });
+FamilyHistorySchema.index({ familyHistoryId: 1 }, { unique: true, sparse: true });
 
 const ExposureSchema = new mongoose.Schema(
   {
@@ -402,7 +402,7 @@ const ExposureSchema = new mongoose.Schema(
   { _id: false },
 );
 
-ExposureSchema.index({ exposureId: 1 }, { unique: true, spare: true });
+ExposureSchema.index({ exposureId: 1 }, { unique: true, sparse: true });
 
 const ComorbiditySchema = new mongoose.Schema(
   {
@@ -412,7 +412,7 @@ const ComorbiditySchema = new mongoose.Schema(
   { _id: false },
 );
 
-ComorbiditySchema.index({ comorbidityId: 1 }, { unique: true, spare: true });
+ComorbiditySchema.index({ comorbidityId: 1 }, { unique: true, sparse: true });
 
 const DonorSchema = new mongoose.Schema(
   {
