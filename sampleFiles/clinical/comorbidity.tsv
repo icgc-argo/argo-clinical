@@ -1,0 +1,2 @@
+program_id	submitter_donor_id	prior_malignancy	laterality_of_prior_malignancy	age_at_comorbidity_diagnosis	comorbidity_type_code	comorbidity_treatment_status	comorbidity_treatment
+TEST-CA	ICGC_0002	yes	Bilateral	55	E10	no	
