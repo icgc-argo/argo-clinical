@@ -1,6 +1,6 @@
 {
   "name": "argo-clinical",
-  "version": "1.50.0",
+  "version": "1.51.0",
   "description": "Clinical submission system and repo.",
   "scripts": {
     "start": "npm run serve",
@@ -111,7 +111,7 @@
     "jsonwebtoken": "^8.5.1",
     "kafkajs": "^1.12.0",
     "kind-of": "^6.0.3",
-    "lodash": "^4.17.19",
+    "lodash": "^4.17.21",
     "migrate-mongo": "^7.0.1",
     "mock-http-server": "^1.4.1",
     "mongoose": "5.7.7",
@@ -123,7 +123,7 @@
     "node-fetch": "^2.6.1",
     "node-vault": "^0.9.11",
     "node-worker-threads-pool": "^1.2.2",
-    "nodemailer": "^6.2.1",
+    "nodemailer": "^6.4.16",
     "promise-tools": "^2.1.0",
     "response-time": "^2.3.2",
     "swagger-ui-express": "^4.0.7",

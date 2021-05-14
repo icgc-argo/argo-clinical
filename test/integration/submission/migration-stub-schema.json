@@ -4987,6 +4987,143 @@
               }
             }
           ]
+        },
+        {
+          "name": "comorbidity",
+          "description": "The collection of data elements related to a donor's comorbidities. Comorbidities are any distinct entity that has existed or may occur during the clinical course of a patient who has the index disease under study. To submit multiple comorbidities for a single donor, submit multiple rows in the comorbidity file for this donor",
+          "meta": {
+            "parent": "donor"
+          },
+          "fields": [
+            {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.program_id",
+                "displayName": "Program ID"
+              },
+              "restrictions": {
+                "required": true
+              }
+            },
+            {
+              "name": "submitter_donor_id",
+              "valueType": "string",
+              "description": "Unique identifier of the donor, assigned by the data provider.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.submitter_donor_id",
+                "displayName": "Submitter Donor ID"
+              },
+              "restrictions": {
+                "required": true,
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "prior_malignancy",
+              "description": "Prior malignancy affecting donor.",
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"]
+              },
+              "valueType": "string",
+              "meta": {
+                "displayName": "Prior Malignancy"
+              }
+            },
+            {
+              "name": "laterality_of_prior_malignancy",
+              "description": "If donor has history of prior malignancy, indicate laterality of previous diagnosis. (Reference: caDSR CDE ID 4122391)",
+              "valueType": "string",
+              "restrictions": {
+                "codeList": [
+                  "Bilateral",
+                  "Left",
+                  "Midline",
+                  "Not applicable",
+                  "Right",
+                  "Unilateral, Side not specified",
+                  "Unknown"
+                ],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n   \n      if ($name === \"laterality_of_prior_malignancy\") {\n         if (($row.prior_malignancy === null || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) && (currField || (!(checkforEmpty(currField))!= null))) {\n            result = {\n               valid: false,\n               message: `The 'prior_malignancy' field should be submitted as 'Yes' if the '${$name}' field is submitted.`\n            };\n         }\n      }\n      return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.prior_malignancy",
+                "displayName": "Laterality at Prior Malignancy"
+              }
+            },
+            {
+              "name": "age_at_comorbidity_diagnosis",
+              "valueType": "integer",
+              "description": "Indicate the age of comorbidity diagnosis, in years.",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ],
+                "range": {
+                  "exclusiveMin": 0
+                }
+              },
+              "meta": {
+                "units": "years",
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Age at Comorbidity Diagnosis"
+              }
+            },
+            {
+              "name": "comorbidity_type_code",
+              "valueType": "string",
+              "description": "Indicate the code for the comorbidity using the WHO ICD-10 code classification (https://icd.who.int/browse10/2019/en).",
+              "restrictions": {
+                "required": true,
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      /* check if ICD-10 code is for neoplasms */\n      const neoplasmCode = (entry) => {return /^[c|d][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$/.test(decodeURI(entry))};\n\n      if (currField || (!(checkforEmpty(currField)))) {\n         if ($row.prior_malignancy === \"yes\" && (!(neoplasmCode(currField)))) {\n            result = { valid: false, message: `The ICD-10 code submitted in the '${$name}' field must be a code for cancer if 'prior_malignancy' is 'Yes'.`}\n         }\n         else if (($row.prior_malignancy === null || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) && neoplasmCode(currField)) {\n            result = {valid: false, message: `If an ICD-10 code for cancer is submitted in the '${$name}' field, then 'prior_malignancy' should be submitted as 'Yes'.`}\n         }\n      }\n      else if (checkforEmpty(currField)) {\n         if ($row.prior_malignancy === \"yes\") { \n            result = {valid: false, message: `The 'comorbidity_type_code' field is required if '${$name}' field is 'Yes'.`}\n         }\n         else if ($row.prior_malignancy === null || checkforEmpty($row.prior_malignancy)) {\n            result = {valid: false, message: `The 'comorbidity_type_code' field is required.`}\n         }\n      }\n      return result;\n  })"
+                ],
+                "regex": "^[A-Z][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$"
+              },
+              "meta": {
+                "primaryId": true,
+                "dependsOn": "comorbidity.prior_malignancy",
+                "examples": "E10, C50.1, I11, M06",
+                "displayName": "Comorbidity Type Code"
+              }
+            },
+            {
+              "name": "comorbidity_treatment_status",
+              "valueType": "string",
+              "description": "Indicate if the patient is being treated for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Comorbidity Treatment"
+              }
+            },
+            {
+              "name": "comorbidity_treatment",
+              "valueType": "string",
+              "description": "Indicate treatment details for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_treatment_status",
+                "displayName": "Comorbidity Treatment Type"
+              }
+            }
+          ]
         }
       ],
       "name": "ARGO Clinical Submission",
@@ -9024,6 +9161,143 @@
                   "Moderate: Increase in the heart beat slightly with some light perspiration",
                   "Vigorous: Increase in the heart beat substantially with heavy perspiration"
                 ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "comorbidity",
+          "description": "The collection of data elements related to a donor's comorbidities. Comorbidities are any distinct entity that has existed or may occur during the clinical course of a patient who has the index disease under study. To submit multiple comorbidities for a single donor, submit multiple rows in the comorbidity file for this donor",
+          "meta": {
+            "parent": "donor"
+          },
+          "fields": [
+            {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.program_id",
+                "displayName": "Program ID"
+              },
+              "restrictions": {
+                "required": true
+              }
+            },
+            {
+              "name": "submitter_donor_id",
+              "valueType": "string",
+              "description": "Unique identifier of the donor, assigned by the data provider.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.submitter_donor_id",
+                "displayName": "Submitter Donor ID"
+              },
+              "restrictions": {
+                "required": true,
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "prior_malignancy",
+              "description": "Prior malignancy affecting donor.",
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"]
+              },
+              "valueType": "string",
+              "meta": {
+                "displayName": "Prior Malignancy"
+              }
+            },
+            {
+              "name": "laterality_of_prior_malignancy",
+              "description": "If donor has history of prior malignancy, indicate laterality of previous diagnosis. (Reference: caDSR CDE ID 4122391)",
+              "valueType": "string",
+              "restrictions": {
+                "codeList": [
+                  "Bilateral",
+                  "Left",
+                  "Midline",
+                  "Not applicable",
+                  "Right",
+                  "Unilateral, Side not specified",
+                  "Unknown"
+                ],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n   \n      if ($name === \"laterality_of_prior_malignancy\") {\n         if (($row.prior_malignancy === null || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) && (currField || (!(checkforEmpty(currField))!= null))) {\n            result = {\n               valid: false,\n               message: `The 'prior_malignancy' field should be submitted as 'Yes' if the '${$name}' field is submitted.`\n            };\n         }\n      }\n      return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.prior_malignancy",
+                "displayName": "Laterality at Prior Malignancy"
+              }
+            },
+            {
+              "name": "age_at_comorbidity_diagnosis",
+              "valueType": "integer",
+              "description": "Indicate the age of comorbidity diagnosis, in years.",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ],
+                "range": {
+                  "exclusiveMin": 0
+                }
+              },
+              "meta": {
+                "units": "years",
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Age at Comorbidity Diagnosis"
+              }
+            },
+            {
+              "name": "comorbidity_type_code",
+              "valueType": "string",
+              "description": "Indicate the code for the comorbidity using the WHO ICD-10 code classification (https://icd.who.int/browse10/2019/en).",
+              "restrictions": {
+                "required": true,
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      /* check if ICD-10 code is for neoplasms */\n      const neoplasmCode = (entry) => {return /^[c|d][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$/.test(decodeURI(entry))};\n\n      if (currField || (!(checkforEmpty(currField)))) {\n         if ($row.prior_malignancy === \"yes\" && (!(neoplasmCode(currField)))) {\n            result = { valid: false, message: `The ICD-10 code submitted in the '${$name}' field must be a code for cancer if 'prior_malignancy' is 'Yes'.`}\n         }\n         else if (($row.prior_malignancy === null || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) && neoplasmCode(currField)) {\n            result = {valid: false, message: `If an ICD-10 code for cancer is submitted in the '${$name}' field, then 'prior_malignancy' should be submitted as 'Yes'.`}\n         }\n      }\n      else if (checkforEmpty(currField)) {\n         if ($row.prior_malignancy === \"yes\") { \n            result = {valid: false, message: `The 'comorbidity_type_code' field is required if '${$name}' field is 'Yes'.`}\n         }\n         else if ($row.prior_malignancy === null || checkforEmpty($row.prior_malignancy)) {\n            result = {valid: false, message: `The 'comorbidity_type_code' field is required.`}\n         }\n      }\n      return result;\n  })"
+                ],
+                "regex": "^[A-Z][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$"
+              },
+              "meta": {
+                "primaryId": true,
+                "dependsOn": "comorbidity.prior_malignancy",
+                "examples": "E10, C50.1, I11, M06",
+                "displayName": "Comorbidity Type Code"
+              }
+            },
+            {
+              "name": "comorbidity_treatment_status",
+              "valueType": "string",
+              "description": "Indicate if the patient is being treated for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Comorbidity Treatment"
+              }
+            },
+            {
+              "name": "comorbidity_treatment",
+              "valueType": "string",
+              "description": "Indicate treatment details for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_treatment_status",
+                "displayName": "Comorbidity Treatment Type"
               }
             }
           ]
@@ -13070,6 +13344,143 @@
               }
             }
           ]
+        },
+        {
+          "name": "comorbidity",
+          "description": "The collection of data elements related to a donor's comorbidities. Comorbidities are any distinct entity that has existed or may occur during the clinical course of a patient who has the index disease under study. To submit multiple comorbidities for a single donor, submit multiple rows in the comorbidity file for this donor",
+          "meta": {
+            "parent": "donor"
+          },
+          "fields": [
+            {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.program_id",
+                "displayName": "Program ID"
+              },
+              "restrictions": {
+                "required": true
+              }
+            },
+            {
+              "name": "submitter_donor_id",
+              "valueType": "string",
+              "description": "Unique identifier of the donor, assigned by the data provider.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.submitter_donor_id",
+                "displayName": "Submitter Donor ID"
+              },
+              "restrictions": {
+                "required": true,
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "prior_malignancy",
+              "description": "Prior malignancy affecting donor.",
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"]
+              },
+              "valueType": "string",
+              "meta": {
+                "displayName": "Prior Malignancy"
+              }
+            },
+            {
+              "name": "laterality_of_prior_malignancy",
+              "description": "If donor has history of prior malignancy, indicate laterality of previous diagnosis. (Reference: caDSR CDE ID 4122391)",
+              "valueType": "string",
+              "restrictions": {
+                "codeList": [
+                  "Bilateral",
+                  "Left",
+                  "Midline",
+                  "Not applicable",
+                  "Right",
+                  "Unilateral, Side not specified",
+                  "Unknown"
+                ],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n   \n      if ($name === \"laterality_of_prior_malignancy\") {\n         if (($row.prior_malignancy === null || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) && (currField || (!(checkforEmpty(currField))!= null))) {\n            result = {\n               valid: false,\n               message: `The 'prior_malignancy' field should be submitted as 'Yes' if the '${$name}' field is submitted.`\n            };\n         }\n      }\n      return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.prior_malignancy",
+                "displayName": "Laterality at Prior Malignancy"
+              }
+            },
+            {
+              "name": "age_at_comorbidity_diagnosis",
+              "valueType": "integer",
+              "description": "Indicate the age of comorbidity diagnosis, in years.",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ],
+                "range": {
+                  "exclusiveMin": 0
+                }
+              },
+              "meta": {
+                "units": "years",
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Age at Comorbidity Diagnosis"
+              }
+            },
+            {
+              "name": "comorbidity_type_code",
+              "valueType": "string",
+              "description": "Indicate the code for the comorbidity using the WHO ICD-10 code classification (https://icd.who.int/browse10/2019/en).",
+              "restrictions": {
+                "required": true,
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      /* check if ICD-10 code is for neoplasms */\n      const neoplasmCode = (entry) => {return /^[c|d][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$/.test(decodeURI(entry))};\n\n      if (currField || (!(checkforEmpty(currField)))) {\n         if ($row.prior_malignancy === \"yes\" && (!(neoplasmCode(currField)))) {\n            result = { valid: false, message: `The ICD-10 code submitted in the '${$name}' field must be a code for cancer if 'prior_malignancy' is 'Yes'.`}\n         }\n         else if (($row.prior_malignancy === null || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) && neoplasmCode(currField)) {\n            result = {valid: false, message: `If an ICD-10 code for cancer is submitted in the '${$name}' field, then 'prior_malignancy' should be submitted as 'Yes'.`}\n         }\n      }\n      else if (checkforEmpty(currField)) {\n         if ($row.prior_malignancy === \"yes\") { \n            result = {valid: false, message: `The 'comorbidity_type_code' field is required if '${$name}' field is 'Yes'.`}\n         }\n         else if ($row.prior_malignancy === null || checkforEmpty($row.prior_malignancy)) {\n            result = {valid: false, message: `The 'comorbidity_type_code' field is required.`}\n         }\n      }\n      return result;\n  })"
+                ],
+                "regex": "^[A-Z][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$"
+              },
+              "meta": {
+                "primaryId": true,
+                "dependsOn": "comorbidity.prior_malignancy",
+                "examples": "E10, C50.1, I11, M06",
+                "displayName": "Comorbidity Type Code"
+              }
+            },
+            {
+              "name": "comorbidity_treatment_status",
+              "valueType": "string",
+              "description": "Indicate if the patient is being treated for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Comorbidity Treatment"
+              }
+            },
+            {
+              "name": "comorbidity_treatment",
+              "valueType": "string",
+              "description": "Indicate treatment details for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_treatment_status",
+                "displayName": "Comorbidity Treatment Type"
+              }
+            }
+          ]
         }
       ],
       "name": "ARGO Clinical Submission",
@@ -17102,6 +17513,143 @@
                   "Moderate: Increase in the heart beat slightly with some light perspiration",
                   "Vigorous: Increase in the heart beat substantially with heavy perspiration"
                 ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "comorbidity",
+          "description": "The collection of data elements related to a donor's comorbidities. Comorbidities are any distinct entity that has existed or may occur during the clinical course of a patient who has the index disease under study. To submit multiple comorbidities for a single donor, submit multiple rows in the comorbidity file for this donor",
+          "meta": {
+            "parent": "donor"
+          },
+          "fields": [
+            {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.program_id",
+                "displayName": "Program ID"
+              },
+              "restrictions": {
+                "required": true
+              }
+            },
+            {
+              "name": "submitter_donor_id",
+              "valueType": "string",
+              "description": "Unique identifier of the donor, assigned by the data provider.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.submitter_donor_id",
+                "displayName": "Submitter Donor ID"
+              },
+              "restrictions": {
+                "required": true,
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "prior_malignancy",
+              "description": "Prior malignancy affecting donor.",
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"]
+              },
+              "valueType": "string",
+              "meta": {
+                "displayName": "Prior Malignancy"
+              }
+            },
+            {
+              "name": "laterality_of_prior_malignancy",
+              "description": "If donor has history of prior malignancy, indicate laterality of previous diagnosis. (Reference: caDSR CDE ID 4122391)",
+              "valueType": "string",
+              "restrictions": {
+                "codeList": [
+                  "Bilateral",
+                  "Left",
+                  "Midline",
+                  "Not applicable",
+                  "Right",
+                  "Unilateral, Side not specified",
+                  "Unknown"
+                ],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n   \n      if ($name === \"laterality_of_prior_malignancy\") {\n         if (($row.prior_malignancy === null || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) && (currField || (!(checkforEmpty(currField))!= null))) {\n            result = {\n               valid: false,\n               message: `The 'prior_malignancy' field should be submitted as 'Yes' if the '${$name}' field is submitted.`\n            };\n         }\n      }\n      return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.prior_malignancy",
+                "displayName": "Laterality at Prior Malignancy"
+              }
+            },
+            {
+              "name": "age_at_comorbidity_diagnosis",
+              "valueType": "integer",
+              "description": "Indicate the age of comorbidity diagnosis, in years.",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ],
+                "range": {
+                  "exclusiveMin": 0
+                }
+              },
+              "meta": {
+                "units": "years",
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Age at Comorbidity Diagnosis"
+              }
+            },
+            {
+              "name": "comorbidity_type_code",
+              "valueType": "string",
+              "description": "Indicate the code for the comorbidity using the WHO ICD-10 code classification (https://icd.who.int/browse10/2019/en).",
+              "restrictions": {
+                "required": true,
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      /* check if ICD-10 code is for neoplasms */\n      const neoplasmCode = (entry) => {return /^[c|d][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$/.test(decodeURI(entry))};\n\n      if (currField || (!(checkforEmpty(currField)))) {\n         if ($row.prior_malignancy === \"yes\" && (!(neoplasmCode(currField)))) {\n            result = { valid: false, message: `The ICD-10 code submitted in the '${$name}' field must be a code for cancer if 'prior_malignancy' is 'Yes'.`}\n         }\n         else if (($row.prior_malignancy === null || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) && neoplasmCode(currField)) {\n            result = {valid: false, message: `If an ICD-10 code for cancer is submitted in the '${$name}' field, then 'prior_malignancy' should be submitted as 'Yes'.`}\n         }\n      }\n      else if (checkforEmpty(currField)) {\n         if ($row.prior_malignancy === \"yes\") { \n            result = {valid: false, message: `The 'comorbidity_type_code' field is required if '${$name}' field is 'Yes'.`}\n         }\n         else if ($row.prior_malignancy === null || checkforEmpty($row.prior_malignancy)) {\n            result = {valid: false, message: `The 'comorbidity_type_code' field is required.`}\n         }\n      }\n      return result;\n  })"
+                ],
+                "regex": "^[A-Z][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$"
+              },
+              "meta": {
+                "primaryId": true,
+                "dependsOn": "comorbidity.prior_malignancy",
+                "examples": "E10, C50.1, I11, M06",
+                "displayName": "Comorbidity Type Code"
+              }
+            },
+            {
+              "name": "comorbidity_treatment_status",
+              "valueType": "string",
+              "description": "Indicate if the patient is being treated for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Comorbidity Treatment"
+              }
+            },
+            {
+              "name": "comorbidity_treatment",
+              "valueType": "string",
+              "description": "Indicate treatment details for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_treatment_status",
+                "displayName": "Comorbidity Treatment Type"
               }
             }
           ]
@@ -21150,6 +21698,143 @@
               }
             }
           ]
+        },
+        {
+          "name": "comorbidity",
+          "description": "The collection of data elements related to a donor's comorbidities. Comorbidities are any distinct entity that has existed or may occur during the clinical course of a patient who has the index disease under study. To submit multiple comorbidities for a single donor, submit multiple rows in the comorbidity file for this donor",
+          "meta": {
+            "parent": "donor"
+          },
+          "fields": [
+            {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.program_id",
+                "displayName": "Program ID"
+              },
+              "restrictions": {
+                "required": true
+              }
+            },
+            {
+              "name": "submitter_donor_id",
+              "valueType": "string",
+              "description": "Unique identifier of the donor, assigned by the data provider.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.submitter_donor_id",
+                "displayName": "Submitter Donor ID"
+              },
+              "restrictions": {
+                "required": true,
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "prior_malignancy",
+              "description": "Prior malignancy affecting donor.",
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"]
+              },
+              "valueType": "string",
+              "meta": {
+                "displayName": "Prior Malignancy"
+              }
+            },
+            {
+              "name": "laterality_of_prior_malignancy",
+              "description": "If donor has history of prior malignancy, indicate laterality of previous diagnosis. (Reference: caDSR CDE ID 4122391)",
+              "valueType": "string",
+              "restrictions": {
+                "codeList": [
+                  "Bilateral",
+                  "Left",
+                  "Midline",
+                  "Not applicable",
+                  "Right",
+                  "Unilateral, Side not specified",
+                  "Unknown"
+                ],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n   \n      if ($name === \"laterality_of_prior_malignancy\") {\n         if (($row.prior_malignancy === null || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) && (currField || (!(checkforEmpty(currField))!= null))) {\n            result = {\n               valid: false,\n               message: `The 'prior_malignancy' field should be submitted as 'Yes' if the '${$name}' field is submitted.`\n            };\n         }\n      }\n      return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.prior_malignancy",
+                "displayName": "Laterality at Prior Malignancy"
+              }
+            },
+            {
+              "name": "age_at_comorbidity_diagnosis",
+              "valueType": "integer",
+              "description": "Indicate the age of comorbidity diagnosis, in years.",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ],
+                "range": {
+                  "exclusiveMin": 0
+                }
+              },
+              "meta": {
+                "units": "years",
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Age at Comorbidity Diagnosis"
+              }
+            },
+            {
+              "name": "comorbidity_type_code",
+              "valueType": "string",
+              "description": "Indicate the code for the comorbidity using the WHO ICD-10 code classification (https://icd.who.int/browse10/2019/en).",
+              "restrictions": {
+                "required": true,
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      /* check if ICD-10 code is for neoplasms */\n      const neoplasmCode = (entry) => {return /^[c|d][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$/.test(decodeURI(entry))};\n\n      if (currField || (!(checkforEmpty(currField)))) {\n         if ($row.prior_malignancy === \"yes\" && (!(neoplasmCode(currField)))) {\n            result = { valid: false, message: `The ICD-10 code submitted in the '${$name}' field must be a code for cancer if 'prior_malignancy' is 'Yes'.`}\n         }\n         else if (($row.prior_malignancy === null || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) && neoplasmCode(currField)) {\n            result = {valid: false, message: `If an ICD-10 code for cancer is submitted in the '${$name}' field, then 'prior_malignancy' should be submitted as 'Yes'.`}\n         }\n      }\n      else if (checkforEmpty(currField)) {\n         if ($row.prior_malignancy === \"yes\") { \n            result = {valid: false, message: `The 'comorbidity_type_code' field is required if '${$name}' field is 'Yes'.`}\n         }\n         else if ($row.prior_malignancy === null || checkforEmpty($row.prior_malignancy)) {\n            result = {valid: false, message: `The 'comorbidity_type_code' field is required.`}\n         }\n      }\n      return result;\n  })"
+                ],
+                "regex": "^[A-Z][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$"
+              },
+              "meta": {
+                "primaryId": true,
+                "dependsOn": "comorbidity.prior_malignancy",
+                "examples": "E10, C50.1, I11, M06",
+                "displayName": "Comorbidity Type Code"
+              }
+            },
+            {
+              "name": "comorbidity_treatment_status",
+              "valueType": "string",
+              "description": "Indicate if the patient is being treated for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Comorbidity Treatment"
+              }
+            },
+            {
+              "name": "comorbidity_treatment",
+              "valueType": "string",
+              "description": "Indicate treatment details for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_treatment_status",
+                "displayName": "Comorbidity Treatment Type"
+              }
+            }
+          ]
         }
       ],
       "name": "ARGO Clinical Submission",
@@ -25193,6 +25878,143 @@
               }
             }
           ]
+        },
+        {
+          "name": "comorbidity",
+          "description": "The collection of data elements related to a donor's comorbidities. Comorbidities are any distinct entity that has existed or may occur during the clinical course of a patient who has the index disease under study. To submit multiple comorbidities for a single donor, submit multiple rows in the comorbidity file for this donor",
+          "meta": {
+            "parent": "donor"
+          },
+          "fields": [
+            {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.program_id",
+                "displayName": "Program ID"
+              },
+              "restrictions": {
+                "required": true
+              }
+            },
+            {
+              "name": "submitter_donor_id",
+              "valueType": "string",
+              "description": "Unique identifier of the donor, assigned by the data provider.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.submitter_donor_id",
+                "displayName": "Submitter Donor ID"
+              },
+              "restrictions": {
+                "required": true,
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "prior_malignancy",
+              "description": "Prior malignancy affecting donor.",
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"]
+              },
+              "valueType": "string",
+              "meta": {
+                "displayName": "Prior Malignancy"
+              }
+            },
+            {
+              "name": "laterality_of_prior_malignancy",
+              "description": "If donor has history of prior malignancy, indicate laterality of previous diagnosis. (Reference: caDSR CDE ID 4122391)",
+              "valueType": "string",
+              "restrictions": {
+                "codeList": [
+                  "Bilateral",
+                  "Left",
+                  "Midline",
+                  "Not applicable",
+                  "Right",
+                  "Unilateral, Side not specified",
+                  "Unknown"
+                ],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n   \n      if ($name === \"laterality_of_prior_malignancy\") {\n         if (($row.prior_malignancy === null || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) && (currField || (!(checkforEmpty(currField))!= null))) {\n            result = {\n               valid: false,\n               message: `The 'prior_malignancy' field should be submitted as 'Yes' if the '${$name}' field is submitted.`\n            };\n         }\n      }\n      return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.prior_malignancy",
+                "displayName": "Laterality at Prior Malignancy"
+              }
+            },
+            {
+              "name": "age_at_comorbidity_diagnosis",
+              "valueType": "integer",
+              "description": "Indicate the age of comorbidity diagnosis, in years.",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ],
+                "range": {
+                  "exclusiveMin": 0
+                }
+              },
+              "meta": {
+                "units": "years",
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Age at Comorbidity Diagnosis"
+              }
+            },
+            {
+              "name": "comorbidity_type_code",
+              "valueType": "string",
+              "description": "Indicate the code for the comorbidity using the WHO ICD-10 code classification (https://icd.who.int/browse10/2019/en).",
+              "restrictions": {
+                "required": true,
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      /* check if ICD-10 code is for neoplasms */\n      const neoplasmCode = (entry) => {return /^[c|d][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$/.test(decodeURI(entry))};\n\n      if (currField || (!(checkforEmpty(currField)))) {\n         if ($row.prior_malignancy === \"yes\" && (!(neoplasmCode(currField)))) {\n            result = { valid: false, message: `The ICD-10 code submitted in the '${$name}' field must be a code for cancer if 'prior_malignancy' is 'Yes'.`}\n         }\n         else if (($row.prior_malignancy === null || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) && neoplasmCode(currField)) {\n            result = {valid: false, message: `If an ICD-10 code for cancer is submitted in the '${$name}' field, then 'prior_malignancy' should be submitted as 'Yes'.`}\n         }\n      }\n      else if (checkforEmpty(currField)) {\n         if ($row.prior_malignancy === \"yes\") { \n            result = {valid: false, message: `The 'comorbidity_type_code' field is required if '${$name}' field is 'Yes'.`}\n         }\n         else if ($row.prior_malignancy === null || checkforEmpty($row.prior_malignancy)) {\n            result = {valid: false, message: `The 'comorbidity_type_code' field is required.`}\n         }\n      }\n      return result;\n  })"
+                ],
+                "regex": "^[A-Z][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$"
+              },
+              "meta": {
+                "primaryId": true,
+                "dependsOn": "comorbidity.prior_malignancy",
+                "examples": "E10, C50.1, I11, M06",
+                "displayName": "Comorbidity Type Code"
+              }
+            },
+            {
+              "name": "comorbidity_treatment_status",
+              "valueType": "string",
+              "description": "Indicate if the patient is being treated for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Comorbidity Treatment"
+              }
+            },
+            {
+              "name": "comorbidity_treatment",
+              "valueType": "string",
+              "description": "Indicate treatment details for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_treatment_status",
+                "displayName": "Comorbidity Treatment Type"
+              }
+            }
+          ]
         }
       ],
       "name": "ARGO Clinical Submission",
@@ -29208,6 +30030,143 @@
                   "Moderate: Increase in the heart beat slightly with some light perspiration",
                   "Vigorous: Increase in the heart beat substantially with heavy perspiration"
                 ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "comorbidity",
+          "description": "The collection of data elements related to a donor's comorbidities. Comorbidities are any distinct entity that has existed or may occur during the clinical course of a patient who has the index disease under study. To submit multiple comorbidities for a single donor, submit multiple rows in the comorbidity file for this donor",
+          "meta": {
+            "parent": "donor"
+          },
+          "fields": [
+            {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.program_id",
+                "displayName": "Program ID"
+              },
+              "restrictions": {
+                "required": true
+              }
+            },
+            {
+              "name": "submitter_donor_id",
+              "valueType": "string",
+              "description": "Unique identifier of the donor, assigned by the data provider.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.submitter_donor_id",
+                "displayName": "Submitter Donor ID"
+              },
+              "restrictions": {
+                "required": true,
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "prior_malignancy",
+              "description": "Prior malignancy affecting donor.",
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"]
+              },
+              "valueType": "string",
+              "meta": {
+                "displayName": "Prior Malignancy"
+              }
+            },
+            {
+              "name": "laterality_of_prior_malignancy",
+              "description": "If donor has history of prior malignancy, indicate laterality of previous diagnosis. (Reference: caDSR CDE ID 4122391)",
+              "valueType": "string",
+              "restrictions": {
+                "codeList": [
+                  "Bilateral",
+                  "Left",
+                  "Midline",
+                  "Not applicable",
+                  "Right",
+                  "Unilateral, Side not specified",
+                  "Unknown"
+                ],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n   \n      if ($name === \"laterality_of_prior_malignancy\") {\n         if (($row.prior_malignancy === null || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) && (currField || (!(checkforEmpty(currField))!= null))) {\n            result = {\n               valid: false,\n               message: `The 'prior_malignancy' field should be submitted as 'Yes' if the '${$name}' field is submitted.`\n            };\n         }\n      }\n      return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.prior_malignancy",
+                "displayName": "Laterality at Prior Malignancy"
+              }
+            },
+            {
+              "name": "age_at_comorbidity_diagnosis",
+              "valueType": "integer",
+              "description": "Indicate the age of comorbidity diagnosis, in years.",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ],
+                "range": {
+                  "exclusiveMin": 0
+                }
+              },
+              "meta": {
+                "units": "years",
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Age at Comorbidity Diagnosis"
+              }
+            },
+            {
+              "name": "comorbidity_type_code",
+              "valueType": "string",
+              "description": "Indicate the code for the comorbidity using the WHO ICD-10 code classification (https://icd.who.int/browse10/2019/en).",
+              "restrictions": {
+                "required": true,
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      /* check if ICD-10 code is for neoplasms */\n      const neoplasmCode = (entry) => {return /^[c|d][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$/.test(decodeURI(entry))};\n\n      if (currField || (!(checkforEmpty(currField)))) {\n         if ($row.prior_malignancy === \"yes\" && (!(neoplasmCode(currField)))) {\n            result = { valid: false, message: `The ICD-10 code submitted in the '${$name}' field must be a code for cancer if 'prior_malignancy' is 'Yes'.`}\n         }\n         else if (($row.prior_malignancy === null || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) && neoplasmCode(currField)) {\n            result = {valid: false, message: `If an ICD-10 code for cancer is submitted in the '${$name}' field, then 'prior_malignancy' should be submitted as 'Yes'.`}\n         }\n      }\n      else if (checkforEmpty(currField)) {\n         if ($row.prior_malignancy === \"yes\") { \n            result = {valid: false, message: `The 'comorbidity_type_code' field is required if '${$name}' field is 'Yes'.`}\n         }\n         else if ($row.prior_malignancy === null || checkforEmpty($row.prior_malignancy)) {\n            result = {valid: false, message: `The 'comorbidity_type_code' field is required.`}\n         }\n      }\n      return result;\n  })"
+                ],
+                "regex": "^[A-Z][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$"
+              },
+              "meta": {
+                "primaryId": true,
+                "dependsOn": "comorbidity.prior_malignancy",
+                "examples": "E10, C50.1, I11, M06",
+                "displayName": "Comorbidity Type Code"
+              }
+            },
+            {
+              "name": "comorbidity_treatment_status",
+              "valueType": "string",
+              "description": "Indicate if the patient is being treated for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Comorbidity Treatment"
+              }
+            },
+            {
+              "name": "comorbidity_treatment",
+              "valueType": "string",
+              "description": "Indicate treatment details for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_treatment_status",
+                "displayName": "Comorbidity Treatment Type"
               }
             }
           ]
@@ -33249,6 +34208,143 @@
               }
             }
           ]
+        },
+        {
+          "name": "comorbidity",
+          "description": "The collection of data elements related to a donor's comorbidities. Comorbidities are any distinct entity that has existed or may occur during the clinical course of a patient who has the index disease under study. To submit multiple comorbidities for a single donor, submit multiple rows in the comorbidity file for this donor",
+          "meta": {
+            "parent": "donor"
+          },
+          "fields": [
+            {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.program_id",
+                "displayName": "Program ID"
+              },
+              "restrictions": {
+                "required": true
+              }
+            },
+            {
+              "name": "submitter_donor_id",
+              "valueType": "string",
+              "description": "Unique identifier of the donor, assigned by the data provider.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.submitter_donor_id",
+                "displayName": "Submitter Donor ID"
+              },
+              "restrictions": {
+                "required": true,
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "prior_malignancy",
+              "description": "Prior malignancy affecting donor.",
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"]
+              },
+              "valueType": "string",
+              "meta": {
+                "displayName": "Prior Malignancy"
+              }
+            },
+            {
+              "name": "laterality_of_prior_malignancy",
+              "description": "If donor has history of prior malignancy, indicate laterality of previous diagnosis. (Reference: caDSR CDE ID 4122391)",
+              "valueType": "string",
+              "restrictions": {
+                "codeList": [
+                  "Bilateral",
+                  "Left",
+                  "Midline",
+                  "Not applicable",
+                  "Right",
+                  "Unilateral, Side not specified",
+                  "Unknown"
+                ],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n   \n      if ($name === \"laterality_of_prior_malignancy\") {\n         if (($row.prior_malignancy === null || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) && (currField || (!(checkforEmpty(currField))!= null))) {\n            result = {\n               valid: false,\n               message: `The 'prior_malignancy' field should be submitted as 'Yes' if the '${$name}' field is submitted.`\n            };\n         }\n      }\n      return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.prior_malignancy",
+                "displayName": "Laterality at Prior Malignancy"
+              }
+            },
+            {
+              "name": "age_at_comorbidity_diagnosis",
+              "valueType": "integer",
+              "description": "Indicate the age of comorbidity diagnosis, in years.",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ],
+                "range": {
+                  "exclusiveMin": 0
+                }
+              },
+              "meta": {
+                "units": "years",
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Age at Comorbidity Diagnosis"
+              }
+            },
+            {
+              "name": "comorbidity_type_code",
+              "valueType": "string",
+              "description": "Indicate the code for the comorbidity using the WHO ICD-10 code classification (https://icd.who.int/browse10/2019/en).",
+              "restrictions": {
+                "required": true,
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      /* check if ICD-10 code is for neoplasms */\n      const neoplasmCode = (entry) => {return /^[c|d][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$/.test(decodeURI(entry))};\n\n      if (currField || (!(checkforEmpty(currField)))) {\n         if ($row.prior_malignancy === \"yes\" && (!(neoplasmCode(currField)))) {\n            result = { valid: false, message: `The ICD-10 code submitted in the '${$name}' field must be a code for cancer if 'prior_malignancy' is 'Yes'.`}\n         }\n         else if (($row.prior_malignancy === null || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) && neoplasmCode(currField)) {\n            result = {valid: false, message: `If an ICD-10 code for cancer is submitted in the '${$name}' field, then 'prior_malignancy' should be submitted as 'Yes'.`}\n         }\n      }\n      else if (checkforEmpty(currField)) {\n         if ($row.prior_malignancy === \"yes\") { \n            result = {valid: false, message: `The 'comorbidity_type_code' field is required if '${$name}' field is 'Yes'.`}\n         }\n         else if ($row.prior_malignancy === null || checkforEmpty($row.prior_malignancy)) {\n            result = {valid: false, message: `The 'comorbidity_type_code' field is required.`}\n         }\n      }\n      return result;\n  })"
+                ],
+                "regex": "^[A-Z][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$"
+              },
+              "meta": {
+                "primaryId": true,
+                "dependsOn": "comorbidity.prior_malignancy",
+                "examples": "E10, C50.1, I11, M06",
+                "displayName": "Comorbidity Type Code"
+              }
+            },
+            {
+              "name": "comorbidity_treatment_status",
+              "valueType": "string",
+              "description": "Indicate if the patient is being treated for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Comorbidity Treatment"
+              }
+            },
+            {
+              "name": "comorbidity_treatment",
+              "valueType": "string",
+              "description": "Indicate treatment details for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_treatment_status",
+                "displayName": "Comorbidity Treatment Type"
+              }
+            }
+          ]
         }
       ],
       "name": "ARGO Clinical Submission",
@@ -37281,6 +38377,143 @@
                   "Moderate: Increase in the heart beat slightly with some light perspiration",
                   "Vigorous: Increase in the heart beat substantially with heavy perspiration"
                 ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "comorbidity",
+          "description": "The collection of data elements related to a donor's comorbidities. Comorbidities are any distinct entity that has existed or may occur during the clinical course of a patient who has the index disease under study. To submit multiple comorbidities for a single donor, submit multiple rows in the comorbidity file for this donor",
+          "meta": {
+            "parent": "donor"
+          },
+          "fields": [
+            {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.program_id",
+                "displayName": "Program ID"
+              },
+              "restrictions": {
+                "required": true
+              }
+            },
+            {
+              "name": "submitter_donor_id",
+              "valueType": "string",
+              "description": "Unique identifier of the donor, assigned by the data provider.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.submitter_donor_id",
+                "displayName": "Submitter Donor ID"
+              },
+              "restrictions": {
+                "required": true,
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "prior_malignancy",
+              "description": "Prior malignancy affecting donor.",
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"]
+              },
+              "valueType": "string",
+              "meta": {
+                "displayName": "Prior Malignancy"
+              }
+            },
+            {
+              "name": "laterality_of_prior_malignancy",
+              "description": "If donor has history of prior malignancy, indicate laterality of previous diagnosis. (Reference: caDSR CDE ID 4122391)",
+              "valueType": "string",
+              "restrictions": {
+                "codeList": [
+                  "Bilateral",
+                  "Left",
+                  "Midline",
+                  "Not applicable",
+                  "Right",
+                  "Unilateral, Side not specified",
+                  "Unknown"
+                ],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n   \n      if ($name === \"laterality_of_prior_malignancy\") {\n         if (($row.prior_malignancy === null || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) && (currField || (!(checkforEmpty(currField))!= null))) {\n            result = {\n               valid: false,\n               message: `The 'prior_malignancy' field should be submitted as 'Yes' if the '${$name}' field is submitted.`\n            };\n         }\n      }\n      return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.prior_malignancy",
+                "displayName": "Laterality at Prior Malignancy"
+              }
+            },
+            {
+              "name": "age_at_comorbidity_diagnosis",
+              "valueType": "integer",
+              "description": "Indicate the age of comorbidity diagnosis, in years.",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ],
+                "range": {
+                  "exclusiveMin": 0
+                }
+              },
+              "meta": {
+                "units": "years",
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Age at Comorbidity Diagnosis"
+              }
+            },
+            {
+              "name": "comorbidity_type_code",
+              "valueType": "string",
+              "description": "Indicate the code for the comorbidity using the WHO ICD-10 code classification (https://icd.who.int/browse10/2019/en).",
+              "restrictions": {
+                "required": true,
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      /* check if ICD-10 code is for neoplasms */\n      const neoplasmCode = (entry) => {return /^[c|d][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$/.test(decodeURI(entry))};\n\n      if (currField || (!(checkforEmpty(currField)))) {\n         if ($row.prior_malignancy === \"yes\" && (!(neoplasmCode(currField)))) {\n            result = { valid: false, message: `The ICD-10 code submitted in the '${$name}' field must be a code for cancer if 'prior_malignancy' is 'Yes'.`}\n         }\n         else if (($row.prior_malignancy === null || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) && neoplasmCode(currField)) {\n            result = {valid: false, message: `If an ICD-10 code for cancer is submitted in the '${$name}' field, then 'prior_malignancy' should be submitted as 'Yes'.`}\n         }\n      }\n      else if (checkforEmpty(currField)) {\n         if ($row.prior_malignancy === \"yes\") { \n            result = {valid: false, message: `The 'comorbidity_type_code' field is required if '${$name}' field is 'Yes'.`}\n         }\n         else if ($row.prior_malignancy === null || checkforEmpty($row.prior_malignancy)) {\n            result = {valid: false, message: `The 'comorbidity_type_code' field is required.`}\n         }\n      }\n      return result;\n  })"
+                ],
+                "regex": "^[A-Z][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$"
+              },
+              "meta": {
+                "primaryId": true,
+                "dependsOn": "comorbidity.prior_malignancy",
+                "examples": "E10, C50.1, I11, M06",
+                "displayName": "Comorbidity Type Code"
+              }
+            },
+            {
+              "name": "comorbidity_treatment_status",
+              "valueType": "string",
+              "description": "Indicate if the patient is being treated for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Comorbidity Treatment"
+              }
+            },
+            {
+              "name": "comorbidity_treatment",
+              "valueType": "string",
+              "description": "Indicate treatment details for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_treatment_status",
+                "displayName": "Comorbidity Treatment Type"
               }
             }
           ]
@@ -41319,6 +42552,143 @@
               }
             }
           ]
+        },
+        {
+          "name": "comorbidity",
+          "description": "The collection of data elements related to a donor's comorbidities. Comorbidities are any distinct entity that has existed or may occur during the clinical course of a patient who has the index disease under study. To submit multiple comorbidities for a single donor, submit multiple rows in the comorbidity file for this donor",
+          "meta": {
+            "parent": "donor"
+          },
+          "fields": [
+            {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.program_id",
+                "displayName": "Program ID"
+              },
+              "restrictions": {
+                "required": true
+              }
+            },
+            {
+              "name": "submitter_donor_id",
+              "valueType": "string",
+              "description": "Unique identifier of the donor, assigned by the data provider.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.submitter_donor_id",
+                "displayName": "Submitter Donor ID"
+              },
+              "restrictions": {
+                "required": true,
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "prior_malignancy",
+              "description": "Prior malignancy affecting donor.",
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"]
+              },
+              "valueType": "string",
+              "meta": {
+                "displayName": "Prior Malignancy"
+              }
+            },
+            {
+              "name": "laterality_of_prior_malignancy",
+              "description": "If donor has history of prior malignancy, indicate laterality of previous diagnosis. (Reference: caDSR CDE ID 4122391)",
+              "valueType": "string",
+              "restrictions": {
+                "codeList": [
+                  "Bilateral",
+                  "Left",
+                  "Midline",
+                  "Not applicable",
+                  "Right",
+                  "Unilateral, Side not specified",
+                  "Unknown"
+                ],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n   \n      if ($name === \"laterality_of_prior_malignancy\") {\n         if (($row.prior_malignancy === null || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) && (currField || (!(checkforEmpty(currField))!= null))) {\n            result = {\n               valid: false,\n               message: `The 'prior_malignancy' field should be submitted as 'Yes' if the '${$name}' field is submitted.`\n            };\n         }\n      }\n      return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.prior_malignancy",
+                "displayName": "Laterality at Prior Malignancy"
+              }
+            },
+            {
+              "name": "age_at_comorbidity_diagnosis",
+              "valueType": "integer",
+              "description": "Indicate the age of comorbidity diagnosis, in years.",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ],
+                "range": {
+                  "exclusiveMin": 0
+                }
+              },
+              "meta": {
+                "units": "years",
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Age at Comorbidity Diagnosis"
+              }
+            },
+            {
+              "name": "comorbidity_type_code",
+              "valueType": "string",
+              "description": "Indicate the code for the comorbidity using the WHO ICD-10 code classification (https://icd.who.int/browse10/2019/en).",
+              "restrictions": {
+                "required": true,
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      /* check if ICD-10 code is for neoplasms */\n      const neoplasmCode = (entry) => {return /^[c|d][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$/.test(decodeURI(entry))};\n\n      if (currField || (!(checkforEmpty(currField)))) {\n         if ($row.prior_malignancy === \"yes\" && (!(neoplasmCode(currField)))) {\n            result = { valid: false, message: `The ICD-10 code submitted in the '${$name}' field must be a code for cancer if 'prior_malignancy' is 'Yes'.`}\n         }\n         else if (($row.prior_malignancy === null || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) && neoplasmCode(currField)) {\n            result = {valid: false, message: `If an ICD-10 code for cancer is submitted in the '${$name}' field, then 'prior_malignancy' should be submitted as 'Yes'.`}\n         }\n      }\n      else if (checkforEmpty(currField)) {\n         if ($row.prior_malignancy === \"yes\") { \n            result = {valid: false, message: `The 'comorbidity_type_code' field is required if '${$name}' field is 'Yes'.`}\n         }\n         else if ($row.prior_malignancy === null || checkforEmpty($row.prior_malignancy)) {\n            result = {valid: false, message: `The 'comorbidity_type_code' field is required.`}\n         }\n      }\n      return result;\n  })"
+                ],
+                "regex": "^[A-Z][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$"
+              },
+              "meta": {
+                "primaryId": true,
+                "dependsOn": "comorbidity.prior_malignancy",
+                "examples": "E10, C50.1, I11, M06",
+                "displayName": "Comorbidity Type Code"
+              }
+            },
+            {
+              "name": "comorbidity_treatment_status",
+              "valueType": "string",
+              "description": "Indicate if the patient is being treated for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Comorbidity Treatment"
+              }
+            },
+            {
+              "name": "comorbidity_treatment",
+              "valueType": "string",
+              "description": "Indicate treatment details for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_treatment_status",
+                "displayName": "Comorbidity Treatment Type"
+              }
+            }
+          ]
         }
       ],
       "name": "ARGO Clinical Submission",
@@ -45247,6 +46617,143 @@
                   "Moderate: Increase in the heart beat slightly with some light perspiration",
                   "Vigorous: Increase in the heart beat substantially with heavy perspiration"
                 ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "comorbidity",
+          "description": "The collection of data elements related to a donor's comorbidities. Comorbidities are any distinct entity that has existed or may occur during the clinical course of a patient who has the index disease under study. To submit multiple comorbidities for a single donor, submit multiple rows in the comorbidity file for this donor",
+          "meta": {
+            "parent": "donor"
+          },
+          "fields": [
+            {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.program_id",
+                "displayName": "Program ID"
+              },
+              "restrictions": {
+                "required": true
+              }
+            },
+            {
+              "name": "submitter_donor_id",
+              "valueType": "string",
+              "description": "Unique identifier of the donor, assigned by the data provider.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.submitter_donor_id",
+                "displayName": "Submitter Donor ID"
+              },
+              "restrictions": {
+                "required": true,
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "prior_malignancy",
+              "description": "Prior malignancy affecting donor.",
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"]
+              },
+              "valueType": "string",
+              "meta": {
+                "displayName": "Prior Malignancy"
+              }
+            },
+            {
+              "name": "laterality_of_prior_malignancy",
+              "description": "If donor has history of prior malignancy, indicate laterality of previous diagnosis. (Reference: caDSR CDE ID 4122391)",
+              "valueType": "string",
+              "restrictions": {
+                "codeList": [
+                  "Bilateral",
+                  "Left",
+                  "Midline",
+                  "Not applicable",
+                  "Right",
+                  "Unilateral, Side not specified",
+                  "Unknown"
+                ],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n   \n      if ($name === \"laterality_of_prior_malignancy\") {\n         if (($row.prior_malignancy === null || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) && (currField || (!(checkforEmpty(currField))!= null))) {\n            result = {\n               valid: false,\n               message: `The 'prior_malignancy' field should be submitted as 'Yes' if the '${$name}' field is submitted.`\n            };\n         }\n      }\n      return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.prior_malignancy",
+                "displayName": "Laterality at Prior Malignancy"
+              }
+            },
+            {
+              "name": "age_at_comorbidity_diagnosis",
+              "valueType": "integer",
+              "description": "Indicate the age of comorbidity diagnosis, in years.",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ],
+                "range": {
+                  "exclusiveMin": 0
+                }
+              },
+              "meta": {
+                "units": "years",
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Age at Comorbidity Diagnosis"
+              }
+            },
+            {
+              "name": "comorbidity_type_code",
+              "valueType": "string",
+              "description": "Indicate the code for the comorbidity using the WHO ICD-10 code classification (https://icd.who.int/browse10/2019/en).",
+              "restrictions": {
+                "required": true,
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      /* check if ICD-10 code is for neoplasms */\n      const neoplasmCode = (entry) => {return /^[c|d][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$/.test(decodeURI(entry))};\n\n      if (currField || (!(checkforEmpty(currField)))) {\n         if ($row.prior_malignancy === \"yes\" && (!(neoplasmCode(currField)))) {\n            result = { valid: false, message: `The ICD-10 code submitted in the '${$name}' field must be a code for cancer if 'prior_malignancy' is 'Yes'.`}\n         }\n         else if (($row.prior_malignancy === null || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) && neoplasmCode(currField)) {\n            result = {valid: false, message: `If an ICD-10 code for cancer is submitted in the '${$name}' field, then 'prior_malignancy' should be submitted as 'Yes'.`}\n         }\n      }\n      else if (checkforEmpty(currField)) {\n         if ($row.prior_malignancy === \"yes\") { \n            result = {valid: false, message: `The 'comorbidity_type_code' field is required if '${$name}' field is 'Yes'.`}\n         }\n         else if ($row.prior_malignancy === null || checkforEmpty($row.prior_malignancy)) {\n            result = {valid: false, message: `The 'comorbidity_type_code' field is required.`}\n         }\n      }\n      return result;\n  })"
+                ],
+                "regex": "^[A-Z][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$"
+              },
+              "meta": {
+                "primaryId": true,
+                "dependsOn": "comorbidity.prior_malignancy",
+                "examples": "E10, C50.1, I11, M06",
+                "displayName": "Comorbidity Type Code"
+              }
+            },
+            {
+              "name": "comorbidity_treatment_status",
+              "valueType": "string",
+              "description": "Indicate if the patient is being treated for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Comorbidity Treatment"
+              }
+            },
+            {
+              "name": "comorbidity_treatment",
+              "valueType": "string",
+              "description": "Indicate treatment details for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_treatment_status",
+                "displayName": "Comorbidity Treatment Type"
               }
             }
           ]
@@ -49285,6 +50792,143 @@
               }
             }
           ]
+        },
+        {
+          "name": "comorbidity",
+          "description": "The collection of data elements related to a donor's comorbidities. Comorbidities are any distinct entity that has existed or may occur during the clinical course of a patient who has the index disease under study. To submit multiple comorbidities for a single donor, submit multiple rows in the comorbidity file for this donor",
+          "meta": {
+            "parent": "donor"
+          },
+          "fields": [
+            {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.program_id",
+                "displayName": "Program ID"
+              },
+              "restrictions": {
+                "required": true
+              }
+            },
+            {
+              "name": "submitter_donor_id",
+              "valueType": "string",
+              "description": "Unique identifier of the donor, assigned by the data provider.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.submitter_donor_id",
+                "displayName": "Submitter Donor ID"
+              },
+              "restrictions": {
+                "required": true,
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "prior_malignancy",
+              "description": "Prior malignancy affecting donor.",
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"]
+              },
+              "valueType": "string",
+              "meta": {
+                "displayName": "Prior Malignancy"
+              }
+            },
+            {
+              "name": "laterality_of_prior_malignancy",
+              "description": "If donor has history of prior malignancy, indicate laterality of previous diagnosis. (Reference: caDSR CDE ID 4122391)",
+              "valueType": "string",
+              "restrictions": {
+                "codeList": [
+                  "Bilateral",
+                  "Left",
+                  "Midline",
+                  "Not applicable",
+                  "Right",
+                  "Unilateral, Side not specified",
+                  "Unknown"
+                ],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n   \n      if ($name === \"laterality_of_prior_malignancy\") {\n         if (($row.prior_malignancy === null || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) && (currField || (!(checkforEmpty(currField))!= null))) {\n            result = {\n               valid: false,\n               message: `The 'prior_malignancy' field should be submitted as 'Yes' if the '${$name}' field is submitted.`\n            };\n         }\n      }\n      return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.prior_malignancy",
+                "displayName": "Laterality at Prior Malignancy"
+              }
+            },
+            {
+              "name": "age_at_comorbidity_diagnosis",
+              "valueType": "integer",
+              "description": "Indicate the age of comorbidity diagnosis, in years.",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ],
+                "range": {
+                  "exclusiveMin": 0
+                }
+              },
+              "meta": {
+                "units": "years",
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Age at Comorbidity Diagnosis"
+              }
+            },
+            {
+              "name": "comorbidity_type_code",
+              "valueType": "string",
+              "description": "Indicate the code for the comorbidity using the WHO ICD-10 code classification (https://icd.who.int/browse10/2019/en).",
+              "restrictions": {
+                "required": true,
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      /* check if ICD-10 code is for neoplasms */\n      const neoplasmCode = (entry) => {return /^[c|d][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$/.test(decodeURI(entry))};\n\n      if (currField || (!(checkforEmpty(currField)))) {\n         if ($row.prior_malignancy === \"yes\" && (!(neoplasmCode(currField)))) {\n            result = { valid: false, message: `The ICD-10 code submitted in the '${$name}' field must be a code for cancer if 'prior_malignancy' is 'Yes'.`}\n         }\n         else if (($row.prior_malignancy === null || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) && neoplasmCode(currField)) {\n            result = {valid: false, message: `If an ICD-10 code for cancer is submitted in the '${$name}' field, then 'prior_malignancy' should be submitted as 'Yes'.`}\n         }\n      }\n      else if (checkforEmpty(currField)) {\n         if ($row.prior_malignancy === \"yes\") { \n            result = {valid: false, message: `The 'comorbidity_type_code' field is required if '${$name}' field is 'Yes'.`}\n         }\n         else if ($row.prior_malignancy === null || checkforEmpty($row.prior_malignancy)) {\n            result = {valid: false, message: `The 'comorbidity_type_code' field is required.`}\n         }\n      }\n      return result;\n  })"
+                ],
+                "regex": "^[A-Z][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$"
+              },
+              "meta": {
+                "primaryId": true,
+                "dependsOn": "comorbidity.prior_malignancy",
+                "examples": "E10, C50.1, I11, M06",
+                "displayName": "Comorbidity Type Code"
+              }
+            },
+            {
+              "name": "comorbidity_treatment_status",
+              "valueType": "string",
+              "description": "Indicate if the patient is being treated for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Comorbidity Treatment"
+              }
+            },
+            {
+              "name": "comorbidity_treatment",
+              "valueType": "string",
+              "description": "Indicate treatment details for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_treatment_status",
+                "displayName": "Comorbidity Treatment Type"
+              }
+            }
+          ]
         }
       ],
       "name": "ARGO Clinical Submission",
@@ -53284,6 +54928,143 @@
                   "Moderate: Increase in the heart beat slightly with some light perspiration",
                   "Vigorous: Increase in the heart beat substantially with heavy perspiration"
                 ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "comorbidity",
+          "description": "The collection of data elements related to a donor's comorbidities. Comorbidities are any distinct entity that has existed or may occur during the clinical course of a patient who has the index disease under study. To submit multiple comorbidities for a single donor, submit multiple rows in the comorbidity file for this donor",
+          "meta": {
+            "parent": "donor"
+          },
+          "fields": [
+            {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.program_id",
+                "displayName": "Program ID"
+              },
+              "restrictions": {
+                "required": true
+              }
+            },
+            {
+              "name": "submitter_donor_id",
+              "valueType": "string",
+              "description": "Unique identifier of the donor, assigned by the data provider.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.submitter_donor_id",
+                "displayName": "Submitter Donor ID"
+              },
+              "restrictions": {
+                "required": true,
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "prior_malignancy",
+              "description": "Prior malignancy affecting donor.",
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"]
+              },
+              "valueType": "string",
+              "meta": {
+                "displayName": "Prior Malignancy"
+              }
+            },
+            {
+              "name": "laterality_of_prior_malignancy",
+              "description": "If donor has history of prior malignancy, indicate laterality of previous diagnosis. (Reference: caDSR CDE ID 4122391)",
+              "valueType": "string",
+              "restrictions": {
+                "codeList": [
+                  "Bilateral",
+                  "Left",
+                  "Midline",
+                  "Not applicable",
+                  "Right",
+                  "Unilateral, Side not specified",
+                  "Unknown"
+                ],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n   \n      if ($name === \"laterality_of_prior_malignancy\") {\n         if (($row.prior_malignancy === null || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) && (currField || (!(checkforEmpty(currField))!= null))) {\n            result = {\n               valid: false,\n               message: `The 'prior_malignancy' field should be submitted as 'Yes' if the '${$name}' field is submitted.`\n            };\n         }\n      }\n      return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.prior_malignancy",
+                "displayName": "Laterality at Prior Malignancy"
+              }
+            },
+            {
+              "name": "age_at_comorbidity_diagnosis",
+              "valueType": "integer",
+              "description": "Indicate the age of comorbidity diagnosis, in years.",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ],
+                "range": {
+                  "exclusiveMin": 0
+                }
+              },
+              "meta": {
+                "units": "years",
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Age at Comorbidity Diagnosis"
+              }
+            },
+            {
+              "name": "comorbidity_type_code",
+              "valueType": "string",
+              "description": "Indicate the code for the comorbidity using the WHO ICD-10 code classification (https://icd.who.int/browse10/2019/en).",
+              "restrictions": {
+                "required": true,
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      /* check if ICD-10 code is for neoplasms */\n      const neoplasmCode = (entry) => {return /^[c|d][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$/.test(decodeURI(entry))};\n\n      if (currField || (!(checkforEmpty(currField)))) {\n         if ($row.prior_malignancy === \"yes\" && (!(neoplasmCode(currField)))) {\n            result = { valid: false, message: `The ICD-10 code submitted in the '${$name}' field must be a code for cancer if 'prior_malignancy' is 'Yes'.`}\n         }\n         else if (($row.prior_malignancy === null || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) && neoplasmCode(currField)) {\n            result = {valid: false, message: `If an ICD-10 code for cancer is submitted in the '${$name}' field, then 'prior_malignancy' should be submitted as 'Yes'.`}\n         }\n      }\n      else if (checkforEmpty(currField)) {\n         if ($row.prior_malignancy === \"yes\") { \n            result = {valid: false, message: `The 'comorbidity_type_code' field is required if '${$name}' field is 'Yes'.`}\n         }\n         else if ($row.prior_malignancy === null || checkforEmpty($row.prior_malignancy)) {\n            result = {valid: false, message: `The 'comorbidity_type_code' field is required.`}\n         }\n      }\n      return result;\n  })"
+                ],
+                "regex": "^[A-Z][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$"
+              },
+              "meta": {
+                "primaryId": true,
+                "dependsOn": "comorbidity.prior_malignancy",
+                "examples": "E10, C50.1, I11, M06",
+                "displayName": "Comorbidity Type Code"
+              }
+            },
+            {
+              "name": "comorbidity_treatment_status",
+              "valueType": "string",
+              "description": "Indicate if the patient is being treated for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Comorbidity Treatment"
+              }
+            },
+            {
+              "name": "comorbidity_treatment",
+              "valueType": "string",
+              "description": "Indicate treatment details for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_treatment_status",
+                "displayName": "Comorbidity Treatment Type"
               }
             }
           ]
@@ -57319,6 +59100,143 @@
                   "Moderate: Increase in the heart beat slightly with some light perspiration",
                   "Vigorous: Increase in the heart beat substantially with heavy perspiration"
                 ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "comorbidity",
+          "description": "The collection of data elements related to a donor's comorbidities. Comorbidities are any distinct entity that has existed or may occur during the clinical course of a patient who has the index disease under study. To submit multiple comorbidities for a single donor, submit multiple rows in the comorbidity file for this donor",
+          "meta": {
+            "parent": "donor"
+          },
+          "fields": [
+            {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.program_id",
+                "displayName": "Program ID"
+              },
+              "restrictions": {
+                "required": true
+              }
+            },
+            {
+              "name": "submitter_donor_id",
+              "valueType": "string",
+              "description": "Unique identifier of the donor, assigned by the data provider.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.submitter_donor_id",
+                "displayName": "Submitter Donor ID"
+              },
+              "restrictions": {
+                "required": true,
+                "regex": "^[A-Za-z0-9\\-\\._]{1,64}"
+              }
+            },
+            {
+              "name": "prior_malignancy",
+              "description": "Prior malignancy affecting donor.",
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"]
+              },
+              "valueType": "string",
+              "meta": {
+                "displayName": "Prior Malignancy"
+              }
+            },
+            {
+              "name": "laterality_of_prior_malignancy",
+              "description": "If donor has history of prior malignancy, indicate laterality of previous diagnosis. (Reference: caDSR CDE ID 4122391)",
+              "valueType": "string",
+              "restrictions": {
+                "codeList": [
+                  "Bilateral",
+                  "Left",
+                  "Midline",
+                  "Not applicable",
+                  "Right",
+                  "Unilateral, Side not specified",
+                  "Unknown"
+                ],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n   \n      if ($name === \"laterality_of_prior_malignancy\") {\n         if (($row.prior_malignancy === null || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) && (currField || (!(checkforEmpty(currField))!= null))) {\n            result = {\n               valid: false,\n               message: `The 'prior_malignancy' field should be submitted as 'Yes' if the '${$name}' field is submitted.`\n            };\n         }\n      }\n      return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.prior_malignancy",
+                "displayName": "Laterality at Prior Malignancy"
+              }
+            },
+            {
+              "name": "age_at_comorbidity_diagnosis",
+              "valueType": "integer",
+              "description": "Indicate the age of comorbidity diagnosis, in years.",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ],
+                "range": {
+                  "exclusiveMin": 0
+                }
+              },
+              "meta": {
+                "units": "years",
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Age at Comorbidity Diagnosis"
+              }
+            },
+            {
+              "name": "comorbidity_type_code",
+              "valueType": "string",
+              "description": "Indicate the code for the comorbidity using the WHO ICD-10 code classification (https://icd.who.int/browse10/2019/en).",
+              "restrictions": {
+                "required": true,
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      /* check if ICD-10 code is for neoplasms */\n      const neoplasmCode = (entry) => {return /^[c|d][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$/.test(decodeURI(entry))};\n\n      if (currField || (!(checkforEmpty(currField)))) {\n         if ($row.prior_malignancy === \"yes\" && (!(neoplasmCode(currField)))) {\n            result = { valid: false, message: `The ICD-10 code submitted in the '${$name}' field must be a code for cancer if 'prior_malignancy' is 'Yes'.`}\n         }\n         else if (($row.prior_malignancy === null || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) && neoplasmCode(currField)) {\n            result = {valid: false, message: `If an ICD-10 code for cancer is submitted in the '${$name}' field, then 'prior_malignancy' should be submitted as 'Yes'.`}\n         }\n      }\n      else if (checkforEmpty(currField)) {\n         if ($row.prior_malignancy === \"yes\") { \n            result = {valid: false, message: `The 'comorbidity_type_code' field is required if '${$name}' field is 'Yes'.`}\n         }\n         else if ($row.prior_malignancy === null || checkforEmpty($row.prior_malignancy)) {\n            result = {valid: false, message: `The 'comorbidity_type_code' field is required.`}\n         }\n      }\n      return result;\n  })"
+                ],
+                "regex": "^[A-Z][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$"
+              },
+              "meta": {
+                "primaryId": true,
+                "dependsOn": "comorbidity.prior_malignancy",
+                "examples": "E10, C50.1, I11, M06",
+                "displayName": "Comorbidity Type Code"
+              }
+            },
+            {
+              "name": "comorbidity_treatment_status",
+              "valueType": "string",
+              "description": "Indicate if the patient is being treated for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Comorbidity Treatment"
+              }
+            },
+            {
+              "name": "comorbidity_treatment",
+              "valueType": "string",
+              "description": "Indicate treatment details for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && (currField || (!(checkforEmpty(currField))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_type_code' field is not submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && currField && !(checkforEmpty(currField))) {\n            if ($row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status)) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n            else if (invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The '${$name}' field should not be submitted if the 'comorbidity_treatment_status' field is not 'Yes'.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_treatment_status",
+                "displayName": "Comorbidity Treatment Type"
               }
             }
           ]

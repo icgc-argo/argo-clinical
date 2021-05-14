@@ -392,6 +392,7 @@ export async function checkClinicalEntityDoesntBelongToOtherDonor(
     | ClinicalTherapyType
     | ClinicalEntitySchemaNames.FAMILY_HISTORY
     | ClinicalEntitySchemaNames.REGISTRATION
+    | ClinicalEntitySchemaNames.COMORBIDITY
   >,
   record: DeepReadonly<SubmittedClinicalRecord>,
   existentDonor: DeepReadonly<Donor>,
@@ -472,7 +473,8 @@ export function getRelatedEntityByFK(
     relatedEntityName == ClinicalEntitySchemaNames.RADIATION ||
     relatedEntityName == ClinicalEntitySchemaNames.HORMONE_THERAPY ||
     relatedEntityName == ClinicalEntitySchemaNames.IMMUNOTHERAPY ||
-    relatedEntityName == ClinicalEntitySchemaNames.FAMILY_HISTORY
+    relatedEntityName == ClinicalEntitySchemaNames.FAMILY_HISTORY ||
+    relatedEntityName == ClinicalEntitySchemaNames.COMORBIDITY
   ) {
     throw new Error('method only supports single submitterId as FK');
   }
