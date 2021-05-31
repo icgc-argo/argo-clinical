@@ -280,6 +280,7 @@ describe('clinical Api', () => {
     });
 
     describe('export endpoints', function() {
+      this.timeout(30000);
       it('shoud download zip file with tsvs of program clinical data', done => {
         chai
           .request(app)

@@ -383,10 +383,7 @@ export namespace MigrationManager {
     const submissions = await submissionService.operations.findActiveClinicalSubmissions();
 
     for (const sub of submissions) {
-      if (
-        sub.state === SUBMISSION_STATE.INVALID ||
-        sub.state === SUBMISSION_STATE.INVALID_BY_MIGRATION
-      ) {
+      if (sub.state === SUBMISSION_STATE.INVALID_BY_MIGRATION) {
         continue;
       }
 
