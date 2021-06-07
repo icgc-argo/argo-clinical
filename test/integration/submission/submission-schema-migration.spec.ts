@@ -39,7 +39,7 @@ import 'deep-equal-in-any-order';
 import 'mocha';
 import mongoose from 'mongoose';
 import { spy, SinonSpy } from 'sinon';
-import { GenericContainer, Wait } from 'testcontainers';
+import { GenericContainer } from 'testcontainers';
 import { findInDb, insertData, emptyDonorDocument, clearCollections } from '../testutils';
 import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN } from '../test.jwt';
 import _ from 'lodash';
@@ -49,7 +49,6 @@ chai.use(require('deep-equal-in-any-order'));
 chai.should();
 
 // legacy field name
-const TUMOUR_STAGING_SYSTEM = 'clinical_tumour_staging_system';
 const PRESENTING_SYMPTOMS = 'presenting_symptoms';
 const schemaName = 'ARGO Clinical Submission';
 const startingSchemaVersion = '1.0';
