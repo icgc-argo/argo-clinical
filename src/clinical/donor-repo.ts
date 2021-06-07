@@ -304,6 +304,12 @@ function unsetIsNewFlagForUpdate(newDonor: Donor) {
       (ex as any).isNew = false;
     }
   });
+
+  newDonor.biomarker?.forEach(bi => {
+    if (bi.biomarkerId) {
+      (bi as any).isNew = false;
+    }
+  });
 }
 
 // Like findByProgramId, but DocQuery asks mongo to return PoJo without docIds for faster fetch
@@ -404,6 +410,16 @@ const ExposureSchema = new mongoose.Schema(
 
 ExposureSchema.index({ exposureId: 1 }, { unique: true, sparse: true });
 
+const BiomarkerSchema = new mongoose.Schema(
+  {
+    biomarkerId: { type: Number },
+    clinicalInfo: {},
+  },
+  { _id: false },
+);
+
+BiomarkerSchema.index({ biomarkerId: 1 }, { unique: true, sparse: true });
+
 const ComorbiditySchema = new mongoose.Schema(
   {
     comorbidityId: { type: Number },
@@ -428,6 +444,7 @@ const DonorSchema = new mongoose.Schema(
     followUps: [FollowUpSchema],
     treatments: [TreatmentSchema],
     exposure: [ExposureSchema],
+    biomarker: [BiomarkerSchema],
     schemaMetadata: {},
     completionStats: {},
   },
@@ -491,6 +508,11 @@ FamilyHistorySchema.plugin(AutoIncrement, {
 
 ExposureSchema.plugin(AutoIncrement, {
   inc_field: 'exposureId',
+  start_seq: 1,
+});
+
+BiomarkerSchema.plugin(AutoIncrement, {
+  inc_field: 'biomarkerId',
   start_seq: 1,
 });
 
