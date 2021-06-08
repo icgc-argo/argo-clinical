@@ -34,6 +34,7 @@ export interface Donor {
   followUps?: Array<FollowUp>;
   treatments?: Array<Treatment>;
   exposure?: Array<Exposure>;
+  biomarker?: Array<Biomarker>;
   createdAt?: string;
   updatedAt?: string;
   completionStats?: CompletionStats;
@@ -96,6 +97,10 @@ export interface FamilyHistory extends ClinicalEntity {
 
 export interface Exposure extends ClinicalEntity {
   exposureId: number | undefined;
+}
+
+export interface Biomarker extends ClinicalEntity {
+  biomarkerId: number | undefined;
 }
 
 export interface Comorbidity extends ClinicalEntity {

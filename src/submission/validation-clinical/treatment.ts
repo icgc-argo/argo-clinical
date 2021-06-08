@@ -36,7 +36,6 @@ import * as utils from './utils';
 import _ from 'lodash';
 import {
   getSingleClinicalObjectFromDonor,
-  getEntitySubmitterIdFieldName,
   getClinicalObjectsFromDonor,
 } from '../../common-model/functions';
 import { checkClinicalEntityDoesntBelongToOtherDonor, checkRelatedEntityExists } from './utils';

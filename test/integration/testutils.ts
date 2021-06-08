@@ -123,6 +123,7 @@ export const emptyDonorDocument = (overrides?: Partial<Donor>) => {
     familyHistory: [],
     exposure: [],
     comorbidity: [],
+    biomarker: [],
     treatments: [],
   };
   if (!overrides) {

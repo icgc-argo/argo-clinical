@@ -23,12 +23,7 @@ import {
   DataValidationErrors,
   SubmissionValidationOutput,
 } from '../submission-entities';
-import {
-  ClinicalEntitySchemaNames,
-  FollowupFieldsEnum,
-  ClinicalUniqueIdentifier,
-  PrimaryDiagnosisFieldsEnum,
-} from '../../common-model/entities';
+import { ClinicalEntitySchemaNames, FollowupFieldsEnum } from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, Treatment } from '../../clinical/clinical-entities';
 import _ from 'lodash';
