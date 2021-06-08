@@ -77,6 +77,13 @@ export function getClinicalObjectsFromDonor(
       return donor.exposure;
     }
   }
+
+  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.BIOMARKER) {
+    if (donor.biomarker) {
+      return donor.biomarker;
+    }
+  }
+
   if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.COMORBIDITY) {
     if (donor.comorbidity) {
       return donor.comorbidity;

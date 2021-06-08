@@ -29,6 +29,7 @@ import {
   FamilyHistory,
   Exposure,
   Comorbidity,
+  Biomarker,
 } from '../../clinical/clinical-entities';
 import { ActiveClinicalSubmission, SubmittedClinicalRecordsMap } from '../submission-entities';
 import _ from 'lodash';
@@ -86,6 +87,9 @@ export const mergeActiveSubmissionWithDonors = async (
         case ClinicalEntitySchemaNames.COMORBIDITY:
           entityWithUpdatedInfo = updateComorbidityInfo(donor, record);
           break;
+        case ClinicalEntitySchemaNames.BIOMARKER:
+          entityWithUpdatedInfo = updateBiomarkerInfo(donor, record);
+          break;
         case ClinicalEntitySchemaNames.TREATMENT:
           entityWithUpdatedInfo = updateOrAddTreatementInfo(donor, record);
           break;
@@ -135,6 +139,10 @@ export const mergeRecordsMapIntoDonor = (
 
   submittedRecordsMap[ClinicalEntitySchemaNames.EXPOSURE]?.forEach(r =>
     updateExposureInfo(mergedDonor, r),
+  );
+
+  submittedRecordsMap[ClinicalEntitySchemaNames.BIOMARKER]?.forEach(r =>
+    updateBiomarkerInfo(mergedDonor, r),
   );
 
   submittedRecordsMap[ClinicalEntitySchemaNames.SPECIMEN]?.forEach(r =>
@@ -191,6 +199,15 @@ const updateExposureInfo = (donor: Donor, record: ClinicalInfo) => {
   }
   exposure.clinicalInfo = record;
   return exposure;
+};
+
+const updateBiomarkerInfo = (donor: Donor, record: ClinicalInfo) => {
+  let biomarker = findBiomarker(donor, record);
+  if (!biomarker) {
+    biomarker = addNewBiomarkerObj(donor);
+  }
+  biomarker.clinicalInfo = record;
+  return biomarker;
 };
 
 const updateComorbidityInfo = (donor: Donor, record: ClinicalInfo) => {
@@ -295,6 +312,10 @@ const findExposure = (donor: Donor, record: ClinicalInfo) => {
   return findClinicalObject(donor, record, ClinicalEntitySchemaNames.EXPOSURE);
 };
 
+const findBiomarker = (donor: Donor, record: ClinicalInfo) => {
+  return findClinicalObject(donor, record, ClinicalEntitySchemaNames.BIOMARKER);
+};
+
 const findClinicalObject = (
   donor: Donor,
   newRecord: ClinicalInfo,
@@ -371,6 +392,12 @@ const addNewExposureObj = (donor: Donor): ClinicalEntity => {
   const newExposure = { clinicalInfo: {}, exposureId: undefined } as Exposure;
   donor.exposure = _.concat(donor.exposure || [], newExposure);
   return _.last(donor.exposure) as Exposure;
+};
+
+const addNewBiomarkerObj = (donor: Donor): ClinicalEntity => {
+  const newBiomarker = { clinicalInfo: {}, biomarkerId: undefined } as Biomarker;
+  donor.biomarker = _.concat(donor.biomarker || [], newBiomarker);
+  return _.last(donor.biomarker) as Biomarker;
 };
 
 const addNewComorbidityObj = (donor: Donor): ClinicalEntity => {

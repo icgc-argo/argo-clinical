@@ -22,6 +22,7 @@ import * as specimen from './specimen';
 import * as follow_up from './followUp';
 import * as treatment from './treatment';
 import * as therapy from './therapy';
+import * as biomarker from './biomarker';
 import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 import * as primaryDiagnosis from './primaryDiagnosis';
 
@@ -32,6 +33,7 @@ const availableValidators: { [k: string]: any } = {
   [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: primaryDiagnosis,
   [ClinicalEntitySchemaNames.FOLLOW_UP]: follow_up,
   [ClinicalEntitySchemaNames.TREATMENT]: treatment,
+  [ClinicalEntitySchemaNames.BIOMARKER]: biomarker,
   // all therapies follow the same validation
   [ClinicalEntitySchemaNames.CHEMOTHERAPY]: therapy,
   [ClinicalEntitySchemaNames.RADIATION]: therapy,
