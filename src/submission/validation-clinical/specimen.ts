@@ -75,10 +75,11 @@ export const validate = async (
   checkRequiredFields(specimen, specimenRecord, mergedDonor, errors);
 
   // validate time conflict if needed
-  const donorDataToValidateWith = getDataFromDonorRecordOrDonor(
+  const donorDataToValidateWith = utils.getDataFromDonorRecordOrDonor(
     specimenRecord,
     mergedDonor,
     errors,
+    SpecimenFieldsEnum.specimen_acquisition_interval,
   );
 
   if (donorDataToValidateWith) {
@@ -135,47 +136,6 @@ function checkTimeConflictWithDonor(
     );
   }
 }
-
-const getDataFromDonorRecordOrDonor = (
-  specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
-  donor: DeepReadonly<Donor>,
-  errors: SubmissionValidationError[],
-) => {
-  let missingDonorFields: string[] = [];
-  let donorVitalStatus: string = '';
-  let donorSurvivalTime: number = NaN;
-  const donorDataSource = donor.clinicalInfo || {};
-
-  if (_.isEmpty(donorDataSource)) {
-    missingDonorFields = [DonorFieldsEnum.vital_status, DonorFieldsEnum.survival_time];
-  } else {
-    donorVitalStatus = (donorDataSource[DonorFieldsEnum.vital_status] as string) || '';
-    donorSurvivalTime = Number(donorDataSource[DonorFieldsEnum.survival_time]) || NaN;
-
-    if (isEmptyString(donorVitalStatus)) {
-      missingDonorFields.push(DonorFieldsEnum.vital_status);
-    }
-    if (donorVitalStatus.toString().toLowerCase() === 'deceased' && isNaN(donorSurvivalTime)) {
-      missingDonorFields.push(DonorFieldsEnum.survival_time);
-    }
-  }
-
-  if (missingDonorFields.length > 0) {
-    errors.push(
-      utils.buildSubmissionError(
-        specimenRecord,
-        DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
-        SpecimenFieldsEnum.specimen_acquisition_interval,
-        {
-          missingField: missingDonorFields.map(s => ClinicalEntitySchemaNames.DONOR + '.' + s),
-        },
-      ),
-    );
-    return undefined;
-  }
-
-  return { donorVitalStatus, donorSurvivalTime };
-};
 
 const checkRequiredFields = (
   specimen: DeepReadonly<Specimen>,
