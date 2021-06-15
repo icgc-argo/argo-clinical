@@ -412,7 +412,8 @@ export const stubs = {
       clinicalInfo: {
         [DonorFieldsEnum.program_id]: 'TEST-CA',
         [DonorFieldsEnum.submitter_donor_id]: 'ICGC_0002',
-        [DonorFieldsEnum.vital_status]: 'Alive',
+        [DonorFieldsEnum.vital_status]: 'Deceased',
+        [DonorFieldsEnum.survival_time]: 9,
       },
       gender: 'Female',
       specimens: [

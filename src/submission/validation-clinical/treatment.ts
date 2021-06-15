@@ -22,6 +22,7 @@ import {
   SubmittedClinicalRecord,
   DataValidationErrors,
   SubmissionValidationOutput,
+  DonorVitalStatusValues,
 } from '../submission-entities';
 import {
   ClinicalEntitySchemaNames,
@@ -70,6 +71,20 @@ export const validate = async (
     errors,
     true,
   );
+
+  // treatment.treatment_start_interval must be smaller than donor.survival_time
+  if (treatmentRecord[TreatmentFieldsEnum.treatment_start_interval]) {
+    const donorDataToValidateWith = utils.getDataFromDonorRecordOrDonor(
+      treatmentRecord,
+      mergedDonor,
+      errors,
+      TreatmentFieldsEnum.treatment_start_interval,
+    );
+
+    if (donorDataToValidateWith) {
+      checkDonorTimeConflict(donorDataToValidateWith, treatmentRecord, errors);
+    }
+  }
 
   // Find existing follow ups for this donor
   const followUps = getClinicalObjectsFromDonor(
@@ -193,6 +208,27 @@ function checkFollowUpTimeConflict(
         DataValidationErrors.TREATMENT_TIME_CONFLICT,
         TreatmentFieldsEnum.treatment_start_interval,
         [],
+      ),
+    );
+  }
+}
+
+function checkDonorTimeConflict(
+  donorDataToValidateWith: { [k: string]: any },
+  treatmentRecord: DeepReadonly<SubmittedClinicalRecord>,
+  errors: SubmissionValidationError[],
+) {
+  if (
+    donorDataToValidateWith.donorVitalStatus === DonorVitalStatusValues.deceased &&
+    donorDataToValidateWith.donorSurvivalTime <
+      treatmentRecord[TreatmentFieldsEnum.treatment_start_interval]
+  ) {
+    errors.push(
+      utils.buildSubmissionError(
+        treatmentRecord,
+        DataValidationErrors.TREATMENT_DONOR_TIME_CONFLICT,
+        TreatmentFieldsEnum.treatment_start_interval,
+        {},
       ),
     );
   }

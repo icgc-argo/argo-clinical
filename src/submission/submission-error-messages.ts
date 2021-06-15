@@ -47,8 +47,12 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
     'survival_time cannot be less than Specimen specimen_acquisition_interval.',
   FOLLOW_UP_CONFLICING_INTERVAL: () =>
     'interval_of_followup cannot be less than Treatment treatment_start_interval.',
+  FOLLOW_UP_DONOR_TIME_CONFLICT: () =>
+    'FollowUp.interval_of_followup must be less than Donor.survival_time.',
   TREATMENT_TIME_CONFLICT: () =>
     'Treatment treatment_start_interval cannot be greater than FollowUp interval_of_followup.',
+  TREATMENT_DONOR_TIME_CONFLICT: () =>
+    'Treatment treatment_start_interval should be less than Donor survival_time.',
   RELATED_ENTITY_MISSING_OR_CONFLICTING: (errorData: { info: RelatedEntityErrorInfo }) =>
     `[${errorData.info.fieldName}] value in [${errorData.info.childEntity}] file requires a matching [${errorData.info.fieldName}] in [${errorData.info.parentEntity}] data. Check that it belongs to the same [submitter_donor_id] = ${errorData.info.donorSubmitterId}. It could have been previously submitted for a different donor, or if it's new in this submission, it's either missing in [${errorData.info.parentEntity}] file or this [${errorData.info.fieldName}] is associated with different [submitter_donor_id] in the [${errorData.info.parentEntity}] file.`,
   TNM_STAGING_FIELDS_MISSING: () =>
@@ -56,7 +60,7 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
   NOT_ENOUGH_INFO_TO_VALIDATE: errorData =>
     `[${errorData.fieldName}] requires [${errorData.info.missingField.join(
       '], [',
-    )}] in order to complete validation.  Please upload data for all fields in this clinical data submission.`,
+    )}] in order to complete validation. Please upload data for all fields in this clinical data submission.`,
   FOUND_IDENTICAL_IDS: errorData => {
     if (errorData.info.useAllRecordValues === true) return `This row is identical to another row`;
     const duplicateFieldNames = errorData.info.uniqueIdNames.join(', ') || '';

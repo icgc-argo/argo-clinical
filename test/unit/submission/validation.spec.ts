@@ -1547,7 +1547,7 @@ describe('data-validator', () => {
 
       const specimenMisisngDonorAB1FieldsErr: SubmissionValidationError = {
         fieldName: SpecimenFieldsEnum.specimen_acquisition_interval,
-        message: `[specimen_acquisition_interval] requires [donor.vital_status], [donor.survival_time] in order to complete validation.  Please upload data for all fields in this clinical data submission.`,
+        message: `[specimen_acquisition_interval] requires [donor.vital_status], [donor.survival_time] in order to complete validation. Please upload data for all fields in this clinical data submission.`,
         type: DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
         index: 0,
         info: {
@@ -1562,7 +1562,7 @@ describe('data-validator', () => {
 
       const specimenMissingDonorAB2FieldErr: SubmissionValidationError = {
         fieldName: SpecimenFieldsEnum.specimen_acquisition_interval,
-        message: `[specimen_acquisition_interval] requires [donor.survival_time] in order to complete validation.  Please upload data for all fields in this clinical data submission.`,
+        message: `[specimen_acquisition_interval] requires [donor.survival_time] in order to complete validation. Please upload data for all fields in this clinical data submission.`,
         type: DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
         index: 2,
         info: {
@@ -2162,6 +2162,53 @@ describe('data-validator', () => {
       chai.expect(result.treatment.dataErrors.length).to.eq(1);
       chai.expect(result.treatment.dataErrors).to.deep.include(hormoneTreatmentInvalidErr);
     });
+    it('should error when Treatment treatment_start_interval is greater than Donor survival_time', async () => {
+      const existingDonor = stubs.validation.existingDonor08();
+      const submissionRecordsMap = {};
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.TREATMENT,
+        submissionRecordsMap,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'ICGC_0002',
+          [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.FOLLOW_UP]]: 'FLL1234',
+          [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.TREATMENT]]: 'T_02',
+          [TreatmentFieldsEnum.treatment_type]: ['Chemotherapy'],
+          [TreatmentFieldsEnum.submitter_primary_diagnosis_id]: 'P4',
+          [TreatmentFieldsEnum.treatment_start_interval]: 40,
+          index: 0,
+        },
+      );
+
+      const result = await dv
+        .validateSubmissionData({ ICGC_0002: submissionRecordsMap }, { ICGC_0002: existingDonor })
+        .catch((err: any) => fail(err));
+
+      const error_1: SubmissionValidationError = {
+        fieldName: TreatmentFieldsEnum.treatment_start_interval,
+        message:
+          'Treatment treatment_start_interval cannot be greater than FollowUp interval_of_followup.',
+        type: DataValidationErrors.TREATMENT_TIME_CONFLICT,
+        index: 0,
+        info: {
+          donorSubmitterId: 'ICGC_0002',
+          value: 40,
+        },
+      };
+
+      const error_2: SubmissionValidationError = {
+        fieldName: TreatmentFieldsEnum.treatment_start_interval,
+        message: 'Treatment treatment_start_interval should be less than Donor survival_time.',
+        type: DataValidationErrors.TREATMENT_DONOR_TIME_CONFLICT,
+        index: 0,
+        info: {
+          donorSubmitterId: 'ICGC_0002',
+          value: 40,
+        },
+      };
+
+      chai.expect(result[ClinicalEntitySchemaNames.TREATMENT].dataErrors[0]).to.deep.eq(error_2);
+      chai.expect(result[ClinicalEntitySchemaNames.TREATMENT].dataErrors[1]).to.deep.eq(error_1);
+    });
   });
 
   describe('follow up validation', () => {
@@ -2188,8 +2235,8 @@ describe('data-validator', () => {
         .validateSubmissionData({ AB1: submissionRecordsMap }, { AB1: donorToAddFollowupTo })
         .catch((err: any) => fail(err));
 
-      chai.expect(result[ClinicalEntitySchemaNames.FOLLOW_UP].dataErrors.length).to.eq(1);
-      const followUpError: SubmissionValidationError = {
+      chai.expect(result[ClinicalEntitySchemaNames.FOLLOW_UP].dataErrors.length).to.eq(2);
+      const followUpError_1: SubmissionValidationError = {
         fieldName: FollowupFieldsEnum.submitter_follow_up_id,
         message: `This follow up has already been associated to donor AB2. Please correct your file.`,
         type: DataValidationErrors.CLINICAL_ENTITY_BELONGS_TO_OTHER_DONOR,
@@ -2201,9 +2248,25 @@ describe('data-validator', () => {
           otherDonorSubmitterId: 'AB2',
         },
       };
+
+      const followUpError_2: SubmissionValidationError = {
+        fieldName: FollowupFieldsEnum.interval_of_followup,
+        message: `[interval_of_followup] requires [donor.vital_status], [donor.survival_time] in order to complete validation. Please upload data for all fields in this clinical data submission.`,
+        type: DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
+        index: 0,
+        info: {
+          donorSubmitterId: 'AB1',
+          value: undefined,
+          missingField: ['donor.vital_status', 'donor.survival_time'],
+        },
+      };
       chai
         .expect(result[ClinicalEntitySchemaNames.FOLLOW_UP].dataErrors[0])
-        .to.deep.eq(followUpError);
+        .to.deep.eq(followUpError_2);
+
+      chai
+        .expect(result[ClinicalEntitySchemaNames.FOLLOW_UP].dataErrors[1])
+        .to.deep.eq(followUpError_1);
     });
     it('should get followup error when follow up interval_of_followup is less than Treatment treatment_start_interval', async () => {
       const existingDonor = stubs.validation.existingDonor08();
@@ -2236,7 +2299,18 @@ describe('data-validator', () => {
         .validateSubmissionData({ ICGC_0002: submissionRecordsMap }, { ICGC_0002: existingDonor })
         .catch((err: any) => fail(err));
 
-      const followUpError: SubmissionValidationError = {
+      const error_1: SubmissionValidationError = {
+        fieldName: FollowupFieldsEnum.interval_of_followup,
+        message: 'FollowUp.interval_of_followup must be less than Donor.survival_time.',
+        type: DataValidationErrors.FOLLOW_UP_DONOR_TIME_CONFLICT,
+        index: 0,
+        info: {
+          donorSubmitterId: 'ICGC_0002',
+          value: 10,
+        },
+      };
+
+      const error_2: SubmissionValidationError = {
         fieldName: FollowupFieldsEnum.interval_of_followup,
         message: 'interval_of_followup cannot be less than Treatment treatment_start_interval.',
         type: DataValidationErrors.FOLLOW_UP_CONFLICING_INTERVAL,
@@ -2247,9 +2321,8 @@ describe('data-validator', () => {
         },
       };
 
-      chai
-        .expect(result[ClinicalEntitySchemaNames.FOLLOW_UP].dataErrors[0])
-        .to.deep.eq(followUpError);
+      chai.expect(result[ClinicalEntitySchemaNames.FOLLOW_UP].dataErrors[0]).to.deep.eq(error_1);
+      chai.expect(result[ClinicalEntitySchemaNames.FOLLOW_UP].dataErrors[1]).to.deep.eq(error_2);
     });
     it('should get treatment error when Treatment treatment_start_interval is geater than Followup interval_of_followup', async () => {
       const existingDonor = stubs.validation.existingDonor08();
@@ -2272,7 +2345,18 @@ describe('data-validator', () => {
         .validateSubmissionData({ ICGC_0002: submissionRecordsMap }, { ICGC_0002: existingDonor })
         .catch((err: any) => fail(err));
 
-      const followUpError_1: SubmissionValidationError = {
+      const error_1: SubmissionValidationError = {
+        fieldName: TreatmentFieldsEnum.treatment_start_interval,
+        message: 'Treatment treatment_start_interval should be less than Donor survival_time.',
+        type: DataValidationErrors.TREATMENT_DONOR_TIME_CONFLICT,
+        index: 0,
+        info: {
+          donorSubmitterId: 'ICGC_0002',
+          value: 50,
+        },
+      };
+
+      const error_2: SubmissionValidationError = {
         fieldName: TreatmentFieldsEnum.treatment_start_interval,
         message:
           'Treatment treatment_start_interval cannot be greater than FollowUp interval_of_followup.',
@@ -2284,7 +2368,7 @@ describe('data-validator', () => {
         },
       };
 
-      const followUpError_2: SubmissionValidationError = {
+      const error_3: SubmissionValidationError = {
         fieldName: TreatmentFieldsEnum.treatment_start_interval,
         message:
           'Treatment treatment_start_interval cannot be greater than FollowUp interval_of_followup.',
@@ -2296,12 +2380,44 @@ describe('data-validator', () => {
         },
       };
 
+      chai.expect(result[ClinicalEntitySchemaNames.TREATMENT].dataErrors[0]).to.deep.eq(error_1);
+      chai.expect(result[ClinicalEntitySchemaNames.TREATMENT].dataErrors[1]).to.deep.eq(error_2);
+      chai.expect(result[ClinicalEntitySchemaNames.TREATMENT].dataErrors[1]).to.deep.eq(error_3);
+    });
+    it('should get followup error when follow up interval_of_followup is greater than Donor survival_time.', async () => {
+      const existingDonor = stubs.validation.existingDonor08();
+      const submissionRecordsMap = {};
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.FOLLOW_UP,
+        submissionRecordsMap,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'ICGC_0002',
+          [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.FOLLOW_UP]]: 'FLL1234',
+          [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.TREATMENT]]: 'T_02',
+          interval_of_followup: 10,
+          index: 0,
+        },
+      );
+
+      const result = await dv
+        .validateSubmissionData({ ICGC_0002: submissionRecordsMap }, { ICGC_0002: existingDonor })
+        .catch((err: any) => fail(err));
+
+      const followUpError: SubmissionValidationError = {
+        fieldName: FollowupFieldsEnum.interval_of_followup,
+        message: 'FollowUp.interval_of_followup must be less than Donor.survival_time.',
+        type: DataValidationErrors.FOLLOW_UP_DONOR_TIME_CONFLICT,
+        index: 0,
+        info: {
+          donorSubmitterId: 'ICGC_0002',
+          value: 10,
+        },
+      };
+
       chai
-        .expect(result[ClinicalEntitySchemaNames.TREATMENT].dataErrors[0])
-        .to.deep.eq(followUpError_1);
-      chai
-        .expect(result[ClinicalEntitySchemaNames.TREATMENT].dataErrors[1])
-        .to.deep.eq(followUpError_2);
+        .expect(result[ClinicalEntitySchemaNames.FOLLOW_UP].dataErrors[0])
+        .to.deep.eq(followUpError);
     });
   });
 });
