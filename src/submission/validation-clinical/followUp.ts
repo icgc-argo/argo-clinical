@@ -22,6 +22,7 @@ import {
   SubmittedClinicalRecord,
   DataValidationErrors,
   SubmissionValidationOutput,
+  DonorVitalStatusValues,
 } from '../submission-entities';
 import { ClinicalEntitySchemaNames, FollowupFieldsEnum } from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
@@ -60,6 +61,39 @@ export const validate = async (
     errors,
     false,
   );
+
+  // Follow_up.interval_of_followup must be less than Donor.survival_time:
+  const donorDataToValidateWith = utils.getDataFromDonorRecordOrDonor(
+    followUpRecord,
+    mergedDonor,
+    errors,
+    FollowupFieldsEnum.interval_of_followup,
+  );
+
+  const checkDonorTimeConflict = (
+    donorDataToValidateWith: { [k: string]: any },
+    followUpRecord: DeepReadonly<SubmittedClinicalRecord>,
+    errors: SubmissionValidationError[],
+  ) => {
+    if (
+      donorDataToValidateWith.donorVitalStatus === DonorVitalStatusValues.deceased &&
+      donorDataToValidateWith.donorSurvivalTime <
+        followUpRecord[FollowupFieldsEnum.interval_of_followup]
+    ) {
+      errors.push(
+        utils.buildSubmissionError(
+          followUpRecord,
+          DataValidationErrors.FOLLOW_UP_DONOR_TIME_CONFLICT,
+          FollowupFieldsEnum.interval_of_followup,
+          {},
+        ),
+      );
+    }
+  };
+
+  if (donorDataToValidateWith) {
+    checkDonorTimeConflict(donorDataToValidateWith, followUpRecord, errors);
+  }
 
   const entitySubmitterIdField = getEntitySubmitterIdFieldName(ClinicalEntitySchemaNames.TREATMENT);
   const treatment = utils.getRelatedEntityByFK(
