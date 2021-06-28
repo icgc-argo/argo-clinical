@@ -2197,7 +2197,7 @@ describe('data-validator', () => {
 
       const error_2: SubmissionValidationError = {
         fieldName: TreatmentFieldsEnum.treatment_start_interval,
-        message: 'Treatment treatment_start_interval should be less than Donor survival_time.',
+        message: 'The treatment_start_interval should be less than Donor survival_time.',
         type: DataValidationErrors.TREATMENT_DONOR_TIME_CONFLICT,
         index: 0,
         info: {
@@ -2301,7 +2301,7 @@ describe('data-validator', () => {
 
       const error_1: SubmissionValidationError = {
         fieldName: FollowupFieldsEnum.interval_of_followup,
-        message: 'FollowUp.interval_of_followup must be less than Donor.survival_time.',
+        message: 'The interval_of_followup must be less than Donor.survival_time.',
         type: DataValidationErrors.FOLLOW_UP_DONOR_TIME_CONFLICT,
         index: 0,
         info: {
@@ -2347,7 +2347,7 @@ describe('data-validator', () => {
 
       const error_1: SubmissionValidationError = {
         fieldName: TreatmentFieldsEnum.treatment_start_interval,
-        message: 'Treatment treatment_start_interval should be less than Donor survival_time.',
+        message: 'The treatment_start_interval should be less than Donor survival_time.',
         type: DataValidationErrors.TREATMENT_DONOR_TIME_CONFLICT,
         index: 0,
         info: {
@@ -2406,7 +2406,7 @@ describe('data-validator', () => {
 
       const followUpError: SubmissionValidationError = {
         fieldName: FollowupFieldsEnum.interval_of_followup,
-        message: 'FollowUp.interval_of_followup must be less than Donor.survival_time.',
+        message: 'The interval_of_followup must be less than Donor.survival_time.',
         type: DataValidationErrors.FOLLOW_UP_DONOR_TIME_CONFLICT,
         index: 0,
         info: {
