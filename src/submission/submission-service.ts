@@ -846,11 +846,14 @@ export namespace operations {
   ) => {
     const schemaName = command.clinicalType as ClinicalEntitySchemaNames;
 
-    // check records are unique
     let useAllRecordValues = false;
+    // Biomarker allows multiple records for the same submitter_donor_id
+    // link to the bug: https://github.com/icgc-argo/argo-clinical/issues/713
     if (schemaName === ClinicalEntitySchemaNames.BIOMARKER) {
       useAllRecordValues = true;
     }
+
+    // check records are unique
     const errors: SubmissionValidationError[] = checkUniqueRecords(
       schemaName,
       command.records,
