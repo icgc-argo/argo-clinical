@@ -312,10 +312,6 @@ const findExposure = (donor: Donor, record: ClinicalInfo) => {
   return findClinicalObject(donor, record, ClinicalEntitySchemaNames.EXPOSURE);
 };
 
-const findBiomarker = (donor: Donor, record: ClinicalInfo) => {
-  return findClinicalObject(donor, record, ClinicalEntitySchemaNames.BIOMARKER);
-};
-
 const findClinicalObject = (
   donor: Donor,
   newRecord: ClinicalInfo,
@@ -325,6 +321,7 @@ const findClinicalObject = (
     | ClinicalEntitySchemaNames.FAMILY_HISTORY
     | ClinicalEntitySchemaNames.REGISTRATION
     | ClinicalEntitySchemaNames.COMORBIDITY
+    | ClinicalEntitySchemaNames.BIOMARKER
   >,
 ): ClinicalEntity | undefined => {
   const uniqueIdName = ClinicalUniqueIdentifier[entityType];
@@ -361,6 +358,14 @@ const findComorbidityObj = (donor: Donor, record: ClinicalInfo): ClinicalEntity 
   uniqueIdNames.forEach(idN => (constraints[idN] = record[idN]));
 
   return _(donor.comorbidity || []).find({ clinicalInfo: constraints });
+};
+
+const findBiomarker = (donor: Donor, record: ClinicalInfo): ClinicalEntity | undefined => {
+  const uniqueIdNames = ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.BIOMARKER];
+  const constraints: ClinicalInfo = {};
+  uniqueIdNames.forEach(idN => (constraints[idN] = record[idN]));
+
+  return _(donor.biomarker || []).find({ clinicalInfo: constraints });
 };
 
 /*** Empty clinical object adders ***/

@@ -845,8 +845,17 @@ export namespace operations {
     schema: dictionaryEntities.SchemasDictionary,
   ) => {
     const schemaName = command.clinicalType as ClinicalEntitySchemaNames;
+
     // check records are unique
-    const errors: SubmissionValidationError[] = checkUniqueRecords(schemaName, command.records);
+    let useAllRecordValues = false;
+    if (schemaName === ClinicalEntitySchemaNames.BIOMARKER) {
+      useAllRecordValues = true;
+    }
+    const errors: SubmissionValidationError[] = checkUniqueRecords(
+      schemaName,
+      command.records,
+      useAllRecordValues,
+    );
 
     let errorsAccumulator: DeepReadonly<SubmissionValidationError[]> = [];
     const validRecordsAccumulator: any[] = [];
