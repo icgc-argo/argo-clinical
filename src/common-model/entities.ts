@@ -119,6 +119,11 @@ export enum ComorbidityFieldsEnum {
 export enum BiomarkerFieldsEnum {
   program_id = 'program_id',
   submitter_donor_id = 'submitter_donor_id',
+  submitter_specimen_id = 'submitter_specimen_id',
+  submitter_primary_diagnosis_id = 'submitter_primary_diagnosis_id',
+  submitter_treatment_id = 'submitter_treatment_id',
+  submitter_follow_up_id = 'submitter_follow_up_id',
+  test_interval = 'test_interval',
 }
 
 export enum TreatmentFieldsEnum {
@@ -169,7 +174,7 @@ type TypeEntitySchemaNameToIndenfiterType = {
   [ClinicalEntitySchemaNames.SPECIMEN]: ClinicalFields;
   [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: ClinicalFields;
   [ClinicalEntitySchemaNames.EXPOSURE]: ClinicalFields;
-  [ClinicalEntitySchemaNames.BIOMARKER]: ClinicalFields;
+  [ClinicalEntitySchemaNames.BIOMARKER]: ClinicalFields[];
   [ClinicalEntitySchemaNames.FAMILY_HISTORY]: ClinicalFields[];
   [ClinicalEntitySchemaNames.FOLLOW_UP]: ClinicalFields;
   [ClinicalEntitySchemaNames.TREATMENT]: ClinicalFields;
@@ -186,12 +191,19 @@ export const ClinicalUniqueIdentifier: TypeEntitySchemaNameToIndenfiterType = {
   [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]:
     PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id,
   [ClinicalEntitySchemaNames.EXPOSURE]: ExposureFieldsEnum.submitter_donor_id,
-  [ClinicalEntitySchemaNames.BIOMARKER]: BiomarkerFieldsEnum.submitter_donor_id,
   // Family history is an independent entity, but it must be uniquely identified by 2 ids,
   // because family_relative_id field is NOT unique within a program, it's only unique within a donor.
   [ClinicalEntitySchemaNames.FAMILY_HISTORY]: [
     FamilyHistoryFieldsEnum.submitter_donor_id,
     FamilyHistoryFieldsEnum.family_relative_id,
+  ],
+  [ClinicalEntitySchemaNames.BIOMARKER]: [
+    BiomarkerFieldsEnum.submitter_donor_id,
+    BiomarkerFieldsEnum.submitter_specimen_id,
+    BiomarkerFieldsEnum.submitter_primary_diagnosis_id,
+    BiomarkerFieldsEnum.submitter_treatment_id,
+    BiomarkerFieldsEnum.submitter_follow_up_id,
+    BiomarkerFieldsEnum.test_interval,
   ],
   [ClinicalEntitySchemaNames.FOLLOW_UP]: FollowupFieldsEnum.submitter_follow_up_id,
   [ClinicalEntitySchemaNames.TREATMENT]: TreatmentFieldsEnum.submitter_treatment_id,

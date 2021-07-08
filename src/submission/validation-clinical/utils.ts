@@ -393,6 +393,7 @@ export async function checkClinicalEntityDoesntBelongToOtherDonor(
     | ClinicalEntitySchemaNames.FAMILY_HISTORY
     | ClinicalEntitySchemaNames.REGISTRATION
     | ClinicalEntitySchemaNames.COMORBIDITY
+    | ClinicalEntitySchemaNames.BIOMARKER
   >,
   record: DeepReadonly<SubmittedClinicalRecord>,
   existentDonor: DeepReadonly<Donor>,
