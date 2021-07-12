@@ -114,8 +114,14 @@
             ]
           },
           "exposure": {
+            "checkAlcoholConsumptionCategory": [
+              "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n      \n      // checks for a string just consisting of whitespace\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      \n      alcoholHistoryCategories = [\"daily drinker\", \"occasional drinker (< once a month)\", \"social drinker (> once a month, < once a week)\", \"weekly drinker (>=1x a week)\"];\n    \n      if (!$field || $field === null || checkforEmpty($field)) {\n         if ($row.alcohol_history && $row.alcohol_history != null && !(checkforEmpty($row.alcohol_history)) && $row.alcohol_history.trim().toLowerCase() === 'yes') {\n            result = {valid:false, message: `The '${$name}' field must be submitted if donor has an alcohol history.`};\n         }\n      }\n      else {\n         alcoholConsumptionCategory = $field.trim().toLowerCase();\n         if (alcoholHistoryCategories.includes(alcoholConsumptionCategory) && (!$row.alcohol_history || $row.alcohol_history === null || checkforEmpty($row.alcohol_history))) {\n            result = {valid:false, message: `The 'alcohol_history' field must be submitted if donor is a '${alcoholConsumptionCategory}'.`};\n         }\n      }\n      return result;\n  })"
+            ],
+            "checkAlcoholHistory": [
+              "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n      \n      // checks for a string just consisting of whitespace\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      alcoholHistoryCategories = [\"daily drinker\", \"occasional drinker (< once a month)\", \"social drinker (> once a month, < once a week)\", \"weekly drinker (>=1x a week)\"];\n      noOrUnknownAllowedCategories = [\"none\", \"occasional drinker (< once a month)\", \"unknown\"];\n       \n      if ($row.alcohol_consumption_category && $row.alcohol_consumption_category != null && !(checkforEmpty($row.alcohol_consumption_category))) {\n         alcoholConsumptionCategory = $row.alcohol_consumption_category.trim().toLowerCase();\n         if ((!$field || $field == null || checkforEmpty($field)) && alcoholHistoryCategories.includes(alcoholConsumptionCategory)) {\n            result = {valid:false, message: `If the donor is a '${alcoholConsumptionCategory}', then the 'alcohol_history' field must be submitted as well.`};\n         }\n         if ((!$field || $field === null || checkforEmpty($field) || $field.trim().toLowerCase() === 'no') && (!(noOrUnknownAllowedCategories.includes(alcoholConsumptionCategory)))) {\n            result = {valid:false, message: `If the donor is a '${alcoholConsumptionCategory}', then the 'alcohol_history' field must be submitted as 'Yes'.`};\n         }\n      }\n      return result;\n  })"
+            ],
             "checkAlcoholType": [
-              "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n      \n      // checks for a string just consisting of whitespace\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      exclusionTerms = [\"no\", \"unknown\"]; \n     \n      if ($field != null && !(checkforEmpty($field))) {\n         if ($row.alcohol_consumption_category && $row.alcohol_consumption_category != null && !(checkforEmpty($row.alcohol_consumption_category)) && $row.alcohol_consumption_category.trim().toLowerCase() === \"none\") {\n            if (!$row.alcohol_history || $row.alcohol_history === null || checkforEmpty($row.alcohol_history) || exclusionTerms.includes($row.alcohol_history.trim().toLowerCase())) {\n                  result = {valid: false, message: `The '${$name}' field should not be submitted if donor has no alcohol history and does not currently consume alcohol.`};\n            }\n         }\n         else if (!$row.alcohol_consumption_category || $row.alcohol_consumption_category === null || checkforEmpty($row.alcohol_consumption_category) || $row.alcohol_consumption_category.trim().toLowerCase() === \"unknown\") {\n            result = {valid: false, message: `If the '${$name}' field is submitted, then the 'alcohol_consumption_category' field must be submitted as well.`};\n         }\n      }\n      return result;\n  })"
+              "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n      \n      // checks for a string just consisting of whitespace\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      exclusionTerms = [\"no\", \"none\", \"unknown\"]; \n      requiresAlcoholType = [\"daily drinker\", \"occasional drinker (< once a month)\", \"social drinker (> once a month, < once a week)\", \"weekly drinker (>=1x a week)\"];\n    \n      if ($row.alcohol_consumption_category && $row.alcohol_consumption_category != null && !(checkforEmpty($row.alcohol_consumption_category))) {\n         alcoholConsumptionCategory = $row.alcohol_consumption_category.trim().toLowerCase();\n         if ($field && $field != null && !(checkforEmpty($field))) {\n            if (exclusionTerms.includes(alcoholConsumptionCategory)) {\n               result = {valid: false, message: `If the 'alcohol_consumption_category' field is '${alcoholConsumptionCategory}', then the 'alcohol_type' field should not be submitted.`};\n            }\n         }\n         else {\n            if (requiresAlcoholType.includes(alcoholConsumptionCategory)) {\n               result = {valid: false, message: `If the 'alcohol_consumption_category' field is '${alcoholConsumptionCategory}', then the 'alcohol_type' field must be submitted.`};\n            }\n         }\n      }\n      if ($field && $field != null && !(checkforEmpty($field)) && (!$row.alcohol_consumption_category || $row.alcohol_consumption_category === null || checkforEmpty($row.alcohol_consumption_category))) {\n         result = {valid: false, message: `The 'alcohol_consumption_category' field is required if the '${$name}' field is submitted.`};\n      }\n      return result;\n  })"
             ],
             "checkExerciseIntensity": [
               "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n      \n      // checks for a string just consisting of whitespace\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n     \n      if ($field != null || !(checkforEmpty($field))) {\n         if ($row.exercise_frequency && $row.exercise_frequency != null && !(checkforEmpty($row.exercise_frequency)) && $row.exercise_frequency.trim().toLowerCase() === \"never\") {\n            result = {valid: false, message: `The 'exercise_frequency' field cannot be 'never' if the '${$name}' field is submitted.`};\n         }\n      } \n      return result;\n  })"
@@ -1580,6 +1586,14 @@
             "Weight loss - Grade 1",
             "Weight loss - Grade 2",
             "Weight loss - Grade 3"
+          ],
+          "tumour_assessmemt": ["Cannot be assessed", "Involved", "Not involved", "Not applicable"],
+          "state": [
+            "Abutment (<180 degree contact)",
+            "Encasement",
+            "Indeterminate",
+            "No involvement",
+            "Unknown"
           ]
         },
         "regex": { "submitter_id": "^[A-Za-z0-9\\-\\._]{1,64}" },
@@ -4585,8 +4599,9 @@
               "name": "immunotherapy_type",
               "valueType": "string",
               "description": "Indicate the type of immunotherapy administered to donor.",
-              "meta": { "displayName": "Immunotherapy Type" },
+              "meta": { "displayName": "Immunotherapy Type", "core": true },
               "restrictions": {
+                "required": true,
                 "codeList": [
                   "Cell-based",
                   "Immune checkpoint inhibitors",
@@ -4618,6 +4633,384 @@
                 "displayName": "Immunotherapy Drug Name"
               },
               "restrictions": { "required": true }
+            }
+          ]
+        },
+        {
+          "name": "surgery",
+          "description": "The collection of data elements related to a donor's surgical treatment at a specific point in the clinical record. To submit multiple surgeries for a single donor, please submit multiple rows in the treatment file for this donor.",
+          "meta": { "parent": "donor" },
+          "fields": [
+            {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.program_id",
+                "displayName": "Program ID"
+              },
+              "restrictions": { "required": true }
+            },
+            {
+              "name": "submitter_donor_id",
+              "description": "Unique identifier of the donor, assigned by the data provider.",
+              "valueType": "string",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.submitter_donor_id",
+                "displayName": "Submitter Donor ID"
+              },
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
+            },
+            {
+              "name": "submitter_treatment_id",
+              "description": "Unique identifier of the treatment, assigned by the data provider.",
+              "valueType": "string",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "displayName": "Submitter Treatment ID"
+              },
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
+            },
+            {
+              "name": "procedure_type",
+              "valueType": "string",
+              "description": "Indicate they type of surgical procedure that was performed.",
+              "meta": { "displayName": "Procedure Type " },
+              "restrictions": {
+                "codeList": [
+                  "Biopsy",
+                  "Breast-conserving surgery (BCN)",
+                  "Bypass procedure / Jejunostomy only",
+                  "Cholecystojejunostomy",
+                  "Choledochojejunostomy",
+                  "Classic Whipple",
+                  "Distal Pancreatectomy",
+                  "Gastrectomy: Completion",
+                  "Gastrectomy: Distal",
+                  "Gastrectomy: Extended Total",
+                  "Gastrectomy: Merendino",
+                  "Gastrectomy: Proximal",
+                  "Gastrectomy: Total",
+                  "Gastrojejunostomy",
+                  "Hepaticojejunostomy",
+                  "Jejunostomy",
+                  "Laparotomy",
+                  "Laparotomy (Open and Shut)",
+                  "Lobectomy",
+                  "Lumpectomy",
+                  "Lymph node dissection performed at time of resection of primary",
+                  "Lymph node surgery",
+                  "Mastectomy",
+                  "Minimally Invasive Oesophagectomy",
+                  "Morcellation",
+                  "Oesophagectomy: 2 – Phase (Ivor-Lewis)",
+                  "Oesophagectomy: 3 – Phase (McKeown)",
+                  "Oesophagectomy: Left thoraco-abdominal approach",
+                  "Oesophagectomy: Transhiatal",
+                  "Omentectomy",
+                  "Other",
+                  "Partial Resection",
+                  "Pneumonectomy",
+                  "Prophylactic mastectomy",
+                  "Pylorus Whipple",
+                  "Radical Whipple",
+                  "Sleeve Resection",
+                  "Stent",
+                  "Subtotal Pancreatectomy",
+                  "Surgical resection",
+                  "Thoracotomy (Open & Shut)",
+                  "Total Pancreatectomy",
+                  "Wedge resection (Segmentectomy)",
+                  "Wedge/localised gastric resection"
+                ]
+              }
+            },
+            {
+              "name": "biopsy_type",
+              "valueType": "string",
+              "description": "If Biopsy was selected as the `procedure_type', indicate the type of biopsy that was performed.",
+              "meta": { "displayName": "Biopsy Type", "dependsOn": "surgery.procedure_type" },
+              "restrictions": {
+                "codeList": [
+                  "Biopsy",
+                  "Endoscopic biopsy",
+                  "Endoscopic brushing ",
+                  "Fine Need Aspiration (FNA) ",
+                  "NOS",
+                  "Open/Surgical biopsy ",
+                  "Other",
+                  "Percutaneous",
+                  "Unknown"
+                ]
+              }
+            },
+            {
+              "name": "procedure_intent",
+              "description": "Indicate the intended disease outcome for which the procedure is given. (Reference: NCIt C124307)",
+              "valueType": "string",
+              "restrictions": {
+                "codeList": ["Exploratory", "Curative", "Palliative", "Other", "Staging", "Unknown"]
+              },
+              "meta": { "displayName": "Procedure  Intent" }
+            },
+            {
+              "name": "procedure_interval",
+              "valueType": "integer",
+              "description": "The interval between primary diagnosis and when the surgical procedure was performed, in days.",
+              "meta": { "displayName": "Procedure Interval" },
+              "restrictions": { "range": { "exclusiveMin": 0 } }
+            },
+            {
+              "name": "procedure_site",
+              "valueType": "string",
+              "description": "Indicate the ICD-O-3 topography code for the anatomic site where procedure was performed, according to the International Classification of Diseases for Oncology, 3rd Edition (WHO ICD-O-3).",
+              "meta": {
+                "displayName": "Procedure Site",
+                "notes": "Refer to the ICD-O-3 manual for guidelines at https://apps.who.int/iris/handle/10665/42344."
+              },
+              "restrictions": { "regex": "^[C][0-9]{2}(.[0-9]{1})?$" }
+            },
+            {
+              "name": "procedure_site_other",
+              "valueType": "string",
+              "description": "Free text to indicate additional details about the procedure site.",
+              "meta": { "displayName": "Procedure Site Details" },
+              "restrictions": {}
+            },
+            {
+              "name": "procedure_location",
+              "valueType": "string",
+              "description": "Indicate whether procedure was done on primary, local recurrence or metastatic location.",
+              "meta": { "displayName": "Procedure Location" },
+              "restrictions": { "codeList": ["Local recurrence", "Metastatic", "Primary"] }
+            },
+            {
+              "name": "tumour_size_status",
+              "valueType": "string",
+              "description": "Indicate if tumour size was determined during the procedure.",
+              "meta": { "displayName": "Tumour Size Status" },
+              "restrictions": {
+                "codeList": ["Yes", "No", "Not Reported", "Not Applicable", "Unknown"]
+              }
+            },
+            {
+              "name": "tumour_length",
+              "valueType": "number",
+              "description": "Indicate the length of the tumour, in mm.",
+              "meta": { "displayName": "Tumour Length" },
+              "restrictions": { "range": { "exclusiveMin": 0 } }
+            },
+            {
+              "name": "tumour_width",
+              "valueType": "number",
+              "description": "Indicate the width of the tumour, in mm.",
+              "meta": { "displayName": "Tumour Width" },
+              "restrictions": { "range": { "exclusiveMin": 0 } }
+            },
+            {
+              "name": "total_tumour_size",
+              "valueType": "number",
+              "description": "Indicate the total tumour size, in mm.",
+              "meta": { "displayName": "Total Tumour Size" },
+              "restrictions": { "range": { "exclusiveMin": 0 } }
+            },
+            {
+              "name": "tumour_focality",
+              "valueType": "string",
+              "description": "Indicate the tumour focality, the definition of the limitaion to a specific area of a tumour. ",
+              "meta": { "displayName": "Tumour Focality" },
+              "restrictions": { "codeList": ["Cannot be assessed", "Multifocal", "Unifocal"] }
+            },
+            {
+              "name": "margin_status",
+              "valueType": "string",
+              "description": "Indicate if intraoperative margins were involved.",
+              "meta": { "displayName": "Margin Status" },
+              "restrictions": {
+                "codeList": ["Negative", "Other", "Positive", "Suspicious for cancer", "Unknown"]
+              }
+            },
+            {
+              "name": "proximal_margin",
+              "valueType": "string",
+              "description": "Indicate if proximal margin is involved.",
+              "meta": { "displayName": "Proximal Margin" },
+              "restrictions": {
+                "codeList": ["Cannot be assessed", "Involved", "Not involved", "Not applicable"]
+              }
+            },
+            {
+              "name": "distal_margin",
+              "valueType": "string",
+              "description": "Indicate if distal margin is involved.",
+              "meta": { "displayName": "Distal Margin" },
+              "restrictions": {
+                "codeList": ["Cannot be assessed", "Involved", "Not involved", "Not applicable"]
+              }
+            },
+            {
+              "name": "circumferential_resection_margin",
+              "valueType": "string",
+              "description": "Indicate if circumferential margin is involved.",
+              "meta": { "displayName": "Circumferential Resection Margin" },
+              "restrictions": { "codeList": ["Yes", "No", "Not Reported"] }
+            },
+            {
+              "name": "lymphovascular_invasion",
+              "valueType": "string",
+              "description": "Indicate whether lymphovascular invasion (LVI) has occurred.",
+              "meta": { "displayName": "Lymphovascular Invasion (LVI)" },
+              "restrictions": {
+                "codeList": [
+                  "Not present",
+                  "Present",
+                  "Lymphatic and small vessel invasion only",
+                  "Venous (large vessel) invasion only",
+                  "Both lymphatic and small vessel and venous (large vessel) invasion",
+                  "Unknown"
+                ]
+              }
+            },
+            {
+              "name": "perineural_invasion",
+              "valueType": "string",
+              "description": "Indicate whether perineural invasion has occurred.",
+              "meta": { "displayName": "Perineural Invasion" },
+              "restrictions": {
+                "codeList": [
+                  "Absent or not identified",
+                  "Cannot be assessed",
+                  "Present or identified",
+                  "Unknown"
+                ]
+              }
+            },
+            {
+              "name": "microvenous_invasion",
+              "valueType": "string",
+              "description": "Indicate whether microvenous invasion has occurred.",
+              "meta": { "displayName": "Microvenous Invasion" },
+              "restrictions": { "codeList": ["Indeterminate", "No", "Yes", "Unknown"] }
+            },
+            {
+              "name": "intraoperative_findings",
+              "valueType": "string",
+              "description": "Indicate other additional intraoperative findings.",
+              "meta": { "displayName": "Intraoperative Findings" },
+              "restrictions": {
+                "codeList": [
+                  "Ascites",
+                  "Borderline resectable",
+                  "Coeliac axis involvement",
+                  "Metastasis to distant lymph nodes",
+                  "Metastasis to other sites",
+                  "None",
+                  "Peritoneal dissemination",
+                  "Resectable",
+                  "Unknown"
+                ]
+              }
+            },
+            {
+              "name": "common_bile_duct_margin",
+              "valueType": "string",
+              "description": "Indicate if common bile duct margin is involved.",
+              "meta": { "displayName": "Common Bile Duct Margin" },
+              "restrictions": {
+                "codeList": ["Cannot be assessed", "Involved", "Not involved", "Not applicable"]
+              }
+            },
+            {
+              "name": "unicinate_margin",
+              "valueType": "string",
+              "description": "Indicate if unicinate margin (retroperitoneal/superior mesenteric artery) is involved.",
+              "meta": { "displayName": "Unicinate Margin" },
+              "restrictions": {
+                "codeList": ["Cannot be assessed", "Involved", "Not involved", "Not applicable"]
+              }
+            },
+            {
+              "name": "periuncinate_margin",
+              "valueType": "string",
+              "description": "Indicate if periuncinate margin is involved.",
+              "meta": { "displayName": "Periuncinate Margin" },
+              "restrictions": {
+                "codeList": ["Cannot be assessed", "Involved", "Not involved", "Not applicable"]
+              }
+            },
+            {
+              "name": "pancreatic_carcinoma_groove_margin",
+              "valueType": "string",
+              "description": "Indicate if pancreatic carcinoma groove margin is involved.",
+              "meta": { "displayName": "Pancreatic Carcinoma Groove Margin" },
+              "restrictions": {
+                "codeList": ["Cannot be assessed", "Involved", "Not involved", "Not applicable"]
+              }
+            },
+            {
+              "name": "state_of_pv_smv",
+              "valueType": "string",
+              "description": "Indicate the state of portal vein and/or superior mesenteric vein.",
+              "meta": { "displayName": "State of Portal/Superior Mesenteric Vein" },
+              "restrictions": {
+                "codeList": [
+                  "Abutment (<180 degree contact)",
+                  "Encasement",
+                  "Indeterminate",
+                  "No involvement",
+                  "Unknown"
+                ]
+              }
+            },
+            {
+              "name": "state_of_pma",
+              "valueType": "string",
+              "description": "Indicate the state of superior mesenteric artery.",
+              "meta": { "displayName": "State of Superior Mesenteric Artery" },
+              "restrictions": {
+                "codeList": [
+                  "Abutment (<180 degree contact)",
+                  "Encasement",
+                  "Indeterminate",
+                  "No involvement",
+                  "Unknown"
+                ]
+              }
+            },
+            {
+              "name": "state_of_duodenal",
+              "valueType": "string",
+              "description": "Indicate the state of duodenal involvement.",
+              "meta": { "displayName": "State of Duodenal Involvement" },
+              "restrictions": {
+                "codeList": [
+                  "Abutment (<180 degree contact)",
+                  "Encasement",
+                  "Indeterminate",
+                  "No involvement",
+                  "Unknown"
+                ]
+              }
+            },
+            {
+              "name": "state_of_common_bile_duct",
+              "valueType": "string",
+              "description": "Indicate the state of common bile duct involvement",
+              "meta": { "displayName": "State of Common Bile Duct Involvement" },
+              "restrictions": {
+                "codeList": [
+                  "Abutment (<180 degree contact)",
+                  "Encasement",
+                  "Indeterminate",
+                  "No involvement",
+                  "Unknown"
+                ]
+              }
             }
           ]
         },
@@ -5412,7 +5805,12 @@
               "name": "alcohol_history",
               "valueType": "string",
               "meta": { "displayName": "Alcohol History" },
-              "restrictions": { "codeList": ["Yes", "No", "Unknown"] }
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n      \n      // checks for a string just consisting of whitespace\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      alcoholHistoryCategories = [\"daily drinker\", \"occasional drinker (< once a month)\", \"social drinker (> once a month, < once a week)\", \"weekly drinker (>=1x a week)\"];\n      noOrUnknownAllowedCategories = [\"none\", \"occasional drinker (< once a month)\", \"unknown\"];\n       \n      if ($row.alcohol_consumption_category && $row.alcohol_consumption_category != null && !(checkforEmpty($row.alcohol_consumption_category))) {\n         alcoholConsumptionCategory = $row.alcohol_consumption_category.trim().toLowerCase();\n         if ((!$field || $field == null || checkforEmpty($field)) && alcoholHistoryCategories.includes(alcoholConsumptionCategory)) {\n            result = {valid:false, message: `If the donor is a '${alcoholConsumptionCategory}', then the 'alcohol_history' field must be submitted as well.`};\n         }\n         if ((!$field || $field === null || checkforEmpty($field) || $field.trim().toLowerCase() === 'no') && (!(noOrUnknownAllowedCategories.includes(alcoholConsumptionCategory)))) {\n            result = {valid:false, message: `If the donor is a '${alcoholConsumptionCategory}', then the 'alcohol_history' field must be submitted as 'Yes'.`};\n         }\n      }\n      return result;\n  })"
+                ]
+              }
             },
             {
               "description": "Describe the donor's current level of alcohol use as self-reported by the donor. (Reference: caDSR CDE ID 3457767)",
@@ -5427,6 +5825,9 @@
                   "Social Drinker (> once a month, < once a week)",
                   "Unknown",
                   "Weekly Drinker (>=1x a week)"
+                ],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n      \n      // checks for a string just consisting of whitespace\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      \n      alcoholHistoryCategories = [\"daily drinker\", \"occasional drinker (< once a month)\", \"social drinker (> once a month, < once a week)\", \"weekly drinker (>=1x a week)\"];\n    \n      if (!$field || $field === null || checkforEmpty($field)) {\n         if ($row.alcohol_history && $row.alcohol_history != null && !(checkforEmpty($row.alcohol_history)) && $row.alcohol_history.trim().toLowerCase() === 'yes') {\n            result = {valid:false, message: `The '${$name}' field must be submitted if donor has an alcohol history.`};\n         }\n      }\n      else {\n         alcoholConsumptionCategory = $field.trim().toLowerCase();\n         if (alcoholHistoryCategories.includes(alcoholConsumptionCategory) && (!$row.alcohol_history || $row.alcohol_history === null || checkforEmpty($row.alcohol_history))) {\n            result = {valid:false, message: `The 'alcohol_history' field must be submitted if donor is a '${alcoholConsumptionCategory}'.`};\n         }\n      }\n      return result;\n  })"
                 ]
               }
             },
@@ -5443,7 +5844,7 @@
               "restrictions": {
                 "codeList": ["Beer", "Liquor", "Other", "Unknown", "Wine"],
                 "script": [
-                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n      \n      // checks for a string just consisting of whitespace\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      exclusionTerms = [\"no\", \"unknown\"]; \n     \n      if ($field != null && !(checkforEmpty($field))) {\n         if ($row.alcohol_consumption_category && $row.alcohol_consumption_category != null && !(checkforEmpty($row.alcohol_consumption_category)) && $row.alcohol_consumption_category.trim().toLowerCase() === \"none\") {\n            if (!$row.alcohol_history || $row.alcohol_history === null || checkforEmpty($row.alcohol_history) || exclusionTerms.includes($row.alcohol_history.trim().toLowerCase())) {\n                  result = {valid: false, message: `The '${$name}' field should not be submitted if donor has no alcohol history and does not currently consume alcohol.`};\n            }\n         }\n         else if (!$row.alcohol_consumption_category || $row.alcohol_consumption_category === null || checkforEmpty($row.alcohol_consumption_category) || $row.alcohol_consumption_category.trim().toLowerCase() === \"unknown\") {\n            result = {valid: false, message: `If the '${$name}' field is submitted, then the 'alcohol_consumption_category' field must be submitted as well.`};\n         }\n      }\n      return result;\n  })"
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n      \n      // checks for a string just consisting of whitespace\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      exclusionTerms = [\"no\", \"none\", \"unknown\"]; \n      requiresAlcoholType = [\"daily drinker\", \"occasional drinker (< once a month)\", \"social drinker (> once a month, < once a week)\", \"weekly drinker (>=1x a week)\"];\n    \n      if ($row.alcohol_consumption_category && $row.alcohol_consumption_category != null && !(checkforEmpty($row.alcohol_consumption_category))) {\n         alcoholConsumptionCategory = $row.alcohol_consumption_category.trim().toLowerCase();\n         if ($field && $field != null && !(checkforEmpty($field))) {\n            if (exclusionTerms.includes(alcoholConsumptionCategory)) {\n               result = {valid: false, message: `If the 'alcohol_consumption_category' field is '${alcoholConsumptionCategory}', then the 'alcohol_type' field should not be submitted.`};\n            }\n         }\n         else {\n            if (requiresAlcoholType.includes(alcoholConsumptionCategory)) {\n               result = {valid: false, message: `If the 'alcohol_consumption_category' field is '${alcoholConsumptionCategory}', then the 'alcohol_type' field must be submitted.`};\n            }\n         }\n      }\n      if ($field && $field != null && !(checkforEmpty($field)) && (!$row.alcohol_consumption_category || $row.alcohol_consumption_category === null || checkforEmpty($row.alcohol_consumption_category))) {\n         result = {valid: false, message: `The 'alcohol_consumption_category' field is required if the '${$name}' field is submitted.`};\n      }\n      return result;\n  })"
                 ]
               }
             },
@@ -5714,6 +6115,130 @@
           ]
         },
         {
+          "name": "comorbidity",
+          "description": "The collection of data elements related to a donor's comorbidities. Comorbidities are any distinct entity that has existed or may occur during the clinical course of a patient who has the index disease under study. To submit multiple comorbidities for a single donor, submit multiple rows in the comorbidity file for this donor",
+          "meta": { "parent": "donor" },
+          "fields": [
+            {
+              "name": "program_id",
+              "valueType": "string",
+              "description": "Unique identifier of the ARGO program.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.program_id",
+                "displayName": "Program ID"
+              },
+              "restrictions": { "required": true }
+            },
+            {
+              "name": "submitter_donor_id",
+              "valueType": "string",
+              "description": "Unique identifier of the donor, assigned by the data provider.",
+              "meta": {
+                "validationDependency": true,
+                "primaryId": true,
+                "foreignKey": "sample_registration.submitter_donor_id",
+                "displayName": "Submitter Donor ID"
+              },
+              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
+            },
+            {
+              "name": "prior_malignancy",
+              "description": "Prior malignancy affecting donor.",
+              "restrictions": { "codeList": ["Yes", "No", "Unknown"] },
+              "valueType": "string",
+              "meta": { "displayName": "Prior Malignancy" }
+            },
+            {
+              "name": "laterality_of_prior_malignancy",
+              "description": "If donor has history of prior malignancy, indicate laterality of previous diagnosis. (Reference: caDSR CDE ID 4122391)",
+              "valueType": "string",
+              "restrictions": {
+                "codeList": [
+                  "Bilateral",
+                  "Left",
+                  "Midline",
+                  "Not applicable",
+                  "Right",
+                  "Unilateral, Side not specified",
+                  "Unknown"
+                ],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n   \n      if ($name === \"laterality_of_prior_malignancy\" && $row.laterality_of_prior_malignancy && $row.laterality_of_prior_malignancy != null && !(checkforEmpty($row.laterality_of_prior_malignancy))) {\n         if (!$row.prior_malignancy || $row.prior_malignancy === null || checkforEmpty($row.prior_malignancy) || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) {\n            result = {valid: false, message: `The 'prior_malignancy' field should be submitted as 'Yes' if the '${$name}' field is submitted.`};\n         }\n      }\n      return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.prior_malignancy",
+                "displayName": "Laterality at Prior Malignancy"
+              }
+            },
+            {
+              "name": "age_at_comorbidity_diagnosis",
+              "valueType": "integer",
+              "description": "Indicate the age of comorbidity diagnosis, in years.",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && ($field || (!(checkforEmpty($field))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The 'comorbidity_type_code' field is required if '${$name}' is submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && $field && !(checkforEmpty($field))) {\n            if (!$row.comorbidity_treatment_status || $row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status) || invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ],
+                "range": { "exclusiveMin": 0 }
+              },
+              "meta": {
+                "units": "years",
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Age at Comorbidity Diagnosis"
+              }
+            },
+            {
+              "name": "comorbidity_type_code",
+              "valueType": "string",
+              "description": "Indicate the code for the comorbidity using the WHO ICD-10 code classification (https://icd.who.int/browse10/2019/en).",
+              "restrictions": {
+                "required": true,
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      /* check if ICD-10 code is for neoplasms */\n      const neoplasmCode = (entry) => {return /^[C|D][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$/.test(decodeURI(entry))};\n\n    \n      if (neoplasmCode($row.comorbidity_type_code)) { \n         if (!$row.prior_malignancy || $row.prior_malignancy === null || checkforEmpty($row.prior_malignancy) || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) {\n           result = {valid: false, message: `If an ICD-10 code for cancer is submitted in the '${$name}' field, then 'prior_malignancy' should be submitted as 'Yes'.`}\n         }\n      }\n      else if ($row.prior_malignancy && $row.prior_malignancy != null && !(checkforEmpty($row.prior_malignancy)) && $row.prior_malignancy.trim().toLowerCase() === \"yes\" && (!(neoplasmCode($row.comorbidity_type_code)))) {\n        result = {valid: false, message: `If the 'prior_malignancy' field is submitted as 'Yes', then an ICD-10 code for cancer is expected in the '${$name}' field.`}\n      }\n      return result;\n  })"
+                ],
+                "regex": "^[A-Z][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$"
+              },
+              "meta": {
+                "primaryId": true,
+                "dependsOn": "comorbidity.prior_malignancy",
+                "examples": "E10, C50.1, I11, M06",
+                "displayName": "Comorbidity Type Code"
+              }
+            },
+            {
+              "name": "comorbidity_treatment_status",
+              "valueType": "string",
+              "description": "Indicate if the patient is being treated for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "codeList": ["Yes", "No", "Unknown"],
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && ($field || (!(checkforEmpty($field))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The 'comorbidity_type_code' field is required if '${$name}' is submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && $field && !(checkforEmpty($field))) {\n            if (!$row.comorbidity_treatment_status || $row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status) || invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_type_code",
+                "displayName": "Comorbidity Treatment"
+              }
+            },
+            {
+              "name": "comorbidity_treatment",
+              "valueType": "string",
+              "description": "Indicate treatment details for the comorbidity (this includes prior malignancies).",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && ($field || (!(checkforEmpty($field))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The 'comorbidity_type_code' field is required if '${$name}' is submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && $field && !(checkforEmpty($field))) {\n            if (!$row.comorbidity_treatment_status || $row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status) || invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n         }\n     }\n     return result;\n  })"
+                ]
+              },
+              "meta": {
+                "dependsOn": "comorbidity.comorbidity_treatment_status",
+                "displayName": "Comorbidity Treatment Type"
+              }
+            }
+          ]
+        },
+        {
           "name": "biomarker",
           "description": "The collection of data elements describing a donor's biomarker tests. A biomarker is a biological molecule found in blood, other body fluids, or tissues that is indicative of the presence of cancer in the body. Each row should include biomarker tests associated with a particular clinical event or time interval.",
           "meta": { "parent": "donor" },
@@ -5879,6 +6404,13 @@
               "meta": { "displayName": "Estrogen Receptor Allred Score" }
             },
             {
+              "name": "er_percent_positive",
+              "description": "Indicate a value, in decimals, that represents the percent of cells staining estrogen receptor positive by IHC.",
+              "valueType": "number",
+              "meta": { "displayName": "Estrogen Receptor Percent Positive" },
+              "restrictions": { "range": { "min": 0, "max": 1 } }
+            },
+            {
               "description": "Indicate the expression of human epidermal growth factor receptor-2 (HER2) assessed by immunohistochemistry (IHC). (Reference: AJCC 8th Edition, Chapter 48)",
               "name": "her2_ihc_status",
               "valueType": "string",
@@ -5947,6 +6479,13 @@
                 ]
               },
               "meta": { "displayName": "Progesterone Receptor Allred Score" }
+            },
+            {
+              "name": "pr_percent_positive",
+              "description": "Indicate a value, in decimals, that represents the percent of cells staining progesterone receptor positive by IHC.",
+              "valueType": "number",
+              "meta": { "displayName": "Progesterone Receptor Percent Positive" },
+              "restrictions": { "range": { "min": 0, "max": 1 } }
             },
             {
               "description": "Indicate the immunohistochemical test result that refers to the overexpression or lack of expression of programmed death ligand 1 (PD-L1) in a tissue sample of a primary or metastatic malignant neoplasm. (Reference NCIt: C122807)",
@@ -6089,130 +6628,6 @@
                 ]
               },
               "meta": { "displayName": "HPV DNA Status" }
-            }
-          ]
-        },
-        {
-          "name": "comorbidity",
-          "description": "The collection of data elements related to a donor's comorbidities. Comorbidities are any distinct entity that has existed or may occur during the clinical course of a patient who has the index disease under study. To submit multiple comorbidities for a single donor, submit multiple rows in the comorbidity file for this donor",
-          "meta": { "parent": "donor" },
-          "fields": [
-            {
-              "name": "program_id",
-              "valueType": "string",
-              "description": "Unique identifier of the ARGO program.",
-              "meta": {
-                "validationDependency": true,
-                "primaryId": true,
-                "foreignKey": "sample_registration.program_id",
-                "displayName": "Program ID"
-              },
-              "restrictions": { "required": true }
-            },
-            {
-              "name": "submitter_donor_id",
-              "valueType": "string",
-              "description": "Unique identifier of the donor, assigned by the data provider.",
-              "meta": {
-                "validationDependency": true,
-                "primaryId": true,
-                "foreignKey": "sample_registration.submitter_donor_id",
-                "displayName": "Submitter Donor ID"
-              },
-              "restrictions": { "required": true, "regex": "^[A-Za-z0-9\\-\\._]{1,64}" }
-            },
-            {
-              "name": "prior_malignancy",
-              "description": "Prior malignancy affecting donor.",
-              "restrictions": { "codeList": ["Yes", "No", "Unknown"] },
-              "valueType": "string",
-              "meta": { "displayName": "Prior Malignancy" }
-            },
-            {
-              "name": "laterality_of_prior_malignancy",
-              "description": "If donor has history of prior malignancy, indicate laterality of previous diagnosis. (Reference: caDSR CDE ID 4122391)",
-              "valueType": "string",
-              "restrictions": {
-                "codeList": [
-                  "Bilateral",
-                  "Left",
-                  "Midline",
-                  "Not applicable",
-                  "Right",
-                  "Unilateral, Side not specified",
-                  "Unknown"
-                ],
-                "script": [
-                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n   \n      if ($name === \"laterality_of_prior_malignancy\" && $row.laterality_of_prior_malignancy && $row.laterality_of_prior_malignancy != null && !(checkforEmpty($row.laterality_of_prior_malignancy))) {\n         if (!$row.prior_malignancy || $row.prior_malignancy === null || checkforEmpty($row.prior_malignancy) || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) {\n            result = {valid: false, message: `The 'prior_malignancy' field should be submitted as 'Yes' if the '${$name}' field is submitted.`};\n         }\n      }\n      return result;\n  })"
-                ]
-              },
-              "meta": {
-                "dependsOn": "comorbidity.prior_malignancy",
-                "displayName": "Laterality at Prior Malignancy"
-              }
-            },
-            {
-              "name": "age_at_comorbidity_diagnosis",
-              "valueType": "integer",
-              "description": "Indicate the age of comorbidity diagnosis, in years.",
-              "restrictions": {
-                "script": [
-                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && ($field || (!(checkforEmpty($field))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The 'comorbidity_type_code' field is required if '${$name}' is submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && $field && !(checkforEmpty($field))) {\n            if (!$row.comorbidity_treatment_status || $row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status) || invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n         }\n     }\n     return result;\n  })"
-                ],
-                "range": { "exclusiveMin": 0 }
-              },
-              "meta": {
-                "units": "years",
-                "dependsOn": "comorbidity.comorbidity_type_code",
-                "displayName": "Age at Comorbidity Diagnosis"
-              }
-            },
-            {
-              "name": "comorbidity_type_code",
-              "valueType": "string",
-              "description": "Indicate the code for the comorbidity using the WHO ICD-10 code classification (https://icd.who.int/browse10/2019/en).",
-              "restrictions": {
-                "required": true,
-                "script": [
-                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      /* check if ICD-10 code is for neoplasms */\n      const neoplasmCode = (entry) => {return /^[C|D][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$/.test(decodeURI(entry))};\n\n    \n      if (neoplasmCode($row.comorbidity_type_code)) { \n         if (!$row.prior_malignancy || $row.prior_malignancy === null || checkforEmpty($row.prior_malignancy) || invalidTypes.includes($row.prior_malignancy.trim().toLowerCase())) {\n           result = {valid: false, message: `If an ICD-10 code for cancer is submitted in the '${$name}' field, then 'prior_malignancy' should be submitted as 'Yes'.`}\n         }\n      }\n      else if ($row.prior_malignancy && $row.prior_malignancy != null && !(checkforEmpty($row.prior_malignancy)) && $row.prior_malignancy.trim().toLowerCase() === \"yes\" && (!(neoplasmCode($row.comorbidity_type_code)))) {\n        result = {valid: false, message: `If the 'prior_malignancy' field is submitted as 'Yes', then an ICD-10 code for cancer is expected in the '${$name}' field.`}\n      }\n      return result;\n  })"
-                ],
-                "regex": "^[A-Z][0-9]{2}(.[0-9]{1,3}[A-Z]{0,1})?$"
-              },
-              "meta": {
-                "primaryId": true,
-                "dependsOn": "comorbidity.prior_malignancy",
-                "examples": "E10, C50.1, I11, M06",
-                "displayName": "Comorbidity Type Code"
-              }
-            },
-            {
-              "name": "comorbidity_treatment_status",
-              "valueType": "string",
-              "description": "Indicate if the patient is being treated for the comorbidity (this includes prior malignancies).",
-              "restrictions": {
-                "codeList": ["Yes", "No", "Unknown"],
-                "script": [
-                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && ($field || (!(checkforEmpty($field))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The 'comorbidity_type_code' field is required if '${$name}' is submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && $field && !(checkforEmpty($field))) {\n            if (!$row.comorbidity_treatment_status || $row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status) || invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n         }\n     }\n     return result;\n  })"
-                ]
-              },
-              "meta": {
-                "dependsOn": "comorbidity.comorbidity_type_code",
-                "displayName": "Comorbidity Treatment"
-              }
-            },
-            {
-              "name": "comorbidity_treatment",
-              "valueType": "string",
-              "description": "Indicate treatment details for the comorbidity (this includes prior malignancies).",
-              "restrictions": {
-                "script": [
-                  "(function validate(inputs) {\n      const {$row, $name, $field} = inputs;\n      let result = {valid: true, message: \"Ok\"};\n\n      \n      /* checks for a string just consisting of whitespace */\n      const checkforEmpty = (entry) => {return /^\\s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n      const invalidTypes = [\"no\", \"unknown\"]\n      optionalFields = [\"age_at_comorbidity_diagnosis\", \"comorbidity_treatment_status\", \"comorbidity_treatment\"];\n   \n      if (optionalFields.includes($name) && ($field || (!(checkforEmpty($field))))) {\n         if (($row.comorbidity_type_code === null || checkforEmpty($row.comorbidity_type_code))) {\n            result = { valid: false, message: `The 'comorbidity_type_code' field is required if '${$name}' is submitted.`};\n         }\n         if ($name === \"comorbidity_treatment\" && $field && !(checkforEmpty($field))) {\n            if (!$row.comorbidity_treatment_status || $row.comorbidity_treatment_status === null || checkforEmpty($row.comorbidity_treatment_status) || invalidTypes.includes($row.comorbidity_treatment_status.trim().toLowerCase())) {\n               result = { valid: false, message: `The 'comorbidity_treatment_status' field should be submitted as 'Yes' if '${$name}' field is submitted.`};\n            }\n         }\n     }\n     return result;\n  })"
-                ]
-              },
-              "meta": {
-                "dependsOn": "comorbidity.comorbidity_treatment_status",
-                "displayName": "Comorbidity Treatment Type"
-              }
             }
           ]
         }
