@@ -1468,6 +1468,7 @@ describe('Submission Api', () => {
         'radiation.tsv',
         'hormone_therapy.tsv',
         'immunotherapy.tsv',
+        'surgery.tsv',
       ]);
       await validateSubmission();
       await commitActiveSubmission();
@@ -1517,6 +1518,7 @@ describe('Submission Api', () => {
         'chemotherapy_update.tsv',
         'hormone_therapy_update.tsv',
         'immunotherapy_update.tsv',
+        'surgery_update.tsv',
         'family_history_update.tsv',
       ]);
 
@@ -1534,7 +1536,7 @@ describe('Submission Api', () => {
         info: {
           deleted: ['Radiation therapy'],
           donorSubmitterId: 'ICGC_0001',
-          value: ['Chemotherapy', 'Surgery'],
+          value: ['Chemotherapy'],
         },
         message: 'The previously submitted treatment data for Radiation therapy will be deleted',
       });
@@ -1605,7 +1607,7 @@ describe('Submission Api', () => {
           chai.expect(updatedDonor.followUps?.[0].followUpId).to.eq(followUpId);
           chai.expect(updatedDonor.treatments?.[0].treatmentId).to.eq(treatmentId);
 
-          // check family history update:
+          // ** check family history update: **
           chai
             .expect(updatedDonor.familyHistory?.[0].clinicalInfo.relationship_type)
             .to.equal('Cousin');
@@ -1627,7 +1629,12 @@ describe('Submission Api', () => {
 
           chai
             .expect(updatedDonor.treatments?.[0].clinicalInfo[TreatmentFieldsEnum.treatment_type])
-            .to.deep.eq(['Chemotherapy', 'Surgery']);
+            .to.deep.eq(['Chemotherapy']);
+
+          // Surgery therapy
+          chai
+            .expect(updatedDonor.treatments?.[3].clinicalInfo[TreatmentFieldsEnum.treatment_type])
+            .to.deep.eq(['Surgery']);
 
           chai.expect(updatedDonor.treatments?.[0].therapies.length).to.eq(1);
 
@@ -1651,6 +1658,11 @@ describe('Submission Api', () => {
               updatedDonor.treatments?.[1].therapies[0].clinicalInfo['cumulative_drug_dosage'],
             )
             .to.eq(44);
+
+          // Surgery
+          chai
+            .expect(updatedDonor.treatments?.[3].therapies[0].clinicalInfo['biopsy_type'])
+            .to.equal('Endoscopic biopsy');
         });
     });
 
@@ -1665,6 +1677,7 @@ describe('Submission Api', () => {
         'radiation.tsv',
         'hormone_therapy.tsv',
         'immunotherapy.tsv',
+        'surgery.tsv',
       ]);
       await validateSubmission();
       await commitActiveSubmission();
