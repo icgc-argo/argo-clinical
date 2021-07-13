@@ -97,6 +97,8 @@ const availableValidators: { [k: string]: any } = {
 }
 ```
 
+- Run `schema_builder` to generate a new `migration-stub-schema.json` when a adding a new schema.
+
 ## Debugging Notes:
 
 If file upload fails with the error `TypeError: Cannot read property 'readFile' of undefined`, make sure you are running Node 12+
@@ -145,12 +147,13 @@ the job to import this: https://jenkins.qa.cancercollaboratory.org/job/ARGO/job/
 ## work live with overture client without publishing new versions
 
 in clinical package json:
-1- "@overturebio-stack/lectern-client": "file:/home/ballabadi/dev/repos/overture/js-lectern-client",
-2- go to lectern client, update code and `npm run build`
-3- install the updated version `npm i`
+
+1. "@overturebio-stack/lectern-client": "file:/home/ballabadi/dev/repos/overture/js-lectern-client",
+2. go to lectern client, update code and `npm run build`
+3. install the updated version `npm i`
 
 ## how to debug schema client :
 
-1- put debug point here: manager.ts function
-2- when break point hits, step into lectern client func
-3- place break point in lectern client file
+1. put debug point here: manager.ts function
+2. when break point hits, step into lectern client func
+3. place break point in lectern client file

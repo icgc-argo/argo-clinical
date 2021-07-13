@@ -2,4 +2,4 @@ program_id	submitter_donor_id	submitter_primary_diagnosis_id	submitter_treatment
 ABCD-EF	ICGC_0001	P-1	T_02	chemotherapy|radiation therapy	99	Yes	5	6	Unknown	NED
 ABCD-EF	ICGC_0001	P-1	T_03	Hormonal Therapy	99	Yes	5	6	Unknown	NED
 ABCD-EF	ICGC_0001	P-1	T_01	Immunotherapy	99	Yes	5	6	Unknown	NED
-
+ABCD-EF	ICGC_0001	P-1	T_04	Surgery	99	Yes	5	6	Unknown	NED
