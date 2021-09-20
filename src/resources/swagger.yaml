@@ -225,6 +225,13 @@ paths:
       tags:
         - Dictionary
       summary: Get a zip file with tsv templates for all dictionary schemas
+      parameters:
+        - name: excludeSampleRegistration
+          description: boolean value for excluding sample registration file, default to false.
+          in: query
+          required: false
+          schema:
+            type: boolean
       responses:
         '200':
           description: 'A zip file with all schemas'
