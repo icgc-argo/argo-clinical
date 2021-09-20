@@ -127,7 +127,7 @@ export const getAllTemplates = async (req: Request, res: Response) => {
 
   schemasDictionary.schemas
     .filter(s =>
-      excludeSampleRegistration ? s.name !== ClinicalEntitySchemaNames.REGISTRATION : () => true,
+      excludeSampleRegistration ? s.name !== ClinicalEntitySchemaNames.REGISTRATION : true,
     )
     .forEach(schema => {
       const template = createTemplate(schema);
