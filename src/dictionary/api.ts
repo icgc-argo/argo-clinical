@@ -114,6 +114,10 @@ export const getTemplate = async (req: Request, res: Response) => {
 };
 
 export const getAllTemplates = async (req: Request, res: Response) => {
+  // by default it should not exclude sample registration file.
+  const excludeSampleRegistration: boolean = req.query.excludeSampleRegistration
+    ? req.query.excludeSampleRegistration == 'true'
+    : false;
   const schemasDictionary = await manager.instance().getCurrent();
   const zip = new AdmZip();
   res
@@ -122,7 +126,9 @@ export const getAllTemplates = async (req: Request, res: Response) => {
     .attachment(`argo_submission_templates_v${schemasDictionary.version}.zip`);
 
   schemasDictionary.schemas
-    .filter(s => s.name !== ClinicalEntitySchemaNames.REGISTRATION)
+    .filter(s =>
+      excludeSampleRegistration ? s.name !== ClinicalEntitySchemaNames.REGISTRATION : true,
+    )
     .forEach(schema => {
       const template = createTemplate(schema);
       zip.addFile(
