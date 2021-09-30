@@ -39,7 +39,7 @@ const availableValidators: { [k: string]: any } = {
   [ClinicalEntitySchemaNames.RADIATION]: therapy,
   [ClinicalEntitySchemaNames.HORMONE_THERAPY]: therapy,
   [ClinicalEntitySchemaNames.IMMUNOTHERAPY]: therapy,
-  // [ClinicalEntitySchemaNames.SURGERY]: therapy,
+  [ClinicalEntitySchemaNames.SURGERY]: therapy,
 };
 
 export const submissionValidator = (clinicalType: string): any => {
