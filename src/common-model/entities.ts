@@ -147,6 +147,7 @@ export enum CommonTherapyFields {
   program_id = 'program_id',
   submitter_donor_id = 'submitter_donor_id',
   submitter_treatment_id = 'submitter_treatment_id',
+  submitter_specimen_id = 'submitter_specimen_id',
 }
 
 export enum RadiationFieldsEnum {
@@ -224,6 +225,7 @@ export const ClinicalUniqueIdentifier: TypeEntitySchemaNameToIndenfiterType = {
   [ClinicalEntitySchemaNames.SURGERY]: [
     CommonTherapyFields.submitter_donor_id,
     CommonTherapyFields.submitter_treatment_id,
+    CommonTherapyFields.submitter_specimen_id,
   ],
   [ClinicalEntitySchemaNames.RADIATION]: [
     CommonTherapyFields.submitter_donor_id,
