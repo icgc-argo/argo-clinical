@@ -1662,7 +1662,7 @@ describe('Submission Api', () => {
           // Surgery
           chai
             .expect(updatedDonor.treatments?.[3].therapies[0].clinicalInfo['biopsy_type'])
-            .to.equal('Endoscopic biopsy');
+            .to.equal('Biopsy');
         });
     });
 
