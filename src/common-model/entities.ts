@@ -44,6 +44,7 @@ export type ClinicalFields =
   | TreatmentFieldsEnum
   | TherapyRxNormFields
   | RadiationFieldsEnum
+  | SurgeryFieldsEnum
   | CommonTherapyFields
   | ExposureFieldsEnum
   | ComorbidityFieldsEnum
@@ -149,6 +150,10 @@ export enum CommonTherapyFields {
   submitter_treatment_id = 'submitter_treatment_id',
 }
 
+export enum SurgeryFieldsEnum {
+  submitter_specimen_id = 'submitter_specimen_id',
+}
+
 export enum RadiationFieldsEnum {
   radiation_therapy_modality = 'radiation_therapy_modality',
 }
@@ -224,6 +229,7 @@ export const ClinicalUniqueIdentifier: TypeEntitySchemaNameToIndenfiterType = {
   [ClinicalEntitySchemaNames.SURGERY]: [
     CommonTherapyFields.submitter_donor_id,
     CommonTherapyFields.submitter_treatment_id,
+    SurgeryFieldsEnum.submitter_specimen_id,
   ],
   [ClinicalEntitySchemaNames.RADIATION]: [
     CommonTherapyFields.submitter_donor_id,
