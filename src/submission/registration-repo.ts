@@ -40,7 +40,7 @@ export const registrationRepository: RegistrationRepository = {
     if (registration === null) {
       return undefined;
     }
-    return F(MongooseUtils.toPojo(registration));
+    return F(MongooseUtils.toPojo(registration) as ActiveRegistration);
   },
   async findByProgramId(programId: string) {
     L.debug(`in findByProgramId programId: ${programId}`);
@@ -52,10 +52,10 @@ export const registrationRepository: RegistrationRepository = {
         return undefined;
       }
       L.info(`found registration for program ${programId}: ${activeRegistration._id}`);
-      return F(MongooseUtils.toPojo(activeRegistration));
+      return F(MongooseUtils.toPojo(activeRegistration) as ActiveRegistration);
     } catch (err) {
-      L.error('failed to fetch registration', err);
-      throw new InternalError('failed to fetch registration', err);
+      L.error('failed to fetch registration', err as Error);
+      throw new InternalError('failed to fetch registration', err as Error);
     }
   },
   async create(toSave: DeepReadonly<ActiveRegistration>) {
@@ -66,10 +66,10 @@ export const registrationRepository: RegistrationRepository = {
       const doc = await activeRegistrationModel.save();
       L.debug(`new registration doc created: ${doc}`);
       L.info(`saved new registration: program: ${doc.programId} id: ${doc._id}`);
-      return F(MongooseUtils.toPojo(doc));
+      return F(MongooseUtils.toPojo(doc) as ActiveRegistration);
     } catch (err) {
-      L.error('failed to save registration', err);
-      throw new InternalError('failed to save registration', err);
+      L.error('failed to save registration', err as Error);
+      throw new InternalError('failed to save registration', err as Error);
     }
   },
   async delete(id: string): Promise<void> {
@@ -78,7 +78,7 @@ export const registrationRepository: RegistrationRepository = {
       await ActiveRegistrationModel.deleteOne({ _id: id }).exec();
       return;
     } catch (err) {
-      throw new InternalError(`failed to delete registration with Id: ${id}`, err);
+      throw new InternalError(`failed to delete registration with Id: ${id}`, err as Error);
     }
   },
 };
