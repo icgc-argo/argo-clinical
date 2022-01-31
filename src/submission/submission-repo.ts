@@ -151,7 +151,7 @@ export const submissionRepository: ClinicalSubmissionRepository = {
       if (!updated) {
         throw new Errors.StateConflict("Couldn't update program.");
       }
-      return F(updated);
+      return updated;
     } catch (err) {
       throw new InternalError(
         `failed to update ActiveSubmission with programId: ${programId} & version: ${version}`,
