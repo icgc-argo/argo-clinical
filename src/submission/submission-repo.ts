@@ -59,14 +59,16 @@ export interface ClinicalSubmissionRepository {
 export const submissionRepository: ClinicalSubmissionRepository = {
   async findAll() {
     const activeSubmissions = await ActiveSubmissionModel.find({}).exec();
-    return activeSubmissions.map((as: any) => F(MongooseUtils.toPojo(as)));
+    return activeSubmissions.map((as: any) =>
+      F(MongooseUtils.toPojo(as) as ActiveClinicalSubmission),
+    );
   },
   async findById(id: string) {
     const registration = await ActiveSubmissionModel.findById(id);
     if (registration === null) {
       return undefined;
     }
-    return F(MongooseUtils.toPojo(registration));
+    return F(MongooseUtils.toPojo(registration) as ActiveClinicalSubmission);
   },
   async findByProgramId(programId: string) {
     L.debug(`in findByProgramId programId: ${programId}`);
@@ -78,17 +80,17 @@ export const submissionRepository: ClinicalSubmissionRepository = {
         return undefined;
       }
       L.debug(`found submission for program ${programId}: ${activeSubmission.version}`);
-      return F(MongooseUtils.toPojo(activeSubmission));
+      return F(MongooseUtils.toPojo(activeSubmission) as ActiveClinicalSubmission);
     } catch (err) {
-      L.error('failed to fetch submission', err);
-      throw new InternalError('failed to fetch submission', err);
+      L.error('failed to fetch submission', err as Error);
+      throw new InternalError('failed to fetch submission', err as Error);
     }
   },
   // forceCreate? singletonCreate?
   async create(submission: DeepReadonly<ActiveClinicalSubmission>) {
     const newsubmission = new ActiveSubmissionModel(submission);
     await newsubmission.save();
-    return F(MongooseUtils.toPojo(newsubmission));
+    return F(MongooseUtils.toPojo(newsubmission) as ActiveClinicalSubmission);
   },
   async delete(id: string): Promise<void> {
     L.debug(`in delete registration id: ${id}`);
@@ -96,7 +98,7 @@ export const submissionRepository: ClinicalSubmissionRepository = {
       await ActiveSubmissionModel.deleteOne({ _id: id }).exec();
       return;
     } catch (err) {
-      throw new InternalError(`failed to delete ActiveSubmission with Id: ${id}`, err);
+      throw new InternalError(`failed to delete ActiveSubmission with Id: ${id}`, err as Error);
     }
   },
   async deleteByProgramId(programId: string): Promise<void> {
@@ -107,7 +109,7 @@ export const submissionRepository: ClinicalSubmissionRepository = {
     } catch (err) {
       throw new InternalError(
         `failed to delete ActiveSubmission with programId: ${programId}`,
-        err,
+        err as Error,
       );
     }
   },
@@ -137,15 +139,15 @@ export const submissionRepository: ClinicalSubmissionRepository = {
   async updateSubmissionFieldsWithVersion(
     programId: string,
     version: string,
-    updatingFields: DeepReadonly<ActiveClinicalSubmission>,
+    updatingFields: ActiveClinicalSubmission,
   ): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined> {
     try {
       const newVersion = uuid();
-      const updated = await ActiveSubmissionModel.findOneAndUpdate(
+      const updated = (await ActiveSubmissionModel.findOneAndUpdate(
         { programId, version },
         { ...updatingFields, version: newVersion },
         { new: true },
-      );
+      )) as ActiveClinicalSubmission;
       if (!updated) {
         throw new Errors.StateConflict("Couldn't update program.");
       }
@@ -153,7 +155,7 @@ export const submissionRepository: ClinicalSubmissionRepository = {
     } catch (err) {
       throw new InternalError(
         `failed to update ActiveSubmission with programId: ${programId} & version: ${version}`,
-        err,
+        err as Error,
       );
     }
   },
@@ -180,7 +182,7 @@ const ActiveSubmissionSchema = new mongoose.Schema(
 // If a findOneAndUpdate query object has updatedAt being set to something,
 // this pre hook will ensure it is actually set to the current time
 ActiveSubmissionSchema.pre('findOneAndUpdate', function(next) {
-  const newsubmission = this.getUpdate();
+  const newsubmission = this.getUpdate() as ActiveClinicalSubmission;
   if (newsubmission.updatedAt) {
     newsubmission.updatedAt = new Date();
   }

@@ -26,25 +26,30 @@ const L = loggerFor(__filename);
 
 export interface DictionaryMigrationRepository {
   getAll(): Promise<DeepReadonly<DictionaryMigration[]>>;
-  create(migration: DictionaryMigration): Promise<DictionaryMigration | undefined>;
-  getByState(state: MigrationState): Promise<DictionaryMigration | undefined>;
-  getById(migrationId: string): Promise<DictionaryMigration | undefined>;
+  create(migration: DictionaryMigration): Promise<DeepReadonly<DictionaryMigration | undefined>>;
+  getByState(state: MigrationState): Promise<DeepReadonly<DictionaryMigration | undefined>>;
+  getById(migrationId: string): Promise<DeepReadonly<DictionaryMigration | undefined>>;
   update(migration: DictionaryMigration): Promise<DictionaryMigration>;
 }
 
 export const migrationRepo: DictionaryMigrationRepository = {
-  create: async (migration: DictionaryMigration): Promise<DictionaryMigration | undefined> => {
+  create: async (
+    migration: DictionaryMigration,
+  ): Promise<DeepReadonly<DictionaryMigration | undefined>> => {
     const doc = new DictionaryMigrationModel(migration);
     await doc.save();
-    return F(MongooseUtils.toPojo(doc));
+    const dm = MongooseUtils.toPojo(doc) as DictionaryMigration;
+    return F(dm);
   },
-  getByState: async (state: MigrationState): Promise<DictionaryMigration | undefined> => {
+  getByState: async (
+    state: MigrationState,
+  ): Promise<DeepReadonly<DictionaryMigration | undefined>> => {
     L.debug('in migration repo get');
     const migration = await DictionaryMigrationModel.findOne({ state: state }).exec();
     if (migration == undefined) {
       return undefined;
     }
-    return F(MongooseUtils.toPojo(migration));
+    return F(MongooseUtils.toPojo(migration) as DictionaryMigration);
   },
   getAll: async (): Promise<DeepReadonly<DictionaryMigration[]>> => {
     const migrationDocs = await DictionaryMigrationModel.find({}).exec();
@@ -53,15 +58,15 @@ export const migrationRepo: DictionaryMigrationRepository = {
         return MongooseUtils.toPojo(d);
       })
       .filter(notEmpty);
-    return F(migrations);
+    return F(migrations as DictionaryMigration[]);
   },
-  getById: async (migrationId: string): Promise<DictionaryMigration | undefined> => {
+  getById: async (migrationId: string): Promise<DeepReadonly<DictionaryMigration | undefined>> => {
     L.debug('in migration repo get');
     const migration = await DictionaryMigrationModel.findOne({ _id: migrationId }).exec();
     if (migration == undefined) {
       return undefined;
     }
-    return F(MongooseUtils.toPojo(migration));
+    return F(MongooseUtils.toPojo(migration) as DictionaryMigration);
   },
   update: async (migration: DictionaryMigration): Promise<DictionaryMigration> => {
     const doc = new DictionaryMigrationModel(migration);

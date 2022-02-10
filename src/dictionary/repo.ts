@@ -49,7 +49,7 @@ export const schemaRepo: SchemaRepository = {
       { upsert: true, new: true },
     ).exec();
 
-    const resultObj = MongooseUtils.toPojo(result);
+    const resultObj = MongooseUtils.toPojo(result) as dictionaryEntities.SchemasDictionary;
     return resultObj;
   },
   get: async (
@@ -64,7 +64,7 @@ export const schemaRepo: SchemaRepository = {
     if (!doc) {
       return undefined;
     }
-    return MongooseUtils.toPojo(doc);
+    return MongooseUtils.toPojo(doc) as dictionaryEntities.SchemasDictionary;
   },
 };
 

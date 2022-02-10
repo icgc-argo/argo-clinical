@@ -109,7 +109,7 @@ export const donorDao: DonorRepository = {
     // convert the id to string to avoid runtime error on freezing
     const mapped = result
       .map((d: DonorDocument) => {
-        return MongooseUtils.toPojo(d);
+        return MongooseUtils.toPojo(d) as Donor;
       })
       .filter(notEmpty);
     return F(mapped);
@@ -135,7 +135,7 @@ export const donorDao: DonorRepository = {
     // convert the id to string to avoid runtime error on freezing
     const mapped = result
       .map((d: DonorDocument) => {
-        return MongooseUtils.toPojo(d);
+        return MongooseUtils.toPojo(d) as Donor;
       })
       .filter(notEmpty);
     return F(mapped);
@@ -211,7 +211,7 @@ export const donorDao: DonorRepository = {
     }).exec();
     // convert the id to string to avoid runtime error on freezing
     const mapped = result.map((d: DonorDocument) => {
-      return MongooseUtils.toPojo(d);
+      return MongooseUtils.toPojo(d) as Donor;
     });
     return F(mapped);
   },
@@ -224,7 +224,7 @@ export const donorDao: DonorRepository = {
       programId: programId,
     });
     const mapped = result.map((d: DonorDocument) => {
-      return MongooseUtils.toPojo(d);
+      return MongooseUtils.toPojo(d) as Donor;
     });
     return F(mapped);
   },
@@ -234,7 +234,7 @@ export const donorDao: DonorRepository = {
     unsetIsNewFlagForUpdate(newDonor);
 
     await newDonor.save();
-    return F(MongooseUtils.toPojo(newDonor));
+    return F(MongooseUtils.toPojo(newDonor) as Donor);
   },
 
   async updateAll(donors: DeepReadonly<Donor>[]) {
@@ -245,13 +245,13 @@ export const donorDao: DonorRepository = {
     });
 
     const results = await Promise.all(newDonors.map(donor => donor.save()));
-    return newDonors.map(donor => F(MongooseUtils.toPojo(donor)));
+    return newDonors.map(donor => F(MongooseUtils.toPojo(donor) as Donor));
   },
 
   async create(donor: DeepReadonly<Donor>) {
     const newDonor = new DonorModel(donor);
     const doc = await newDonor.save();
-    return F(MongooseUtils.toPojo(newDonor));
+    return F(MongooseUtils.toPojo(newDonor) as Donor);
   },
 };
 
@@ -328,7 +328,7 @@ async function findByProgramIdOmitMongoDocId(
     .lean() // ask mongo to return pojo only
     .exec();
 
-  return F(result);
+  return F(result as Donor[]);
 }
 
 type DonorDocument = mongoose.Document & Donor;

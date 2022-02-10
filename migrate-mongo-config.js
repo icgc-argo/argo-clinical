@@ -21,7 +21,7 @@
 let auth = undefined;
 if (process.env.CLINICAL_DB_USERNAME && process.env.CLINICAL_DB_PASSWORD) {
   auth = {
-    user: process.env.CLINICAL_DB_USERNAME,
+    username: process.env.CLINICAL_DB_USERNAME,
     password: process.env.CLINICAL_DB_PASSWORD,
   };
 }
@@ -48,7 +48,7 @@ const config = {
 const configCopy = JSON.parse(JSON.stringify(config)); // a hack to deep copy
 if (configCopy.mongodb.options.auth) {
   console.log('hiding auth..');
-  configCopy.mongodb.options.auth.user = configCopy.mongodb.options.auth.user.length;
+  configCopy.mongodb.options.auth.username = configCopy.mongodb.options.auth.username.length;
   configCopy.mongodb.options.auth.password = configCopy.mongodb.options.auth.password.length;
 }
 console.log(JSON.stringify(configCopy));
