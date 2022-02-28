@@ -80,7 +80,7 @@ export async function getDonors(programId: string) {
 }
 
 export async function findDonorId(submitterId: string, programId: string) {
-  const donor = await findDonor(submitterId, programId);
+  const donor = await findDonorBySubmitterId(submitterId, programId);
   if (!donor) {
     throw new Errors.NotFound('Donor not found');
   }
@@ -124,19 +124,16 @@ export async function findSampleId(submitterId: string, programId: string) {
   return `SA${sample.sampleId}`;
 }
 
-export async function findDonor(submitterId: string, programId: string) {
-  const donors = await donorDao.findByProgramAndSubmitterId([
-    {
-      programId: programId,
-      submitterId: submitterId,
-    },
-  ]);
+export async function findDonorBySubmitterId(submitterId: string, programId: string) {
+  return await donorDao.findOneBy({ programId, submitterId });
+}
 
-  if (!donors || donors.length == 0) {
-    return undefined;
-  }
+export async function findDonorByDonorId(donorId: number, programId: string) {
+  return await donorDao.findOneBy({ programId, donorId });
+}
 
-  return donors[0];
+export function iterateAllDonorsByProgramId(programId: string) {
+  return donorDao.iterateAllByProgramId(programId);
 }
 
 export async function deleteDonors(programId: string) {
