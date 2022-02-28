@@ -145,6 +145,20 @@ export namespace ControllerUtils {
   };
 }
 
+export namespace DonorUtils {
+  export const donorIdPrefix = 'DO';
+  export const specimenIdPrefix = 'SP';
+  export const sampleIdPrefix = 'SA';
+
+  export const parseDonorId = (stringId: string): number =>
+    Number(stringId.replace(donorIdPrefix, ''));
+  export const prefixDonorId = (donorId: number): string => `${donorIdPrefix}${donorId}`;
+
+  export const prefixSpecimenId = (specimenId: number): string =>
+    `${specimenIdPrefix}${specimenId}`;
+  export const prefixSampleId = (sampleId: number): string => `${sampleIdPrefix}${sampleId}`;
+}
+
 export namespace Checks {
   export const checkNotNull = (argName: string, arg: any) => {
     if (!arg) {
