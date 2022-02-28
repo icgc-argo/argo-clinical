@@ -3,7 +3,8 @@ version: '3.8'
 services:
   rxnormdb:
     container_name: clinical_rxnormdb
-    image: mysql:5.7
+    # mariadb is a direct swap for mysql but it has a docker image that works on Apple Silicon
+    image: mariadb:10.7.1
     restart: always
     environment:
       MYSQL_DATABASE: 'rxnorm'
