@@ -57,6 +57,7 @@ export interface DonorRepository {
   insertDonors(donors: Donor[]): Promise<void>;
   updateDonor(donor: Donor): Promise<void>;
   findBy(criteria: any, limit: number): Promise<DeepReadonly<Donor[]>>;
+  findOneBy(criteria: any): Promise<DeepReadonly<Donor | undefined>>;
   findByProgramId(
     programId: string,
     projections?: Partial<Record<DONOR_DOCUMENT_FIELDS, number>>,
@@ -76,6 +77,7 @@ export interface DonorRepository {
   findBySampleSubmitterIdAndProgramId(
     filter: FindByProgramAndSubmitterFilter,
   ): Promise<DeepReadonly<Donor> | undefined>;
+  iterateAllByProgramId(programId: string): AsyncIterable<DeepReadonly<Donor>>;
   create(donor: DeepReadonly<Donor>): Promise<DeepReadonly<Donor>>;
   update(donor: DeepReadonly<Donor>): Promise<DeepReadonly<Donor>>;
   updateAll(donors: DeepReadonly<Donor>[]): Promise<DeepReadonly<Donor>[]>;
@@ -113,6 +115,15 @@ export const donorDao: DonorRepository = {
       })
       .filter(notEmpty);
     return F(mapped);
+  },
+
+  async findOneBy(criteria: any) {
+    const result = await DonorModel.findOne(criteria).exec();
+    if (result) {
+      return F(MongooseUtils.toPojo(result) as Donor);
+    } else {
+      return undefined;
+    }
   },
 
   async findByProgramId(
@@ -229,6 +240,10 @@ export const donorDao: DonorRepository = {
     return F(mapped);
   },
 
+  iterateAllByProgramId(programId: string) {
+    return iterateAllByProgramId(programId);
+  },
+
   async update(donor: DeepReadonly<Donor>) {
     const newDonor = new DonorModel(donor);
     unsetIsNewFlagForUpdate(newDonor);
@@ -254,6 +269,17 @@ export const donorDao: DonorRepository = {
     return F(MongooseUtils.toPojo(newDonor) as Donor);
   },
 };
+
+export async function* iterateAllByProgramId(
+  programId: string,
+): AsyncIterable<DeepReadonly<Donor>> {
+  const cursor = DonorModel.find({ programId }).cursor();
+  for (let doc = await cursor.next(); doc; doc = await cursor.next()) {
+    const donor = MongooseUtils.toPojo(doc) as Donor;
+    yield F(donor);
+  }
+  return;
+}
 
 function unsetIsNewFlagForUpdate(newDonor: Donor) {
   (newDonor as any).isNew = false;
@@ -335,7 +361,7 @@ type DonorDocument = mongoose.Document & Donor;
 
 const SampleSchema = new mongoose.Schema(
   {
-    sampleId: { type: Number, index: true, unique: true, get: prefixSampleId },
+    sampleId: { type: Number, index: true, unique: true },
     sampleType: { type: String },
     submitterId: { type: String, required: true },
   },
@@ -344,7 +370,7 @@ const SampleSchema = new mongoose.Schema(
 
 const SpecimenSchema = new mongoose.Schema(
   {
-    specimenId: { type: Number, index: true, unique: true, get: prefixSpecimenId },
+    specimenId: { type: Number, index: true, unique: true },
     specimenTissueSource: { type: String },
     clinicalInfo: {},
     tumourNormalDesignation: String,
@@ -432,7 +458,7 @@ ComorbiditySchema.index({ comorbidityId: 1 }, { unique: true, sparse: true });
 
 const DonorSchema = new mongoose.Schema(
   {
-    donorId: { type: Number, index: true, unique: true, get: prefixDonorId },
+    donorId: { type: Number, index: true, unique: true },
     gender: { type: String, required: true },
     submitterId: { type: String, required: true },
     programId: { type: String, required: true },
@@ -450,21 +476,6 @@ const DonorSchema = new mongoose.Schema(
   },
   { timestamps: true, minimize: false }, // minimize false is to avoid omitting clinicalInfo:{}
 );
-
-function prefixDonorId(id: any) {
-  if (!id) return undefined;
-  return `DO${id}`;
-}
-
-function prefixSpecimenId(id: any) {
-  if (!id) return undefined;
-  return `SP${id}`;
-}
-
-function prefixSampleId(id: any) {
-  if (!id) return undefined;
-  return `SA${id}`;
-}
 
 DonorSchema.index({ submitterId: 1, programId: 1 }, { unique: true });
 DonorSchema.index({ 'specimens.submitterId': 1, programId: 1 }, { unique: true });
