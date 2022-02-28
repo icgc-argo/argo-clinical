@@ -692,10 +692,12 @@ paths:
       responses:
         '201':
           description: imported successfully - will indicate number of new donors and number of updated donors
+
   /clinical/donors:
     get:
+      deprecated: true
       tags:
-        - Clinical Data
+        - Deprecated
       summary: Get all program donors from db
       parameters:
         - $ref: '#/components/parameters/QueryProgramId'
@@ -716,7 +718,7 @@ paths:
                   type: object
     delete:
       tags:
-        - Clinical Data
+        - Test
       summary: Test endpoint to delete program donors in db (disabled in prod)
       parameters:
         - $ref: '#/components/parameters/QueryProgramId'
@@ -729,7 +731,74 @@ paths:
           $ref: '#/components/responses/ServerError'
         '200':
           description: 'all donors deleted'
+  /clinical/program/{programId}/donor/{donorId}:
+    get:
+      tags:
+        - Clinical Data
+      summary: Get all clinical data for a single donor, using the DonorID
+      parameters:
+        - $ref: '#/components/parameters/PathProgramId'
+        - $ref: '#/components/parameters/PathDonorId'
+      responses:
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+        '200':
+          description: 'All clinical data for a donor'
+          content:
+            application/json:
+              schema:
+                type: object
+  /clinical/program/{programId}/donors:
+    get:
+      tags:
+        - Clinical Data
+      summary: Get all program donors from db, returns as stream
+      parameters:
+        - $ref: '#/components/parameters/PathProgramId'
+      responses:
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+        '200':
+          description: 'Stream of newline `\n` delmited JSON objects'
+
   /clinical/program/{programId}/tsv-export:
+    parameters:
+      - $ref: '#/components/parameters/PathProgramId'
+    get:
+      deprecated: true
+      tags:
+        - Deprecated
+      summary: Get all commited clinical data for a program
+      description: Returns a zip file with all commited clinical and sample_registration data in tsvs. Exported data may not be valid with current dictionary.
+      responses:
+        '200':
+          description: 'A zip file with tsv file(s) inside'
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Invalid programId provided
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /clinical/program/{programId}/tsv/all:
     parameters:
       - $ref: '#/components/parameters/PathProgramId'
     get:
@@ -804,7 +873,6 @@ paths:
                 type: string
         '404':
           description: no matching sample found
-
   /clinical/donor/{donorId}/completion-stats:
     patch:
       tags:
@@ -926,6 +994,8 @@ tags:
     description: APIs to do the icgc import
   - name: Admin
     description: Admin operations collected for convenience
+  - name: Test
+    description: Protected endpoints that run in dev only, not in prod.
   - name: Deprecated
     description: Deprecated enpoints
 components:
@@ -947,6 +1017,13 @@ components:
     PathProgramId:
       name: programId
       description: Short Name of the program (ex. ABCD-EF)
+      in: path
+      required: true
+      schema:
+        type: string
+    PathDonorId:
+      name: donorId
+      description: DonorId (ex. DO1234)
       in: path
       required: true
       schema:
