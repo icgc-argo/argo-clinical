@@ -62,27 +62,34 @@ const health: AppHealth = {
 };
 
 export function setStatus(component: keyof AppHealth, status: ComponentStatus) {
-  if (status.status == Status.OK) {
+  if (status.status === Status.OK) {
     status.statusText = 'OK';
   }
-  if (status.status == Status.UNKNOWN) {
+  if (status.status === Status.UNKNOWN) {
     status.statusText = 'N/A';
   }
-  if (status.status == Status.ERROR) {
+  if (status.status === Status.ERROR) {
     status.statusText = 'ERROR';
   }
   health[component] = status;
   for (const k in health) {
     const key = k as keyof AppHealth;
-    if (key == 'all') {
+    if (key === 'all') {
       continue;
     }
-    if (health[key].status !== Status.OK) {
+    if (health[key].status === Status.ERROR) {
       health['all'].status = Status.ERROR;
+      health['all'].statusText = 'ERROR';
+      return;
+    }
+    if (health[key].status === Status.UNKNOWN) {
+      health['all'].status = Status.UNKNOWN;
+      health['all'].statusText = 'N/A';
       return;
     }
   }
   health['all'].status = Status.OK;
+  health['all'].statusText = 'OK';
 }
 
 export function getHealth(): AppHealth {

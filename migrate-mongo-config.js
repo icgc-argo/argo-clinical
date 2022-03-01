@@ -18,6 +18,9 @@
  */
 
 // In this file you can configure migrate-mongo
+const dotenv = require('dotenv');
+dotenv.config();
+
 let auth = undefined;
 if (process.env.CLINICAL_DB_USERNAME && process.env.CLINICAL_DB_PASSWORD) {
   auth = {

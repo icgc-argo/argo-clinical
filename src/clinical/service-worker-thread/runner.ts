@@ -37,8 +37,8 @@ const pool = new StaticPool({
   task: jsWorkerLocation,
 });
 
-export async function runTaskInWorkerThread(taskToRun: WorkerTasks, taskArgs: any) {
+export async function runTaskInWorkerThread<T>(taskToRun: WorkerTasks, taskArgs: any): Promise<T> {
   const poolExecArgs = { taskToRun, taskArgs };
   const result = await pool.exec(poolExecArgs, poolTimeOutMs);
-  return result;
+  return result as T;
 }

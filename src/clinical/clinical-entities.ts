@@ -21,6 +21,8 @@ import { DeepReadonly } from 'deep-freeze';
 
 export interface Donor {
   _id?: string;
+  __v?: number; // mongodb property not being filtered out
+  createBy?: string;
   schemaMetadata: SchemaMetadata;
   donorId?: number;
   gender: string;
