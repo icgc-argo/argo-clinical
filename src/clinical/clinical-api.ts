@@ -61,6 +61,36 @@ class ClinicalController {
     res.send(zip.toBuffer());
   }
 
+  /**
+   * Fetches data for a single clinical entity type and returns the values as a TSV. This is returned in the body of the request, not as a downloadable file.
+   * @param req
+   * @param res
+   * @returns
+   */
+  @HasProgramReadAccess((req: Request) => req.params.programId)
+  async getProgramClinicalDataAsTsv(req: Request, res: Response) {
+    const programId = req.params.programId as string;
+    const entityType = req.params.entityType as string;
+    if (!programId) {
+      return ControllerUtils.badRequest(res, 'Invalid programId provided');
+    }
+
+    const allData = await service.getClinicalData(programId);
+
+    const entityData = allData.find(
+      (entity: { entityName: string } & any) => entity.entityName === entityType,
+    );
+
+    if (!entityData) {
+      return res.status(400).send('No data for the requested entity type');
+    }
+
+    res
+      .status(200)
+      .contentType('text/tab-separated-values')
+      .send(TsvUtils.convertJsonRecordsToTsv(entityData.records, entityData.entityFields));
+  }
+
   @ProtectTestEndpoint()
   @HasFullWriteAccess()
   async deleteDonors(req: Request, res: Response) {

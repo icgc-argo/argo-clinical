@@ -43,6 +43,10 @@ router.get(
   wrapAsync(clinicalApi.getProgramClinicalDataAsTsvsInZip),
 ); // DEPRECATED
 router.get('/program/:programId/tsv/all', wrapAsync(clinicalApi.getProgramClinicalDataAsTsvsInZip));
+router.get(
+  '/program/:programId/tsv/:entityType',
+  wrapAsync(clinicalApi.getProgramClinicalDataAsTsv),
+);
 
 router.patch('/donor/:donorId/completion-stats', wrapAsync(clinicalApi.patchDonorCompletionStats));
 
