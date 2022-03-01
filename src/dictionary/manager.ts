@@ -36,7 +36,7 @@ const L = loggerFor(__filename);
 
 let manager: SchemaManager;
 
-type SchemaWithFields = {
+export type SchemaWithFields = {
   name: string;
   fields: string[];
 };
