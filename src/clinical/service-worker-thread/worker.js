@@ -28,8 +28,6 @@ if (!process[tsNode.REGISTER_INSTANCE]) {
 const { WorkerTasksMap } = require('./tasks');
 
 function run({ taskToRun, taskArgs }) {
-  console.log('in worker run');
-
   try {
     const task = WorkerTasksMap[taskToRun];
     if (!task) {

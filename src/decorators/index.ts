@@ -123,6 +123,19 @@ export function HasProgramWriteAccess(programIdExtractor: Function) {
   );
 }
 
+export function HasProgramReadAccess(programIdExtractor: Function) {
+  return scopeCheckGenerator(
+    'HasProgramReadAccess',
+    programId => [
+      `PROGRAMDATA-${programId}.WRITE`,
+      `PROGRAMDATA-${programId}.READ`,
+      'CLINICALSERVICE.READ',
+      'CLINICALSERVICE.WRITE',
+    ],
+    programIdExtractor,
+  );
+}
+
 export function HasFullWriteAccess() {
   return scopeCheckGenerator('HasFullWriteAccess', () => ['CLINICALSERVICE.WRITE']);
 }

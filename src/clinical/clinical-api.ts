@@ -19,17 +19,25 @@
 
 import { Request, Response } from 'express';
 import * as service from './clinical-service';
-import { HasFullWriteAccess, ProtectTestEndpoint, HasProgramWriteAccess } from '../decorators';
-import { ControllerUtils, TsvUtils } from '../utils';
+import {
+  HasFullWriteAccess,
+  ProtectTestEndpoint,
+  HasProgramReadAccess,
+  HasFullReadAccess,
+} from '../decorators';
+import { ControllerUtils, DonorUtils, TsvUtils } from '../utils';
 import AdmZip from 'adm-zip';
+import { Donor } from './clinical-entities';
+import { omit } from 'lodash';
+import { DeepReadonly } from 'deep-freeze';
 
 class ClinicalController {
-  @HasFullWriteAccess()
+  @HasFullReadAccess()
   async findDonors(req: Request, res: Response) {
     return res.status(200).send(await service.getDonors(req.query.programId));
   }
 
-  @HasProgramWriteAccess((req: Request) => req.params.programId)
+  @HasProgramReadAccess((req: Request) => req.params.programId)
   async getProgramClinicalDataAsTsvsInZip(req: Request, res: Response) {
     const programId = req.params.programId;
     if (!programId) {
@@ -51,6 +59,36 @@ class ClinicalController {
     });
 
     res.send(zip.toBuffer());
+  }
+
+  /**
+   * Fetches data for a single clinical entity type and returns the values as a TSV. This is returned in the body of the request, not as a downloadable file.
+   * @param req
+   * @param res
+   * @returns
+   */
+  @HasProgramReadAccess((req: Request) => req.params.programId)
+  async getProgramClinicalDataAsTsv(req: Request, res: Response) {
+    const programId = req.params.programId as string;
+    const entityType = req.params.entityType as string;
+    if (!programId) {
+      return ControllerUtils.badRequest(res, 'Invalid programId provided');
+    }
+
+    const allData = await service.getClinicalData(programId);
+
+    const entityData = allData.find(
+      (entity: { entityName: string } & any) => entity.entityName === entityType,
+    );
+
+    if (!entityData) {
+      return res.status(400).send('No data for the requested entity type');
+    }
+
+    res
+      .status(200)
+      .contentType('text/tab-separated-values')
+      .send(TsvUtils.convertJsonRecordsToTsv(entityData.records, entityData.entityFields));
   }
 
   @ProtectTestEndpoint()
@@ -85,10 +123,7 @@ class ClinicalController {
 
   @HasFullWriteAccess()
   async patchDonorCompletionStats(req: Request, res: Response) {
-    const strDonorId = req.params.donorId;
-
-    // extract number only since that's what is stored in db
-    const donorId: number = Number(strDonorId.replace('DO', ''));
+    const donorId = DonorUtils.parseDonorId(req.params.donorId);
 
     if (!donorId) {
       return ControllerUtils.badRequest(res, 'Invalid/Missing donorId, e.g. DO123');
@@ -99,16 +134,82 @@ class ClinicalController {
     const upadtedDonor = await service.updateDonorStats(donorId, coreCompletionOverride);
 
     if (!upadtedDonor) {
-      return ControllerUtils.notFound(res, `Donor with donorId:${strDonorId} not found`);
+      return ControllerUtils.notFound(res, `Donor with donorId:${donorId} not found`);
     }
 
     return res.status(200).send(upadtedDonor);
+  }
+
+  @HasProgramReadAccess((req: Request) => req.params.programId)
+  async getDonorById(req: Request, res: Response) {
+    const programId = req.params.programId;
+    if (!programId) {
+      return ControllerUtils.badRequest(res, 'Invalid/Missing programId, e.g. ABCD-CA');
+    }
+    const donorId = DonorUtils.parseDonorId(req.params.donorId);
+    if (!donorId) {
+      return ControllerUtils.badRequest(res, 'Invalid/Missing donorId, e.g. DO123');
+    }
+    const donor = await service.findDonorByDonorId(donorId, programId);
+    if (donor) {
+      return res.status(200).json(sanitizeDonorOutput(donor));
+    } else {
+      return ControllerUtils.notFound(
+        res,
+        `No donor found with donorId: '${donorId}' in program: '${programId}'`,
+      );
+    }
+  }
+
+  /**
+   * Returns every donor JSON document delmited by a new line character. Each document is written to the response stream as it is read in.
+   * @param req
+   * @param res
+   * @returns
+   */
+  @HasProgramReadAccess((req: Request) => req.params.programId)
+  async streamProgramDonors(req: Request, res: Response) {
+    console.log(req.params);
+    const programId = req.params.programId;
+    if (!programId) {
+      return ControllerUtils.badRequest(res, 'Invalid/Missing programId, e.g. ABCD-CA');
+    }
+
+    res.setHeader('Transfer-Encoding', 'chunked');
+    res.setHeader('Content-Type', 'application/x-ndjson');
+
+    for await (const donor of service.iterateAllDonorsByProgramId(programId)) {
+      res.write(JSON.stringify(sanitizeDonorOutput(donor)) + '\n');
+    }
+
+    res.end();
   }
 }
 
 function currentDateFormatted() {
   const now = new Date();
   return `${now.getFullYear()}${now.getMonth()}${now.getDate()}`;
+}
+
+/**
+ * loop through all donor, specimen, and sample IDs and apply the require prefixes.
+ * We also remove mongo specific properties and internal props that are not needed by consumers (e.g. `createBy`)
+ * @param donor
+ * @returns
+ */
+function sanitizeDonorOutput(donor: DeepReadonly<Donor>): any {
+  return {
+    ...omit(donor, '_id', '__v', 'createBy'),
+    donorId: donor.donorId ? DonorUtils.prefixDonorId(donor.donorId) : '',
+    specimens: donor.specimens.map(specimen => ({
+      ...specimen,
+      specimenId: specimen.specimenId ? DonorUtils.prefixSpecimenId(specimen.specimenId) : '',
+      samples: specimen.samples.map(sample => ({
+        ...sample,
+        sampleId: sample.sampleId ? DonorUtils.prefixSampleId(sample.sampleId) : '',
+      })),
+    })),
+  };
 }
 
 export default new ClinicalController();
