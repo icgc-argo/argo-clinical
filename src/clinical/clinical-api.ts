@@ -61,6 +61,20 @@ class ClinicalController {
     res.send(zip.toBuffer());
   }
 
+  @HasProgramReadAccess((req: Request) => req.params.programId)
+  async getProgramClinicalData(req: Request, res: Response) {
+    const programId = req.params.programId;
+    if (!programId) {
+      return ControllerUtils.badRequest(res, 'Invalid programId provided');
+    }
+
+    const data = await service.getClinicalData(programId);
+
+    res.status(200).contentType('application/json');
+
+    res.send(data);
+  }
+
   /**
    * Fetches data for a single clinical entity type and returns the values as a TSV. This is returned in the body of the request, not as a downloadable file.
    * @param req

@@ -771,7 +771,26 @@ paths:
         '500':
           $ref: '#/components/responses/ServerError'
         '200':
-          description: 'Stream of newline `\n` delmited JSON objects'
+          description: 'Stream of newline `\n` delimited JSON objects'
+
+  /clinical/program/:programId/submitted-data:
+    get:
+      tags:
+        - Clinical Data
+      summary: Get all program submitted data from db, returns as stream
+      parameters:
+        - $ref: '#/components/parameters/PathProgramId'
+      responses:
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+        '200':
+          description: 'Stream of newline `\n` delimited JSON objects'
 
   /clinical/program/{programId}/tsv-export:
     parameters:
