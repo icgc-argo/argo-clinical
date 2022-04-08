@@ -127,7 +127,7 @@ export function getSingleClinicalEntityFromDonorBySchemanName(
   }
   const uniqueIdNames: string[] = convertToArray(ClinicalUniqueIdentifier[clinicalEntityType]);
   if (_.isEmpty(uniqueIdNames)) {
-    throw new Error("illegale state, couldn't find entity id field name");
+    throw new Error("Illegal state, couldn't find entity id field name");
   }
   const constraints: ClinicalInfo = {};
   uniqueIdNames.forEach(idN => (constraints[idN] = clinicalInfoRef[idN]));
