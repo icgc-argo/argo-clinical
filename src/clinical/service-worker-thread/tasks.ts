@@ -49,12 +49,10 @@ function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
   const recordsMap: any = {};
   donors.forEach(d => {
     Object.values(ClinicalEntitySchemaNames).forEach(entity => {
-      let clinicalInfoRecords;
-      if (entity === ClinicalEntitySchemaNames.REGISTRATION) {
-        clinicalInfoRecords = getSampleRegistrationDataFromDonor(d);
-      } else {
-        clinicalInfoRecords = getClinicalEntitiesFromDonorBySchemaName(d, entity);
-      }
+      const clinicalInfoRecords =
+        entity === ClinicalEntitySchemaNames.REGISTRATION
+          ? getSampleRegistrationDataFromDonor(d)
+          : getClinicalEntitiesFromDonorBySchemaName(d, entity);
       recordsMap[entity] = _.concat(recordsMap[entity] || [], clinicalInfoRecords);
     });
   });
