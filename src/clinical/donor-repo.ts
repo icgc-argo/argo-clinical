@@ -18,7 +18,8 @@
  */
 
 import { Donor } from './clinical-entities';
-import mongoose from 'mongoose';
+import mongoose, { PaginateModel } from 'mongoose';
+import mongoosePaginate from 'mongoose-paginate-v2';
 import { DeepReadonly } from 'deep-freeze';
 import { F, MongooseUtils, notEmpty } from '../utils';
 export const SUBMITTER_ID = 'submitterId';
@@ -135,16 +136,15 @@ export const donorDao: DonorRepository = {
       return findByProgramIdOmitMongoDocId(programId, projection);
     }
 
-    const result = await DonorModel.find(
+    const result = await DonorModel.paginate(
       {
         [DONOR_DOCUMENT_FIELDS.PROGRAM_ID]: programId,
       },
-      projection,
-      { sort: { [DONOR_DOCUMENT_FIELDS.DONOR_ID]: 1 } },
-    ).exec();
+      { projection, sort: { [DONOR_DOCUMENT_FIELDS.DONOR_ID]: 1 } },
+    );
 
     // convert the id to string to avoid runtime error on freezing
-    const mapped = result
+    const mapped: Donor[] = result.docs
       .map((d: DonorDocument) => {
         return MongooseUtils.toPojo(d) as Donor;
       })
@@ -492,6 +492,8 @@ DonorSchema.plugin(AutoIncrement, {
   start_seq: process.env.DONOR_ID_SEED || 250000,
 });
 
+DonorSchema.plugin(mongoosePaginate);
+
 SpecimenSchema.plugin(AutoIncrement, {
   inc_field: 'specimenId',
   start_seq: process.env.SPECIMEN_ID_SEED || 210000,
@@ -537,4 +539,6 @@ TreatmentSchema.plugin(AutoIncrement, {
   start_seq: 1,
 });
 
-export let DonorModel = mongoose.model<DonorDocument>('Donor', DonorSchema);
+export let DonorModel = mongoose.model<DonorDocument>('Donor', DonorSchema) as PaginateModel<
+  DonorDocument
+>;
