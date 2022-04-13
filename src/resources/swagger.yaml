@@ -773,7 +773,7 @@ paths:
         '200':
           description: 'Stream of newline `\n` delimited JSON objects'
 
-  /clinical/program/:programId/submitted-data:
+  /clinical/program/:programId/clinical-data:
     get:
       tags:
         - Clinical Data
