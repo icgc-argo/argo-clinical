@@ -70,7 +70,7 @@ class ClinicalController {
 
     const data = await service.getClinicalData(programId);
 
-    res.status(200).json({ clinicalEntities: data });
+    res.status(200).json(data);
   }
 
   /**
