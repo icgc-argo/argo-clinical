@@ -17,11 +17,11 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { Donor } from '../clinical-entities';
+import _, { isEmpty } from 'lodash';
 import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../../common-model/functions';
-import _, { isEmpty } from 'lodash';
 import { notEmpty } from '../../utils';
+import { Donor, SchemaMetadata, CompletionStats } from '../clinical-entities';
 
 function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
   function getSampleRegistrationDataFromDonor(d: Donor) {
@@ -47,6 +47,9 @@ function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
   }
 
   const recordsMap: any = {};
+  const schemaMetadata: SchemaMetadata[] = donors.map(d => d.schemaMetadata).filter(notEmpty);
+  const completionStats: CompletionStats[] = donors.map(d => d.completionStats).filter(notEmpty);
+
   donors.forEach(d => {
     Object.values(ClinicalEntitySchemaNames).forEach(entity => {
       const clinicalInfoRecords =
@@ -57,7 +60,7 @@ function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
     });
   });
 
-  const data = Object.entries(recordsMap)
+  const clinicalEntities = Object.entries(recordsMap)
     .map(([entityName, records]) => {
       if (isEmpty(records)) return undefined;
 
@@ -73,6 +76,12 @@ function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
       };
     })
     .filter(notEmpty);
+
+  const data = {
+    clinicalEntities,
+    schemaMetadata,
+    completionStats,
+  };
 
   return data;
 }
