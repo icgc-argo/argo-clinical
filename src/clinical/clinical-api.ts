@@ -143,13 +143,13 @@ class ClinicalController {
 
     const coreCompletionOverride = req.body.coreCompletionOverride || {};
 
-    const upadtedDonor = await service.updateDonorStats(donorId, coreCompletionOverride);
+    const updatedDonor = await service.updateDonorStats(donorId, coreCompletionOverride);
 
-    if (!upadtedDonor) {
+    if (!updatedDonor) {
       return ControllerUtils.notFound(res, `Donor with donorId:${donorId} not found`);
     }
 
-    return res.status(200).send(upadtedDonor);
+    return res.status(200).send(updatedDonor);
   }
 
   @HasProgramReadAccess((req: Request) => req.params.programId)
