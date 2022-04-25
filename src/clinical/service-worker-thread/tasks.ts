@@ -23,6 +23,14 @@ import { getClinicalEntitiesFromDonorBySchemaName } from '../../common-model/fun
 import { notEmpty } from '../../utils';
 import { Donor, SchemaMetadata, CompletionStats } from '../clinical-entities';
 
+interface CompletionRecord extends CompletionStats {
+  donorId?: number;
+}
+
+interface SchemaMetaDataRecord extends SchemaMetadata {
+  donorId?: number;
+}
+
 function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
   function getSampleRegistrationDataFromDonor(d: Donor) {
     const baseRegistrationRecord = {
@@ -47,8 +55,18 @@ function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
   }
 
   const recordsMap: any = {};
-  const schemaMetadata: SchemaMetadata[] = donors.map(d => d.schemaMetadata).filter(notEmpty);
-  const completionStats: CompletionStats[] = donors.map(d => d.completionStats).filter(notEmpty);
+
+  const schemaMetadata: SchemaMetadata[] = donors
+    .map(({ schemaMetadata, donorId }): SchemaMetaDataRecord | undefined =>
+      schemaMetadata && donorId ? { ...schemaMetadata, donorId } : undefined,
+    )
+    .filter(notEmpty);
+
+  const completionStats: CompletionRecord[] = donors
+    .map(({ completionStats, donorId }): CompletionRecord | undefined =>
+      completionStats && donorId ? { ...completionStats, donorId } : undefined,
+    )
+    .filter(notEmpty);
 
   donors.forEach(d => {
     Object.values(ClinicalEntitySchemaNames).forEach(entity => {
