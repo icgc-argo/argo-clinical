@@ -63,15 +63,36 @@ class ClinicalController {
 
   @HasProgramReadAccess((req: Request) => req.params.programId)
   async getProgramClinicalData(req: Request, res: Response) {
+    /**
+     * - Pagination parameters in request
+     * - Entity Types to return
+     * - Include Error Information
+     */
+
     const programId = req.params.programId;
     if (!programId) {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
-
+    // paginate
     const data = await service.getClinicalData(programId);
+
+    //     const includeErrorData = params.somewhere.includeErrors?
+    //     if(includeErrorData) {
+    //       const errorData = service.getClinicalEntityMigrationErrors(programId, entityType, donorIds)
+    //       collate this errorData into the entityRecords
+    //     }
 
     res.status(200).json(data);
   }
+
+  // @HasProgramReadAccess((req: Request) => req.params.programId)
+  // async getProgramClinicalEntityData() {}
+
+  //   const entityTypes = params.entityTypes
+  //   TODO: handle get all entity type data - maybe we dont want to do this, make entityTypes required to get entity data
+  //   const output: {entityName, entityFields, records}[] = entityTypes.map(entityType => {
+  //   const paginationData = params.somewhere.paginationData;
+  //   const entityRecords = service.getClinicalEntityRecords(programId, entityType, paginationData); //each record must include donorId
 
   /**
    * Fetches data for a single clinical entity type and returns the values as a TSV. This is returned in the body of the request, not as a downloadable file.

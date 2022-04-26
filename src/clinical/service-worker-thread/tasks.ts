@@ -27,10 +27,6 @@ interface CompletionRecord extends CompletionStats {
   donorId?: number;
 }
 
-interface SchemaMetaDataRecord extends SchemaMetadata {
-  donorId?: number;
-}
-
 function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
   function getSampleRegistrationDataFromDonor(d: Donor) {
     const baseRegistrationRecord = {
@@ -55,12 +51,6 @@ function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
   }
 
   const recordsMap: any = {};
-
-  const schemaMetadata: SchemaMetadata[] = donors
-    .map(({ schemaMetadata, donorId }): SchemaMetaDataRecord | undefined =>
-      schemaMetadata && donorId ? { ...schemaMetadata, donorId } : undefined,
-    )
-    .filter(notEmpty);
 
   const completionStats: CompletionRecord[] = donors
     .map(({ completionStats, donorId }): CompletionRecord | undefined =>
@@ -97,7 +87,6 @@ function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
 
   const data = {
     clinicalEntities,
-    schemaMetadata,
     completionStats,
   };
 
