@@ -1468,7 +1468,7 @@ describe('Submission Api', () => {
         'radiation.tsv',
         'hormone_therapy.tsv',
         'immunotherapy.tsv',
-        'surgery.tsv',
+        // 'surgery.tsv',
       ]);
       await validateSubmission();
       await commitActiveSubmission();
@@ -1518,7 +1518,7 @@ describe('Submission Api', () => {
         'chemotherapy_update.tsv',
         'hormone_therapy_update.tsv',
         'immunotherapy_update.tsv',
-        'surgery_update.tsv',
+        // 'surgery_update.tsv',
         'family_history_update.tsv',
       ]);
 
@@ -1632,9 +1632,9 @@ describe('Submission Api', () => {
             .to.deep.eq(['Chemotherapy']);
 
           // Surgery therapy
-          chai
-            .expect(updatedDonor.treatments?.[3].clinicalInfo[TreatmentFieldsEnum.treatment_type])
-            .to.deep.eq(['Surgery']);
+          // chai
+          //   .expect(updatedDonor.treatments?.[3].clinicalInfo[TreatmentFieldsEnum.treatment_type])
+          //   .to.deep.eq(['Surgery']);
 
           chai.expect(updatedDonor.treatments?.[0].therapies.length).to.eq(1);
 
@@ -1660,9 +1660,9 @@ describe('Submission Api', () => {
             .to.eq(44);
 
           // Surgery
-          chai
-            .expect(updatedDonor.treatments?.[3].therapies[0].clinicalInfo['biopsy_type'])
-            .to.equal('Biopsy');
+          // chai
+          //   .expect(updatedDonor.treatments?.[3].therapies[0].clinicalInfo['biopsy_type'])
+          //   .to.equal('Biopsy');
         });
     });
 
@@ -1677,7 +1677,7 @@ describe('Submission Api', () => {
         'radiation.tsv',
         'hormone_therapy.tsv',
         'immunotherapy.tsv',
-        'surgery.tsv',
+        // 'surgery.tsv',
       ]);
       await validateSubmission();
       await commitActiveSubmission();

@@ -354,6 +354,7 @@ export type ClinicalTypeValidateResult = {
 
 // batchNameRegex are arrays, so we can just add new file name regex when needed
 // also we should check file extensions at api level for each file type upload function
+// TODO: remove special case for surgery type
 export const BatchNameRegex: Record<ClinicalEntitySchemaNames, RegExp[]> = {
   [ClinicalEntitySchemaNames.REGISTRATION]: [/^sample_registration.*\.tsv$/i],
   [ClinicalEntitySchemaNames.DONOR]: [/^donor.*\.tsv$/i],
@@ -366,7 +367,7 @@ export const BatchNameRegex: Record<ClinicalEntitySchemaNames, RegExp[]> = {
   [ClinicalEntitySchemaNames.RADIATION]: [/^radiation.*\.tsv$/i],
   [ClinicalEntitySchemaNames.HORMONE_THERAPY]: [/^hormone_therapy.*\.tsv$/i],
   [ClinicalEntitySchemaNames.IMMUNOTHERAPY]: [/^immunotherapy.*\.tsv$/i],
-  [ClinicalEntitySchemaNames.SURGERY]: [/^surgery.*\.tsv$/i],
+  // [ClinicalEntitySchemaNames.SURGERY]: [/^surgery.*\.tsv$/i],
   [ClinicalEntitySchemaNames.EXPOSURE]: [/^exposure.*\.tsv$/i],
   [ClinicalEntitySchemaNames.COMORBIDITY]: [/^comorbidity.*\.tsv$/i],
   [ClinicalEntitySchemaNames.BIOMARKER]: [/^biomarker.*\.tsv$/i],
@@ -382,6 +383,7 @@ export interface SubmittedClinicalRecordsMap {
 
 export type IdToIndexMap = { [k: string]: number[] };
 
+// TODO: remove special case for surgery type
 export const ClinicalEntityToEnumFieldsMap: Record<ClinicalEntitySchemaNames, string[]> = {
   [ClinicalEntitySchemaNames.REGISTRATION]: Object.values(SampleRegistrationFieldsEnum),
   [ClinicalEntitySchemaNames.DONOR]: Object.values(DonorFieldsEnum),
@@ -405,15 +407,16 @@ export const ClinicalEntityToEnumFieldsMap: Record<ClinicalEntitySchemaNames, st
   [ClinicalEntitySchemaNames.IMMUNOTHERAPY]: (Object.values(TherapyRxNormFields) as string[])
     .concat(Object.values(CommonTherapyFields))
     .concat(Object.values(ImmunotherapyFields) as string[]),
-  [ClinicalEntitySchemaNames.SURGERY]: Object.values(CommonTherapyFields) as string[],
+  // [ClinicalEntitySchemaNames.SURGERY]: Object.values(CommonTherapyFields) as string[],
 };
 
+// TODO: remove special case for surgery type
 export const TreatmentTypeValuesMappedByTherapy: Record<ClinicalTherapyType, string> = {
   [ClinicalEntitySchemaNames.CHEMOTHERAPY]: 'Chemotherapy',
   [ClinicalEntitySchemaNames.RADIATION]: 'Radiation therapy',
   [ClinicalEntitySchemaNames.HORMONE_THERAPY]: 'Hormonal therapy',
   [ClinicalEntitySchemaNames.IMMUNOTHERAPY]: 'Immunotherapy',
-  [ClinicalEntitySchemaNames.SURGERY]: 'Surgery',
+  // [ClinicalEntitySchemaNames.SURGERY]: 'Surgery',
 };
 
 export const DonorVitalStatusValues = { deceased: 'Deceased' };
