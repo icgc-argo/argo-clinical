@@ -70,17 +70,24 @@ class ClinicalController {
      */
 
     const programId = req.params.programId;
+
+    console.log('req.query', req.query);
+    console.log('req.query.withErrors', req.query.withErrors);
+    console.log('req.query.withErrors', req.query.entityTypes);
+
     if (!programId) {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
     // paginate
     const data = await service.getClinicalData(programId);
 
-    //     const includeErrorData = params.somewhere.includeErrors?
-    //     if(includeErrorData) {
-    //       const errorData = service.getClinicalEntityMigrationErrors(programId, entityType, donorIds)
-    //       collate this errorData into the entityRecords
-    //     }
+    const includeErrorData = req.query.withErrors;
+    if (!!includeErrorData) {
+      console.log('includeErrorData');
+      console.log(service.getClinicalEntityMigrationErrors(programId));
+      // service.getClinicalEntityMigrationErrors(programId, entityType, donorIds);
+      // collate this errorData into the entityRecords
+    }
 
     res.status(200).json(data);
   }

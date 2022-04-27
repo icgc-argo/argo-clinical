@@ -182,3 +182,25 @@ export const getClinicalData = async (programId: string) => {
 
   return data;
 };
+
+export const getClinicalEntityMigrationErrors = async (programId: string) => {
+  if (!programId) throw new Error('Missing programId!');
+  const start = new Date().getTime() / 1000;
+
+  // worker-threads can't get dictionary instance so deal with it here and pass it to worker task
+  const allSchemasWithFields = await dictionaryManager.instance().getSchemasWithFields();
+
+  // async/await functions just hang in current library worker-thread setup, root cause is unknown
+  // const donors = await donorDao.findByProgramId(programId, {}, true);
+
+  // const taskToRun = WorkerTasks.ExtractDataFromDonors;
+  // const taskArgs = [donors, allSchemasWithFields];
+  // const data = await runTaskInWorkerThread<
+  //   { entityName: string; records: unknown; entityFields: any }[]
+  // >(taskToRun, taskArgs);
+
+  const end = new Date().getTime() / 1000;
+  L.debug(`getClinicalData took ${end - start}s`);
+  console.log(programId);
+  return programId;
+};
