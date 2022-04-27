@@ -151,6 +151,16 @@ export const updateDonorStats = async (donorId: number, coreCompletionOverride: 
   return await donorDao.update(updatedDonor);
 };
 
+/*
+  service.getClinicalEntityMigrationErrors(programId, entityType, donorIds):
+  1. find latest succesful migration
+    - dictionarymigrations collection
+    - stage===COMPLETED AND dryRun===false
+  2. for each donorId, look in the migration.invalidDonorsErrors and try to find a record with that donorId
+    - if not found, no errors for that donor :)
+    - if found, return the errors
+*/
+
 export const getClinicalData = async (programId: string) => {
   if (!programId) throw new Error('Missing programId!');
   const start = new Date().getTime() / 1000;
@@ -172,13 +182,3 @@ export const getClinicalData = async (programId: string) => {
 
   return data;
 };
-
-/* 
-  service.getClinicalEntityMigrationErrors(programId, entityType, donorIds):
-  1. find latest succesful migration
-    - dictionarymigrations collection
-    - stage===COMPLETED AND dryRun===false
-  2. for each donorId, look in the migration.invalidDonorsErrors and try to find a record with that donorId
-    - if not found, no errors for that donor :)
-    - if found, return the errors
-   */
