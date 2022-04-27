@@ -17,6 +17,10 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// this is temporary to keep code compiling until surgery is ready in dictionary, to be removed in favor of
+// the surgery in ClinicalEntitySchemaNames
+export const SURGERY_SCHEMA_NAME = 'surgery';
+
 export enum ClinicalEntitySchemaNames {
   REGISTRATION = 'sample_registration',
   DONOR = 'donor',
@@ -26,7 +30,7 @@ export enum ClinicalEntitySchemaNames {
   TREATMENT = 'treatment',
   CHEMOTHERAPY = 'chemotherapy',
   IMMUNOTHERAPY = 'immunotherapy',
-  SURGERY = 'surgery',
+  // SURGERY = 'surgery',
   RADIATION = 'radiation',
   FOLLOW_UP = 'follow_up',
   HORMONE_THERAPY = 'hormone_therapy',
@@ -54,15 +58,15 @@ export type ClinicalTherapyType =
   | ClinicalEntitySchemaNames.CHEMOTHERAPY
   | ClinicalEntitySchemaNames.RADIATION
   | ClinicalEntitySchemaNames.HORMONE_THERAPY
-  | ClinicalEntitySchemaNames.IMMUNOTHERAPY
-  | ClinicalEntitySchemaNames.SURGERY;
+  | ClinicalEntitySchemaNames.IMMUNOTHERAPY;
+// | ClinicalEntitySchemaNames.SURGERY;
 
 export const ClinicalTherapySchemaNames: ClinicalTherapyType[] = [
   ClinicalEntitySchemaNames.CHEMOTHERAPY,
   ClinicalEntitySchemaNames.HORMONE_THERAPY,
   ClinicalEntitySchemaNames.RADIATION,
   ClinicalEntitySchemaNames.IMMUNOTHERAPY,
-  ClinicalEntitySchemaNames.SURGERY,
+  // ClinicalEntitySchemaNames.SURGERY,
 ];
 
 export enum DonorFieldsEnum {
@@ -188,7 +192,7 @@ type TypeEntitySchemaNameToIndenfiterType = {
   [ClinicalEntitySchemaNames.TREATMENT]: ClinicalFields;
   [ClinicalEntitySchemaNames.CHEMOTHERAPY]: ClinicalFields[];
   [ClinicalEntitySchemaNames.IMMUNOTHERAPY]: ClinicalFields[];
-  [ClinicalEntitySchemaNames.SURGERY]: ClinicalFields[];
+  [SURGERY_SCHEMA_NAME]: ClinicalFields[];
   [ClinicalEntitySchemaNames.RADIATION]: ClinicalFields[];
   [ClinicalEntitySchemaNames.HORMONE_THERAPY]: ClinicalFields[];
   [ClinicalEntitySchemaNames.COMORBIDITY]: ClinicalFields[];
@@ -226,10 +230,10 @@ export const ClinicalUniqueIdentifier: TypeEntitySchemaNameToIndenfiterType = {
     CommonTherapyFields.submitter_treatment_id,
     TherapyRxNormFields.drug_rxnormid,
   ],
-  [ClinicalEntitySchemaNames.SURGERY]: [
+  [SURGERY_SCHEMA_NAME]: [
     CommonTherapyFields.submitter_donor_id,
     CommonTherapyFields.submitter_treatment_id,
-    SurgeryFieldsEnum.submitter_specimen_id,
+    SpecimenFieldsEnum.submitter_specimen_id,
   ],
   [ClinicalEntitySchemaNames.RADIATION]: [
     CommonTherapyFields.submitter_donor_id,

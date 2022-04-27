@@ -474,7 +474,7 @@ export function getRelatedEntityByFK(
     relatedEntityName == ClinicalEntitySchemaNames.RADIATION ||
     relatedEntityName == ClinicalEntitySchemaNames.HORMONE_THERAPY ||
     relatedEntityName == ClinicalEntitySchemaNames.IMMUNOTHERAPY ||
-    relatedEntityName == ClinicalEntitySchemaNames.SURGERY ||
+    // relatedEntityName == ClinicalEntitySchemaNames.SURGERY ||
     relatedEntityName == ClinicalEntitySchemaNames.FAMILY_HISTORY ||
     relatedEntityName == ClinicalEntitySchemaNames.COMORBIDITY ||
     relatedEntityName == ClinicalEntitySchemaNames.BIOMARKER
