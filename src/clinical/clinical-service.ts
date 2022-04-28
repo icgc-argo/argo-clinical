@@ -20,6 +20,7 @@
 import { donorDao, DONOR_DOCUMENT_FIELDS } from './donor-repo';
 import { Errors } from '../utils';
 import { Sample, Donor } from './clinical-entities';
+import { ClinicalQuery } from './clinical-api';
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 import { forceRecalcDonorCoreEntityStats } from '../submission/submission-to-clinical/stat-calculator';
@@ -173,7 +174,7 @@ export const getClinicalDataTsv = async (programId: string, query = {}) => {
   return data;
 };
 
-export const getClinicalEntityData = async (programId: string, query = {}) => {
+export const getClinicalEntityData = async (programId: string, query: ClinicalQuery) => {
   if (!programId) throw new Error('Missing programId!');
   const start = new Date().getTime() / 1000;
 
@@ -181,7 +182,7 @@ export const getClinicalEntityData = async (programId: string, query = {}) => {
   const allSchemasWithFields = await dictionaryManager.instance().getSchemasWithFields();
 
   // async/await functions just hang in current library worker-thread setup, root cause is unknown
-  const donors = await donorDao.findByPaginatedProgramId(programId, {}, query);
+  const donors = await donorDao.findByPaginatedProgramId(programId, query, {});
 
   const taskToRun = WorkerTasks.ExtractDataFromDonors;
   const taskArgs = [donors, allSchemasWithFields];

@@ -31,6 +31,16 @@ import { Donor } from './clinical-entities';
 import { omit } from 'lodash';
 import { DeepReadonly } from 'deep-freeze';
 
+export type ClinicalQuery = {
+  programShortName: String;
+  entityTypes: String[];
+  withErrors: Boolean;
+  first: Number;
+  offset: Number;
+  filters: {};
+  sort: String;
+};
+
 class ClinicalController {
   @HasFullReadAccess()
   async findDonors(req: Request, res: Response) {

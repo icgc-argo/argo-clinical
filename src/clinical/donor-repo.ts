@@ -18,6 +18,7 @@
  */
 
 import { Donor } from './clinical-entities';
+import { ClinicalQuery } from './clinical-api';
 import mongoose, { PaginateModel } from 'mongoose';
 import mongoosePaginate from 'mongoose-paginate-v2';
 import { DeepReadonly } from 'deep-freeze';
@@ -66,8 +67,8 @@ export interface DonorRepository {
   ): Promise<DeepReadonly<Donor[]>>;
   findByPaginatedProgramId(
     programId: string,
+    query: ClinicalQuery,
     projection?: Partial<Record<DONOR_DOCUMENT_FIELDS, number>>,
-    query?: {},
   ): Promise<DeepReadonly<Donor[]>>;
   deleteByProgramId(programId: string): Promise<void>;
   findByProgramAndSubmitterId(
@@ -159,16 +160,17 @@ export const donorDao: DonorRepository = {
 
   async findByPaginatedProgramId(
     programId: string,
+    query: ClinicalQuery,
     projection?: Partial<Record<DONOR_DOCUMENT_FIELDS, number>>,
-    query?: {},
   ): Promise<DeepReadonly<Donor[]>> {
+    const { sort } = query;
     const result = await DonorModel.paginate(
       {
         [DONOR_DOCUMENT_FIELDS.PROGRAM_ID]: programId,
       },
       {
         projection,
-        sort: { [DONOR_DOCUMENT_FIELDS.DONOR_ID]: 1 },
+        sort,
         select: '-_id',
       },
     );
@@ -178,7 +180,7 @@ export const donorDao: DonorRepository = {
         return MongooseUtils.toPojo(d) as Donor;
       })
       .filter(notEmpty);
-
+    console.log('mapped', mapped);
     return F(mapped);
   },
 
