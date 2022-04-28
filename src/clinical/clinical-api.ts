@@ -44,7 +44,7 @@ class ClinicalController {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
 
-    const data = await service.getClinicalData(programId);
+    const data = await service.getClinicalDataTsv(programId);
 
     const todaysDate = currentDateFormatted();
     res
@@ -63,25 +63,21 @@ class ClinicalController {
 
   @HasProgramReadAccess((req: Request) => req.params.programId)
   async getProgramClinicalData(req: Request, res: Response) {
-    /**
-     * - Pagination parameters in request
-     * - Entity Types to return
-     * - Include Error Information
-     */
-
     const programId = req.params.programId;
-
-    console.log('req.query', req.query);
-    console.log('req.query.withErrors', req.query.withErrors);
-    console.log('req.query.withErrors', req.query.entityTypes);
+    const query = {
+      ...req.query,
+      entityTypes: req.query.entityTypes && JSON.parse(req.query.entityTypes),
+      sort: req.query.sort && JSON.parse(req.query.sort),
+      filters: req.query.filters && JSON.parse(req.query.filters),
+    };
 
     if (!programId) {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
     // paginate
-    const data = await service.getClinicalData(programId);
+    const data = await service.getClinicalEntityData(programId, query);
 
-    const includeErrorData = req.query.withErrors;
+    const includeErrorData = JSON.parse(req.query.withErrors);
     if (!!includeErrorData) {
       console.log('includeErrorData');
       console.log(service.getClinicalEntityMigrationErrors(programId));
@@ -115,7 +111,7 @@ class ClinicalController {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
 
-    const allData = await service.getClinicalData(programId);
+    const allData = await service.getClinicalDataTsv(programId);
 
     const entityData = allData.find(
       (entity: { entityName: string } & any) => entity.entityName === entityType,

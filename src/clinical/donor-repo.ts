@@ -64,6 +64,11 @@ export interface DonorRepository {
     projections?: Partial<Record<DONOR_DOCUMENT_FIELDS, number>>,
     omitMongoDocIds?: boolean,
   ): Promise<DeepReadonly<Donor[]>>;
+  findByPaginatedProgramId(
+    programId: string,
+    projection?: Partial<Record<DONOR_DOCUMENT_FIELDS, number>>,
+    query?: {},
+  ): Promise<DeepReadonly<Donor[]>>;
   deleteByProgramId(programId: string): Promise<void>;
   findByProgramAndSubmitterId(
     filters: DeepReadonly<FindByProgramAndSubmitterFilter[]>,
@@ -149,6 +154,31 @@ export const donorDao: DonorRepository = {
         return MongooseUtils.toPojo(d) as Donor;
       })
       .filter(notEmpty);
+    return F(mapped);
+  },
+
+  async findByPaginatedProgramId(
+    programId: string,
+    projection?: Partial<Record<DONOR_DOCUMENT_FIELDS, number>>,
+    query?: {},
+  ): Promise<DeepReadonly<Donor[]>> {
+    const result = await DonorModel.paginate(
+      {
+        [DONOR_DOCUMENT_FIELDS.PROGRAM_ID]: programId,
+      },
+      {
+        projection,
+        sort: { [DONOR_DOCUMENT_FIELDS.DONOR_ID]: 1 },
+        select: '-_id',
+      },
+    );
+
+    const mapped: Donor[] = result.docs
+      .map((d: DonorDocument) => {
+        return MongooseUtils.toPojo(d) as Donor;
+      })
+      .filter(notEmpty);
+
     return F(mapped);
   },
 

@@ -151,17 +151,7 @@ export const updateDonorStats = async (donorId: number, coreCompletionOverride: 
   return await donorDao.update(updatedDonor);
 };
 
-/*
-  service.getClinicalEntityMigrationErrors(programId, entityType, donorIds):
-  1. find latest succesful migration
-    - dictionarymigrations collection
-    - stage===COMPLETED AND dryRun===false
-  2. for each donorId, look in the migration.invalidDonorsErrors and try to find a record with that donorId
-    - if not found, no errors for that donor :)
-    - if found, return the errors
-*/
-
-export const getClinicalData = async (programId: string) => {
+export const getClinicalDataTsv = async (programId: string, query = {}) => {
   if (!programId) throw new Error('Missing programId!');
   const start = new Date().getTime() / 1000;
 
@@ -169,7 +159,7 @@ export const getClinicalData = async (programId: string) => {
   const allSchemasWithFields = await dictionaryManager.instance().getSchemasWithFields();
 
   // async/await functions just hang in current library worker-thread setup, root cause is unknown
-  const donors = await donorDao.findByProgramId(programId, {}, true);
+  const donors = await donorDao.findByProgramId(programId, {}, true, query);
 
   const taskToRun = WorkerTasks.ExtractDataFromDonors;
   const taskArgs = [donors, allSchemasWithFields];
@@ -182,6 +172,38 @@ export const getClinicalData = async (programId: string) => {
 
   return data;
 };
+
+export const getClinicalEntityData = async (programId: string, query = {}) => {
+  if (!programId) throw new Error('Missing programId!');
+  const start = new Date().getTime() / 1000;
+
+  // worker-threads can't get dictionary instance so deal with it here and pass it to worker task
+  const allSchemasWithFields = await dictionaryManager.instance().getSchemasWithFields();
+
+  // async/await functions just hang in current library worker-thread setup, root cause is unknown
+  const donors = await donorDao.findByPaginatedProgramId(programId, {}, query);
+
+  const taskToRun = WorkerTasks.ExtractDataFromDonors;
+  const taskArgs = [donors, allSchemasWithFields];
+  const data = await runTaskInWorkerThread<
+    { entityName: string; records: unknown; entityFields: any }[]
+  >(taskToRun, taskArgs);
+
+  const end = new Date().getTime() / 1000;
+  L.debug(`getClinicalData took ${end - start}s`);
+
+  return data;
+};
+
+/*
+  service.getClinicalEntityMigrationErrors(programId, entityType, donorIds):
+  1. find latest succesful migration
+    - dictionarymigrations collection
+    - stage===COMPLETED AND dryRun===false
+  2. for each donorId, look in the migration.invalidDonorsErrors and try to find a record with that donorId
+    - if not found, no errors for that donor :)
+    - if found, return the errors
+*/
 
 export const getClinicalEntityMigrationErrors = async (programId: string) => {
   if (!programId) throw new Error('Missing programId!');
