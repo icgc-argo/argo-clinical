@@ -182,7 +182,7 @@ export const getClinicalEntityData = async (programId: string, query: ClinicalQu
   const allSchemasWithFields = await dictionaryManager.instance().getSchemasWithFields();
 
   // async/await functions just hang in current library worker-thread setup, root cause is unknown
-  const donors = await donorDao.findByPaginatedProgramId(programId, query, {});
+  const donors = await donorDao.findByPaginatedProgramId(programId, query);
 
   const taskToRun = WorkerTasks.ExtractDataFromDonors;
   const taskArgs = [donors, allSchemasWithFields];

@@ -65,11 +65,7 @@ export interface DonorRepository {
     projections?: Partial<Record<DONOR_DOCUMENT_FIELDS, number>>,
     omitMongoDocIds?: boolean,
   ): Promise<DeepReadonly<Donor[]>>;
-  findByPaginatedProgramId(
-    programId: string,
-    query: ClinicalQuery,
-    projection?: Partial<Record<DONOR_DOCUMENT_FIELDS, number>>,
-  ): Promise<DeepReadonly<Donor[]>>;
+  findByPaginatedProgramId(programId: string, query: ClinicalQuery): Promise<DeepReadonly<Donor[]>>;
   deleteByProgramId(programId: string): Promise<void>;
   findByProgramAndSubmitterId(
     filters: DeepReadonly<FindByProgramAndSubmitterFilter[]>,
@@ -161,9 +157,11 @@ export const donorDao: DonorRepository = {
   async findByPaginatedProgramId(
     programId: string,
     query: ClinicalQuery,
-    projection?: Partial<Record<DONOR_DOCUMENT_FIELDS, number>>,
   ): Promise<DeepReadonly<Donor[]>> {
-    const { sort } = query;
+    const { sort, entityTypes } = query;
+
+    const projection = `donorId submitterId programId gender clinicalInfo completionStats ${entityTypes}`;
+
     const result = await DonorModel.paginate(
       {
         [DONOR_DOCUMENT_FIELDS.PROGRAM_ID]: programId,

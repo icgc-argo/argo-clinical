@@ -21,7 +21,7 @@ import _, { isEmpty } from 'lodash';
 import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../../common-model/functions';
 import { notEmpty } from '../../utils';
-import { Donor, SchemaMetadata, CompletionStats } from '../clinical-entities';
+import { Donor, CompletionStats } from '../clinical-entities';
 
 interface CompletionRecord extends CompletionStats {
   donorId?: number;

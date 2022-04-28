@@ -76,7 +76,7 @@ class ClinicalController {
     const programId = req.params.programId;
     const query = {
       ...req.query,
-      entityTypes: req.query.entityTypes && JSON.parse(req.query.entityTypes),
+      entityTypes: req.query.entityTypes && JSON.parse(req.query.entityTypes).join(' '),
       sort: req.query.sort && JSON.parse(req.query.sort),
       filters: req.query.filters && JSON.parse(req.query.filters),
     };
