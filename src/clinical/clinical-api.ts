@@ -35,10 +35,10 @@ export type ClinicalQuery = {
   programShortName: String;
   entityTypes: String[];
   withErrors: Boolean;
-  first: Number;
-  offset: Number;
-  filters: {};
+  page: number;
+  limit: number;
   sort: String;
+  filters: {};
 };
 
 class ClinicalController {
@@ -74,7 +74,7 @@ class ClinicalController {
   @HasProgramReadAccess((req: Request) => req.params.programId)
   async getProgramClinicalData(req: Request, res: Response) {
     const programId = req.params.programId;
-    const query = {
+    const query: ClinicalQuery = {
       ...req.query,
       entityTypes: req.query.entityTypes && JSON.parse(req.query.entityTypes).join(' '),
       sort: req.query.sort && JSON.parse(req.query.sort),
