@@ -151,7 +151,7 @@ export const validateSubmissionData = async (
   const recordValidationResultMap: { [clinicalType: string]: RecordValidationResult[] } = {};
   Object.values(ClinicalEntitySchemaNames)
     .filter(type => type != ClinicalEntitySchemaNames.REGISTRATION)
-    .map(type => (recordValidationResultMap[type] = []));
+    .forEach(type => (recordValidationResultMap[type] = []));
 
   for (const donorSubmitterId in newRecordsToDonorMap) {
     const submittedRecords: DeepReadonly<SubmittedClinicalRecordsMap> =
