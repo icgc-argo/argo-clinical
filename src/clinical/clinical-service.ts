@@ -25,6 +25,7 @@ import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 import { forceRecalcDonorCoreEntityStats } from '../submission/submission-to-clinical/stat-calculator';
 import { migrationRepo } from '../submission/migration/migration-repo';
+import { DictionaryMigration } from '../submission/migration/migration-entities';
 import * as dictionaryManager from '../dictionary/manager';
 import { loggerFor } from '../logger';
 import { WorkerTasks } from './service-worker-thread/tasks';
@@ -193,30 +194,25 @@ export const getClinicalEntityData = async (programId: string, query: ClinicalQu
   return data;
 };
 
-/*
-  for each donorId, look in the migration.invalidDonorsErrors and try to find a record with that donorId
-    - if not found, no errors for that donor :)
-    - if found, return the errors
-*/
-
 export const getClinicalEntityMigrationErrors = async (
   programId: string,
   data: ClinicalEntityData,
-  query: ClinicalQuery,
 ) => {
   if (!programId) throw new Error('Missing programId!');
   const start = new Date().getTime() / 1000;
 
-  const latest = await migrationRepo.getLatestSuccessful();
+  const migration: DeepReadonly<
+    DictionaryMigration | undefined
+  > = await migrationRepo.getLatestSuccessful();
 
-  // const taskToRun = WorkerTasks.ExtractDataFromDonors;
-  // const taskArgs = [donors, allSchemasWithFields];
-  // const data = await runTaskInWorkerThread<
-  //   { entityName: string; records: unknown; entityFields: any }[]
-  // >(taskToRun, taskArgs);
+  let errors: any[] = [];
+  if (migration) {
+    const { invalidDonorsErrors } = migration;
+    errors = invalidDonorsErrors.filter(donor => donor.programId.toString() === programId);
+  }
 
   const end = new Date().getTime() / 1000;
-  L.debug(`getClinicalData took ${end - start}s`);
-  console.log(programId);
-  return programId;
+  L.debug(`getClinicalEntityMigrationErrors took ${end - start}s`);
+
+  return errors;
 };

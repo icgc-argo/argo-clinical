@@ -35,13 +35,20 @@ export interface DictionaryMigration {
     validDocumentsCount: number;
     invalidDocumentsCount: number;
   };
-  invalidDonorsErrors: any[];
+  invalidDonorsErrors: DonorMigrationError[];
   checkedSubmissions: any[];
   invalidSubmissions: any[];
   programsWithDonorUpdates: string[];
   createdBy: string;
   newSchemaErrors?: NewSchemaVerificationResult | string;
 }
+
+export type DonorMigrationError = {
+  donorId?: number;
+  submitterDonorId: string;
+  programId: string;
+  errors: any[];
+};
 
 export type NewSchemaVerificationResult = {
   [clinicalEntity: string]: {

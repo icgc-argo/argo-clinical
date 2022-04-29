@@ -70,7 +70,7 @@ export const migrationRepo: DictionaryMigrationRepository = {
     return F(MongooseUtils.toPojo(migration) as DictionaryMigration);
   },
   getLatestSuccessful: async (): Promise<DeepReadonly<DictionaryMigration | undefined>> => {
-    L.debug('in migration repo get');
+    L.debug('in migration repo get latest successful');
     const migration = await DictionaryMigrationModel.find()
       .sort({ createdAt: -1 })
       .findOne({ stage: 'COMPLETED', dryRun: false })
