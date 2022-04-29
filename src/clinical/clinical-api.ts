@@ -88,7 +88,7 @@ class ClinicalController {
     const data = await service.getClinicalEntityData(programId, query);
 
     const includeErrorData = JSON.parse(req.query.withErrors);
-    if (!!includeErrorData) {
+    if (includeErrorData) {
       const errors = await service.getClinicalEntityMigrationErrors(programId, query);
       // collate this errorData into the entityRecords
     }

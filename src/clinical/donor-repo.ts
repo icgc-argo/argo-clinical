@@ -180,7 +180,7 @@ export const donorDao: DonorRepository = {
         return MongooseUtils.toPojo(d) as Donor;
       })
       .filter(notEmpty);
-    console.log('mapped', mapped);
+
     return F(mapped);
   },
 

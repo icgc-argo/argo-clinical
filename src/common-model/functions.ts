@@ -113,7 +113,9 @@ export function getClinicalEntitiesFromDonorBySchemaName(
         return e.clinicalInfo as ClinicalInfo;
       }
     })
-    .filter(notEmpty);
+    .filter(notEmpty)
+    .map(clinicalInfo => ({ donorId: donor.donorId, ...clinicalInfo }));
+
   return clinicalRecords;
 }
 
