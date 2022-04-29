@@ -206,7 +206,7 @@ export const getClinicalEntityData = async (programId: string, query: ClinicalQu
     - if found, return the errors
 */
 
-export const getClinicalEntityMigrationErrors = async (programId: string) => {
+export const getClinicalEntityMigrationErrors = async (programId: string, query: ClinicalQuery) => {
   if (!programId) throw new Error('Missing programId!');
   const start = new Date().getTime() / 1000;
 
