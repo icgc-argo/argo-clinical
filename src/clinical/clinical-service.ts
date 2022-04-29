@@ -19,7 +19,7 @@
 
 import { donorDao, DONOR_DOCUMENT_FIELDS } from './donor-repo';
 import { Errors } from '../utils';
-import { Sample, Donor } from './clinical-entities';
+import { Sample, Donor, ClinicalEntityData } from './clinical-entities';
 import { ClinicalQuery } from './clinical-api';
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
@@ -164,9 +164,7 @@ export const getClinicalDataTsv = async (programId: string, query = {}) => {
 
   const taskToRun = WorkerTasks.ExtractDataFromDonors;
   const taskArgs = [donors, allSchemasWithFields];
-  const data = await runTaskInWorkerThread<
-    { entityName: string; records: unknown; entityFields: any }[]
-  >(taskToRun, taskArgs);
+  const data = await runTaskInWorkerThread<ClinicalEntityData[]>(taskToRun, taskArgs);
 
   const end = new Date().getTime() / 1000;
   L.debug(`getClinicalData took ${end - start}s`);
@@ -186,9 +184,7 @@ export const getClinicalEntityData = async (programId: string, query: ClinicalQu
 
   const taskToRun = WorkerTasks.ExtractDataFromDonors;
   const taskArgs = [donors, allSchemasWithFields];
-  const data = await runTaskInWorkerThread<
-    { entityName: string; records: unknown; entityFields: any }[]
-  >(taskToRun, taskArgs);
+  const data = await runTaskInWorkerThread<ClinicalEntityData>(taskToRun, taskArgs);
 
   const end = new Date().getTime() / 1000;
   L.debug(`getClinicalData took ${end - start}s`);
@@ -208,7 +204,7 @@ export const getClinicalEntityData = async (programId: string, query: ClinicalQu
 
 export const getClinicalEntityMigrationErrors = async (
   programId: string,
-  data: {},
+  data: ClinicalEntityData,
   query: ClinicalQuery,
 ) => {
   if (!programId) throw new Error('Missing programId!');
