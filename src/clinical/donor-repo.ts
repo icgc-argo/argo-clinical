@@ -160,7 +160,15 @@ export const donorDao: DonorRepository = {
   ): Promise<DeepReadonly<Donor[]>> {
     const { page, limit, sort, entityTypes } = query;
 
-    const projection = `donorId submitterId programId gender clinicalInfo completionStats ${entityTypes}`;
+    const projection = [
+      'donorId',
+      'submitterId',
+      'programId',
+      'gender',
+      'clinicalInfo',
+      'completionStats',
+      ...entityTypes,
+    ].join(' ');
 
     const result = await DonorModel.paginate(
       {

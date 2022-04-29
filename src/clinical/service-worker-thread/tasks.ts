@@ -30,6 +30,7 @@ interface CompletionRecord extends CompletionStats {
 function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
   function getSampleRegistrationDataFromDonor(d: Donor) {
     const baseRegistrationRecord = {
+      donor_id: d.donorId,
       program_id: d.programId,
       submitter_donor_id: d.submitterId,
       gender: d.gender,
@@ -80,7 +81,7 @@ function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
       return {
         entityName,
         records,
-        entityFields: relevantSchemaWithFields.fields,
+        entityFields: ['donor_id', ...relevantSchemaWithFields.fields],
       };
     })
     .filter(notEmpty);

@@ -206,12 +206,13 @@ export const getClinicalEntityData = async (programId: string, query: ClinicalQu
     - if found, return the errors
 */
 
-export const getClinicalEntityMigrationErrors = async (programId: string, query: ClinicalQuery) => {
+export const getClinicalEntityMigrationErrors = async (
+  programId: string,
+  data: {},
+  query: ClinicalQuery,
+) => {
   if (!programId) throw new Error('Missing programId!');
   const start = new Date().getTime() / 1000;
-
-  // worker-threads can't get dictionary instance so deal with it here and pass it to worker task
-  const allSchemasWithFields = await dictionaryManager.instance().getSchemasWithFields();
 
   // async/await functions just hang in current library worker-thread setup, root cause is unknown
   // const donors = await donorDao.findByProgramId(programId, {}, true);

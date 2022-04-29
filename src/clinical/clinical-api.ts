@@ -76,7 +76,7 @@ class ClinicalController {
     const programId = req.params.programId;
     const query: ClinicalQuery = {
       ...req.query,
-      entityTypes: req.query.entityTypes && JSON.parse(req.query.entityTypes).join(' '),
+      entityTypes: req.query.entityTypes && JSON.parse(req.query.entityTypes),
       sort: req.query.sort && JSON.parse(req.query.sort),
       filters: req.query.filters && JSON.parse(req.query.filters),
     };
@@ -89,7 +89,7 @@ class ClinicalController {
 
     const includeErrorData = JSON.parse(req.query.withErrors);
     if (includeErrorData) {
-      const errors = await service.getClinicalEntityMigrationErrors(programId, query);
+      const errors = await service.getClinicalEntityMigrationErrors(programId, data, query);
       // collate this errorData into the entityRecords
     }
 
