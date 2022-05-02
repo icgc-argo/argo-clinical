@@ -777,7 +777,7 @@ paths:
     get:
       tags:
         - Clinical Data
-      summary: Get all program submitted data from db, returns as stream
+      summary: Get all program submitted data from db. Returns clinicalEntities[], completionStats[] & clinicalErrors[].
       parameters:
         - $ref: '#/components/parameters/PathProgramId'
       responses:
