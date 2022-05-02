@@ -85,16 +85,19 @@ class ClinicalController {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
 
-    const data = await service.getClinicalEntityData(programId, query);
+    const entityData = await service.getClinicalEntityData(programId, query);
 
     const includeErrorData = JSON.parse(req.query.withErrors);
-    if (includeErrorData) {
-      const errors = await service.getClinicalEntityMigrationErrors(programId, data);
-      console.log('getClinical errors', errors);
-      // collate this errorData into the entityRecords
-    }
+    const clinicalErrors = includeErrorData
+      ? await service.getClinicalEntityMigrationErrors(programId)
+      : [];
 
-    res.status(200).json(data);
+    const clinicalData = {
+      ...entityData,
+      clinicalErrors,
+    };
+
+    res.status(200).json(clinicalData);
   }
 
   /**

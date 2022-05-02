@@ -25,7 +25,10 @@ import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 import { forceRecalcDonorCoreEntityStats } from '../submission/submission-to-clinical/stat-calculator';
 import { migrationRepo } from '../submission/migration/migration-repo';
-import { DictionaryMigration } from '../submission/migration/migration-entities';
+import {
+  DictionaryMigration,
+  DonorMigrationErrorRecord,
+} from '../submission/migration/migration-entities';
 import * as dictionaryManager from '../dictionary/manager';
 import { loggerFor } from '../logger';
 import { WorkerTasks } from './service-worker-thread/tasks';
@@ -194,25 +197,33 @@ export const getClinicalEntityData = async (programId: string, query: ClinicalQu
   return data;
 };
 
-export const getClinicalEntityMigrationErrors = async (
-  programId: string,
-  data: ClinicalEntityData,
-) => {
+export const getClinicalEntityMigrationErrors = async (programId: string) => {
   if (!programId) throw new Error('Missing programId!');
   const start = new Date().getTime() / 1000;
 
   const migration: DeepReadonly<
     DictionaryMigration | undefined
   > = await migrationRepo.getLatestSuccessful();
+  let clinicalErrors: any[] = [];
 
-  let errors: any[] = [];
   if (migration) {
     const { invalidDonorsErrors } = migration;
-    errors = invalidDonorsErrors.filter(donor => donor.programId.toString() === programId);
+    invalidDonorsErrors
+      .filter(donor => donor.programId.toString() === programId)
+      .forEach(donor => {
+        // Overwrite donor.errors + flatten entityName to simplify query
+        const { donorId, submitterDonorId } = donor;
+        let errors: DonorMigrationErrorRecord[] = [];
+        donor.errors.forEach(entity => {
+          const entityName = Object.keys(entity)[0];
+          errors = errors.concat(entity[entityName].map(error => ({ ...error, entityName })));
+        });
+        clinicalErrors.push({ donorId, submitterDonorId, errors });
+      });
   }
 
   const end = new Date().getTime() / 1000;
   L.debug(`getClinicalEntityMigrationErrors took ${end - start}s`);
 
-  return errors;
+  return clinicalErrors;
 };
