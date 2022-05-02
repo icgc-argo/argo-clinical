@@ -204,7 +204,7 @@ export const getClinicalEntityMigrationErrors = async (programId: string) => {
   const migration: DeepReadonly<
     DictionaryMigration | undefined
   > = await migrationRepo.getLatestSuccessful();
-  let clinicalErrors: any[] = [];
+  const clinicalErrors: any[] = [];
 
   if (migration) {
     const { invalidDonorsErrors } = migration;
