@@ -34,7 +34,6 @@ import { DeepReadonly } from 'deep-freeze';
 export type ClinicalQuery = {
   programShortName: String;
   entityTypes: String[];
-  withErrors: Boolean;
   page: number;
   limit: number;
   sort: String;
@@ -54,7 +53,7 @@ class ClinicalController {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
 
-    const data = await service.getClinicalDataTsv(programId);
+    const data = await service.getClinicalData(programId);
 
     const todaysDate = currentDateFormatted();
     res
@@ -114,7 +113,7 @@ class ClinicalController {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
 
-    const allData = await service.getClinicalDataTsv(programId);
+    const allData = await service.getClinicalData(programId);
 
     const entityData = allData.find(
       (entity: { entityName: string } & any) => entity.entityName === entityType,

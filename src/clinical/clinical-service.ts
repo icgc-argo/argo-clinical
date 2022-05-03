@@ -157,7 +157,7 @@ export const updateDonorStats = async (donorId: number, coreCompletionOverride: 
   return await donorDao.update(updatedDonor);
 };
 
-export const getClinicalDataTsv = async (programId: string, query = {}) => {
+export const getClinicalData = async (programId: string) => {
   if (!programId) throw new Error('Missing programId!');
   const start = new Date().getTime() / 1000;
 
@@ -187,7 +187,7 @@ export const getClinicalEntityData = async (programId: string, query: ClinicalQu
   // async/await functions just hang in current library worker-thread setup, root cause is unknown
   const donors = await donorDao.findByPaginatedProgramId(programId, query);
 
-  const taskToRun = WorkerTasks.ExtractDataFromDonors;
+  const taskToRun = WorkerTasks.ExtractEntityDataFromDonors;
   const taskArgs = [donors, allSchemasWithFields];
   const data = await runTaskInWorkerThread<ClinicalEntityData>(taskToRun, taskArgs);
 
