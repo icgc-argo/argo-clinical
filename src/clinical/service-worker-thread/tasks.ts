@@ -28,37 +28,14 @@ interface CompletionRecord extends CompletionStats {
 }
 
 function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
-  function getSampleRegistrationDataFromDonor(d: Donor) {
-    const baseRegistrationRecord = {
-      program_id: d.programId,
-      submitter_donor_id: d.submitterId,
-      gender: d.gender,
-    };
-
-    return d.specimens
-      .map(sp =>
-        sp.samples.map(sm => ({
-          ...baseRegistrationRecord,
-          submitter_specimen_id: sp.submitterId,
-          specimen_tissue_source: sp.specimenTissueSource,
-          tumour_normal_designation: sp.tumourNormalDesignation,
-          specimen_type: sp.specimenType,
-          submitter_sample_id: sm.submitterId,
-          sample_type: sm.sampleType,
-        })),
-      )
-      .flat();
-  }
-
   const recordsMap: any = {};
+
   donors.forEach(d => {
     Object.values(ClinicalEntitySchemaNames).forEach(entity => {
-      let clincialInfoRecords;
-      if (entity === ClinicalEntitySchemaNames.REGISTRATION) {
-        clincialInfoRecords = getSampleRegistrationDataFromDonor(d);
-      } else {
-        clincialInfoRecords = getClinicalEntitiesFromDonorBySchemaName(d, entity);
-      }
+      // let clincialInfoRecords;
+      // if (entity === ClinicalEntitySchemaNames.REGISTRATION) {
+      const clincialInfoRecords = getClinicalEntitiesFromDonorBySchemaName(d, entity);
+      // }
       recordsMap[entity] = _.concat(recordsMap[entity] || [], clincialInfoRecords);
     });
   });
@@ -84,29 +61,6 @@ function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
 }
 
 function extractEntityDataFromDonors(donors: Donor[], schemasWithFields: any) {
-  function getSampleRegistrationDataFromDonor(d: Donor) {
-    const baseRegistrationRecord = {
-      donor_id: d.donorId,
-      program_id: d.programId,
-      submitter_donor_id: d.submitterId,
-      gender: d.gender,
-    };
-
-    return d.specimens
-      .map(sp =>
-        sp.samples.map(sm => ({
-          ...baseRegistrationRecord,
-          submitter_specimen_id: sp.submitterId,
-          specimen_tissue_source: sp.specimenTissueSource,
-          tumour_normal_designation: sp.tumourNormalDesignation,
-          specimen_type: sp.specimenType,
-          submitter_sample_id: sm.submitterId,
-          sample_type: sm.sampleType,
-        })),
-      )
-      .flat();
-  }
-
   const recordsMap: any = {};
 
   const completionStats: CompletionRecord[] = donors
@@ -117,10 +71,12 @@ function extractEntityDataFromDonors(donors: Donor[], schemasWithFields: any) {
 
   donors.forEach(d => {
     Object.values(ClinicalEntitySchemaNames).forEach(entity => {
-      const clinicalInfoRecords =
-        entity === ClinicalEntitySchemaNames.REGISTRATION
-          ? getSampleRegistrationDataFromDonor(d)
-          : getClinicalEntitiesFromDonorBySchemaName(d, entity);
+      const clinicalInfoRecords = getClinicalEntitiesFromDonorBySchemaName(d, entity).map(
+        clinicalInfo => ({
+          donorId: d.donorId,
+          ...clinicalInfo,
+        }),
+      );
       recordsMap[entity] = _.concat(recordsMap[entity] || [], clinicalInfoRecords);
     });
   });

@@ -27,6 +27,7 @@ import { forceRecalcDonorCoreEntityStats } from '../submission/submission-to-cli
 import { migrationRepo } from '../submission/migration/migration-repo';
 import {
   DictionaryMigration,
+  DonorMigrationError,
   DonorMigrationErrorRecord,
 } from '../submission/migration/migration-entities';
 import * as dictionaryManager from '../dictionary/manager';
@@ -197,17 +198,21 @@ export const getClinicalEntityData = async (programId: string, query: ClinicalQu
   return data;
 };
 
+interface DonorMigration extends Omit<DictionaryMigration, 'invalidDonorsErrors '> {
+  invalidDonorsErrors: DonorMigrationError[];
+}
+
 export const getClinicalEntityMigrationErrors = async (programId: string) => {
   if (!programId) throw new Error('Missing programId!');
   const start = new Date().getTime() / 1000;
 
   const migration: DeepReadonly<
-    DictionaryMigration | undefined
+    DonorMigration | undefined
   > = await migrationRepo.getLatestSuccessful();
   const clinicalErrors: any[] = [];
 
   if (migration) {
-    const { invalidDonorsErrors } = migration;
+    const { invalidDonorsErrors }: DeepReadonly<DonorMigration> = migration;
     invalidDonorsErrors
       .filter(donor => donor.programId.toString() === programId)
       .forEach(donor => {

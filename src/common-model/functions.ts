@@ -98,6 +98,30 @@ export function getClinicalObjectsFromDonor(
         .filter(notEmpty);
     }
   }
+
+  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.COMORBIDITY) {
+    if (donor.specimens) {
+      const baseRegistrationRecord = {
+        program_id: donor.programId,
+        submitter_donor_id: donor.submitterId,
+        gender: donor.gender,
+      };
+
+      return donor.specimens
+        .map(sp =>
+          sp.samples.map(sm => ({
+            ...baseRegistrationRecord,
+            submitter_specimen_id: sp.submitterId,
+            specimen_tissue_source: sp.specimenTissueSource,
+            tumour_normal_designation: sp.tumourNormalDesignation,
+            specimen_type: sp.specimenType,
+            submitter_sample_id: sm.submitterId,
+            sample_type: sm.sampleType,
+          })),
+        )
+        .flat();
+    }
+  }
   return [];
 }
 
@@ -113,8 +137,7 @@ export function getClinicalEntitiesFromDonorBySchemaName(
         return e.clinicalInfo as ClinicalInfo;
       }
     })
-    .filter(notEmpty)
-    .map(clinicalInfo => ({ donorId: donor.donorId, ...clinicalInfo }));
+    .filter(notEmpty);
 
   return clinicalRecords;
 }
