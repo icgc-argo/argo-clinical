@@ -99,7 +99,7 @@ export function getClinicalObjectsFromDonor(
     }
   }
 
-  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.COMORBIDITY) {
+  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.REGISTRATION) {
     if (donor.specimens) {
       const baseRegistrationRecord = {
         program_id: donor.programId,
@@ -107,7 +107,7 @@ export function getClinicalObjectsFromDonor(
         gender: donor.gender,
       };
 
-      return donor.specimens
+      const sample_registration = donor.specimens
         .map(sp =>
           sp.samples.map(sm => ({
             ...baseRegistrationRecord,
@@ -120,6 +120,8 @@ export function getClinicalObjectsFromDonor(
           })),
         )
         .flat();
+
+      return sample_registration;
     }
   }
   return [];
@@ -130,10 +132,11 @@ export function getClinicalEntitiesFromDonorBySchemaName(
   clinicalEntitySchemaName: ClinicalEntitySchemaNames,
 ): ClinicalInfo[] {
   const result = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName) as any[];
-
   const clinicalRecords = result
     .map((e: any) => {
-      if (e.clinicalInfo) {
+      if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.REGISTRATION) {
+        return e;
+      } else if (e.clinicalInfo) {
         return e.clinicalInfo as ClinicalInfo;
       }
     })
