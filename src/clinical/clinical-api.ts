@@ -71,7 +71,7 @@ class ClinicalController {
   }
 
   @HasProgramReadAccess((req: Request) => req.params.programId)
-  async getProgramClinicalData(req: Request, res: Response) {
+  async getProgramClinicalEntityData(req: Request, res: Response) {
     const programId = req.params.programId;
     const query: ClinicalQuery = {
       ...req.query,
@@ -85,11 +85,7 @@ class ClinicalController {
     }
 
     const entityData = await service.getClinicalEntityData(programId, query);
-
-    const includeErrorData = JSON.parse(req.query.withErrors);
-    const clinicalErrors = includeErrorData
-      ? await service.getClinicalEntityMigrationErrors(programId)
-      : [];
+    const clinicalErrors = await service.getClinicalEntityMigrationErrors(programId);
 
     const clinicalData = {
       ...entityData,
