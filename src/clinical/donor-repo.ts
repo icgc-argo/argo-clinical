@@ -138,16 +138,16 @@ export const donorDao: DonorRepository = {
     if (omitMongoDocIds) {
       return findByProgramIdOmitMongoDocId(programId, projection);
     }
-
     const result = await DonorModel.find(
       {
         [DONOR_DOCUMENT_FIELDS.PROGRAM_ID]: programId,
       },
-      { projection, sort: { [DONOR_DOCUMENT_FIELDS.DONOR_ID]: 1 } },
+      projection,
+      { sort: { [DONOR_DOCUMENT_FIELDS.DONOR_ID]: 1 } },
     ).exec();
 
     // convert the id to string to avoid runtime error on freezing
-    const mapped: Donor[] = result
+    const mapped = result
       .map((d: DonorDocument) => {
         return MongooseUtils.toPojo(d) as Donor;
       })
