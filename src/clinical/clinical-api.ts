@@ -32,12 +32,14 @@ import { omit } from 'lodash';
 import { DeepReadonly } from 'deep-freeze';
 
 export type ClinicalQuery = {
-  programShortName: String;
-  entityTypes: String[];
   page: number;
   limit: number;
-  sort: String;
-  filters: {};
+  sort: string;
+  programShortName: string;
+  entityTypes: string[];
+  donorIds: [string];
+  submitterDonorIds: [string];
+  errorState: string;
 };
 
 class ClinicalController {
@@ -76,9 +78,7 @@ class ClinicalController {
 
     const query: ClinicalQuery = {
       ...req.query,
-      entityTypes: req.query.entityTypes && JSON.parse(req.query.entityTypes),
-      sort: req.query.sort && JSON.parse(req.query.sort),
-      filters: req.query.filters && JSON.parse(req.query.filters),
+      entityTypes: req.query.entityTypes.split(','),
     };
 
     if (!programId) {
