@@ -93,7 +93,6 @@ class ClinicalController {
   @HasProgramReadAccess((req: Request) => req.params.programId)
   async getProgramClinicalErrors(req: Request, res: Response) {
     const programId = req.params.programId;
-    console.log('program clinical errors', programId);
     if (!programId) {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
