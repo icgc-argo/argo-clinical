@@ -73,6 +73,7 @@ class ClinicalController {
   @HasProgramReadAccess((req: Request) => req.params.programId)
   async getProgramClinicalEntityData(req: Request, res: Response) {
     const programId = req.params.programId;
+
     const query: ClinicalQuery = {
       ...req.query,
       entityTypes: req.query.entityTypes && JSON.parse(req.query.entityTypes),
@@ -85,14 +86,21 @@ class ClinicalController {
     }
 
     const entityData = await service.getClinicalEntityData(programId, query);
+
+    res.status(200).json(entityData);
+  }
+
+  @HasProgramReadAccess((req: Request) => req.params.programId)
+  async getProgramClinicalErrors(req: Request, res: Response) {
+    const programId = req.params.programId;
+    console.log('program clinical errors', programId);
+    if (!programId) {
+      return ControllerUtils.badRequest(res, 'Invalid programId provided');
+    }
+
     const clinicalErrors = await service.getClinicalEntityMigrationErrors(programId);
 
-    const clinicalData = {
-      ...entityData,
-      clinicalErrors,
-    };
-
-    res.status(200).json(clinicalData);
+    res.status(200).json(clinicalErrors);
   }
 
   /**
