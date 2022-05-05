@@ -23,13 +23,18 @@ const L = loggerFor(__filename);
 
 let instance: SubmissionUpdatesMessenger;
 
+export type ClinicalProgramUpdateMessage = {
+  programId: string;
+  donorIds?: string[];
+};
+
 export interface SubmissionUpdatesMessenger {
-  sendProgramUpdatedMessage(programId: string): Promise<void>;
+  sendProgramUpdatedMessage({ programId, donorIds }: ClinicalProgramUpdateMessage): Promise<void>;
   closeOpenConnections(): Promise<void>;
 }
 
 class DummyMessenger implements SubmissionUpdatesMessenger {
-  sendProgramUpdatedMessage = async (programId: string) => {
+  sendProgramUpdatedMessage = async ({ programId, donorIds }: ClinicalProgramUpdateMessage) => {
     L.info('DummyMessenger called to send message to broker for updated program: ' + programId);
     return;
   };
@@ -54,7 +59,10 @@ const createKafkaMessenger = async (
   });
   await admin.disconnect();
 
-  const sendProgramUpdatedMessage = async (programId: string) => {
+  const sendProgramUpdatedMessage = async ({
+    programId,
+    donorIds,
+  }: ClinicalProgramUpdateMessage) => {
     L.info('KafkaMessenger called to send message to broker for updated program: ' + programId);
     const producer = kafka.producer();
     await producer.connect().catch(errorHandler);
@@ -64,7 +72,7 @@ const createKafkaMessenger = async (
         messages: [
           {
             key: programId,
-            value: JSON.stringify({ programId }),
+            value: JSON.stringify({ programId, donorIds }),
           },
         ],
       })

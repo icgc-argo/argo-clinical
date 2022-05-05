@@ -394,7 +394,13 @@ const sendMessageOnUpdatesFromRegistration = async (
     registration.stats.newSampleIds.length > 0 ||
     registration.stats.newSpecimenIds.length > 0
   ) {
-    await messenger.getInstance().sendProgramUpdatedMessage(registration.programId);
+    // use donor model to fetch donorIds for new donors from their submitterIds
+    const programId = registration.programId;
+    const submitterIds = registration.stats.newDonorIds.map(id => id?.submitterId);
+    const donors = await donorDao.findByProgramAndSubmitterIds(programId, submitterIds);
+    const donorIds = donors ? donors.filter(d => d.donorId).map(d => String(d.donorId)) : [];
+
+    await messenger.getInstance().sendProgramUpdatedMessage({ programId, donorIds });
   }
 };
 
@@ -416,7 +422,16 @@ const sendMessageOnUpdatesFromClinicalSubmission = async (
     );
 
   if (submissionHasProgramUpdates) {
-    await messenger.getInstance().sendProgramUpdatedMessage(submission.programId);
+    // use model to fetch donorIds for updated donors from their donorSubmitterIds
+    const programId = submission.programId;
+    const donorSubmitterIds = Object.entries(submission.clinicalEntities)
+      .filter(([_, entity]) => entity.stats.new.length > 0 || entity.stats.updated.length > 0)
+      .map(([_, entity]) => entity.dataUpdates.map(update => update.info.donorSubmitterId))
+      .reduce((acc, curr) => acc.concat(curr), []);
+    const donors = await donorDao.findByProgramAndSubmitterIds(programId, donorSubmitterIds);
+    const donorIds = donors ? donors.filter(d => d.donorId).map(d => String(d.donorId)) : [];
+
+    await messenger.getInstance().sendProgramUpdatedMessage({ programId, donorIds });
   }
 };
 

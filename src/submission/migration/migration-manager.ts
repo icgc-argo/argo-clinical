@@ -220,7 +220,7 @@ export namespace MigrationManager {
   const sendMessagesForProgramWithDonorUpdates = (programs: string[]) => {
     programs?.forEach(program => {
       try {
-        messenger.getInstance().sendProgramUpdatedMessage(program);
+        messenger.getInstance().sendProgramUpdatedMessage({ programId: program });
       } catch (e) {
         L.error(`Found error sending update message for program - ${program}: `, e);
       }
