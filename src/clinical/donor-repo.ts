@@ -52,6 +52,12 @@ export type FindByProgramAndSubmitterFilter = DeepReadonly<{
   submitterId: string;
 }>;
 
+export type FindPaginatedProgramFilter = {
+  programId: string;
+  submitterId?: { $in: '' };
+  donorId?: { $in: '' };
+};
+
 export interface DonorRepository {
   findByClinicalEntitySubmitterIdAndProgramId(
     filters: DeepReadonly<FindByProgramAndSubmitterFilter>,
@@ -159,7 +165,7 @@ export const donorDao: DonorRepository = {
     programId: string,
     query: ClinicalQuery,
   ): Promise<DeepReadonly<Donor[]>> {
-    const { page, limit, sort, entityTypes } = query;
+    const { page, limit, sort, entityTypes, donorIds, submitterDonorIds } = query;
 
     const projection = [
       'donorId',
@@ -174,6 +180,8 @@ export const donorDao: DonorRepository = {
     const result = await DonorModel.paginate(
       {
         [DONOR_DOCUMENT_FIELDS.PROGRAM_ID]: programId,
+        ...donorIds,
+        ...submitterDonorIds,
       },
       {
         limit,
