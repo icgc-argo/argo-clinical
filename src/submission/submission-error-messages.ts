@@ -107,6 +107,9 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
       .map((d: string) => `- ${d}`)
       .join('\n')}`;
   },
+  DUPLICATE_SUBMITTER_SPECIMEN_ID_IN_SURGERY: () =>
+    'Duplicate submitter_specimen_id not allowed in surgery.',
+  SURGERY_TYPES_NOT_EQUAL: () => 'Surgery types must be equal',
 };
 
 const BATCH_ERROR_MESSAGES: Record<SubmissionBatchErrorTypes, (errorData: any) => string> = {
