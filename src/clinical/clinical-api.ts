@@ -43,17 +43,17 @@ export type ClinicalQuery = {
 };
 
 enum CompletionStates {
-  'all',
-  'invalid',
-  'complete',
-  'incomplete',
+  all = 'all',
+  invalid = 'invalid',
+  complete = 'complete',
+  incomplete = 'incomplete',
 }
 
 const completionFilters = {
-  [CompletionStates.invalid]: { 'schemaMetadata.isValid': false },
-  [CompletionStates.complete]: { 'completionStats.coreCompletionPercentage': 100 },
-  [CompletionStates.incomplete]: { 'completionStats.coreCompletionPercentage': 0 },
-  [CompletionStates.all]: {},
+  invalid: { 'schemaMetadata.isValid': false },
+  complete: { 'completionStats.coreCompletionPercentage': 100 },
+  incomplete: { 'completionStats.coreCompletionPercentage': 0 },
+  all: {},
 };
 
 class ClinicalController {
