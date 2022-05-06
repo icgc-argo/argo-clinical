@@ -165,7 +165,7 @@ export const donorDao: DonorRepository = {
     programId: string,
     query: ClinicalQuery,
   ): Promise<DeepReadonly<Donor[]>> {
-    const { page, limit, sort, entityTypes, donorIds, submitterDonorIds } = query;
+    const { page, limit, sort, entityTypes, donorIds, submitterDonorIds, completionState } = query;
 
     const projection = [
       'donorId',
@@ -182,6 +182,7 @@ export const donorDao: DonorRepository = {
         [DONOR_DOCUMENT_FIELDS.PROGRAM_ID]: programId,
         ...donorIds,
         ...submitterDonorIds,
+        ...completionState,
       },
       {
         limit,

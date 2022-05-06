@@ -39,7 +39,21 @@ export type ClinicalQuery = {
   entityTypes: string[];
   donorIds: number[];
   submitterDonorIds: string[];
-  errorState: string;
+  completionState: {};
+};
+
+enum CompletionStates {
+  'all',
+  'invalid',
+  'complete',
+  'incomplete',
+}
+
+const completionFilters = {
+  [CompletionStates.invalid]: { 'schemaMetadata.isValid': false },
+  [CompletionStates.complete]: { 'completionStats.coreCompletionPercentage': 100 },
+  [CompletionStates.incomplete]: { 'completionStats.coreCompletionPercentage': 0 },
+  [CompletionStates.all]: {},
 };
 
 class ClinicalController {
@@ -75,6 +89,8 @@ class ClinicalController {
   @HasProgramReadAccess((req: Request) => req.params.programId)
   async getProgramClinicalEntityData(req: Request, res: Response) {
     const programId = req.params.programId;
+    const state: CompletionStates = req.query.completionState;
+    const completionState: {} = completionFilters[state] || {};
 
     const query: ClinicalQuery = {
       ...req.query,
@@ -85,6 +101,7 @@ class ClinicalController {
         req.query.submitterDonorIds.length > 0
           ? { submitterId: { $in: req.query.submitterDonorIds.split(',') } }
           : '',
+      completionState,
     };
 
     if (!programId) {
