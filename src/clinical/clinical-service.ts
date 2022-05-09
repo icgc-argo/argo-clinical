@@ -202,7 +202,7 @@ interface DonorMigration extends Omit<DictionaryMigration, 'invalidDonorsErrors 
   invalidDonorsErrors: DonorMigrationError[];
 }
 
-export const getClinicalEntityMigrationErrors = async (programId: string) => {
+export const getClinicalEntityMigrationErrors = async (programId: string, query: string[]) => {
   if (!programId) throw new Error('Missing programId!');
   const start = new Date().getTime() / 1000;
 
@@ -214,10 +214,13 @@ export const getClinicalEntityMigrationErrors = async (programId: string) => {
   if (migration) {
     const { invalidDonorsErrors }: DeepReadonly<DonorMigration> = migration;
     invalidDonorsErrors
-      .filter(donor => donor.programId.toString() === programId)
+      .filter(
+        donor =>
+          donor.programId.toString() === programId && query.includes(donor.donorId.toString()),
+      )
       .forEach(donor => {
-        // Overwrite donor.errors + flatten entityName to simplify query
         const { donorId, submitterDonorId } = donor;
+        // Overwrite donor.errors + flatten entityName to simplify query
         let errors: DonorMigrationErrorRecord[] = [];
         donor.errors.forEach(entity => {
           const entityName = Object.keys(entity)[0];

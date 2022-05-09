@@ -116,11 +116,12 @@ class ClinicalController {
   @HasProgramReadAccess((req: Request) => req.params.programId)
   async getProgramClinicalErrors(req: Request, res: Response) {
     const programId = req.params.programId;
+    const query = req.query.donorIds && req.query.donorIds.split(',');
     if (!programId) {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
 
-    const clinicalErrors = await service.getClinicalEntityMigrationErrors(programId);
+    const clinicalErrors = await service.getClinicalEntityMigrationErrors(programId, query);
 
     res.status(200).json(clinicalErrors);
   }

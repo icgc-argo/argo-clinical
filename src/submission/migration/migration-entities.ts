@@ -44,7 +44,7 @@ export interface DictionaryMigration {
 }
 
 export type DonorMigrationError = {
-  donorId?: number;
+  donorId: number;
   submitterDonorId: string;
   programId: string;
   errors: DonorMigrationSchemaErrors;
