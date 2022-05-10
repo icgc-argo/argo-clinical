@@ -32,7 +32,7 @@ import {
 } from '../submission/migration/migration-entities';
 import * as dictionaryManager from '../dictionary/manager';
 import { loggerFor } from '../logger';
-import { WorkerTasks } from './service-worker-thread/tasks';
+import { WorkerTasks, extractEntityDataFromDonors } from './service-worker-thread/tasks';
 import { runTaskInWorkerThread } from './service-worker-thread/runner';
 
 const L = loggerFor(__filename);
@@ -182,15 +182,11 @@ export const getPaginatedClinicalData = async (programId: string, query: Clinica
   if (!programId) throw new Error('Missing programId!');
   const start = new Date().getTime() / 1000;
 
-  // worker-threads can't get dictionary instance so deal with it here and pass it to worker task
   const allSchemasWithFields = await dictionaryManager.instance().getSchemasWithFields();
 
-  // async/await functions just hang in current library worker-thread setup, root cause is unknown
   const donors = await donorDao.findByPaginatedProgramId(programId, query);
 
-  const taskToRun = WorkerTasks.ExtractEntityDataFromDonors;
-  const taskArgs = [donors, allSchemasWithFields];
-  const data = await runTaskInWorkerThread<ClinicalEntityData>(taskToRun, taskArgs);
+  const data = extractEntityDataFromDonors(donors as Donor[], allSchemasWithFields);
 
   const end = new Date().getTime() / 1000;
   L.debug(`getPaginatedClinicalData took ${end - start}s`);

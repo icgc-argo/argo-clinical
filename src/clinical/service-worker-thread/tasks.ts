@@ -60,7 +60,7 @@ function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
   return data;
 }
 
-function extractEntityDataFromDonors(donors: Donor[], schemasWithFields: any) {
+export function extractEntityDataFromDonors(donors: Donor[], schemasWithFields: any) {
   const recordsMap: any = {};
 
   const completionStats: CompletionRecord[] = donors
