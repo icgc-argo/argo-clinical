@@ -178,7 +178,7 @@ export const getClinicalData = async (programId: string) => {
   return data;
 };
 
-export const getClinicalEntityData = async (programId: string, query: ClinicalQuery) => {
+export const getPaginatedClinicalData = async (programId: string, query: ClinicalQuery) => {
   if (!programId) throw new Error('Missing programId!');
   const start = new Date().getTime() / 1000;
 
@@ -193,7 +193,7 @@ export const getClinicalEntityData = async (programId: string, query: ClinicalQu
   const data = await runTaskInWorkerThread<ClinicalEntityData>(taskToRun, taskArgs);
 
   const end = new Date().getTime() / 1000;
-  L.debug(`getClinicalData took ${end - start}s`);
+  L.debug(`getPaginatedClinicalData took ${end - start}s`);
 
   return data;
 };
