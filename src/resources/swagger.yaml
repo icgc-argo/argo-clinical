@@ -831,6 +831,31 @@ paths:
           $ref: '#/components/responses/ServerError'
         '200':
           description: 'Array of Clinical Entity + CompletionStat objects'
+  /clinical/program/:programId/clinical-errors:
+    get:
+      tags:
+        - Clinical Data
+      summary: Get all clinical errors for a given program. Returns clinicalErrors[].
+      parameters:
+        - $ref: '#/components/parameters/PathProgramId'
+        - in: query
+          name: donorIds
+          schema:
+            type: array
+            items:
+              type: integer
+          description: Donor IDs to filter error results
+      responses:
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+        '200':
+          description: 'Array of Clinical Error objects'
   /clinical/program/{programId}/tsv-export:
     parameters:
       - $ref: '#/components/parameters/PathProgramId'
