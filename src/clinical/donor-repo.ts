@@ -47,6 +47,15 @@ export enum DONOR_DOCUMENT_FIELDS {
   FAMILY_HISTORY_ID = 'familyHistory.clinicalInfo.family_relative_id',
 }
 
+const DONOR_ENTITY_CORE_FIELDS = [
+  'donorId',
+  'submitterId',
+  'programId',
+  'gender',
+  'clinicalInfo',
+  'completionStats',
+];
+
 export type FindByProgramAndSubmitterFilter = DeepReadonly<{
   programId: string;
   submitterId: string;
@@ -167,15 +176,7 @@ export const donorDao: DonorRepository = {
   ): Promise<DeepReadonly<Donor[]>> {
     const { page, limit, sort, entityTypes, donorIds, submitterDonorIds, completionState } = query;
 
-    const projection = [
-      'donorId',
-      'submitterId',
-      'programId',
-      'gender',
-      'clinicalInfo',
-      'completionStats',
-      ...entityTypes,
-    ].join(' ');
+    const projection = [...DONOR_ENTITY_CORE_FIELDS, ...entityTypes].join(' ');
 
     const result = await DonorModel.paginate(
       {

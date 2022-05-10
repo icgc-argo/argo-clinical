@@ -27,7 +27,7 @@ interface CompletionRecord extends CompletionStats {
   donorId?: number;
 }
 
-const donorIdField = 'donor_id';
+const DONOR_ID_FIELD = 'donor_id';
 
 function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
   const recordsMap: any = {};
@@ -93,7 +93,7 @@ function extractEntityDataFromDonors(donors: Donor[], schemasWithFields: any) {
       return {
         entityName,
         records,
-        entityFields: [donorIdField, ...relevantSchemaWithFields.fields],
+        entityFields: [DONOR_ID_FIELD, ...relevantSchemaWithFields.fields],
       };
     })
     .filter(notEmpty);
