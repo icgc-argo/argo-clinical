@@ -772,7 +772,6 @@ paths:
           $ref: '#/components/responses/ServerError'
         '200':
           description: 'Stream of newline `\n` delimited JSON objects'
-
   /clinical/program/:programId/clinical-data:
     get:
       tags:
@@ -780,6 +779,47 @@ paths:
       summary: Get all program submitted data from db. Returns clinicalEntities[], completionStats[] & clinicalErrors[].
       parameters:
         - $ref: '#/components/parameters/PathProgramId'
+        - in: query
+          name: entityTypes
+          schema:
+            type: array
+            items:
+              type: string
+          description: Clinical Entity data types to return
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Paginated Results page number to return
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: Number of paginated results per page
+        - in: query
+          name: donorIds
+          schema:
+            type: array
+            items:
+              type: integer
+          description: Donor ID values to return
+        - in: query
+          name: submitterDonorIds
+          schema:
+            type: array
+            items:
+              type: integer
+          description: Submitter ID values to return
+        - in: query
+          name: completionState
+          schema:
+            type: string
+          description: Entity CompletionStates to filter by, one of 'all' | 'invalid' | 'complete' | 'incomplete'
+        - in: query
+          name: sort
+          schema:
+            type: string
+          description: Donor Field to sort results by, preceding '-' indicates descending
       responses:
         '401':
           $ref: '#/components/responses/UnauthorizedError'
@@ -790,8 +830,7 @@ paths:
         '500':
           $ref: '#/components/responses/ServerError'
         '200':
-          description: 'Stream of newline `\n` delimited JSON objects'
-
+          description: 'Array of Clinical Entity + CompletionStat objects'
   /clinical/program/{programId}/tsv-export:
     parameters:
       - $ref: '#/components/parameters/PathProgramId'
