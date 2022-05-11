@@ -32,14 +32,14 @@ import { omit } from 'lodash';
 import { DeepReadonly } from 'deep-freeze';
 
 export type ClinicalQuery = {
+  programShortName: string;
   page: number;
   limit: number;
-  sort: string;
-  programShortName: string;
   entityTypes: string[];
-  donorIds: number[];
-  submitterDonorIds: string[];
-  completionState: {};
+  sort?: string;
+  donorIds?: number[];
+  submitterDonorIds?: string[];
+  completionState?: {};
 };
 
 enum CompletionStates {
@@ -88,19 +88,31 @@ class ClinicalController {
 
   @HasProgramReadAccess((req: Request) => req.params.programId)
   async getProgramClinicalEntityData(req: Request, res: Response) {
-    const programId = req.params.programId;
-    const state: CompletionStates = req.query.completionState;
+    const programId: string = req.params.programId;
+    const sort: string = req.query.sort || 'donorId';
+    const state: CompletionStates = req.query.completionState || CompletionStates.all;
+    const entityTypes: string[] =
+      req.query.entityTypes && req.query.entityTypes.length > 0
+        ? req.query.entityTypes.split(',')
+        : [''];
     const completionState: {} = completionFilters[state] || {};
+    const donorIds =
+      req.query.donorIds && req.query.donorIds.length > 0
+        ? { donorId: { $in: req.query.donorIds.split(',') } }
+        : '';
 
+    const submitterDonorIds =
+      req.query.submitterDonorIds && req.query.submitterDonorIds.length > 0
+        ? { submitterId: { $in: req.query.submitterDonorIds.split(',') } }
+        : '';
+    console.log(donorIds);
+    console.log(submitterDonorIds);
     const query: ClinicalQuery = {
       ...req.query,
-      entityTypes: req.query.entityTypes.split(','),
-      donorIds:
-        req.query.donorIds.length > 0 ? { donorId: { $in: req.query.donorIds.split(',') } } : '',
-      submitterDonorIds:
-        req.query.submitterDonorIds.length > 0
-          ? { submitterId: { $in: req.query.submitterDonorIds.split(',') } }
-          : '',
+      sort,
+      entityTypes,
+      donorIds,
+      submitterDonorIds,
       completionState,
     };
 

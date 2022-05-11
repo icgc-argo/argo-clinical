@@ -109,9 +109,7 @@ export function getClinicalEntitiesFromDonorBySchemaName(
   const result = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName) as any[];
   const clinicalRecords = result
     .map((e: any) => {
-      if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.REGISTRATION) {
-        return e;
-      } else if (e.clinicalInfo) {
+      if (e.clinicalInfo) {
         return e.clinicalInfo as ClinicalInfo;
       }
     })
