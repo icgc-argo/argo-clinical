@@ -99,31 +99,6 @@ export function getClinicalObjectsFromDonor(
     }
   }
 
-  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.REGISTRATION) {
-    if (donor.specimens) {
-      const baseRegistrationRecord = {
-        program_id: donor.programId,
-        submitter_donor_id: donor.submitterId,
-        gender: donor.gender,
-      };
-
-      const sample_registration = donor.specimens
-        .map(sp =>
-          sp.samples.map(sm => ({
-            ...baseRegistrationRecord,
-            submitter_specimen_id: sp.submitterId,
-            specimen_tissue_source: sp.specimenTissueSource,
-            tumour_normal_designation: sp.tumourNormalDesignation,
-            specimen_type: sp.specimenType,
-            submitter_sample_id: sm.submitterId,
-            sample_type: sm.sampleType,
-          })),
-        )
-        .flat();
-
-      return sample_registration;
-    }
-  }
   return [];
 }
 
