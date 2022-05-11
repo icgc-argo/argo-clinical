@@ -255,6 +255,18 @@ describe('clinical Api', () => {
             res.should.have.status(404);
           });
       });
+
+      it('/clinical/program/:programId/clinical-data should return clinical data', async function() {
+        return chai
+          .request(app)
+          .get('/clinical/program/PACA-CA/clinical-data?page=0&limit=20')
+          .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+          .then((res: any) => {
+            res.should.have.status(200);
+            res.body.should.have.property('clinicalEntities');
+            res.body.should.have.property('completionStats');
+          });
+      });
     }); // end of id endpoints
 
     describe('dev/test enpoints', function() {
