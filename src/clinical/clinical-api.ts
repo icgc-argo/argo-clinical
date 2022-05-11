@@ -105,8 +105,7 @@ class ClinicalController {
       req.query.submitterDonorIds && req.query.submitterDonorIds.length > 0
         ? { submitterId: { $in: req.query.submitterDonorIds.split(',') } }
         : '';
-    console.log(donorIds);
-    console.log(submitterDonorIds);
+
     const query: ClinicalQuery = {
       ...req.query,
       sort,
