@@ -267,6 +267,17 @@ describe('clinical Api', () => {
             res.body.should.have.property('completionStats');
           });
       });
+
+      it('/clinical/program/:programId/clinical-errors should return clinical errors', async function() {
+        return chai
+          .request(app)
+          .get('/clinical/program/PACA-CA/clinical-errors')
+          .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+          .then((res: any) => {
+            res.should.have.status(200);
+            res.body.should.be.an('array');
+          });
+      });
     }); // end of id endpoints
 
     describe('dev/test enpoints', function() {
