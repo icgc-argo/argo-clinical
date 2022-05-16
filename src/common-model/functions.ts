@@ -98,6 +98,7 @@ export function getClinicalObjectsFromDonor(
         .filter(notEmpty);
     }
   }
+
   return [];
 }
 
@@ -106,7 +107,6 @@ export function getClinicalEntitiesFromDonorBySchemaName(
   clinicalEntitySchemaName: ClinicalEntitySchemaNames,
 ): ClinicalInfo[] {
   const result = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName) as any[];
-
   const clinicalRecords = result
     .map((e: any) => {
       if (e.clinicalInfo) {
@@ -114,6 +114,7 @@ export function getClinicalEntitiesFromDonorBySchemaName(
       }
     })
     .filter(notEmpty);
+
   return clinicalRecords;
 }
 
@@ -127,7 +128,7 @@ export function getSingleClinicalEntityFromDonorBySchemanName(
   }
   const uniqueIdNames: string[] = convertToArray(ClinicalUniqueIdentifier[clinicalEntityType]);
   if (_.isEmpty(uniqueIdNames)) {
-    throw new Error("illegale state, couldn't find entity id field name");
+    throw new Error("Illegal state, couldn't find entity id field name");
   }
   const constraints: ClinicalInfo = {};
   uniqueIdNames.forEach(idN => (constraints[idN] = clinicalInfoRef[idN]));

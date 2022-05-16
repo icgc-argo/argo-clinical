@@ -43,6 +43,13 @@ export interface DictionaryMigration {
   newSchemaErrors?: NewSchemaVerificationResult | string;
 }
 
+export type DonorMigrationError = {
+  donorId: number;
+  submitterDonorId: string;
+  programId: string;
+  errors: DonorMigrationSchemaErrors;
+};
+
 export type NewSchemaVerificationResult = {
   [clinicalEntity: string]: {
     missingFields?: string[];
@@ -51,6 +58,10 @@ export type NewSchemaVerificationResult = {
     errorMessage?: string;
   };
 };
+
+export interface DonorMigrationErrorRecord extends dictionaryEntities.SchemaValidationError {
+  entityName: string;
+}
 
 export type DonorMigrationSchemaErrors = Array<{
   [clinicalType: string]: ReadonlyArray<dictionaryEntities.SchemaValidationError>;

@@ -29,6 +29,7 @@ export interface DictionaryMigrationRepository {
   create(migration: DictionaryMigration): Promise<DeepReadonly<DictionaryMigration | undefined>>;
   getByState(state: MigrationState): Promise<DeepReadonly<DictionaryMigration | undefined>>;
   getById(migrationId: string): Promise<DeepReadonly<DictionaryMigration | undefined>>;
+  getLatestSuccessful(): Promise<DeepReadonly<DictionaryMigration | undefined>>;
   update(migration: DictionaryMigration): Promise<DictionaryMigration>;
 }
 
@@ -63,6 +64,17 @@ export const migrationRepo: DictionaryMigrationRepository = {
   getById: async (migrationId: string): Promise<DeepReadonly<DictionaryMigration | undefined>> => {
     L.debug('in migration repo get');
     const migration = await DictionaryMigrationModel.findOne({ _id: migrationId }).exec();
+    if (migration == undefined) {
+      return undefined;
+    }
+    return F(MongooseUtils.toPojo(migration) as DictionaryMigration);
+  },
+  getLatestSuccessful: async (): Promise<DeepReadonly<DictionaryMigration | undefined>> => {
+    L.debug('in migration repo get latest successful');
+    const migration = await DictionaryMigrationModel.find()
+      .sort({ createdAt: -1 })
+      .findOne({ stage: 'COMPLETED', dryRun: false })
+      .exec();
     if (migration == undefined) {
       return undefined;
     }
