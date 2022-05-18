@@ -17,7 +17,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { Donor, Therapy, Treatment } from '../../clinical/clinical-entities';
+import { Donor, Therapy } from '../../clinical/clinical-entities';
 import {
   DataValidationErrors,
   SubmissionValidationError,
@@ -55,7 +55,11 @@ export const validate = async (
     const existingSurgeryBySpecimenId = getSingleClinicalObjectFromDonor(
       existentDonor,
       ClinicalEntitySchemaNames.SURGERY,
-      { clinicalInfo: { [SurgeryFieldsEnum.submitter_specimen_id]: specimenId as string } },
+      {
+        clinicalInfo: {
+          [SurgeryFieldsEnum.submitter_specimen_id]: specimenId as string,
+        },
+      },
     ) as DeepReadonly<Therapy>;
 
     if (existingSurgeryBySpecimenId) {
@@ -108,7 +112,7 @@ export const validate = async (
     const submitterDonorId = therapyRecord[CommonTherapyFields.submitter_donor_id];
     const sumitterTreatmentId = therapyRecord[CommonTherapyFields.submitter_treatment_id];
     const existingSurgery = getSingleClinicalObjectFromDonor(
-      mergedDonor,
+      existentDonor,
       ClinicalEntitySchemaNames.SURGERY,
       {
         clinicalInfo: {
