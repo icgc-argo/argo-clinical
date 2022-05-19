@@ -1468,7 +1468,7 @@ describe('Submission Api', () => {
         'radiation.tsv',
         'hormone_therapy.tsv',
         'immunotherapy.tsv',
-        // 'surgery.tsv',
+        'surgery.tsv',
       ]);
       await validateSubmission();
       await commitActiveSubmission();
@@ -1677,7 +1677,7 @@ describe('Submission Api', () => {
         'radiation.tsv',
         'hormone_therapy.tsv',
         'immunotherapy.tsv',
-        // 'surgery.tsv',
+        'surgery.tsv',
       ]);
       await validateSubmission();
       await commitActiveSubmission();
