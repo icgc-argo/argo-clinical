@@ -79,7 +79,7 @@ export const validate = async (
     // get existing surgery by submitter_specimen_id
     const specimenId = therapyRecord[SurgeryFieldsEnum.submitter_specimen_id];
     const existingSurgeryBySpecimenId = getSingleClinicalObjectFromDonor(
-      existentDonor,
+      mergedDonor,
       ClinicalEntitySchemaNames.SURGERY,
       {
         clinicalInfo: {
@@ -98,7 +98,7 @@ export const validate = async (
         ),
       );
     } else {
-      const existingSurgery = checkDonorAndTreatmentSubmitted(existentDonor, therapyRecord);
+      const existingSurgery = checkDonorAndTreatmentSubmitted(mergedDonor, therapyRecord);
       if (existingSurgery) {
         const isSurgeryTypeEqual = checkSurgeryTypeEquality(therapyRecord, existingSurgery);
         if (!isSurgeryTypeEqual) {
@@ -113,7 +113,7 @@ export const validate = async (
       }
     }
   } else {
-    const existingSurgery = checkDonorAndTreatmentSubmitted(existentDonor, therapyRecord);
+    const existingSurgery = checkDonorAndTreatmentSubmitted(mergedDonor, therapyRecord);
 
     if (existingSurgery) {
       const isSurgeryTypeEqual = checkSurgeryTypeEquality(therapyRecord, existingSurgery);
