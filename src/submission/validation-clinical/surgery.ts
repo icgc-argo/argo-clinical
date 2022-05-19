@@ -35,12 +35,12 @@ import { checkTreatementHasCorrectTypeForTherapy, getTreatment } from './therapy
 import * as utils from './utils';
 
 function checkDonorAndTreatmentSubmitted(
-  mergedDonor: DeepReadonly<Donor>,
+  donor: DeepReadonly<Donor>,
   therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
 ) {
   const submitterDonorId = therapyRecord[CommonTherapyFields.submitter_donor_id];
   const sumitterTreatmentId = therapyRecord[CommonTherapyFields.submitter_treatment_id];
-  return getSingleClinicalObjectFromDonor(mergedDonor, ClinicalEntitySchemaNames.SURGERY, {
+  return getSingleClinicalObjectFromDonor(donor, ClinicalEntitySchemaNames.SURGERY, {
     clinicalInfo: {
       [CommonTherapyFields.submitter_donor_id]: submitterDonorId as string,
       [CommonTherapyFields.submitter_treatment_id]: sumitterTreatmentId as string,
@@ -107,6 +107,10 @@ export const validate = async (
               therapyRecord,
               DataValidationErrors.SURGERY_TYPES_NOT_EQUAL,
               SurgeryFieldsEnum.submitter_specimen_id,
+              {
+                submitter_donor_id: therapyRecord[CommonTherapyFields.submitter_donor_id],
+                submitter_treatment_id: therapyRecord[CommonTherapyFields.submitter_treatment_id],
+              },
             ),
           );
         }
@@ -124,6 +128,10 @@ export const validate = async (
             therapyRecord,
             DataValidationErrors.SURGERY_TYPES_NOT_EQUAL,
             SurgeryFieldsEnum.submitter_specimen_id,
+            {
+              submitter_donor_id: therapyRecord[CommonTherapyFields.submitter_donor_id],
+              submitter_treatment_id: therapyRecord[CommonTherapyFields.submitter_treatment_id],
+            },
           ),
         );
       }
