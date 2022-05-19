@@ -186,7 +186,7 @@ export const getPaginatedClinicalData = async (programId: string, query: Clinica
 
   const donors = await donorDao.findByPaginatedProgramId(programId, query);
 
-  const data = extractEntityDataFromDonors(donors as Donor[], allSchemasWithFields);
+  const data = extractEntityDataFromDonors(donors as Donor[], allSchemasWithFields, query);
 
   const end = new Date().getTime() / 1000;
   L.debug(`getPaginatedClinicalData took ${end - start}s`);

@@ -39,6 +39,24 @@ export enum ClinicalEntitySchemaNames {
   BIOMARKER = 'biomarker',
 }
 
+export const aliasEntityNames = {
+  donor: 'donor',
+  sample_registration: 'sampleRegistration',
+  specimen: 'specimens',
+  primary_diagnosis: 'primaryDiagnoses',
+  family_history: 'familyHistory',
+  treatment: 'treatment',
+  chemotherapy: 'chemotherapy',
+  immunotherapy: 'immunotherapy',
+  surgery: 'surgery',
+  radiation: 'radiation',
+  follow_up: 'followUps',
+  hormone_therapy: 'hormoneTherapy',
+  exposure: 'exposure',
+  comorbidity: 'comorbidity',
+  biomarker: 'biomarker',
+};
+
 export type ClinicalFields =
   | DonorFieldsEnum
   | SpecimenFieldsEnum

@@ -18,9 +18,10 @@
  */
 
 import _, { isEmpty } from 'lodash';
-import { ClinicalEntitySchemaNames } from '../../common-model/entities';
+import { ClinicalEntitySchemaNames, aliasEntityNames } from '../../common-model/entities';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../../common-model/functions';
 import { notEmpty } from '../../utils';
+import { ClinicalQuery } from '../clinical-api';
 import { Donor, CompletionStats } from '../clinical-entities';
 
 interface CompletionRecord extends CompletionStats {
@@ -87,7 +88,11 @@ function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
   return data;
 }
 
-export function extractEntityDataFromDonors(donors: Donor[], schemasWithFields: any) {
+export function extractEntityDataFromDonors(
+  donors: Donor[],
+  schemasWithFields: any,
+  query: ClinicalQuery,
+) {
   const recordsMap: any = {};
 
   const completionStats: CompletionRecord[] = donors
@@ -97,16 +102,18 @@ export function extractEntityDataFromDonors(donors: Donor[], schemasWithFields: 
     .filter(notEmpty);
 
   donors.forEach(d => {
-    Object.values(ClinicalEntitySchemaNames).forEach(entity => {
-      const clinicalInfoRecords = (entity === ClinicalEntitySchemaNames.REGISTRATION
-        ? getSampleRegistrationDataFromDonor(d)
-        : getClinicalEntitiesFromDonorBySchemaName(d, entity)
-      ).map(clinicalInfo => ({
-        donorId: d.donorId,
-        ...clinicalInfo,
-      }));
-      recordsMap[entity] = _.concat(recordsMap[entity] || [], clinicalInfoRecords);
-    });
+    Object.values(ClinicalEntitySchemaNames)
+      .filter(entitySchemaName => query.entityTypes.includes(aliasEntityNames[entitySchemaName]))
+      .forEach(entity => {
+        const clinicalInfoRecords = (entity === ClinicalEntitySchemaNames.REGISTRATION
+          ? getSampleRegistrationDataFromDonor(d)
+          : getClinicalEntitiesFromDonorBySchemaName(d, entity)
+        ).map(clinicalInfo => ({
+          donorId: d.donorId,
+          ...clinicalInfo,
+        }));
+        recordsMap[entity] = _.concat(recordsMap[entity] || [], clinicalInfoRecords);
+      });
   });
 
   const clinicalEntities = Object.entries(recordsMap)
