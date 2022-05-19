@@ -107,9 +107,10 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
       .map((d: string) => `- ${d}`)
       .join('\n')}`;
   },
-  DUPLICATE_SUBMITTER_SPECIMEN_ID_IN_SURGERY: () =>
-    'Duplicate submitter_specimen_id not allowed in surgery.',
-  SURGERY_TYPES_NOT_EQUAL: () => 'Surgery types must be equal',
+  DUPLICATE_SUBMITTER_SPECIMEN_ID_IN_SURGERY: data =>
+    `The submitter_specimen_id '${data.info.value}' can only be submitted once.`,
+  SURGERY_TYPES_NOT_EQUAL: data =>
+    `The combination of submitter_donor_id '${data.info.submitter_donor_id}' and submitter_treatment_id '${data.info.submitter_treatment_id}' can only be associated with one surgery_type.`,
 };
 
 const BATCH_ERROR_MESSAGES: Record<SubmissionBatchErrorTypes, (errorData: any) => string> = {
