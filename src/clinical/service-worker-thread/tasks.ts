@@ -19,7 +19,10 @@
 
 import _, { isEmpty } from 'lodash';
 import { ClinicalEntitySchemaNames, aliasEntityNames } from '../../common-model/entities';
-import { getClinicalEntitiesFromDonorBySchemaName } from '../../common-model/functions';
+import {
+  getClinicalEntitiesFromDonorBySchemaName,
+  getClinicalEntitySubmittedData,
+} from '../../common-model/functions';
 import { notEmpty } from '../../utils';
 import { ClinicalQuery } from '../clinical-api';
 import { Donor, CompletionStats } from '../clinical-entities';
@@ -105,13 +108,10 @@ export function extractEntityDataFromDonors(
     Object.values(ClinicalEntitySchemaNames)
       .filter(entitySchemaName => query.entityTypes.includes(aliasEntityNames[entitySchemaName]))
       .forEach(entity => {
-        const clinicalInfoRecords = (entity === ClinicalEntitySchemaNames.REGISTRATION
-          ? getSampleRegistrationDataFromDonor(d)
-          : getClinicalEntitiesFromDonorBySchemaName(d, entity)
-        ).map(clinicalInfo => ({
-          donorId: d.donorId,
-          ...clinicalInfo,
-        }));
+        const clinicalInfoRecords =
+          entity === ClinicalEntitySchemaNames.REGISTRATION
+            ? getSampleRegistrationDataFromDonor(d)
+            : getClinicalEntitySubmittedData(d, entity);
         recordsMap[entity] = _.concat(recordsMap[entity] || [], clinicalInfoRecords);
       });
   });
