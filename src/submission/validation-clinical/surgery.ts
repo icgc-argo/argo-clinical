@@ -25,7 +25,10 @@ import {
   SubmittedClinicalRecord,
 } from '../submission-entities';
 import { DeepReadonly } from 'deep-freeze';
-import { getSingleClinicalObjectFromDonor } from '../../common-model/functions';
+import {
+  findClinicalObjects,
+  getSingleClinicalObjectFromDonor,
+} from '../../common-model/functions';
 import {
   ClinicalEntitySchemaNames,
   CommonTherapyFields,
@@ -33,32 +36,7 @@ import {
 } from '../../common-model/entities';
 import { checkTreatementHasCorrectTypeForTherapy, getTreatment } from './therapy';
 import * as utils from './utils';
-
-function checkDonorAndTreatmentSubmitted(
-  donor: DeepReadonly<Donor>,
-  therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
-) {
-  const submitterDonorId = therapyRecord[CommonTherapyFields.submitter_donor_id];
-  const sumitterTreatmentId = therapyRecord[CommonTherapyFields.submitter_treatment_id];
-  return getSingleClinicalObjectFromDonor(donor, ClinicalEntitySchemaNames.SURGERY, {
-    clinicalInfo: {
-      [CommonTherapyFields.submitter_donor_id]: submitterDonorId as string,
-      [CommonTherapyFields.submitter_treatment_id]: sumitterTreatmentId as string,
-    },
-  }) as DeepReadonly<Therapy>;
-}
-
-function checkSurgeryTypeEquality(
-  therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
-  existingSurgery: DeepReadonly<Therapy>,
-) {
-  // check if existing surgery'surgery_type === therapyRecord.surgery_type
-  const existingSurgeryType = existingSurgery.clinicalInfo[
-    SurgeryFieldsEnum.surgery_type
-  ] as string;
-  const therapyRecordSurgeryType = therapyRecord[SurgeryFieldsEnum.surgery_type] as string;
-  return existingSurgeryType === therapyRecordSurgeryType;
-}
+import _ from 'mongoose-sequence';
 
 export const validate = async (
   therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
@@ -76,10 +54,23 @@ export const validate = async (
 
   // sub_sp_id is submitted in tsv?
   if (therapyRecord[SurgeryFieldsEnum.submitter_specimen_id]) {
-    // get existing surgery by submitter_specimen_id
+    // 1. check if submitter_specimen_id has been registered with current donor
+    const specimen = utils.getSpecimenFromDonor(existentDonor, therapyRecord, errors);
+    if (!specimen) {
+      return { errors };
+    }
+
+    // 2. check if there is more than one surgery by submitter_specimen_id in the current submission
     const specimenId = therapyRecord[SurgeryFieldsEnum.submitter_specimen_id];
-    const existingSurgeryBySpecimenId = getSingleClinicalObjectFromDonor(
-      mergedDonor,
+    const surgeries = findClinicalObjects(mergedDonor, ClinicalEntitySchemaNames.SURGERY, {
+      clinicalInfo: {
+        [SurgeryFieldsEnum.submitter_specimen_id]: specimenId as string,
+      },
+    }) as DeepReadonly<Therapy>[];
+
+    // 3. check if there is existing surgery in DB by submitter_specimen_id
+    const existingSurgeryInDB = getSingleClinicalObjectFromDonor(
+      existentDonor,
       ClinicalEntitySchemaNames.SURGERY,
       {
         clinicalInfo: {
@@ -88,8 +79,10 @@ export const validate = async (
       },
     ) as DeepReadonly<Therapy>;
 
-    if (existingSurgeryBySpecimenId) {
-      // Has sub_sp_id been submitted in surgery before? if yes, then invalid
+    // if there is surgery with the current submitter_specimen_id submitted before,
+    // or if there are more than one surgeries with the same submitter_specimen_id
+    // in the current submission, then invalid.
+    if (existingSurgeryInDB || surgeries.length > 1) {
       errors.push(
         utils.buildSubmissionError(
           therapyRecord,
@@ -98,45 +91,90 @@ export const validate = async (
         ),
       );
     } else {
-      const existingSurgery = checkDonorAndTreatmentSubmitted(mergedDonor, therapyRecord);
-      if (existingSurgery) {
-        const isSurgeryTypeEqual = checkSurgeryTypeEquality(therapyRecord, existingSurgery);
-        if (!isSurgeryTypeEqual) {
-          errors.push(
-            utils.buildSubmissionError(
-              therapyRecord,
-              DataValidationErrors.SURGERY_TYPES_NOT_EQUAL,
-              SurgeryFieldsEnum.submitter_specimen_id,
-              {
-                submitter_donor_id: therapyRecord[CommonTherapyFields.submitter_donor_id],
-                submitter_treatment_id: therapyRecord[CommonTherapyFields.submitter_treatment_id],
-              },
-            ),
-          );
-        }
-      }
+      validateSurgeryByDonorAndTreatment(therapyRecord, existentDonor, mergedDonor, errors);
     }
   } else {
-    const existingSurgery = checkDonorAndTreatmentSubmitted(mergedDonor, therapyRecord);
-
-    if (existingSurgery) {
-      const isSurgeryTypeEqual = checkSurgeryTypeEquality(therapyRecord, existingSurgery);
-
-      if (!isSurgeryTypeEqual) {
-        errors.push(
-          utils.buildSubmissionError(
-            therapyRecord,
-            DataValidationErrors.SURGERY_TYPES_NOT_EQUAL,
-            SurgeryFieldsEnum.submitter_specimen_id,
-            {
-              submitter_donor_id: therapyRecord[CommonTherapyFields.submitter_donor_id],
-              submitter_treatment_id: therapyRecord[CommonTherapyFields.submitter_treatment_id],
-            },
-          ),
-        );
-      }
-    }
+    validateSurgeryByDonorAndTreatment(therapyRecord, existentDonor, mergedDonor, errors);
   }
 
   return { errors };
 };
+
+// verify if there is surgery with the current combination of submitter_donor_id and submitter_treatment_id
+// in DB, or if there are more than one surgeries with the current submitter_donor_id and submitter_treatment_id
+// in current submission, if found any, then validate if the found surgery's surgery_type is the
+// same as the current surgery being validated.
+function validateSurgeryByDonorAndTreatment(
+  therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
+  existentDonor: DeepReadonly<Donor>,
+  mergedDonor: Donor,
+  errors: SubmissionValidationError[],
+) {
+  const surgeryInDB = findSubmittedSurgeryByDonorAndTreatment(existentDonor, therapyRecord);
+  const surgeriesInCurrentSubmission = findSurgeryInCurrentSubmission(mergedDonor, therapyRecord);
+  if (surgeryInDB || surgeriesInCurrentSubmission.length > 1) {
+    const isSurgeryTypeEqual = checkSurgeryTypeEquality(
+      therapyRecord,
+      surgeryInDB,
+      surgeriesInCurrentSubmission,
+    );
+    if (!isSurgeryTypeEqual) {
+      errors.push(
+        utils.buildSubmissionError(
+          therapyRecord,
+          DataValidationErrors.SURGERY_TYPES_NOT_EQUAL,
+          SurgeryFieldsEnum.submitter_specimen_id,
+          {
+            submitter_donor_id: therapyRecord[CommonTherapyFields.submitter_donor_id],
+            submitter_treatment_id: therapyRecord[CommonTherapyFields.submitter_treatment_id],
+            surgery_type: therapyRecord[SurgeryFieldsEnum.submitter_specimen_id],
+          },
+        ),
+      );
+    }
+  }
+}
+
+function findSubmittedSurgeryByDonorAndTreatment(
+  existenDonor: DeepReadonly<Donor>,
+  therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
+) {
+  const submitterDonorId = therapyRecord[CommonTherapyFields.submitter_donor_id];
+  const sumitterTreatmentId = therapyRecord[CommonTherapyFields.submitter_treatment_id];
+  return getSingleClinicalObjectFromDonor(existenDonor, ClinicalEntitySchemaNames.SURGERY, {
+    clinicalInfo: {
+      [CommonTherapyFields.submitter_donor_id]: submitterDonorId as string,
+      [CommonTherapyFields.submitter_treatment_id]: sumitterTreatmentId as string,
+    },
+  }) as DeepReadonly<Therapy>;
+}
+
+function findSurgeryInCurrentSubmission(
+  mergedDonor: Donor,
+  therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
+) {
+  const submitterDonorId = therapyRecord[CommonTherapyFields.submitter_donor_id];
+  const sumitterTreatmentId = therapyRecord[CommonTherapyFields.submitter_treatment_id];
+  const sugeries = findClinicalObjects(mergedDonor, ClinicalEntitySchemaNames.SURGERY, {
+    clinicalInfo: {
+      [CommonTherapyFields.submitter_donor_id]: submitterDonorId as string,
+      [CommonTherapyFields.submitter_treatment_id]: sumitterTreatmentId as string,
+    },
+  }) as DeepReadonly<Therapy>[];
+
+  return sugeries;
+}
+
+function checkSurgeryTypeEquality(
+  therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
+  surgeryInDB: DeepReadonly<Therapy> | undefined,
+  surgeriesInCurrentSubmission: DeepReadonly<Therapy>[],
+) {
+  const therapyRecordSurgeryType = therapyRecord[SurgeryFieldsEnum.surgery_type] as string;
+
+  const existingSurgeryType = surgeryInDB
+    ? (surgeryInDB.clinicalInfo[SurgeryFieldsEnum.surgery_type] as string)
+    : (surgeriesInCurrentSubmission[0].clinicalInfo[SurgeryFieldsEnum.surgery_type] as string);
+
+  return existingSurgeryType === therapyRecordSurgeryType;
+}
