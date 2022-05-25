@@ -18,9 +18,12 @@
  */
 
 import { Donor } from './clinical-entities';
-import mongoose from 'mongoose';
+import { ClinicalQuery } from './clinical-api';
+import mongoose, { PaginateModel } from 'mongoose';
+import mongoosePaginate from 'mongoose-paginate-v2';
 import { DeepReadonly } from 'deep-freeze';
 import { F, MongooseUtils, notEmpty } from '../utils';
+
 export const SUBMITTER_ID = 'submitterId';
 export const SPECIMEN_SUBMITTER_ID = 'specimen.submitterId';
 export const SPECIMEN_SAMPLE_SUBMITTER_ID = 'specimen.sample.submitterId';
@@ -44,10 +47,26 @@ export enum DONOR_DOCUMENT_FIELDS {
   FAMILY_HISTORY_ID = 'familyHistory.clinicalInfo.family_relative_id',
 }
 
+const DONOR_ENTITY_CORE_FIELDS = [
+  'donorId',
+  'submitterId',
+  'programId',
+  'gender',
+  'clinicalInfo',
+  'completionStats',
+  'specimens',
+];
+
 export type FindByProgramAndSubmitterFilter = DeepReadonly<{
   programId: string;
   submitterId: string;
 }>;
+
+export type FindPaginatedProgramFilter = {
+  programId: string;
+  submitterId?: { $in: '' };
+  donorId?: { $in: '' };
+};
 
 export interface DonorRepository {
   findByClinicalEntitySubmitterIdAndProgramId(
@@ -63,6 +82,7 @@ export interface DonorRepository {
     projections?: Partial<Record<DONOR_DOCUMENT_FIELDS, number>>,
     omitMongoDocIds?: boolean,
   ): Promise<DeepReadonly<Donor[]>>;
+  findByPaginatedProgramId(programId: string, query: ClinicalQuery): Promise<DeepReadonly<Donor[]>>;
   deleteByProgramId(programId: string): Promise<void>;
   findByProgramAndSubmitterId(
     filters: DeepReadonly<FindByProgramAndSubmitterFilter[]>,
@@ -134,7 +154,6 @@ export const donorDao: DonorRepository = {
     if (omitMongoDocIds) {
       return findByProgramIdOmitMongoDocId(programId, projection);
     }
-
     const result = await DonorModel.find(
       {
         [DONOR_DOCUMENT_FIELDS.PROGRAM_ID]: programId,
@@ -149,6 +168,39 @@ export const donorDao: DonorRepository = {
         return MongooseUtils.toPojo(d) as Donor;
       })
       .filter(notEmpty);
+    return F(mapped);
+  },
+
+  async findByPaginatedProgramId(
+    programId: string,
+    query: ClinicalQuery,
+  ): Promise<DeepReadonly<Donor[]>> {
+    const { page, limit, sort, entityTypes, donorIds, submitterDonorIds, completionState } = query;
+
+    const projection = [...DONOR_ENTITY_CORE_FIELDS, ...entityTypes].join(' ');
+
+    const result = await DonorModel.paginate(
+      {
+        [DONOR_DOCUMENT_FIELDS.PROGRAM_ID]: programId,
+        ...donorIds,
+        ...submitterDonorIds,
+        ...completionState,
+      },
+      {
+        limit,
+        page,
+        projection,
+        sort,
+        select: '-_id',
+      },
+    );
+
+    const mapped: Donor[] = result.docs
+      .map((d: DonorDocument) => {
+        return MongooseUtils.toPojo(d) as Donor;
+      })
+      .filter(notEmpty);
+
     return F(mapped);
   },
 
@@ -492,6 +544,8 @@ DonorSchema.plugin(AutoIncrement, {
   start_seq: process.env.DONOR_ID_SEED || 250000,
 });
 
+DonorSchema.plugin(mongoosePaginate);
+
 SpecimenSchema.plugin(AutoIncrement, {
   inc_field: 'specimenId',
   start_seq: process.env.SPECIMEN_ID_SEED || 210000,
@@ -537,4 +591,6 @@ TreatmentSchema.plugin(AutoIncrement, {
   start_seq: 1,
 });
 
-export let DonorModel = mongoose.model<DonorDocument>('Donor', DonorSchema);
+export let DonorModel = mongoose.model<DonorDocument>('Donor', DonorSchema) as PaginateModel<
+  DonorDocument
+>;

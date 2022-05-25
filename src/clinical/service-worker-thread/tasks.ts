@@ -17,45 +17,53 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { Donor } from '../clinical-entities';
+import _, { isEmpty } from 'lodash';
 import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../../common-model/functions';
-import _, { isEmpty } from 'lodash';
 import { notEmpty } from '../../utils';
+import { Donor, CompletionStats } from '../clinical-entities';
+
+interface CompletionRecord extends CompletionStats {
+  donorId?: number;
+}
+
+function getSampleRegistrationDataFromDonor(donor: Donor) {
+  const baseRegistrationRecord = {
+    program_id: donor.programId,
+    submitter_donor_id: donor.submitterId,
+    gender: donor.gender,
+  };
+
+  const sample_registration = donor.specimens
+    .map(sp =>
+      sp.samples.map(sm => ({
+        ...baseRegistrationRecord,
+        submitter_specimen_id: sp.submitterId,
+        specimen_tissue_source: sp.specimenTissueSource,
+        tumour_normal_designation: sp.tumourNormalDesignation,
+        specimen_type: sp.specimenType,
+        submitter_sample_id: sm.submitterId,
+        sample_type: sm.sampleType,
+      })),
+    )
+    .flat();
+
+  return sample_registration;
+}
+
+const DONOR_ID_FIELD = 'donor_id';
 
 function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
-  function getSampleRegistrationDataFromDonor(d: Donor) {
-    const baseRegistrationRecord = {
-      program_id: d.programId,
-      submitter_donor_id: d.submitterId,
-      gender: d.gender,
-    };
-
-    return d.specimens
-      .map(sp =>
-        sp.samples.map(sm => ({
-          ...baseRegistrationRecord,
-          submitter_specimen_id: sp.submitterId,
-          specimen_tissue_source: sp.specimenTissueSource,
-          tumour_normal_designation: sp.tumourNormalDesignation,
-          specimen_type: sp.specimenType,
-          submitter_sample_id: sm.submitterId,
-          sample_type: sm.sampleType,
-        })),
-      )
-      .flat();
-  }
-
   const recordsMap: any = {};
+
   donors.forEach(d => {
     Object.values(ClinicalEntitySchemaNames).forEach(entity => {
-      let clincialInfoRecords;
-      if (entity === ClinicalEntitySchemaNames.REGISTRATION) {
-        clincialInfoRecords = getSampleRegistrationDataFromDonor(d);
-      } else {
-        clincialInfoRecords = getClinicalEntitiesFromDonorBySchemaName(d, entity);
-      }
-      recordsMap[entity] = _.concat(recordsMap[entity] || [], clincialInfoRecords);
+      const clinicalInfoRecords =
+        entity === ClinicalEntitySchemaNames.REGISTRATION
+          ? getSampleRegistrationDataFromDonor(d)
+          : getClinicalEntitiesFromDonorBySchemaName(d, entity);
+
+      recordsMap[entity] = _.concat(recordsMap[entity] || [], clinicalInfoRecords);
     });
   });
 
@@ -79,10 +87,59 @@ function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
   return data;
 }
 
+export function extractEntityDataFromDonors(donors: Donor[], schemasWithFields: any) {
+  const recordsMap: any = {};
+
+  const completionStats: CompletionRecord[] = donors
+    .map(({ completionStats, donorId }): CompletionRecord | undefined =>
+      completionStats && donorId ? { ...completionStats, donorId } : undefined,
+    )
+    .filter(notEmpty);
+
+  donors.forEach(d => {
+    Object.values(ClinicalEntitySchemaNames).forEach(entity => {
+      const clinicalInfoRecords = (entity === ClinicalEntitySchemaNames.REGISTRATION
+        ? getSampleRegistrationDataFromDonor(d)
+        : getClinicalEntitiesFromDonorBySchemaName(d, entity)
+      ).map(clinicalInfo => ({
+        donorId: d.donorId,
+        ...clinicalInfo,
+      }));
+      recordsMap[entity] = _.concat(recordsMap[entity] || [], clinicalInfoRecords);
+    });
+  });
+
+  const clinicalEntities = Object.entries(recordsMap)
+    .map(([entityName, records]) => {
+      if (isEmpty(records)) return undefined;
+
+      const relevantSchemaWithFields = schemasWithFields.find((s: any) => s.name === entityName);
+      if (!relevantSchemaWithFields) {
+        throw new Error(`Can't find schema ${entityName}, something is wrong here!`);
+      }
+
+      return {
+        entityName,
+        records,
+        entityFields: [DONOR_ID_FIELD, ...relevantSchemaWithFields.fields],
+      };
+    })
+    .filter(notEmpty);
+
+  const data = {
+    clinicalEntities,
+    completionStats,
+  };
+
+  return data;
+}
+
 export enum WorkerTasks {
   ExtractDataFromDonors,
+  ExtractEntityDataFromDonors,
 }
 
 export const WorkerTasksMap: Record<WorkerTasks, Function> = {
   [WorkerTasks.ExtractDataFromDonors]: extractDataFromDonors,
+  [WorkerTasks.ExtractEntityDataFromDonors]: extractEntityDataFromDonors,
 };
