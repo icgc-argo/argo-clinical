@@ -27,20 +27,15 @@ import {
 } from '../submission-entities';
 import {
   ClinicalEntitySchemaNames,
-  DonorFieldsEnum,
   SpecimenFieldsEnum,
-  ClinicalUniqueIdentifier,
   PrimaryDiagnosisFieldsEnum,
 } from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, PrimaryDiagnosis, Specimen } from '../../clinical/clinical-entities';
 import * as utils from './utils';
-import { isEmptyString, isEmpty, notEmpty } from '../../utils';
-import {
-  getEntitySubmitterIdFieldName,
-  getSingleClinicalObjectFromDonor,
-} from '../../common-model/functions';
-import { checkRelatedEntityExists } from './utils';
+import { isEmpty, notEmpty } from '../../utils';
+import { getEntitySubmitterIdFieldName } from '../../common-model/functions';
+import { checkRelatedEntityExists, getSpecimenFromDonor } from './utils';
 import _ from 'lodash';
 
 export const validate = async (
@@ -88,33 +83,6 @@ export const validate = async (
 
   return { errors };
 };
-
-function getSpecimenFromDonor(
-  existentDonor: DeepReadonly<Donor>,
-  specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
-  errors: SubmissionValidationError[],
-) {
-  const specimen = getSingleClinicalObjectFromDonor(
-    existentDonor,
-    ClinicalEntitySchemaNames.SPECIMEN,
-    {
-      submitterId: specimenRecord[ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.SPECIMEN]],
-    },
-  ) as DeepReadonly<Specimen>;
-
-  if (!specimen) {
-    errors.push(
-      utils.buildSubmissionError(
-        specimenRecord,
-        DataValidationErrors.ID_NOT_REGISTERED,
-        SpecimenFieldsEnum.submitter_specimen_id,
-      ),
-    );
-    return undefined;
-  }
-
-  return specimen;
-}
 
 function checkTimeConflictWithDonor(
   donorDataToValidateWith: { [k: string]: any },

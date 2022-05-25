@@ -156,6 +156,7 @@ export enum CommonTherapyFields {
 
 export enum SurgeryFieldsEnum {
   submitter_specimen_id = 'submitter_specimen_id',
+  surgery_type = 'surgery_type',
 }
 
 export enum RadiationFieldsEnum {
