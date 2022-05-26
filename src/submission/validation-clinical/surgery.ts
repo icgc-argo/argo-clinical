@@ -127,7 +127,7 @@ function validateSurgeryByDonorAndTreatment(
           {
             submitter_donor_id: therapyRecord[CommonTherapyFields.submitter_donor_id],
             submitter_treatment_id: therapyRecord[CommonTherapyFields.submitter_treatment_id],
-            surgery_type: therapyRecord[SurgeryFieldsEnum.submitter_specimen_id],
+            surgery_type: therapyRecord[SurgeryFieldsEnum.surgery_type],
           },
         ),
       );
