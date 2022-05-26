@@ -36,6 +36,15 @@ export function getSingleClinicalObjectFromDonor(
   return _.find(entities, constraints);
 }
 
+export function findClinicalObjects(
+  donor: DeepReadonly<Donor>,
+  clinicalEntitySchemaName: ClinicalEntitySchemaNames,
+  constraints: object,
+) {
+  const entities = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName);
+  return _.filter(entities, constraints);
+}
+
 export function getClinicalObjectsFromDonor(
   donor: DeepReadonly<Donor>,
   clinicalEntitySchemaName: ClinicalEntitySchemaNames,
