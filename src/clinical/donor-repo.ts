@@ -178,7 +178,7 @@ export const donorDao: DonorRepository = {
     programId: string,
     query: ClinicalQuery,
   ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number }>> {
-    const { sort, entityTypes, donorIds, submitterDonorIds, completionState } = query;
+    const { sort, pageSize, entityTypes, donorIds, submitterDonorIds, completionState } = query;
 
     const projection = [...DONOR_ENTITY_CORE_FIELDS, ...entityTypes].join(' ');
 
@@ -192,6 +192,7 @@ export const donorDao: DonorRepository = {
       {
         projection,
         sort,
+        limit: pageSize,
         select: '-_id',
       },
     );

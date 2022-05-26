@@ -36,7 +36,7 @@ export type ClinicalQuery = {
   page: number;
   pageSize: number;
   entityTypes: string[];
-  sort?: string;
+  sort: string;
   donorIds?: number[];
   submitterDonorIds?: string[];
   completionState?: {};
@@ -120,7 +120,7 @@ class ClinicalController {
     }
 
     const entityData = await service.getPaginatedClinicalData(programId, query);
-
+    console.log(entityData);
     res.status(200).json(entityData);
   }
 
