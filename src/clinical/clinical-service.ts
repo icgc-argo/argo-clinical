@@ -183,15 +183,21 @@ export const getPaginatedClinicalData = async (programId: string, query: Clinica
   const start = new Date().getTime() / 1000;
 
   const allSchemasWithFields = await dictionaryManager.instance().getSchemasWithFields();
+  // Get all donors + records for given entity
+  const { donors, totalDonors } = await donorDao.findByPaginatedProgramId(programId, query);
 
-  const { totalDocs, donors } = await donorDao.findByPaginatedProgramId(programId, query);
-
-  const data = extractEntityDataFromDonors(donors as Donor[], allSchemasWithFields, query);
+  // Return paginated data
+  const data = extractEntityDataFromDonors(
+    donors as Donor[],
+    totalDonors,
+    allSchemasWithFields,
+    query,
+  );
 
   const end = new Date().getTime() / 1000;
   L.debug(`getPaginatedClinicalData took ${end - start}s`);
 
-  return { totalDocs, ...data };
+  return data;
 };
 
 interface DonorMigration extends Omit<DictionaryMigration, 'invalidDonorsErrors '> {
