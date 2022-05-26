@@ -31,6 +31,31 @@ import { Donor } from './clinical-entities';
 import { omit } from 'lodash';
 import { DeepReadonly } from 'deep-freeze';
 
+export type ClinicalQuery = {
+  programShortName: string;
+  page: number;
+  limit: number;
+  entityTypes: string[];
+  sort?: string;
+  donorIds?: number[];
+  submitterDonorIds?: string[];
+  completionState?: {};
+};
+
+enum CompletionStates {
+  all = 'all',
+  invalid = 'invalid',
+  complete = 'complete',
+  incomplete = 'incomplete',
+}
+
+const completionFilters = {
+  invalid: { 'schemaMetadata.isValid': false },
+  complete: { 'completionStats.coreCompletionPercentage': 100 },
+  incomplete: { 'completionStats.coreCompletionPercentage': 0 },
+  all: {},
+};
+
 class ClinicalController {
   @HasFullReadAccess()
   async findDonors(req: Request, res: Response) {
@@ -59,6 +84,57 @@ class ClinicalController {
     });
 
     res.send(zip.toBuffer());
+  }
+
+  @HasProgramReadAccess((req: Request) => req.params.programId)
+  async getProgramClinicalEntityData(req: Request, res: Response) {
+    const programId: string = req.params.programId;
+    const sort: string = req.query.sort || 'donorId';
+    const state: CompletionStates = req.query.completionState || CompletionStates.all;
+    const entityTypes: string[] =
+      req.query.entityTypes && req.query.entityTypes.length > 0
+        ? req.query.entityTypes.split(',')
+        : [''];
+    const completionState: {} = completionFilters[state] || {};
+    const donorIds =
+      req.query.donorIds && req.query.donorIds.length > 0
+        ? { donorId: { $in: req.query.donorIds.split(',') } }
+        : '';
+
+    const submitterDonorIds =
+      req.query.submitterDonorIds && req.query.submitterDonorIds.length > 0
+        ? { submitterId: { $in: req.query.submitterDonorIds.split(',') } }
+        : '';
+
+    const query: ClinicalQuery = {
+      ...req.query,
+      sort,
+      entityTypes,
+      donorIds,
+      submitterDonorIds,
+      completionState,
+    };
+
+    if (!programId) {
+      return ControllerUtils.badRequest(res, 'Invalid programId provided');
+    }
+
+    const entityData = await service.getPaginatedClinicalData(programId, query);
+
+    res.status(200).json(entityData);
+  }
+
+  @HasProgramReadAccess((req: Request) => req.params.programId)
+  async getProgramClinicalErrors(req: Request, res: Response) {
+    const programId = req.params.programId;
+    const query = req.query.donorIds && req.query.donorIds.split(',');
+    if (!programId) {
+      return ControllerUtils.badRequest(res, 'Invalid programId provided');
+    }
+
+    const clinicalErrors = await service.getClinicalEntityMigrationErrors(programId, query);
+
+    res.status(200).json(clinicalErrors);
   }
 
   /**
@@ -131,13 +207,13 @@ class ClinicalController {
 
     const coreCompletionOverride = req.body.coreCompletionOverride || {};
 
-    const upadtedDonor = await service.updateDonorStats(donorId, coreCompletionOverride);
+    const updatedDonor = await service.updateDonorStats(donorId, coreCompletionOverride);
 
-    if (!upadtedDonor) {
+    if (!updatedDonor) {
       return ControllerUtils.notFound(res, `Donor with donorId:${donorId} not found`);
     }
 
-    return res.status(200).send(upadtedDonor);
+    return res.status(200).send(updatedDonor);
   }
 
   @HasProgramReadAccess((req: Request) => req.params.programId)

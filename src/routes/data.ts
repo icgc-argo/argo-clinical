@@ -36,6 +36,11 @@ router.get('/samples/id', wrapAsync(clinicalApi.findSampleId));
 // Get Donor Data
 router.get('/program/:programId/donor/:donorId', wrapAsync(clinicalApi.getDonorById));
 router.get('/program/:programId/donors', wrapAsync(clinicalApi.streamProgramDonors));
+router.get(
+  '/program/:programId/clinical-data',
+  wrapAsync(clinicalApi.getProgramClinicalEntityData),
+);
+router.get('/program/:programId/clinical-errors', wrapAsync(clinicalApi.getProgramClinicalErrors));
 
 // Get TSV Data
 router.get(
