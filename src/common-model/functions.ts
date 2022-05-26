@@ -123,19 +123,21 @@ export function getClinicalEntitySubmittedData(
   clinicalEntitySchemaName: ClinicalEntitySchemaNames,
 ): ClinicalInfo[] {
   const result = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName) as any[];
+
   const clinicalRecords = result
     .map((entity: any) =>
       clinicalEntitySchemaName === ClinicalEntitySchemaNames.DONOR
         ? {
-            donorId: donor.donorId,
-            programId: donor.programId,
-            submitterId: donor.submitterId,
+            donor_id: donor.donorId,
+            program_id: donor.programId,
+            submitter_id: donor.submitterId,
             gender: donor.gender,
             ...entity.clinicalInfo,
           }
         : {
-            donorId: donor.donorId,
-            ...entity,
+            donor_id: donor.donorId,
+            program_id: donor.programId,
+            ...entity.clinicalInfo,
           },
     )
     .filter(notEmpty);
