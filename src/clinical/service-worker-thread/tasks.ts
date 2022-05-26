@@ -102,7 +102,7 @@ export function extractEntityDataFromDonors(
   query: ClinicalQuery,
 ) {
   const recordsMap = {} as RecordsMap;
-  const { entityTypes, page, limit } = query;
+  const { entityTypes, page, pageSize } = query;
 
   const completionStats: CompletionRecord[] = donors
     .map(({ completionStats, donorId }): CompletionRecord | undefined =>
@@ -133,8 +133,8 @@ export function extractEntityDataFromDonors(
 
       const totalDocs =
         entityName === ClinicalEntitySchemaNames.DONOR ? totalDonors : results.length;
-      const first = page * limit;
-      const last = (page + 1) * limit;
+      const first = page * pageSize;
+      const last = (page + 1) * pageSize;
       const records = results.slice(first, last);
 
       return {

@@ -34,7 +34,7 @@ import { DeepReadonly } from 'deep-freeze';
 export type ClinicalQuery = {
   programShortName: string;
   page: number;
-  limit: number;
+  pageSize: number;
   entityTypes: string[];
   sort?: string;
   donorIds?: number[];
