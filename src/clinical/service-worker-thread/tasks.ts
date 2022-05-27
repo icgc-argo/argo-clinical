@@ -131,6 +131,8 @@ export function extractEntityDataFromDonors(
         throw new Error(`Can't find schema ${entityName}, something is wrong here!`);
       }
 
+      const completionRecords =
+        entityName === ClinicalEntitySchemaNames.DONOR ? { completionStats } : {};
       const totalDocs =
         entityName === ClinicalEntitySchemaNames.DONOR ? totalDonors : results.length;
       const first = page * pageSize;
@@ -152,13 +154,13 @@ export function extractEntityDataFromDonors(
         totalDocs,
         records,
         entityFields: [DONOR_ID_FIELD, ...relevantSchemaWithFields.fields],
+        ...completionRecords,
       };
     })
     .filter(notEmpty);
 
   const data = {
     clinicalEntities,
-    completionStats,
   };
 
   return data;
