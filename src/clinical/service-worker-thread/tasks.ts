@@ -141,7 +141,7 @@ export function extractEntityDataFromDonors(
           const key = !isDescending ? sort.split('-')[0] : sort.split('-')[1];
           const first = currentRecord[key] !== undefined ? (currentRecord[key] as number) : -1;
           const next = nextRecord[key] !== undefined ? (nextRecord[key] as number) : -1;
-          let order = first === next ? 0 : first > next && isDescending ? -1 : 1;
+          const order = first === next ? 0 : first > next && isDescending ? -1 : 1;
 
           return order;
         })

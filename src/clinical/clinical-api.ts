@@ -120,7 +120,7 @@ class ClinicalController {
     }
 
     const entityData = await service.getPaginatedClinicalData(programId, query);
-    console.log(entityData);
+
     res.status(200).json(entityData);
   }
 
