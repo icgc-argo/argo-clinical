@@ -116,7 +116,10 @@ export function extractEntityDataFromDonors(
       .forEach(entity => {
         const clinicalInfoRecords =
           entity === ClinicalEntitySchemaNames.REGISTRATION
-            ? getSampleRegistrationDataFromDonor(d)
+            ? getSampleRegistrationDataFromDonor(d).map(sample => ({
+                donor_id: d.donorId,
+                ...sample,
+              }))
             : getClinicalEntitySubmittedData(d, entity);
         recordsMap[entity] = _.concat(recordsMap[entity] || [], clinicalInfoRecords);
       });
