@@ -34,6 +34,7 @@ import {
   DonorFieldsEnum,
   ClinicalFields,
   ClinicalTherapyType,
+  SpecimenFieldsEnum,
 } from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
 import {
@@ -43,7 +44,7 @@ import {
 } from '../submission-error-messages';
 import _ from 'lodash';
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
-import { Donor, ClinicalInfo } from '../../clinical/clinical-entities';
+import { Donor, ClinicalInfo, Specimen } from '../../clinical/clinical-entities';
 import {
   getSingleClinicalEntityFromDonorBySchemanName,
   getSingleClinicalObjectFromDonor,
@@ -145,6 +146,33 @@ export const buildRecordValidationResult = (
   const rvr = addUpdateStatus(record, clinicalInfo);
   return addWarnings(rvr, warnings);
 };
+
+export function getSpecimenFromDonor(
+  existentDonor: DeepReadonly<Donor>,
+  specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
+  errors: SubmissionValidationError[],
+) {
+  const specimen = getSingleClinicalObjectFromDonor(
+    existentDonor,
+    ClinicalEntitySchemaNames.SPECIMEN,
+    {
+      submitterId: specimenRecord[ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.SPECIMEN]],
+    },
+  ) as DeepReadonly<Specimen>;
+
+  if (!specimen) {
+    errors.push(
+      buildSubmissionError(
+        specimenRecord,
+        DataValidationErrors.ID_NOT_REGISTERED,
+        SpecimenFieldsEnum.submitter_specimen_id,
+      ),
+    );
+    return undefined;
+  }
+
+  return specimen;
+}
 
 const addWarnings = (rvr: RecordValidationResult, warnings: SubmissionValidationError[]) => {
   return { ...rvr, warnings };
@@ -474,7 +502,7 @@ export function getRelatedEntityByFK(
     relatedEntityName == ClinicalEntitySchemaNames.RADIATION ||
     relatedEntityName == ClinicalEntitySchemaNames.HORMONE_THERAPY ||
     relatedEntityName == ClinicalEntitySchemaNames.IMMUNOTHERAPY ||
-    // relatedEntityName == ClinicalEntitySchemaNames.SURGERY ||
+    relatedEntityName == ClinicalEntitySchemaNames.SURGERY ||
     relatedEntityName == ClinicalEntitySchemaNames.FAMILY_HISTORY ||
     relatedEntityName == ClinicalEntitySchemaNames.COMORBIDITY ||
     relatedEntityName == ClinicalEntitySchemaNames.BIOMARKER
