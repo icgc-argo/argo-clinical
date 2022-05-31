@@ -61,40 +61,6 @@ function getSampleRegistrationDataFromDonor(donor: Donor) {
 
 const DONOR_ID_FIELD = 'donor_id';
 
-function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
-  const recordsMap = <RecordsMap>{};
-
-  donors.forEach(d => {
-    Object.values(ClinicalEntitySchemaNames).forEach(entity => {
-      const clinicalInfoRecords =
-        entity === ClinicalEntitySchemaNames.REGISTRATION
-          ? getSampleRegistrationDataFromDonor(d)
-          : getClinicalEntitiesFromDonorBySchemaName(d, entity);
-
-      recordsMap[entity] = _.concat(recordsMap[entity] || [], clinicalInfoRecords);
-    });
-  });
-
-  const data = Object.entries(recordsMap)
-    .map(([entityName, records]) => {
-      if (isEmpty(records)) return undefined;
-
-      const relevantSchemaWithFields = schemasWithFields.find((s: any) => s.name === entityName);
-      if (!relevantSchemaWithFields) {
-        throw new Error(`Can't find schema ${entityName}, something is wrong here!`);
-      }
-
-      return {
-        entityName,
-        records,
-        entityFields: relevantSchemaWithFields.fields,
-      };
-    })
-    .filter(notEmpty);
-
-  return data;
-}
-
 const sortDocs = (sort: string) => (currentRecord: ClinicalInfo, nextRecord: ClinicalInfo) => {
   const isDescending = sort.split('-')[1] !== undefined;
   const key = !isDescending ? sort.split('-')[0] : sort.split('-')[1];
@@ -129,6 +95,40 @@ const mapEntityDocuments = (totalDonors: number, schemas: any, query: ClinicalQu
     entityFields: [DONOR_ID_FIELD, ...relevantSchemaWithFields.fields],
   };
 };
+
+function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
+  const recordsMap = <RecordsMap>{};
+
+  donors.forEach(d => {
+    Object.values(ClinicalEntitySchemaNames).forEach(entity => {
+      const clinicalInfoRecords =
+        entity === ClinicalEntitySchemaNames.REGISTRATION
+          ? getSampleRegistrationDataFromDonor(d)
+          : getClinicalEntitiesFromDonorBySchemaName(d, entity);
+
+      recordsMap[entity] = _.concat(recordsMap[entity] || [], clinicalInfoRecords);
+    });
+  });
+
+  const data = Object.entries(recordsMap)
+    .map(([entityName, records]) => {
+      if (isEmpty(records)) return undefined;
+
+      const relevantSchemaWithFields = schemasWithFields.find((s: any) => s.name === entityName);
+      if (!relevantSchemaWithFields) {
+        throw new Error(`Can't find schema ${entityName}, something is wrong here!`);
+      }
+
+      return {
+        entityName,
+        records,
+        entityFields: relevantSchemaWithFields.fields,
+      };
+    })
+    .filter(notEmpty);
+
+  return data;
+}
 
 export function extractEntityDataFromDonors(
   donors: Donor[],
