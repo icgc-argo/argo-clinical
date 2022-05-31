@@ -52,7 +52,7 @@ export const validate = async (
   return { errors };
 };
 
-function checkTreatementHasCorrectTypeForTherapy(
+export function checkTreatementHasCorrectTypeForTherapy(
   therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
   treatment: DeepReadonly<Treatment>,
   errors: SubmissionValidationError[],
@@ -77,7 +77,7 @@ function checkTreatementHasCorrectTypeForTherapy(
   }
 }
 
-function getTreatment(
+export function getTreatment(
   therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
   mergedDonor: Donor,
   errors: SubmissionValidationError[],
