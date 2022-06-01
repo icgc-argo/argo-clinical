@@ -71,10 +71,12 @@ const sortDocs = (sort: string) => (currentRecord: ClinicalInfo, nextRecord: Cli
   return order;
 };
 
-const mapEntityDocuments = (totalDonors: number, schemas: any, query: ClinicalQuery) => ([
-  entityName,
-  results,
-]: [string, ClinicalInfo[]]) => {
+const mapEntityDocuments = (
+  totalDonors: number,
+  schemas: any,
+  query: ClinicalQuery,
+  completionStats: CompletionRecord[],
+) => ([entityName, results]: [string, ClinicalInfo[]]) => {
   if (isEmpty(results)) return undefined;
 
   const relevantSchemaWithFields = schemas.find((s: any) => s.name === entityName);
@@ -88,10 +90,14 @@ const mapEntityDocuments = (totalDonors: number, schemas: any, query: ClinicalQu
   const last = (page + 1) * pageSize;
   const records = results.sort(sortDocs(sort)).slice(first, last);
 
+  const completionRecords =
+    entityName === ClinicalEntitySchemaNames.DONOR ? { completionStats } : {};
+
   return {
     entityName,
     totalDocs,
     records,
+    ...completionRecords,
     entityFields: [DONOR_ID_FIELD, ...relevantSchemaWithFields.fields],
   };
 };
@@ -161,7 +167,7 @@ export function extractEntityDataFromDonors(
   });
 
   const clinicalEntities = Object.entries(recordsMap)
-    .map(mapEntityDocuments(totalDonors, schemasWithFields, query))
+    .map(mapEntityDocuments(totalDonors, schemasWithFields, query, completionStats))
     .filter(notEmpty);
 
   const data = {
