@@ -82,7 +82,10 @@ export interface DonorRepository {
     projections?: Partial<Record<DONOR_DOCUMENT_FIELDS, number>>,
     omitMongoDocIds?: boolean,
   ): Promise<DeepReadonly<Donor[]>>;
-  findByPaginatedProgramId(programId: string, query: ClinicalQuery): Promise<DeepReadonly<Donor[]>>;
+  findByPaginatedProgramId(
+    programId: string,
+    query: ClinicalQuery,
+  ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number }>>;
   deleteByProgramId(programId: string): Promise<void>;
   findByProgramAndSubmitterId(
     filters: DeepReadonly<FindByProgramAndSubmitterFilter[]>,
@@ -174,8 +177,8 @@ export const donorDao: DonorRepository = {
   async findByPaginatedProgramId(
     programId: string,
     query: ClinicalQuery,
-  ): Promise<DeepReadonly<Donor[]>> {
-    const { page, limit, sort, entityTypes, donorIds, submitterDonorIds, completionState } = query;
+  ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number }>> {
+    const { sort, pageSize, entityTypes, donorIds, submitterDonorIds, completionState } = query;
 
     const projection = [...DONOR_ENTITY_CORE_FIELDS, ...entityTypes].join(' ');
 
@@ -187,21 +190,24 @@ export const donorDao: DonorRepository = {
         ...completionState,
       },
       {
-        limit,
-        page,
         projection,
         sort,
+        limit: pageSize,
         select: '-_id',
       },
     );
 
+    const { totalDocs: totalDonors } = result;
     const mapped: Donor[] = result.docs
       .map((d: DonorDocument) => {
         return MongooseUtils.toPojo(d) as Donor;
       })
       .filter(notEmpty);
 
-    return F(mapped);
+    return F({
+      donors: mapped,
+      totalDonors,
+    });
   },
 
   async findBySpecimenSubmitterIdAndProgramId(
