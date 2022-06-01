@@ -66,7 +66,7 @@ import {
   DataValidationErrors,
 } from './submission-entities';
 import * as dictionaryManager from '../dictionary/manager';
-
+import * as messenger from './submission-updates-messenger';
 import { loggerFor } from '../logger';
 import {
   Errors,
@@ -1391,6 +1391,11 @@ export namespace operations {
           .filter(id => Number(id) > 0)
           .filter(notEmpty),
       );
+    }
+
+    // if samples will be deleted, notify program update
+    if (dryRun === false && result.samplesDeleted.length > 0) {
+      await messenger.getInstance().sendProgramUpdatedMessage(programId);
     }
     return result;
   }

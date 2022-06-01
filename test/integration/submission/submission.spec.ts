@@ -324,6 +324,62 @@ describe('Submission Api', () => {
         });
     });
 
+    it('should allow sample deletion', done => {
+      let file: Buffer;
+      let rows: any[];
+
+      try {
+        file = fs.readFileSync(stubFilesDir + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`);
+        (async () =>
+          (rows = (await TsvUtils.tsvToJson(
+            stubFilesDir + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`,
+          )) as any[]))();
+      } catch (err) {
+        return done(err);
+      }
+
+      chai
+        .request(app)
+        .post('/submission/program/ABCD-EF/registration')
+        .auth(JWT_ABCDEF, { type: 'bearer' })
+        .type('form')
+        .attach('registrationFile', file, `${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`)
+        .end(async (err: any, res: any) => {
+          try {
+            await assertUploadOKRegistrationCreated(res, dburl);
+            const reg1Id = res.body.registration._id;
+            chai
+              .request(app)
+              .post(`/submission/program/ABCD-EF/registration/${reg1Id}/commit`)
+              .auth(JWT_ABCDEF, { type: 'bearer' })
+              .end(async (err: any, res: any) => {
+                try {
+                  await assertFirstCommitDonorsCreatedInDB(res, rows, dburl);
+                  chai
+                    .request(app)
+                    .delete(
+                      '/submission/program/ABCD-EF/registration/unregister?dryRun=false&sampleSubmitterIds=sm123-4',
+                    )
+                    .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+                    .end(async (err: any, res: any) => {
+                      try {
+                        const result = res.body;
+                        chai.expect(result.samplesDeleted).to.include('sm123-4');
+                        return done();
+                      } catch (err) {
+                        return done(err);
+                      }
+                    });
+                } catch (err) {
+                  return done(err);
+                }
+              });
+          } catch (err) {
+            return done(err);
+          }
+        });
+    });
+
     it('should commit registration, detect already registered', async () => {
       let file: Buffer;
       let rows: any[] = [];
