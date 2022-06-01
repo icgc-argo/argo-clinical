@@ -108,9 +108,11 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
       .join('\n')}`;
   },
   DUPLICATE_SUBMITTER_SPECIMEN_ID_IN_SURGERY: data =>
-    `Surgery with The submitter_specimen_id '${data.info.value}' has already been submitted either in current or previous submission, submitter_specimen_id can only be submitted once in Surgery.`,
+    `Surgery with The submitter_specimen_id '${data.info.submitter_specimen_id}' has already been submitted either in current or previous submission, submitter_specimen_id can only be submitted once in Surgery.`,
   SURGERY_TYPES_NOT_EQUAL: data =>
     `The combination of submitter_donor_id '${data.info.submitter_donor_id}' and submitter_treatment_id '${data.info.submitter_treatment_id}' can only be associated with one surgery_type.`,
+  DUPLICATE_SURGERY_WHEN_SPECIMEN_NOT_SUBMITTED: data =>
+    `When submitter_specimen_id is not submitted, the combination of [ submitter_donor_id '${data.info.submitter_donor_id}' ] and [ submitter_treatment_id '${data.info.submitter_treatment_id}' ] should only be submitted once in Surgery`,
 };
 
 const BATCH_ERROR_MESSAGES: Record<SubmissionBatchErrorTypes, (errorData: any) => string> = {
