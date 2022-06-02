@@ -810,7 +810,7 @@ paths:
     get:
       tags:
         - Clinical Data
-      summary: Get all program submitted data from db. Returns clinicalEntities[], completionStats[] & clinicalErrors[].
+      summary: Get all program submitted data from db. Returns clinicalEntities[].
       parameters:
         - $ref: '#/components/parameters/PathProgramId'
         - in: query
@@ -864,7 +864,7 @@ paths:
         '500':
           $ref: '#/components/responses/ServerError'
         '200':
-          description: 'Array of Clinical Entity + CompletionStat objects'
+          description: 'Array of Clinical Entity objects'
   /clinical/program/:programId/clinical-errors:
     get:
       tags:

@@ -2255,12 +2255,16 @@ describe('data-validator', () => {
         .catch((err: any) => fail(err));
 
       const error: SubmissionValidationError = {
-        fieldName: SurgeryFieldsEnum.submitter_specimen_id,
+        fieldName: DonorFieldsEnum.submitter_donor_id,
         message:
           "Surgery with The submitter_specimen_id 'sp-1' has already been submitted either in current or previous submission, submitter_specimen_id can only be submitted once in Surgery.",
         type: DataValidationErrors.DUPLICATE_SUBMITTER_SPECIMEN_ID_IN_SURGERY,
         index: 0,
-        info: { donorSubmitterId: 'ICGC_0002', value: 'sp-1' },
+        info: {
+          submitter_specimen_id: 'sp-1',
+          donorSubmitterId: 'ICGC_0002',
+          value: 'ICGC_0002',
+        },
       };
 
       chai.expect(result[ClinicalEntitySchemaNames.SURGERY].dataErrors.length).equal(1);
@@ -2298,6 +2302,42 @@ describe('data-validator', () => {
           submitter_treatment_id: 'Tr-1',
           surgery_type: 'Gastric Antrectomy',
           value: 'sp-2',
+        },
+      };
+
+      chai.expect(result[ClinicalEntitySchemaNames.SURGERY].dataErrors.length).equal(1);
+      chai.expect(result[ClinicalEntitySchemaNames.SURGERY].dataErrors[0]).to.deep.eq(error);
+    });
+
+    it('should error when submitter_specimen_id is not submitted, two surgeries are associated with the same submitter_donor_id and submitter_treatment_id', async () => {
+      const existingDonor = stubs.validation.existingDonor09();
+      const submissionRecordsMap = {};
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.SURGERY,
+        submissionRecordsMap,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'ICGC_0002',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'Tr-1',
+          [SurgeryFieldsEnum.surgery_type]: 'Gastric Antrectomy',
+          index: 0,
+        },
+      );
+
+      const result = await dv
+        .validateSubmissionData({ ICGC_0002: submissionRecordsMap }, { ICGC_0002: existingDonor })
+        .catch((err: any) => fail(err));
+
+      const error: SubmissionValidationError = {
+        fieldName: DonorFieldsEnum.submitter_donor_id,
+        message:
+          "When submitter_specimen_id is not submitted, the combination of [ submitter_donor_id 'ICGC_0002' ] and [ submitter_treatment_id 'Tr-1' ] should only be submitted once in Surgery",
+        type: DataValidationErrors.DUPLICATE_SURGERY_WHEN_SPECIMEN_NOT_SUBMITTED,
+        index: 0,
+        info: {
+          submitter_donor_id: 'ICGC_0002',
+          submitter_treatment_id: 'Tr-1',
+          donorSubmitterId: 'ICGC_0002',
+          value: 'ICGC_0002',
         },
       };
 

@@ -127,6 +127,33 @@ export function getClinicalEntitiesFromDonorBySchemaName(
   return clinicalRecords;
 }
 
+export function getClinicalEntitySubmittedData(
+  donor: DeepReadonly<Donor>,
+  clinicalEntitySchemaName: ClinicalEntitySchemaNames,
+): ClinicalInfo[] {
+  const result = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName) as any[];
+
+  const clinicalRecords = result
+    .map((entity: any) =>
+      clinicalEntitySchemaName === ClinicalEntitySchemaNames.DONOR
+        ? {
+            donor_id: donor.donorId,
+            program_id: donor.programId,
+            submitter_id: donor.submitterId,
+            gender: donor.gender,
+            ...entity.clinicalInfo,
+          }
+        : {
+            donor_id: donor.donorId,
+            program_id: donor.programId,
+            ...entity.clinicalInfo,
+          },
+    )
+    .filter(notEmpty);
+
+  return clinicalRecords;
+}
+
 export function getSingleClinicalEntityFromDonorBySchemanName(
   donor: DeepReadonly<Donor>,
   clinicalEntityType: ClinicalEntitySchemaNames,
