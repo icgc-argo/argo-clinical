@@ -87,6 +87,7 @@ export interface DonorRepository {
     query: ClinicalQuery,
   ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number }>>;
   deleteByProgramId(programId: string): Promise<void>;
+  deleteByProgramIdAndDonorIds(programId: string, donorIds: number[]): Promise<void>;
   findByProgramAndSubmitterId(
     filters: DeepReadonly<FindByProgramAndSubmitterFilter[]>,
   ): Promise<DeepReadonly<Donor[]> | undefined>;
@@ -124,6 +125,15 @@ export const donorDao: DonorRepository = {
   async deleteByProgramId(programId: string): Promise<void> {
     await DonorModel.deleteMany({
       [DONOR_DOCUMENT_FIELDS.PROGRAM_ID]: programId,
+    }).exec();
+  },
+
+  async deleteByProgramIdAndDonorIds(programId: string, donorIds: number[]): Promise<void> {
+    await DonorModel.deleteMany({
+      [DONOR_DOCUMENT_FIELDS.PROGRAM_ID]: programId,
+      [DONOR_DOCUMENT_FIELDS.DONOR_ID]: {
+        $in: donorIds,
+      },
     }).exec();
   },
 

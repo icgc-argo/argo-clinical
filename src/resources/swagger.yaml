@@ -330,6 +330,40 @@ paths:
                 $ref: '#/components/schemas/CreateRegistration'
         '503':
           $ref: '#/components/responses/ServiceUnavailableError'
+
+  /submission/program/{programId}/registration/unregister:
+    parameters:
+      - $ref: '#/components/parameters/PathProgramId'
+    delete:
+      tags:
+        - Sample Registration
+        - Admin
+      summary: Delete registered Samples
+      parameters:
+        - name: dryRun
+          description: if true won't execute the deletion, but will return what will be deleted, default is true, set to false to execute.
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: sampleSubmitterIds
+          description: Submitter Id of the samples csv format
+          in: query
+          required: true
+          schema:
+            type: string
+            format: csv
+        - $ref: '#/components/parameters/PathProgramId'
+      description: Dcc Admin endpoint to delete registered samples if no clinical data submitted
+      responses:
+        '200':
+          description: operation done successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/ServerError'
   /submission/program/{programId}/registration/{id}:
     delete:
       tags:
