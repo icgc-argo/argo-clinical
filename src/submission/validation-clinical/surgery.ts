@@ -32,6 +32,7 @@ import {
 import {
   ClinicalEntitySchemaNames,
   CommonTherapyFields,
+  DonorFieldsEnum,
   SurgeryFieldsEnum,
 } from '../../common-model/entities';
 import { checkTreatementHasCorrectTypeForTherapy, getTreatment } from './therapy';
@@ -87,14 +88,33 @@ export const validate = async (
         utils.buildSubmissionError(
           therapyRecord,
           DataValidationErrors.DUPLICATE_SUBMITTER_SPECIMEN_ID_IN_SURGERY,
-          SurgeryFieldsEnum.submitter_specimen_id,
+          DonorFieldsEnum.submitter_donor_id,
+          {
+            submitter_specimen_id: therapyRecord[SurgeryFieldsEnum.submitter_specimen_id],
+          },
         ),
       );
     } else {
       validateSurgeryByDonorAndTreatment(therapyRecord, existentDonor, mergedDonor, errors);
     }
   } else {
-    validateSurgeryByDonorAndTreatment(therapyRecord, existentDonor, mergedDonor, errors);
+    // when submitter_specimen_id is not submitted in tsv, and if surgery with the same combo of submitter_treatment_id
+    // and submitter_donor_id have been submitted before, should invalidate.
+    const surgeryInDB = findSubmittedSurgeryByDonorAndTreatment(existentDonor, therapyRecord);
+    const surgeriesInCurrentSubmission = findSurgeryInCurrentSubmission(mergedDonor, therapyRecord);
+    if (surgeryInDB || surgeriesInCurrentSubmission.length > 1) {
+      errors.push(
+        utils.buildSubmissionError(
+          therapyRecord,
+          DataValidationErrors.DUPLICATE_SURGERY_WHEN_SPECIMEN_NOT_SUBMITTED,
+          DonorFieldsEnum.submitter_donor_id,
+          {
+            submitter_donor_id: therapyRecord[CommonTherapyFields.submitter_donor_id],
+            submitter_treatment_id: therapyRecord[CommonTherapyFields.submitter_treatment_id],
+          },
+        ),
+      );
+    }
   }
 
   return { errors };
@@ -112,6 +132,7 @@ function validateSurgeryByDonorAndTreatment(
 ) {
   const surgeryInDB = findSubmittedSurgeryByDonorAndTreatment(existentDonor, therapyRecord);
   const surgeriesInCurrentSubmission = findSurgeryInCurrentSubmission(mergedDonor, therapyRecord);
+
   if (surgeryInDB || surgeriesInCurrentSubmission.length > 1) {
     const isSurgeryTypeEqual = checkSurgeryTypeEquality(
       therapyRecord,
