@@ -2257,7 +2257,7 @@ describe('data-validator', () => {
       const error: SubmissionValidationError = {
         fieldName: DonorFieldsEnum.submitter_donor_id,
         message:
-          "Surgery with The submitter_specimen_id 'sp-1' has already been submitted either in current or previous submission, submitter_specimen_id can only be submitted once in Surgery.",
+          "The submitter_specimen_id 'sp-1' has already been indicated as resected during a surgery in the current or previous submission. The submitter_specimen_id 'sp-1' can only be submitted once in the Surgery schema. Please review your data submission.",
         type: DataValidationErrors.DUPLICATE_SUBMITTER_SPECIMEN_ID_IN_SURGERY,
         index: 0,
         info: {
@@ -2293,7 +2293,7 @@ describe('data-validator', () => {
       const error: SubmissionValidationError = {
         fieldName: SurgeryFieldsEnum.submitter_specimen_id,
         message:
-          "The combination of submitter_donor_id 'ICGC_0002' and submitter_treatment_id 'Tr-1' can only be associated with one surgery_type.",
+          "The combination of submitter_donor_id 'ICGC_0002' and submitter_treatment_id 'Tr-1' can only be associated with one surgery_type. Please review your data submission.",
         type: DataValidationErrors.SURGERY_TYPES_NOT_EQUAL,
         index: 0,
         info: {
@@ -2330,7 +2330,7 @@ describe('data-validator', () => {
       const error: SubmissionValidationError = {
         fieldName: DonorFieldsEnum.submitter_donor_id,
         message:
-          "When submitter_specimen_id is not submitted, the combination of [ submitter_donor_id 'ICGC_0002' ] and [ submitter_treatment_id 'Tr-1' ] should only be submitted once in Surgery",
+          "When submitter_specimen_id is not submitted, the combination of [submitter_donor_id = 'ICGC_0002' and submitter_treatment_id = 'Tr-1' ] should only be submitted once in the Surgery schema. Please review your data submission.",
         type: DataValidationErrors.DUPLICATE_SURGERY_WHEN_SPECIMEN_NOT_SUBMITTED,
         index: 0,
         info: {
