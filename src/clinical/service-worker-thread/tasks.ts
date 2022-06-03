@@ -100,42 +100,31 @@ const mapEntityDocuments = (
   const samples = resultsArray.find(result => result[0] === 'sample_registration');
 
   if (completionRecords.completionStats && samples !== undefined) {
+    const updateCompletionTumourStats = (specimen: ClinicalInfo, type: string) => {
+      const specimenType = `${type}Specimens`;
+      const index = completionRecords.completionStats.findIndex(
+        donor => donor.donorId === specimen.donor_id,
+      );
+      if (index !== -1) {
+        const original = completionRecords.completionStats[index];
+        completionRecords.completionStats[index] = {
+          ...original,
+          coreCompletion: {
+            ...original.coreCompletion,
+            [specimenType]: 1,
+          },
+        };
+      }
+    };
+
     const normalSpecimens = samples[1].filter(
       sample => sample.tumour_normal_designation === 'Normal',
     );
     const tumourSpecimens = samples[1].filter(
-      sample => sample.tumour_normal_designation === 'Normal',
+      sample => sample.tumour_normal_designation === 'Tumour',
     );
-    normalSpecimens.forEach(specimen => {
-      const index = completionRecords.completionStats.findIndex(
-        donor => donor.donorId === specimen.donor_id,
-      );
-      if (index !== -1) {
-        const original = completionRecords.completionStats[index];
-        completionRecords.completionStats[index] = {
-          ...original,
-          coreCompletion: {
-            ...original.coreCompletion,
-            normalSpecimens: 1,
-          },
-        };
-      }
-    });
-    tumourSpecimens.forEach(specimen => {
-      const index = completionRecords.completionStats.findIndex(
-        donor => donor.donorId === specimen.donor_id,
-      );
-      if (index !== -1) {
-        const original = completionRecords.completionStats[index];
-        completionRecords.completionStats[index] = {
-          ...original,
-          coreCompletion: {
-            ...original.coreCompletion,
-            tumourSpecimens: 1,
-          },
-        };
-      }
-    });
+    normalSpecimens.forEach(specimen => updateCompletionTumourStats(specimen, 'normal'));
+    tumourSpecimens.forEach(specimen => updateCompletionTumourStats(specimen, 'tumour'));
   }
 
   return {
