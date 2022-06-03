@@ -179,7 +179,15 @@ export const donorDao: DonorRepository = {
   ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number }>> {
     const { sort, pageSize, entityTypes, donorIds, submitterDonorIds, completionState } = query;
 
-    const projection = [...DONOR_ENTITY_CORE_FIELDS, ...entityTypes].join(' ');
+    // Donor Completion Stats require Sample Registration data
+    // Sample Registration requires Specimen data
+    const requiredEntities =
+      (entityTypes.includes('donor') && !entityTypes.includes('sampleRegistration')) ||
+      (entityTypes.includes('sampleRegistration') && !entityTypes.includes('specimens'))
+        ? ['sampleRegistration', 'specimens']
+        : '';
+
+    const projection = [...DONOR_ENTITY_CORE_FIELDS, ...entityTypes, ...requiredEntities].join(' ');
 
     const result = await DonorModel.paginate(
       {

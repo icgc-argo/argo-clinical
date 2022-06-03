@@ -35,6 +35,8 @@ type RecordsMap = {
   [key in ClinicalEntitySchemaNames]: ClinicalInfo[];
 };
 
+const queryEntityNames = <string[]>Object.values(aliasEntityNames);
+
 function getSampleRegistrationDataFromDonor(donor: Donor) {
   const baseRegistrationRecord = {
     program_id: donor.programId,
@@ -79,17 +81,20 @@ const mapEntityDocuments = (
 ) => (
   entity: [string, ClinicalInfo[]],
   index: number,
-  resultsArray: [string, ClinicalInfo[]][],
+  originalResultsArray: [string, ClinicalInfo[]][],
 ) => {
   const [entityName, results] = entity;
-  if (isEmpty(results)) return undefined;
+  const { page, pageSize, sort, entityTypes } = query;
 
   const relevantSchemaWithFields = schemas.find((s: any) => s.name === entityName);
-  if (!relevantSchemaWithFields) {
-    throw new Error(`Can't find schema ${entityName}, something is wrong here!`);
+  const entityInQuery =
+    queryEntityNames.includes(aliasEntityNames[entityName]) &&
+    entityTypes.includes(aliasEntityNames[entityName]);
+
+  if (!relevantSchemaWithFields || !entityInQuery || isEmpty(results)) {
+    return undefined;
   }
 
-  const { page, pageSize, sort } = query;
   const totalDocs = entityName === ClinicalEntitySchemaNames.DONOR ? totalDonors : results.length;
   const first = page * pageSize;
   const last = (page + 1) * pageSize;
@@ -97,7 +102,7 @@ const mapEntityDocuments = (
 
   const completionRecords =
     entityName === ClinicalEntitySchemaNames.DONOR ? { completionStats: [...completionStats] } : {};
-  const samples = resultsArray.find(result => result[0] === 'sample_registration');
+  const samples = originalResultsArray.find(result => result[0] === 'sample_registration');
 
   if (completionRecords.completionStats && samples !== undefined) {
     const updateCompletionTumourStats = (specimen: ClinicalInfo, type: string) => {
@@ -177,7 +182,6 @@ export function extractEntityDataFromDonors(
   query: ClinicalQuery,
 ) {
   const recordsMap = <RecordsMap>{};
-  const { entityTypes } = query;
 
   const completionStats: CompletionRecord[] = donors
     .map(({ completionStats, donorId }): CompletionRecord | undefined =>
@@ -186,20 +190,18 @@ export function extractEntityDataFromDonors(
     .filter(notEmpty);
 
   donors.forEach(d => {
-    Object.values(ClinicalEntitySchemaNames)
-      .filter(entitySchemaName => entityTypes.includes(aliasEntityNames[entitySchemaName]))
-      .forEach(entity => {
-        const clinicalInfoRecords =
-          entity === ClinicalEntitySchemaNames.REGISTRATION
-            ? getSampleRegistrationDataFromDonor(d)
-                .filter(notEmpty)
-                .map(sample => ({
-                  donor_id: d.donorId,
-                  ...sample,
-                }))
-            : getClinicalEntitySubmittedData(d, entity);
-        recordsMap[entity] = _.concat(recordsMap[entity] || [], clinicalInfoRecords);
-      });
+    Object.values(ClinicalEntitySchemaNames).forEach(entity => {
+      const clinicalInfoRecords =
+        entity === ClinicalEntitySchemaNames.REGISTRATION
+          ? getSampleRegistrationDataFromDonor(d)
+              .filter(notEmpty)
+              .map(sample => ({
+                donor_id: d.donorId,
+                ...sample,
+              }))
+          : getClinicalEntitySubmittedData(d, entity);
+      recordsMap[entity] = _.concat(recordsMap[entity] || [], clinicalInfoRecords);
+    });
   });
 
   const clinicalEntities = Object.entries(recordsMap)
