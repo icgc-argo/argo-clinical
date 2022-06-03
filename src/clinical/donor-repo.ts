@@ -54,7 +54,6 @@ const DONOR_ENTITY_CORE_FIELDS = [
   'gender',
   'clinicalInfo',
   'completionStats',
-  'specimens',
 ];
 
 export type FindByProgramAndSubmitterFilter = DeepReadonly<{

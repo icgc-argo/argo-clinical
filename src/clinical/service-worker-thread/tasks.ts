@@ -76,7 +76,12 @@ const mapEntityDocuments = (
   schemas: any,
   query: ClinicalQuery,
   completionStats: CompletionRecord[],
-) => ([entityName, results]: [string, ClinicalInfo[]]) => {
+) => (
+  entity: [string, ClinicalInfo[]],
+  index: number,
+  resultsArray: [string, ClinicalInfo[]][],
+) => {
+  const [entityName, results] = entity;
   if (isEmpty(results)) return undefined;
 
   const relevantSchemaWithFields = schemas.find((s: any) => s.name === entityName);
@@ -91,7 +96,47 @@ const mapEntityDocuments = (
   const records = results.sort(sortDocs(sort)).slice(first, last);
 
   const completionRecords =
-    entityName === ClinicalEntitySchemaNames.DONOR ? { completionStats } : {};
+    entityName === ClinicalEntitySchemaNames.DONOR ? { completionStats: [...completionStats] } : {};
+  const samples = resultsArray.find(result => result[0] === 'sample_registration');
+
+  if (completionRecords.completionStats && samples !== undefined) {
+    const normalSpecimens = samples[1].filter(
+      sample => sample.tumour_normal_designation === 'Normal',
+    );
+    const tumourSpecimens = samples[1].filter(
+      sample => sample.tumour_normal_designation === 'Normal',
+    );
+    normalSpecimens.forEach(specimen => {
+      const index = completionRecords.completionStats.findIndex(
+        donor => donor.donorId === specimen.donor_id,
+      );
+      if (index !== -1) {
+        const original = completionRecords.completionStats[index];
+        completionRecords.completionStats[index] = {
+          ...original,
+          coreCompletion: {
+            ...original.coreCompletion,
+            normalSpecimens: 1,
+          },
+        };
+      }
+    });
+    tumourSpecimens.forEach(specimen => {
+      const index = completionRecords.completionStats.findIndex(
+        donor => donor.donorId === specimen.donor_id,
+      );
+      if (index !== -1) {
+        const original = completionRecords.completionStats[index];
+        completionRecords.completionStats[index] = {
+          ...original,
+          coreCompletion: {
+            ...original.coreCompletion,
+            tumourSpecimens: 1,
+          },
+        };
+      }
+    });
+  }
 
   return {
     entityName,
@@ -157,10 +202,12 @@ export function extractEntityDataFromDonors(
       .forEach(entity => {
         const clinicalInfoRecords =
           entity === ClinicalEntitySchemaNames.REGISTRATION
-            ? getSampleRegistrationDataFromDonor(d).map(sample => ({
-                donor_id: d.donorId,
-                ...sample,
-              }))
+            ? getSampleRegistrationDataFromDonor(d)
+                .filter(notEmpty)
+                .map(sample => ({
+                  donor_id: d.donorId,
+                  ...sample,
+                }))
             : getClinicalEntitySubmittedData(d, entity);
         recordsMap[entity] = _.concat(recordsMap[entity] || [], clinicalInfoRecords);
       });

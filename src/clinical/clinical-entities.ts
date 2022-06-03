@@ -129,6 +129,8 @@ export interface CoreCompletionFields {
   primaryDiagnosis: number;
   followUps: number;
   treatments: number;
+  normalSpecimens?: number;
+  tumourSpecimens?: number;
 }
 
 export type CoreClinicalEntities = keyof CoreCompletionFields;
