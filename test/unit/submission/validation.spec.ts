@@ -43,6 +43,7 @@ import {
   FollowupFieldsEnum,
   ClinicalUniqueIdentifier,
   PrimaryDiagnosisFieldsEnum,
+  SurgeryFieldsEnum,
 } from '../../../src/common-model/entities';
 
 const genderMutatedErr: SubmissionValidationError = {
@@ -2207,6 +2208,141 @@ describe('data-validator', () => {
 
       chai.expect(result[ClinicalEntitySchemaNames.TREATMENT].dataErrors[0]).to.deep.eq(error_2);
       chai.expect(result[ClinicalEntitySchemaNames.TREATMENT].dataErrors[1]).to.deep.eq(error_1);
+    });
+
+    /**
+     * Surgery Tests
+     */
+    it('should allow submitting surgeries with the same combo of submitter_donor_id and sumitter_treatment_id when surgery_type is the same ', async () => {
+      const existingDonor = stubs.validation.existingDonor09();
+      const submissionRecordsMap = {};
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.SURGERY,
+        submissionRecordsMap,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'ICGC_0002',
+          [SurgeryFieldsEnum.submitter_specimen_id]: 'sp-2',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'Tr-1',
+          [SurgeryFieldsEnum.surgery_type]: 'Biopsy',
+          index: 0,
+        },
+      );
+
+      const result = await dv
+        .validateSubmissionData({ ICGC_0002: submissionRecordsMap }, { ICGC_0002: existingDonor })
+        .catch((err: any) => fail(err));
+
+      chai.expect(result[ClinicalEntitySchemaNames.SURGERY].dataErrors.length).to.equal(0);
+    });
+
+    it('should error when multiple surgeries with the same submitter_specimen_id are found', async () => {
+      const existingDonor = stubs.validation.existingDonor09();
+      const submissionRecordsMap = {};
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.SURGERY,
+        submissionRecordsMap,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'ICGC_0002',
+          [SurgeryFieldsEnum.submitter_specimen_id]: 'sp-1',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'Tr-1',
+          [SurgeryFieldsEnum.surgery_type]: 'Biopsy',
+          index: 0,
+        },
+      );
+
+      const result = await dv
+        .validateSubmissionData({ ICGC_0002: submissionRecordsMap }, { ICGC_0002: existingDonor })
+        .catch((err: any) => fail(err));
+
+      const error: SubmissionValidationError = {
+        fieldName: DonorFieldsEnum.submitter_donor_id,
+        message:
+          "The submitter_specimen_id 'sp-1' has already been indicated as resected during a surgery in the current or previous submission. The submitter_specimen_id 'sp-1' can only be submitted once in the Surgery schema. Please review your data submission.",
+        type: DataValidationErrors.DUPLICATE_SUBMITTER_SPECIMEN_ID_IN_SURGERY,
+        index: 0,
+        info: {
+          submitter_specimen_id: 'sp-1',
+          donorSubmitterId: 'ICGC_0002',
+          value: 'ICGC_0002',
+        },
+      };
+
+      chai.expect(result[ClinicalEntitySchemaNames.SURGERY].dataErrors.length).equal(1);
+      chai.expect(result[ClinicalEntitySchemaNames.SURGERY].dataErrors[0]).to.deep.eq(error);
+    });
+
+    it('should error when two surgeries are associated with the same submitter_donor_id and submitter_treatment_id but different surgery_type.', async () => {
+      const existingDonor = stubs.validation.existingDonor09();
+      const submissionRecordsMap = {};
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.SURGERY,
+        submissionRecordsMap,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'ICGC_0002',
+          [SurgeryFieldsEnum.submitter_specimen_id]: 'sp-2',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'Tr-1',
+          [SurgeryFieldsEnum.surgery_type]: 'Gastric Antrectomy',
+          index: 0,
+        },
+      );
+
+      const result = await dv
+        .validateSubmissionData({ ICGC_0002: submissionRecordsMap }, { ICGC_0002: existingDonor })
+        .catch((err: any) => fail(err));
+
+      const error: SubmissionValidationError = {
+        fieldName: SurgeryFieldsEnum.submitter_specimen_id,
+        message:
+          "The combination of submitter_donor_id 'ICGC_0002' and submitter_treatment_id 'Tr-1' can only be associated with one surgery_type. Please review your data submission.",
+        type: DataValidationErrors.SURGERY_TYPES_NOT_EQUAL,
+        index: 0,
+        info: {
+          donorSubmitterId: 'ICGC_0002',
+          submitter_donor_id: 'ICGC_0002',
+          submitter_treatment_id: 'Tr-1',
+          surgery_type: 'Gastric Antrectomy',
+          value: 'sp-2',
+        },
+      };
+
+      chai.expect(result[ClinicalEntitySchemaNames.SURGERY].dataErrors.length).equal(1);
+      chai.expect(result[ClinicalEntitySchemaNames.SURGERY].dataErrors[0]).to.deep.eq(error);
+    });
+
+    it('should error when submitter_specimen_id is not submitted, two surgeries are associated with the same submitter_donor_id and submitter_treatment_id', async () => {
+      const existingDonor = stubs.validation.existingDonor09();
+      const submissionRecordsMap = {};
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.SURGERY,
+        submissionRecordsMap,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'ICGC_0002',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'Tr-1',
+          [SurgeryFieldsEnum.surgery_type]: 'Gastric Antrectomy',
+          index: 0,
+        },
+      );
+
+      const result = await dv
+        .validateSubmissionData({ ICGC_0002: submissionRecordsMap }, { ICGC_0002: existingDonor })
+        .catch((err: any) => fail(err));
+
+      const error: SubmissionValidationError = {
+        fieldName: DonorFieldsEnum.submitter_donor_id,
+        message:
+          "When submitter_specimen_id is not submitted, the combination of [submitter_donor_id = 'ICGC_0002' and submitter_treatment_id = 'Tr-1' ] should only be submitted once in the Surgery schema. Please review your data submission.",
+        type: DataValidationErrors.DUPLICATE_SURGERY_WHEN_SPECIMEN_NOT_SUBMITTED,
+        index: 0,
+        info: {
+          submitter_donor_id: 'ICGC_0002',
+          submitter_treatment_id: 'Tr-1',
+          donorSubmitterId: 'ICGC_0002',
+          value: 'ICGC_0002',
+        },
+      };
+
+      chai.expect(result[ClinicalEntitySchemaNames.SURGERY].dataErrors.length).equal(1);
+      chai.expect(result[ClinicalEntitySchemaNames.SURGERY].dataErrors[0]).to.deep.eq(error);
     });
   });
 

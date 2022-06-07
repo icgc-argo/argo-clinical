@@ -36,6 +36,15 @@ export function getSingleClinicalObjectFromDonor(
   return _.find(entities, constraints);
 }
 
+export function findClinicalObjects(
+  donor: DeepReadonly<Donor>,
+  clinicalEntitySchemaName: ClinicalEntitySchemaNames,
+  constraints: object,
+) {
+  const entities = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName);
+  return _.filter(entities, constraints);
+}
+
 export function getClinicalObjectsFromDonor(
   donor: DeepReadonly<Donor>,
   clinicalEntitySchemaName: ClinicalEntitySchemaNames,
@@ -98,6 +107,7 @@ export function getClinicalObjectsFromDonor(
         .filter(notEmpty);
     }
   }
+
   return [];
 }
 
@@ -106,7 +116,6 @@ export function getClinicalEntitiesFromDonorBySchemaName(
   clinicalEntitySchemaName: ClinicalEntitySchemaNames,
 ): ClinicalInfo[] {
   const result = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName) as any[];
-
   const clinicalRecords = result
     .map((e: any) => {
       if (e.clinicalInfo) {
@@ -114,6 +123,34 @@ export function getClinicalEntitiesFromDonorBySchemaName(
       }
     })
     .filter(notEmpty);
+
+  return clinicalRecords;
+}
+
+export function getClinicalEntitySubmittedData(
+  donor: DeepReadonly<Donor>,
+  clinicalEntitySchemaName: ClinicalEntitySchemaNames,
+): ClinicalInfo[] {
+  const result = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName) as any[];
+
+  const clinicalRecords = result
+    .map((entity: any) =>
+      clinicalEntitySchemaName === ClinicalEntitySchemaNames.DONOR
+        ? {
+            donor_id: donor.donorId,
+            program_id: donor.programId,
+            submitter_id: donor.submitterId,
+            gender: donor.gender,
+            ...entity.clinicalInfo,
+          }
+        : {
+            donor_id: donor.donorId,
+            program_id: donor.programId,
+            ...entity.clinicalInfo,
+          },
+    )
+    .filter(notEmpty);
+
   return clinicalRecords;
 }
 
@@ -127,7 +164,7 @@ export function getSingleClinicalEntityFromDonorBySchemanName(
   }
   const uniqueIdNames: string[] = convertToArray(ClinicalUniqueIdentifier[clinicalEntityType]);
   if (_.isEmpty(uniqueIdNames)) {
-    throw new Error("illegale state, couldn't find entity id field name");
+    throw new Error("Illegal state, couldn't find entity id field name");
   }
   const constraints: ClinicalInfo = {};
   uniqueIdNames.forEach(idN => (constraints[idN] = clinicalInfoRef[idN]));

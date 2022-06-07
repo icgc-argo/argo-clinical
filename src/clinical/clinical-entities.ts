@@ -113,6 +113,12 @@ export interface ClinicalInfo {
   [field: string]: string | number | boolean | string[] | number[] | boolean[] | undefined;
 }
 
+export type ClinicalEntityData = {
+  entityName: string;
+  records: ClinicalEntity[];
+  entityFields: any;
+};
+
 export type DonorMap = Readonly<{ [submitterId: string]: Donor }>;
 
 export type DonorBySubmitterIdMap = { [k: string]: DeepReadonly<Donor> };

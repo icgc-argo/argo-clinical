@@ -33,6 +33,7 @@ router.post(
   upload.single('registrationFile'),
   wrapAsync(submissionAPI.createRegistrationWithTsv),
 );
+router.delete('/unregister', wrapAsync(submissionAPI.deleteRegisteredSamples));
 router.post('/:id/commit', wrapAsync(submissionAPI.commitRegistration));
 router.delete('/:id', wrapAsync(submissionAPI.deleteRegistration));
 

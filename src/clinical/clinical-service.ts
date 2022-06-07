@@ -18,14 +18,21 @@
  */
 
 import { donorDao, DONOR_DOCUMENT_FIELDS } from './donor-repo';
-import { Errors } from '../utils';
-import { Sample, Donor } from './clinical-entities';
+import { Errors, notEmpty } from '../utils';
+import { Sample, Donor, ClinicalEntityData } from './clinical-entities';
+import { ClinicalQuery } from './clinical-api';
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 import { forceRecalcDonorCoreEntityStats } from '../submission/submission-to-clinical/stat-calculator';
+import { migrationRepo } from '../submission/migration/migration-repo';
+import {
+  DictionaryMigration,
+  DonorMigrationError,
+  DonorMigrationErrorRecord,
+} from '../submission/migration/migration-entities';
 import * as dictionaryManager from '../dictionary/manager';
 import { loggerFor } from '../logger';
-import { WorkerTasks } from './service-worker-thread/tasks';
+import { WorkerTasks, extractEntityDataFromDonors } from './service-worker-thread/tasks';
 import { runTaskInWorkerThread } from './service-worker-thread/runner';
 
 const L = loggerFor(__filename);
@@ -163,12 +170,70 @@ export const getClinicalData = async (programId: string) => {
 
   const taskToRun = WorkerTasks.ExtractDataFromDonors;
   const taskArgs = [donors, allSchemasWithFields];
-  const data = await runTaskInWorkerThread<
-    { entityName: string; records: unknown; entityFields: any }[]
-  >(taskToRun, taskArgs);
+  const data = await runTaskInWorkerThread<ClinicalEntityData[]>(taskToRun, taskArgs);
 
   const end = new Date().getTime() / 1000;
   L.debug(`getClinicalData took ${end - start}s`);
 
   return data;
+};
+
+export const getPaginatedClinicalData = async (programId: string, query: ClinicalQuery) => {
+  if (!programId) throw new Error('Missing programId!');
+  const start = new Date().getTime() / 1000;
+
+  const allSchemasWithFields = await dictionaryManager.instance().getSchemasWithFields();
+  // Get all donors + records for given entity
+  const { donors, totalDonors } = await donorDao.findByPaginatedProgramId(programId, query);
+
+  // Return paginated data
+  const data = extractEntityDataFromDonors(
+    donors as Donor[],
+    totalDonors,
+    allSchemasWithFields,
+    query,
+  );
+
+  const end = new Date().getTime() / 1000;
+  L.debug(`getPaginatedClinicalData took ${end - start}s`);
+
+  return data;
+};
+
+interface DonorMigration extends Omit<DictionaryMigration, 'invalidDonorsErrors '> {
+  invalidDonorsErrors: DonorMigrationError[];
+}
+
+export const getClinicalEntityMigrationErrors = async (programId: string, query: string[]) => {
+  if (!programId) throw new Error('Missing programId!');
+  const start = new Date().getTime() / 1000;
+
+  const migration: DeepReadonly<
+    DonorMigration | undefined
+  > = await migrationRepo.getLatestSuccessful();
+  const clinicalErrors: any[] = [];
+
+  if (migration) {
+    const { invalidDonorsErrors }: DeepReadonly<DonorMigration> = migration;
+    invalidDonorsErrors
+      .filter(
+        donor =>
+          donor.programId.toString() === programId && query.includes(donor.donorId.toString()),
+      )
+      .forEach(donor => {
+        const { donorId, submitterDonorId } = donor;
+        // Overwrite donor.errors + flatten entityName to simplify query
+        let errors: DonorMigrationErrorRecord[] = [];
+        donor.errors.forEach(entity => {
+          const entityName = Object.keys(entity)[0];
+          errors = errors.concat(entity[entityName].map(error => ({ ...error, entityName })));
+        });
+        clinicalErrors.push({ donorId, submitterDonorId, errors });
+      });
+  }
+
+  const end = new Date().getTime() / 1000;
+  L.debug(`getClinicalEntityMigrationErrors took ${end - start}s`);
+
+  return clinicalErrors;
 };

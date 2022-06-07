@@ -281,6 +281,21 @@ class SubmissionController {
       .status(201)
       .send(await submission.operations.importLegacyDonors(JSON.parse(donorsJson)));
   }
+
+  @HasFullWriteAccess()
+  async deleteRegisteredSamples(req: Request, res: Response) {
+    const programId = req.params.programId as string;
+    const samplesSubmitterIds =
+      req.query.sampleSubmitterIds && req.query.sampleSubmitterIds.split(',');
+    const dryRun = req.query.dryRun === 'false' ? false : true;
+    const updater = ControllerUtils.getUserFromToken(req);
+    L.info(
+      `Delete registered samples called, caller ${updater}, ids: ${samplesSubmitterIds}, programId: ${programId}`,
+    );
+    return res
+      .status(200)
+      .send(await submission.operations.adminDeleteSamples(programId, samplesSubmitterIds, dryRun));
+  }
 }
 
 const submissionSystemIsDisabled = async (res: Response) => {

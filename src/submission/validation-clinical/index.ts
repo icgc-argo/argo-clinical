@@ -23,6 +23,7 @@ import * as follow_up from './followUp';
 import * as treatment from './treatment';
 import * as therapy from './therapy';
 import * as biomarker from './biomarker';
+import * as surgery from './surgery';
 import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 import * as primaryDiagnosis from './primaryDiagnosis';
 
@@ -39,7 +40,7 @@ const availableValidators: { [k: string]: any } = {
   [ClinicalEntitySchemaNames.RADIATION]: therapy,
   [ClinicalEntitySchemaNames.HORMONE_THERAPY]: therapy,
   [ClinicalEntitySchemaNames.IMMUNOTHERAPY]: therapy,
-  // [ClinicalEntitySchemaNames.SURGERY]: therapy,
+  [ClinicalEntitySchemaNames.SURGERY]: surgery,
 };
 
 export const submissionValidator = (clinicalType: string): any => {

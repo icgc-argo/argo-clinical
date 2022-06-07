@@ -324,6 +324,62 @@ describe('Submission Api', () => {
         });
     });
 
+    it('should allow sample deletion', done => {
+      let file: Buffer;
+      let rows: any[];
+
+      try {
+        file = fs.readFileSync(stubFilesDir + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`);
+        (async () =>
+          (rows = (await TsvUtils.tsvToJson(
+            stubFilesDir + `/${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`,
+          )) as any[]))();
+      } catch (err) {
+        return done(err);
+      }
+
+      chai
+        .request(app)
+        .post('/submission/program/ABCD-EF/registration')
+        .auth(JWT_ABCDEF, { type: 'bearer' })
+        .type('form')
+        .attach('registrationFile', file, `${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`)
+        .end(async (err: any, res: any) => {
+          try {
+            await assertUploadOKRegistrationCreated(res, dburl);
+            const reg1Id = res.body.registration._id;
+            chai
+              .request(app)
+              .post(`/submission/program/ABCD-EF/registration/${reg1Id}/commit`)
+              .auth(JWT_ABCDEF, { type: 'bearer' })
+              .end(async (err: any, res: any) => {
+                try {
+                  await assertFirstCommitDonorsCreatedInDB(res, rows, dburl);
+                  chai
+                    .request(app)
+                    .delete(
+                      '/submission/program/ABCD-EF/registration/unregister?dryRun=false&sampleSubmitterIds=sm123-4',
+                    )
+                    .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+                    .end(async (err: any, res: any) => {
+                      try {
+                        const result = res.body;
+                        chai.expect(result.samplesDeleted).to.include('sm123-4');
+                        return done();
+                      } catch (err) {
+                        return done(err);
+                      }
+                    });
+                } catch (err) {
+                  return done(err);
+                }
+              });
+          } catch (err) {
+            return done(err);
+          }
+        });
+    });
+
     it('should commit registration, detect already registered', async () => {
       let file: Buffer;
       let rows: any[] = [];
@@ -1468,7 +1524,7 @@ describe('Submission Api', () => {
         'radiation.tsv',
         'hormone_therapy.tsv',
         'immunotherapy.tsv',
-        // 'surgery.tsv',
+        'surgery.tsv',
       ]);
       await validateSubmission();
       await commitActiveSubmission();
@@ -1677,7 +1733,7 @@ describe('Submission Api', () => {
         'radiation.tsv',
         'hormone_therapy.tsv',
         'immunotherapy.tsv',
-        // 'surgery.tsv',
+        'surgery.tsv',
       ]);
       await validateSubmission();
       await commitActiveSubmission();
@@ -2594,7 +2650,7 @@ const expectedFollowUpBatchSubmissionSchemaErrors = [
       uniqueIdNames: [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.FOLLOW_UP]],
     },
     message:
-      'You are trying to submit the same [submitter_follow_up_id] in multiple rows. [submitter_follow_up_id] can only be submitted once per file.',
+      'You are trying to submit the same [submitter_follow_up_id] in multiple rows. The combination of [submitter_follow_up_id] can only be submitted once per file. The same submitter_specimen_id cannot be resected more than once. Please review your data submission.',
     fieldName: FollowupFieldsEnum.submitter_follow_up_id,
   },
   {
@@ -2608,7 +2664,7 @@ const expectedFollowUpBatchSubmissionSchemaErrors = [
       uniqueIdNames: [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.FOLLOW_UP]],
     },
     message:
-      'You are trying to submit the same [submitter_follow_up_id] in multiple rows. [submitter_follow_up_id] can only be submitted once per file.',
+      'You are trying to submit the same [submitter_follow_up_id] in multiple rows. The combination of [submitter_follow_up_id] can only be submitted once per file. The same submitter_specimen_id cannot be resected more than once. Please review your data submission.',
     fieldName: FollowupFieldsEnum.submitter_follow_up_id,
   },
 ];
@@ -2625,7 +2681,7 @@ const expectedDonorBatchSubmissionSchemaErrors = [
       uniqueIdNames: [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.DONOR]],
     },
     message:
-      'You are trying to submit the same [submitter_donor_id] in multiple rows. [submitter_donor_id] can only be submitted once per file.',
+      'You are trying to submit the same [submitter_donor_id] in multiple rows. The combination of [submitter_donor_id] can only be submitted once per file. The same submitter_specimen_id cannot be resected more than once. Please review your data submission.',
     fieldName: DonorFieldsEnum.submitter_donor_id,
   },
   {
@@ -2639,7 +2695,7 @@ const expectedDonorBatchSubmissionSchemaErrors = [
       uniqueIdNames: [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.DONOR]],
     },
     message:
-      'You are trying to submit the same [submitter_donor_id] in multiple rows. [submitter_donor_id] can only be submitted once per file.',
+      'You are trying to submit the same [submitter_donor_id] in multiple rows. The combination of [submitter_donor_id] can only be submitted once per file. The same submitter_specimen_id cannot be resected more than once. Please review your data submission.',
     fieldName: DonorFieldsEnum.submitter_donor_id,
   },
   {
@@ -2665,7 +2721,7 @@ const expectedRadiationBatchSubmissionSchemaErrors = [
       uniqueIdNames: ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.RADIATION],
     },
     message:
-      'You are trying to submit the same [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] in multiple rows. [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] can only be submitted once per file.',
+      'You are trying to submit the same [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] in multiple rows. The combination of [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] can only be submitted once per file. The same submitter_specimen_id cannot be resected more than once. Please review your data submission.',
     fieldName: DonorFieldsEnum.submitter_donor_id,
   },
   {
@@ -2679,7 +2735,7 @@ const expectedRadiationBatchSubmissionSchemaErrors = [
       uniqueIdNames: ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.RADIATION],
     },
     message:
-      'You are trying to submit the same [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] in multiple rows. [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] can only be submitted once per file.',
+      'You are trying to submit the same [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] in multiple rows. The combination of [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] can only be submitted once per file. The same submitter_specimen_id cannot be resected more than once. Please review your data submission.',
     fieldName: DonorFieldsEnum.submitter_donor_id,
   },
 ];

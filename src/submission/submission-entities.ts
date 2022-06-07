@@ -159,6 +159,9 @@ export enum DataValidationErrors {
   TNM_STAGING_FIELDS_MISSING = 'TNM_STAGING_FIELDS_MISSING',
   TREATMENT_DONOR_TIME_CONFLICT = 'TREATMENT_DONOR_TIME_CONFLICT',
   FOLLOW_UP_DONOR_TIME_CONFLICT = 'FOLLOW_UP_DONOR_TIME_CONFLICT',
+  DUPLICATE_SUBMITTER_SPECIMEN_ID_IN_SURGERY = 'DUPLICATE_SUBMITTER_SPECIMEN_ID_IN_SURGERY',
+  SURGERY_TYPES_NOT_EQUAL = 'SURGERY_TYPES_NOT_EQUAL',
+  DUPLICATE_SURGERY_WHEN_SPECIMEN_NOT_SUBMITTED = 'DUPLICATE_SURGERY_WHEN_SPECIMEN_NOT_SUBMITTED',
 }
 
 export type RegistrationStat = Array<{
@@ -367,7 +370,7 @@ export const BatchNameRegex: Record<ClinicalEntitySchemaNames, RegExp[]> = {
   [ClinicalEntitySchemaNames.RADIATION]: [/^radiation.*\.tsv$/i],
   [ClinicalEntitySchemaNames.HORMONE_THERAPY]: [/^hormone_therapy.*\.tsv$/i],
   [ClinicalEntitySchemaNames.IMMUNOTHERAPY]: [/^immunotherapy.*\.tsv$/i],
-  // [ClinicalEntitySchemaNames.SURGERY]: [/^surgery.*\.tsv$/i],
+  [ClinicalEntitySchemaNames.SURGERY]: [/^surgery.*\.tsv$/i],
   [ClinicalEntitySchemaNames.EXPOSURE]: [/^exposure.*\.tsv$/i],
   [ClinicalEntitySchemaNames.COMORBIDITY]: [/^comorbidity.*\.tsv$/i],
   [ClinicalEntitySchemaNames.BIOMARKER]: [/^biomarker.*\.tsv$/i],
@@ -407,16 +410,15 @@ export const ClinicalEntityToEnumFieldsMap: Record<ClinicalEntitySchemaNames, st
   [ClinicalEntitySchemaNames.IMMUNOTHERAPY]: (Object.values(TherapyRxNormFields) as string[])
     .concat(Object.values(CommonTherapyFields))
     .concat(Object.values(ImmunotherapyFields) as string[]),
-  // [ClinicalEntitySchemaNames.SURGERY]: Object.values(CommonTherapyFields) as string[],
+  [ClinicalEntitySchemaNames.SURGERY]: Object.values(CommonTherapyFields) as string[],
 };
 
-// TODO: remove special case for surgery type
 export const TreatmentTypeValuesMappedByTherapy: Record<ClinicalTherapyType, string> = {
   [ClinicalEntitySchemaNames.CHEMOTHERAPY]: 'Chemotherapy',
   [ClinicalEntitySchemaNames.RADIATION]: 'Radiation therapy',
   [ClinicalEntitySchemaNames.HORMONE_THERAPY]: 'Hormonal therapy',
   [ClinicalEntitySchemaNames.IMMUNOTHERAPY]: 'Immunotherapy',
-  // [ClinicalEntitySchemaNames.SURGERY]: 'Surgery',
+  [ClinicalEntitySchemaNames.SURGERY]: 'Surgery',
 };
 
 export const DonorVitalStatusValues = { deceased: 'Deceased' };

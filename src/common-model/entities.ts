@@ -30,7 +30,7 @@ export enum ClinicalEntitySchemaNames {
   TREATMENT = 'treatment',
   CHEMOTHERAPY = 'chemotherapy',
   IMMUNOTHERAPY = 'immunotherapy',
-  // SURGERY = 'surgery',
+  SURGERY = 'surgery',
   RADIATION = 'radiation',
   FOLLOW_UP = 'follow_up',
   HORMONE_THERAPY = 'hormone_therapy',
@@ -38,6 +38,24 @@ export enum ClinicalEntitySchemaNames {
   COMORBIDITY = 'comorbidity',
   BIOMARKER = 'biomarker',
 }
+
+export const aliasEntityNames = {
+  donor: 'donor',
+  sample_registration: 'sampleRegistration',
+  specimen: 'specimens',
+  primary_diagnosis: 'primaryDiagnoses',
+  family_history: 'familyHistory',
+  treatment: 'treatment',
+  chemotherapy: 'chemotherapy',
+  immunotherapy: 'immunotherapy',
+  surgery: 'surgery',
+  radiation: 'radiation',
+  follow_up: 'followUps',
+  hormone_therapy: 'hormoneTherapy',
+  exposure: 'exposure',
+  comorbidity: 'comorbidity',
+  biomarker: 'biomarker',
+};
 
 export type ClinicalFields =
   | DonorFieldsEnum
@@ -58,15 +76,15 @@ export type ClinicalTherapyType =
   | ClinicalEntitySchemaNames.CHEMOTHERAPY
   | ClinicalEntitySchemaNames.RADIATION
   | ClinicalEntitySchemaNames.HORMONE_THERAPY
-  | ClinicalEntitySchemaNames.IMMUNOTHERAPY;
-// | ClinicalEntitySchemaNames.SURGERY;
+  | ClinicalEntitySchemaNames.IMMUNOTHERAPY
+  | ClinicalEntitySchemaNames.SURGERY;
 
 export const ClinicalTherapySchemaNames: ClinicalTherapyType[] = [
   ClinicalEntitySchemaNames.CHEMOTHERAPY,
   ClinicalEntitySchemaNames.HORMONE_THERAPY,
   ClinicalEntitySchemaNames.RADIATION,
   ClinicalEntitySchemaNames.IMMUNOTHERAPY,
-  // ClinicalEntitySchemaNames.SURGERY,
+  ClinicalEntitySchemaNames.SURGERY,
 ];
 
 export enum DonorFieldsEnum {
@@ -156,6 +174,7 @@ export enum CommonTherapyFields {
 
 export enum SurgeryFieldsEnum {
   submitter_specimen_id = 'submitter_specimen_id',
+  surgery_type = 'surgery_type',
 }
 
 export enum RadiationFieldsEnum {

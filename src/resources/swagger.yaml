@@ -330,6 +330,40 @@ paths:
                 $ref: '#/components/schemas/CreateRegistration'
         '503':
           $ref: '#/components/responses/ServiceUnavailableError'
+
+  /submission/program/{programId}/registration/unregister:
+    parameters:
+      - $ref: '#/components/parameters/PathProgramId'
+    delete:
+      tags:
+        - Sample Registration
+        - Admin
+      summary: Delete registered Samples
+      parameters:
+        - name: dryRun
+          description: if true won't execute the deletion, but will return what will be deleted, default is true, set to false to execute.
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: sampleSubmitterIds
+          description: Submitter Id of the samples csv format
+          in: query
+          required: true
+          schema:
+            type: string
+            format: csv
+        - $ref: '#/components/parameters/PathProgramId'
+      description: Dcc Admin endpoint to delete registered samples if no clinical data submitted
+      responses:
+        '200':
+          description: operation done successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/ServerError'
   /submission/program/{programId}/registration/{id}:
     delete:
       tags:
@@ -771,8 +805,91 @@ paths:
         '500':
           $ref: '#/components/responses/ServerError'
         '200':
-          description: 'Stream of newline `\n` delmited JSON objects'
-
+          description: 'Stream of newline `\n` delimited JSON objects'
+  /clinical/program/:programId/clinical-data:
+    get:
+      tags:
+        - Clinical Data
+      summary: Get all program submitted data from db. Returns clinicalEntities[].
+      parameters:
+        - $ref: '#/components/parameters/PathProgramId'
+        - in: query
+          name: entityTypes
+          schema:
+            type: array
+            items:
+              type: string
+          description: Clinical Entity data types to return
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Paginated Results page number to return
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: Number of paginated results per page
+        - in: query
+          name: donorIds
+          schema:
+            type: array
+            items:
+              type: integer
+          description: Donor ID values to return
+        - in: query
+          name: submitterDonorIds
+          schema:
+            type: array
+            items:
+              type: integer
+          description: Submitter ID values to return
+        - in: query
+          name: completionState
+          schema:
+            type: string
+          description: Entity CompletionStates to filter by, one of 'all' | 'invalid' | 'complete' | 'incomplete'
+        - in: query
+          name: sort
+          schema:
+            type: string
+          description: Donor Field to sort results by, preceding '-' indicates descending
+      responses:
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+        '200':
+          description: 'Array of Clinical Entity objects'
+  /clinical/program/:programId/clinical-errors:
+    get:
+      tags:
+        - Clinical Data
+      summary: Get all clinical errors for a given program. Returns clinicalErrors[].
+      parameters:
+        - $ref: '#/components/parameters/PathProgramId'
+        - in: query
+          name: donorIds
+          schema:
+            type: array
+            items:
+              type: integer
+          description: Donor IDs to filter error results
+      responses:
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+        '200':
+          description: 'Array of Clinical Error objects'
   /clinical/program/{programId}/tsv-export:
     parameters:
       - $ref: '#/components/parameters/PathProgramId'
