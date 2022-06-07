@@ -19,6 +19,7 @@
 
 import { Donor } from './clinical-entities';
 import { ClinicalQuery } from './clinical-api';
+import { ClinicalTherapySchemaNames } from '../common-model/entities';
 import mongoose, { PaginateModel } from 'mongoose';
 import mongoosePaginate from 'mongoose-paginate-v2';
 import { DeepReadonly } from 'deep-freeze';
@@ -172,12 +173,16 @@ export const donorDao: DonorRepository = {
   ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number }>> {
     const { sort, pageSize, entityTypes, donorIds, submitterDonorIds, completionState } = query;
 
-    // Donor Completion Stats require Sample Registration data
-    // Sample Registration requires Specimen data
     const requiredEntities =
+      // Donor Completion Stats require Sample Registration data
       (entityTypes.includes('donor') && !entityTypes.includes('sampleRegistration')) ||
+      // Sample Registration requires Specimen data
       (entityTypes.includes('sampleRegistration') && !entityTypes.includes('specimens'))
         ? ['completionStats', 'sampleRegistration', 'specimens']
+        : // Clinical Therapies require Treatments
+        entityTypes.includes('hormoneTherapy') ||
+          ClinicalTherapySchemaNames.some(entity => entityTypes.includes(entity))
+        ? ['treatments']
         : '';
 
     const projection = [...DONOR_ENTITY_CORE_FIELDS, ...entityTypes, ...requiredEntities].join(' ');
@@ -196,7 +201,8 @@ export const donorDao: DonorRepository = {
         select: '-_id',
       },
     );
-
+    console.log('projection', projection);
+    console.log('result', result);
     const { totalDocs: totalDonors } = result;
     const mapped: Donor[] = result.docs
       .map((d: DonorDocument) => {
