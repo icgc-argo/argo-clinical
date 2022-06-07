@@ -63,6 +63,10 @@ function getSampleRegistrationDataFromDonor(donor: Donor) {
 
 const DONOR_ID_FIELD = 'donor_id';
 
+const isEntityInQuery = (entityName: string, entityTypes: string[]) =>
+  queryEntityNames.includes(aliasEntityNames[entityName]) &&
+  entityTypes.includes(aliasEntityNames[entityName]);
+
 const sortDocs = (sort: string) => (currentRecord: ClinicalInfo, nextRecord: ClinicalInfo) => {
   const isDescending = sort.split('-')[1] !== undefined;
   const key = !isDescending ? sort.split('-')[0] : sort.split('-')[1];
@@ -87,9 +91,7 @@ const mapEntityDocuments = (
   const { page, pageSize, sort, entityTypes } = query;
 
   const relevantSchemaWithFields = schemas.find((s: any) => s.name === entityName);
-  const entityInQuery =
-    queryEntityNames.includes(aliasEntityNames[entityName]) &&
-    entityTypes.includes(aliasEntityNames[entityName]);
+  const entityInQuery = isEntityInQuery(entityName, entityTypes);
 
   if (!relevantSchemaWithFields || !entityInQuery || isEmpty(results)) {
     return undefined;
@@ -99,7 +101,6 @@ const mapEntityDocuments = (
   const first = page * pageSize;
   const last = (page + 1) * pageSize;
   const records = results.sort(sortDocs(sort)).slice(first, last);
-
   const completionRecords =
     entityName === ClinicalEntitySchemaNames.DONOR ? { completionStats: [...completionStats] } : {};
   const samples = originalResultsArray.find(result => result[0] === 'sample_registration');
@@ -191,15 +192,16 @@ export function extractEntityDataFromDonors(
 
   donors.forEach(d => {
     Object.values(ClinicalEntitySchemaNames).forEach(entity => {
-      const clinicalInfoRecords =
-        entity === ClinicalEntitySchemaNames.REGISTRATION
-          ? getSampleRegistrationDataFromDonor(d)
-              .filter(notEmpty)
-              .map(sample => ({
-                donor_id: d.donorId,
-                ...sample,
-              }))
-          : getClinicalEntitySubmittedData(d, entity);
+      const clinicalInfoRecords = !isEntityInQuery(entity, query.entityTypes)
+        ? []
+        : entity === ClinicalEntitySchemaNames.REGISTRATION
+        ? getSampleRegistrationDataFromDonor(d)
+            .filter(notEmpty)
+            .map(sample => ({
+              donor_id: d.donorId,
+              ...sample,
+            }))
+        : getClinicalEntitySubmittedData(d, entity);
       recordsMap[entity] = _.concat(recordsMap[entity] || [], clinicalInfoRecords);
     });
   });
