@@ -197,10 +197,7 @@ export function extractEntityDataFromDonors(
         : entity === ClinicalEntitySchemaNames.REGISTRATION
         ? getSampleRegistrationDataFromDonor(d)
             .filter(notEmpty)
-            .map(sample => ({
-              donor_id: d.donorId,
-              ...sample,
-            }))
+            .map(sample => ({ donor_id: d.donorId, ...sample }))
         : getClinicalEntitySubmittedData(d, entity);
       recordsMap[entity] = _.concat(recordsMap[entity] || [], clinicalInfoRecords);
     });
