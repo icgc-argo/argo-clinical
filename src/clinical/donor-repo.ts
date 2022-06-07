@@ -47,14 +47,7 @@ export enum DONOR_DOCUMENT_FIELDS {
   FAMILY_HISTORY_ID = 'familyHistory.clinicalInfo.family_relative_id',
 }
 
-const DONOR_ENTITY_CORE_FIELDS = [
-  'donorId',
-  'submitterId',
-  'programId',
-  'gender',
-  'clinicalInfo',
-  'completionStats',
-];
+const DONOR_ENTITY_CORE_FIELDS = ['donorId', 'submitterId', 'programId', 'gender', 'clinicalInfo'];
 
 export type FindByProgramAndSubmitterFilter = DeepReadonly<{
   programId: string;
@@ -184,7 +177,7 @@ export const donorDao: DonorRepository = {
     const requiredEntities =
       (entityTypes.includes('donor') && !entityTypes.includes('sampleRegistration')) ||
       (entityTypes.includes('sampleRegistration') && !entityTypes.includes('specimens'))
-        ? ['sampleRegistration', 'specimens']
+        ? ['completionStats', 'sampleRegistration', 'specimens']
         : '';
 
     const projection = [...DONOR_ENTITY_CORE_FIELDS, ...entityTypes, ...requiredEntities].join(' ');
