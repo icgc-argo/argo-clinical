@@ -19,6 +19,7 @@
 
 import _, { isEmpty } from 'lodash';
 import { ClinicalEntitySchemaNames, aliasEntityNames } from '../../common-model/entities';
+import { requiredEntities } from '../../common-model/functions';
 import {
   getClinicalEntitiesFromDonorBySchemaName,
   getClinicalEntitySubmittedData,
@@ -192,13 +193,16 @@ export function extractEntityDataFromDonors(
 
   donors.forEach(d => {
     Object.values(ClinicalEntitySchemaNames).forEach(entity => {
-      const clinicalInfoRecords = !isEntityInQuery(entity, query.entityTypes)
-        ? []
-        : entity === ClinicalEntitySchemaNames.REGISTRATION
-        ? getSampleRegistrationDataFromDonor(d)
-            .filter(notEmpty)
-            .map(sample => ({ donor_id: d.donorId, ...sample }))
-        : getClinicalEntitySubmittedData(d, entity);
+      const isQueriedType = isEntityInQuery(entity, query.entityTypes);
+      const isRequiredType = requiredEntities(query.entityTypes).includes(entity);
+      const clinicalInfoRecords =
+        isQueriedType || isRequiredType
+          ? entity === ClinicalEntitySchemaNames.REGISTRATION
+            ? getSampleRegistrationDataFromDonor(d)
+                .filter(notEmpty)
+                .map(sample => ({ donor_id: d.donorId, ...sample }))
+            : getClinicalEntitySubmittedData(d, entity)
+          : [];
       recordsMap[entity] = _.concat(recordsMap[entity] || [], clinicalInfoRecords);
     });
   });

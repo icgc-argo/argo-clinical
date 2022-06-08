@@ -142,6 +142,25 @@ export function getClinicalEntitySubmittedData(
           gender: donor.gender,
           ...entity.clinicalInfo,
         }))
+      : clinicalEntitySchemaName === ClinicalEntitySchemaNames.TREATMENT
+      ? result.map((treatment: any) => {
+          const clinicalInfo = treatment.clinicalInfo || {};
+          const therapy_type =
+            treatment.therapies.length === 1
+              ? { therapy_type: treatment.therapies[0].therapyType }
+              : {};
+          const therapy_info =
+            treatment.therapies.length === 1 && treatment.therapies[0].clinicalInfo;
+          return {
+            donor_id: donor.donorId,
+            program_id: donor.programId,
+            submitter_id: donor.submitterId,
+            treatment_id: treatment.treatmentId,
+            ...clinicalInfo,
+            ...therapy_type,
+            ...therapy_info,
+          };
+        })
       : result
           .filter(record => notEmpty(record.clinicalInfo))
           .map((entity: any) => ({
@@ -153,6 +172,18 @@ export function getClinicalEntitySubmittedData(
 
   return clinicalRecords;
 }
+
+export const requiredEntities = (entityTypes: string[]) =>
+  // Donor Completion Stats require Sample Registration data
+  (entityTypes.includes('donor') && !entityTypes.includes('sampleRegistration')) ||
+  // Sample Registration requires Specimen data
+  (entityTypes.includes('sampleRegistration') && !entityTypes.includes('specimens'))
+    ? ['completionStats', 'sampleRegistration', 'specimens']
+    : // Clinical Therapies require Treatments; hormoneTherapy does not match schema names
+    entityTypes.includes('hormoneTherapy') ||
+      ClinicalTherapySchemaNames.some(entity => entityTypes.includes(entity))
+    ? ['treatments', 'treatment']
+    : '';
 
 export function getSingleClinicalEntityFromDonorBySchemanName(
   donor: DeepReadonly<Donor>,
