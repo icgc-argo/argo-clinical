@@ -64,7 +64,7 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
   FOUND_IDENTICAL_IDS: errorData => {
     if (errorData.info.useAllRecordValues === true) return `This row is identical to another row`;
     const duplicateFieldNames = errorData.info.uniqueIdNames.join(', ') || '';
-    return `You are trying to submit the same [${duplicateFieldNames}] in multiple rows. The combination of [${duplicateFieldNames}] can only be submitted once per file. The same submitter_specimen_id cannot be resected more than once. Please review your data submission.`;
+    return `You are trying to submit the same [${duplicateFieldNames}] in multiple rows. The combination of [${duplicateFieldNames}] can only be submitted once per file. The same submitter_specimen_id cannot be resected more than once. Please correct your data submission.`;
   },
   CLINICAL_ENTITY_BELONGS_TO_OTHER_DONOR: errorData => {
     const clinicalType = _.lowerCase(errorData.info.clinicalType);
@@ -108,11 +108,11 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
       .join('\n')}`;
   },
   DUPLICATE_SUBMITTER_SPECIMEN_ID_IN_SURGERY: data =>
-    `The submitter_specimen_id '${data.info.submitter_specimen_id}' has already been indicated as resected during a surgery in the current or previous submission. The submitter_specimen_id '${data.info.submitter_specimen_id}' can only be submitted once in the Surgery schema. Please review your data submission.`,
+    `The submitter_specimen_id '${data.info.submitter_specimen_id}' has already been associated with a surgery in the current or previous submission. Specimen can only be submitted once for a single surgery.`,
   SURGERY_TYPES_NOT_EQUAL: data =>
-    `The combination of submitter_donor_id '${data.info.submitter_donor_id}' and submitter_treatment_id '${data.info.submitter_treatment_id}' can only be associated with one surgery_type. Please review your data submission.`,
+    `The combination of submitter_donor_id '${data.info.submitter_donor_id}' and submitter_treatment_id '${data.info.submitter_treatment_id}' can only be associated with one surgery_type. Please correct your data submission.`,
   DUPLICATE_SURGERY_WHEN_SPECIMEN_NOT_SUBMITTED: data =>
-    `When submitter_specimen_id is not submitted, the combination of [submitter_donor_id = '${data.info.submitter_donor_id}' and submitter_treatment_id = '${data.info.submitter_treatment_id}' ] should only be submitted once in the Surgery schema. Please review your data submission.`,
+    `When submitter_specimen_id is not submitted, the combination of [submitter_donor_id = '${data.info.submitter_donor_id}' and submitter_treatment_id = '${data.info.submitter_treatment_id}' ] should only be submitted once in the Surgery schema. Please correct your data submission.`,
 };
 
 const BATCH_ERROR_MESSAGES: Record<SubmissionBatchErrorTypes, (errorData: any) => string> = {
