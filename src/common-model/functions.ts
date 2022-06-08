@@ -179,8 +179,10 @@ export const requiredEntities = (entityTypes: string[]) =>
   // Sample Registration requires Specimen data
   (entityTypes.includes('sampleRegistration') && !entityTypes.includes('specimens'))
     ? ['completionStats', 'sampleRegistration', 'specimens']
-    : // Clinical Therapies require Treatments; hormoneTherapy does not match schema names
+    : // Clinical Therapies require Treatments
+    // hormoneTherapy + treatment do not match schema names
     entityTypes.includes('hormoneTherapy') ||
+      entityTypes.includes('treatment') ||
       ClinicalTherapySchemaNames.some(entity => entityTypes.includes(entity))
     ? ['treatments', 'treatment']
     : '';
