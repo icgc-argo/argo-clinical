@@ -203,6 +203,7 @@ export const donorDao: DonorRepository = {
         select: '-_id',
       },
     );
+
     const { totalDocs: totalDonors } = result;
     const mapped: Donor[] = result.docs
       .map((d: DonorDocument) => {
