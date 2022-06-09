@@ -18,7 +18,7 @@
  */
 
 import { donorDao, DONOR_DOCUMENT_FIELDS } from './donor-repo';
-import { Errors } from '../utils';
+import { Errors, notEmpty } from '../utils';
 import { Sample, Donor, ClinicalEntityData } from './clinical-entities';
 import { ClinicalQuery } from './clinical-api';
 import { DeepReadonly } from 'deep-freeze';

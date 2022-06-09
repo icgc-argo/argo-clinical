@@ -66,9 +66,17 @@ import {
   DataValidationErrors,
 } from './submission-entities';
 import * as dictionaryManager from '../dictionary/manager';
-
+import * as messenger from './submission-updates-messenger';
 import { loggerFor } from '../logger';
-import { Errors, F, isStringMatchRegex, toString, isEmptyString, isNotAbsent } from '../utils';
+import {
+  Errors,
+  F,
+  isStringMatchRegex,
+  toString,
+  isEmptyString,
+  isNotAbsent,
+  notEmpty,
+} from '../utils';
 import { DeepReadonly } from 'deep-freeze';
 import { submissionRepository } from './submission-repo';
 import { v1 as uuid } from 'uuid';
@@ -1288,6 +1296,108 @@ export namespace operations {
       newDonors: newDonors.length,
       updates: actionPromises.length - (newDonors.length ? 1 : 0), // weird math to not double count the insert(newDonors) action
     };
+  }
+
+  export async function adminDeleteSamples(
+    programId: string,
+    samplesSubmitterIds: string[],
+    dryRun = true,
+  ) {
+    // validate the program has no active submissions
+    const existingRegistration = await findByProgramId(programId);
+    if (existingRegistration) {
+      throw new Error(
+        'Program has active registration in progress, cancel it or commit it to avoid conflicts.',
+      );
+    }
+
+    const existingClinicalSubmission = await findSubmissionByProgramId(programId);
+    if (existingClinicalSubmission) {
+      throw new Error(
+        'Program has active clinical data submission, you cannot delete specific samples if program has clinical data.',
+      );
+    }
+
+    const promises = samplesSubmitterIds.map(ssi => {
+      return donorDao.findBySampleSubmitterIdAndProgramId({
+        programId: programId,
+        submitterId: ssi,
+      });
+    });
+
+    // wait on the queries to execute
+    const donors = (await Promise.all(promises)).filter(notEmpty);
+    if (donors.length == 0) {
+      return {
+        dryRun,
+        samplesDeleted: [],
+        specimensDeleted: [],
+        donorsDeleted: [],
+      };
+    }
+    // reject request if donors have clinical data
+    const donorsWithClinicalData = donors
+      .filter(notEmpty)
+      .filter(d1 => !_.isEmpty(d1.clinicalInfo));
+    if (donorsWithClinicalData.length > 0) {
+      throw new Error(`Donors: ${donors.map(d => d?.submitterId)} have clinical data already`);
+    }
+
+    // filter donors in case multiple samples belong to same donor
+    const filteredDonors = _.uniqBy(donors.filter(notEmpty), d => d.donorId);
+
+    // remove specified samples
+    const modifiableDonors = _.cloneDeep(filteredDonors) as Donor[];
+    const result: any = {
+      dryRun,
+      samplesDeleted: [],
+      specimensDeleted: [],
+      donorsDeleted: [],
+    };
+
+    modifiableDonors.forEach(d => {
+      d?.specimens.forEach(sp => {
+        // filter out samples that ids are in the provided ids list to remove
+        result.samplesDeleted = result.samplesDeleted.concat(
+          sp.samples
+            .filter(sa => samplesSubmitterIds.includes(sa.submitterId))
+            .map(s => s.submitterId),
+        );
+        sp.samples = sp.samples.filter(sa => !samplesSubmitterIds.includes(sa.submitterId));
+      });
+
+      // if specimen has no samples, remove it
+      result.specimensDeleted = result.specimensDeleted.concat(
+        d.specimens.filter(sp => sp.samples.length == 0).map(s => s.submitterId),
+      );
+      d.specimens = d.specimens.filter(sp => sp.samples.length !== 0);
+    });
+
+    // update donors to save changes
+    if (dryRun === false) {
+      await donorDao.updateAll(modifiableDonors);
+    }
+
+    // delete donors with no specimens (tbd)
+    const donorsWithNoSpecimens = modifiableDonors.filter(d => d.specimens.length == 0);
+    result.donorsDeleted = result.donorsDeleted.concat(
+      donorsWithNoSpecimens.map(d => d.submitterId),
+    );
+    if (dryRun === false) {
+      donorDao.deleteByProgramIdAndDonorIds(
+        programId,
+        donorsWithNoSpecimens
+          .map(d => d.donorId)
+          .filter(id => Number(id) > 0)
+          .filter(notEmpty),
+      );
+    }
+
+    // if samples will be deleted, notify program update
+    if (dryRun === false && result.samplesDeleted.length > 0) {
+      await messenger.getInstance().sendProgramUpdatedMessage(programId);
+    }
+    return result;
   }
 }
 
