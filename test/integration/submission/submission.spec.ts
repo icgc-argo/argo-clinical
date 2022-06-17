@@ -2650,7 +2650,7 @@ const expectedFollowUpBatchSubmissionSchemaErrors = [
       uniqueIdNames: [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.FOLLOW_UP]],
     },
     message:
-      'You are trying to submit the same [submitter_follow_up_id] in multiple rows. The combination of [submitter_follow_up_id] can only be submitted once per file. The same submitter_specimen_id cannot be resected more than once. Please review your data submission.',
+      'You are trying to submit the same [submitter_follow_up_id] in multiple rows. The combination of [submitter_follow_up_id] can only be submitted once per file. The same submitter_specimen_id cannot be resected more than once. Please correct your data submission.',
     fieldName: FollowupFieldsEnum.submitter_follow_up_id,
   },
   {
@@ -2664,7 +2664,7 @@ const expectedFollowUpBatchSubmissionSchemaErrors = [
       uniqueIdNames: [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.FOLLOW_UP]],
     },
     message:
-      'You are trying to submit the same [submitter_follow_up_id] in multiple rows. The combination of [submitter_follow_up_id] can only be submitted once per file. The same submitter_specimen_id cannot be resected more than once. Please review your data submission.',
+      'You are trying to submit the same [submitter_follow_up_id] in multiple rows. The combination of [submitter_follow_up_id] can only be submitted once per file. The same submitter_specimen_id cannot be resected more than once. Please correct your data submission.',
     fieldName: FollowupFieldsEnum.submitter_follow_up_id,
   },
 ];
@@ -2681,7 +2681,7 @@ const expectedDonorBatchSubmissionSchemaErrors = [
       uniqueIdNames: [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.DONOR]],
     },
     message:
-      'You are trying to submit the same [submitter_donor_id] in multiple rows. The combination of [submitter_donor_id] can only be submitted once per file. The same submitter_specimen_id cannot be resected more than once. Please review your data submission.',
+      'You are trying to submit the same [submitter_donor_id] in multiple rows. The combination of [submitter_donor_id] can only be submitted once per file. The same submitter_specimen_id cannot be resected more than once. Please correct your data submission.',
     fieldName: DonorFieldsEnum.submitter_donor_id,
   },
   {
@@ -2695,7 +2695,7 @@ const expectedDonorBatchSubmissionSchemaErrors = [
       uniqueIdNames: [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.DONOR]],
     },
     message:
-      'You are trying to submit the same [submitter_donor_id] in multiple rows. The combination of [submitter_donor_id] can only be submitted once per file. The same submitter_specimen_id cannot be resected more than once. Please review your data submission.',
+      'You are trying to submit the same [submitter_donor_id] in multiple rows. The combination of [submitter_donor_id] can only be submitted once per file. The same submitter_specimen_id cannot be resected more than once. Please correct your data submission.',
     fieldName: DonorFieldsEnum.submitter_donor_id,
   },
   {
@@ -2721,7 +2721,7 @@ const expectedRadiationBatchSubmissionSchemaErrors = [
       uniqueIdNames: ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.RADIATION],
     },
     message:
-      'You are trying to submit the same [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] in multiple rows. The combination of [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] can only be submitted once per file. The same submitter_specimen_id cannot be resected more than once. Please review your data submission.',
+      'You are trying to submit the same [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] in multiple rows. The combination of [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] can only be submitted once per file. The same submitter_specimen_id cannot be resected more than once. Please correct your data submission.',
     fieldName: DonorFieldsEnum.submitter_donor_id,
   },
   {
@@ -2735,7 +2735,7 @@ const expectedRadiationBatchSubmissionSchemaErrors = [
       uniqueIdNames: ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.RADIATION],
     },
     message:
-      'You are trying to submit the same [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] in multiple rows. The combination of [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] can only be submitted once per file. The same submitter_specimen_id cannot be resected more than once. Please review your data submission.',
+      'You are trying to submit the same [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] in multiple rows. The combination of [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] can only be submitted once per file. The same submitter_specimen_id cannot be resected more than once. Please correct your data submission.',
     fieldName: DonorFieldsEnum.submitter_donor_id,
   },
 ];
