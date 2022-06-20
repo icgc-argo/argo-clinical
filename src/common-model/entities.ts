@@ -39,7 +39,7 @@ export enum ClinicalEntitySchemaNames {
   BIOMARKER = 'biomarker',
 }
 
-export const aliasEntityNames: { [key: string]: string } = {
+export const aliasEntityNames: Record<string, string> = {
   donor: 'donor',
   sample_registration: 'sampleRegistration',
   specimen: 'specimens',
