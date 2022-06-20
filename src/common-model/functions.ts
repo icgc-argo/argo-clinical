@@ -173,19 +173,24 @@ export function getClinicalEntitySubmittedData(
   return clinicalRecords;
 }
 
-export const requiredEntities = (entityTypes: string[]) =>
-  // Donor Completion Stats require Sample Registration data
-  (entityTypes.includes('donor') && !entityTypes.includes('sampleRegistration')) ||
-  // Sample Registration requires Specimen data
-  (entityTypes.includes('sampleRegistration') && !entityTypes.includes('specimens'))
-    ? ['completionStats', 'sampleRegistration', 'specimens']
-    : // Clinical Therapies require Treatments
+export const requiredEntities = (entityTypes: string[]) => {
+  if (
+    // Donor Completion Stats require Sample Registration data
+    // Sample Registration requires Specimen data
+    (entityTypes.includes('donor') && !entityTypes.includes('sampleRegistration')) ||
+    (entityTypes.includes('sampleRegistration') && !entityTypes.includes('specimens'))
+  ) {
+    return ['completionStats', 'sampleRegistration', 'specimens'];
+  } else if (
+    // Clinical Therapies require Treatments
     // hormoneTherapy + treatment do not match schema names
     entityTypes.includes('hormoneTherapy') ||
-      entityTypes.includes('treatment') ||
-      ClinicalTherapySchemaNames.some(entity => entityTypes.includes(entity))
-    ? ['treatments', 'treatment']
-    : '';
+    entityTypes.includes('treatment') ||
+    ClinicalTherapySchemaNames.some(entity => entityTypes.includes(entity))
+  ) {
+    return ['treatments', 'treatment'];
+  } else return '';
+};
 
 export function getSingleClinicalEntityFromDonorBySchemanName(
   donor: DeepReadonly<Donor>,
