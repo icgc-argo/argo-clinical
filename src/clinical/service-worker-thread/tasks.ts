@@ -39,6 +39,27 @@ type EntityClinicalInfo = {
 
 const queryEntityNames = <string[]>Object.values(aliasEntityNames);
 
+const updateCompletionTumourStats = (
+  specimen: ClinicalInfo,
+  type: string,
+  completionRecords: { completionStats: CompletionRecord[] },
+) => {
+  const specimenType = `${type}Specimens`;
+  const index = completionRecords.completionStats.findIndex(
+    donor => donor.donorId === specimen.donor_id,
+  );
+  if (index !== -1) {
+    const original = completionRecords.completionStats[index];
+    completionRecords.completionStats[index] = {
+      ...original,
+      coreCompletion: {
+        ...original.coreCompletion,
+        [specimenType]: 1,
+      },
+    };
+  }
+};
+
 function getSampleRegistrationDataFromDonor(donor: Donor) {
   const baseRegistrationRecord = {
     program_id: donor.programId,
@@ -88,49 +109,38 @@ const mapEntityDocuments = (
   completionStats: CompletionRecord[],
 ) => {
   const { entityName, results } = entity;
-  const { page, pageSize, sort, entityTypes } = query;
 
+  // Filter, Paginate + Sort
+  const { page, pageSize, sort, entityTypes } = query;
   const relevantSchemaWithFields = schemas.find((s: any) => s.name === entityName);
   const entityInQuery = isEntityInQuery(entityName, entityTypes);
 
   if (!relevantSchemaWithFields || !entityInQuery || isEmpty(results)) {
     return undefined;
   }
-
   const totalDocs = entityName === ClinicalEntitySchemaNames.DONOR ? totalDonors : results.length;
   const first = page * pageSize;
   const last = (page + 1) * pageSize;
   const records = results.sort(sortDocs(sort)).slice(first, last);
+
+  // Update Completion Stats to display Normal/Tumour stats
   const completionRecords =
     entityName === ClinicalEntitySchemaNames.DONOR ? { completionStats: [...completionStats] } : {};
   const samples = originalResultsArray.find(result => result.entityName === 'sample_registration');
 
   if (completionRecords.completionStats && samples !== undefined) {
-    const updateCompletionTumourStats = (specimen: ClinicalInfo, type: string) => {
-      const specimenType = `${type}Specimens`;
-      const index = completionRecords.completionStats.findIndex(
-        donor => donor.donorId === specimen.donor_id,
-      );
-      if (index !== -1) {
-        const original = completionRecords.completionStats[index];
-        completionRecords.completionStats[index] = {
-          ...original,
-          coreCompletion: {
-            ...original.coreCompletion,
-            [specimenType]: 1,
-          },
-        };
-      }
-    };
-
     const normalSpecimens = samples.results.filter(
       sample => sample.tumour_normal_designation === 'Normal',
     );
     const tumourSpecimens = samples.results.filter(
       sample => sample.tumour_normal_designation === 'Tumour',
     );
-    normalSpecimens.forEach(specimen => updateCompletionTumourStats(specimen, 'normal'));
-    tumourSpecimens.forEach(specimen => updateCompletionTumourStats(specimen, 'tumour'));
+    normalSpecimens.forEach(specimen =>
+      updateCompletionTumourStats(specimen, 'normal', completionRecords),
+    );
+    tumourSpecimens.forEach(specimen =>
+      updateCompletionTumourStats(specimen, 'tumour', completionRecords),
+    );
   }
 
   return <ClinicalEntityData>{
