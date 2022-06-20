@@ -78,13 +78,15 @@ const sortDocs = (sort: string) => (currentRecord: ClinicalInfo, nextRecord: Cli
   return order;
 };
 
+type EntityClinicalInfo = [string, ClinicalInfo[]];
+
 const mapEntityDocuments = (
   totalDonors: number,
   schemas: any,
   query: ClinicalQuery,
   completionStats: CompletionRecord[],
 ) => (
-  entity: [string, ClinicalInfo[]],
+  entity: EntityClinicalInfo,
   index: number,
   originalResultsArray: [string, ClinicalInfo[]][],
 ) => {
