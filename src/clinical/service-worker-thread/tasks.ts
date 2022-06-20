@@ -80,11 +80,13 @@ const sortDocs = (sort: string) => (currentRecord: ClinicalInfo, nextRecord: Cli
 };
 
 const mapEntityDocuments = (
+  entity: EntityClinicalInfo,
+  originalResultsArray: EntityClinicalInfo[],
   totalDonors: number,
   schemas: any,
   query: ClinicalQuery,
   completionStats: CompletionRecord[],
-) => (entity: EntityClinicalInfo, index: number, originalResultsArray: EntityClinicalInfo[]) => {
+) => {
   const { entityName, results } = entity;
   const { page, pageSize, sort, entityTypes } = query;
 
@@ -131,7 +133,7 @@ const mapEntityDocuments = (
     tumourSpecimens.forEach(specimen => updateCompletionTumourStats(specimen, 'tumour'));
   }
 
-  return {
+  return <ClinicalEntityData>{
     entityName,
     totalDocs,
     records,
@@ -200,7 +202,11 @@ export function extractEntityDataFromDonors(
                 .map(sample => ({ donor_id: d.donorId, ...sample }))
             : getClinicalEntitySubmittedData(d, entity)
           : [];
-      if (clinicalInfoRecords.length > 0) {
+
+      const relatedEntity = clinicalEntityData.find(entityData => entityData.entityName === entity);
+      if (relatedEntity) {
+        relatedEntity.results = _.concat(relatedEntity.results, clinicalInfoRecords);
+      } else {
         const clinicalEntity = { entityName: entity, results: clinicalInfoRecords };
         clinicalEntityData = _.concat(clinicalEntityData, clinicalEntity);
       }
@@ -208,7 +214,16 @@ export function extractEntityDataFromDonors(
   });
 
   const clinicalEntities: ClinicalEntityData[] = clinicalEntityData
-    .map(mapEntityDocuments(totalDonors, schemasWithFields, query, completionStats))
+    .map((entity: EntityClinicalInfo, index: number, originalResultsArray: EntityClinicalInfo[]) =>
+      mapEntityDocuments(
+        entity,
+        originalResultsArray,
+        totalDonors,
+        schemasWithFields,
+        query,
+        completionStats,
+      ),
+    )
     .filter(notEmpty);
 
   const data = {

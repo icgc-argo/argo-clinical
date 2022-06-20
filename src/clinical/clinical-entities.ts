@@ -117,7 +117,7 @@ export type ClinicalEntityData = {
   entityName: string;
   totalDocs: number;
   records: ClinicalInfo[];
-  entityFields: any;
+  entityFields: string[];
   completionStats?: CompletionRecord[];
 };
 
