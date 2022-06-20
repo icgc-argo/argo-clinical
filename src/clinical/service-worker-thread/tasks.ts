@@ -26,17 +26,16 @@ import {
 } from '../../common-model/functions';
 import { notEmpty } from '../../utils';
 import { ClinicalQuery } from '../clinical-api';
-import { Donor, CompletionStats, ClinicalInfo } from '../clinical-entities';
-
-interface CompletionRecord extends CompletionStats {
-  donorId?: number;
-}
+import { Donor, CompletionRecord, ClinicalEntityData, ClinicalInfo } from '../clinical-entities';
 
 type RecordsMap = {
   [key in ClinicalEntitySchemaNames]: ClinicalInfo[];
 };
 
-type EntityClinicalInfo = [ClinicalEntitySchemaNames | string, ClinicalInfo[]];
+type EntityClinicalInfo = {
+  entityName: ClinicalEntitySchemaNames | string;
+  results: ClinicalInfo[];
+};
 
 const queryEntityNames = <string[]>Object.values(aliasEntityNames);
 
@@ -86,7 +85,7 @@ const mapEntityDocuments = (
   query: ClinicalQuery,
   completionStats: CompletionRecord[],
 ) => (entity: EntityClinicalInfo, index: number, originalResultsArray: EntityClinicalInfo[]) => {
-  const [entityName, results] = entity;
+  const { entityName, results } = entity;
   const { page, pageSize, sort, entityTypes } = query;
 
   const relevantSchemaWithFields = schemas.find((s: any) => s.name === entityName);
@@ -102,7 +101,7 @@ const mapEntityDocuments = (
   const records = results.sort(sortDocs(sort)).slice(first, last);
   const completionRecords =
     entityName === ClinicalEntitySchemaNames.DONOR ? { completionStats: [...completionStats] } : {};
-  const samples = originalResultsArray.find(result => result[0] === 'sample_registration');
+  const samples = originalResultsArray.find(result => result.entityName === 'sample_registration');
 
   if (completionRecords.completionStats && samples !== undefined) {
     const updateCompletionTumourStats = (specimen: ClinicalInfo, type: string) => {
@@ -122,10 +121,10 @@ const mapEntityDocuments = (
       }
     };
 
-    const normalSpecimens = samples[1].filter(
+    const normalSpecimens = samples.results.filter(
       sample => sample.tumour_normal_designation === 'Normal',
     );
-    const tumourSpecimens = samples[1].filter(
+    const tumourSpecimens = samples.results.filter(
       sample => sample.tumour_normal_designation === 'Tumour',
     );
     normalSpecimens.forEach(specimen => updateCompletionTumourStats(specimen, 'normal'));
@@ -181,7 +180,7 @@ export function extractEntityDataFromDonors(
   schemasWithFields: any,
   query: ClinicalQuery,
 ) {
-  const recordsMap = <RecordsMap>{};
+  let clinicalEntityData: EntityClinicalInfo[] = [];
 
   const completionStats: CompletionRecord[] = donors
     .map(({ completionStats, donorId }): CompletionRecord | undefined =>
@@ -201,11 +200,14 @@ export function extractEntityDataFromDonors(
                 .map(sample => ({ donor_id: d.donorId, ...sample }))
             : getClinicalEntitySubmittedData(d, entity)
           : [];
-      recordsMap[entity] = _.concat(recordsMap[entity] || [], clinicalInfoRecords);
+      if (clinicalInfoRecords.length > 0) {
+        const clinicalEntity = { entityName: entity, results: clinicalInfoRecords };
+        clinicalEntityData = _.concat(clinicalEntityData, clinicalEntity);
+      }
     });
   });
 
-  const clinicalEntities = Object.entries(recordsMap)
+  const clinicalEntities: ClinicalEntityData[] = clinicalEntityData
     .map(mapEntityDocuments(totalDonors, schemasWithFields, query, completionStats))
     .filter(notEmpty);
 

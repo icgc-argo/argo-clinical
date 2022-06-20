@@ -115,8 +115,10 @@ export interface ClinicalInfo {
 
 export type ClinicalEntityData = {
   entityName: string;
-  records: ClinicalEntity[];
+  totalDocs: number;
+  records: ClinicalInfo[];
   entityFields: any;
+  completionStats?: CompletionRecord[];
 };
 
 export type DonorMap = Readonly<{ [submitterId: string]: Donor }>;
@@ -131,6 +133,10 @@ export interface CoreCompletionFields {
   treatments: number;
   normalSpecimens?: number;
   tumourSpecimens?: number;
+}
+
+export interface CompletionRecord extends CompletionStats {
+  donorId?: number;
 }
 
 export type CoreClinicalEntities = keyof CoreCompletionFields;
