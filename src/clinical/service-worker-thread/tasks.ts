@@ -36,6 +36,8 @@ type RecordsMap = {
   [key in ClinicalEntitySchemaNames]: ClinicalInfo[];
 };
 
+type EntityClinicalInfo = [ClinicalEntitySchemaNames | string, ClinicalInfo[]];
+
 const queryEntityNames = <string[]>Object.values(aliasEntityNames);
 
 function getSampleRegistrationDataFromDonor(donor: Donor) {
@@ -78,18 +80,12 @@ const sortDocs = (sort: string) => (currentRecord: ClinicalInfo, nextRecord: Cli
   return order;
 };
 
-type EntityClinicalInfo = [string, ClinicalInfo[]];
-
 const mapEntityDocuments = (
   totalDonors: number,
   schemas: any,
   query: ClinicalQuery,
   completionStats: CompletionRecord[],
-) => (
-  entity: EntityClinicalInfo,
-  index: number,
-  originalResultsArray: [string, ClinicalInfo[]][],
-) => {
+) => (entity: EntityClinicalInfo, index: number, originalResultsArray: EntityClinicalInfo[]) => {
   const [entityName, results] = entity;
   const { page, pageSize, sort, entityTypes } = query;
 
