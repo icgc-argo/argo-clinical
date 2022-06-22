@@ -174,9 +174,9 @@ export function getClinicalEntitySubmittedData(
   return clinicalRecords;
 }
 
-export const requiredEntities = (
+export const getRequiredDonorFieldsForEntityTypes = (
   entityTypes: EntityAlias[],
-): EntityAlias | ClinicalEntitySchemaNames | string[] => {
+): Array<EntityAlias | ClinicalEntitySchemaNames | 'completionStats'> => {
   if (
     // Donor Completion Stats require Sample Registration data
     // Sample Registration requires Specimen data
@@ -192,7 +192,7 @@ export const requiredEntities = (
     ClinicalTherapySchemaNames.some(entity => entityTypes.includes(entity))
   ) {
     return ['treatments'];
-  } else return [''];
+  } else return [];
 };
 
 export function getSingleClinicalEntityFromDonorBySchemanName(

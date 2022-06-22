@@ -46,6 +46,7 @@ export type EntityAlias =
   | 'primaryDiagnoses'
   | 'familyHistory'
   | 'treatment'
+  | 'treatments'
   | 'chemotherapy'
   | 'immunotherapy'
   | 'surgery'
