@@ -39,7 +39,30 @@ export enum ClinicalEntitySchemaNames {
   BIOMARKER = 'biomarker',
 }
 
-export const aliasEntityNames: Record<string, string> = {
+export type EntityAlias =
+  | 'donor'
+  | 'sampleRegistration'
+  | 'specimens'
+  | 'primaryDiagnoses'
+  | 'familyHistory'
+  | 'treatment'
+  | 'treatments'
+  | 'chemotherapy'
+  | 'immunotherapy'
+  | 'surgery'
+  | 'radiation'
+  | 'followUps'
+  | 'hormoneTherapy'
+  | 'exposure'
+  | 'comorbidity'
+  | 'biomarker'
+  | ClinicalEntitySchemaNames.CHEMOTHERAPY
+  | ClinicalEntitySchemaNames.RADIATION
+  | ClinicalEntitySchemaNames.HORMONE_THERAPY
+  | ClinicalEntitySchemaNames.IMMUNOTHERAPY
+  | ClinicalEntitySchemaNames.SURGERY;
+
+export const aliasEntityNames: Record<ClinicalEntitySchemaNames, EntityAlias> = {
   donor: 'donor',
   sample_registration: 'sampleRegistration',
   specimen: 'specimens',

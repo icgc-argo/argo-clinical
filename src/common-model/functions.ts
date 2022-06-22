@@ -23,6 +23,7 @@ import {
   ClinicalEntitySchemaNames,
   ClinicalUniqueIdentifier,
   ClinicalTherapySchemaNames,
+  EntityAlias,
 } from './entities';
 import _ from 'lodash';
 import { notEmpty, convertToArray } from '../utils';
@@ -163,13 +164,16 @@ export function getClinicalEntitySubmittedData(
           .map((entity: any) => ({
             donor_id: donor.donorId,
             program_id: donor.programId,
+            submitter_id: donor.submitterId,
             ...entity.clinicalInfo,
           }));
 
   return clinicalRecords;
 }
 
-export const requiredEntities = (entityTypes: string[]) => {
+export const getRequiredDonorFieldsForEntityTypes = (
+  entityTypes: EntityAlias[],
+): Array<EntityAlias | ClinicalEntitySchemaNames | 'completionStats'> => {
   if (
     // Donor Completion Stats require Sample Registration data
     // Sample Registration requires Specimen data
@@ -184,8 +188,8 @@ export const requiredEntities = (entityTypes: string[]) => {
     entityTypes.includes('treatment') ||
     ClinicalTherapySchemaNames.some(entity => entityTypes.includes(entity))
   ) {
-    return ['treatments', 'treatment'];
-  } else return '';
+    return ['treatments'];
+  } else return [];
 };
 
 export function getSingleClinicalEntityFromDonorBySchemanName(

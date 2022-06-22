@@ -18,9 +18,13 @@
  */
 
 import _, { isEmpty } from 'lodash';
-import { ClinicalEntitySchemaNames, aliasEntityNames } from '../../common-model/entities';
-import { requiredEntities } from '../../common-model/functions';
 import {
+  ClinicalEntitySchemaNames,
+  aliasEntityNames,
+  EntityAlias,
+} from '../../common-model/entities';
+import {
+  getRequiredDonorFieldsForEntityTypes,
   getClinicalEntitiesFromDonorBySchemaName,
   getClinicalEntitySubmittedData,
 } from '../../common-model/functions';
@@ -33,11 +37,11 @@ type RecordsMap = {
 };
 
 type EntityClinicalInfo = {
-  entityName: ClinicalEntitySchemaNames | string;
+  entityName: ClinicalEntitySchemaNames;
   results: ClinicalInfo[];
 };
 
-const queryEntityNames = <string[]>Object.values(aliasEntityNames);
+const queryEntityNames = <EntityAlias[]>Object.values(aliasEntityNames);
 
 const updateCompletionTumourStats = (
   specimen: ClinicalInfo,
@@ -86,7 +90,7 @@ function getSampleRegistrationDataFromDonor(donor: Donor) {
 
 const DONOR_ID_FIELD = 'donor_id';
 
-const isEntityInQuery = (entityName: string, entityTypes: string[]) =>
+const isEntityInQuery = (entityName: ClinicalEntitySchemaNames, entityTypes: string[]) =>
   queryEntityNames.includes(aliasEntityNames[entityName]) &&
   entityTypes.includes(aliasEntityNames[entityName]);
 
@@ -203,7 +207,9 @@ export function extractEntityDataFromDonors(
   donors.forEach(d => {
     Object.values(ClinicalEntitySchemaNames).forEach(entity => {
       const isQueriedType = isEntityInQuery(entity, query.entityTypes);
-      const isRequiredType = requiredEntities(query.entityTypes).includes(entity);
+      const isRequiredType = getRequiredDonorFieldsForEntityTypes(query.entityTypes).includes(
+        entity,
+      );
       const clinicalInfoRecords =
         isQueriedType || isRequiredType
           ? entity === ClinicalEntitySchemaNames.REGISTRATION

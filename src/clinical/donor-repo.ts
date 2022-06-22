@@ -19,7 +19,7 @@
 
 import { Donor } from './clinical-entities';
 import { ClinicalQuery } from './clinical-api';
-import { requiredEntities } from '../common-model/functions';
+import { getRequiredDonorFieldsForEntityTypes } from '../common-model/functions';
 import mongoose, { PaginateModel } from 'mongoose';
 import mongoosePaginate from 'mongoose-paginate-v2';
 import { DeepReadonly } from 'deep-freeze';
@@ -186,7 +186,7 @@ export const donorDao: DonorRepository = {
     const projection = [
       ...DONOR_ENTITY_CORE_FIELDS,
       ...entityTypes,
-      ...requiredEntities(entityTypes),
+      ...getRequiredDonorFieldsForEntityTypes(entityTypes),
     ].join(' ');
 
     const result = await DonorModel.paginate(
