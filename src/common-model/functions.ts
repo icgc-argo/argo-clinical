@@ -23,6 +23,7 @@ import {
   ClinicalEntitySchemaNames,
   ClinicalUniqueIdentifier,
   ClinicalTherapySchemaNames,
+  EntityAlias,
 } from './entities';
 import _ from 'lodash';
 import { notEmpty, convertToArray } from '../utils';
@@ -173,7 +174,7 @@ export function getClinicalEntitySubmittedData(
   return clinicalRecords;
 }
 
-export const requiredEntities = (entityTypes: string[]) => {
+export const requiredEntities = (entityTypes: EntityAlias[]) => {
   if (
     // Donor Completion Stats require Sample Registration data
     // Sample Registration requires Specimen data

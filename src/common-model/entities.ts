@@ -54,7 +54,12 @@ export type EntityAlias =
   | 'hormoneTherapy'
   | 'exposure'
   | 'comorbidity'
-  | 'biomarker';
+  | 'biomarker'
+  | ClinicalEntitySchemaNames.CHEMOTHERAPY
+  | ClinicalEntitySchemaNames.RADIATION
+  | ClinicalEntitySchemaNames.HORMONE_THERAPY
+  | ClinicalEntitySchemaNames.IMMUNOTHERAPY
+  | ClinicalEntitySchemaNames.SURGERY;
 
 export const aliasEntityNames: Record<ClinicalEntitySchemaNames, EntityAlias> = {
   donor: 'donor',
