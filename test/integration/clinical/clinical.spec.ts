@@ -264,7 +264,6 @@ describe('clinical Api', () => {
           .then((res: any) => {
             res.should.have.status(200);
             res.body.should.have.property('clinicalEntities');
-            res.body.should.have.property('completionStats');
           });
       });
 
