@@ -18,9 +18,13 @@
  */
 
 import _, { isEmpty } from 'lodash';
-import { ClinicalEntitySchemaNames, aliasEntityNames } from '../../common-model/entities';
-import { getRequiredDonorFieldsForEntityTypes } from '../../common-model/functions';
 import {
+  ClinicalEntitySchemaNames,
+  aliasEntityNames,
+  EntityAlias,
+} from '../../common-model/entities';
+import {
+  getRequiredDonorFieldsForEntityTypes,
   getClinicalEntitiesFromDonorBySchemaName,
   getClinicalEntitySubmittedData,
 } from '../../common-model/functions';
@@ -37,7 +41,7 @@ type EntityClinicalInfo = {
   results: ClinicalInfo[];
 };
 
-const queryEntityNames = <string[]>Object.values(aliasEntityNames);
+const queryEntityNames = <EntityAlias[]>Object.values(aliasEntityNames);
 
 const updateCompletionTumourStats = (
   specimen: ClinicalInfo,
