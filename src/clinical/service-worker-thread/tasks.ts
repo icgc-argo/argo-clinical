@@ -33,7 +33,7 @@ type RecordsMap = {
 };
 
 type EntityClinicalInfo = {
-  entityName: ClinicalEntitySchemaNames | string;
+  entityName: ClinicalEntitySchemaNames;
   results: ClinicalInfo[];
 };
 
@@ -86,7 +86,7 @@ function getSampleRegistrationDataFromDonor(donor: Donor) {
 
 const DONOR_ID_FIELD = 'donor_id';
 
-const isEntityInQuery = (entityName: string, entityTypes: string[]) =>
+const isEntityInQuery = (entityName: ClinicalEntitySchemaNames, entityTypes: string[]) =>
   queryEntityNames.includes(aliasEntityNames[entityName]) &&
   entityTypes.includes(aliasEntityNames[entityName]);
 
