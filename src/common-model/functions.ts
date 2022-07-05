@@ -23,6 +23,7 @@ import {
   ClinicalEntitySchemaNames,
   ClinicalUniqueIdentifier,
   ClinicalTherapySchemaNames,
+  EntityAlias,
 } from './entities';
 import _ from 'lodash';
 import { notEmpty, convertToArray } from '../utils';
@@ -133,26 +134,63 @@ export function getClinicalEntitySubmittedData(
 ): ClinicalInfo[] {
   const result = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName) as any[];
 
-  const clinicalRecords = result
-    .map((entity: any) =>
-      clinicalEntitySchemaName === ClinicalEntitySchemaNames.DONOR
-        ? {
+  const clinicalRecords =
+    clinicalEntitySchemaName === ClinicalEntitySchemaNames.DONOR
+      ? result.map((entity: any) => ({
+          donor_id: donor.donorId,
+          program_id: donor.programId,
+          ...entity.clinicalInfo,
+        }))
+      : clinicalEntitySchemaName === ClinicalEntitySchemaNames.TREATMENT
+      ? result.map((treatment: any) => {
+          const clinicalInfo = treatment.clinicalInfo || {};
+          const therapy_type =
+            treatment.therapies.length === 1
+              ? { therapy_type: treatment.therapies[0].therapyType }
+              : {};
+          const therapy_info =
+            treatment.therapies.length === 1 && treatment.therapies[0].clinicalInfo;
+          return {
+            donor_id: donor.donorId,
+            program_id: donor.programId,
+            treatment_id: treatment.treatmentId,
+            ...clinicalInfo,
+            ...therapy_type,
+            ...therapy_info,
+          };
+        })
+      : result
+          .filter(record => notEmpty(record.clinicalInfo))
+          .map((entity: any) => ({
             donor_id: donor.donorId,
             program_id: donor.programId,
             submitter_id: donor.submitterId,
-            gender: donor.gender,
             ...entity.clinicalInfo,
-          }
-        : {
-            donor_id: donor.donorId,
-            program_id: donor.programId,
-            ...entity.clinicalInfo,
-          },
-    )
-    .filter(notEmpty);
+          }));
 
   return clinicalRecords;
 }
+
+export const getRequiredDonorFieldsForEntityTypes = (
+  entityTypes: EntityAlias[],
+): Array<EntityAlias | ClinicalEntitySchemaNames | 'completionStats'> => {
+  if (
+    // Donor Completion Stats require Sample Registration data
+    // Sample Registration requires Specimen data
+    (entityTypes.includes('donor') && !entityTypes.includes('sampleRegistration')) ||
+    (entityTypes.includes('sampleRegistration') && !entityTypes.includes('specimens'))
+  ) {
+    return ['completionStats', 'sampleRegistration', 'specimens'];
+  } else if (
+    // Clinical Therapies require Treatments
+    // hormoneTherapy + treatment do not match schema names
+    entityTypes.includes('hormoneTherapy') ||
+    entityTypes.includes('treatment') ||
+    ClinicalTherapySchemaNames.some(entity => entityTypes.includes(entity))
+  ) {
+    return ['treatments'];
+  } else return [];
+};
 
 export function getSingleClinicalEntityFromDonorBySchemanName(
   donor: DeepReadonly<Donor>,

@@ -25,6 +25,7 @@ import {
   HasProgramReadAccess,
   HasFullReadAccess,
 } from '../decorators';
+import { EntityAlias } from '../common-model/entities';
 import { ControllerUtils, DonorUtils, TsvUtils } from '../utils';
 import AdmZip from 'adm-zip';
 import { Donor } from './clinical-entities';
@@ -35,7 +36,7 @@ export type ClinicalQuery = {
   programShortName: string;
   page: number;
   pageSize: number;
-  entityTypes: string[];
+  entityTypes: EntityAlias[];
   sort: string;
   donorIds?: number[];
   submitterDonorIds?: string[];

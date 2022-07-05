@@ -19,6 +19,7 @@
 
 import { Donor } from './clinical-entities';
 import { ClinicalQuery } from './clinical-api';
+import { getRequiredDonorFieldsForEntityTypes } from '../common-model/functions';
 import mongoose, { PaginateModel } from 'mongoose';
 import mongoosePaginate from 'mongoose-paginate-v2';
 import { DeepReadonly } from 'deep-freeze';
@@ -47,15 +48,7 @@ export enum DONOR_DOCUMENT_FIELDS {
   FAMILY_HISTORY_ID = 'familyHistory.clinicalInfo.family_relative_id',
 }
 
-const DONOR_ENTITY_CORE_FIELDS = [
-  'donorId',
-  'submitterId',
-  'programId',
-  'gender',
-  'clinicalInfo',
-  'completionStats',
-  'specimens',
-];
+const DONOR_ENTITY_CORE_FIELDS = ['donorId', 'submitterId', 'programId', 'gender', 'clinicalInfo'];
 
 export type FindByProgramAndSubmitterFilter = DeepReadonly<{
   programId: string;
@@ -190,7 +183,11 @@ export const donorDao: DonorRepository = {
   ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number }>> {
     const { sort, pageSize, entityTypes, donorIds, submitterDonorIds, completionState } = query;
 
-    const projection = [...DONOR_ENTITY_CORE_FIELDS, ...entityTypes].join(' ');
+    const projection = [
+      ...DONOR_ENTITY_CORE_FIELDS,
+      ...entityTypes,
+      ...getRequiredDonorFieldsForEntityTypes(entityTypes),
+    ].join(' ');
 
     const result = await DonorModel.paginate(
       {
