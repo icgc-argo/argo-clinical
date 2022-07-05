@@ -181,13 +181,29 @@ export const donorDao: DonorRepository = {
     programId: string,
     query: ClinicalQuery,
   ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number }>> {
-    const { sort, pageSize, entityTypes, donorIds, submitterDonorIds, completionState } = query;
-
+    const {
+      sort,
+      page,
+      pageSize,
+      entityTypes,
+      donorIds,
+      submitterDonorIds,
+      completionState,
+    } = query;
+    console.log('page', page);
+    console.log('pageSize', pageSize);
+    console.log('entityTypes', entityTypes);
     const projection = [
       ...DONOR_ENTITY_CORE_FIELDS,
       ...entityTypes,
       ...getRequiredDonorFieldsForEntityTypes(entityTypes),
     ].join(' ');
+
+    const total = await DonorModel.count({ programId });
+    const limit = projection.includes('sampleRegistration') ? total : pageSize;
+    console.log('total', total);
+
+    //const { totalDocs } =  await DonorModel.find({ programId, projection });
 
     const result = await DonorModel.paginate(
       {
@@ -199,12 +215,16 @@ export const donorDao: DonorRepository = {
       {
         projection,
         sort,
-        limit: pageSize,
+        page,
+        limit,
         select: '-_id',
       },
     );
 
-    const { totalDocs: totalDonors } = result;
+    const { totalDocs: totalDonors, totalPages } = result;
+    console.log('result keys', Object.keys(result));
+    console.log('totalDonors', totalDonors);
+    console.log('totalPages', totalPages);
     const mapped: Donor[] = result.docs
       .map((d: DonorDocument) => {
         return MongooseUtils.toPojo(d) as Donor;
