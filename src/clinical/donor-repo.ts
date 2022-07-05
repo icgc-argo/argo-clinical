@@ -78,7 +78,7 @@ export interface DonorRepository {
   findByPaginatedProgramId(
     programId: string,
     query: ClinicalQuery,
-  ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number }>>;
+  ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number; totalSamples: number }>>;
   deleteByProgramId(programId: string): Promise<void>;
   deleteByProgramIdAndDonorIds(programId: string, donorIds: number[]): Promise<void>;
   findByProgramAndSubmitterId(
@@ -180,7 +180,7 @@ export const donorDao: DonorRepository = {
   async findByPaginatedProgramId(
     programId: string,
     query: ClinicalQuery,
-  ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number }>> {
+  ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number; totalSamples: number }>> {
     const {
       sort,
       page,
@@ -190,20 +190,25 @@ export const donorDao: DonorRepository = {
       submitterDonorIds,
       completionState,
     } = query;
-    console.log('page', page);
-    console.log('pageSize', pageSize);
-    console.log('entityTypes', entityTypes);
+
     const projection = [
       ...DONOR_ENTITY_CORE_FIELDS,
       ...entityTypes,
       ...getRequiredDonorFieldsForEntityTypes(entityTypes),
     ].join(' ');
+    let totalSamples = 0;
 
-    const total = await DonorModel.count({ programId });
-    const limit = projection.includes('sampleRegistration') ? total : pageSize;
-    console.log('total', total);
-
-    //const { totalDocs } =  await DonorModel.find({ programId, projection });
+    // Find total # of queried documents
+    // TODO: Test other entities + refactor all pagination stats
+    if (projection.includes('sampleRegistration')) {
+      const allDocs = await DonorModel.find({ programId }, projection);
+      const samples = allDocs
+        .map(donor => donor.specimens)
+        .flat()
+        .filter(notEmpty)
+        .map(specimen => specimen.samples);
+      totalSamples = samples.length;
+    }
 
     const result = await DonorModel.paginate(
       {
@@ -215,16 +220,15 @@ export const donorDao: DonorRepository = {
       {
         projection,
         sort,
-        page,
-        limit,
+        page: page + 1,
+        limit: pageSize,
         select: '-_id',
       },
     );
 
-    const { totalDocs: totalDonors, totalPages } = result;
-    console.log('result keys', Object.keys(result));
-    console.log('totalDonors', totalDonors);
-    console.log('totalPages', totalPages);
+    // TotalDonors !== total documents; use totalPages + pagingCounter
+    const { totalDocs: totalDonors } = result;
+
     const mapped: Donor[] = result.docs
       .map((d: DonorDocument) => {
         return MongooseUtils.toPojo(d) as Donor;
@@ -234,6 +238,7 @@ export const donorDao: DonorRepository = {
     return F({
       donors: mapped,
       totalDonors,
+      totalSamples,
     });
   },
 
