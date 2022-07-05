@@ -139,8 +139,6 @@ export function getClinicalEntitySubmittedData(
       ? result.map((entity: any) => ({
           donor_id: donor.donorId,
           program_id: donor.programId,
-          submitter_id: donor.submitterId,
-          gender: donor.gender,
           ...entity.clinicalInfo,
         }))
       : clinicalEntitySchemaName === ClinicalEntitySchemaNames.TREATMENT
@@ -155,7 +153,6 @@ export function getClinicalEntitySubmittedData(
           return {
             donor_id: donor.donorId,
             program_id: donor.programId,
-            submitter_id: donor.submitterId,
             treatment_id: treatment.treatmentId,
             ...clinicalInfo,
             ...therapy_type,
