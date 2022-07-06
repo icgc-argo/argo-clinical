@@ -181,28 +181,32 @@ export const donorDao: DonorRepository = {
     programId: string,
     query: ClinicalQuery,
   ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number; totalSamples: number }>> {
-    const {
-      sort,
-      page,
-      pageSize,
-      entityTypes,
-      donorIds,
-      submitterDonorIds,
-      completionState,
-    } = query;
+    const { sort, entityTypes, donorIds, submitterDonorIds, completionState } = query;
 
     const projection = [
+      '-_id',
       ...DONOR_ENTITY_CORE_FIELDS,
       ...entityTypes,
       ...getRequiredDonorFieldsForEntityTypes(entityTypes),
     ].join(' ');
     let totalSamples = 0;
 
-    // Find total # of queried documents
-    // TODO: Test other entities + refactor all pagination stats
+    // All Entity Data is stored on Donor documents, so all Donors must be requested
+    // Pagination is handled downstream before response in service-worker-threads/tasks
+    const result = await DonorModel.find(
+      {
+        programId,
+        ...donorIds,
+        ...submitterDonorIds,
+        ...completionState,
+      },
+      projection,
+    ).sort(sort);
+
+    const totalDonors = result.length;
+
     if (projection.includes('sampleRegistration')) {
-      const allDocs = await DonorModel.find({ programId }, projection);
-      const samples = allDocs
+      const samples = result
         .map(donor => donor.specimens)
         .flat()
         .filter(notEmpty)
@@ -210,26 +214,7 @@ export const donorDao: DonorRepository = {
       totalSamples = samples.length;
     }
 
-    const result = await DonorModel.paginate(
-      {
-        [DONOR_DOCUMENT_FIELDS.PROGRAM_ID]: programId,
-        ...donorIds,
-        ...submitterDonorIds,
-        ...completionState,
-      },
-      {
-        projection,
-        sort,
-        page: page + 1,
-        limit: pageSize,
-        select: '-_id',
-      },
-    );
-
-    // TotalDonors !== total documents; use totalPages + pagingCounter
-    const { totalDocs: totalDonors } = result;
-
-    const mapped: Donor[] = result.docs
+    const mapped: Donor[] = result
       .map((d: DonorDocument) => {
         return MongooseUtils.toPojo(d) as Donor;
       })
