@@ -184,16 +184,12 @@ export const getPaginatedClinicalData = async (programId: string, query: Clinica
 
   const allSchemasWithFields = await dictionaryManager.instance().getSchemasWithFields();
   // Get all donors + records for given entity
-  const { donors, totalDonors, totalSamples } = await donorDao.findByPaginatedProgramId(
-    programId,
-    query,
-  );
+  const { donors, totalDonors } = await donorDao.findByPaginatedProgramId(programId, query);
 
   // Return paginated data
   const data = extractEntityDataFromDonors(
     donors as Donor[],
     totalDonors,
-    totalSamples,
     allSchemasWithFields,
     query,
   );

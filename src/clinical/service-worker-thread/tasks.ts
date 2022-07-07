@@ -108,7 +108,6 @@ const mapEntityDocuments = (
   entity: EntityClinicalInfo,
   originalResultsArray: EntityClinicalInfo[],
   totalDonors: number,
-  totalSamples: number,
   schemas: any,
   query: ClinicalQuery,
   completionStats: CompletionRecord[],
@@ -124,12 +123,7 @@ const mapEntityDocuments = (
     return undefined;
   }
 
-  const totalDocs =
-    entityName === ClinicalEntitySchemaNames.DONOR
-      ? totalDonors
-      : entityName === ClinicalEntitySchemaNames.REGISTRATION
-      ? totalSamples
-      : results.length;
+  const totalDocs = entityName === ClinicalEntitySchemaNames.DONOR ? totalDonors : results.length;
   const first = page * pageSize;
   const last = (page + 1) * pageSize;
   const records = results.sort(sortDocs(sort)).slice(first, last);
@@ -200,7 +194,6 @@ function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
 export function extractEntityDataFromDonors(
   donors: Donor[],
   totalDonors: number,
-  totalSamples: number,
   schemasWithFields: any,
   query: ClinicalQuery,
 ) {
@@ -243,7 +236,6 @@ export function extractEntityDataFromDonors(
         entity,
         originalResultsArray,
         totalDonors,
-        totalSamples,
         schemasWithFields,
         query,
         completionStats,

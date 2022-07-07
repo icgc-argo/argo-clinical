@@ -193,6 +193,7 @@ export const donorDao: DonorRepository = {
 
     // All Entity Data is stored on Donor documents, so all Donors must be requested
     // Pagination is handled downstream before response in service-worker-threads/tasks
+    // TODO: Paginate if requesting donors? use limit = 0 if !entityTypes.includes(donor)?
     const result = await DonorModel.find(
       {
         programId,
@@ -204,7 +205,7 @@ export const donorDao: DonorRepository = {
     ).sort(sort);
 
     const totalDonors = result.length;
-
+    // TODO: Move to Tasks
     if (projection.includes('sampleRegistration')) {
       const samples = result
         .map(donor => donor.specimens)
