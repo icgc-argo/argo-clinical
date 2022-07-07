@@ -181,7 +181,7 @@ export const donorDao: DonorRepository = {
     programId: string,
     query: ClinicalQuery,
   ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number }>> {
-    const { sort, entityTypes, donorIds, submitterDonorIds, completionState } = query;
+    const { sort, pageSize, entityTypes, donorIds, submitterDonorIds, completionState } = query;
 
     const projection = [
       '-_id',
@@ -189,23 +189,35 @@ export const donorDao: DonorRepository = {
       ...entityTypes,
       ...getRequiredDonorFieldsForEntityTypes(entityTypes),
     ].join(' ');
-    // All Entity Data is stored on Donor documents, so all Donors must be requested
-    // Pagination is handled downstream before response in service-worker-threads/tasks
 
-    // TODO: Paginate if requesting donors? use limit = 0 if !entityTypes.includes(donor)?
-    const result = await DonorModel.find(
+    // All Entity Data is stored on Donor documents, so all Donors must be requested,
+    // unless we are specifically requesting Donors
+    // Otherwise Pagination is handled downstream before response in service-worker-threads/tasks
+
+    const limit = entityTypes.includes('donor')
+      ? pageSize
+      : await DonorModel.countDocuments({ programId });
+
+    const page = entityTypes.includes('donor') ? query.page : 0;
+
+    const result = await DonorModel.paginate(
       {
         programId,
         ...donorIds,
         ...submitterDonorIds,
         ...completionState,
       },
-      projection,
-    ).sort(sort);
+      {
+        projection,
+        sort,
+        page,
+        limit,
+      },
+    );
 
-    const totalDonors = result.length;
+    const { totalDocs: totalDonors } = result;
 
-    const mapped: Donor[] = result
+    const mapped: Donor[] = result.docs
       .map((d: DonorDocument) => {
         return MongooseUtils.toPojo(d) as Donor;
       })
