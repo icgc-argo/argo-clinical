@@ -78,7 +78,7 @@ export interface DonorRepository {
   findByPaginatedProgramId(
     programId: string,
     query: ClinicalQuery,
-  ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number; totalSamples: number }>>;
+  ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number }>>;
   deleteByProgramId(programId: string): Promise<void>;
   deleteByProgramIdAndDonorIds(programId: string, donorIds: number[]): Promise<void>;
   findByProgramAndSubmitterId(
@@ -180,7 +180,7 @@ export const donorDao: DonorRepository = {
   async findByPaginatedProgramId(
     programId: string,
     query: ClinicalQuery,
-  ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number; totalSamples: number }>> {
+  ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number }>> {
     const { sort, entityTypes, donorIds, submitterDonorIds, completionState } = query;
 
     const projection = [
@@ -189,10 +189,9 @@ export const donorDao: DonorRepository = {
       ...entityTypes,
       ...getRequiredDonorFieldsForEntityTypes(entityTypes),
     ].join(' ');
-    let totalSamples = 0;
-
     // All Entity Data is stored on Donor documents, so all Donors must be requested
     // Pagination is handled downstream before response in service-worker-threads/tasks
+
     // TODO: Paginate if requesting donors? use limit = 0 if !entityTypes.includes(donor)?
     const result = await DonorModel.find(
       {
@@ -205,15 +204,6 @@ export const donorDao: DonorRepository = {
     ).sort(sort);
 
     const totalDonors = result.length;
-    // TODO: Move to Tasks
-    if (projection.includes('sampleRegistration')) {
-      const samples = result
-        .map(donor => donor.specimens)
-        .flat()
-        .filter(notEmpty)
-        .map(specimen => specimen.samples);
-      totalSamples = samples.length;
-    }
 
     const mapped: Donor[] = result
       .map((d: DonorDocument) => {
@@ -224,7 +214,6 @@ export const donorDao: DonorRepository = {
     return F({
       donors: mapped,
       totalDonors,
-      totalSamples,
     });
   },
 
