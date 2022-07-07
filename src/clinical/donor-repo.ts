@@ -190,9 +190,10 @@ export const donorDao: DonorRepository = {
       ...getRequiredDonorFieldsForEntityTypes(entityTypes),
     ].join(' ');
 
-    // All Entity Data is stored on Donor documents, so all Donors must be requested,
-    // unless we are specifically requesting Donors
-    // Otherwise Pagination is handled downstream before response in service-worker-threads/tasks
+    // All Entity Data is stored on Donor documents
+    // Specific Requests for Donor documents can be paginated at the MongoDB level
+    // All other Entity Data we must request all Donor-documents to see total Entity counts
+    // Pagination is then handled downstream before response in service-worker-threads/tasks
 
     const limit = entityTypes.includes('donor')
       ? pageSize
