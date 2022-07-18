@@ -181,10 +181,24 @@ export const donorDao: DonorRepository = {
     programId: string,
     query: ClinicalQuery,
   ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number }>> {
-    const { sort, pageSize, entityTypes, donorIds, submitterDonorIds, completionState } = query;
+    const {
+      querySort,
+      pageSize,
+      entityTypes,
+      donorIds,
+      submitterDonorIds,
+      completionState,
+    } = query;
+
+    const sortQuery = querySort.includes('-') ? { [querySort.slice(1)]: -1 } : { [querySort]: 1 };
+    const sort = {
+      'schemaMetadata.isValid': 1,
+      ...sortQuery,
+    };
 
     const projection = [
       '-_id',
+      'schemaMetadata',
       ...DONOR_ENTITY_CORE_FIELDS,
       ...entityTypes,
       ...getRequiredDonorFieldsForEntityTypes(entityTypes),
@@ -215,7 +229,7 @@ export const donorDao: DonorRepository = {
         limit,
       },
     );
-
+    result.docs.forEach(doc => console.log(doc.schemaMetadata.isValid));
     const { totalDocs: totalDonors } = result;
 
     const mapped: Donor[] = result.docs
