@@ -181,7 +181,15 @@ export const donorDao: DonorRepository = {
     programId: string,
     query: ClinicalQuery,
   ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number }>> {
-    const { sort, pageSize, entityTypes, donorIds, submitterDonorIds, completionState } = query;
+    const {
+      sort,
+      page: queryPage,
+      pageSize,
+      entityTypes,
+      donorIds,
+      submitterDonorIds,
+      completionState,
+    } = query;
 
     const projection = [
       '-_id',
@@ -199,7 +207,8 @@ export const donorDao: DonorRepository = {
       ? pageSize
       : await DonorModel.countDocuments({ programId });
 
-    const page = entityTypes.includes('donor') ? query.page : 0;
+    // React-Table Pagination is 0 indexed, BE Mongoose-Paginate is 1 indexed
+    const page = entityTypes.includes('donor') ? queryPage + 1 : 1;
 
     const result = await DonorModel.paginate(
       {
