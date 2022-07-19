@@ -826,7 +826,7 @@ paths:
             type: integer
           description: Paginated Results page number to return
         - in: query
-          name: limit
+          name: pageSize
           schema:
             type: integer
           description: Number of paginated results per page

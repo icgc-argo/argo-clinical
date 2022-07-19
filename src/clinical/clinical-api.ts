@@ -91,6 +91,7 @@ class ClinicalController {
   async getProgramClinicalEntityData(req: Request, res: Response) {
     const programId: string = req.params.programId;
     const sort: string = req.query.sort || 'donorId';
+    const page: number = parseInt(req.query.page);
     const state: CompletionStates = req.query.completionState || CompletionStates.all;
     const entityTypes: string[] =
       req.query.entityTypes && req.query.entityTypes.length > 0
@@ -112,6 +113,7 @@ class ClinicalController {
       sort,
       entityTypes,
       donorIds,
+      page,
       submitterDonorIds,
       completionState,
     };

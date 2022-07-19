@@ -122,10 +122,16 @@ const mapEntityDocuments = (
   if (!relevantSchemaWithFields || !entityInQuery || isEmpty(results)) {
     return undefined;
   }
+
   const totalDocs = entityName === ClinicalEntitySchemaNames.DONOR ? totalDonors : results.length;
-  const first = page * pageSize;
-  const last = (page + 1) * pageSize;
-  const records = results.sort(sortDocs(sort)).slice(first, last);
+  let records = results.sort(sortDocs(sort));
+
+  if (records.length > pageSize) {
+    // Manual Pagination
+    const first = page * pageSize;
+    const last = (page + 1) * pageSize;
+    records = records.slice(first, last);
+  }
 
   // Update Completion Stats to display Normal/Tumour stats
   const completionRecords =
