@@ -182,7 +182,8 @@ export const donorDao: DonorRepository = {
     query: ClinicalQuery,
   ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number }>> {
     const {
-      querySort,
+      sort: querySort,
+      page: queryPage,
       pageSize,
       entityTypes,
       donorIds,
@@ -213,8 +214,7 @@ export const donorDao: DonorRepository = {
       ? pageSize
       : await DonorModel.countDocuments({ programId });
 
-    const page = entityTypes.includes('donor') ? query.page : 0;
-
+    const page = entityTypes.includes('donor') ? queryPage : 0;
     const result = await DonorModel.paginate(
       {
         programId,
@@ -229,7 +229,7 @@ export const donorDao: DonorRepository = {
         limit,
       },
     );
-    result.docs.forEach(doc => console.log(doc.schemaMetadata.isValid));
+
     const { totalDocs: totalDonors } = result;
 
     const mapped: Donor[] = result.docs

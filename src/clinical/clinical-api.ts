@@ -37,7 +37,7 @@ export type ClinicalQuery = {
   page: number;
   pageSize: number;
   entityTypes: EntityAlias[];
-  querySort: string;
+  sort: string;
   donorIds?: number[];
   submitterDonorIds?: string[];
   completionState?: {};
@@ -90,7 +90,7 @@ class ClinicalController {
   @HasProgramReadAccess((req: Request) => req.params.programId)
   async getProgramClinicalEntityData(req: Request, res: Response) {
     const programId: string = req.params.programId;
-    const querySort: string = req.query.sort || 'donorId';
+    const sort: string = req.query.sort || 'donorId';
     const page: number = parseInt(req.query.page);
     const state: CompletionStates = req.query.completionState || CompletionStates.all;
     const entityTypes: string[] =
@@ -110,7 +110,7 @@ class ClinicalController {
 
     const query: ClinicalQuery = {
       ...req.query,
-      querySort,
+      sort,
       entityTypes,
       donorIds,
       page,

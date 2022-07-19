@@ -115,7 +115,7 @@ const mapEntityDocuments = (
   const { entityName, results } = entity;
 
   // Filter, Paginate + Sort
-  const { page, pageSize, querySort, entityTypes } = query;
+  const { page, pageSize, sort, entityTypes } = query;
   const relevantSchemaWithFields = schemas.find((s: any) => s.name === entityName);
   const entityInQuery = isEntityInQuery(entityName, entityTypes);
 
@@ -124,7 +124,7 @@ const mapEntityDocuments = (
   }
 
   const totalDocs = entityName === ClinicalEntitySchemaNames.DONOR ? totalDonors : results.length;
-  let records = results.sort(sortDocs(querySort));
+  let records = results.sort(sortDocs(sort));
 
   if (records.length > pageSize) {
     // Manual Pagination
