@@ -214,7 +214,9 @@ export const donorDao: DonorRepository = {
       ? pageSize
       : await DonorModel.countDocuments({ programId });
 
-    const page = entityTypes.includes('donor') ? queryPage : 0;
+    // React-Table Pagination is 0 indexed, BE Mongoose-Paginate is 1 indexed
+    const page = entityTypes.includes('donor') ? queryPage + 1 : 1;
+
     const result = await DonorModel.paginate(
       {
         programId,
