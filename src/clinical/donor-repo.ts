@@ -194,6 +194,7 @@ export const donorDao: DonorRepository = {
     const sortQuery = querySort.includes('-') ? { [querySort.slice(1)]: -1 } : { [querySort]: 1 };
     const sort = {
       'schemaMetadata.isValid': 1,
+      'completionStats.coreCompletionPercentage': 1,
       ...sortQuery,
     };
 
