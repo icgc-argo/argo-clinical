@@ -94,12 +94,50 @@ const isEntityInQuery = (entityName: ClinicalEntitySchemaNames, entityTypes: str
   queryEntityNames.includes(aliasEntityNames[entityName]) &&
   entityTypes.includes(aliasEntityNames[entityName]);
 
-const sortDocs = (sort: string) => (currentRecord: ClinicalInfo, nextRecord: ClinicalInfo) => {
-  const isDescending = sort.split('-')[1] !== undefined;
-  const key = !isDescending ? sort.split('-')[0] : sort.split('-')[1];
-  const first = currentRecord[key] !== undefined ? (currentRecord[key] as number) : -1;
-  const next = nextRecord[key] !== undefined ? (nextRecord[key] as number) : -1;
-  const order = first === next ? 0 : first > next && isDescending ? -1 : 1;
+const sortDocs = (sort: string, entityName: string, completionStats: CompletionRecord[]) => (
+  currentRecord: ClinicalInfo,
+  nextRecord: ClinicalInfo,
+) => {
+  const isDefaultSort = entityName === ClinicalEntitySchemaNames.DONOR && sort.includes('donorId');
+  const currentDonor = currentRecord['donor_id'];
+  const nextDonor = nextRecord['donor_id'];
+
+  // -1 Current lower index than Next, +1 Current higher index than Next
+  let order = 0;
+  const isDescending = sort.includes('-') ? -1 : 1;
+
+  if (isDefaultSort) {
+    // Sort Clinically Incomplete donors to top (sorted by donorId at DB level)
+    const completionA =
+      completionStats.find(record => record.donorId && record.donorId === currentDonor)
+        ?.coreCompletionPercentage || 0;
+
+    const completionB =
+      completionStats.find(record => record.donorId && record.donorId === nextDonor)
+        ?.coreCompletionPercentage || 0;
+
+    const completionSort = completionA === completionB ? 0 : completionA > completionB ? -1 : 1;
+    order = completionSort;
+  } else {
+    // Sort by Selected Column
+    const key = isDescending === -1 ? sort.split('-')[1] : sort;
+    const first: any = currentRecord[key];
+    const next: any = nextRecord[key];
+    const firstExists = !(first === undefined || first === null);
+    const nextExists = !(next === undefined || next === null);
+    let valueSort = 0;
+
+    valueSort =
+      (!firstExists && !nextExists) || first === next
+        ? 0
+        : first > next || (firstExists && !nextExists)
+        ? 1
+        : -1;
+
+    order = valueSort;
+  }
+
+  order = isDescending * order;
 
   return order;
 };
@@ -124,7 +162,7 @@ const mapEntityDocuments = (
   }
 
   const totalDocs = entityName === ClinicalEntitySchemaNames.DONOR ? totalDonors : results.length;
-  let records = results.sort(sortDocs(sort));
+  let records = results.sort(sortDocs(sort, entityName, completionStats));
 
   if (records.length > pageSize) {
     // Manual Pagination
