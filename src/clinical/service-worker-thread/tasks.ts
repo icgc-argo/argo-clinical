@@ -125,9 +125,7 @@ const sortDocs = (sort: string, entityName: string, completionStats: CompletionR
     const next: any = nextRecord[key];
     const firstExists = !(first === undefined || first === null);
     const nextExists = !(next === undefined || next === null);
-    let valueSort = 0;
-
-    valueSort =
+    const valueSort =
       (!firstExists && !nextExists) || first === next
         ? 0
         : first > next || (firstExists && !nextExists)
