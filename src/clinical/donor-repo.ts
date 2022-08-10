@@ -182,7 +182,7 @@ export const donorDao: DonorRepository = {
     query: ClinicalQuery,
   ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number }>> {
     const {
-      sort,
+      sort: querySort,
       page: queryPage,
       pageSize,
       entityTypes,
@@ -191,8 +191,16 @@ export const donorDao: DonorRepository = {
       completionState,
     } = query;
 
+    const sortQuery = querySort.includes('-') ? { [querySort.slice(1)]: -1 } : { [querySort]: 1 };
+    const sort = {
+      'schemaMetadata.isValid': 1,
+      'completionStats.coreCompletionPercentage': 1,
+      ...sortQuery,
+    };
+
     const projection = [
       '-_id',
+      'schemaMetadata',
       ...DONOR_ENTITY_CORE_FIELDS,
       ...entityTypes,
       ...getRequiredDonorFieldsForEntityTypes(entityTypes),
