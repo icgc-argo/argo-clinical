@@ -163,7 +163,7 @@ const mapEntityDocuments = (
   let records = results
     .map((record: ClinicalInfo) => {
       const { treatment_type } = record;
-      let displayRecord = { ...record };
+      const displayRecord = { ...record };
       delete displayRecord.submitter_id;
 
       if (treatment_type && Array.isArray(treatment_type))
@@ -184,7 +184,7 @@ const mapEntityDocuments = (
   const completionRecords =
     entityName === ClinicalEntitySchemaNames.DONOR ? { completionStats: [...completionStats] } : {};
   const samples = originalResultsArray.find(result => result.entityName === 'sample_registration');
-  console.log('samples', samples);
+
   if (completionRecords.completionStats && samples !== undefined) {
     const normalSpecimens = samples.results.filter(
       sample => sample.tumour_normal_designation === 'Normal',
