@@ -180,7 +180,12 @@ export const getRequiredDonorFieldsForEntityTypes = (
     (entityTypes.includes('donor') && !entityTypes.includes('sampleRegistration')) ||
     (entityTypes.includes('sampleRegistration') && !entityTypes.includes('specimens'))
   ) {
-    return ['completionStats', 'sampleRegistration', 'specimens'];
+    return [
+      'completionStats',
+      'sampleRegistration',
+      ClinicalEntitySchemaNames.REGISTRATION,
+      'specimens',
+    ];
   } else if (
     // Clinical Therapies require Treatments
     // hormoneTherapy + treatment do not match schema names
