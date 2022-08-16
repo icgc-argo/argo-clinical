@@ -181,17 +181,46 @@ export const donorDao: DonorRepository = {
     programId: string,
     query: ClinicalQuery,
   ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number }>> {
-    const { sort, pageSize, entityTypes, donorIds, submitterDonorIds, completionState } = query;
+    const {
+      sort: querySort,
+      page: queryPage,
+      pageSize,
+      entityTypes,
+      donorIds,
+      submitterDonorIds,
+      completionState,
+    } = query;
+
+    const sortQuery = querySort.includes('-') ? { [querySort.slice(1)]: -1 } : { [querySort]: 1 };
+    const sort = {
+      'schemaMetadata.isValid': 1,
+      'completionStats.coreCompletionPercentage': 1,
+      ...sortQuery,
+    };
 
     const projection = [
+      '-_id',
+      'schemaMetadata',
       ...DONOR_ENTITY_CORE_FIELDS,
       ...entityTypes,
       ...getRequiredDonorFieldsForEntityTypes(entityTypes),
     ].join(' ');
 
+    // All Entity Data is stored on Donor documents
+    // Specific Requests for Donor documents can be paginated at the MongoDB level
+    // All other Entity Data we must request all Donor documents to see total Entity counts
+    // Pagination is then handled downstream before response in service-worker-threads/tasks
+
+    const limit = entityTypes.includes('donor')
+      ? pageSize
+      : await DonorModel.countDocuments({ programId });
+
+    // React-Table Pagination is 0 indexed, BE Mongoose-Paginate is 1 indexed
+    const page = entityTypes.includes('donor') ? queryPage + 1 : 1;
+
     const result = await DonorModel.paginate(
       {
-        [DONOR_DOCUMENT_FIELDS.PROGRAM_ID]: programId,
+        programId,
         ...donorIds,
         ...submitterDonorIds,
         ...completionState,
@@ -199,12 +228,13 @@ export const donorDao: DonorRepository = {
       {
         projection,
         sort,
-        limit: pageSize,
-        select: '-_id',
+        page,
+        limit,
       },
     );
 
     const { totalDocs: totalDonors } = result;
+
     const mapped: Donor[] = result.docs
       .map((d: DonorDocument) => {
         return MongooseUtils.toPojo(d) as Donor;
