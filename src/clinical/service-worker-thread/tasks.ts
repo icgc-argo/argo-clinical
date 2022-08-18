@@ -160,20 +160,7 @@ const mapEntityDocuments = (
   }
 
   const totalDocs = entityName === ClinicalEntitySchemaNames.DONOR ? totalDonors : results.length;
-  let records = results
-    .map((record: ClinicalInfo) => {
-      const displayRecord = { ...record };
-      delete displayRecord.submitter_id;
-
-      Object.keys(displayRecord).forEach(key => {
-        if (displayRecord[key] && Array.isArray(displayRecord[key])) {
-          displayRecord[key] = displayRecord[key]?.toString().replace(',', ', ');
-        }
-      });
-
-      return displayRecord;
-    })
-    .sort(sortDocs(sort, entityName, completionStats));
+  let records = results.sort(sortDocs(sort, entityName, completionStats));
 
   if (records.length > pageSize) {
     // Manual Pagination
