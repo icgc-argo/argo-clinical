@@ -162,12 +162,14 @@ const mapEntityDocuments = (
   const totalDocs = entityName === ClinicalEntitySchemaNames.DONOR ? totalDonors : results.length;
   let records = results
     .map((record: ClinicalInfo) => {
-      const { treatment_type } = record;
       const displayRecord = { ...record };
       delete displayRecord.submitter_id;
 
-      if (treatment_type && Array.isArray(treatment_type))
-        displayRecord['treatment_type'] = treatment_type[0];
+      Object.keys(displayRecord).forEach(key => {
+        if (displayRecord[key] && Array.isArray(displayRecord[key])) {
+          displayRecord[key] = displayRecord[key]?.toString().replace(',', ', ');
+        }
+      });
 
       return displayRecord;
     })
