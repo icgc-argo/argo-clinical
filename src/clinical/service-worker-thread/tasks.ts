@@ -17,7 +17,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import _, { isEmpty } from 'lodash';
+import _, { isEmpty, result } from 'lodash';
 import {
   ClinicalEntitySchemaNames,
   aliasEntityNames,
@@ -30,7 +30,13 @@ import {
 } from '../../common-model/functions';
 import { notEmpty } from '../../utils';
 import { ClinicalQuery } from '../clinical-api';
-import { Donor, CompletionRecord, ClinicalEntityData, ClinicalInfo } from '../clinical-entities';
+import {
+  Donor,
+  CompletionRecord,
+  ClinicalEntityData,
+  ClinicalInfo,
+  Sample,
+} from '../clinical-entities';
 
 type RecordsMap = {
   [key in ClinicalEntitySchemaNames]: ClinicalInfo[];
@@ -175,18 +181,19 @@ const mapEntityDocuments = (
   const samples = originalResultsArray.find(result => result.entityName === 'sample_registration');
 
   if (completionRecords.completionStats && samples !== undefined) {
-    const normalSpecimens = samples.results.filter(
-      sample => sample.tumour_normal_designation === 'Normal',
+    const sampleResults = samples.results.filter(
+      sample => typeof sample.sample_type === 'string' && !sample.sample_type?.includes('RNA'),
     );
-    const tumourSpecimens = samples.results.filter(
-      sample => sample.tumour_normal_designation === 'Tumour',
-    );
-    normalSpecimens.forEach(specimen =>
-      updateCompletionTumourStats(specimen, 'normal', completionRecords),
-    );
-    tumourSpecimens.forEach(specimen =>
-      updateCompletionTumourStats(specimen, 'tumour', completionRecords),
-    );
+
+    sampleResults.forEach(sample => {
+      if (
+        sample.tumour_normal_designation &&
+        typeof sample.tumour_normal_designation === 'string'
+      ) {
+        const designation = sample.tumour_normal_designation.toLowerCase();
+        updateCompletionTumourStats(sample, designation, completionRecords);
+      }
+    });
   }
 
   return <ClinicalEntityData>{
