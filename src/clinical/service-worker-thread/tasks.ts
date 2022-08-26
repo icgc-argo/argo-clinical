@@ -17,7 +17,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import _, { isEmpty, result } from 'lodash';
+import _, { isEmpty } from 'lodash';
 import {
   ClinicalEntitySchemaNames,
   aliasEntityNames,
@@ -35,7 +35,7 @@ import {
   CompletionRecord,
   ClinicalEntityData,
   ClinicalInfo,
-  Sample,
+  CoreClinicalEntities,
 } from '../clinical-entities';
 
 type RecordsMap = {
@@ -54,17 +54,19 @@ const updateCompletionTumourStats = (
   type: string,
   completionRecords: { completionStats: CompletionRecord[] },
 ) => {
-  const specimenType = `${type}Specimens`;
+  const specimenType: CoreClinicalEntities =
+    type === 'normal' ? 'normalSpecimens' : 'tumourSpecimens';
   const index = completionRecords.completionStats.findIndex(
     donor => donor.donorId === specimen.donor_id,
   );
   if (index !== -1) {
     const original = completionRecords.completionStats[index];
+    const specimenCount: number = original.coreCompletion[specimenType] || 0;
     completionRecords.completionStats[index] = {
       ...original,
       coreCompletion: {
         ...original.coreCompletion,
-        [specimenType]: 1,
+        [specimenType]: specimenCount + 1,
       },
     };
   }
