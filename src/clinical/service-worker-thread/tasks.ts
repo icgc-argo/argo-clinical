@@ -61,12 +61,11 @@ const updateCompletionTumourStats = (
   );
   if (index !== -1) {
     const original = completionRecords.completionStats[index];
-    const specimenCount: number = original.coreCompletion[specimenType] || 0;
     completionRecords.completionStats[index] = {
       ...original,
       coreCompletion: {
         ...original.coreCompletion,
-        [specimenType]: specimenCount + 1,
+        [specimenType]: 1,
       },
     };
   }
