@@ -56,6 +56,7 @@ export type EntityAlias =
   | 'exposure'
   | 'comorbidity'
   | 'biomarker'
+  | ClinicalEntitySchemaNames.REGISTRATION
   | ClinicalEntitySchemaNames.CHEMOTHERAPY
   | ClinicalEntitySchemaNames.RADIATION
   | ClinicalEntitySchemaNames.HORMONE_THERAPY
