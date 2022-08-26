@@ -187,10 +187,7 @@ const mapEntityDocuments = (
     );
 
     sampleResults.forEach(sample => {
-      if (
-        sample.tumour_normal_designation &&
-        typeof sample.tumour_normal_designation === 'string'
-      ) {
+      if (typeof sample.tumour_normal_designation === 'string') {
         const designation = sample.tumour_normal_designation.toLowerCase();
         updateCompletionTumourStats(sample, designation, completionRecords);
       }
