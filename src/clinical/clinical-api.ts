@@ -52,8 +52,8 @@ enum CompletionStates {
 
 const completionFilters = {
   invalid: { 'schemaMetadata.isValid': false },
-  complete: { 'completionStats.coreCompletionPercentage': 100 },
-  incomplete: { 'completionStats.coreCompletionPercentage': 0 },
+  complete: { 'completionStats.coreCompletionPercentage': 1 },
+  incomplete: { 'completionStats.coreCompletionPercentage': { $lt: 1 } },
   all: {},
 };
 
