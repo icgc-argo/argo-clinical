@@ -68,6 +68,7 @@ import {
 import * as dictionaryManager from '../dictionary/manager';
 import * as messenger from './submission-updates-messenger';
 import { loggerFor } from '../logger';
+import { DonorUtils } from '../utils';
 import {
   Errors,
   F,
@@ -1395,7 +1396,12 @@ export namespace operations {
 
     // if samples will be deleted, notify program update
     if (dryRun === false && result.samplesDeleted.length > 0) {
-      await messenger.getInstance().sendProgramUpdatedMessage(programId);
+      await messenger.getInstance().sendProgramUpdatedMessage({
+        programId,
+        donorIds: modifiableDonors
+          .filter(donor => donor.donorId)
+          .map(donor => DonorUtils.prefixDonorId(donor.donorId as number)),
+      });
     }
     return result;
   }

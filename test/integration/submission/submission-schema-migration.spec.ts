@@ -31,7 +31,10 @@ import {
   MigrationStage,
 } from '../../../src/submission/migration/migration-entities';
 import { Donor } from '../../../src/clinical/clinical-entities';
-import { getInstance } from '../../../src/submission/submission-updates-messenger';
+import {
+  getInstance,
+  ClinicalProgramUpdateMessage,
+} from '../../../src/submission/submission-updates-messenger';
 
 import chai from 'chai';
 import 'chai-http';
@@ -54,7 +57,7 @@ const schemaName = 'ARGO Clinical Submission';
 const startingSchemaVersion = '1.0';
 
 describe('schema migration api', () => {
-  let sendProgramUpdatedMessageFunc: SinonSpy<[string], Promise<void>>;
+  let sendProgramUpdatedMessageFunc: SinonSpy<[ClinicalProgramUpdateMessage], Promise<void>>;
   let mongoContainer: any;
   let mysqlContainer: any;
   let dburl = ``;
@@ -363,7 +366,7 @@ describe('schema migration api', () => {
         .expect(updatedDonor[2].completionStats.overriddenCoreCompletion)
         .to.deep.eq(['treatments']);
 
-      chai.assert(sendProgramUpdatedMessageFunc.calledOnceWith(programId));
+      chai.assert(sendProgramUpdatedMessageFunc.calledOnceWith({ programId }));
     });
     it('should update the schema after an enum option was removed, and make donor2 invalid', async () => {
       const VERSION = '7.0';
