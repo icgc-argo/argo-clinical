@@ -33,7 +33,7 @@ import {
   SampleRegistrationFieldsEnum,
   SUBMISSION_STATE,
 } from '../submission-entities';
-import { Errors } from '../../utils';
+import { DonorUtils, Errors } from '../../utils';
 import {
   donorDao,
   FindByProgramAndSubmitterFilter,
@@ -429,7 +429,9 @@ const sendMessageOnUpdatesFromClinicalSubmission = async (
       .map(([_, entity]) => entity.dataUpdates.map(update => update.info.donorSubmitterId))
       .reduce((acc, curr) => acc.concat(curr), []);
     const donors = await donorDao.findByProgramAndSubmitterIds(programId, donorSubmitterIds);
-    const donorIds = donors ? donors.filter(d => d.donorId).map(d => String(d.donorId)) : [];
+    const donorIds = donors
+      ? donors.filter(d => d.donorId).map(d => DonorUtils.prefixDonorId(d.donorId as number))
+      : [];
 
     await messenger.getInstance().sendProgramUpdatedMessage({ programId, donorIds });
   }
