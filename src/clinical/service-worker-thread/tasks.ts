@@ -30,7 +30,13 @@ import {
 } from '../../common-model/functions';
 import { notEmpty } from '../../utils';
 import { ClinicalQuery } from '../clinical-api';
-import { Donor, CompletionRecord, ClinicalEntityData, ClinicalInfo } from '../clinical-entities';
+import {
+  Donor,
+  CompletionRecord,
+  ClinicalEntityData,
+  ClinicalInfo,
+  CoreClinicalEntities,
+} from '../clinical-entities';
 
 type RecordsMap = {
   [key in ClinicalEntitySchemaNames]: ClinicalInfo[];
@@ -48,7 +54,8 @@ const updateCompletionTumourStats = (
   type: string,
   completionRecords: { completionStats: CompletionRecord[] },
 ) => {
-  const specimenType = `${type}Specimens`;
+  const specimenType: CoreClinicalEntities =
+    type === 'normal' ? 'normalSpecimens' : 'tumourSpecimens';
   const index = completionRecords.completionStats.findIndex(
     donor => donor.donorId === specimen.donor_id,
   );
@@ -175,18 +182,16 @@ const mapEntityDocuments = (
   const samples = originalResultsArray.find(result => result.entityName === 'sample_registration');
 
   if (completionRecords.completionStats && samples !== undefined) {
-    const normalSpecimens = samples.results.filter(
-      sample => sample.tumour_normal_designation === 'Normal',
+    const sampleResults = samples.results.filter(
+      sample => typeof sample.sample_type === 'string' && !sample.sample_type?.includes('RNA'),
     );
-    const tumourSpecimens = samples.results.filter(
-      sample => sample.tumour_normal_designation === 'Tumour',
-    );
-    normalSpecimens.forEach(specimen =>
-      updateCompletionTumourStats(specimen, 'normal', completionRecords),
-    );
-    tumourSpecimens.forEach(specimen =>
-      updateCompletionTumourStats(specimen, 'tumour', completionRecords),
-    );
+
+    sampleResults.forEach(sample => {
+      if (typeof sample.tumour_normal_designation === 'string') {
+        const designation = sample.tumour_normal_designation.toLowerCase();
+        updateCompletionTumourStats(sample, designation, completionRecords);
+      }
+    });
   }
 
   return <ClinicalEntityData>{
