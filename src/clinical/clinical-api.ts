@@ -38,7 +38,7 @@ export type ClinicalQuery = {
   pageSize: number;
   entityTypes: EntityAlias[];
   sort: string;
-  donorIds?: number[];
+  donorIds?: string[];
   submitterDonorIds?: string[];
   completionState?: {};
 };
@@ -102,12 +102,14 @@ class ClinicalController {
       req.query.donorIds && req.query.donorIds.length > 0
         ? { donorId: { $in: req.query.donorIds.split(',') } }
         : '';
-
+    console.log('\nreq query donorIds', req.query.donorIds);
+    console.log('\ndonorIds', donorIds);
     const submitterDonorIds =
       req.query.submitterDonorIds && req.query.submitterDonorIds.length > 0
         ? { submitterId: { $in: req.query.submitterDonorIds.split(',') } }
         : '';
-
+    console.log('\nreq query submitterDonorIds', req.query.submitterDonorIds);
+    console.log('\nsubmitterDonorIds', submitterDonorIds);
     const query: ClinicalQuery = {
       ...req.query,
       sort,
