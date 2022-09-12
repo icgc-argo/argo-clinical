@@ -251,17 +251,17 @@ export function extractEntityDataFromDonors(
     )
     .filter(notEmpty);
 
-  console.log('query.donorIds', query.donorIds);
   const filteredDonors =
-    query.donorIds && query.donorIds.length
+    (query.donorIds && query.donorIds.length) ||
+    (query.submitterDonorIds && query.submitterDonorIds.length)
       ? donors.filter(donor => {
-          let found = false;
           const { donorId } = donor;
           const stringId = `${donorId}`;
-          query.donorIds?.forEach(id => {
-            if (stringId.includes(id)) found = true;
-          });
-          return found;
+          const donorMatch = query.donorIds?.filter(id => stringId.includes(id));
+          const submitterMatch = query.submitterDonorIds?.filter(id =>
+            donor.submitterId.includes(id),
+          );
+          return donorMatch.length > 0 || submitterMatch.length > 0;
         })
       : donors;
 

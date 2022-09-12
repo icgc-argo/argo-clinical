@@ -38,8 +38,8 @@ export type ClinicalQuery = {
   pageSize: number;
   entityTypes: EntityAlias[];
   sort: string;
-  donorIds?: string[];
-  submitterDonorIds?: string[];
+  donorIds: string[];
+  submitterDonorIds: string[];
   completionState?: {};
 };
 
@@ -103,14 +103,14 @@ class ClinicalController {
 
     const submitterDonorIds =
       req.query.submitterDonorIds && req.query.submitterDonorIds.length > 0
-        ? { submitterId: { $in: req.query.submitterDonorIds.split(',') } }
+        ? req.query.submitterDonorIds.split(',')
         : '';
     const query: ClinicalQuery = {
       ...req.query,
       sort,
       entityTypes,
-      donorIds,
       page,
+      donorIds,
       submitterDonorIds,
       completionState,
     };
