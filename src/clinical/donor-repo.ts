@@ -186,7 +186,6 @@ export const donorDao: DonorRepository = {
       page: queryPage,
       pageSize,
       entityTypes,
-      donorIds,
       submitterDonorIds,
       completionState,
     } = query;
@@ -221,7 +220,6 @@ export const donorDao: DonorRepository = {
     const result = await DonorModel.paginate(
       {
         programId,
-        ...donorIds,
         ...submitterDonorIds,
         ...completionState,
       },

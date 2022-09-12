@@ -98,18 +98,13 @@ class ClinicalController {
         ? req.query.entityTypes.split(',')
         : [''];
     const completionState: {} = completionFilters[state] || {};
-    const donorIds =
-      req.query.donorIds && req.query.donorIds.length > 0
-        ? { donorId: { $in: req.query.donorIds.split(',') } }
-        : '';
-    console.log('\nreq query donorIds', req.query.donorIds);
-    console.log('\ndonorIds', donorIds);
+
+    const donorIds = req.query.donorIds.match(/[0-9]*/gi)?.filter((match: string) => !!match) || '';
+
     const submitterDonorIds =
       req.query.submitterDonorIds && req.query.submitterDonorIds.length > 0
         ? { submitterId: { $in: req.query.submitterDonorIds.split(',') } }
         : '';
-    console.log('\nreq query submitterDonorIds', req.query.submitterDonorIds);
-    console.log('\nsubmitterDonorIds', submitterDonorIds);
     const query: ClinicalQuery = {
       ...req.query,
       sort,

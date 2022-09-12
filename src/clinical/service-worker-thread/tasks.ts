@@ -251,7 +251,21 @@ export function extractEntityDataFromDonors(
     )
     .filter(notEmpty);
 
-  donors.forEach(d => {
+  console.log('query.donorIds', query.donorIds);
+  const filteredDonors =
+    query.donorIds && query.donorIds.length
+      ? donors.filter(donor => {
+          let found = false;
+          const { donorId } = donor;
+          const stringId = `${donorId}`;
+          query.donorIds?.forEach(id => {
+            if (stringId.includes(id)) found = true;
+          });
+          return found;
+        })
+      : donors;
+
+  filteredDonors.forEach(d => {
     Object.values(ClinicalEntitySchemaNames).forEach(entity => {
       const isQueriedType = isEntityInQuery(entity, query.entityTypes);
       const isRequiredType = getRequiredDonorFieldsForEntityTypes(query.entityTypes).includes(
