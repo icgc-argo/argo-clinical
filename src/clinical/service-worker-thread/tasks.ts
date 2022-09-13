@@ -255,12 +255,14 @@ export function extractEntityDataFromDonors(
     (query.donorIds && query.donorIds.length) ||
     (query.submitterDonorIds && query.submitterDonorIds.length)
       ? donors.filter(donor => {
-          const { donorId } = donor;
+          const { donorId, clinicalInfo } = donor;
           const stringId = `${donorId}`;
           const donorMatch = query.donorIds?.filter(id => stringId.includes(id));
-          const submitterMatch = query.submitterDonorIds?.filter(id =>
-            donor.submitterId.includes(id),
-          );
+          const submitterDonorId = clinicalInfo && `${clinicalInfo.submitter_donor_id}`;
+          const submitterMatch = submitterDonorId
+            ? query.submitterDonorIds?.filter(id => submitterDonorId.includes(id))
+            : [];
+
           return donorMatch.length > 0 || submitterMatch.length > 0;
         })
       : donors;
