@@ -32,7 +32,11 @@ import {
 } from '../submission/migration/migration-entities';
 import * as dictionaryManager from '../dictionary/manager';
 import { loggerFor } from '../logger';
-import { WorkerTasks, extractEntityDataFromDonors } from './service-worker-thread/tasks';
+import {
+  WorkerTasks,
+  extractEntityDataFromDonors,
+  filterDonorIdDataFromSearch,
+} from './service-worker-thread/tasks';
 import { runTaskInWorkerThread } from './service-worker-thread/runner';
 
 const L = loggerFor(__filename);
@@ -193,6 +197,23 @@ export const getPaginatedClinicalData = async (programId: string, query: Clinica
     allSchemasWithFields,
     query,
   );
+
+  const end = new Date().getTime() / 1000;
+  L.debug(`getPaginatedClinicalData took ${end - start}s`);
+
+  return data;
+};
+
+export const getClinicalSearchResults = async (programId: string, query: ClinicalQuery) => {
+  if (!programId) throw new Error('Missing programId!');
+  const start = new Date().getTime() / 1000;
+
+  const allSchemasWithFields = await dictionaryManager.instance().getSchemasWithFields();
+  // Get all donors + records for given entity
+  const { donors } = await donorDao.findByProgramEntitySearch(programId, query);
+  const totalDonors = donors.length;
+  // Return paginated data
+  const data = filterDonorIdDataFromSearch(donors as Donor[], totalDonors, query);
 
   const end = new Date().getTime() / 1000;
   L.debug(`getPaginatedClinicalData took ${end - start}s`);

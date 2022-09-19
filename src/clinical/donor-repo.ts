@@ -49,6 +49,7 @@ export enum DONOR_DOCUMENT_FIELDS {
 }
 
 const DONOR_ENTITY_CORE_FIELDS = ['donorId', 'submitterId', 'programId', 'gender', 'clinicalInfo'];
+const DONOR_SEARCH_CORE_FIELDS = ['donorId', 'submitterId', 'programId', 'clinicalInfo'];
 
 export type FindByProgramAndSubmitterFilter = DeepReadonly<{
   programId: string;
@@ -79,6 +80,10 @@ export interface DonorRepository {
     programId: string,
     query: ClinicalQuery,
   ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number }>>;
+  findByProgramEntitySearch(
+    programId: string,
+    query: ClinicalQuery,
+  ): Promise<DeepReadonly<{ donors: Donor[] }>>;
   deleteByProgramId(programId: string): Promise<void>;
   deleteByProgramIdAndDonorIds(programId: string, donorIds: number[]): Promise<void>;
   findByProgramAndSubmitterId(
@@ -181,14 +186,7 @@ export const donorDao: DonorRepository = {
     programId: string,
     query: ClinicalQuery,
   ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number }>> {
-    const {
-      sort: querySort,
-      page: queryPage,
-      pageSize,
-      entityTypes,
-      completionState,
-      useFilteredDonors,
-    } = query;
+    const { sort: querySort, page: queryPage, pageSize, entityTypes, completionState } = query;
 
     const sortQuery = querySort.includes('-') ? { [querySort.slice(1)]: -1 } : { [querySort]: 1 };
     const sort = {
@@ -210,13 +208,12 @@ export const donorDao: DonorRepository = {
     // For most use cases, all Donor documents must be retrieved for accurate filtering
     // Specific Requests for Donor documents can be paginated at the MongoDB level
 
-    const limit =
-      entityTypes.includes('donor') && !useFilteredDonors
-        ? pageSize
-        : await DonorModel.countDocuments({ programId });
+    const limit = entityTypes.includes('donor')
+      ? pageSize
+      : await DonorModel.countDocuments({ programId });
 
     // React-Table Pagination is 0 indexed, BE Mongoose-Paginate is 1 indexed
-    const page = entityTypes.includes('donor') && !useFilteredDonors ? queryPage + 1 : 1;
+    const page = entityTypes.includes('donor') ? queryPage + 1 : 1;
 
     const result = await DonorModel.paginate(
       {
@@ -242,6 +239,40 @@ export const donorDao: DonorRepository = {
     return F({
       donors: mapped,
       totalDonors,
+    });
+  },
+
+  async findByProgramEntitySearch(
+    programId: string,
+    query: ClinicalQuery,
+  ): Promise<DeepReadonly<{ donors: Donor[] }>> {
+    const { entityTypes, completionState } = query;
+
+    let projection: { [key: string]: number } = {
+      _id: 0,
+    };
+    [
+      ...DONOR_SEARCH_CORE_FIELDS,
+      ...entityTypes,
+      ...getRequiredDonorFieldsForEntityTypes(entityTypes),
+    ].forEach((key: string) => (projection[key] = 1));
+
+    const result = await DonorModel.find(
+      {
+        programId,
+        ...completionState,
+      },
+      projection,
+    );
+
+    const mapped: Donor[] = result
+      .map((d: DonorDocument) => {
+        return MongooseUtils.toPojo(d) as Donor;
+      })
+      .filter(notEmpty);
+
+    return F({
+      donors: mapped,
     });
   },
 

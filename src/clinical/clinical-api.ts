@@ -41,7 +41,6 @@ export type ClinicalQuery = {
   donorIds: string[];
   submitterDonorIds: string[];
   completionState?: {};
-  useFilteredDonors?: boolean;
 };
 
 enum CompletionStates {
@@ -106,9 +105,6 @@ class ClinicalController {
         ? req.query.submitterDonorIds.split(',').filter((match: string) => !!match)
         : '';
 
-    const useFilteredDonors =
-      (donorIds && donorIds.length) || (submitterDonorIds && submitterDonorIds.length);
-
     const query: ClinicalQuery = {
       ...req.query,
       sort,
@@ -117,7 +113,6 @@ class ClinicalController {
       donorIds,
       submitterDonorIds,
       completionState,
-      useFilteredDonors,
     };
 
     if (!programId) {
@@ -132,8 +127,6 @@ class ClinicalController {
   @HasProgramReadAccess((req: Request) => req.params.programId)
   async getProgramClinicalSearchResults(req: Request, res: Response) {
     const programId: string = req.params.programId;
-    const sort: string = req.query.sort || 'donorId';
-    const page: number = parseInt(req.query.page);
     const state: CompletionStates = req.query.completionState || CompletionStates.all;
     const entityTypes: string[] =
       req.query.entityTypes && req.query.entityTypes.length > 0
@@ -147,27 +140,21 @@ class ClinicalController {
         ? req.query.submitterDonorIds.split(',').filter((match: string) => !!match)
         : '';
 
-    const useFilteredDonors =
-      (donorIds && donorIds.length) || (submitterDonorIds && submitterDonorIds.length);
-
     const query: ClinicalQuery = {
       ...req.query,
-      sort,
       entityTypes,
-      page,
       donorIds,
       submitterDonorIds,
       completionState,
-      useFilteredDonors,
     };
 
     if (!programId) {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
 
-    const entityData = await service.getPaginatedClinicalData(programId, query);
+    const searchData = await service.getClinicalSearchResults(programId, query);
 
-    res.status(200).json(entityData);
+    res.status(200).json(searchData);
   }
 
   @HasProgramReadAccess((req: Request) => req.params.programId)

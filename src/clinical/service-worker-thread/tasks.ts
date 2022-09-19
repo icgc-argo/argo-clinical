@@ -237,20 +237,15 @@ function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
   return data;
 }
 
-export function extractEntityDataFromDonors(
+export function filterDonorIdDataFromSearch(
   donors: Donor[],
   totalDonors: number,
-  schemasWithFields: any,
   query: ClinicalQuery,
 ) {
-  let clinicalEntityData: EntityClinicalInfo[] = [];
+  const { donorIds, submitterDonorIds } = query;
 
-  const { donorIds, submitterDonorIds, useFilteredDonors } = query;
-  const completionStats: CompletionRecord[] = donors
-    .map(({ completionStats, donorId }): CompletionRecord | undefined =>
-      completionStats && donorId ? { ...completionStats, donorId } : undefined,
-    )
-    .filter(notEmpty);
+  const useFilteredDonors =
+    (donorIds && donorIds.length) || (submitterDonorIds && submitterDonorIds.length);
 
   const filteredDonors = useFilteredDonors
     ? donors.filter(donor => {
@@ -265,7 +260,32 @@ export function extractEntityDataFromDonors(
       })
     : donors;
 
-  filteredDonors.forEach(d => {
+  const searchResults = filteredDonors.map((donor: Donor) => {
+    const { donorId, clinicalInfo } = donor;
+    const submitterDonorId = (clinicalInfo && clinicalInfo.submitter_donor_id) || null;
+    return { donorId, submitterDonorId };
+  });
+
+  const donorCount = useFilteredDonors ? filteredDonors.length : totalDonors;
+
+  return searchResults;
+}
+
+export function extractEntityDataFromDonors(
+  donors: Donor[],
+  totalDonors: number,
+  schemasWithFields: any,
+  query: ClinicalQuery,
+) {
+  let clinicalEntityData: EntityClinicalInfo[] = [];
+
+  const completionStats: CompletionRecord[] = donors
+    .map(({ completionStats, donorId }): CompletionRecord | undefined =>
+      completionStats && donorId ? { ...completionStats, donorId } : undefined,
+    )
+    .filter(notEmpty);
+
+  donors.forEach(d => {
     Object.values(ClinicalEntitySchemaNames).forEach(entity => {
       const isQueriedType = isEntityInQuery(entity, query.entityTypes);
       const isRequiredType = getRequiredDonorFieldsForEntityTypes(query.entityTypes).includes(
@@ -290,7 +310,7 @@ export function extractEntityDataFromDonors(
     });
   });
 
-  const donorCount = useFilteredDonors ? filteredDonors.length : totalDonors;
+  const donorCount = totalDonors;
   const clinicalEntities: ClinicalEntityData[] = clinicalEntityData
     .map((entity: EntityClinicalInfo, index: number, originalResultsArray: EntityClinicalInfo[]) =>
       mapEntityDocuments(
