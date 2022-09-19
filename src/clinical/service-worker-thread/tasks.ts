@@ -262,7 +262,6 @@ export function extractEntityDataFromDonors(
           const submitterMatch = submitterDonorId
             ? query.submitterDonorIds?.filter(id => submitterDonorId.includes(id))
             : [];
-
           return donorMatch.length > 0 || submitterMatch.length > 0;
         })
       : donors;
@@ -292,12 +291,13 @@ export function extractEntityDataFromDonors(
     });
   });
 
+  const donorCount = filteredDonors.length;
   const clinicalEntities: ClinicalEntityData[] = clinicalEntityData
     .map((entity: EntityClinicalInfo, index: number, originalResultsArray: EntityClinicalInfo[]) =>
       mapEntityDocuments(
         entity,
         originalResultsArray,
-        totalDonors,
+        donorCount,
         schemasWithFields,
         query,
         completionStats,
