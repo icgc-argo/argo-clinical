@@ -181,7 +181,14 @@ export const donorDao: DonorRepository = {
     programId: string,
     query: ClinicalQuery,
   ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number }>> {
-    const { sort: querySort, page: queryPage, pageSize, entityTypes, completionState } = query;
+    const {
+      sort: querySort,
+      page: queryPage,
+      pageSize,
+      entityTypes,
+      completionState,
+      useFilteredDonors,
+    } = query;
 
     const sortQuery = querySort.includes('-') ? { [querySort.slice(1)]: -1 } : { [querySort]: 1 };
     const sort = {
@@ -199,16 +206,17 @@ export const donorDao: DonorRepository = {
     ].join(' ');
 
     // All Entity Data is stored on Donor documents
+    // Pagination and Search are handled downstream before response in service-worker-threads/tasks
+    // For most use cases, all Donor documents must be retrieved for accurate filtering
     // Specific Requests for Donor documents can be paginated at the MongoDB level
-    // All other Entity Data we must request all Donor documents to see total Entity counts
-    // Pagination is then handled downstream before response in service-worker-threads/tasks
 
-    const limit = entityTypes.includes('donor')
-      ? pageSize
-      : await DonorModel.countDocuments({ programId });
+    const limit =
+      entityTypes.includes('donor') && !useFilteredDonors
+        ? pageSize
+        : await DonorModel.countDocuments({ programId });
 
     // React-Table Pagination is 0 indexed, BE Mongoose-Paginate is 1 indexed
-    const page = entityTypes.includes('donor') ? queryPage + 1 : 1;
+    const page = entityTypes.includes('donor') && !useFilteredDonors ? queryPage + 1 : 1;
 
     const result = await DonorModel.paginate(
       {

@@ -41,6 +41,7 @@ export type ClinicalQuery = {
   donorIds: string[];
   submitterDonorIds: string[];
   completionState?: {};
+  useFilteredDonors?: boolean;
 };
 
 enum CompletionStates {
@@ -105,6 +106,9 @@ class ClinicalController {
         ? req.query.submitterDonorIds.split(',').filter((match: string) => !!match)
         : '';
 
+    const useFilteredDonors =
+      (donorIds && donorIds.length) || (submitterDonorIds && submitterDonorIds.length);
+
     const query: ClinicalQuery = {
       ...req.query,
       sort,
@@ -113,6 +117,7 @@ class ClinicalController {
       donorIds,
       submitterDonorIds,
       completionState,
+      useFilteredDonors,
     };
 
     if (!programId) {
