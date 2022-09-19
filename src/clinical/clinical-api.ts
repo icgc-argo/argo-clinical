@@ -98,8 +98,8 @@ class ClinicalController {
         ? req.query.entityTypes.split(',')
         : [''];
     const completionState: {} = completionFilters[state] || {};
-
-    const donorIds = req.query.donorIds.match(/[0-9]*/gi)?.filter((match: string) => !!match) || '';
+    // FE filters search text for only digits for Donor search
+    const donorIds = req.query.donorIds.match(/\d*/gi)?.filter((match: string) => !!match) || [];
 
     const submitterDonorIds =
       req.query.submitterDonorIds && req.query.submitterDonorIds.length > 0
