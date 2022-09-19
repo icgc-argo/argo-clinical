@@ -130,6 +130,47 @@ class ClinicalController {
   }
 
   @HasProgramReadAccess((req: Request) => req.params.programId)
+  async getProgramClinicalSearchResults(req: Request, res: Response) {
+    const programId: string = req.params.programId;
+    const sort: string = req.query.sort || 'donorId';
+    const page: number = parseInt(req.query.page);
+    const state: CompletionStates = req.query.completionState || CompletionStates.all;
+    const entityTypes: string[] =
+      req.query.entityTypes && req.query.entityTypes.length > 0
+        ? req.query.entityTypes.split(',')
+        : [''];
+    const completionState: {} = completionFilters[state] || {};
+    // FE filters digits out of search text for Donor search
+    const donorIds = req.query.donorIds.match(/\d*/gi)?.filter((match: string) => !!match) || [];
+    const submitterDonorIds =
+      req.query.submitterDonorIds && req.query.submitterDonorIds.length > 0
+        ? req.query.submitterDonorIds.split(',').filter((match: string) => !!match)
+        : '';
+
+    const useFilteredDonors =
+      (donorIds && donorIds.length) || (submitterDonorIds && submitterDonorIds.length);
+
+    const query: ClinicalQuery = {
+      ...req.query,
+      sort,
+      entityTypes,
+      page,
+      donorIds,
+      submitterDonorIds,
+      completionState,
+      useFilteredDonors,
+    };
+
+    if (!programId) {
+      return ControllerUtils.badRequest(res, 'Invalid programId provided');
+    }
+
+    const entityData = await service.getPaginatedClinicalData(programId, query);
+
+    res.status(200).json(entityData);
+  }
+
+  @HasProgramReadAccess((req: Request) => req.params.programId)
   async getProgramClinicalErrors(req: Request, res: Response) {
     const programId = req.params.programId;
     const query = req.query.donorIds && req.query.donorIds.split(',');
