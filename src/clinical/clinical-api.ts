@@ -38,7 +38,7 @@ export type ClinicalQuery = {
   pageSize: number;
   entityTypes: EntityAlias[];
   sort: string;
-  donorIds: string[];
+  donorIds: number[];
   submitterDonorIds: string[];
   completionState?: {};
 };
@@ -107,9 +107,9 @@ class ClinicalController {
         ? req.query.entityTypes.split(',')
         : [''];
 
-    // FE filters digits out of search text for Donor search
-    const donorIds = req.query.donorIds.match(/\d*/gi)?.filter((match: string) => !!match) || [];
-    const submitterDonorIds =
+    const donorIds: number[] =
+      req.query.donorIds.split(',').filter((match: string) => !!match && parseInt(match)) || [];
+    const submitterDonorIds: string[] =
       req.query.submitterDonorIds && req.query.submitterDonorIds.length > 0
         ? req.query.submitterDonorIds.split(',').filter((match: string) => !!match)
         : '';
