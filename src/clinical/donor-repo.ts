@@ -222,12 +222,19 @@ export const donorDao: DonorRepository = {
 
     // React-Table Pagination is 0 indexed, BE Mongoose-Paginate is 1 indexed
     const page = entityTypes.includes('donor') ? queryPage + 1 : 1;
+    const donorSearch =
+      donorIds.length > 0 || submitterDonorIds.length > 0
+        ? {
+            donorId: { $in: donorIds },
+            'clinicalInfo.submitter_donor_id': { $in: submitterDonorIds },
+          }
+        : {};
 
     const result = await DonorModel.paginate(
       {
         programId,
         ...completionState,
-        donorId: { $in: donorIds },
+        ...donorSearch,
       },
       {
         projection,
