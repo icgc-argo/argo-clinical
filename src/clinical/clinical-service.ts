@@ -20,7 +20,7 @@
 import { donorDao, DONOR_DOCUMENT_FIELDS } from './donor-repo';
 import { Errors, notEmpty } from '../utils';
 import { Sample, Donor, ClinicalEntityData } from './clinical-entities';
-import { ClinicalQuery } from './clinical-api';
+import { ClinicalQuery, ClinicalSearchQuery } from './clinical-api';
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 import { forceRecalcDonorCoreEntityStats } from '../submission/submission-to-clinical/stat-calculator';
@@ -204,16 +204,14 @@ export const getPaginatedClinicalData = async (programId: string, query: Clinica
   return data;
 };
 
-export const getClinicalSearchResults = async (programId: string, query: ClinicalQuery) => {
+export const getClinicalSearchResults = async (programId: string, query: ClinicalSearchQuery) => {
   if (!programId) throw new Error('Missing programId!');
   const start = new Date().getTime() / 1000;
 
-  const allSchemasWithFields = await dictionaryManager.instance().getSchemasWithFields();
-  // Get all donors + records for given entity
+  // Get list of donorIds + submitterDonorIds matching search results
   const { donors } = await donorDao.findByProgramEntitySearch(programId, query);
-  const totalDonors = donors.length;
-  // Return paginated data
-  const data = filterDonorIdDataFromSearch(donors as Donor[], totalDonors, query);
+
+  const data = filterDonorIdDataFromSearch(donors as Donor[], query);
 
   const end = new Date().getTime() / 1000;
   L.debug(`getPaginatedClinicalData took ${end - start}s`);

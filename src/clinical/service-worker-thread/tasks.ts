@@ -29,7 +29,7 @@ import {
   getClinicalEntitySubmittedData,
 } from '../../common-model/functions';
 import { notEmpty } from '../../utils';
-import { ClinicalQuery } from '../clinical-api';
+import { ClinicalQuery, ClinicalSearchQuery } from '../clinical-api';
 import {
   Donor,
   CompletionRecord,
@@ -237,11 +237,7 @@ function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
   return data;
 }
 
-export function filterDonorIdDataFromSearch(
-  donors: Donor[],
-  totalDonors: number,
-  query: ClinicalQuery,
-) {
+export function filterDonorIdDataFromSearch(donors: Donor[], query: ClinicalSearchQuery) {
   const { donorIds, submitterDonorIds } = query;
 
   const useFilteredDonors =
@@ -265,8 +261,6 @@ export function filterDonorIdDataFromSearch(
     const submitterDonorId = (clinicalInfo && clinicalInfo.submitter_donor_id) || null;
     return { donorId, submitterDonorId };
   });
-
-  const donorCount = useFilteredDonors ? filteredDonors.length : totalDonors;
 
   return searchResults;
 }

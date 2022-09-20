@@ -43,6 +43,14 @@ export type ClinicalQuery = {
   completionState?: {};
 };
 
+export type ClinicalSearchQuery = {
+  programShortName: string;
+  donorIds: string[];
+  submitterDonorIds: string[];
+  entityTypes: EntityAlias[];
+  completionState?: {};
+};
+
 enum CompletionStates {
   all = 'all',
   invalid = 'invalid',
@@ -93,11 +101,12 @@ class ClinicalController {
     const sort: string = req.query.sort || 'donorId';
     const page: number = parseInt(req.query.page);
     const state: CompletionStates = req.query.completionState || CompletionStates.all;
+    const completionState: {} = completionFilters[state] || {};
     const entityTypes: string[] =
       req.query.entityTypes && req.query.entityTypes.length > 0
         ? req.query.entityTypes.split(',')
         : [''];
-    const completionState: {} = completionFilters[state] || {};
+
     // FE filters digits out of search text for Donor search
     const donorIds = req.query.donorIds.match(/\d*/gi)?.filter((match: string) => !!match) || [];
     const submitterDonorIds =
@@ -128,11 +137,12 @@ class ClinicalController {
   async getProgramClinicalSearchResults(req: Request, res: Response) {
     const programId: string = req.params.programId;
     const state: CompletionStates = req.query.completionState || CompletionStates.all;
+    const completionState: {} = completionFilters[state] || {};
     const entityTypes: string[] =
       req.query.entityTypes && req.query.entityTypes.length > 0
         ? req.query.entityTypes.split(',')
         : [''];
-    const completionState: {} = completionFilters[state] || {};
+
     // FE filters digits out of search text for Donor search
     const donorIds = req.query.donorIds.match(/\d*/gi)?.filter((match: string) => !!match) || [];
     const submitterDonorIds =
@@ -140,11 +150,11 @@ class ClinicalController {
         ? req.query.submitterDonorIds.split(',').filter((match: string) => !!match)
         : '';
 
-    const query: ClinicalQuery = {
+    const query: ClinicalSearchQuery = {
       ...req.query,
-      entityTypes,
       donorIds,
       submitterDonorIds,
+      entityTypes,
       completionState,
     };
 
