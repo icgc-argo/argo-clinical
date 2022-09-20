@@ -80,7 +80,7 @@ export interface DonorRepository {
     programId: string,
     query: ClinicalQuery,
   ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number }>>;
-  findByProgramEntitySearch(
+  findByProgramDonorSearch(
     programId: string,
     query: ClinicalSearchQuery,
   ): Promise<DeepReadonly<{ donors: Donor[] }>>;
@@ -223,11 +223,15 @@ export const donorDao: DonorRepository = {
     // React-Table Pagination is 0 indexed, BE Mongoose-Paginate is 1 indexed
     const page = entityTypes.includes('donor') ? queryPage + 1 : 1;
     const donorSearch =
-      donorIds.length > 0 || submitterDonorIds.length > 0
+      donorIds.length > 0
         ? {
             donorId: { $in: donorIds },
-            'clinicalInfo.submitter_donor_id': { $in: submitterDonorIds },
           }
+        : {};
+
+    const submitterSearch =
+      submitterDonorIds.length > 0
+        ? { 'clinicalInfo.submitter_donor_id': { $in: submitterDonorIds } }
         : {};
 
     const result = await DonorModel.paginate(
@@ -235,6 +239,7 @@ export const donorDao: DonorRepository = {
         programId,
         ...completionState,
         ...donorSearch,
+        ...submitterSearch,
       },
       {
         projection,
@@ -258,13 +263,13 @@ export const donorDao: DonorRepository = {
     });
   },
 
-  async findByProgramEntitySearch(
+  async findByProgramDonorSearch(
     programId: string,
     query: ClinicalSearchQuery,
   ): Promise<DeepReadonly<{ donors: Donor[] }>> {
     const { entityTypes, completionState } = query;
 
-    let projection: { [key: string]: number } = {
+    const projection: { [key: string]: number } = {
       _id: 0,
     };
     [

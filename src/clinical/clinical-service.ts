@@ -209,7 +209,7 @@ export const getClinicalSearchResults = async (programId: string, query: Clinica
   const start = new Date().getTime() / 1000;
 
   // Get list of donorIds + submitterDonorIds matching search results
-  const { donors } = await donorDao.findByProgramEntitySearch(programId, query);
+  const { donors } = await donorDao.findByProgramDonorSearch(programId, query);
 
   const data = filterDonorIdDataFromSearch(donors as Donor[], query);
 

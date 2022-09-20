@@ -256,13 +256,14 @@ export function filterDonorIdDataFromSearch(donors: Donor[], query: ClinicalSear
       })
     : donors;
 
+  const totalResults = filteredDonors.length;
   const searchResults = filteredDonors.map((donor: Donor) => {
     const { donorId, clinicalInfo } = donor;
-    const submitterDonorId = (clinicalInfo && clinicalInfo.submitter_donor_id) || null;
+    const submitterDonorId = (clinicalInfo && clinicalInfo.submitter_donor_id) || undefined;
     return { donorId, submitterDonorId };
   });
 
-  return searchResults;
+  return { searchResults, totalResults };
 }
 
 export function extractEntityDataFromDonors(
