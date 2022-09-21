@@ -20,7 +20,7 @@
 import { donorDao, DONOR_DOCUMENT_FIELDS } from './donor-repo';
 import { Errors, notEmpty } from '../utils';
 import { Sample, Donor, ClinicalEntityData } from './clinical-entities';
-import { ClinicalQuery } from './clinical-api';
+import { ClinicalQuery, ClinicalSearchQuery } from './clinical-api';
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 import { forceRecalcDonorCoreEntityStats } from '../submission/submission-to-clinical/stat-calculator';
@@ -32,7 +32,11 @@ import {
 } from '../submission/migration/migration-entities';
 import * as dictionaryManager from '../dictionary/manager';
 import { loggerFor } from '../logger';
-import { WorkerTasks, extractEntityDataFromDonors } from './service-worker-thread/tasks';
+import {
+  WorkerTasks,
+  extractEntityDataFromDonors,
+  filterDonorIdDataFromSearch,
+} from './service-worker-thread/tasks';
 import { runTaskInWorkerThread } from './service-worker-thread/runner';
 
 const L = loggerFor(__filename);
@@ -193,6 +197,21 @@ export const getPaginatedClinicalData = async (programId: string, query: Clinica
     allSchemasWithFields,
     query,
   );
+
+  const end = new Date().getTime() / 1000;
+  L.debug(`getPaginatedClinicalData took ${end - start}s`);
+
+  return data;
+};
+
+export const getClinicalSearchResults = async (programId: string, query: ClinicalSearchQuery) => {
+  if (!programId) throw new Error('Missing programId!');
+  const start = new Date().getTime() / 1000;
+
+  // Get list of donorIds + submitterDonorIds matching search results
+  const { donors } = await donorDao.findByProgramDonorSearch(programId, query);
+
+  const data = filterDonorIdDataFromSearch(donors as Donor[], query);
 
   const end = new Date().getTime() / 1000;
   L.debug(`getPaginatedClinicalData took ${end - start}s`);
