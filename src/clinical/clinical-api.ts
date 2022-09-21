@@ -108,11 +108,11 @@ class ClinicalController {
         : [''];
 
     const donorIds: number[] =
-      req.query.donorIds.match(/\d*/gi)?.filter((match: string) => !!match && parseInt(match)) ||
+      req.query.donorIds?.match(/\d*/gi)?.filter((match: string) => !!match && parseInt(match)) ||
       [];
     const submitterDonorIds: string[] =
       req.query.submitterDonorIds && req.query.submitterDonorIds.length > 0
-        ? req.query.submitterDonorIds.split(',').filter((match: string) => !!match)
+        ? req.query.submitterDonorIds?.split(',').filter((match: string) => !!match)
         : [];
 
     const query: ClinicalQuery = {
