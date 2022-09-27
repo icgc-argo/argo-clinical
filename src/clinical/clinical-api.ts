@@ -149,7 +149,7 @@ class ClinicalController {
     const submitterDonorIds =
       req.query.submitterDonorIds && req.query.submitterDonorIds.length > 0
         ? req.query.submitterDonorIds.split(',').filter((match: string) => !!match)
-        : '';
+        : [];
 
     const query: ClinicalSearchQuery = {
       ...req.query,
