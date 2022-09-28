@@ -269,7 +269,7 @@ export const donorDao: DonorRepository = {
   ): Promise<DeepReadonly<{ donors: Donor[] }>> {
     const { entityTypes, completionState } = query;
 
-    const projection: { [key: string]: number } = {
+    const projection: Record<string, number> = {
       _id: 0,
     };
     [
