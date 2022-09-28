@@ -29,7 +29,7 @@ import {
   getClinicalEntitySubmittedData,
 } from '../../common-model/functions';
 import { notEmpty } from '../../utils';
-import { ClinicalQuery } from '../clinical-api';
+import { ClinicalQuery, ClinicalSearchQuery } from '../clinical-api';
 import {
   Donor,
   CompletionRecord,
@@ -150,7 +150,7 @@ const sortDocs = (sort: string, entityName: string, completionStats: CompletionR
 const mapEntityDocuments = (
   entity: EntityClinicalInfo,
   originalResultsArray: EntityClinicalInfo[],
-  totalDonors: number,
+  donorCount: number,
   schemas: any,
   query: ClinicalQuery,
   completionStats: CompletionRecord[],
@@ -166,7 +166,7 @@ const mapEntityDocuments = (
     return undefined;
   }
 
-  const totalDocs = entityName === ClinicalEntitySchemaNames.DONOR ? totalDonors : results.length;
+  const totalDocs = entityName === ClinicalEntitySchemaNames.DONOR ? donorCount : results.length;
   let records = results.sort(sortDocs(sort, entityName, completionStats));
 
   if (records.length > pageSize) {
@@ -237,6 +237,35 @@ function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
   return data;
 }
 
+export function filterDonorIdDataFromSearch(donors: Donor[], query: ClinicalSearchQuery) {
+  const { donorIds, submitterDonorIds } = query;
+
+  const useFilteredDonors =
+    (donorIds && donorIds.length) || (submitterDonorIds && submitterDonorIds.length);
+
+  const filteredDonors = useFilteredDonors
+    ? donors.filter(donor => {
+        const { donorId, clinicalInfo } = donor;
+        const stringId = `${donorId}`;
+        const donorMatch = donorIds?.filter(id => stringId.includes(id));
+        const submitterDonorId = clinicalInfo && `${clinicalInfo.submitter_donor_id}`;
+        const submitterMatch = submitterDonorId
+          ? submitterDonorIds?.filter(id => submitterDonorId.includes(id))
+          : [];
+        return donorMatch.length > 0 || submitterMatch.length > 0;
+      })
+    : donors;
+
+  const totalResults = filteredDonors.length;
+  const searchResults = filteredDonors.map((donor: Donor) => {
+    const { donorId, clinicalInfo } = donor;
+    const submitterDonorId = (clinicalInfo && clinicalInfo.submitter_donor_id) || undefined;
+    return { donorId, submitterDonorId };
+  });
+
+  return { searchResults, totalResults };
+}
+
 export function extractEntityDataFromDonors(
   donors: Donor[],
   totalDonors: number,
@@ -276,12 +305,13 @@ export function extractEntityDataFromDonors(
     });
   });
 
+  const donorCount = totalDonors;
   const clinicalEntities: ClinicalEntityData[] = clinicalEntityData
     .map((entity: EntityClinicalInfo, index: number, originalResultsArray: EntityClinicalInfo[]) =>
       mapEntityDocuments(
         entity,
         originalResultsArray,
-        totalDonors,
+        donorCount,
         schemasWithFields,
         query,
         completionStats,

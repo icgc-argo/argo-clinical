@@ -18,7 +18,7 @@
  */
 
 import { Donor } from './clinical-entities';
-import { ClinicalQuery } from './clinical-api';
+import { ClinicalQuery, ClinicalSearchQuery } from './clinical-api';
 import { getRequiredDonorFieldsForEntityTypes } from '../common-model/functions';
 import mongoose, { PaginateModel } from 'mongoose';
 import mongoosePaginate from 'mongoose-paginate-v2';
@@ -49,6 +49,7 @@ export enum DONOR_DOCUMENT_FIELDS {
 }
 
 const DONOR_ENTITY_CORE_FIELDS = ['donorId', 'submitterId', 'programId', 'gender', 'clinicalInfo'];
+const DONOR_SEARCH_CORE_FIELDS = ['donorId', 'submitterId', 'programId', 'clinicalInfo'];
 
 export type FindByProgramAndSubmitterFilter = DeepReadonly<{
   programId: string;
@@ -79,6 +80,10 @@ export interface DonorRepository {
     programId: string,
     query: ClinicalQuery,
   ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number }>>;
+  findByProgramDonorSearch(
+    programId: string,
+    query: ClinicalSearchQuery,
+  ): Promise<DeepReadonly<{ donors: Donor[] }>>;
   deleteByProgramId(programId: string): Promise<void>;
   deleteByProgramIdAndDonorIds(programId: string, donorIds: number[]): Promise<void>;
   findByProgramAndSubmitterId(
@@ -182,12 +187,12 @@ export const donorDao: DonorRepository = {
     query: ClinicalQuery,
   ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number }>> {
     const {
+      donorIds,
+      submitterDonorIds,
       sort: querySort,
       page: queryPage,
       pageSize,
       entityTypes,
-      donorIds,
-      submitterDonorIds,
       completionState,
     } = query;
 
@@ -207,23 +212,34 @@ export const donorDao: DonorRepository = {
     ].join(' ');
 
     // All Entity Data is stored on Donor documents
+    // Pagination and Search are handled downstream before response in service-worker-threads/tasks
+    // For most use cases, all Donor documents must be retrieved for accurate filtering
     // Specific Requests for Donor documents can be paginated at the MongoDB level
-    // All other Entity Data we must request all Donor documents to see total Entity counts
-    // Pagination is then handled downstream before response in service-worker-threads/tasks
 
     const limit = entityTypes.includes('donor')
       ? pageSize
       : await DonorModel.countDocuments({ programId });
 
     // React-Table Pagination is 0 indexed, BE Mongoose-Paginate is 1 indexed
-    const page = entityTypes.includes('donor') ? queryPage + 1 : 1;
+    const page = entityTypes.includes('donor') && donorIds.length === 0 ? queryPage + 1 : 1;
+    const donorSearch =
+      donorIds.length > 0
+        ? {
+            donorId: { $in: donorIds },
+          }
+        : {};
+
+    const submitterSearch =
+      submitterDonorIds.length > 0
+        ? { 'clinicalInfo.submitter_donor_id': { $in: submitterDonorIds } }
+        : {};
 
     const result = await DonorModel.paginate(
       {
         programId,
-        ...donorIds,
-        ...submitterDonorIds,
         ...completionState,
+        ...donorSearch,
+        ...submitterSearch,
       },
       {
         projection,
@@ -244,6 +260,40 @@ export const donorDao: DonorRepository = {
     return F({
       donors: mapped,
       totalDonors,
+    });
+  },
+
+  async findByProgramDonorSearch(
+    programId: string,
+    query: ClinicalSearchQuery,
+  ): Promise<DeepReadonly<{ donors: Donor[] }>> {
+    const { entityTypes, completionState } = query;
+
+    const projection: Record<string, number> = {
+      _id: 0,
+    };
+    [
+      ...DONOR_SEARCH_CORE_FIELDS,
+      ...entityTypes,
+      ...getRequiredDonorFieldsForEntityTypes(entityTypes),
+    ].forEach((key: string) => (projection[key] = 1));
+
+    const result = await DonorModel.find(
+      {
+        programId,
+        ...completionState,
+      },
+      projection,
+    );
+
+    const mapped: Donor[] = result
+      .map((d: DonorDocument) => {
+        return MongooseUtils.toPojo(d) as Donor;
+      })
+      .filter(notEmpty);
+
+    return F({
+      donors: mapped,
     });
   },
 
