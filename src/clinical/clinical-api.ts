@@ -96,6 +96,33 @@ class ClinicalController {
   }
 
   @HasProgramReadAccess((req: Request) => req.params.programId)
+  async getSpecificClinicalDataAsTsvsInZip(req: Request, res: Response) {
+    // process req.params
+    // get donor data
+    // call tsv function
+    const programId = req.params.programId;
+    if (!programId) {
+      return ControllerUtils.badRequest(res, 'Invalid programId provided');
+    }
+
+    const data = await service.getClinicalData(programId);
+
+    const todaysDate = currentDateFormatted();
+    res
+      .status(200)
+      .contentType('application/zip')
+      .attachment(`${programId}_Clinical_Data_${todaysDate}.zip`);
+
+    const zip = new AdmZip();
+    data.forEach((d: any) => {
+      const tsvData = TsvUtils.convertJsonRecordsToTsv(d.records, d.entityFields);
+      zip.addFile(`${d.entityName}.tsv`, Buffer.alloc(tsvData.length, tsvData));
+    });
+
+    res.send(zip.toBuffer());
+  }
+
+  @HasProgramReadAccess((req: Request) => req.params.programId)
   async getProgramClinicalEntityData(req: Request, res: Response) {
     const programId: string = req.params.programId;
     const sort: string = req.query.sort || 'donorId';
