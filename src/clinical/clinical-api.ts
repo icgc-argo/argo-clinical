@@ -97,15 +97,39 @@ class ClinicalController {
 
   @HasProgramReadAccess((req: Request) => req.params.programId)
   async getSpecificClinicalDataAsTsvsInZip(req: Request, res: Response) {
-    // process req.params
-    // get donor data
-    // call tsv function
-    const programId = req.params.programId;
+    const programId: string = req.params.programId;
+    const sort: string = 'donorId';
+    const page: number = 0;
+    const state: CompletionStates = req.query.completionState || CompletionStates.all;
+    const completionState: {} = completionFilters[state] || {};
+    const entityTypes: string[] =
+      req.query.entityTypes && req.query.entityTypes.length > 0
+        ? req.query.entityTypes.split(',')
+        : ['donor'];
+
+    const donorIds: number[] =
+      req.query.donorIds?.match(/\d*/gi)?.filter((match: string) => !!match && parseInt(match)) ||
+      [];
+    const submitterDonorIds: string[] =
+      req.query.submitterDonorIds && req.query.submitterDonorIds.length > 0
+        ? req.query.submitterDonorIds?.split(',').filter((match: string) => !!match)
+        : [];
+
+    const query: ClinicalQuery = {
+      ...req.query,
+      sort,
+      entityTypes,
+      page,
+      donorIds,
+      submitterDonorIds,
+      completionState,
+    };
+
     if (!programId) {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
 
-    const data = await service.getClinicalData(programId);
+    const entityData = await service.getPaginatedClinicalData(programId, query);
 
     const todaysDate = currentDateFormatted();
     res
@@ -114,7 +138,7 @@ class ClinicalController {
       .attachment(`${programId}_Clinical_Data_${todaysDate}.zip`);
 
     const zip = new AdmZip();
-    data.forEach((d: any) => {
+    entityData.clinicalEntities.forEach((d: any) => {
       const tsvData = TsvUtils.convertJsonRecordsToTsv(d.records, d.entityFields);
       zip.addFile(`${d.entityName}.tsv`, Buffer.alloc(tsvData.length, tsvData));
     });
@@ -132,7 +156,7 @@ class ClinicalController {
     const entityTypes: string[] =
       req.query.entityTypes && req.query.entityTypes.length > 0
         ? req.query.entityTypes.split(',')
-        : [''];
+        : ['donor'];
 
     const donorIds: number[] =
       req.query.donorIds?.match(/\d*/gi)?.filter((match: string) => !!match && parseInt(match)) ||
