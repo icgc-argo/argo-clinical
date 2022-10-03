@@ -102,14 +102,14 @@ class ClinicalController {
     const page: number = 0;
     const state: CompletionStates = req.query.completionState || CompletionStates.all;
     const completionState: {} = completionFilters[state] || {};
+
     const entityTypes: string[] =
-      req.query.entityTypes && req.query.entityTypes.length > 0
-        ? req.query.entityTypes.split(',')
-        : ['donor'];
+      req.query.entityTypes !== undefined ? req.query.entityTypes.split(',') : [];
 
     const donorIds: number[] =
       req.query.donorIds?.match(/\d*/gi)?.filter((match: string) => !!match && parseInt(match)) ||
       [];
+
     const submitterDonorIds: string[] =
       req.query.submitterDonorIds && req.query.submitterDonorIds.length > 0
         ? req.query.submitterDonorIds?.split(',').filter((match: string) => !!match)
@@ -129,7 +129,12 @@ class ClinicalController {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
 
-    const entityData = await service.getPaginatedClinicalData(programId, query);
+    const entityData =
+      entityTypes.length > 0
+        ? await service
+            .getPaginatedClinicalData(programId, query)
+            .then(data => data.clinicalEntities)
+        : await service.getClinicalData(programId);
 
     const todaysDate = currentDateFormatted();
     res
@@ -138,7 +143,7 @@ class ClinicalController {
       .attachment(`${programId}_Clinical_Data_${todaysDate}.zip`);
 
     const zip = new AdmZip();
-    entityData.clinicalEntities.forEach((d: any) => {
+    entityData.forEach((d: any) => {
       const tsvData = TsvUtils.convertJsonRecordsToTsv(d.records, d.entityFields);
       zip.addFile(`${d.entityName}.tsv`, Buffer.alloc(tsvData.length, tsvData));
     });
