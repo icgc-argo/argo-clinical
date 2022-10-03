@@ -129,12 +129,9 @@ class ClinicalController {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
 
-    const entityData =
-      entityTypes.length > 0
-        ? await service
-            .getPaginatedClinicalData(programId, query)
-            .then(data => data.clinicalEntities)
-        : await service.getClinicalData(programId);
+    const entityData = await service
+      .getPaginatedClinicalData(programId, query)
+      .then(data => data.clinicalEntities);
 
     const todaysDate = currentDateFormatted();
     res
