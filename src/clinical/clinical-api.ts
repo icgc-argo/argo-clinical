@@ -65,6 +65,12 @@ const completionFilters = {
   all: {},
 };
 
+export const parseDonorIdList = (donorIds: string) =>
+  donorIds
+    ?.match(/\d*/gi)
+    ?.filter((match: string) => !!match && parseInt(match))
+    .map(id => parseInt(id));
+
 class ClinicalController {
   @HasFullReadAccess()
   async findDonors(req: Request, res: Response) {
@@ -109,9 +115,7 @@ class ClinicalController {
     const entityTypes: string[] =
       req.query.entityTypes !== undefined ? req.query.entityTypes.split(',') : [];
 
-    const donorIds: number[] =
-      req.query.donorIds?.match(/\d*/gi)?.filter((match: string) => !!match && parseInt(match)) ||
-      [];
+    const donorIds: number[] = parseDonorIdList(req.query.donorIds) || [];
 
     const submitterDonorIds: string[] =
       req.query.submitterDonorIds && req.query.submitterDonorIds.length > 0
@@ -162,9 +166,8 @@ class ClinicalController {
         ? req.query.entityTypes.split(',')
         : ['donor'];
 
-    const donorIds: number[] =
-      req.query.donorIds?.match(/\d*/gi)?.filter((match: string) => !!match && parseInt(match)) ||
-      [];
+    const donorIds: number[] = parseDonorIdList(req.query.donorIds) || [];
+
     const submitterDonorIds: string[] =
       req.query.submitterDonorIds && req.query.submitterDonorIds.length > 0
         ? req.query.submitterDonorIds?.split(',').filter((match: string) => !!match)
