@@ -98,6 +98,9 @@ class ClinicalController {
   @HasProgramReadAccess((req: Request) => req.params.programId)
   async getSpecificClinicalDataAsTsvsInZip(req: Request, res: Response) {
     const programId: string = req.params.programId;
+    if (!programId) {
+      return ControllerUtils.badRequest(res, 'Invalid programId provided');
+    }
     const sort: string = 'donorId';
     const page: number = 0;
     const state: CompletionStates = req.query.completionState || CompletionStates.all;
@@ -125,10 +128,6 @@ class ClinicalController {
       completionState,
     };
 
-    if (!programId) {
-      return ControllerUtils.badRequest(res, 'Invalid programId provided');
-    }
-
     const entityData = await service
       .getPaginatedClinicalData(programId, query)
       .then(data => data.clinicalEntities);
@@ -151,6 +150,9 @@ class ClinicalController {
   @HasProgramReadAccess((req: Request) => req.params.programId)
   async getProgramClinicalEntityData(req: Request, res: Response) {
     const programId: string = req.params.programId;
+    if (!programId) {
+      return ControllerUtils.badRequest(res, 'Invalid programId provided');
+    }
     const sort: string = req.query.sort || 'donorId';
     const page: number = parseInt(req.query.page);
     const state: CompletionStates = req.query.completionState || CompletionStates.all;
@@ -178,10 +180,6 @@ class ClinicalController {
       completionState,
     };
 
-    if (!programId) {
-      return ControllerUtils.badRequest(res, 'Invalid programId provided');
-    }
-
     const entityData = await service.getPaginatedClinicalData(programId, query);
 
     res.status(200).json(entityData);
@@ -190,6 +188,9 @@ class ClinicalController {
   @HasProgramReadAccess((req: Request) => req.params.programId)
   async getProgramClinicalSearchResults(req: Request, res: Response) {
     const programId: string = req.params.programId;
+    if (!programId) {
+      return ControllerUtils.badRequest(res, 'Invalid programId provided');
+    }
     const state: CompletionStates = req.query.completionState || CompletionStates.all;
     const completionState: {} = completionFilters[state] || {};
     const entityTypes: string[] =
@@ -211,10 +212,6 @@ class ClinicalController {
       entityTypes,
       completionState,
     };
-
-    if (!programId) {
-      return ControllerUtils.badRequest(res, 'Invalid programId provided');
-    }
 
     const searchData = await service.getClinicalSearchResults(programId, query);
 
