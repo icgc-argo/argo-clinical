@@ -28,7 +28,7 @@ import {
 import { EntityAlias } from '../common-model/entities';
 import { ControllerUtils, DonorUtils, TsvUtils } from '../utils';
 import AdmZip from 'adm-zip';
-import { Donor } from './clinical-entities';
+import { ClinicalEntityData, Donor } from './clinical-entities';
 import { omit } from 'lodash';
 import { DeepReadonly } from 'deep-freeze';
 
@@ -71,6 +71,15 @@ export const parseDonorIdList = (donorIds: string) =>
     ?.filter((match: string) => !!match && parseInt(match))
     .map(id => parseInt(id));
 
+export const createClinicalZipFile = (data: ClinicalEntityData[]) => {
+  const zip = new AdmZip();
+  data.forEach((d: any) => {
+    const tsvData = TsvUtils.convertJsonRecordsToTsv(d.records, d.entityFields);
+    zip.addFile(`${d.entityName}.tsv`, Buffer.alloc(tsvData.length, tsvData));
+  });
+  return zip;
+};
+
 class ClinicalController {
   @HasFullReadAccess()
   async findDonors(req: Request, res: Response) {
@@ -92,11 +101,7 @@ class ClinicalController {
       .contentType('application/zip')
       .attachment(`${programId}_Clinical_Data_${todaysDate}.zip`);
 
-    const zip = new AdmZip();
-    data.forEach((d: any) => {
-      const tsvData = TsvUtils.convertJsonRecordsToTsv(d.records, d.entityFields);
-      zip.addFile(`${d.entityName}.tsv`, Buffer.alloc(tsvData.length, tsvData));
-    });
+    const zip = createClinicalZipFile(data);
 
     res.send(zip.toBuffer());
   }
@@ -142,11 +147,7 @@ class ClinicalController {
       .contentType('application/zip')
       .attachment(`${programId}_Clinical_Data_${todaysDate}.zip`);
 
-    const zip = new AdmZip();
-    entityData.forEach((d: any) => {
-      const tsvData = TsvUtils.convertJsonRecordsToTsv(d.records, d.entityFields);
-      zip.addFile(`${d.entityName}.tsv`, Buffer.alloc(tsvData.length, tsvData));
-    });
+    const zip = createClinicalZipFile(entityData);
 
     res.send(zip.toBuffer());
   }
