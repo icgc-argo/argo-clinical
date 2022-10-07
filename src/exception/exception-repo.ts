@@ -30,7 +30,7 @@ const ExceptionSchema = new mongoose.Schema({
 });
 
 const ProgramExceptionSchema = new mongoose.Schema({
-  name: { type: String, unique: true, required: true },
+  programName: { type: String, unique: true, required: true },
   exceptions: { type: [ExceptionSchema], required: true },
 });
 
@@ -48,7 +48,7 @@ interface ProgramExceptionItem {
 }
 
 export interface ProgramException {
-  name: string;
+  programName: string;
   exceptions: ProgramExceptionItem[];
 }
 
@@ -78,7 +78,7 @@ export const programExceptionRepository: ProgramExceptionRepository = {
   async find(name: string) {
     L.debug(`finding program exception with name: ${JSON.stringify(name)}`);
     try {
-      const doc = await ProgramExceptionModel.findOne({ name });
+      const doc = await ProgramExceptionModel.findOne({ programName: name });
       if (doc) {
         L.info(`doc found ${doc}`);
         return F(MongooseUtils.toPojo(doc) as ProgramException);
@@ -92,11 +92,13 @@ export const programExceptionRepository: ProgramExceptionRepository = {
   // update replaces entire program exceptions record
   async update(programException: ProgramException) {
     L.debug(
-      `finding program exception with program name: ${JSON.stringify(programException.name)}`,
+      `finding program exception with program name: ${JSON.stringify(
+        programException.programName,
+      )}`,
     );
     try {
       const doc = await ProgramExceptionModel.replaceOne(
-        { name: programException.name },
+        { programName: programException.programName },
         programException,
       );
       if (doc) {
@@ -112,7 +114,7 @@ export const programExceptionRepository: ProgramExceptionRepository = {
   async delete(name: string) {
     L.debug(`deleting program exception with program name: ${JSON.stringify(name)}`);
     try {
-      await ProgramExceptionModel.findOneAndDelete({ name });
+      await ProgramExceptionModel.findOneAndDelete({ programName: name });
     } catch (e) {
       L.error('failed to find program exception', e);
       throw new Error(`failed to delete program exception with name: ${JSON.stringify(name)}`);
