@@ -55,7 +55,7 @@ export interface ProgramException {
 export interface ProgramExceptionRepository {
   create(programException: ProgramException): Promise<DeepReadonly<ProgramException>>;
   find(name: string): Promise<DeepReadonly<ProgramException> | undefined>;
-  update(programException: ProgramException): Promise<DeepReadonly<ProgramException> | undefined>;
+  replace(programException: ProgramException): Promise<DeepReadonly<ProgramException> | undefined>;
   delete(name: string): Promise<void>;
 }
 
@@ -89,8 +89,7 @@ export const programExceptionRepository: ProgramExceptionRepository = {
     }
   },
 
-  // update replaces entire program exceptions record
-  async update(programException: ProgramException) {
+  async replace(programException: ProgramException) {
     L.debug(
       `finding program exception with program name: ${JSON.stringify(
         programException.programName,
