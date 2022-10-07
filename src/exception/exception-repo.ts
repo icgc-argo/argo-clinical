@@ -62,8 +62,7 @@ export interface ProgramExceptionRepository {
 export const programExceptionRepository: ProgramExceptionRepository = {
   async create(req: ProgramException) {
     L.debug(`Creating new program exception with: ${JSON.stringify(req)}`);
-    const exception: ProgramException = { ...req };
-    const programException = new ProgramExceptionModel(exception);
+    const programException = new ProgramExceptionModel(req);
     try {
       const doc = await programException.save();
       L.info(`doc created ${doc}`);
