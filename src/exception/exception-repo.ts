@@ -24,14 +24,14 @@ import { DeepReadonly } from 'deep-freeze';
 const L = loggerFor(__filename);
 
 const ExceptionSchema = new mongoose.Schema({
-  schema: { type: String },
-  coreField: { type: String },
-  exceptionValue: { type: String, enum: ['Unknown', 'Missing', 'Not applicable'] },
+  schema: { type: String, required: true },
+  coreField: { type: String, required: true },
+  exceptionValue: { type: String, enum: ['Unknown', 'Missing', 'Not applicable'], required: true },
 });
 
 const ProgramExceptionSchema = new mongoose.Schema({
   name: { type: String, unique: true, required: true },
-  exceptions: [ExceptionSchema],
+  exceptions: { type: [ExceptionSchema], required: true },
 });
 
 type ProgramExceptionDocument = mongoose.Document & ProgramException;
