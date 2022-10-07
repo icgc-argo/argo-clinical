@@ -142,10 +142,12 @@ class ClinicalController {
       .then(data => data.clinicalEntities);
 
     const todaysDate = currentDateFormatted();
+    const fileName = `filename=${programId}_Clinical_Data_${todaysDate}.zip`;
     res
       .status(200)
       .contentType('application/zip')
-      .attachment(`${programId}_Clinical_Data_${todaysDate}.zip`);
+      .attachment(fileName)
+      .setHeader('content-disposition', fileName);
 
     const zip = createClinicalZipFile(entityData);
 
