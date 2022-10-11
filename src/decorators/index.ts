@@ -27,7 +27,11 @@ const getToken = (request: Request) => {
   if (!request.headers.authorization) {
     return undefined;
   }
-  const token = decodeAndVerify(request.headers.authorization.split(' ')[1]);
+
+  const token = request.headers.authorization.includes('Bearer')
+    ? decodeAndVerify(request.headers.authorization.split(' ')[1])
+    : verifyEgoApiKey(request.headers.authorization);
+
   return token;
 };
 
@@ -44,6 +48,8 @@ const decodeAndVerify = (tokenJwtString: string) => {
     return undefined;
   }
 };
+
+const verifyEgoApiKey = (uuidString: string) => {};
 
 const hasScope = (scopes: string[], token: any) => {
   if (
