@@ -19,9 +19,12 @@
 
 import { Request, Response, RequestHandler, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import fetch from 'node-fetch';
 import { loggerFor } from '../logger';
 import { config } from '../config';
 const L = loggerFor(__filename);
+
+const EGO_URL = 'https://ego.dev.argo.cancercollaboratory.org/api/';
 
 const getToken = (request: Request) => {
   if (!request.headers.authorization) {
@@ -30,8 +33,11 @@ const getToken = (request: Request) => {
 
   const token = request.headers.authorization.includes('Bearer')
     ? decodeAndVerify(request.headers.authorization.split(' ')[1])
-    : verifyEgoApiKey(request.headers.authorization);
-
+    : verifyEgoApiKey('e4a841ef-cd62-412f-998c-0a3d985c4baf', request.headers.authorization);
+  console.log(
+    '\nverify',
+    verifyEgoApiKey('e4a841ef-cd62-412f-998c-0a3d985c4baf', request.headers.authorization),
+  );
   return token;
 };
 
@@ -49,7 +55,14 @@ const decodeAndVerify = (tokenJwtString: string) => {
   }
 };
 
-const verifyEgoApiKey = (uuidString: string) => {};
+const verifyEgoApiKey = async (uuidString: string, auth: string) => {
+  const response = await fetch(`${EGO_URL}/o/check_api_key?apiKey=${uuidString}`, {
+    method: 'post',
+    headers: { 'Content-Type': 'application/json', authorization: auth },
+  });
+  const jsr = await response.json();
+  console.log('response', jsr);
+};
 
 const hasScope = (scopes: string[], token: any) => {
   if (
