@@ -24,20 +24,18 @@ import { loggerFor } from '../logger';
 import { config } from '../config';
 const L = loggerFor(__filename);
 
+// TODO: MAKE ENV VARIABLE
 const EGO_URL = 'https://ego.dev.argo.cancercollaboratory.org/api/';
 
-const getToken = (request: Request) => {
+const getToken = async (request: Request) => {
   if (!request.headers.authorization) {
     return undefined;
   }
 
   const token = request.headers.authorization.includes('Bearer')
     ? decodeAndVerify(request.headers.authorization.split(' ')[1])
-    : verifyEgoApiKey('e4a841ef-cd62-412f-998c-0a3d985c4baf', request.headers.authorization);
-  console.log(
-    '\nverify',
-    verifyEgoApiKey('e4a841ef-cd62-412f-998c-0a3d985c4baf', request.headers.authorization),
-  );
+    : await verifyEgoApiKey(request.headers.authorization, request.headers.authorization);
+
   return token;
 };
 
@@ -60,29 +58,32 @@ const verifyEgoApiKey = async (uuidString: string, auth: string) => {
     method: 'post',
     headers: { 'Content-Type': 'application/json', authorization: auth },
   });
-  const jsr = await response.json();
-  console.log('response', jsr);
+  const token = await response.json();
+  return token;
 };
 
 const hasScope = (scopes: string[], token: any) => {
   if (
-    !token.context ||
-    !token.context.scope ||
-    token.context.scope.filter((s: string) => scopes.indexOf(s) >= 0).length === 0
+    (token.context &&
+      (!token.context.scope ||
+        token.context.scope.filter((s: string) => scopes.indexOf(s) >= 0).length === 0)) ||
+    (token.scope && token.scope.filter((s: string) => scopes.indexOf(s) >= 0).length === 0)
   ) {
     return false;
   }
   return true;
 };
 
-const checkAuthorization = (scopes: string[], request: Request, response: Response) => {
-  const token = getToken(request);
+const checkAuthorization = async (scopes: string[], request: Request, response: Response) => {
+  const token = await getToken(request);
+
   if (!token) {
     return response.status(401).send('This endpoint needs a valid authentication token');
   }
   if (!hasScope(scopes, token)) {
     return response.status(403).send("Caller doesn't have the required permissions");
   }
+
   return undefined;
 };
 
