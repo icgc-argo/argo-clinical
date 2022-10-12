@@ -94,13 +94,13 @@ const scopeCheckGenerator = (
 ) => {
   return function(target: any, key: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value as RequestHandler;
-    descriptor.value = function() {
+    descriptor.value = async function() {
       const request = arguments[0] as Request;
       const response = arguments[1] as Response;
       const next = arguments[2] as NextFunction;
       const programId = programIdExtractor ? programIdExtractor(request) : '';
       programIdExtractor && L.debug(`${functionName} @ ${key} was called with: ${programId}`);
-      const unauthorizedResponse = checkAuthorization(
+      const unauthorizedResponse = await checkAuthorization(
         scopesGenerator(programId),
         request,
         response,
