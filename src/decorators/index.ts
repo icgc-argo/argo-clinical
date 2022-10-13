@@ -24,9 +24,6 @@ import { loggerFor } from '../logger';
 import { config } from '../config';
 const L = loggerFor(__filename);
 
-// TODO: MAKE ENV VARIABLE
-const EGO_URL = 'https://ego.dev.argo.cancercollaboratory.org/api/';
-
 const getToken = async (request: Request) => {
   if (!request.headers.authorization) {
     return undefined;
@@ -54,6 +51,7 @@ const decodeAndVerify = (tokenJwtString: string) => {
 };
 
 const verifyEgoApiKey = async (uuidString: string, auth: string) => {
+  const EGO_URL = config.getConfig().egoUrl();
   const response = await fetch(`${EGO_URL}/o/check_api_key?apiKey=${uuidString}`, {
     method: 'post',
     headers: { 'Content-Type': 'application/json', authorization: auth },

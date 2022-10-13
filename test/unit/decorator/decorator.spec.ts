@@ -83,6 +83,15 @@ describe('decorator', () => {
           user: '',
         };
       },
+      egoUrl() {
+        return '';
+      },
+      egoClientId() {
+        return '';
+      },
+      egoClientSecret() {
+        return '';
+      },
     });
   });
 

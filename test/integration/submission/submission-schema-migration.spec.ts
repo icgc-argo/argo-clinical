@@ -210,6 +210,15 @@ describe('schema migration api', () => {
               port: mysqlContainer.getMappedPort(3306),
             };
           },
+          egoUrl() {
+            return '';
+          },
+          egoClientId() {
+            return '';
+          },
+          egoClientSecret() {
+            return '';
+          },
         });
       } catch (err) {
         console.error('before >>>>>>>>>>>', err);
