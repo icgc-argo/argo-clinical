@@ -29,14 +29,16 @@ const getToken = async (request: Request) => {
     return undefined;
   }
 
-  const token = request.headers.authorization.includes('Bearer')
-    ? decodeAndVerify(request.headers.authorization.split(' ')[1])
-    : await verifyEgoApiKey(request.headers.authorization, request.headers.authorization);
+  const authToken = request.headers.authorization.split(' ')[1];
+
+  const token = Boolean(jwt.decode(authToken))
+    ? verifyJwt(authToken)
+    : await verifyEgoApiKey(authToken);
 
   return token;
 };
 
-const decodeAndVerify = (tokenJwtString: string) => {
+const verifyJwt = (tokenJwtString: string) => {
   const key = config.getConfig().jwtPubKey();
   if (key.trim() === '') {
     throw new Error('no key found to verify the token');
@@ -50,8 +52,12 @@ const decodeAndVerify = (tokenJwtString: string) => {
   }
 };
 
-const verifyEgoApiKey = async (uuidString: string, auth: string) => {
+const verifyEgoApiKey = async (uuidString: string) => {
   const EGO_URL = config.getConfig().egoUrl();
+  const EGO_CLIENT_ID = config.getConfig().egoClientId();
+  const EGO_CLIENT_SECRET = config.getConfig().egoClientSecret();
+  const auth = 'Basic ' + Buffer.from(EGO_CLIENT_ID + ':' + EGO_CLIENT_SECRET).toString('base64');
+
   const response = await fetch(`${EGO_URL}/o/check_api_key?apiKey=${uuidString}`, {
     method: 'post',
     headers: { 'Content-Type': 'application/json', authorization: auth },
