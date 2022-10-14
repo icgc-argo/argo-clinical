@@ -25,12 +25,11 @@ import { config } from '../config';
 const L = loggerFor(__filename);
 
 const getToken = async (request: Request) => {
-  if (!request.headers.authorization) {
+  if (!request.headers.authorization?.startsWith('Bearer')) {
     return undefined;
   }
 
-  const authToken = request.headers.authorization.split(' ')[1];
-
+  const authToken = request.headers.authorization.slice(7).trim(); // remove 'Bearer ' from header
   const token = Boolean(jwt.decode(authToken))
     ? verifyJwt(authToken)
     : await verifyEgoApiKey(authToken);
@@ -66,25 +65,23 @@ const verifyEgoApiKey = async (uuidString: string) => {
   return token;
 };
 
-const hasScope = (scopes: string[], token: any) => {
-  if (
-    (token.context &&
-      (!token.context.scope ||
-        token.context.scope.filter((s: string) => scopes.indexOf(s) >= 0).length === 0)) ||
-    (token.scope && token.scope.filter((s: string) => scopes.indexOf(s) >= 0).length === 0)
-  ) {
-    return false;
-  }
-  return true;
-};
+/**
+ * Confirms if the at least one of the required scopes has been provided
+ * @param requiredScopes at least one of these scopes must be provided
+ * @param providedScopes scopes provided in auth header
+ * @returns {boolean} true if provided scopes contains at least one of the requiredScopes
+ */
+const hasScope = (requiredScopes: string[], providedScopes: string[]): boolean =>
+  requiredScopes.some(scope => providedScopes.includes(scope));
 
 const checkAuthorization = async (scopes: string[], request: Request, response: Response) => {
   const token = await getToken(request);
-
   if (!token) {
     return response.status(401).send('This endpoint needs a valid authentication token');
   }
-  if (!hasScope(scopes, token)) {
+
+  const tokenScopes = token.context?.scope || token.scope;
+  if (!hasScope(scopes, tokenScopes)) {
     return response.status(403).send("Caller doesn't have the required permissions");
   }
 
