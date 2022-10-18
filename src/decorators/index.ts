@@ -18,18 +18,22 @@
  */
 
 import { Request, Response, RequestHandler, NextFunction } from 'express';
+import _ from 'lodash';
 import jwt from 'jsonwebtoken';
 import fetch from 'node-fetch';
 import { loggerFor } from '../logger';
 import { config } from '../config';
 const L = loggerFor(__filename);
 
-type TokenValidationResult = { success: boolean; data: TokenData | any };
-type TokenData = string | object;
+type TokenValidationResult = { success: boolean; data?: TokenData; error?: any };
+type TokenData = {
+  scopes: string[];
+};
+type JwtPayload = { context: { scopes: [] } };
 
 const getToken = async (request: Request): Promise<TokenValidationResult> => {
-  if (!request.headers.authorization?.startsWith('Bearer')) {
-    return { success: false, data: `invalid token provided` };
+  if (!request.headers.authorization?.startsWith('Bearer ')) {
+    return { success: false, error: `invalid token provided` };
   }
 
   const authToken = request.headers.authorization.slice(7).trim(); // remove 'Bearer ' from header
@@ -44,36 +48,37 @@ const verifyJwt = (tokenJwtString: string): TokenValidationResult => {
   if (key.trim() === '') {
     const err = 'no key found to verify the token';
     L.debug(err);
-    return { success: false, data: err };
+    return { success: false };
   }
   try {
-    const decoded: TokenData = jwt.verify(`${tokenJwtString}`, key);
-    return { success: true, data: decoded };
+    const decoded = jwt.verify(`${tokenJwtString}`, key);
+    const scopes = _.isObjectLike(decoded) && (<JwtPayload>decoded).context?.scopes;
+    return _.isArray(scopes) ? { success: true, data: { scopes } } : { success: false };
   } catch (err) {
     L.debug(`invalid token provided ${err}`);
-    return { success: false, data: err };
+    return { success: false };
   }
 };
 
-const verifyEgoApiKey = async (uuidString: string): Promise<TokenValidationResult> => {
+const verifyEgoApiKey = async (keyString: string): Promise<TokenValidationResult> => {
   const EGO_URL = config.getConfig().egoUrl();
   const EGO_CLIENT_ID = config.getConfig().egoClientId();
   const EGO_CLIENT_SECRET = config.getConfig().egoClientSecret();
   const auth = 'Basic ' + Buffer.from(EGO_CLIENT_ID + ':' + EGO_CLIENT_SECRET).toString('base64');
 
-  return await fetch(`${EGO_URL}/o/check_api_key?apiKey=${uuidString}`, {
+  return await fetch(`${EGO_URL}/o/check_api_key?apiKey=${keyString}`, {
     method: 'post',
     headers: { 'Content-Type': 'application/json', authorization: auth },
   })
     .then(async res => {
       const token = await res.json();
-
+      const { scopes } = token;
       if (token.error) throw token.error;
-      return { success: true, data: token };
+      return { success: true, data: { scopes } };
     })
     .catch(err => {
       L.debug(`Error response: ${err}`);
-      return { success: false, data: err };
+      return { success: false };
     });
 };
 
@@ -88,11 +93,11 @@ const hasScope = (requiredScopes: string[], providedScopes: string[]): boolean =
 
 const checkAuthorization = async (scopes: string[], request: Request, response: Response) => {
   const { success, data } = await getToken(request);
-  if (!success) {
+  if (!success || !data) {
     return response.status(401).send('This endpoint needs a valid authentication token');
   }
 
-  const tokenScopes = data.context?.scope || data.scope;
+  const { scopes: tokenScopes } = data;
   if (!hasScope(scopes, tokenScopes)) {
     return response.status(403).send("Caller doesn't have the required permissions");
   }
