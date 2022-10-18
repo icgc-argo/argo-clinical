@@ -29,7 +29,7 @@ type TokenValidationResult = { success: boolean; data?: TokenData };
 type TokenData = {
   scopes: string[];
 };
-type JwtPayload = { context: { scopes: [] } };
+type JwtPayload = { context: { scopes: string[] } };
 
 const getToken = async (request: Request): Promise<TokenValidationResult> => {
   if (!request.headers.authorization?.startsWith('Bearer ')) {
