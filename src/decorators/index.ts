@@ -29,7 +29,7 @@ type TokenValidationResult = { success: boolean; data?: TokenData };
 type TokenData = {
   scopes: string[];
 };
-type JwtPayload = { context: { scopes: string[] } };
+type JwtPayload = { context: { scope: string[] } };
 
 const getToken = async (request: Request): Promise<TokenValidationResult> => {
   if (!request.headers.authorization?.startsWith('Bearer ')) {
@@ -53,7 +53,7 @@ const verifyJwt = (tokenJwtString: string): TokenValidationResult => {
   }
   try {
     const decoded = jwt.verify(`${tokenJwtString}`, key);
-    const scopes = _.isObjectLike(decoded) && (<JwtPayload>decoded).context?.scopes;
+    const scopes = _.isObjectLike(decoded) && (<JwtPayload>decoded).context?.scope;
     return _.isArray(scopes) ? { success: true, data: { scopes } } : { success: false };
   } catch (err) {
     L.debug(`invalid token provided ${err}`);
