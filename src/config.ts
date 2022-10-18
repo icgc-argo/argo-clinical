@@ -37,6 +37,9 @@ export interface AppConfig {
   testApisDisabled(): boolean;
   kafkaProperties(): KafkaConfigurations;
   rxNormDbProperties(): RxNormDbConfig;
+  egoUrl(): string;
+  egoClientId(): string;
+  egoClientSecret(): string;
 }
 
 class ConfigManager {

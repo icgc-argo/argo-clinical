@@ -122,6 +122,15 @@ let server: Server;
         timeout: Number(process.env.RXNORM_DB_TIMEOUT_MILLIS) || 5 * 1000,
       };
     },
+    egoUrl(): string {
+      return process.env.EGO_URL || secrets.EGO_URL || '';
+    },
+    egoClientId(): string {
+      return process.env.EGO_CLIENT_ID || secrets.EGO_CLIENT_ID || '';
+    },
+    egoClientSecret(): string {
+      return process.env.EGO_CLIENT_SECRET || secrets.EGO_CLIENT_SECRET || '';
+    },
   };
 
   let connection: any;

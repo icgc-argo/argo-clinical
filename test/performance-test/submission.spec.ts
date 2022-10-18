@@ -154,6 +154,15 @@ describe('Submission Api', () => {
               port: mysqlContainer.getMappedPort(3306),
             };
           },
+          egoUrl() {
+            return '';
+          },
+          egoClientId() {
+            return '';
+          },
+          egoClientSecret() {
+            return '';
+          },
         });
       } catch (err) {
         return err;

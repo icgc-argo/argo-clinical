@@ -24,7 +24,7 @@ import { ActiveClinicalSubmission, SUBMISSION_STATE } from './submission-entitie
 import { MongooseUtils, F, Errors } from '../utils';
 import { InternalError } from './errors';
 import _ from 'lodash';
-import uuid from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 const L = loggerFor(__filename);
 
 export interface ClinicalSubmissionRepository {
@@ -142,7 +142,7 @@ export const submissionRepository: ClinicalSubmissionRepository = {
     updatingFields: ActiveClinicalSubmission,
   ): Promise<DeepReadonly<ActiveClinicalSubmission> | undefined> {
     try {
-      const newVersion = uuid();
+      const newVersion = uuidv4();
       const updated = (await ActiveSubmissionModel.findOneAndUpdate(
         { programId, version },
         { ...updatingFields, version: newVersion },
