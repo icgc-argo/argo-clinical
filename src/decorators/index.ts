@@ -25,7 +25,7 @@ import { loggerFor } from '../logger';
 import { config } from '../config';
 const L = loggerFor(__filename);
 
-type TokenValidationResult = { success: boolean; data?: TokenData; error?: any };
+type TokenValidationResult = { success: boolean; data?: TokenData };
 type TokenData = {
   scopes: string[];
 };
@@ -33,7 +33,8 @@ type JwtPayload = { context: { scopes: [] } };
 
 const getToken = async (request: Request): Promise<TokenValidationResult> => {
   if (!request.headers.authorization?.startsWith('Bearer ')) {
-    return { success: false, error: `invalid token provided` };
+    L.debug(`invalid token provided`);
+    return { success: false };
   }
 
   const authToken = request.headers.authorization.slice(7).trim(); // remove 'Bearer ' from header
