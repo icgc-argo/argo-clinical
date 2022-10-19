@@ -18,52 +18,91 @@
  */
 
 import { Request, Response, RequestHandler, NextFunction } from 'express';
+import _ from 'lodash';
 import jwt from 'jsonwebtoken';
+import fetch from 'node-fetch';
 import { loggerFor } from '../logger';
 import { config } from '../config';
 const L = loggerFor(__filename);
 
-const getToken = (request: Request) => {
-  if (!request.headers.authorization) {
-    return undefined;
+type TokenValidationResult = { success: boolean; data?: TokenData };
+type TokenData = {
+  scopes: string[];
+};
+type JwtPayload = { context: { scope: string[] } };
+
+const getToken = async (request: Request): Promise<TokenValidationResult> => {
+  if (!request.headers.authorization?.startsWith('Bearer ')) {
+    L.debug(`invalid token provided`);
+    return { success: false };
   }
-  const token = decodeAndVerify(request.headers.authorization.split(' ')[1]);
-  return token;
+
+  const authToken = request.headers.authorization.slice(7).trim(); // remove 'Bearer ' from header
+  const isJwt = Boolean(jwt.decode(authToken));
+  const tokenResult = isJwt ? verifyJwt(authToken) : await verifyEgoApiKey(authToken);
+
+  return tokenResult;
 };
 
-const decodeAndVerify = (tokenJwtString: string) => {
+const verifyJwt = (tokenJwtString: string): TokenValidationResult => {
   const key = config.getConfig().jwtPubKey();
   if (key.trim() === '') {
-    throw new Error('no key found to verify the token');
+    const err = 'no key found to verify the token';
+    L.debug(err);
+    return { success: false };
   }
   try {
-    const decoded = jwt.verify(tokenJwtString, key);
-    return decoded;
+    const decoded = jwt.verify(`${tokenJwtString}`, key);
+    const scopes = _.isObjectLike(decoded) && (<JwtPayload>decoded).context?.scope;
+    return _.isArray(scopes) ? { success: true, data: { scopes } } : { success: false };
   } catch (err) {
     L.debug(`invalid token provided ${err}`);
-    return undefined;
+    return { success: false };
   }
 };
 
-const hasScope = (scopes: string[], token: any) => {
-  if (
-    !token.context ||
-    !token.context.scope ||
-    token.context.scope.filter((s: string) => scopes.indexOf(s) >= 0).length === 0
-  ) {
-    return false;
-  }
-  return true;
+const verifyEgoApiKey = async (keyString: string): Promise<TokenValidationResult> => {
+  const EGO_URL = config.getConfig().egoUrl();
+  const EGO_CLIENT_ID = config.getConfig().egoClientId();
+  const EGO_CLIENT_SECRET = config.getConfig().egoClientSecret();
+  const auth = 'Basic ' + Buffer.from(EGO_CLIENT_ID + ':' + EGO_CLIENT_SECRET).toString('base64');
+
+  return await fetch(`${EGO_URL}/o/check_api_key?apiKey=${keyString}`, {
+    method: 'post',
+    headers: { 'Content-Type': 'application/json', authorization: auth },
+  })
+    .then(async res => {
+      const token = await res.json();
+      const { scopes } = token;
+      if (token.error || !scopes) throw token.error || 'No token scopes provided';
+      return { success: true, data: { scopes } };
+    })
+    .catch(err => {
+      L.debug(`Error response: ${err}`);
+      return { success: false };
+    });
 };
 
-const checkAuthorization = (scopes: string[], request: Request, response: Response) => {
-  const token = getToken(request);
-  if (!token) {
+/**
+ * Confirms if the at least one of the required scopes has been provided
+ * @param requiredScopes at least one of these scopes must be provided
+ * @param providedScopes scopes provided in auth header
+ * @returns {boolean} true if provided scopes contains at least one of the requiredScopes
+ */
+const hasScope = (requiredScopes: string[], providedScopes: string[]): boolean =>
+  requiredScopes.some(scope => providedScopes.includes(scope));
+
+const checkAuthorization = async (scopes: string[], request: Request, response: Response) => {
+  const { success, data } = await getToken(request);
+  if (!success || !data) {
     return response.status(401).send('This endpoint needs a valid authentication token');
   }
-  if (!hasScope(scopes, token)) {
+
+  const { scopes: tokenScopes } = data;
+  if (!hasScope(scopes, tokenScopes)) {
     return response.status(403).send("Caller doesn't have the required permissions");
   }
+
   return undefined;
 };
 
@@ -74,13 +113,13 @@ const scopeCheckGenerator = (
 ) => {
   return function(target: any, key: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value as RequestHandler;
-    descriptor.value = function() {
+    descriptor.value = async function() {
       const request = arguments[0] as Request;
       const response = arguments[1] as Response;
       const next = arguments[2] as NextFunction;
       const programId = programIdExtractor ? programIdExtractor(request) : '';
       programIdExtractor && L.debug(`${functionName} @ ${key} was called with: ${programId}`);
-      const unauthorizedResponse = checkAuthorization(
+      const unauthorizedResponse = await checkAuthorization(
         scopesGenerator(programId),
         request,
         response,

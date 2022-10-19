@@ -166,6 +166,15 @@ describe('Submission Api', () => {
               port: mysqlContainer.getMappedPort(3306),
             };
           },
+          egoUrl() {
+            return '';
+          },
+          egoClientId() {
+            return '';
+          },
+          egoClientSecret() {
+            return '';
+          },
         });
         const connPool = pool.getPool();
         await createtRxNormTables(connPool);

@@ -28,7 +28,7 @@ import {
 import { EntityAlias } from '../common-model/entities';
 import { ControllerUtils, DonorUtils, TsvUtils } from '../utils';
 import AdmZip from 'adm-zip';
-import { Donor } from './clinical-entities';
+import { ClinicalEntityData, Donor } from './clinical-entities';
 import { omit } from 'lodash';
 import { DeepReadonly } from 'deep-freeze';
 
@@ -65,6 +65,21 @@ const completionFilters = {
   all: {},
 };
 
+export const parseDonorIdList = (donorIds: string) =>
+  donorIds
+    ?.match(/\d*/gi)
+    ?.filter((match: string) => !!match && parseInt(match))
+    .map(id => parseInt(id));
+
+export const createClinicalZipFile = (data: ClinicalEntityData[]) => {
+  const zip = new AdmZip();
+  data.forEach((d: any) => {
+    const tsvData = TsvUtils.convertJsonRecordsToTsv(d.records, d.entityFields);
+    zip.addFile(`${d.entityName}.tsv`, Buffer.alloc(tsvData.length, tsvData));
+  });
+  return zip;
+};
+
 class ClinicalController {
   @HasFullReadAccess()
   async findDonors(req: Request, res: Response) {
@@ -86,30 +101,27 @@ class ClinicalController {
       .contentType('application/zip')
       .attachment(`${programId}_Clinical_Data_${todaysDate}.zip`);
 
-    const zip = new AdmZip();
-    data.forEach((d: any) => {
-      const tsvData = TsvUtils.convertJsonRecordsToTsv(d.records, d.entityFields);
-      zip.addFile(`${d.entityName}.tsv`, Buffer.alloc(tsvData.length, tsvData));
-    });
+    const zip = createClinicalZipFile(data);
 
     res.send(zip.toBuffer());
   }
 
   @HasProgramReadAccess((req: Request) => req.params.programId)
-  async getProgramClinicalEntityData(req: Request, res: Response) {
+  async getSpecificClinicalDataAsTsvsInZip(req: Request, res: Response) {
     const programId: string = req.params.programId;
-    const sort: string = req.query.sort || 'donorId';
-    const page: number = parseInt(req.query.page);
+    if (!programId) {
+      return ControllerUtils.badRequest(res, 'Invalid programId provided');
+    }
+    const sort: string = 'donorId';
+    const page: number = 0;
     const state: CompletionStates = req.query.completionState || CompletionStates.all;
     const completionState: {} = completionFilters[state] || {};
-    const entityTypes: string[] =
-      req.query.entityTypes && req.query.entityTypes.length > 0
-        ? req.query.entityTypes.split(',')
-        : [''];
 
-    const donorIds: number[] =
-      req.query.donorIds?.match(/\d*/gi)?.filter((match: string) => !!match && parseInt(match)) ||
-      [];
+    const entityTypes: string[] =
+      req.query.entityTypes !== undefined ? req.query.entityTypes.split(',') : [];
+
+    const donorIds: number[] = parseDonorIdList(req.query.donorIds) || [];
+
     const submitterDonorIds: string[] =
       req.query.submitterDonorIds && req.query.submitterDonorIds.length > 0
         ? req.query.submitterDonorIds?.split(',').filter((match: string) => !!match)
@@ -125,9 +137,54 @@ class ClinicalController {
       completionState,
     };
 
+    const entityData = await service
+      .getPaginatedClinicalData(programId, query)
+      .then(data => data.clinicalEntities);
+
+    const todaysDate = currentDateFormatted();
+    const fileName = `filename=${programId}_Clinical_Data_${todaysDate}.zip`;
+    res
+      .status(200)
+      .contentType('application/zip')
+      .attachment(fileName)
+      .setHeader('content-disposition', fileName);
+
+    const zip = createClinicalZipFile(entityData);
+
+    res.send(zip.toBuffer());
+  }
+
+  @HasProgramReadAccess((req: Request) => req.params.programId)
+  async getProgramClinicalEntityData(req: Request, res: Response) {
+    const programId: string = req.params.programId;
     if (!programId) {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
+    const sort: string = req.query.sort || 'donorId';
+    const page: number = parseInt(req.query.page);
+    const state: CompletionStates = req.query.completionState || CompletionStates.all;
+    const completionState: {} = completionFilters[state] || {};
+    const entityTypes: string[] =
+      req.query.entityTypes && req.query.entityTypes.length > 0
+        ? req.query.entityTypes.split(',')
+        : ['donor'];
+
+    const donorIds: number[] = parseDonorIdList(req.query.donorIds) || [];
+
+    const submitterDonorIds: string[] =
+      req.query.submitterDonorIds && req.query.submitterDonorIds.length > 0
+        ? req.query.submitterDonorIds?.split(',').filter((match: string) => !!match)
+        : [];
+
+    const query: ClinicalQuery = {
+      ...req.query,
+      sort,
+      entityTypes,
+      page,
+      donorIds,
+      submitterDonorIds,
+      completionState,
+    };
 
     const entityData = await service.getPaginatedClinicalData(programId, query);
 
@@ -137,6 +194,9 @@ class ClinicalController {
   @HasProgramReadAccess((req: Request) => req.params.programId)
   async getProgramClinicalSearchResults(req: Request, res: Response) {
     const programId: string = req.params.programId;
+    if (!programId) {
+      return ControllerUtils.badRequest(res, 'Invalid programId provided');
+    }
     const state: CompletionStates = req.query.completionState || CompletionStates.all;
     const completionState: {} = completionFilters[state] || {};
     const entityTypes: string[] =
@@ -149,7 +209,7 @@ class ClinicalController {
     const submitterDonorIds =
       req.query.submitterDonorIds && req.query.submitterDonorIds.length > 0
         ? req.query.submitterDonorIds.split(',').filter((match: string) => !!match)
-        : '';
+        : [];
 
     const query: ClinicalSearchQuery = {
       ...req.query,
@@ -158,10 +218,6 @@ class ClinicalController {
       entityTypes,
       completionState,
     };
-
-    if (!programId) {
-      return ControllerUtils.badRequest(res, 'Invalid programId provided');
-    }
 
     const searchData = await service.getClinicalSearchResults(programId, query);
 

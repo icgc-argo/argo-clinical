@@ -842,7 +842,7 @@ paths:
           schema:
             type: array
             items:
-              type: integer
+              type: string
           description: Submitter ID values to return
         - in: query
           name: completionState
@@ -890,6 +890,103 @@ paths:
           $ref: '#/components/responses/ServerError'
         '200':
           description: 'Array of Clinical Error objects'
+
+  /clinical/program/:programId/clinical-search-results:
+    get:
+      tags:
+        - Clinical Data
+      summary: Get donorIds and submitter donor IDs which match a query for a given program. Returns DonorId[] + SubmitterDonorId[].
+      parameters:
+        - $ref: '#/components/parameters/PathProgramId'
+        - in: query
+          name: entityTypes
+          schema:
+            type: array
+            items:
+              type: string
+          description: Clinical Entity data types to return
+        - in: query
+          name: donorIds
+          schema:
+            type: array
+            items:
+              type: integer
+          description: Donor ID values to query
+        - in: query
+          name: submitterDonorIds
+          schema:
+            type: array
+            items:
+              type: string
+          description: Submitter ID values to query
+        - in: query
+          name: completionState
+          schema:
+            type: string
+          description: Entity CompletionStates to filter by, one of 'all' | 'invalid' | 'complete' | 'incomplete'
+      responses:
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+        '200':
+          description: 'Array of DonorIds + SubmitterDonorIds'
+
+  /clinical/program/{programId}/clinical-tsv:
+    get:
+      tags:
+        - Clinical Data
+      summary: Get filtered clinical data as TSV files for a program
+      description: Returns a zip file with commited clinical entity data in tsvs, filtered by request query. Exported data may not be valid with current dictionary.
+      parameters:
+        - $ref: '#/components/parameters/PathProgramId'
+        - in: query
+          name: entityTypes
+          schema:
+            type: array
+            items:
+              type: string
+          description: Clinical Entity data types to return
+        - in: query
+          name: donorIds
+          schema:
+            type: array
+            items:
+              type: integer
+          description: Donor ID values to return
+        - in: query
+          name: submitterDonorIds
+          schema:
+            type: array
+            items:
+              type: string
+          description: Submitter ID values to return
+        - in: query
+          name: completionState
+          schema:
+            type: string
+          description: Entity CompletionStates to filter by, one of 'all' | 'invalid' | 'complete' | 'incomplete'
+      responses:
+        '200':
+          description: 'A zip file with tsv file(s) inside'
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Invalid programId provided
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
   /clinical/program/{programId}/tsv-export:
     parameters:
       - $ref: '#/components/parameters/PathProgramId'

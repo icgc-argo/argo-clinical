@@ -166,6 +166,15 @@ describe('clinical Api', () => {
               user: '',
             };
           },
+          egoUrl() {
+            return '';
+          },
+          egoClientId() {
+            return '';
+          },
+          egoClientSecret() {
+            return '';
+          },
         });
       } catch (err) {
         console.error('before >>>>>>>>>>>', err);

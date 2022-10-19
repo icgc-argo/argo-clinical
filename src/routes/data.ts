@@ -45,6 +45,10 @@ router.get(
   wrapAsync(clinicalApi.getProgramClinicalSearchResults),
 );
 router.get('/program/:programId/clinical-errors', wrapAsync(clinicalApi.getProgramClinicalErrors));
+router.get(
+  '/program/:programId/clinical-tsv',
+  wrapAsync(clinicalApi.getSpecificClinicalDataAsTsvsInZip),
+);
 
 // Get TSV Data
 router.get(

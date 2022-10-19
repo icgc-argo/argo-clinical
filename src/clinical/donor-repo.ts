@@ -216,21 +216,22 @@ export const donorDao: DonorRepository = {
     // For most use cases, all Donor documents must be retrieved for accurate filtering
     // Specific Requests for Donor documents can be paginated at the MongoDB level
 
-    const limit = entityTypes.includes('donor')
-      ? pageSize
-      : await DonorModel.countDocuments({ programId });
+    const limit =
+      entityTypes.includes('donor') && pageSize
+        ? pageSize
+        : await DonorModel.countDocuments({ programId });
 
     // React-Table Pagination is 0 indexed, BE Mongoose-Paginate is 1 indexed
     const page = entityTypes.includes('donor') && donorIds.length === 0 ? queryPage + 1 : 1;
     const donorSearch =
-      donorIds.length > 0
+      donorIds && donorIds.length > 0
         ? {
             donorId: { $in: donorIds },
           }
         : {};
 
     const submitterSearch =
-      submitterDonorIds.length > 0
+      submitterDonorIds && submitterDonorIds.length > 0
         ? { 'clinicalInfo.submitter_donor_id': { $in: submitterDonorIds } }
         : {};
 

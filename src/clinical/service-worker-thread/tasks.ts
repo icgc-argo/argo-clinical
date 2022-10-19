@@ -158,7 +158,7 @@ const mapEntityDocuments = (
   const { entityName, results } = entity;
 
   // Filter, Paginate + Sort
-  const { page, pageSize, sort, entityTypes } = query;
+  const { page, pageSize = results.length, sort, entityTypes } = query;
   const relevantSchemaWithFields = schemas.find((s: any) => s.name === entityName);
   const entityInQuery = isEntityInQuery(entityName, entityTypes);
 
