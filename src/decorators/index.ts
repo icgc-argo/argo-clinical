@@ -73,7 +73,7 @@ const verifyEgoApiKey = async (keyString: string): Promise<TokenValidationResult
   })
     .then(async res => {
       const token = await res.json();
-      const { scopes } = token;
+      const scopes = token.scope;
       if (token.error || !scopes) throw token.error || 'No token scopes provided';
       return { success: true, data: { scopes } };
     })
