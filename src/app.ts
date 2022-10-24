@@ -34,6 +34,7 @@ import submissionRouter from './routes/submission';
 import dictionaryRouter from './routes/dictionary';
 import configRouter from './routes/config';
 import icgcImport from './routes/icgc-import';
+import exceptionRouter from './routes/exception';
 import responseTime from 'response-time';
 import morgan from 'morgan';
 
@@ -86,6 +87,8 @@ app.use('/submission/configs', configRouter);
 app.use('/submission/program/:programId/registration', registrationRouter);
 app.use('/submission/program/:programId/clinical', submissionRouter);
 app.use('/submission/icgc-import', icgcImport);
+
+app.use('/exception/:programId', exceptionRouter);
 
 app.use('/dictionary', dictionaryRouter);
 app.use('/submission/schema', dictionaryRouter); // deprecated
