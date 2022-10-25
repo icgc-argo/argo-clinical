@@ -18,7 +18,7 @@
  */
 
 import * as dictionaryManager from '../dictionary/manager';
-import { programExceptionRepository } from './repo';
+import { programExceptionRepository } from './exception-repo';
 import { ProgramException, ProgramExceptionRecord } from './types';
 
 const recordsToException = (programId: string, records: any): ProgramException => ({
