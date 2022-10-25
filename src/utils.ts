@@ -121,6 +121,10 @@ export namespace ControllerUtils {
     return res.status(503).send({ message });
   };
 
+  export const unableToProcess = (res: Response, message: string): any => {
+    return res.status(422).send({ message });
+  };
+
   export const invalidBatch = (
     res: Response,
     batchErrors: SubmissionBatchError | SubmissionBatchError[],
