@@ -17,60 +17,51 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 import mongoose from 'mongoose';
-import { F, MongooseUtils } from '../utils';
+import { MongooseUtils } from '../utils';
 import { loggerFor } from '../logger';
 import { DeepReadonly } from 'deep-freeze';
+import { ProgramException } from './types';
 
 const L = loggerFor(__filename);
 
-const ExceptionSchema = new mongoose.Schema({
-  schema: { type: String },
-  coreField: { type: String },
-  exceptionValue: { type: String, enum: ['Unknown', 'Missing', 'Not applicable'] },
-});
-
-const ProgramExceptionSchema = new mongoose.Schema({
-  name: { type: String, unique: true, required: true },
-  exceptions: [ExceptionSchema],
+const programExceptionSchema = new mongoose.Schema({
+  programId: String,
+  exceptions: [
+    {
+      schema: String,
+      coreField: String,
+      exceptionValue: { type: String, enum: ['Unknown', 'Missing', 'Not applicable'] },
+    },
+  ],
 });
 
 type ProgramExceptionDocument = mongoose.Document & ProgramException;
 
 export const ProgramExceptionModel = mongoose.model<ProgramExceptionDocument>(
   'ProgramException',
-  ProgramExceptionSchema,
+  programExceptionSchema,
 );
 
-interface ProgramExceptionItem {
-  schema: string;
-  coreField: string;
-  exceptionValue: string;
-}
-
-export interface ProgramException {
-  name: string;
-  exceptions: ProgramExceptionItem[];
-}
-
 export interface ProgramExceptionRepository {
-  create(programException: ProgramException): Promise<DeepReadonly<ProgramException>>;
+  create(exception: ProgramException): Promise<DeepReadonly<ProgramException>>;
   find(name: string): Promise<DeepReadonly<ProgramException> | undefined>;
-  update(programException: ProgramException): Promise<DeepReadonly<ProgramException> | undefined>;
   delete(name: string): Promise<void>;
 }
 
 export const programExceptionRepository: ProgramExceptionRepository = {
-  async create(req: ProgramException) {
-    L.debug(`Creating new program exception with: ${JSON.stringify(req)}`);
-    const exception: ProgramException = { ...req };
-    const programException = new ProgramExceptionModel(exception);
+  async create(exception: ProgramException) {
+    L.debug(`Creating new program exception with: ${JSON.stringify(exception)}`);
     try {
-      const doc = await programException.save();
+      const doc = await ProgramExceptionModel.findOneAndUpdate(
+        { programId: exception.programId },
+        exception,
+        { upsert: true, new: true, overwrite: true },
+      );
       L.info(`doc created ${doc}`);
       L.info('saved program exception');
-      return F(MongooseUtils.toPojo(doc) as ProgramException);
+      return MongooseUtils.toPojo(doc) as ProgramException;
     } catch (e) {
-      L.error('failed to create program exception', e);
+      L.error('failed to create program exception: ', e);
       throw new Error('failed to create program exception');
     }
   },
@@ -81,31 +72,11 @@ export const programExceptionRepository: ProgramExceptionRepository = {
       const doc = await ProgramExceptionModel.findOne({ name });
       if (doc) {
         L.info(`doc found ${doc}`);
-        return F(MongooseUtils.toPojo(doc) as ProgramException);
+        return MongooseUtils.toPojo(doc) as ProgramException;
       }
     } catch (e) {
       L.error('failed to find program exception', e);
       throw new Error(`failed to find program exception with name: ${JSON.stringify(name)}`);
-    }
-  },
-
-  // update replaces entire program exceptions record
-  async update(programException: ProgramException) {
-    L.debug(
-      `finding program exception with program name: ${JSON.stringify(programException.name)}`,
-    );
-    try {
-      const doc = await ProgramExceptionModel.replaceOne(
-        { name: programException.name },
-        programException,
-      );
-      if (doc) {
-        L.info(`doc found ${doc}`);
-        return F(MongooseUtils.toPojo(doc) as ProgramException);
-      }
-    } catch (e) {
-      L.error('failed to find program exception', e);
-      throw new Error(`failed to update program exception with name: ${JSON.stringify(name)}`);
     }
   },
 
