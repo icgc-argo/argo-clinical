@@ -235,12 +235,15 @@ export const donorDao: DonorRepository = {
         ? { 'clinicalInfo.submitter_donor_id': { $in: submitterDonorIds } }
         : {};
 
+    const searchTerms = {
+      $or: [donorSearch, submitterSearch],
+    };
+
     const result = await DonorModel.paginate(
       {
         programId,
         ...completionState,
-        ...donorSearch,
-        ...submitterSearch,
+        ...searchTerms,
       },
       {
         projection,
