@@ -248,7 +248,10 @@ export function filterDonorIdDataFromSearch(donors: Donor[], query: ClinicalSear
         const { donorId, clinicalInfo } = donor;
         const stringId = `${donorId}`;
         const donorMatch = donorIds?.filter(id => stringId.includes(id));
-        const submitterDonorId = clinicalInfo && `${clinicalInfo.submitter_donor_id}`;
+        const submitterDonorId =
+          (clinicalInfo?.submitter_donor_id && `${clinicalInfo.submitter_donor_id}`) ||
+          donor.submitterId;
+
         const submitterMatch = submitterDonorId
           ? submitterDonorIds?.filter(id => submitterDonorId.includes(id))
           : [];
