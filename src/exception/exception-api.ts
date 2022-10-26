@@ -25,14 +25,14 @@ import * as exceptionService from './exception-service';
 
 const L = loggerFor(__filename);
 
-export enum ProgramExceptionErrorMessage {
+enum ProgramExceptionErrorMessage {
   TSV_PARSING_FAILED = `This file is formatted incorrectly`,
 }
 
 class ExceptionController {
   @HasFullWriteAccess()
   async createProgramException(req: Request, res: Response) {
-    if (!isValidCreateBody) {
+    if (!isValidCreateBody(req, res)) {
       return false;
     }
 
@@ -64,17 +64,7 @@ class ExceptionController {
 }
 
 const isValidCreateBody = (req: Request, res: Response): boolean => {
-  if (req.body === undefined) {
-    L.debug('request body missing');
-    ControllerUtils.badRequest(res, `no body`);
-    return false;
-  }
-  if (req.params.programId === undefined) {
-    L.debug('programId missing');
-    ControllerUtils.badRequest(res, `programId is required`);
-    return false;
-  }
-  if (req.file === undefined) {
+  if (req.file === undefined || req.file.size <= 0) {
     L.debug(`File missing`);
     ControllerUtils.badRequest(res, `Program exception file upload required`);
     return false;
