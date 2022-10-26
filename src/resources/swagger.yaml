@@ -734,6 +734,8 @@ paths:
       tags:
         - Exception
       summary: Upload clinical submission files
+      parameters:
+        - $ref: '#/components/parameters/PathProgramId'
       requestBody:
         content:
           multipart/form-data:
