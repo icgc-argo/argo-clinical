@@ -727,13 +727,13 @@ paths:
         '201':
           description: imported successfully - will indicate number of new donors and number of updated donors
 
-  /exception/{programId}/upload:
+  /exception/{programId}:
+    parameters:
+      - $ref: '#/components/parameters/PathProgramId'
     post:
       tags:
         - Exception
       summary: Upload clinical submission files
-      parameters:
-        - $ref: '#/components/parameters/PathProgramId'
       requestBody:
         content:
           multipart/form-data:
@@ -752,6 +752,15 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
         '422':
           description: 'unsuccessful validation on file'
+    get:
+      tags:
+        - Exception
+      summary: Get exception
+      responses:
+        '200':
+          description: 'exception or empty object if resource not found'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
 
   /clinical/donors:
     get:
