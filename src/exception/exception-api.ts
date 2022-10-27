@@ -33,6 +33,17 @@ enum ProgramExceptionErrorMessage {
 
 class ExceptionController {
   @HasFullWriteAccess()
+  async clearProgramException(req: Request, res: Response) {
+    const programId = req.params.programId;
+    try {
+      const result = await programExceptionRepository.delete(programId);
+      return res.status(200).send();
+    } catch (e) {
+      return res.status(404).send();
+    }
+  }
+
+  @HasFullWriteAccess()
   async createProgramException(req: Request, res: Response) {
     if (!requestContainsFile(req, res)) {
       return false;
