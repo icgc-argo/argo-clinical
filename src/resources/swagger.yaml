@@ -733,7 +733,7 @@ paths:
     post:
       tags:
         - Exception
-      summary: Upload clinical submission files
+      summary: Upload exception files
       parameters:
         - $ref: '#/components/parameters/PathProgramId'
       requestBody:

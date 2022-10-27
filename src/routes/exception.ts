@@ -34,4 +34,6 @@ router.post(
 
 router.get('/', wrapAsync(exceptionApi.getProgramException));
 
+router.delete('/', wrapAsync(exceptionApi.clearProgramException));
+
 export default router;
