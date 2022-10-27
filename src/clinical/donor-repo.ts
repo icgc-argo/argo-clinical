@@ -233,7 +233,7 @@ export const donorDao: DonorRepository = {
 
     if (submitterDonorIds && submitterDonorIds.length > 0)
       searchTerms.push({
-        'clinicalInfo.submitter_donor_id': { $in: submitterDonorIds },
+        submitterId: { $in: submitterDonorIds },
       });
 
     const searchQuery =
