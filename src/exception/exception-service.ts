@@ -129,7 +129,7 @@ const checkCoreField = async (record: ProgramExceptionRecord, idx: number) => {
 };
 
 const checkRequestedValue = (record: ProgramExceptionRecord, idx: number) => {
-  const validRequests = ['Missing', 'Unknown', 'Not Applicable'];
+  const validRequests = Object.values(ExceptionValue);
   const requestedExceptionValue = record.requested_exception_value;
 
   if (requestedExceptionValue === undefined) {

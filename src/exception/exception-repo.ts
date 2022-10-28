@@ -20,7 +20,7 @@ import mongoose from 'mongoose';
 import { MongooseUtils } from '../utils';
 import { loggerFor } from '../logger';
 import { DeepReadonly } from 'deep-freeze';
-import { ProgramException } from './types';
+import { ExceptionValue, ProgramException } from './types';
 
 const L = loggerFor(__filename);
 
@@ -30,7 +30,7 @@ const programExceptionSchema = new mongoose.Schema({
     {
       schema: String,
       coreField: String,
-      exceptionValue: { type: String, enum: ['Unknown', 'Missing', 'Not applicable'] },
+      exceptionValue: { type: String, enum: Object.values(ExceptionValue) },
     },
   ],
 });

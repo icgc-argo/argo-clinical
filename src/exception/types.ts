@@ -21,10 +21,16 @@ export interface ProgramExceptionRecord {
   program_name: string;
   schema: string;
   requested_core_field: string;
-  requested_exception_value: string;
+  requested_exception_value: ExceptionValue;
 }
 
 export interface ProgramException {
   programId: string;
   exceptions: ProgramExceptionRecord[];
+}
+
+export enum ExceptionValue {
+  Unknown = 'Unknown',
+  Missing = 'Missing',
+  NotApplicable = 'Not applicable',
 }
