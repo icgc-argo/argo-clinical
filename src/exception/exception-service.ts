@@ -17,27 +17,37 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import { DeepReadonly } from 'deep-freeze';
 import * as dictionaryManager from '../dictionary/manager';
+import { SchemaWithFields } from '../dictionary/manager';
 import { programExceptionRepository } from './exception-repo';
-import { ProgramException, ProgramExceptionRecord } from './types';
+import { ExceptionValue, ProgramException, ProgramExceptionRecord } from './types';
 
-const recordsToException = (programId: string, records: any): ProgramException => ({
+const recordsToException = (
+  programId: string,
+  records: ProgramExceptionRecord[],
+): ProgramException => ({
   programId,
-  exceptions: records.map((r: any) => ({
+  exceptions: records.map(r => ({
     schema: r.schema,
     coreField: r.requested_core_field,
     exceptionValue: r.requested_exception_value,
   })),
 });
 
+interface ProgramExceptionResult {
+  programException: undefined | DeepReadonly<ProgramException>;
+  errors: ValidationError[];
+  successful: boolean;
+}
 export namespace operations {
   export const createProgramException = async ({
     programId,
     records,
   }: {
     programId: string;
-    records: any;
-  }): Promise<any> => {
+    records: ProgramExceptionRecord[];
+  }): Promise<ProgramExceptionResult> => {
     const errors = await validateExceptionRecords(programId, records);
 
     if (errors.length > 0) {
@@ -66,7 +76,7 @@ interface ValidationError {
 
 const validateExceptionRecords = async (
   programId: string,
-  records: ReadonlyArray<any>,
+  records: ReadonlyArray<ProgramExceptionRecord>,
 ): Promise<ValidationError[]> => {
   let errors: ValidationError[] = [];
 
@@ -106,11 +116,11 @@ const checkCoreField = async (record: ProgramExceptionRecord, idx: number) => {
     return [createValidationError(idx, `requested_core_field field is not defined`)];
   }
 
-  const fieldFilter = (field: any) => {
-    return field.name === requestedCoreField && field.meta?.core;
+  const fieldFilter = (field: { name: string; meta?: { core: boolean } }): boolean => {
+    return field.name === requestedCoreField && !!field.meta?.core;
   };
 
-  const schemaFilter = (schema: any) => {
+  const schemaFilter = (schema: SchemaWithFields): boolean => {
     return schema.name === record.schema;
   };
 

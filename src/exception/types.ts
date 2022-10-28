@@ -26,7 +26,11 @@ export interface ProgramExceptionRecord {
 
 export interface ProgramException {
   programId: string;
-  exceptions: ProgramExceptionRecord[];
+  exceptions: {
+    schema: string;
+    coreField: string;
+    exceptionValue: ExceptionValue;
+  }[];
 }
 
 export enum ExceptionValue {
