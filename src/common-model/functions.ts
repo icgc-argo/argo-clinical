@@ -170,7 +170,9 @@ export function getClinicalEntitySubmittedData(
     }
     case ClinicalEntitySchemaNames.SURGERY: {
       clinicalRecords = result
-        .filter(therapy => therapy.clinicalInfo.treatment_type.includes(/surgery/i))
+        .filter(therapy =>
+          therapy.clinicalInfo.treatment_type.find((type: string) => type.match(/surgery/i)),
+        )
         .map((surgery: any) => {
           const clinicalInfo = surgery.clinicalInfo || {};
           return {
