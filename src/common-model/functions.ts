@@ -70,7 +70,10 @@ export function getClinicalObjectsFromDonor(
     }
   }
 
-  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.TREATMENT) {
+  if (
+    clinicalEntitySchemaName === ClinicalEntitySchemaNames.TREATMENT ||
+    clinicalEntitySchemaName === ClinicalEntitySchemaNames.SURGERY
+  ) {
     if (donor.treatments) {
       return donor.treatments;
     }
@@ -134,39 +137,62 @@ export function getClinicalEntitySubmittedData(
 ): ClinicalInfo[] {
   const result = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName) as any[];
 
-  const clinicalRecords =
-    clinicalEntitySchemaName === ClinicalEntitySchemaNames.DONOR
-      ? result.map((entity: any) => ({
+  let clinicalRecords = [];
+
+  switch (clinicalEntitySchemaName) {
+    case ClinicalEntitySchemaNames.DONOR: {
+      clinicalRecords = result.map((entity: any) => ({
+        donor_id: donor.donorId,
+        program_id: donor.programId,
+        ...entity.clinicalInfo,
+      }));
+      break;
+    }
+    case ClinicalEntitySchemaNames.TREATMENT: {
+      clinicalRecords = result.map((treatment: any) => {
+        const clinicalInfo = treatment.clinicalInfo || {};
+        const therapy_type =
+          treatment.therapies.length === 1
+            ? { therapy_type: treatment.therapies[0].therapyType }
+            : {};
+        const therapy_info =
+          treatment.therapies.length === 1 && treatment.therapies[0].clinicalInfo;
+        return {
           donor_id: donor.donorId,
           program_id: donor.programId,
-          ...entity.clinicalInfo,
-        }))
-      : clinicalEntitySchemaName === ClinicalEntitySchemaNames.TREATMENT
-      ? result.map((treatment: any) => {
-          const clinicalInfo = treatment.clinicalInfo || {};
-          const therapy_type =
-            treatment.therapies.length === 1
-              ? { therapy_type: treatment.therapies[0].therapyType }
-              : {};
-          const therapy_info =
-            treatment.therapies.length === 1 && treatment.therapies[0].clinicalInfo;
+          treatment_id: treatment.treatmentId,
+          ...clinicalInfo,
+          ...therapy_type,
+          ...therapy_info,
+        };
+      });
+      break;
+    }
+    case ClinicalEntitySchemaNames.SURGERY: {
+      clinicalRecords = result
+        .filter(therapy => therapy.clinicalInfo.treatment_type.includes(/surgery/i))
+        .map((surgery: any) => {
+          const clinicalInfo = surgery.clinicalInfo || {};
           return {
             donor_id: donor.donorId,
             program_id: donor.programId,
-            treatment_id: treatment.treatmentId,
+            treatment_id: surgery.treatmentId,
             ...clinicalInfo,
-            ...therapy_type,
-            ...therapy_info,
           };
-        })
-      : result
-          .filter(record => notEmpty(record.clinicalInfo))
-          .map((entity: any) => ({
-            donor_id: donor.donorId,
-            program_id: donor.programId,
-            submitter_id: donor.submitterId,
-            ...entity.clinicalInfo,
-          }));
+        });
+      break;
+    }
+    default: {
+      clinicalRecords = result
+        .filter(record => notEmpty(record.clinicalInfo))
+        .map((entity: any) => ({
+          donor_id: donor.donorId,
+          program_id: donor.programId,
+          submitter_id: donor.submitterId,
+          ...entity.clinicalInfo,
+        }));
+    }
+  }
 
   return clinicalRecords;
 }
