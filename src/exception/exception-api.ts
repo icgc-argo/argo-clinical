@@ -22,6 +22,7 @@ import { HasFullWriteAccess } from '../decorators';
 import { loggerFor } from '../logger';
 import { ControllerUtils, TsvUtils } from '../utils';
 import * as exceptionService from './exception-service';
+import { isProgramExceptionRecord, isReadonlyArrayOf } from './types';
 
 const L = loggerFor(__filename);
 
@@ -39,27 +40,29 @@ class ExceptionController {
     const programId = req.params.programId;
     const file = req.file;
 
-    let records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj>;
-
     try {
-      records = await TsvUtils.tsvToJson(file.path);
+      const records = await TsvUtils.tsvToJson(file.path);
       if (records.length === 0) {
         throw new Error('TSV has no records!');
       }
+
+      if (!isReadonlyArrayOf(records, isProgramExceptionRecord)) {
+        throw new Error('TSV is incorrectly structured');
+      }
+
+      const result = await exceptionService.operations.createProgramException({
+        programId,
+        records,
+      });
+
+      if (!result.successful) {
+        return res.status(422).send(result);
+      }
+      return res.status(201).send(result);
     } catch (err) {
       L.error(`Program Exception TSV_PARSING_FAILED`, err);
       return ControllerUtils.unableToProcess(res, ProgramExceptionErrorMessage.TSV_PARSING_FAILED);
     }
-
-    const result = await exceptionService.operations.createProgramException({
-      programId,
-      records,
-    });
-
-    if (!result.successful) {
-      return res.status(422).send(result);
-    }
-    return res.status(201).send(result);
   }
 }
 

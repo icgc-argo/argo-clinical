@@ -25,7 +25,7 @@ import { ExceptionValue, ProgramException, ProgramExceptionRecord } from './type
 
 const recordsToException = (
   programId: string,
-  records: ProgramExceptionRecord[],
+  records: ReadonlyArray<ProgramExceptionRecord>,
 ): ProgramException => ({
   programId,
   exceptions: records.map(r => ({
@@ -46,7 +46,7 @@ export namespace operations {
     records,
   }: {
     programId: string;
-    records: ProgramExceptionRecord[];
+    records: ReadonlyArray<ProgramExceptionRecord>;
   }): Promise<ProgramExceptionResult> => {
     const errors = await validateExceptionRecords(programId, records);
 
