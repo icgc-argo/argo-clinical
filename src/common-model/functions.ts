@@ -58,58 +58,49 @@ export function getClinicalObjectsFromDonor(
     return donor.specimens;
   }
 
-  if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS) {
-    if (donor.primaryDiagnoses) {
-      return donor.primaryDiagnoses;
-    }
+  if (
+    clinicalEntitySchemaName == ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS &&
+    donor.primaryDiagnoses
+  ) {
+    return donor.primaryDiagnoses;
   }
 
-  if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.FAMILY_HISTORY) {
-    if (donor.familyHistory) {
-      return donor.familyHistory;
-    }
+  if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.FAMILY_HISTORY && donor.familyHistory) {
+    return donor.familyHistory;
   }
 
   if (
-    clinicalEntitySchemaName === ClinicalEntitySchemaNames.TREATMENT ||
-    clinicalEntitySchemaName === ClinicalEntitySchemaNames.SURGERY
+    (clinicalEntitySchemaName === ClinicalEntitySchemaNames.TREATMENT ||
+      clinicalEntitySchemaName === ClinicalEntitySchemaNames.SURGERY) &&
+    donor.treatments
   ) {
-    if (donor.treatments) {
-      return donor.treatments;
-    }
+    return donor.treatments;
   }
 
-  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.FOLLOW_UP) {
-    if (donor.followUps) {
-      return donor.followUps;
-    }
+  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.FOLLOW_UP && donor.followUps) {
+    return donor.followUps;
   }
 
-  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.EXPOSURE) {
-    if (donor.exposure) {
-      return donor.exposure;
-    }
+  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.EXPOSURE && donor.exposure) {
+    return donor.exposure;
   }
 
-  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.BIOMARKER) {
-    if (donor.biomarker) {
-      return donor.biomarker;
-    }
+  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.BIOMARKER && donor.biomarker) {
+    return donor.biomarker;
   }
 
-  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.COMORBIDITY) {
-    if (donor.comorbidity) {
-      return donor.comorbidity;
-    }
+  if (clinicalEntitySchemaName === ClinicalEntitySchemaNames.COMORBIDITY && donor.comorbidity) {
+    return donor.comorbidity;
   }
 
-  if (ClinicalTherapySchemaNames.find(tsn => tsn === clinicalEntitySchemaName)) {
-    if (donor.treatments) {
-      return donor.treatments
-        .map(tr => tr.therapies.filter(th => th.therapyType === clinicalEntitySchemaName))
-        .flat()
-        .filter(notEmpty);
-    }
+  if (
+    ClinicalTherapySchemaNames.find(tsn => tsn === clinicalEntitySchemaName) &&
+    donor.treatments
+  ) {
+    return donor.treatments
+      .map(tr => tr.therapies.filter(th => th.therapyType === clinicalEntitySchemaName))
+      .flat()
+      .filter(notEmpty);
   }
 
   return [];
