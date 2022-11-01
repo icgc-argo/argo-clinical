@@ -18,7 +18,7 @@
  */
 
 import { DeepReadonly } from 'deep-freeze';
-import { Donor, ClinicalInfo } from '../clinical/clinical-entities';
+import { Donor, ClinicalInfo, Treatment } from '../clinical/clinical-entities';
 import {
   ClinicalEntitySchemaNames,
   ClinicalUniqueIdentifier,
@@ -132,7 +132,7 @@ export function getClinicalEntitySubmittedData(
 
   switch (clinicalEntitySchemaName) {
     case ClinicalEntitySchemaNames.DONOR: {
-      clinicalRecords = result.map((entity: any) => ({
+      clinicalRecords = result.map((entity: Donor) => ({
         donor_id: donor.donorId,
         program_id: donor.programId,
         ...entity.clinicalInfo,
@@ -140,7 +140,7 @@ export function getClinicalEntitySubmittedData(
       break;
     }
     case ClinicalEntitySchemaNames.TREATMENT: {
-      clinicalRecords = result.map((treatment: any) => {
+      clinicalRecords = result.map((treatment: Treatment) => {
         const clinicalInfo = treatment.clinicalInfo || {};
         const therapy_type =
           treatment.therapies.length === 1
@@ -161,10 +161,12 @@ export function getClinicalEntitySubmittedData(
     }
     case ClinicalEntitySchemaNames.SURGERY: {
       clinicalRecords = result
-        .filter(therapy =>
-          therapy.clinicalInfo.treatment_type.find((type: string) => type.match(/surgery/i)),
-        )
-        .map((surgery: any) => {
+        .filter((treatment: Treatment) => {
+          const clinicalInfo: ClinicalInfo = treatment.clinicalInfo;
+          const treatmentType = <string[]>clinicalInfo['treatment_type'];
+          return treatmentType && treatmentType.find((type: string) => type.match(/surgery/i));
+        })
+        .map((surgery: Treatment) => {
           const clinicalInfo = surgery.clinicalInfo || {};
           return {
             donor_id: donor.donorId,
