@@ -33,7 +33,7 @@ enum ProgramExceptionErrorMessage {
 class ExceptionController {
   @HasFullWriteAccess()
   async createProgramException(req: Request, res: Response) {
-    if (!isValidCreateBody(req, res)) {
+    if (!requestContainsFile(req, res)) {
       return false;
     }
 
@@ -66,7 +66,7 @@ class ExceptionController {
   }
 }
 
-const isValidCreateBody = (req: Request, res: Response): boolean => {
+const requestContainsFile = (req: Request, res: Response): boolean => {
   if (req.file === undefined || req.file.size <= 0) {
     L.debug(`File missing`);
     ControllerUtils.badRequest(res, `Program exception file upload required`);
