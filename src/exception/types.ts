@@ -35,7 +35,6 @@ export interface ProgramException {
 
 export enum ExceptionValue {
   Unknown = 'Unknown',
-  Missing = 'Missing',
   NotApplicable = 'Not applicable',
 }
 
