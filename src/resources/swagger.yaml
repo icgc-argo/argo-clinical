@@ -727,6 +727,32 @@ paths:
         '201':
           description: imported successfully - will indicate number of new donors and number of updated donors
 
+  /exception/{programId}/upload:
+    post:
+      tags:
+        - Exception
+      summary: Upload clinical submission files
+      parameters:
+        - $ref: '#/components/parameters/PathProgramId'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                programExceptionFile:
+                  type: string
+                  format: binary
+        description: the tsv program exception file
+        required: true
+      responses:
+        '201':
+          description: 'successful upload'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '422':
+          description: 'unsuccessful validation on file'
+
   /clinical/donors:
     get:
       deprecated: true
@@ -1225,6 +1251,8 @@ tags:
     description: Registering new Donors, Specimens, and Samples
   - name: Submission
     description: Uploading, Validating, and Committing clinical data
+  - name: Exception
+    description: Uploading exceptions
   - name: Clinical Data
     description: ''
   - name: Patch Operations
