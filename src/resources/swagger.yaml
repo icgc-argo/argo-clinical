@@ -806,7 +806,7 @@ paths:
           $ref: '#/components/responses/ServerError'
         '200':
           description: 'Stream of newline `\n` delimited JSON objects'
-  /clinical/program/:programId/clinical-data:
+  /clinical/program/{programId}/clinical-data:
     get:
       tags:
         - Clinical Data
@@ -865,7 +865,7 @@ paths:
           $ref: '#/components/responses/ServerError'
         '200':
           description: 'Array of Clinical Entity objects'
-  /clinical/program/:programId/clinical-errors:
+  /clinical/program/{programId}/clinical-errors:
     get:
       tags:
         - Clinical Data
@@ -891,7 +891,7 @@ paths:
         '200':
           description: 'Array of Clinical Error objects'
 
-  /clinical/program/:programId/clinical-search-results:
+  /clinical/program/{programId}/clinical-search-results:
     get:
       tags:
         - Clinical Data
