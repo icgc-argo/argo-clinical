@@ -58,7 +58,6 @@ export namespace operations {
       };
     } else {
       const exception = recordsToException(programId, records);
-
       const result = await programExceptionRepository.create(exception);
       return {
         programException: result,
