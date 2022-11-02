@@ -45,7 +45,7 @@ export const ProgramExceptionModel = mongoose.model<ProgramExceptionDocument>(
 export interface ProgramExceptionRepository {
   create(exception: ProgramException): Promise<DeepReadonly<ProgramException>>;
   find(programId: string): Promise<DeepReadonly<ProgramException> | undefined>;
-  delete(name: string): Promise<void>;
+  delete(programId: string): Promise<void>;
 }
 
 export const programExceptionRepository: ProgramExceptionRepository = {
