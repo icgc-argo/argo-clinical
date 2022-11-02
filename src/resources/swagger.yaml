@@ -733,7 +733,9 @@ paths:
     post:
       tags:
         - Exception
-      summary: Upload clinical submission files
+      summary: Upload exception files
+      parameters:
+        - $ref: '#/components/parameters/PathProgramId'
       requestBody:
         content:
           multipart/form-data:
@@ -761,6 +763,21 @@ paths:
           description: 'exception or empty object if resource not found'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+
+  /exception/{programId}/clear:
+    delete:
+      tags:
+        - Exception
+      summary: Delete program exception
+      parameters:
+        - $ref: '#/components/parameters/PathProgramId'
+      responses:
+        '200':
+          description: 'successful clear'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: 'unsuccessful resource not found'
 
   /clinical/donors:
     get:

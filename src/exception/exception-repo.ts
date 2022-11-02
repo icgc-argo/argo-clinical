@@ -45,7 +45,7 @@ export const ProgramExceptionModel = mongoose.model<ProgramExceptionDocument>(
 export interface ProgramExceptionRepository {
   create(exception: ProgramException): Promise<DeepReadonly<ProgramException>>;
   find(programId: string): Promise<DeepReadonly<ProgramException> | undefined>;
-  delete(name: string): Promise<void>;
+  delete(programId: string): Promise<void>;
 }
 
 export const programExceptionRepository: ProgramExceptionRepository = {
@@ -80,13 +80,13 @@ export const programExceptionRepository: ProgramExceptionRepository = {
     }
   },
 
-  async delete(name: string) {
-    L.debug(`deleting program exception with program name: ${JSON.stringify(name)}`);
+  async delete(programId: string) {
+    L.debug(`deleting program exception with program id: ${JSON.stringify(programId)}`);
     try {
-      await ProgramExceptionModel.findOneAndDelete({ name });
+      await ProgramExceptionModel.findOneAndDelete({ programId });
     } catch (e) {
       L.error('failed to find program exception', e);
-      throw new Error(`failed to delete program exception with name: ${JSON.stringify(name)}`);
+      throw new Error(`failed to delete program exception with name: ${JSON.stringify(programId)}`);
     }
   },
 };

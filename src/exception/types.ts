@@ -35,7 +35,6 @@ export interface ProgramException {
 
 export enum ExceptionValue {
   Unknown = 'Unknown',
-  Missing = 'Missing',
   NotApplicable = 'Not applicable',
 }
 
@@ -55,8 +54,8 @@ export const isProgramExceptionRecord = (input: any): input is ProgramExceptionR
     typeof input.requested_core_field === 'string' &&
     // requested_exception_value must exist and be string and be in enum list
     'requested_exception_value' in input &&
-    typeof input.requested_core_field === 'string' &&
-    Object.values(ExceptionValue).includes(input.requested_core_field)
+    typeof input.requested_exception_value === 'string' &&
+    Object.values(ExceptionValue).includes(input.requested_exception_value)
   );
 };
 
