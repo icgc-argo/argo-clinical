@@ -763,8 +763,6 @@ paths:
           description: 'exception or empty object if resource not found'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
-
-  /exception/{programId}/clear:
     delete:
       tags:
         - Exception
