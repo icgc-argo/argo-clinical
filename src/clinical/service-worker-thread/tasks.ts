@@ -245,12 +245,11 @@ export function filterDonorIdDataFromSearch(donors: Donor[], query: ClinicalSear
 
   const filteredDonors = useFilteredDonors
     ? donors.filter(donor => {
-        const { donorId, clinicalInfo } = donor;
+        const { donorId, submitterId } = donor;
         const stringId = `${donorId}`;
         const donorMatch = donorIds?.filter(id => stringId.includes(id));
-        const submitterDonorId = clinicalInfo && `${clinicalInfo.submitter_donor_id}`;
-        const submitterMatch = submitterDonorId
-          ? submitterDonorIds?.filter(id => submitterDonorId.includes(id))
+        const submitterMatch = submitterId
+          ? submitterDonorIds?.filter(id => submitterId.includes(id))
           : [];
         return donorMatch.length > 0 || submitterMatch.length > 0;
       })
@@ -258,8 +257,8 @@ export function filterDonorIdDataFromSearch(donors: Donor[], query: ClinicalSear
 
   const totalResults = filteredDonors.length;
   const searchResults = filteredDonors.map((donor: Donor) => {
-    const { donorId, clinicalInfo } = donor;
-    const submitterDonorId = (clinicalInfo && clinicalInfo.submitter_donor_id) || undefined;
+    const { donorId, submitterId } = donor;
+    const submitterDonorId = submitterId;
     return { donorId, submitterDonorId };
   });
 
