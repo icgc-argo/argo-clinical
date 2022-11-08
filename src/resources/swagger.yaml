@@ -996,6 +996,7 @@ paths:
         - $ref: '#/components/parameters/PathProgramId'
         - in: query
           name: entityTypes
+          explode: false
           schema:
             type: array
             items:
@@ -1003,6 +1004,7 @@ paths:
           description: Clinical Entity data types to return
         - in: query
           name: donorIds
+          explode: false
           schema:
             type: array
             items:
@@ -1010,6 +1012,7 @@ paths:
           description: Donor ID values to return
         - in: query
           name: submitterDonorIds
+          explode: false
           schema:
             type: array
             items:
