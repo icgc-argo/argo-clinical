@@ -22,6 +22,7 @@ import {
   ClinicalEntitySchemaNames,
   aliasEntityNames,
   EntityAlias,
+  queryEntityNames,
 } from '../../common-model/entities';
 import {
   getRequiredDonorFieldsForEntityTypes,
@@ -46,8 +47,6 @@ type EntityClinicalInfo = {
   entityName: ClinicalEntitySchemaNames;
   results: ClinicalInfo[];
 };
-
-const queryEntityNames = <EntityAlias[]>Object.values(aliasEntityNames);
 
 const updateCompletionTumourStats = (
   specimen: ClinicalInfo,

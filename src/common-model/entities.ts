@@ -81,6 +81,8 @@ export const aliasEntityNames: Record<ClinicalEntitySchemaNames, EntityAlias> = 
   biomarker: 'biomarker',
 };
 
+export const queryEntityNames = <EntityAlias[]>Object.values(aliasEntityNames);
+
 export type ClinicalFields =
   | DonorFieldsEnum
   | SpecimenFieldsEnum

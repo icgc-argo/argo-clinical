@@ -25,7 +25,12 @@ import {
   HasProgramReadAccess,
   HasFullReadAccess,
 } from '../decorators';
-import { EntityAlias } from '../common-model/entities';
+import {
+  EntityAlias,
+  ClinicalEntitySchemaNames,
+  aliasEntityNames,
+  queryEntityNames,
+} from '../common-model/entities';
 import { ControllerUtils, DonorUtils, TsvUtils } from '../utils';
 import AdmZip from 'adm-zip';
 import { ClinicalEntityData, Donor } from './clinical-entities';
@@ -118,7 +123,19 @@ class ClinicalController {
     const completionState: {} = completionFilters[state] || {};
 
     const entityTypes: string[] =
-      req.query.entityTypes !== undefined ? req.query.entityTypes.split(',') : [];
+      req.query.entityTypes !== undefined
+        ? req.query.entityTypes
+            .split(',')
+            .map((entityName: EntityAlias & ClinicalEntitySchemaNames) => {
+              const schemaNames = Object.values(ClinicalEntitySchemaNames);
+              if (queryEntityNames.includes(entityName)) {
+                return entityName;
+              } else if (schemaNames.includes(entityName)) {
+                return aliasEntityNames[entityName];
+              } else return undefined;
+            })
+            .filter(Boolean)
+        : [];
 
     const donorIds: number[] = parseDonorIdList(req.query.donorIds) || [];
 
