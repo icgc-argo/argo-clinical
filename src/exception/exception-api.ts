@@ -18,9 +18,10 @@
  */
 
 import { Request, Response } from 'express';
-import { HasFullWriteAccess } from '../decorators';
+import { HasFullReadAccess, HasFullWriteAccess } from '../decorators';
 import { loggerFor } from '../logger';
 import { ControllerUtils, TsvUtils } from '../utils';
+import { programExceptionRepository } from './exception-repo';
 import * as exceptionService from './exception-service';
 import { isProgramExceptionRecord, isReadonlyArrayOf } from './types';
 
@@ -31,6 +32,17 @@ enum ProgramExceptionErrorMessage {
 }
 
 class ExceptionController {
+  @HasFullWriteAccess()
+  async clearProgramException(req: Request, res: Response) {
+    const programId = req.params.programId;
+    try {
+      const result = await programExceptionRepository.delete(programId);
+      return res.status(200).send();
+    } catch (e) {
+      return res.status(404).send();
+    }
+  }
+
   @HasFullWriteAccess()
   async createProgramException(req: Request, res: Response) {
     if (!requestContainsFile(req, res)) {
@@ -62,6 +74,17 @@ class ExceptionController {
     } catch (err) {
       L.error(`Program Exception TSV_PARSING_FAILED`, err);
       return ControllerUtils.unableToProcess(res, ProgramExceptionErrorMessage.TSV_PARSING_FAILED);
+    }
+  }
+
+  @HasFullReadAccess()
+  async getProgramException(req: Request, res: Response) {
+    const programId = req.params.programId;
+    try {
+      const exception = await programExceptionRepository.find(programId);
+      res.status(200).send(exception);
+    } catch (e) {
+      res.status(200).send({});
     }
   }
 }

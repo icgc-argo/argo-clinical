@@ -27,12 +27,13 @@ const router = express.Router({ mergeParams: true });
 const upload = multer({ dest: '/tmp' });
 
 router.post(
-  '/upload',
+  '/',
   upload.single('programExceptionFile'),
   wrapAsync(exceptionApi.createProgramException),
 );
 
-export default router;
+router.get('/', wrapAsync(exceptionApi.getProgramException));
 
-// define api more clear with params
-// {} empty req.params gets too far without throwing error
+router.delete('/', wrapAsync(exceptionApi.clearProgramException));
+
+export default router;

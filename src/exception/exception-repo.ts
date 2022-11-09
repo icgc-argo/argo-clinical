@@ -44,8 +44,8 @@ export const ProgramExceptionModel = mongoose.model<ProgramExceptionDocument>(
 
 export interface ProgramExceptionRepository {
   create(exception: ProgramException): Promise<DeepReadonly<ProgramException>>;
-  find(name: string): Promise<DeepReadonly<ProgramException> | undefined>;
-  delete(name: string): Promise<void>;
+  find(programId: string): Promise<DeepReadonly<ProgramException> | undefined>;
+  delete(programId: string): Promise<void>;
 }
 
 export const programExceptionRepository: ProgramExceptionRepository = {
@@ -66,27 +66,27 @@ export const programExceptionRepository: ProgramExceptionRepository = {
     }
   },
 
-  async find(name: string) {
-    L.debug(`finding program exception with name: ${JSON.stringify(name)}`);
+  async find(programId: string) {
+    L.debug(`finding program exception with id: ${JSON.stringify(programId)}`);
     try {
-      const doc = await ProgramExceptionModel.findOne({ name });
+      const doc = await ProgramExceptionModel.findOne({ programId });
       if (doc) {
         L.info(`doc found ${doc}`);
         return MongooseUtils.toPojo(doc) as ProgramException;
       }
     } catch (e) {
       L.error('failed to find program exception', e);
-      throw new Error(`failed to find program exception with name: ${JSON.stringify(name)}`);
+      throw new Error(`failed to find program exception with name: ${JSON.stringify(programId)}`);
     }
   },
 
-  async delete(name: string) {
-    L.debug(`deleting program exception with program name: ${JSON.stringify(name)}`);
+  async delete(programId: string) {
+    L.debug(`deleting program exception with program id: ${JSON.stringify(programId)}`);
     try {
-      await ProgramExceptionModel.findOneAndDelete({ name });
+      await ProgramExceptionModel.findOneAndDelete({ programId });
     } catch (e) {
       L.error('failed to find program exception', e);
-      throw new Error(`failed to delete program exception with name: ${JSON.stringify(name)}`);
+      throw new Error(`failed to delete program exception with name: ${JSON.stringify(programId)}`);
     }
   },
 };
