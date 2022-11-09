@@ -116,26 +116,26 @@ class ClinicalController {
     const programId: string = req.params.programId;
     if (!programId) {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
+    } else if (!req.query.entityTypes) {
+      return ControllerUtils.badRequest(res, 'Must request specific EntityTypes');
     }
     const sort: string = 'donorId';
     const page: number = 0;
     const state: CompletionStates = req.query.completionState || CompletionStates.all;
     const completionState: {} = completionFilters[state] || {};
 
+    const schemaNames = Object.values(ClinicalEntitySchemaNames);
     const entityTypes: string[] =
-      req.query.entityTypes !== undefined
-        ? req.query.entityTypes
-            .split(',')
-            .map((entityName: EntityAlias & ClinicalEntitySchemaNames) => {
-              const schemaNames = Object.values(ClinicalEntitySchemaNames);
-              if (queryEntityNames.includes(entityName)) {
-                return entityName;
-              } else if (schemaNames.includes(entityName)) {
-                return aliasEntityNames[entityName];
-              } else return undefined;
-            })
-            .filter(Boolean)
-        : [];
+      req.query.entityTypes
+        .split(',')
+        .map((entityName: EntityAlias & ClinicalEntitySchemaNames) => {
+          if (queryEntityNames.includes(entityName)) {
+            return entityName;
+          } else if (schemaNames.includes(entityName)) {
+            return aliasEntityNames[entityName];
+          } else return undefined;
+        })
+        .filter(Boolean) || [];
 
     const donorIds: number[] = parseDonorIdList(req.query.donorIds) || [];
 
