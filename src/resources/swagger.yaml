@@ -996,13 +996,16 @@ paths:
         - $ref: '#/components/parameters/PathProgramId'
         - in: query
           name: entityTypes
+          explode: false
+          required: true
           schema:
             type: array
             items:
               type: string
-          description: Clinical Entity data types to return
+          description: Clinical Entity data types to return (ex. donor, specimen, sample_registration)
         - in: query
           name: donorIds
+          explode: false
           schema:
             type: array
             items:
@@ -1010,6 +1013,7 @@ paths:
           description: Donor ID values to return
         - in: query
           name: submitterDonorIds
+          explode: false
           schema:
             type: array
             items:
@@ -1029,7 +1033,7 @@ paths:
                 type: string
                 format: binary
         '400':
-          description: Invalid programId provided
+          description: Bad Request
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '403':
