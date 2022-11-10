@@ -125,17 +125,16 @@ class ClinicalController {
     const completionState: {} = completionFilters[state] || {};
 
     const schemaNames = Object.values(ClinicalEntitySchemaNames);
-    const entityTypes: string[] =
-      req.query.entityTypes
-        .split(',')
-        .map((entityName: EntityAlias & ClinicalEntitySchemaNames) => {
-          if (queryEntityNames.includes(entityName)) {
-            return entityName;
-          } else if (schemaNames.includes(entityName)) {
-            return aliasEntityNames[entityName];
-          } else return undefined;
-        })
-        .filter(Boolean) || [];
+    const entityTypes: string[] = req.query.entityTypes
+      .split(',')
+      .map((entityName: EntityAlias & ClinicalEntitySchemaNames) => {
+        if (queryEntityNames.includes(entityName)) {
+          return entityName;
+        } else if (schemaNames.includes(entityName)) {
+          return aliasEntityNames[entityName];
+        } else return undefined;
+      })
+      .filter(Boolean);
 
     const donorIds: number[] = parseDonorIdList(req.query.donorIds) || [];
 
