@@ -21,7 +21,6 @@ import _, { isEmpty } from 'lodash';
 import {
   ClinicalEntitySchemaNames,
   aliasEntityNames,
-  EntityAlias,
   queryEntityNames,
 } from '../../common-model/entities';
 import {

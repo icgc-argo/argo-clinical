@@ -42,7 +42,6 @@ export enum ClinicalEntitySchemaNames {
 export type EntityAlias =
   | 'donor'
   | 'sampleRegistration'
-  | 'specimen'
   | 'specimens'
   | 'primaryDiagnoses'
   | 'familyHistory'
