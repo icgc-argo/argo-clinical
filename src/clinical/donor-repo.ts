@@ -258,7 +258,6 @@ export const donorDao: DonorRepository = {
     );
 
     const { totalDocs: totalDonors } = result;
-    console.log('totalDonors', totalDonors);
     const mapped: Donor[] = result.docs
       .map((d: DonorDocument) => {
         return MongooseUtils.toPojo(d) as Donor;
