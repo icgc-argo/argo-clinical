@@ -217,7 +217,7 @@ export const donorDao: DonorRepository = {
     // Specific Requests for Donor documents can be paginated at the MongoDB level
 
     const limit =
-      entityTypes === ['donor'] && pageSize
+      entityTypes.length === 1 && entityTypes.includes('donor') && pageSize
         ? pageSize
         : await DonorModel.countDocuments({ programId });
 
