@@ -217,7 +217,7 @@ export const donorDao: DonorRepository = {
     // Specific Requests for Donor documents can be paginated at the MongoDB level
 
     const limit =
-      entityTypes.includes('donor') && pageSize
+      entityTypes.length === 1 && entityTypes.includes('donor') && pageSize
         ? pageSize
         : await DonorModel.countDocuments({ programId });
 
@@ -258,7 +258,6 @@ export const donorDao: DonorRepository = {
     );
 
     const { totalDocs: totalDonors } = result;
-
     const mapped: Donor[] = result.docs
       .map((d: DonorDocument) => {
         return MongooseUtils.toPojo(d) as Donor;
