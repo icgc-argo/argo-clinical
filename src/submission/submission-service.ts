@@ -857,7 +857,7 @@ export namespace operations {
     validationError: dictionaryEntities.SchemaValidationError,
     record: DataRecord,
   ): boolean => {
-    // missing required field, validate as normal
+    // missing required field, validate as normal, exceptions still require a submitted value
     if (
       validationError.errorType ===
       dictionaryEntities.SchemaValidationErrorTypes.MISSING_REQUIRED_FIELD
@@ -895,16 +895,17 @@ export namespace operations {
           const programException = await programExceptionRepository.find(command.programId);
 
           // filter out valid exceptions before adding to error accumulator
-          const hasProgramExceptions = programException && programException?.exceptions.length > 0;
-          const validationErrors = hasProgramExceptions
-            ? schemaResult.validationErrors.filter(validationError => {
-                return !applyExceptionIfExists(
-                  programException.exceptions,
-                  validationError,
-                  record,
-                );
-              })
-            : schemaResult.validationErrors;
+          const validationErrors =
+            // only filter is we have valid exceptions available
+            programException && programException?.exceptions.length > 0
+              ? schemaResult.validationErrors.filter(validationError => {
+                  return !applyExceptionIfExists(
+                    programException.exceptions,
+                    validationError,
+                    record,
+                  );
+                })
+              : schemaResult.validationErrors;
 
           errorsAccumulator = errorsAccumulator.concat(
             unifySchemaErrors(schemaName, validationErrors, index, command.records),
