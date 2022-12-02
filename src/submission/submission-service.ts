@@ -96,6 +96,9 @@ import {
 } from '../common-model/entities';
 
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
+import { programExceptionRepository } from '../exception/exception-repo';
+import { ProgramException } from '../exception/types';
+import { DataRecord } from '@overturebio-stack/lectern-client/lib/schema-entities';
 
 const L = loggerFor(__filename);
 
@@ -159,7 +162,7 @@ export namespace operations {
           unifiedSchemaErrors = unifiedSchemaErrors.concat(
             unifySchemaErrors(
               ClinicalEntitySchemaNames.REGISTRATION,
-              schemaResult,
+              schemaResult.validationErrors,
               index,
               command.records,
             ),
@@ -719,12 +722,12 @@ export namespace operations {
 
   const unifySchemaErrors = (
     type: ClinicalEntitySchemaNames,
-    result: dictionaryEntities.SchemaProcessingResult,
+    validationErrors: dictionaryEntities.SchemaProcessingResult['validationErrors'],
     index: number,
     records: ReadonlyArray<dictionaryEntities.DataRecord>,
   ) => {
     const errorsList = new Array<SubmissionValidationError>();
-    result.validationErrors.forEach(schemaErr => {
+    validationErrors.forEach(schemaErr => {
       errorsList.push({
         index: index,
         type: schemaErr.errorType,
@@ -849,6 +852,26 @@ export namespace operations {
     );
   }
 
+  const applyExceptionIfExists = (
+    exceptions: DeepReadonly<ProgramException['exceptions']>,
+    validationError: dictionaryEntities.SchemaValidationError,
+    record: DataRecord,
+  ): boolean => {
+    // missing required field, validate as normal
+    if (
+      validationError.errorType ===
+      dictionaryEntities.SchemaValidationErrorTypes.MISSING_REQUIRED_FIELD
+    ) {
+      return false;
+    }
+    // every other validation of SchemaValidationErrorTypes check for exception
+    else {
+      const validationErrorField = validationError.fieldName;
+      const exception = exceptions.find(exception => exception.coreField === validationErrorField);
+      return !exception ? false : exception.exceptionValue === record[validationErrorField];
+    }
+  };
+
   const checkClinicalEntity = async (
     command: ClinicalSubmissionCommand,
     schema: dictionaryEntities.SchemasDictionary,
@@ -869,8 +892,22 @@ export namespace operations {
           .processParallel(command.clinicalType, record, index, schema);
 
         if (schemaResult.validationErrors.length > 0) {
+          const programException = await programExceptionRepository.find(command.programId);
+
+          // filter out valid exceptions before adding to error accumulator
+          const hasProgramExceptions = programException && programException?.exceptions.length > 0;
+          const validationErrors = hasProgramExceptions
+            ? schemaResult.validationErrors.filter(validationError => {
+                return !applyExceptionIfExists(
+                  programException.exceptions,
+                  validationError,
+                  record,
+                );
+              })
+            : schemaResult.validationErrors;
+
           errorsAccumulator = errorsAccumulator.concat(
-            unifySchemaErrors(schemaName, schemaResult, index, command.records),
+            unifySchemaErrors(schemaName, validationErrors, index, command.records),
           );
         }
 
