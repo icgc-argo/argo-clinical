@@ -65,7 +65,7 @@ const coreClinialSchemaNamesSet = new Set<CoreClinicalSchemaName>(
 );
 
 // This is the main core stat caclulation function.
-// We conisder only `required & core` fields for core field calculation, which are always submitted.
+// We consider only `required & core` fields for core field calculation, which are always submitted.
 // Additionally, `optional & core` fields are submitted in relation to `required & core` fields,
 // which are verified at upload/data-validate step. So can assume record is valid.
 const calcDonorCoreEntityStats = (
@@ -85,14 +85,22 @@ const calcDonorCoreEntityStats = (
 
     if (tumorAndNormalExists) {
       coreStats[schemaNameToCoreCompletenessStat[clinicalType]] =
-        donor.specimens.map(sp => sp.clinicalInfo).filter(notEmpty).length / donor.specimens.length;
+        donor.specimens
+          .map(sp => sp.clinicalInfo)
+          .filter(
+            clinicalInfo =>
+              clinicalInfo &&
+              typeof clinicalInfo.specimen_type === 'string' &&
+              clinicalInfo.specimen_type?.includes('DNA'),
+          )
+          .filter(notEmpty).length / donor.specimens.length;
     } else {
       coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = 0;
     }
   } else {
     // for others we just need to find one clinical info for core entity
-    const entites = getClinicalEntitiesFromDonorBySchemaName(donor, clinicalType);
-    coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = entites.length >= 1 ? 1 : 0;
+    const entities = getClinicalEntitiesFromDonorBySchemaName(donor, clinicalType);
+    coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = entities.length >= 1 ? 1 : 0;
   }
 
   const coreCompletionPercentage = getCoreCompletionPercentage(coreStats);
