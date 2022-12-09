@@ -86,13 +86,7 @@ const calcDonorCoreEntityStats = (
     if (tumorAndNormalExists) {
       coreStats[schemaNameToCoreCompletenessStat[clinicalType]] =
         donor.specimens
-          .map(sp => sp.clinicalInfo)
-          .filter(
-            clinicalInfo =>
-              clinicalInfo &&
-              typeof clinicalInfo.specimen_type === 'string' &&
-              clinicalInfo.specimen_type?.includes('DNA'),
-          )
+          .filter(specimen => specimen && specimen.sampleType?.includes('DNA'))
           .filter(notEmpty).length / donor.specimens.length;
     } else {
       coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = 0;
