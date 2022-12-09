@@ -21,13 +21,9 @@ import { ProgramExceptionRecord, ExceptionValue } from './types';
 import * as dictionaryManager from '../dictionary/manager';
 import { SchemaWithFields } from '../dictionary/manager';
 import { loggerFor } from '../logger';
+import { createValidationErrors, ValidationError } from './error';
 
 const L = loggerFor(__filename);
-
-export interface ValidationError {
-  message: string;
-  row: number;
-}
 
 export interface Validator<RecordT = { [k: string]: any }> {
   ({
@@ -49,14 +45,14 @@ export type FieldValidators<RecordT> = {
   [key in keyof RecordT]: Validator<RecordT>;
 };
 
-export const checkCoreField: Validator = async ({ record, rowIndex }) => {
+export const checkCoreField: Validator = async ({ record, recordIndex }) => {
   const currentDictionary = await dictionaryManager.instance();
   console.log('current dictionary', currentDictionary);
 
   const requestedCoreField = record.requested_core_field;
 
   if (requestedCoreField === undefined) {
-    return [createValidationError(rowIndex, `requested_core_field field is not defined`)];
+    return createValidationErrors(recordIndex, `requested_core_field field is not defined`);
   }
 
   const fieldFilter = (field: { name: string; meta?: { core: boolean } }): boolean => {
@@ -74,27 +70,22 @@ export const checkCoreField: Validator = async ({ record, rowIndex }) => {
   console.log('EXISTING SCHEMA', existingDictionarySchema);
 
   if (existingDictionarySchema[0] && existingDictionarySchema[0].fields.length === 0) {
-    return [
-      createValidationError(rowIndex, `core field of ${record.requested_core_field} is not valid`),
-    ];
+    return createValidationErrors(
+        recordIndex,
+        `core field of ${record.requested_core_field} is not valid`,
+      ),
+    ;
   }
 
   return [];
 };
 
-const createValidationError = (row: number, message: string) => ({
-  row: row + 1, // account for tsv header row
-  message,
-});
-
 export const checkProgramId: Validator = ({ record, recordIndex, programId }) => {
   if (programId !== record.program_name) {
-    return [
-      createValidationError(
+    return createValidationErrors(
         recordIndex,
         `submitted program id of ${programId} does not match record program id of ${record.program_name}`,
-      ),
-    ];
+      );
   }
   return [];
 };
@@ -104,16 +95,15 @@ export const checkRequestedValue: Validator = ({ record, recordIndex }) => {
   const requestedExceptionValue = record.requested_exception_value;
 
   if (requestedExceptionValue === undefined) {
-    return [createValidationError(recordIndex, `requested_exception_value field is not defined`)];
+    return createValidationErrors(recordIndex, `requested_exception_value field is not defined`);
   } else if (typeof requestedExceptionValue !== 'string') {
-    return [createValidationError(recordIndex, `requested_exception_value is not a string`)];
+    return createValidationErrors(recordIndex, `requested_exception_value is not a string`);
   } else if (!validRequests.includes(requestedExceptionValue)) {
-    return [
-      createValidationError(
+    return createValidationErrors(
         recordIndex,
         `requested_exception_value is not valid. must be one of ${validRequests.join(', ')}`,
       ),
-    ];
+    
   }
   return [];
 };
@@ -121,7 +111,7 @@ export const checkRequestedValue: Validator = ({ record, recordIndex }) => {
 export const checkForEmptyField: Validator = ({ fieldValue, fieldName, recordIndex }) => {
   return fieldValue !== '' || !!fieldValue
     ? []
-    : [createValidationError(recordIndex, `${fieldName} cannot be empty`)];
+    : createValidationErrors(recordIndex, `${fieldName} cannot be empty`);
 };
 
 const getValidator = <RecordT>(fieldValidators: any, fieldName: string): Validator<RecordT> => {
@@ -145,6 +135,7 @@ export const validateRecords = async <RecordT>(
 
   // avoid map to keep async working cleanly (some validators might be async)
   for (const [recordIndex, record] of records.entries()) {
+    console.log('record', record);
     for (const [fieldName, fieldValue] of Object.entries(record)) {
       console.log('field', fieldName, fieldValue);
       const e = await getValidator<RecordT>(
@@ -166,4 +157,3 @@ export const validateRecords = async <RecordT>(
 };
 
 // TODO: !why pass in record? if we are validating per field, just pass in fieldValue, fieldName, idx, prgoram id
-// TODO: cleanup types, generics
