@@ -18,10 +18,23 @@
  */
 
 import { DeepReadonly } from 'deep-freeze';
+import { loggerFor } from '../logger';
 import * as dictionaryManager from '../dictionary/manager';
 import { SchemaWithFields } from '../dictionary/manager';
-import { programExceptionRepository } from './exception-repo';
+import { ProgramExceptionModel, programExceptionRepository } from './exception-repo';
 import { ExceptionValue, ProgramException, ProgramExceptionRecord } from './types';
+import {
+  checkCoreField,
+  checkForEmptyField,
+  checkProgramId,
+  checkRequestedValue,
+  FieldValidators,
+  validateRecords,
+  ValidationError,
+  Validator,
+} from './validation';
+
+const L = loggerFor(__filename);
 
 const recordsToException = (
   programId: string,
@@ -40,6 +53,14 @@ interface ProgramExceptionResult {
   errors: ValidationError[];
   successful: boolean;
 }
+
+export const programValidators: FieldValidators<ProgramExceptionRecord> = {
+  program_name: checkProgramId,
+  schema: checkForEmptyField,
+  requested_core_field: checkCoreField,
+  requested_exception_value: checkRequestedValue,
+};
+
 export namespace operations {
   export const createProgramException = async ({
     programId,
@@ -48,7 +69,12 @@ export namespace operations {
     programId: string;
     records: ReadonlyArray<ProgramExceptionRecord>;
   }): Promise<ProgramExceptionResult> => {
-    const errors = await validateExceptionRecords(programId, records);
+    L.info(JSON.stringify(records));
+    const errors = await validateRecords<ProgramExceptionRecord>(
+      programId,
+      records,
+      programValidators,
+    );
 
     if (errors.length > 0) {
       return {
@@ -67,91 +93,3 @@ export namespace operations {
     }
   };
 }
-
-interface ValidationError {
-  message: string;
-  row: number;
-}
-
-const validateExceptionRecords = async (
-  programId: string,
-  records: ReadonlyArray<ProgramExceptionRecord>,
-): Promise<ValidationError[]> => {
-  let errors: ValidationError[] = [];
-
-  for (const [idx, record] of records.entries()) {
-    const programErrors = checkProgramId(programId, record, idx);
-    const coreFieldErrors = await checkCoreField(record, idx);
-    const requestedValErrors = checkRequestedValue(record, idx);
-    errors = errors.concat(programErrors, coreFieldErrors, requestedValErrors);
-  }
-
-  return errors;
-};
-
-const createValidationError = (row: number, message: string) => ({
-  row: row + 1, // account for tsc header row
-  message,
-});
-
-const checkProgramId = (programId: string, record: ProgramExceptionRecord, idx: number) => {
-  if (programId !== record.program_name) {
-    return [
-      createValidationError(
-        idx,
-        `submitted program id of ${programId} does not match record program id of ${record.program_name}`,
-      ),
-    ];
-  }
-  return [];
-};
-
-const checkCoreField = async (record: ProgramExceptionRecord, idx: number) => {
-  const currentDictionary = await dictionaryManager.instance();
-
-  const requestedCoreField = record.requested_core_field;
-
-  if (requestedCoreField === undefined) {
-    return [createValidationError(idx, `requested_core_field field is not defined`)];
-  }
-
-  const fieldFilter = (field: { name: string; meta?: { core: boolean } }): boolean => {
-    return field.name === requestedCoreField && !!field.meta?.core;
-  };
-
-  const schemaFilter = (schema: SchemaWithFields): boolean => {
-    return schema.name === record.schema;
-  };
-
-  const existingDictionarySchema = await currentDictionary.getSchemasWithFields(
-    schemaFilter,
-    fieldFilter,
-  );
-
-  if (existingDictionarySchema[0] && existingDictionarySchema[0].fields.length === 0) {
-    return [
-      createValidationError(idx, `core field of ${record.requested_core_field} is not valid`),
-    ];
-  }
-
-  return [];
-};
-
-const checkRequestedValue = (record: ProgramExceptionRecord, idx: number) => {
-  const validRequests = Object.values(ExceptionValue);
-  const requestedExceptionValue = record.requested_exception_value;
-
-  if (requestedExceptionValue === undefined) {
-    return [createValidationError(idx, `requested_exception_value field is not defined`)];
-  } else if (typeof requestedExceptionValue !== 'string') {
-    return [createValidationError(idx, `requested_exception_value is not a string`)];
-  } else if (!validRequests.includes(requestedExceptionValue)) {
-    return [
-      createValidationError(
-        idx,
-        `requested_exception_value is not valid. must be one of ${validRequests.join(', ')}`,
-      ),
-    ];
-  }
-  return [];
-};
