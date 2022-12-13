@@ -16,39 +16,129 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+// @ts-nocheck
+
 import chai from 'chai';
 import { ExceptionValue } from '../../../src/exception/types';
-import { validateExceptionRecords } from '../../../src/exception/exception-service';
+import { validateRecords, ValidationResultType } from '../../../src/exception/validation';
 import sinon from 'sinon';
 import * as dictionaryManager from '../../../src/dictionary/manager';
+import { programValidators } from '../../../src/exception/exception-service';
 
 const emptyFields = [
   {
-    program_name: 'TEST-IE',
-    schema: 'treatment',
-    requested_core_field: '',
+    program_name: 'TESxT-IE',
+    schema: '',
+    requested_core_field: 'is_primary_treatment',
     requested_exception_value: ExceptionValue.Unknown,
   },
 ];
 
-function validateError(error: any, type: any) {
-  //  chai.expect(error.type).to.be.eq(type);
-  chai.expect(error.message).to.be.a('string');
-  chai.expect(error.message.length).to.be.greaterThan(0);
+function expectToHaveErrors(result: any, length = 1) {
+  chai.expect(result).to.be.instanceOf(Array);
+  chai.expect(result).to.have.lengthOf(length, 'unexpected error result array size');
+}
+
+function expectValidationError(row: any, recordIndex: any, validationResultType: any) {
+  chai.expect(row.recordIndex).to.eq(recordIndex);
+  chai.expect(row.message).to.be.a('string');
+  chai.expect(row.message.length).to.be.greaterThan(0);
+  chai.expect(row.result).to.equal(validationResultType);
 }
 
 describe('program exception service', () => {
-  it('should check for empty fields', async () => {
-    const dictionaryMock = sinon
-      .stub(dictionaryManager, 'instance')
-      // @ts-ignore
-      .returns({ getSchemasWithFields: () => ({ name: 'treatment', fields: [] }) });
+  afterEach(() => {
+    // Restore the default sandbox here
+    sinon.restore();
+  });
 
-    const result = await validateExceptionRecords(emptyFields[0].program_name, emptyFields);
-    console.log(result);
-    const res = result[0];
-    chai.expect(result.length).to.be.greaterThan(0);
-    chai.expect(res.row).to.eq(0);
-    validateError(res, 'bb');
+  it('should check for empty fields', async () => {
+    sinon.stub(dictionaryManager, 'instance').returns({
+      getSchemasWithFields: () => [
+        { name: 'treatment', fields: [{ name: 'is_primary_treatment', meta: { core: true } }] },
+      ],
+    });
+
+    const result = await validateRecords(
+      emptyFields[0].program_name,
+      emptyFields,
+      programValidators,
+    );
+
+    expectToHaveErrors(result);
+    // row is +1 because row 0 is header row of tsv for end user
+    expectValidationError(result[0], 1, ValidationResultType.EMPTY_FIELD);
+  });
+  it('should check if program id matches program_name in records', async () => {
+    sinon.stub(dictionaryManager, 'instance').returns({
+      getSchemasWithFields: () => [
+        {
+          name: 'treatment',
+          fields: [{ name: 'is_primary_treatment', meta: { core: true } }],
+        },
+      ],
+    });
+
+    const programId = 'CIA-IE';
+    const result = await validateRecords(
+      programId,
+      [
+        {
+          program_name: 'NOT-CIA-IE',
+          schema: 'treatment',
+          requested_core_field: 'is_primary_treatment',
+          requested_exception_value: ExceptionValue.Unknown,
+        },
+      ],
+      programValidators,
+    );
+    expectToHaveErrors(result);
+    expectValidationError(result[0], 1, ValidationResultType.PARAM_INVALID);
+  });
+  it('should check if submitted schema is valid schema', async () => {
+    sinon.stub(dictionaryManager, 'instance').returns({
+      getSchemasWithFields: () => [],
+    });
+
+    const result = await validateRecords(
+      'CIA-IE',
+      [
+        {
+          program_name: 'CIA-IE',
+          schema: 'not_a_valid_schema',
+          requested_core_field: 'is_primary_treatment',
+          requested_exception_value: ExceptionValue.Unknown,
+        },
+      ],
+      programValidators,
+    );
+    expectToHaveErrors(result, 2);
+    expectValidationError(result[0], 1, ValidationResultType.INVALID);
+  });
+  it('should check that requested exception value only accepts valid values', async () => {
+    sinon.stub(dictionaryManager, 'instance').returns({
+      getSchemasWithFields: () => [
+        {
+          name: 'treatment',
+          fields: [{ name: 'is_primary_treatment', meta: { core: true } }],
+        },
+      ],
+    });
+
+    const result = await validateRecords(
+      'CIA-IE',
+      [
+        {
+          program_name: 'CIA-IE',
+          schema: 'not_a_valid_schema',
+          requested_core_field: 'is_primary_treatment',
+          requested_exception_value: 'invalid_exception_value',
+        },
+      ],
+      programValidators,
+    );
+    expectToHaveErrors(result, 1);
+    expectValidationError(result[0], 1, ValidationResultType.INVALID);
   });
 });
