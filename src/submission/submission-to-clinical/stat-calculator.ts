@@ -64,6 +64,8 @@ const coreClinialSchemaNamesSet = new Set<CoreClinicalSchemaName>(
   Object.keys(schemaNameToCoreCompletenessStat) as CoreClinicalSchemaName[],
 );
 
+const dnaSampleTypes = ['Amplified DNA', 'ctDNA', 'Other DNA enrichments', 'Total DNA'];
+
 // This is the main core stat caclulation function.
 // We consider only `required & core` fields for core field calculation, which are always submitted.
 // Additionally, `optional & core` fields are submitted in relation to `required & core` fields,
@@ -86,7 +88,10 @@ const calcDonorCoreEntityStats = (
     if (tumorAndNormalExists) {
       coreStats[schemaNameToCoreCompletenessStat[clinicalType]] =
         donor.specimens
-          .filter(specimen => specimen && specimen.sampleType?.includes('DNA'))
+          .filter(
+            specimen =>
+              specimen && specimen.sampleType && dnaSampleTypes.includes(specimen.sampleType),
+          )
           .filter(notEmpty).length / donor.specimens.length;
     } else {
       coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = 0;
