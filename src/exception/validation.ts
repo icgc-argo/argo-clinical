@@ -233,7 +233,6 @@ export const validateRecords = async <RecordT extends Object>(
 
   // avoid map to keep async working cleanly (some validators might be async)
   for (const [recordIndex, record] of records.entries()) {
-    console.log('record', record);
     for (const [fieldName, fieldValue] of Object.entries(record)) {
       const validationResult = await getValidator<RecordT>(
         fieldValidators,
