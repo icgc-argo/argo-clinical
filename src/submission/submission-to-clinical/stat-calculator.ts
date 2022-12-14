@@ -90,6 +90,7 @@ const calcDonorCoreEntityStats = (
         donor.specimens
           .filter(
             specimen =>
+              // Only DNA Specimens are counted toward Core Completion
               specimen && specimen.sampleType && dnaSampleTypes.includes(specimen.sampleType),
           )
           .filter(notEmpty).length / donor.specimens.length;
