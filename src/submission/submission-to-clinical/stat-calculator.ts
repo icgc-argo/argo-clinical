@@ -25,6 +25,7 @@ import {
 import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 import { notEmpty, F } from '../../../src/utils';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../../common-model/functions';
+import { Specimen } from '../../clinical/clinical-entities';
 
 import { DeepReadonly } from 'deep-freeze';
 import { cloneDeep, mean, pull } from 'lodash';
@@ -66,6 +67,10 @@ const coreClinialSchemaNamesSet = new Set<CoreClinicalSchemaName>(
 
 const dnaSampleTypes = ['Amplified DNA', 'ctDNA', 'Other DNA enrichments', 'Total DNA'];
 
+// Only DNA Specimens are counted toward Core Completion
+const dnaSpecimenFilter = (specimen?: Specimen): boolean =>
+  specimen && specimen.sampleType && dnaSampleTypes.includes(specimen.sampleType);
+
 // This is the main core stat caclulation function.
 // We consider only `required & core` fields for core field calculation, which are always submitted.
 // Additionally, `optional & core` fields are submitted in relation to `required & core` fields,
@@ -87,13 +92,7 @@ const calcDonorCoreEntityStats = (
 
     if (tumorAndNormalExists) {
       coreStats[schemaNameToCoreCompletenessStat[clinicalType]] =
-        donor.specimens
-          .filter(
-            specimen =>
-              // Only DNA Specimens are counted toward Core Completion
-              specimen && specimen.sampleType && dnaSampleTypes.includes(specimen.sampleType),
-          )
-          .filter(notEmpty).length / donor.specimens.length;
+        donor.specimens.filter(dnaSpecimenFilter).filter(notEmpty).length / donor.specimens.length;
     } else {
       coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = 0;
     }
