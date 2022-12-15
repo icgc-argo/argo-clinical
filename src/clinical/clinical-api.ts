@@ -221,7 +221,7 @@ class ClinicalController {
         : [''];
 
     // FE filters digits out of search text for Donor search
-    const donorIds = req.query.donorIds.match(/\d*/gi)?.filter((match: string) => !!match) || [];
+    const donorIds = req.query.donorIds?.match(/\d*/gi)?.filter((match: string) => !!match) || [];
     const submitterDonorIds =
       req.query.submitterDonorIds && req.query.submitterDonorIds.length > 0
         ? req.query.submitterDonorIds.split(',').filter((match: string) => !!match)
