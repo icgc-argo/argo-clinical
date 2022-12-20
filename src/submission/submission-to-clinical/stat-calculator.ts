@@ -22,11 +22,11 @@ import {
   CoreCompletionFields,
   Donor,
   dnaSampleTypes,
-} from '../../../src/clinical/clinical-entities';
+  Specimen,
+} from '../../clinical/clinical-entities';
 import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 import { notEmpty, F } from '../../../src/utils';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../../common-model/functions';
-import { Specimen } from '../../clinical/clinical-entities';
 
 import { DeepReadonly } from 'deep-freeze';
 import { cloneDeep, mean, pull } from 'lodash';
