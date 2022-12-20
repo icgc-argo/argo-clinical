@@ -21,6 +21,7 @@ import {
   CoreClinicalEntities,
   CoreCompletionFields,
   Donor,
+  dnaSampleTypes,
 } from '../../../src/clinical/clinical-entities';
 import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 import { notEmpty, F } from '../../../src/utils';
@@ -64,8 +65,6 @@ const schemaNameToCoreCompletenessStat: Record<
 const coreClinialSchemaNamesSet = new Set<CoreClinicalSchemaName>(
   Object.keys(schemaNameToCoreCompletenessStat) as CoreClinicalSchemaName[],
 );
-
-const dnaSampleTypes = ['Amplified DNA', 'ctDNA', 'Other DNA enrichments', 'Total DNA'];
 
 // Only DNA Specimens are counted toward Core Completion
 const dnaSpecimenFilter = (specimen?: Specimen): boolean =>
