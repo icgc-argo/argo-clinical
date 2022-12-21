@@ -76,6 +76,8 @@ export interface Sample {
   submitterId: string;
 }
 
+export const dnaSampleTypes = ['Amplified DNA', 'ctDNA', 'Other DNA enrichments', 'Total DNA'];
+
 export interface Treatment extends ClinicalEntity {
   treatmentId: number | undefined;
   therapies: Array<Therapy>;
