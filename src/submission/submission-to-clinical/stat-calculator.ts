@@ -21,7 +21,9 @@ import {
   CoreClinicalEntities,
   CoreCompletionFields,
   Donor,
-} from '../../../src/clinical/clinical-entities';
+  dnaSampleTypes,
+  Specimen,
+} from '../../clinical/clinical-entities';
 import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 import { notEmpty, F } from '../../../src/utils';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../../common-model/functions';
@@ -64,8 +66,12 @@ const coreClinialSchemaNamesSet = new Set<CoreClinicalSchemaName>(
   Object.keys(schemaNameToCoreCompletenessStat) as CoreClinicalSchemaName[],
 );
 
+// Only DNA Specimens are counted toward Core Completion
+const dnaSpecimenFilter = (specimen?: Specimen): boolean =>
+  specimen && specimen.sampleType && dnaSampleTypes.includes(specimen.sampleType);
+
 // This is the main core stat caclulation function.
-// We conisder only `required & core` fields for core field calculation, which are always submitted.
+// We consider only `required & core` fields for core field calculation, which are always submitted.
 // Additionally, `optional & core` fields are submitted in relation to `required & core` fields,
 // which are verified at upload/data-validate step. So can assume record is valid.
 const calcDonorCoreEntityStats = (
@@ -85,14 +91,14 @@ const calcDonorCoreEntityStats = (
 
     if (tumorAndNormalExists) {
       coreStats[schemaNameToCoreCompletenessStat[clinicalType]] =
-        donor.specimens.map(sp => sp.clinicalInfo).filter(notEmpty).length / donor.specimens.length;
+        donor.specimens.filter(dnaSpecimenFilter).filter(notEmpty).length / donor.specimens.length;
     } else {
       coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = 0;
     }
   } else {
     // for others we just need to find one clinical info for core entity
-    const entites = getClinicalEntitiesFromDonorBySchemaName(donor, clinicalType);
-    coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = entites.length >= 1 ? 1 : 0;
+    const entities = getClinicalEntitiesFromDonorBySchemaName(donor, clinicalType);
+    coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = entities.length >= 1 ? 1 : 0;
   }
 
   const coreCompletionPercentage = getCoreCompletionPercentage(coreStats);

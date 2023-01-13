@@ -1770,6 +1770,7 @@ describe('Submission Api', () => {
           specimenTissueSource: 'Other',
           tumourNormalDesignation: 'Tumour',
           specimenType: 'Tumour',
+          sampleType: 'ctDNA',
           submitterId: 'ss123-sjdm-1',
           clinicalInfo: {},
         },
@@ -1959,6 +1960,7 @@ describe('Submission Api', () => {
             tumourNormalDesignation: 'Tumour',
             specimenType: 'Tumour',
             submitterId: 'ss123-sjdm-1',
+            sampleType: 'ctDNA',
             clinicalInfo: {
               program_id: 'ABCD-EF',
               submitter_donor_id: 'ICGC_0001',
