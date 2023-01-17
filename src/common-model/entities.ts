@@ -134,6 +134,7 @@ export enum SpecimenFieldsEnum {
   tumour_grading_system = 'tumour_grading_system',
   tumour_grade = 'tumour_grade',
   percent_tumour_cells = 'percent_tumour_cells',
+  percent_tumour_cells_measurement_method = 'percent_tumour_cells_measurement_method',
   percent_proliferating_cells = 'percent_proliferating_cells',
   percent_stromal_cells = 'percent_stromal_cells',
   percent_necrosis = 'percent_necrosis',

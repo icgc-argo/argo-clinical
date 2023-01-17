@@ -115,6 +115,7 @@ const checkRequiredFields = (
     'tumour_grading_system',
     'tumour_grade',
     'percent_tumour_cells',
+    'percent_tumour_cells_measurement_method',
     'tumour_histological_type',
     'reference_pathology_confirmed',
   ];
