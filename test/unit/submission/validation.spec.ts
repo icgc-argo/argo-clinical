@@ -1674,6 +1674,7 @@ describe('data-validator', () => {
         SpecimenFieldsEnum.tumour_grading_system,
         SpecimenFieldsEnum.tumour_grade,
         SpecimenFieldsEnum.percent_tumour_cells,
+        SpecimenFieldsEnum.percent_tumour_cells_measurement_method,
         SpecimenFieldsEnum.tumour_histological_type,
         SpecimenFieldsEnum.reference_pathology_confirmed,
       ];
