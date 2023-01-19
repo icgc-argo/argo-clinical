@@ -256,7 +256,6 @@ export const donorDao: DonorRepository = {
       },
     );
 
-    console.log('\nresult', result);
     const { totalDocs: totalDonors } = result;
     const mapped: Donor[] = result.docs
       .map((d: DonorDocument) => {
