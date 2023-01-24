@@ -44,7 +44,7 @@ type RecordsMap = {
 
 type EntityClinicalInfo = {
   entityName: ClinicalEntitySchemaNames;
-  results: ClinicalInfo[];
+  results: Array<ClinicalInfo | Donor>;
 };
 
 const updateCompletionTumourStats = (
@@ -100,21 +100,22 @@ const isEntityInQuery = (entityName: ClinicalEntitySchemaNames, entityTypes: str
   entityTypes.includes(aliasEntityNames[entityName]);
 
 const sortDocs = (sort: string, entityName: string, completionStats: CompletionRecord[]) => (
-  currentRecord: ClinicalInfo,
-  nextRecord: ClinicalInfo,
+  currentRecord: ClinicalInfo | Donor,
+  nextRecord: ClinicalInfo | Donor,
 ) => {
   const isDefaultSort = entityName === ClinicalEntitySchemaNames.DONOR && sort.includes('donorId');
-  const currentDonor = currentRecord['donor_id'];
-  const nextDonor = nextRecord['donor_id'];
 
   // -1 Current lower index than Next, +1 Current higher index than Next
   let order = 0;
   const isDescending = sort.includes('-') ? -1 : 1;
 
   if (isDefaultSort) {
+    const { donorId: currentDonorId } = currentRecord as Donor;
+    const { donorId: nextDonor } = nextRecord as Donor;
+
     // Sort Clinically Incomplete donors to top (sorted by donorId at DB level)
     const completionA =
-      completionStats.find(record => record.donorId && record.donorId === currentDonor)
+      completionStats.find(record => record.donorId && record.donorId === currentDonorId)
         ?.coreCompletionPercentage || 0;
 
     const completionB =
@@ -124,10 +125,13 @@ const sortDocs = (sort: string, entityName: string, completionStats: CompletionR
     const completionSort = completionA === completionB ? 0 : completionA > completionB ? -1 : 1;
     order = completionSort;
   } else {
+    const currentEntry = currentRecord as ClinicalInfo;
+    const nextEntry = nextRecord as ClinicalInfo;
+
     // Sort by Selected Column
     const key = isDescending === -1 ? sort.split('-')[1] : sort;
-    const first: any = currentRecord[key];
-    const next: any = nextRecord[key];
+    const first: any = currentEntry[key] as string;
+    const next: any = nextEntry[key];
     const firstExists = !(first === undefined || first === null);
     const nextExists = !(next === undefined || next === null);
     const valueSort =
@@ -180,11 +184,12 @@ const mapEntityDocuments = (
   const samples = originalResultsArray.find(result => result.entityName === 'sample_registration');
 
   if (completionRecords.completionStats && samples !== undefined) {
-    const sampleResults = samples.results.filter(
+    const sampleResults = samples.results as ClinicalInfo[];
+    const sampleData = sampleResults.filter(
       sample => typeof sample.sample_type === 'string' && !sample.sample_type?.includes('RNA'),
     );
 
-    sampleResults.forEach(sample => {
+    sampleData.forEach(sample => {
       if (typeof sample.tumour_normal_designation === 'string') {
         const designation = sample.tumour_normal_designation.toLowerCase();
         updateCompletionTumourStats(sample, designation, completionRecords);
