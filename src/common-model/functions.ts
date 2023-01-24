@@ -131,7 +131,7 @@ export function getClinicalEntitiesFromDonorBySchemaName(
 export function getClinicalEntitySubmittedData(
   donor: DeepReadonly<Donor>,
   clinicalEntitySchemaName: ClinicalEntitySchemaNames,
-): ClinicalInfo[] {
+): ClinicalInfo[] | Donor[] {
   const result = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName) as any[];
 
   const clinicalRecords =
@@ -139,6 +139,7 @@ export function getClinicalEntitySubmittedData(
       ? result.map((entity: any) => ({
           donor_id: donor.donorId,
           program_id: donor.programId,
+          updatedAt: donor.updatedAt,
           ...entity.clinicalInfo,
         }))
       : clinicalEntitySchemaName === ClinicalEntitySchemaNames.TREATMENT
@@ -197,7 +198,7 @@ export const getRequiredDonorFieldsForEntityTypes = (
   } else return [];
 };
 
-export function getSingleClinicalEntityFromDonorBySchemanName(
+export function getSingleClinicalEntityFromDonorBySchemaName(
   donor: DeepReadonly<Donor>,
   clinicalEntityType: ClinicalEntitySchemaNames,
   clinicalInfoRef: ClinicalInfo, // this function will use the values of the clinicalInfoRef that are needed to uniquely find a clinical info

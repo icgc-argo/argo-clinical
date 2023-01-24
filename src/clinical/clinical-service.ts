@@ -219,7 +219,7 @@ export const getClinicalSearchResults = async (programId: string, query: Clinica
   return data;
 };
 
-interface DonorMigration extends Omit<DictionaryMigration, 'invalidDonorsErrors '> {
+interface DonorMigration extends Omit<DictionaryMigration, 'invalidDonorsErrors'> {
   invalidDonorsErrors: DonorMigrationError[];
 }
 
@@ -230,7 +230,8 @@ export const getClinicalEntityMigrationErrors = async (programId: string, query:
   const migration: DeepReadonly<
     DonorMigration | undefined
   > = await migrationRepo.getLatestSuccessful();
-  const clinicalErrors: any[] = [];
+  const clinicalMigrationErrors: any[] = [];
+  const migrationLastUpdated = migration?.updatedAt || undefined;
 
   if (migration) {
     const { invalidDonorsErrors }: DeepReadonly<DonorMigration> = migration;
@@ -247,12 +248,12 @@ export const getClinicalEntityMigrationErrors = async (programId: string, query:
           const entityName = Object.keys(entity)[0];
           errors = errors.concat(entity[entityName].map(error => ({ ...error, entityName })));
         });
-        clinicalErrors.push({ donorId, submitterDonorId, errors });
+        clinicalMigrationErrors.push({ donorId, submitterDonorId, errors });
       });
   }
 
   const end = new Date().getTime() / 1000;
   L.debug(`getClinicalEntityMigrationErrors took ${end - start}s`);
 
-  return clinicalErrors;
+  return { clinicalErrors: clinicalMigrationErrors, migrationLastUpdated };
 };

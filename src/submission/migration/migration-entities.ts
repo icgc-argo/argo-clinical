@@ -40,6 +40,7 @@ export interface DictionaryMigration {
   invalidSubmissions: any[];
   programsWithDonorUpdates: string[];
   createdBy: string;
+  updatedAt?: string;
   newSchemaErrors?: NewSchemaVerificationResult | string;
 }
 

@@ -40,7 +40,7 @@ import { DeepReadonly } from 'deep-freeze';
 export type ClinicalQuery = {
   programShortName: string;
   page: number;
-  pageSize: number;
+  pageSize?: number;
   entityTypes: EntityAlias[];
   sort: string;
   donorIds: number[];
@@ -248,8 +248,37 @@ class ClinicalController {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
 
-    const clinicalErrors = await service.getClinicalEntityMigrationErrors(programId, query);
+    const {
+      clinicalErrors: migrationErrors,
+      migrationLastUpdated,
+    } = await service.getClinicalEntityMigrationErrors(programId, query);
 
+    if (migrationLastUpdated && migrationErrors.length) {
+      const errorDonorIds = migrationErrors.filter(Boolean).map(error => error.donorId);
+
+      const errorQuery: ClinicalQuery = {
+        programShortName: programId,
+        page: 0,
+        sort: 'donorId',
+        entityTypes: ['donor'],
+        donorIds: errorDonorIds,
+        submitterDonorIds: [],
+      };
+
+      await service.getPaginatedClinicalData(programId, errorQuery).then(entityData => {
+        if (entityData.clinicalEntities) {
+          const donors = entityData.clinicalEntities[0].records as Donor[];
+          const updatedDonors = donors.filter(donor => {
+            const { updatedAt } = donor;
+
+            const donorUpdatedAfterMigration =
+              updatedAt && Date.parse(updatedAt) > Date.parse(migrationLastUpdated);
+          });
+        }
+      });
+    }
+
+    const clinicalErrors = migrationErrors;
     res.status(200).json(clinicalErrors);
   }
 
