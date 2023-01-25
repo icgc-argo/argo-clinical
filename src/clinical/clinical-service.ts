@@ -17,18 +17,18 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { donorDao, DONOR_DOCUMENT_FIELDS } from './donor-repo';
-import { Errors, notEmpty } from '../utils';
-import { Sample, Donor, ClinicalEntityData } from './clinical-entities';
-import { ClinicalQuery, ClinicalSearchQuery } from './clinical-api';
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
+import { Sample, Donor, ClinicalEntityData, ClinicalEntity } from './clinical-entities';
+import { ClinicalQuery, ClinicalSearchQuery } from './clinical-api';
+import { donorDao, DONOR_DOCUMENT_FIELDS } from './donor-repo';
+import { ClinicalErrorsResponseRecord, EntityAlias } from '../common-model/entities';
+import { Errors, notEmpty } from '../utils';
 import { forceRecalcDonorCoreEntityStats } from '../submission/submission-to-clinical/stat-calculator';
 import { migrationRepo } from '../submission/migration/migration-repo';
 import {
   DictionaryMigration,
   DonorMigrationError,
-  DonorMigrationErrorRecord,
 } from '../submission/migration/migration-entities';
 import * as dictionaryManager from '../dictionary/manager';
 import { loggerFor } from '../logger';
@@ -38,6 +38,7 @@ import {
   filterDonorIdDataFromSearch,
 } from './service-worker-thread/tasks';
 import { runTaskInWorkerThread } from './service-worker-thread/runner';
+import { SchemaValidationError } from '@overturebio-stack/lectern-client/lib/schema-entities';
 
 const L = loggerFor(__filename);
 
@@ -220,7 +221,7 @@ export const getClinicalSearchResults = async (programId: string, query: Clinica
 };
 
 interface DonorMigration extends Omit<DictionaryMigration, 'invalidDonorsErrors'> {
-  invalidDonorsErrors: DonorMigrationError[];
+  invalidDonorsErrors: Array<DonorMigrationError>;
 }
 
 export const getClinicalEntityMigrationErrors = async (programId: string, query: string[]) => {
@@ -230,7 +231,8 @@ export const getClinicalEntityMigrationErrors = async (programId: string, query:
   const migration: DeepReadonly<
     DonorMigration | undefined
   > = await migrationRepo.getLatestSuccessful();
-  const clinicalMigrationErrors: any[] = [];
+
+  const clinicalMigrationErrors: ClinicalErrorsResponseRecord[] = [];
   const migrationLastUpdated = migration?.updatedAt || undefined;
 
   if (migration) {
@@ -241,14 +243,36 @@ export const getClinicalEntityMigrationErrors = async (programId: string, query:
           donor.programId.toString() === programId && query.includes(donor.donorId.toString()),
       )
       .forEach(donor => {
-        const { donorId, submitterDonorId } = donor;
+        const { donorId, submitterDonorId, errors } = donor;
         // Overwrite donor.errors + flatten entityName to simplify query
-        let errors: DonorMigrationErrorRecord[] = [];
-        donor.errors.forEach(entity => {
-          const entityName = Object.keys(entity)[0];
-          errors = errors.concat(entity[entityName].map(error => ({ ...error, entityName })));
+        // Input: Donor.Errors = [{ [entityName] : [{error}] }]
+        // =>  Output: Donor.Errors = [{ ...error, entityName}]
+
+        errors.forEach(entityErrorObject => {
+          const currentEntityErrorData: [
+            string | EntityAlias,
+            readonly DeepReadonly<SchemaValidationError>[],
+          ] = Object.entries(entityErrorObject)[0];
+
+          const entityName = currentEntityErrorData[0] as EntityAlias;
+          const entityErrors = currentEntityErrorData[1] as readonly DeepReadonly<
+            SchemaValidationError
+          >[];
+
+          const updatedErrorEntries = entityErrors.map(error => ({
+            ...error,
+            donorId,
+            entityName,
+          }));
+
+          const updatedDonorErrorData: ClinicalErrorsResponseRecord = {
+            donorId,
+            submitterDonorId,
+            errors: updatedErrorEntries,
+          };
+
+          clinicalMigrationErrors.push(updatedDonorErrorData);
         });
-        clinicalMigrationErrors.push({ donorId, submitterDonorId, errors });
       });
   }
 

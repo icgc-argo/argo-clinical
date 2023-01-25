@@ -17,6 +17,8 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
+
 // this is temporary to keep code compiling until surgery is ready in dictionary, to be removed in favor of
 // the surgery in ClinicalEntitySchemaNames
 export const SURGERY_SCHEMA_NAME = 'surgery';
@@ -82,6 +84,17 @@ export const aliasEntityNames: Record<ClinicalEntitySchemaNames, EntityAlias> = 
 };
 
 export const queryEntityNames = Object.values(aliasEntityNames) as EntityAlias[];
+
+export interface ClinicalEntityErrorRecord extends dictionaryEntities.SchemaValidationError {
+  entityName: EntityAlias;
+  donorId: number;
+}
+
+export interface ClinicalErrorsResponseRecord {
+  donorId: number;
+  submitterDonorId: string;
+  errors: ClinicalEntityErrorRecord[];
+}
 
 export type ClinicalFields =
   | DonorFieldsEnum

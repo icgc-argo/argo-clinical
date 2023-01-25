@@ -18,6 +18,7 @@
  */
 
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
+import { EntityAlias } from '../../common-model/entities';
 
 export type MigrationStage = 'SUBMITTED' | 'ANALYZED' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
 export type MigrationState = 'OPEN' | 'CLOSED';
@@ -60,10 +61,10 @@ export type NewSchemaVerificationResult = {
   };
 };
 
-export interface DonorMigrationErrorRecord extends dictionaryEntities.SchemaValidationError {
-  entityName: string;
-}
-
-export type DonorMigrationSchemaErrors = Array<{
-  [clinicalType: string]: ReadonlyArray<dictionaryEntities.SchemaValidationError>;
-}>;
+export type DonorMigrationSchemaErrors = Array<
+  {
+    [clinicalAlias in EntityAlias | string]: ReadonlyArray<
+      dictionaryEntities.SchemaValidationError
+    >;
+  }
+>;
