@@ -233,7 +233,7 @@ export const getClinicalEntityMigrationErrors = async (programId: string, query:
   > = await migrationRepo.getLatestSuccessful();
 
   const clinicalMigrationErrors: ClinicalErrorsResponseRecord[] = [];
-  const migrationLastUpdated = migration?.updatedAt || undefined;
+  const migrationLastUpdated = migration?.updatedAt;
 
   if (migration) {
     const { invalidDonorsErrors }: DeepReadonly<DonorMigration> = migration;
@@ -291,6 +291,7 @@ export const getDonorSubmissionErrorUpdates = async (
   if (!programId) throw new Error('Missing programId!');
   const start = new Date().getTime() / 1000;
 
+  let validDonors: number[] = [];
   const { clinicalErrors: clinicalMigrationErrors, migrationLastUpdated } = migrationErrors;
   const errorDonorIds = clinicalMigrationErrors.map(error => error.donorId);
   let errorEntities: EntityAlias[] = [];
@@ -313,34 +314,13 @@ export const getDonorSubmissionErrorUpdates = async (
   };
 
   await donorDao.findByPaginatedProgramId(programId, errorQuery).then(donorData => {
-    const validDonors = donorData.donors
+    validDonors = donorData.donors
       .filter(donor => donor.schemaMetadata.isValid)
-      .map(({ donorId }) => donorId);
-
-    console.log('validDonors', validDonors);
-
-    // if (entityData.clinicalEntities) {
-    // console.log('entityData.clinicalEntities', entityData.clinicalEntities);
-    // const donors = entityData.clinicalEntities[0].records as ClinicalInfo[];
-    // const updatedDonorIds = donors
-    //   .filter(donor => {
-    //     console.log(donor);
-    //     const { updatedAt } = (donor as ClinicalInfo) as { updatedAt: string };
-    //     return updatedAt && Date.parse(updatedAt) > Date.parse(migrationLastUpdated);
-    //   })
-    //   .map(donor => donor.donor_id);
-    // console.log('\nupdatedDonorIds', updatedDonorIds);
-    // updatedDonorIds.forEach(donorId => {
-    //   console.log('\nmigrationErrors', migrationErrors);
-    //   const currentErrors = migrationErrors
-    //     .filter(error => error.donorId === donorId)
-    //     .map(migrationError => migrationError.errors)[0];
-    //   console.log('\ncurrentErrors', currentErrors);
-    // });
+      .map(({ donorId }) => Number(donorId));
   });
 
   const end = new Date().getTime() / 1000;
-  L.debug(`getClinicalEntityMigrationErrors took ${end - start}s`);
+  L.debug(`getDonorSubmissionErrorUpdates took ${end - start}s`);
 
-  return { clinicalErrors: clinicalMigrationErrors, migrationLastUpdated };
+  return validDonors;
 };
