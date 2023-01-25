@@ -214,15 +214,14 @@ export const donorDao: DonorRepository = {
     // All Entity Data is stored on Donor documents
     // Pagination and Search are handled downstream before response in service-worker-threads/tasks
     // For most use cases, all Donor documents must be retrieved for accurate filtering
-    // Specific Requests for Donor documents can be paginated at the MongoDB level
-
     const limit =
       entityTypes.length === 1 && entityTypes.includes('donor') && pageSize
         ? pageSize
         : await DonorModel.countDocuments({ programId });
 
+    // Only requests for Specific Donor IDs can be paginated at the MongoDB level
     // React-Table Pagination is 0 indexed, BE Mongoose-Paginate is 1 indexed
-    const page = entityTypes.includes('donor') && donorIds.length === 0 ? queryPage + 1 : 1;
+    const page = entityTypes.length === 1 && entityTypes.includes('donor') ? queryPage + 1 : 1;
 
     const searchTerms = [];
 
