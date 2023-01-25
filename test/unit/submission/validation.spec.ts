@@ -1736,6 +1736,7 @@ describe('data-validator', () => {
           [SpecimenFieldsEnum.tumour_grading_system]: 'WHO grading system for CNS tumours',
           [SpecimenFieldsEnum.tumour_grade]: 'Grade III',
           [SpecimenFieldsEnum.percent_tumour_cells]: 0.2,
+          [SpecimenFieldsEnum.percent_tumour_cells_measurement_method]: 'measurement method',
           [SpecimenFieldsEnum.tumour_histological_type]: '9691/36',
           [SpecimenFieldsEnum.reference_pathology_confirmed]: 'Yes',
           [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
@@ -1769,7 +1770,7 @@ describe('data-validator', () => {
       const result = await dv
         .validateSubmissionData({ AB1: newDonorAB1Records }, { AB1: existingDonorAB1Mock })
         .catch((err: any) => fail(err));
-
+      console.log('\n', result.specimen.dataErrors);
       chai.expect(result.specimen.dataErrors.length).to.eq(1);
       chai.expect(result.primary_diagnosis.dataErrors.length).to.eq(1);
       result.specimen.dataErrors.forEach(dataError => {
