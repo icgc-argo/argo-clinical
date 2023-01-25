@@ -1770,7 +1770,7 @@ describe('data-validator', () => {
       const result = await dv
         .validateSubmissionData({ AB1: newDonorAB1Records }, { AB1: existingDonorAB1Mock })
         .catch((err: any) => fail(err));
-      console.log('\n', result.specimen.dataErrors);
+
       chai.expect(result.specimen.dataErrors.length).to.eq(1);
       chai.expect(result.primary_diagnosis.dataErrors.length).to.eq(1);
       result.specimen.dataErrors.forEach(dataError => {
