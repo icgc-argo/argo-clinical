@@ -248,43 +248,13 @@ class ClinicalController {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
 
-    const {
-      clinicalErrors: migrationErrors,
-      migrationLastUpdated,
-    } = await service.getClinicalEntityMigrationErrors(programId, query);
+    const migrationErrors = await service.getClinicalEntityMigrationErrors(programId, query);
 
-    if (migrationLastUpdated && migrationErrors.length) {
-      const errorDonorIds = migrationErrors.map(error => error.donorId);
-      let errorEntities: EntityAlias[] = [];
-
-      migrationErrors.forEach(migrationError => {
-        const { errors } = migrationError;
-        errors.forEach(error => {
-          const { entityName } = error;
-          if (!errorEntities.includes(entityName)) errorEntities = [...errorEntities, entityName];
-        });
-      });
-
-      const errorQuery: ClinicalQuery = {
-        programShortName: programId,
-        page: 0,
-        sort: 'donorId',
-        entityTypes: ['donor', ...errorEntities],
-        donorIds: errorDonorIds,
-        submitterDonorIds: [],
-      };
-
-      await service.getPaginatedClinicalData(programId, errorQuery).then(entityData => {
-        if (entityData.clinicalEntities) {
-          const donors = entityData.clinicalEntities[0].records as Donor[];
-          const updatedDonors = donors.filter(({ updatedAt }: Donor) => {
-            return updatedAt && Date.parse(updatedAt) > Date.parse(migrationLastUpdated);
-          });
-        }
-      });
+    if (migrationErrors) {
+      await service.getDonorSubmissionErrorUpdates(programId, migrationErrors);
     }
 
-    const clinicalErrors = migrationErrors;
+    const clinicalErrors = migrationErrors.clinicalErrors;
     res.status(200).json(clinicalErrors);
   }
 
