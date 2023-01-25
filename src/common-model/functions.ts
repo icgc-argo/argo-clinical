@@ -175,27 +175,31 @@ export function getClinicalEntitySubmittedData(
 export const getRequiredDonorFieldsForEntityTypes = (
   entityTypes: EntityAlias[],
 ): Array<EntityAlias | ClinicalEntitySchemaNames | 'completionStats'> => {
+  let requiredFields: Array<EntityAlias | ClinicalEntitySchemaNames | 'completionStats'> = [];
   if (
     // Donor Completion Stats require Sample Registration data
     // Sample Registration requires Specimen data
     (entityTypes.includes('donor') && !entityTypes.includes('sampleRegistration')) ||
     (entityTypes.includes('sampleRegistration') && !entityTypes.includes('specimens'))
   ) {
-    return [
+    requiredFields = [
+      ...requiredFields,
       'completionStats',
       'sampleRegistration',
       ClinicalEntitySchemaNames.REGISTRATION,
       'specimens',
     ];
-  } else if (
+  }
+  if (
     // Clinical Therapies require Treatments
     // hormoneTherapy + treatment do not match schema names
     entityTypes.includes('hormoneTherapy') ||
     entityTypes.includes('treatment') ||
     ClinicalTherapySchemaNames.some(entity => entityTypes.includes(entity))
   ) {
-    return ['treatments'];
-  } else return [];
+    requiredFields = [...requiredFields, 'treatments'];
+  }
+  return requiredFields;
 };
 
 export function getSingleClinicalEntityFromDonorBySchemaName(
