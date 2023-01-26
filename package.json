@@ -1,6 +1,6 @@
 {
   "name": "argo-clinical",
-  "version": "1.73.0",
+  "version": "1.74.0",
   "description": "Clinical submission system and repo.",
   "scripts": {
     "start": "npm run serve",
@@ -91,7 +91,7 @@
     "typescript": "^3.9.5"
   },
   "dependencies": {
-    "@overturebio-stack/lectern-client": "1.3.0",
+    "@overturebio-stack/lectern-client": "1.4.0",
     "@types/mongoose-paginate-v2": "^1.3.11",
     "adm-zip": "^0.4.16",
     "async": "^3.0.1",
