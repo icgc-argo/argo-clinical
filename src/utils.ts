@@ -122,7 +122,7 @@ export namespace ControllerUtils {
   };
 
   export const unableToProcess = (res: Response, message: string): any => {
-    return res.status(403).send({ message });
+    return res.status(422).send({ message });
   };
 
   export const invalidBatch = (
