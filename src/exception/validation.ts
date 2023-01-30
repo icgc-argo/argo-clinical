@@ -181,12 +181,27 @@ const getValidator = <RecordT>(fieldValidators: any, fieldName: string): Validat
   }
 };
 
-export const validateRecords = async <RecordT>(
+class DuplicateChecker {
+  records: any[] = [];
+
+  validate(record: any) {
+    if (this.records.some(previousRecord => isEqual(previousRecord, record))) {
+      return createValidationResult(0, '', ValidationResultErrorType.INVALID, 'duplicate');
+    } else {
+      this.records.push(record);
+      return createValidationResult(0, '', ValidationResultErrorType.VALID, '');
+    }
+  }
+}
+
   programId: string,
   records: ReadonlyArray<RecordT>,
   fieldValidators: FieldValidators<RecordT>,
 ): Promise<ValidationResult[]> => {
   let errors: ValidationResult[] = [];
+
+  // operates on rows rather than field
+  const duplicateChecker = new DuplicateChecker();
 
   // avoid map to keep async working cleanly (some validators might be async)
   for (const [recordIndex, record] of records.entries()) {
@@ -203,8 +218,14 @@ export const validateRecords = async <RecordT>(
       });
 
       if (validationResult.result !== ValidationResultType.VALID) {
+      if (validationResult.result !== ValidationResultErrorType.VALID) {
         errors = errors.concat([validationResult]);
       }
+    }
+    //
+    const duplicateValidation = duplicateChecker.validate(record);
+    if (duplicateValidation.result !== ValidationResultErrorType.VALID) {
+      errors = errors.concat([duplicateValidation]);
     }
   }
 
