@@ -17,39 +17,52 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import { isEqual } from 'lodash';
 import * as dictionaryManager from '../dictionary/manager';
 import { SchemaWithFields } from '../dictionary/manager';
 import { loggerFor } from '../logger';
-import { ExceptionValue } from './types';
+import { ExceptionRecord, ExceptionValue, ObjectValues, ProgramExceptionRecord } from './types';
 
 const L = loggerFor(__filename);
 
-export interface ValidationResult {
+export type ValidationResult = {
+  message: string;
+  result: ValidationResultErrorType;
+};
+
+export const ValidationResultErrorType = {
+  VALID: 'VALID',
+  INVALID: 'INVALID',
+  EMPTY_FIELD: 'EMPTY_FIELD',
+  TYPE_ERROR: 'TYPE_ERROR',
+  UNDEFINED: 'UNDEFINED',
+  PARAM_INVALID: 'INVALID_PARAM',
+} as const;
+
+type ValidationResultErrorType = ObjectValues<typeof ValidationResultErrorType>;
+
+type ValidationError = {
+  field: string;
+  recordIndex: number;
+} & ValidationResult;
+export const createValidationError = ({
+  recordIndex,
+  result,
+  message,
+  field,
+}: {
+  field: string;
+  result: ValidationResultErrorType;
   message: string;
   recordIndex: number;
-  result: ValidationResultType;
-}
-
-export enum ValidationResultType {
-  VALID = 'valid',
-  INVALID = 'invalid',
-  EMPTY_FIELD = 'empty_field',
-  TYPE_ERROR = 'type_error',
-  UNDEFINED = 'undefined',
-  PARAM_INVALID = 'PARAM_INVALID',
-}
-
-export const createValidationResult = (
-  row: number,
-  result: ValidationResultType,
-  message: string,
-): ValidationResult => ({
-  recordIndex: row + 1, // account for tsv header row
+}): ValidationError => ({
+  recordIndex: recordIndex + 1, // account for tsv header row
+  field,
   result,
   message,
 });
 
-export interface Validator<RecordT = { [k: string]: any }> {
+export type Validator<RecordT extends Object> = {
   ({
     fieldValue,
     fieldName,
@@ -63,23 +76,26 @@ export interface Validator<RecordT = { [k: string]: any }> {
     record: RecordT;
     programId: string;
   }): Promise<ValidationResult> | ValidationResult;
-}
+};
 
-export type FieldValidators<RecordT> = {
+export type FieldValidators<RecordT extends Object> = {
   [key in keyof RecordT]: Validator<RecordT>;
 };
 
-export const checkCoreField: Validator = async ({ record, recordIndex }) => {
+export const checkCoreField: Validator<ExceptionRecord> = async ({
+  record,
+  recordIndex,
+  fieldName,
+}) => {
   const currentDictionary = await dictionaryManager.instance();
 
   const requestedCoreField = record.requested_core_field;
 
   if (requestedCoreField === undefined) {
-    return createValidationResult(
-      recordIndex,
-      ValidationResultType.UNDEFINED,
-      `requested_core_field field is not defined`,
-    );
+    return {
+      result: ValidationResultErrorType.UNDEFINED,
+      message: `requested_core_field field is not defined`,
+    };
   }
 
   const fieldFilter = (field: { name: string; meta?: { core: boolean } }): boolean => {
@@ -96,66 +112,82 @@ export const checkCoreField: Validator = async ({ record, recordIndex }) => {
   );
 
   const isValid = existingDictionarySchema[0] && existingDictionarySchema[0].fields.length > 0;
-  return createValidationResult(
-    recordIndex,
-    isValid ? ValidationResultType.VALID : ValidationResultType.INVALID,
-    isValid ? '' : `core field of ${record.requested_core_field} is not valid`,
-  );
+  return {
+    result: isValid ? ValidationResultErrorType.VALID : ValidationResultErrorType.INVALID,
+    message: isValid ? '' : `core field of ${record.requested_core_field} is not valid`,
+  };
 };
 
-export const checkProgramId: Validator = ({ record, recordIndex, programId }) => {
-  const isValid = programId === record.program_name;
-  return createValidationResult(
-    recordIndex,
-    isValid ? ValidationResultType.VALID : ValidationResultType.PARAM_INVALID,
-    isValid
-      ? ''
-      : `submitted program id of ${programId} does not match record program id of ${record.program_name}`,
-  );
+export const checkProgramId: Validator<ProgramExceptionRecord> = ({ record, programId }) => {
+  const result =
+    programId === record.program_name
+      ? ValidationResultErrorType.VALID
+      : ValidationResultErrorType.PARAM_INVALID;
+
+  const message =
+    result !== ValidationResultErrorType.VALID
+      ? `submitted exception program id of ${record.program_name} does not match request parameter program id of ${programId}`
+      : '';
+  return { result, message };
 };
 
-export const checkRequestedValue: Validator = ({ record, recordIndex }) => {
+export const checkRequestedValue: Validator<ExceptionRecord> = ({
+  record,
+  recordIndex,
+  fieldName,
+}) => {
   const validRequests: string[] = Object.values(ExceptionValue);
   const requestedExceptionValue = record.requested_exception_value;
 
   if (requestedExceptionValue === undefined) {
-    return createValidationResult(
-      recordIndex,
-      ValidationResultType.UNDEFINED,
-      `requested_exception_value field is not defined`,
-    );
+    return {
+      result: ValidationResultErrorType.UNDEFINED,
+      message: `requested_exception_value field is not defined`,
+    };
   } else if (typeof requestedExceptionValue !== 'string') {
-    return createValidationResult(
-      recordIndex,
-      ValidationResultType.TYPE_ERROR,
-      `requested_exception_value is not a string`,
-    );
+    return {
+      result: ValidationResultErrorType.TYPE_ERROR,
+      message: `requested_exception_value is not a string`,
+    };
   } else if (!validRequests.includes(requestedExceptionValue)) {
-    return createValidationResult(
-      recordIndex,
-      ValidationResultType.INVALID,
-      `requested_exception_value is not valid. must be one of ${validRequests.join(', ')}`,
-    );
+    return {
+      result: ValidationResultErrorType.INVALID,
+      message: `requested_exception_value is not valid. must be one of ${validRequests.join(', ')}`,
+    };
   } else {
-    return createValidationResult(recordIndex, ValidationResultType.VALID, '');
+    return { result: ValidationResultErrorType.VALID, message: '' };
   }
 };
 
-export const checkForEmptyField: Validator = ({ fieldValue, fieldName, recordIndex }) => {
+export const checkForEmptyField: Validator<ExceptionRecord> = ({
+  fieldValue,
+  fieldName,
+  recordIndex,
+}): ValidationResult => {
   const isValid = fieldValue !== '' || !!fieldValue;
-  return createValidationResult(
-    recordIndex,
-    isValid ? ValidationResultType.VALID : ValidationResultType.EMPTY_FIELD,
-    !isValid ? `${fieldName} cannot be empty` : '',
-  );
+  const errorMessage = `${fieldName} cannot be empty`;
+
+  return {
+    result: isValid ? ValidationResultErrorType.VALID : ValidationResultErrorType.EMPTY_FIELD,
+    message: isValid ? '' : errorMessage,
+  };
 };
 
-export const checkIsValidSchema: Validator = async ({ fieldValue, recordIndex }) => {
+export const checkIsValidSchema: Validator<ExceptionRecord> = async ({
+  fieldValue,
+  fieldName,
+  recordIndex,
+}) => {
+  const errorMessage = 'field is empty';
   if (!fieldValue) {
-    return createValidationResult(recordIndex, ValidationResultType.EMPTY_FIELD, 'field is empty');
+    return {
+      result: ValidationResultErrorType.EMPTY_FIELD,
+      message: errorMessage,
+    };
   }
 
   const currentDictionary = await dictionaryManager.instance();
+
   const schemaFilter = (schema: SchemaWithFields): boolean => {
     return schema.name === fieldValue;
   };
@@ -164,20 +196,22 @@ export const checkIsValidSchema: Validator = async ({ fieldValue, recordIndex })
 
   const isValid = existingDictionarySchema[0];
 
-  return createValidationResult(
-    recordIndex,
-    isValid ? ValidationResultType.VALID : ValidationResultType.INVALID,
-    isValid ? '' : `record schema of ${fieldValue} is not valid`,
-  );
+  return {
+    result: isValid ? ValidationResultErrorType.VALID : ValidationResultErrorType.INVALID,
+    message: isValid ? '' : `record schema of ${fieldValue} is not valid`,
+  };
 };
 
-const getValidator = <RecordT>(fieldValidators: any, fieldName: string): Validator<RecordT> => {
+const getValidator = <RecordT extends Object>(
+  fieldValidators: any,
+  fieldName: string,
+): Validator<RecordT> => {
   const v = fieldValidators[fieldName];
   if (v) {
     return v;
   } else {
     L.debug(`warning: no validation for ${fieldName}`);
-    return ({ recordIndex }) => createValidationResult(recordIndex, ValidationResultType.VALID, '');
+    return ({ recordIndex }) => ({ result: ValidationResultErrorType.VALID, message: '' });
   }
 };
 
@@ -186,14 +220,15 @@ class DuplicateChecker {
 
   validate(record: any) {
     if (this.records.some(previousRecord => isEqual(previousRecord, record))) {
-      return createValidationResult(0, '', ValidationResultErrorType.INVALID, 'duplicate');
+      return { result: ValidationResultErrorType.INVALID, message: 'duplicate' };
     } else {
       this.records.push(record);
-      return createValidationResult(0, '', ValidationResultErrorType.VALID, '');
+      return { result: ValidationResultErrorType.VALID, message: '' };
     }
   }
 }
 
+export const validateRecords = async <RecordT extends Object>(
   programId: string,
   records: ReadonlyArray<RecordT>,
   fieldValidators: FieldValidators<RecordT>,
@@ -217,15 +252,23 @@ class DuplicateChecker {
         programId,
       });
 
-      if (validationResult.result !== ValidationResultType.VALID) {
-      if (validationResult.result !== ValidationResultErrorType.VALID) {
-        errors = errors.concat([validationResult]);
+      const { message, result } = validationResult;
+      if (result !== ValidationResultErrorType.VALID) {
+        const error = createValidationError({ recordIndex, field: fieldName, result, message });
+        errors = errors.concat([error]);
       }
     }
-    //
+    // row level validations
     const duplicateValidation = duplicateChecker.validate(record);
-    if (duplicateValidation.result !== ValidationResultErrorType.VALID) {
-      errors = errors.concat([duplicateValidation]);
+    const { message, result } = duplicateValidation;
+    if (result !== ValidationResultErrorType.VALID) {
+      const error = createValidationError({
+        recordIndex,
+        result,
+        message,
+        field: '',
+      });
+      errors = errors.concat([error]);
     }
   }
 
