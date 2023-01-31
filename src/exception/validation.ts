@@ -82,7 +82,7 @@ export type FieldValidators<RecordT extends Object> = {
   [key in keyof RecordT]: Validator<RecordT>;
 };
 
-export const checkCoreField: Validator<ExceptionRecord> = async ({ record }) => {
+export const checkCoreField: Validator<ExceptionRecord> = async ({ record, fieldName }) => {
   const currentDictionary = await dictionaryManager.instance();
 
   const requestedCoreField = record.requested_core_field;
@@ -90,7 +90,7 @@ export const checkCoreField: Validator<ExceptionRecord> = async ({ record }) => 
   if (requestedCoreField === undefined) {
     return {
       result: ValidationResultErrorType.UNDEFINED,
-      message: `requested_core_field field is not defined`,
+      message: `${fieldName} value is not defined`,
     };
   }
 
@@ -110,11 +110,15 @@ export const checkCoreField: Validator<ExceptionRecord> = async ({ record }) => 
   const isValid = existingDictionarySchema[0] && existingDictionarySchema[0].fields.length > 0;
   return {
     result: isValid ? ValidationResultErrorType.VALID : ValidationResultErrorType.INVALID,
-    message: isValid ? '' : `core field of ${record.requested_core_field} is not valid`,
+    message: isValid ? '' : `${fieldName} value of '${record.requested_core_field}' is not valid`,
   };
 };
 
-export const checkProgramId: Validator<ProgramExceptionRecord> = ({ record, programId }) => {
+export const checkProgramId: Validator<ProgramExceptionRecord> = ({
+  record,
+  programId,
+  fieldName,
+}) => {
   const result =
     programId === record.program_name
       ? ValidationResultErrorType.VALID
@@ -122,29 +126,29 @@ export const checkProgramId: Validator<ProgramExceptionRecord> = ({ record, prog
 
   const message =
     result !== ValidationResultErrorType.VALID
-      ? `submitted exception program id of ${record.program_name} does not match request parameter program id of ${programId}`
+      ? `submitted exception ${fieldName} of ${record.program_name} does not match request parameter program id of ${programId}`
       : '';
   return { result, message };
 };
 
-export const checkRequestedValue: Validator<ExceptionRecord> = ({ record }) => {
+export const checkRequestedValue: Validator<ExceptionRecord> = ({ record, fieldName }) => {
   const validRequests: string[] = Object.values(ExceptionValue);
   const requestedExceptionValue = record.requested_exception_value;
 
   if (requestedExceptionValue === undefined) {
     return {
       result: ValidationResultErrorType.UNDEFINED,
-      message: `requested_exception_value field is not defined`,
+      message: `${fieldName} value is not defined`,
     };
   } else if (typeof requestedExceptionValue !== 'string') {
     return {
       result: ValidationResultErrorType.TYPE_ERROR,
-      message: `requested_exception_value is not a string`,
+      message: `${fieldName} value is not a string`,
     };
   } else if (!validRequests.includes(requestedExceptionValue)) {
     return {
       result: ValidationResultErrorType.INVALID,
-      message: `requested_exception_value is not valid. must be one of ${validRequests.join(', ')}`,
+      message: `${fieldName} value is not valid. Must be one of [${validRequests.join(', ')}]`,
     };
   } else {
     return { result: ValidationResultErrorType.VALID, message: '' };
