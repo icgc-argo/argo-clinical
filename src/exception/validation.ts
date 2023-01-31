@@ -126,7 +126,7 @@ export const checkProgramId: Validator<ProgramExceptionRecord> = ({
 
   const message =
     result !== ValidationResultErrorType.VALID
-      ? `submitted exception ${fieldName} of ${record.program_name} does not match request parameter program id of ${programId}`
+      ? `submitted exception '${fieldName}' of '${record.program_name}' does not match request parameter program id of '${programId}'`
       : '';
   return { result, message };
 };
