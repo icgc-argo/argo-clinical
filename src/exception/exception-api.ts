@@ -57,7 +57,6 @@ class ExceptionController {
       if (records.length === 0) {
         throw new Error('TSV has no records!');
       }
-      console.log('res', JSON.stringify(records));
 
       if (!isReadonlyArrayOf(records, isProgramExceptionRecord)) {
         throw new Error('TSV is incorrectly structured');
