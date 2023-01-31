@@ -257,7 +257,7 @@ describe('program exception service', () => {
       const result = await validateRecords(DEFAULT_PROGRAM_ID, records, programValidators);
 
       expectToHaveNumberOfErrors(result, 1);
-      expectValidationError(result[0], 1, ValidationResultErrorType.INVALID);
+      expectValidationError(result[0], 2, ValidationResultErrorType.INVALID);
     });
   });
 });

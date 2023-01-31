@@ -27,9 +27,9 @@ import { isProgramExceptionRecord, isReadonlyArrayOf } from './types';
 
 const L = loggerFor(__filename);
 
-enum ProgramExceptionErrorMessage {
-  TSV_PARSING_FAILED = `This file is formatted incorrectly`,
-}
+const ProgramExceptionErrorMessage = {
+  TSV_PARSING_FAILED: `This file is formatted incorrectly`,
+} as const;
 
 class ExceptionController {
   @HasFullWriteAccess()
@@ -57,6 +57,7 @@ class ExceptionController {
       if (records.length === 0) {
         throw new Error('TSV has no records!');
       }
+      console.log('res', JSON.stringify(records));
 
       if (!isReadonlyArrayOf(records, isProgramExceptionRecord)) {
         throw new Error('TSV is incorrectly structured');

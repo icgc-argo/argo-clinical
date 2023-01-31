@@ -19,19 +19,16 @@
 
 import { DeepReadonly } from 'deep-freeze';
 import { loggerFor } from '../logger';
-import * as dictionaryManager from '../dictionary/manager';
-import { SchemaWithFields } from '../dictionary/manager';
-import { ProgramExceptionModel, programExceptionRepository } from './exception-repo';
-import { ExceptionValue, ProgramException, ProgramExceptionRecord } from './types';
+import { programExceptionRepository } from './exception-repo';
+import { ExceptionValueType, ProgramException, ProgramExceptionRecord } from './types';
 import {
   checkCoreField,
-  checkForEmptyField,
+  checkIsValidSchema,
   checkProgramId,
   checkRequestedValue,
   FieldValidators,
   validateRecords,
-  ValidationError,
-  Validator,
+  ValidationResult,
 } from './validation';
 
 const L = loggerFor(__filename);
@@ -39,27 +36,40 @@ const L = loggerFor(__filename);
 const recordsToException = (
   programId: string,
   records: ReadonlyArray<ProgramExceptionRecord>,
-): ProgramException => ({
-  programId,
-  exceptions: records.map(r => ({
-    schema: r.schema,
-    coreField: r.requested_core_field,
-    exceptionValue: r.requested_exception_value,
-  })),
-});
+): ProgramException => {
+  return {
+    programId,
+    exceptions: records.map(r => ({
+      schema: r.schema,
+      coreField: r.requested_core_field,
+      exceptionValue: r.requested_exception_value as ExceptionValueType,
+    })),
+  };
+};
 
 interface ProgramExceptionResult {
   programException: undefined | DeepReadonly<ProgramException>;
-  errors: ValidationError[];
+  errors: ValidationResult[];
   successful: boolean;
 }
 
+// relates to our TSV cols
 export const programValidators: FieldValidators<ProgramExceptionRecord> = {
   program_name: checkProgramId,
-  schema: checkForEmptyField,
+  schema: checkIsValidSchema,
   requested_core_field: checkCoreField,
   requested_exception_value: checkRequestedValue,
 };
+
+const createResult = ({
+  programException = undefined,
+  errors,
+  successful,
+}: ProgramExceptionResult) => ({
+  programException,
+  errors,
+  successful,
+});
 
 export namespace operations {
   export const createProgramException = async ({
@@ -69,7 +79,6 @@ export namespace operations {
     programId: string;
     records: ReadonlyArray<ProgramExceptionRecord>;
   }): Promise<ProgramExceptionResult> => {
-    L.info(JSON.stringify(records));
     const errors = await validateRecords<ProgramExceptionRecord>(
       programId,
       records,
@@ -77,19 +86,24 @@ export namespace operations {
     );
 
     if (errors.length > 0) {
-      return {
+      return createResult({
         programException: undefined,
         errors,
         successful: false,
-      };
+      });
     } else {
       const exception = recordsToException(programId, records);
-      const result = await programExceptionRepository.create(exception);
-      return {
-        programException: result,
-        errors: [],
-        successful: true,
-      };
+      try {
+        const programException = await programExceptionRepository.save(exception);
+        return createResult({
+          programException,
+          errors: [],
+          successful: true,
+        });
+      } catch (e) {
+        L.error('error saving exception to database', e);
+        return createResult({ programException: undefined, successful: false, errors: [] });
+      }
     }
   };
 }

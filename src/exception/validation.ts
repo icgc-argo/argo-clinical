@@ -82,11 +82,7 @@ export type FieldValidators<RecordT extends Object> = {
   [key in keyof RecordT]: Validator<RecordT>;
 };
 
-export const checkCoreField: Validator<ExceptionRecord> = async ({
-  record,
-  recordIndex,
-  fieldName,
-}) => {
+export const checkCoreField: Validator<ExceptionRecord> = async ({ record }) => {
   const currentDictionary = await dictionaryManager.instance();
 
   const requestedCoreField = record.requested_core_field;
@@ -131,11 +127,7 @@ export const checkProgramId: Validator<ProgramExceptionRecord> = ({ record, prog
   return { result, message };
 };
 
-export const checkRequestedValue: Validator<ExceptionRecord> = ({
-  record,
-  recordIndex,
-  fieldName,
-}) => {
+export const checkRequestedValue: Validator<ExceptionRecord> = ({ record }) => {
   const validRequests: string[] = Object.values(ExceptionValue);
   const requestedExceptionValue = record.requested_exception_value;
 
@@ -162,7 +154,6 @@ export const checkRequestedValue: Validator<ExceptionRecord> = ({
 export const checkForEmptyField: Validator<ExceptionRecord> = ({
   fieldValue,
   fieldName,
-  recordIndex,
 }): ValidationResult => {
   const isValid = fieldValue !== '' || !!fieldValue;
   const errorMessage = `${fieldName} cannot be empty`;
@@ -173,11 +164,7 @@ export const checkForEmptyField: Validator<ExceptionRecord> = ({
   };
 };
 
-export const checkIsValidSchema: Validator<ExceptionRecord> = async ({
-  fieldValue,
-  fieldName,
-  recordIndex,
-}) => {
+export const checkIsValidSchema: Validator<ExceptionRecord> = async ({ fieldValue }) => {
   const errorMessage = 'field is empty';
   if (!fieldValue) {
     return {
@@ -202,6 +189,21 @@ export const checkIsValidSchema: Validator<ExceptionRecord> = async ({
   };
 };
 
+class DuplicateChecker {
+  records: any[] = [];
+
+  validate(record: any, recordIndex: number) {
+    const match = this.records.find(previousRecord => isEqual(previousRecord, record));
+    if (match) {
+      const message = `duplicate rows: ${this.records.indexOf(match) + 1} and ${recordIndex + 1}`;
+      return { result: ValidationResultErrorType.INVALID, message };
+    } else {
+      this.records.push(record);
+      return { result: ValidationResultErrorType.VALID, message: '' };
+    }
+  }
+}
+
 const getValidator = <RecordT extends Object>(
   fieldValidators: any,
   fieldName: string,
@@ -211,22 +213,9 @@ const getValidator = <RecordT extends Object>(
     return v;
   } else {
     L.debug(`warning: no validation for ${fieldName}`);
-    return ({ recordIndex }) => ({ result: ValidationResultErrorType.VALID, message: '' });
+    return () => ({ result: ValidationResultErrorType.VALID, message: '' });
   }
 };
-
-class DuplicateChecker {
-  records: any[] = [];
-
-  validate(record: any) {
-    if (this.records.some(previousRecord => isEqual(previousRecord, record))) {
-      return { result: ValidationResultErrorType.INVALID, message: 'duplicate' };
-    } else {
-      this.records.push(record);
-      return { result: ValidationResultErrorType.VALID, message: '' };
-    }
-  }
-}
 
 export const validateRecords = async <RecordT extends Object>(
   programId: string,
@@ -259,7 +248,7 @@ export const validateRecords = async <RecordT extends Object>(
       }
     }
     // row level validations
-    const duplicateValidation = duplicateChecker.validate(record);
+    const duplicateValidation = duplicateChecker.validate(record, recordIndex);
     const { message, result } = duplicateValidation;
     if (result !== ValidationResultErrorType.VALID) {
       const error = createValidationError({
