@@ -130,16 +130,18 @@ const sortDocs = (sort: string, entityName: string, completionStats: CompletionR
 
     // Sort by Selected Column
     const key = isDescending === -1 ? sort.split('-')[1] : sort;
-    const first: any = currentEntry[key] as string;
-    const next: any = nextEntry[key];
-    const firstExists = !(first === undefined || first === null);
-    const nextExists = !(next === undefined || next === null);
-    const valueSort =
-      (!firstExists && !nextExists) || first === next
-        ? 0
-        : first > next || (firstExists && !nextExists)
-        ? 1
-        : -1;
+    const first: ClinicalInfo[string] = currentEntry[key];
+    const next: ClinicalInfo[string] = nextEntry[key];
+
+    let valueSort;
+    const firstExists = typeof first !== 'undefined';
+    const nextExists = typeof next !== 'undefined';
+
+    if (firstExists && nextExists) {
+      valueSort = first > next ? 1 : first === next ? 0 : -1;
+    } else {
+      valueSort = firstExists && !nextExists ? 1 : nextExists ? -1 : 0;
+    }
 
     order = valueSort;
   }
