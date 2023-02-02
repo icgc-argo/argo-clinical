@@ -240,6 +240,13 @@ class ClinicalController {
     res.status(200).json(searchData);
   }
 
+  /**
+   * Finds all Program Migration Errors, then finds which invalid Donors are now Valid post-migration.
+   * Filters out any errors related to Valid Donors, and returns the remaining Errors.
+   * @param programId string program name
+   * @param donorIds array of donor IDs
+   * @returns {ClinicalErrorsResponseRecord[]}
+   */
   @HasProgramReadAccess((req: Request) => req.params.programId)
   async getProgramClinicalErrors(req: Request, res: Response) {
     const programId = req.params.programId;
