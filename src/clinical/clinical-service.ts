@@ -227,7 +227,7 @@ interface DonorMigration extends Omit<DictionaryMigration, 'invalidDonorsErrors'
 /**
  * Returns all errors from latest migration, plus date of migration.
  * Records are formatted for use on front end.
- * Clinical Errors endpoint filters out errors related to valid donors downstream.
+ * Downstream, Clinical API -> Clinical Errors endpoint filters out errors related to valid donors.
  */
 export const getClinicalEntityMigrationErrors = async (programId: string, query: string[]) => {
   if (!programId) throw new Error('Missing programId!');

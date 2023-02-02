@@ -150,7 +150,6 @@ const performCommitSubmission = async (
         ud,
         currentDictionary,
       );
-
       if (isValid) {
         L.info(`donor ${ud._id} is now valid`);
         ud.schemaMetadata.isValid = true;
