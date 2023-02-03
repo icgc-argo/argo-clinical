@@ -227,9 +227,14 @@ interface DonorMigration extends Omit<DictionaryMigration, 'invalidDonorsErrors'
 /**
  * Returns all errors from latest migration, plus date of migration.
  * Records are formatted for use on front end.
- * Downstream, Clinical API -> Clinical Errors endpoint filters out errors related to valid donors.
  */
-export const getClinicalEntityMigrationErrors = async (programId: string, query: string[]) => {
+export const getClinicalEntityMigrationErrors = async (
+  programId: string,
+  query: string[],
+): Promise<{
+  clinicalErrors: ClinicalErrorsResponseRecord[];
+  migrationLastUpdated: string | undefined;
+}> => {
   if (!programId) throw new Error('Missing programId!');
   const start = new Date().getTime() / 1000;
 
@@ -289,8 +294,6 @@ export const getClinicalEntityMigrationErrors = async (programId: string, query:
 /**
  * Given a list of Program Migration Errors, this function finds related Donors,
  * and returns a list of DonorIds which are now Valid post-migration.
- * Clinical Errors filters out any errors related to Valid Donors from the original
- * array of Migration Errors, and returns the remaining Errors.
  */
 export const getDonorSubmissionErrorUpdates = async (
   programId: string,
@@ -298,7 +301,7 @@ export const getDonorSubmissionErrorUpdates = async (
     clinicalErrors: ClinicalErrorsResponseRecord[];
     migrationLastUpdated: string | undefined;
   },
-) => {
+): Promise<number[]> => {
   if (!programId) throw new Error('Missing programId!');
   const start = new Date().getTime() / 1000;
 
