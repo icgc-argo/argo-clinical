@@ -19,7 +19,7 @@
 
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
-import { Sample, Donor, ClinicalEntityData, ClinicalEntity } from './clinical-entities';
+import { Sample, Donor, ClinicalEntityData } from './clinical-entities';
 import { ClinicalQuery, ClinicalSearchQuery } from './clinical-api';
 import { donorDao, DONOR_DOCUMENT_FIELDS } from './donor-repo';
 import { ClinicalErrorsResponseRecord, EntityAlias } from '../common-model/entities';
