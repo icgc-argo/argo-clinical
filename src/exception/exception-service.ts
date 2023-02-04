@@ -17,7 +17,6 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { DeepReadonly } from 'deep-freeze';
 import { loggerFor } from '../logger';
 import { programExceptionRepository } from './exception-repo';
 import { ExceptionValueType, ProgramException, ProgramExceptionRecord } from './types';
@@ -47,12 +46,6 @@ const recordsToException = (
   };
 };
 
-interface ProgramExceptionResult {
-  programException: undefined | DeepReadonly<ProgramException>;
-  errors: ValidationResult[];
-  successful: boolean;
-}
-
 // relates to our TSV cols
 export const programValidators: FieldValidators<ProgramExceptionRecord> = {
   program_name: checkProgramId,
@@ -62,23 +55,51 @@ export const programValidators: FieldValidators<ProgramExceptionRecord> = {
 };
 
 const createResult = ({
-  programException = undefined,
-  errors,
-  successful,
-}: ProgramExceptionResult) => ({
-  programException,
-  errors,
-  successful,
+  exception = null,
+  validationErrors = [],
+  error = null,
+  success = false,
+}: Result) => ({
+  exception,
+  error,
+  validationErrors,
+  success,
 });
 
+export type Result = {
+  success: boolean;
+  error: string | null;
+  exception: ProgramException | null;
+  validationErrors?: ValidationResult[];
+};
+
+type Service = ({ programId }: { programId: string }) => Promise<Result>;
+
 export namespace operations {
+  export const getProgramException: Service = async ({ programId }) => {
+    const exception = await programExceptionRepository.find(programId);
+
+    const success = exception !== null;
+    const error = !success ? `Cannot find program '${programId}'` : null;
+
+    return createResult({ success, error, exception });
+  };
+
+  export const deleteProgramException: Service = async ({ programId }) => {
+    const exception = await programExceptionRepository.delete(programId);
+    const success = exception !== null;
+    const error = !success ? `Cannot delete program '${programId}'` : null;
+
+    return createResult({ success, error, exception });
+  };
+
   export const createProgramException = async ({
     programId,
     records,
   }: {
     programId: string;
     records: ReadonlyArray<ProgramExceptionRecord>;
-  }): Promise<ProgramExceptionResult> => {
+  }): Promise<Result> => {
     const errors = await validateRecords<ProgramExceptionRecord>(
       programId,
       records,
@@ -87,23 +108,18 @@ export namespace operations {
 
     if (errors.length > 0) {
       return createResult({
-        programException: undefined,
-        errors,
-        successful: false,
+        exception: null,
+        error: 'TODO',
+        success: false,
       });
     } else {
       const exception = recordsToException(programId, records);
-      try {
-        const programException = await programExceptionRepository.save(exception);
-        return createResult({
-          programException,
-          errors: [],
-          successful: true,
-        });
-      } catch (e) {
-        L.error('error saving exception to database', e);
-        return createResult({ programException: undefined, successful: false, errors: [] });
-      }
+      const programException = await programExceptionRepository.save(exception);
+      return createResult({
+        exception: programException,
+        error: null,
+        success: true,
+      });
     }
   };
 }
