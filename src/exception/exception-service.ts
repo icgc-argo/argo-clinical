@@ -109,7 +109,7 @@ export namespace operations {
     if (errors.length > 0) {
       return createResult({
         exception: null,
-        error: 'TODO',
+        error: `Cannot create exceptions for program '${programId}'`,
         success: false,
       });
     } else {
