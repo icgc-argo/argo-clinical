@@ -21,8 +21,8 @@ import { Request, Response } from 'express';
 import { HasFullReadAccess, HasFullWriteAccess } from '../decorators';
 import { loggerFor } from '../logger';
 import { ControllerUtils, TsvUtils } from '../utils';
-import { programExceptionRepository } from './exception-repo';
 import * as exceptionService from './exception-service';
+import { Result } from './exception-service';
 import { isProgramExceptionRecord, isReadonlyArrayOf } from './types';
 
 const L = loggerFor(__filename);
@@ -32,17 +32,6 @@ const ProgramExceptionErrorMessage = {
 } as const;
 
 class ExceptionController {
-  @HasFullWriteAccess()
-  async clearProgramException(req: Request, res: Response) {
-    const programId = req.params.programId;
-    try {
-      const result = await programExceptionRepository.delete(programId);
-      return res.status(200).send();
-    } catch (e) {
-      return res.status(404).send();
-    }
-  }
-
   @HasFullWriteAccess()
   async createProgramException(req: Request, res: Response) {
     if (!requestContainsFile(req, res)) {
@@ -67,7 +56,7 @@ class ExceptionController {
         records,
       });
 
-      if (!result.successful) {
+      if (!result.success) {
         return res.status(422).send(result);
       }
       return res.status(201).send(result);
@@ -77,15 +66,20 @@ class ExceptionController {
     }
   }
 
+  @HasFullWriteAccess()
+  async clearProgramException(req: Request, res: Response) {
+    const programId = req.params.programId;
+    const result = await exceptionService.operations.deleteProgramException({ programId });
+    const status = result.success ? 200 : 400;
+    return res.status(status).send(result);
+  }
+
   @HasFullReadAccess()
   async getProgramException(req: Request, res: Response) {
     const programId = req.params.programId;
-    try {
-      const exception = await programExceptionRepository.find(programId);
-      res.status(200).send(exception);
-    } catch (e) {
-      res.status(200).send({});
-    }
+    const result = await exceptionService.operations.getProgramException({ programId });
+    const status = result.success ? 200 : 400;
+    return res.status(status).send(result);
   }
 }
 
