@@ -100,6 +100,8 @@ export namespace operations {
     programId: string;
     records: ReadonlyArray<ProgramExceptionRecord>;
   }): Promise<Result> => {
+    const errorMsg = `Cannot create exceptions for program '${programId}'`;
+
     const errors = await validateRecords<ProgramExceptionRecord>(
       programId,
       records,
@@ -108,17 +110,18 @@ export namespace operations {
 
     if (errors.length > 0) {
       return createResult({
-        exception: undefined,
-        error: `Cannot create exceptions for program '${programId}'`,
+        error: errorMsg,
         success: false,
+        validationErrors: errors,
       });
     } else {
-      const exception = recordsToException(programId, records);
-      const programException = await programExceptionRepository.save(exception);
+      const exceptionToSave = recordsToException(programId, records);
+      const exception = await programExceptionRepository.save(exceptionToSave);
+      const success = exception !== undefined;
       return createResult({
-        exception: programException,
-        error: '',
-        success: true,
+        exception,
+        success,
+        error: success ? '' : errorMsg,
       });
     }
   };
