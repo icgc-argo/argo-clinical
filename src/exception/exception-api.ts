@@ -22,7 +22,6 @@ import { HasFullReadAccess, HasFullWriteAccess } from '../decorators';
 import { loggerFor } from '../logger';
 import { ControllerUtils, TsvUtils } from '../utils';
 import * as exceptionService from './exception-service';
-import { Result } from './exception-service';
 import { isProgramExceptionRecord, isReadonlyArrayOf } from './types';
 
 const L = loggerFor(__filename);

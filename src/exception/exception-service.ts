@@ -55,9 +55,9 @@ export const programValidators: FieldValidators<ProgramExceptionRecord> = {
 };
 
 const createResult = ({
-  exception = null,
+  exception,
   validationErrors = [],
-  error = null,
+  error = '',
   success = false,
 }: Result) => ({
   exception,
@@ -67,9 +67,9 @@ const createResult = ({
 });
 
 export type Result = {
-  success: boolean;
-  error: string | null;
-  exception: ProgramException | null;
+  success?: boolean;
+  error?: string;
+  exception?: ProgramException | undefined;
   validationErrors?: ValidationResult[];
 };
 
@@ -79,16 +79,16 @@ export namespace operations {
   export const getProgramException: Service = async ({ programId }) => {
     const exception = await programExceptionRepository.find(programId);
 
-    const success = exception !== null;
-    const error = !success ? `Cannot find program '${programId}'` : null;
+    const success = exception !== undefined;
+    const error = !success ? `Cannot find program '${programId}'` : '';
 
     return createResult({ success, error, exception });
   };
 
   export const deleteProgramException: Service = async ({ programId }) => {
     const exception = await programExceptionRepository.delete(programId);
-    const success = exception !== null;
-    const error = !success ? `Cannot delete program '${programId}'` : null;
+    const success = exception !== undefined;
+    const error = !success ? `Cannot delete program '${programId}'` : '';
 
     return createResult({ success, error, exception });
   };
@@ -108,7 +108,7 @@ export namespace operations {
 
     if (errors.length > 0) {
       return createResult({
-        exception: null,
+        exception: undefined,
         error: `Cannot create exceptions for program '${programId}'`,
         success: false,
       });
@@ -117,7 +117,7 @@ export namespace operations {
       const programException = await programExceptionRepository.save(exception);
       return createResult({
         exception: programException,
-        error: null,
+        error: '',
         success: true,
       });
     }

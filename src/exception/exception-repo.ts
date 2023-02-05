@@ -16,7 +16,7 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-import { DeepReadonly } from 'deep-freeze';
+import { isArray } from 'lodash';
 import mongoose from 'mongoose';
 import { loggerFor } from '../logger';
 import { ExceptionValue, ProgramException } from './types';
@@ -39,11 +39,20 @@ export const ProgramExceptionModel = mongoose.model<ProgramException>(
   programExceptionSchema,
 );
 
+type RepoResponse = Promise<ProgramException | undefined>;
+
 export interface ProgramExceptionRepository {
-  save(exception: ProgramException): Promise<ProgramException>;
-  find(programId: string): Promise<ProgramException | null>;
-  delete(programId: string): Promise<ProgramException | null>;
+  save(exception: ProgramException): RepoResponse;
+  find(programId: string): RepoResponse;
+  delete(programId: string): RepoResponse;
 }
+
+const checkDoc = (doc: null | ProgramException): undefined | ProgramException => {
+  if (doc === null || (isArray(doc) && doc.length === 0)) {
+    return undefined;
+  }
+  return doc;
+};
 
 export const programExceptionRepository: ProgramExceptionRepository = {
   async save(exception: ProgramException) {
@@ -57,27 +66,29 @@ export const programExceptionRepository: ProgramExceptionRepository = {
       // L.info(`doc created ${doc}`);
     } catch (e) {
       L.error('failed to create program exception: ', e);
-      throw new Error('failed to create program exception');
+      return undefined;
     }
   },
 
   async find(programId: string) {
     L.debug(`finding program exception with id: ${JSON.stringify(programId)}`);
     try {
-      return await ProgramExceptionModel.findOne({ programId }).lean(true);
+      const doc = await ProgramExceptionModel.findOne({ programId }).lean(true);
+      return checkDoc(doc);
     } catch (e) {
       L.error('failed to find program exception', e);
-      return null;
+      return undefined;
     }
   },
 
   async delete(programId: string) {
     L.debug(`deleting program exception with program id: ${JSON.stringify(programId)}`);
     try {
-      return await ProgramExceptionModel.findOneAndDelete({ programId }).lean(true);
+      const doc = await ProgramExceptionModel.findOneAndDelete({ programId }).lean(true);
+      return checkDoc(doc);
     } catch (e) {
       L.error('failed to delete program exception', e);
-      return null;
+      return undefined;
     }
   },
 };
