@@ -80,7 +80,7 @@ export namespace operations {
     const exception = await programExceptionRepository.find(programId);
 
     const success = exception !== undefined;
-    const error = !success ? `Cannot find program '${programId}'` : '';
+    const error = !success ? `no program level exceptions for program '${programId}'` : '';
 
     return createResult({ success, error, exception });
   };
@@ -88,7 +88,7 @@ export namespace operations {
   export const deleteProgramException: Service = async ({ programId }) => {
     const exception = await programExceptionRepository.delete(programId);
     const success = exception !== undefined;
-    const error = !success ? `Cannot delete program '${programId}'` : '';
+    const error = !success ? `no program level exceptions for program '${programId}'` : '';
 
     return createResult({ success, error, exception });
   };
