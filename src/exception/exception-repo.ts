@@ -43,13 +43,13 @@ export const ProgramExceptionModel = mongoose.model<ProgramExceptionDocument>(
 );
 
 export interface ProgramExceptionRepository {
-  create(exception: ProgramException): Promise<DeepReadonly<ProgramException>>;
+  save(exception: ProgramException): Promise<DeepReadonly<ProgramException>>;
   find(programId: string): Promise<DeepReadonly<ProgramException> | undefined>;
   delete(programId: string): Promise<void>;
 }
 
 export const programExceptionRepository: ProgramExceptionRepository = {
-  async create(exception: ProgramException) {
+  async save(exception: ProgramException) {
     L.debug(`Creating new program exception with: ${JSON.stringify(exception)}`);
     try {
       const doc = await ProgramExceptionModel.findOneAndUpdate(
