@@ -46,7 +46,7 @@ import _ from 'lodash';
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
 import { Donor, ClinicalInfo, Specimen } from '../../clinical/clinical-entities';
 import {
-  getSingleClinicalEntityFromDonorBySchemanName,
+  getSingleClinicalEntityFromDonorBySchemaName,
   getSingleClinicalObjectFromDonor,
   getEntitySubmitterIdFieldName,
 } from '../../common-model/functions';
@@ -137,7 +137,7 @@ export const buildRecordValidationResult = (
     };
   }
 
-  const clinicalInfo = getSingleClinicalEntityFromDonorBySchemanName(
+  const clinicalInfo = getSingleClinicalEntityFromDonorBySchemaName(
     existentDonor,
     clinicalEntitySchemaName,
     record as ClinicalInfo,

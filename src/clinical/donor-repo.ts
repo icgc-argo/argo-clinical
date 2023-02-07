@@ -48,7 +48,14 @@ export enum DONOR_DOCUMENT_FIELDS {
   FAMILY_HISTORY_ID = 'familyHistory.clinicalInfo.family_relative_id',
 }
 
-const DONOR_ENTITY_CORE_FIELDS = ['donorId', 'submitterId', 'programId', 'gender', 'clinicalInfo'];
+const DONOR_ENTITY_CORE_FIELDS = [
+  'donorId',
+  'submitterId',
+  'programId',
+  'gender',
+  'clinicalInfo',
+  'updatedAt',
+];
 const DONOR_SEARCH_CORE_FIELDS = ['donorId', 'submitterId', 'programId', 'clinicalInfo'];
 
 export type FindByProgramAndSubmitterFilter = DeepReadonly<{
