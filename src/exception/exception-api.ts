@@ -21,7 +21,7 @@ import { Request, Response } from 'express';
 import { HasFullReadAccess, HasFullWriteAccess } from '../decorators';
 import { loggerFor } from '../logger';
 import { ControllerUtils, TsvUtils } from '../utils';
-import { programExceptionRepository } from './exception-repo';
+import { RepoError } from './exception-repo';
 import * as exceptionService from './exception-service';
 import { isProgramExceptionRecord, isReadonlyArrayOf } from './types';
 
@@ -31,18 +31,17 @@ const ProgramExceptionErrorMessage = {
   TSV_PARSING_FAILED: `This file is formatted incorrectly`,
 } as const;
 
-class ExceptionController {
-  @HasFullWriteAccess()
-  async clearProgramException(req: Request, res: Response) {
-    const programId = req.params.programId;
-    try {
-      const result = await programExceptionRepository.delete(programId);
-      return res.status(200).send();
-    } catch (e) {
-      return res.status(404).send();
-    }
+function getResStatus(result: exceptionService.Result): number {
+  if (result.success) {
+    return 200;
+  } else if (result.error?.code === RepoError.DOCUMENT_UNDEFINED) {
+    return 400;
+  } else {
+    return 500;
   }
+}
 
+class ExceptionController {
   @HasFullWriteAccess()
   async createProgramException(req: Request, res: Response) {
     if (!requestContainsFile(req, res)) {
@@ -67,7 +66,7 @@ class ExceptionController {
         records,
       });
 
-      if (!result.successful) {
+      if (!result.success) {
         return res.status(422).send(result);
       }
       return res.status(201).send(result);
@@ -77,15 +76,18 @@ class ExceptionController {
     }
   }
 
+  @HasFullWriteAccess()
+  async clearProgramException(req: Request, res: Response) {
+    const programId = req.params.programId;
+    const result = await exceptionService.operations.deleteProgramException({ programId });
+    return res.status(getResStatus(result)).send(result);
+  }
+
   @HasFullReadAccess()
   async getProgramException(req: Request, res: Response) {
     const programId = req.params.programId;
-    try {
-      const exception = await programExceptionRepository.find(programId);
-      res.status(200).send(exception);
-    } catch (e) {
-      res.status(200).send({});
-    }
+    const result = await exceptionService.operations.getProgramException({ programId });
+    return res.status(getResStatus(result)).send(result);
   }
 }
 

@@ -17,9 +17,8 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { DeepReadonly } from 'deep-freeze';
 import { loggerFor } from '../logger';
-import { programExceptionRepository } from './exception-repo';
+import { programExceptionRepository, RepoError } from './exception-repo';
 import { ExceptionValueType, ProgramException, ProgramExceptionRecord } from './types';
 import {
   checkCoreField,
@@ -47,12 +46,6 @@ const recordsToException = (
   };
 };
 
-interface ProgramExceptionResult {
-  programException: undefined | DeepReadonly<ProgramException>;
-  errors: ValidationResult[];
-  successful: boolean;
-}
-
 // relates to our TSV cols
 export const programValidators: FieldValidators<ProgramExceptionRecord> = {
   program_name: checkProgramId,
@@ -62,23 +55,73 @@ export const programValidators: FieldValidators<ProgramExceptionRecord> = {
 };
 
 const createResult = ({
-  programException = undefined,
-  errors,
-  successful,
-}: ProgramExceptionResult) => ({
-  programException,
-  errors,
-  successful,
+  exception,
+  validationErrors = [],
+  error = { code: '', message: '' },
+  success = false,
+}: Result) => ({
+  exception,
+  error,
+  validationErrors,
+  success,
 });
 
+export type Result = {
+  success?: boolean;
+  error?: { code: string; message: string };
+  exception?: ProgramException | undefined;
+  validationErrors?: ValidationResult[];
+};
+
+type Service = ({ programId }: { programId: string }) => Promise<Result>;
+
+function isProgramException(result: ProgramException | RepoError): result is ProgramException {
+  return (result as ProgramException).programId !== undefined;
+}
+
+function processResult({
+  result,
+  errorMessage,
+}: {
+  result: ProgramException | RepoError;
+  errorMessage: string;
+}) {
+  const SERVER_ERROR_MSG: string = 'Server error occurred';
+  if (isProgramException(result)) {
+    return createResult({ success: true, exception: result });
+  } else {
+    return createResult({
+      error: { code: result, message: errorMessage || SERVER_ERROR_MSG },
+    });
+  }
+}
 export namespace operations {
+  export const getProgramException: Service = async ({ programId }) => {
+    const result = await programExceptionRepository.find(programId);
+
+    return processResult({
+      result,
+      errorMessage: `no program level exceptions for program '${programId}'`,
+    });
+  };
+
+  export const deleteProgramException: Service = async ({ programId }) => {
+    const result = await programExceptionRepository.delete(programId);
+    return processResult({
+      result,
+      errorMessage: `no program level exceptions for program '${programId}'`,
+    });
+  };
+
   export const createProgramException = async ({
     programId,
     records,
   }: {
     programId: string;
     records: ReadonlyArray<ProgramExceptionRecord>;
-  }): Promise<ProgramExceptionResult> => {
+  }): Promise<Result> => {
+    const errorMessage = `Cannot create exceptions for program '${programId}'`;
+
     const errors = await validateRecords<ProgramExceptionRecord>(
       programId,
       records,
@@ -87,23 +130,17 @@ export namespace operations {
 
     if (errors.length > 0) {
       return createResult({
-        programException: undefined,
-        errors,
-        successful: false,
+        error: { code: RepoError.DOCUMENT_UNDEFINED, message: errorMessage },
+        validationErrors: errors,
       });
     } else {
-      const exception = recordsToException(programId, records);
-      try {
-        const programException = await programExceptionRepository.save(exception);
-        return createResult({
-          programException,
-          errors: [],
-          successful: true,
-        });
-      } catch (e) {
-        L.error('error saving exception to database', e);
-        return createResult({ programException: undefined, successful: false, errors: [] });
-      }
+      const exceptionToSave = recordsToException(programId, records);
+      const result = await programExceptionRepository.save(exceptionToSave);
+
+      return processResult({
+        result,
+        errorMessage,
+      });
     }
   };
 }

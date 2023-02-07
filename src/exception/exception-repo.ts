@@ -16,15 +16,14 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+import { isArray } from 'lodash';
 import mongoose from 'mongoose';
-import { MongooseUtils } from '../utils';
 import { loggerFor } from '../logger';
-import { DeepReadonly } from 'deep-freeze';
-import { ExceptionValue, ProgramException } from './types';
+import { ExceptionValue, ObjectValues, ProgramException } from './types';
 
 const L = loggerFor(__filename);
 
-const programExceptionSchema = new mongoose.Schema({
+const programExceptionSchema = new mongoose.Schema<ProgramException>({
   programId: String,
   exceptions: [
     {
@@ -35,58 +34,68 @@ const programExceptionSchema = new mongoose.Schema({
   ],
 });
 
-type ProgramExceptionDocument = mongoose.Document & ProgramException;
-
-export const ProgramExceptionModel = mongoose.model<ProgramExceptionDocument>(
+export const ProgramExceptionModel = mongoose.model<ProgramException>(
   'ProgramException',
   programExceptionSchema,
 );
 
+type RepoResponse = Promise<ProgramException | RepoError>;
+
+export const RepoError = {
+  DOCUMENT_UNDEFINED: 'DOCUMENT_UNDEFINED',
+  SERVER_ERROR: 'SERVER_ERROR',
+} as const;
+
+export type RepoError = ObjectValues<typeof RepoError>;
+
 export interface ProgramExceptionRepository {
-  save(exception: ProgramException): Promise<DeepReadonly<ProgramException>>;
-  find(programId: string): Promise<DeepReadonly<ProgramException> | undefined>;
-  delete(programId: string): Promise<void>;
+  save(exception: ProgramException): RepoResponse;
+  find(programId: string): RepoResponse;
+  delete(programId: string): RepoResponse;
 }
+
+const checkDoc = (doc: null | ProgramException): RepoError | ProgramException => {
+  if (doc === null || (isArray(doc) && doc.length === 0)) {
+    return RepoError.DOCUMENT_UNDEFINED;
+  }
+  return doc;
+};
 
 export const programExceptionRepository: ProgramExceptionRepository = {
   async save(exception: ProgramException) {
     L.debug(`Creating new program exception with: ${JSON.stringify(exception)}`);
     try {
-      const doc = await ProgramExceptionModel.findOneAndUpdate(
+      return await ProgramExceptionModel.findOneAndUpdate(
         { programId: exception.programId },
         exception,
         { upsert: true, new: true, overwrite: true },
-      );
-      L.info(`doc created ${doc}`);
-      L.info('saved program exception');
-      return MongooseUtils.toPojo(doc) as ProgramException;
+      ).lean(true);
+      // L.info(`doc created ${doc}`);
     } catch (e) {
       L.error('failed to create program exception: ', e);
-      throw new Error('failed to create program exception');
+      return RepoError.SERVER_ERROR;
     }
   },
 
   async find(programId: string) {
     L.debug(`finding program exception with id: ${JSON.stringify(programId)}`);
     try {
-      const doc = await ProgramExceptionModel.findOne({ programId });
-      if (doc) {
-        L.info(`doc found ${doc}`);
-        return MongooseUtils.toPojo(doc) as ProgramException;
-      }
+      const doc = await ProgramExceptionModel.findOne({ programId }).lean(true);
+      return checkDoc(doc);
     } catch (e) {
       L.error('failed to find program exception', e);
-      throw new Error(`failed to find program exception with name: ${JSON.stringify(programId)}`);
+      return RepoError.SERVER_ERROR;
     }
   },
 
   async delete(programId: string) {
     L.debug(`deleting program exception with program id: ${JSON.stringify(programId)}`);
     try {
-      await ProgramExceptionModel.findOneAndDelete({ programId });
+      const doc = await ProgramExceptionModel.findOneAndDelete({ programId }).lean(true);
+      return checkDoc(doc);
     } catch (e) {
-      L.error('failed to find program exception', e);
-      throw new Error(`failed to delete program exception with name: ${JSON.stringify(programId)}`);
+      L.error('failed to delete program exception', e);
+      return RepoError.SERVER_ERROR;
     }
   },
 };
