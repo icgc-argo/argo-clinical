@@ -27,9 +27,9 @@ import { isProgramExceptionRecord, isReadonlyArrayOf } from './types';
 
 const L = loggerFor(__filename);
 
-enum ProgramExceptionErrorMessage {
-  TSV_PARSING_FAILED = `This file is formatted incorrectly`,
-}
+const ProgramExceptionErrorMessage = {
+  TSV_PARSING_FAILED: `This file is formatted incorrectly`,
+} as const;
 
 class ExceptionController {
   @HasFullWriteAccess()

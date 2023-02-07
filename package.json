@@ -1,6 +1,6 @@
 {
   "name": "argo-clinical",
-  "version": "1.72.0",
+  "version": "1.73.0",
   "description": "Clinical submission system and repo.",
   "scripts": {
     "start": "npm run serve",
@@ -9,7 +9,7 @@
     "serve": "node dist/src/server.js",
     "watch-node": "nodemon dist/src/server.js",
     "test": "npm run unit-test && npm run int-test",
-    "int-test": "npm run build && mocha --exit --timeout 60000 -r ts-node/register test/integration/**/*.ts",
+    "int-test": "npm run build && DEBUG=testcontainers mocha --exit --timeout 60000 -r ts-node/register test/integration/**/*.ts",
     "unit-test": "npm run build && mocha --exit --timeout 5000 -r ts-node/register test/unit/**/*.spec.ts",
     "perf-test": "npm run build && mocha --exit --timeout 60000 -r ts-node/register test/performance-test/**/*.spec.ts",
     "build-ts": "tsc",
@@ -37,6 +37,8 @@
   },
   "homepage": "https://github.com/icgc-argo/argo-clinical#readme",
   "devDependencies": {
+    "@swc/core": "^1.3.32",
+    "@swc/helpers": "^0.4.14",
     "@types/adm-zip": "^0.4.33",
     "@types/async": "^3.0.0",
     "@types/bcrypt-nodejs": "^0.0.30",
@@ -84,9 +86,11 @@
     "nodemon": "^2.0.15",
     "prettier": "^1.19.1",
     "pretty-quick": "^1.11.1",
+    "regenerator-runtime": "^0.13.11",
     "shelljs": "^0.8.5",
     "sinon": "^7.3.2",
     "testcontainers": "^1.3.1",
+    "ts-node": "^10.9.1",
     "tslint": "^5.20.1",
     "typescript": "^3.9.5"
   },
@@ -130,7 +134,6 @@
     "promise-tools": "^2.1.0",
     "response-time": "^2.3.2",
     "swagger-ui-express": "^4.3.0",
-    "ts-node": "^8.5.4",
     "winston": "^3.2.1",
     "yamljs": "^0.3.0"
   },
