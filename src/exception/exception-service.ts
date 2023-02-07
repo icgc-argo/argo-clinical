@@ -17,141 +17,130 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { DeepReadonly } from 'deep-freeze';
-import * as dictionaryManager from '../dictionary/manager';
-import { SchemaWithFields } from '../dictionary/manager';
-import { programExceptionRepository } from './exception-repo';
-import { ExceptionValue, ProgramException, ProgramExceptionRecord } from './types';
+import { loggerFor } from '../logger';
+import { programExceptionRepository, RepoError } from './exception-repo';
+import { ExceptionValueType, ProgramException, ProgramExceptionRecord } from './types';
+import {
+  checkCoreField,
+  checkIsValidSchema,
+  checkProgramId,
+  checkRequestedValue,
+  FieldValidators,
+  validateRecords,
+  ValidationResult,
+} from './validation';
+
+const L = loggerFor(__filename);
 
 const recordsToException = (
   programId: string,
   records: ReadonlyArray<ProgramExceptionRecord>,
-): ProgramException => ({
-  programId,
-  exceptions: records.map(r => ({
-    schema: r.schema,
-    coreField: r.requested_core_field,
-    exceptionValue: r.requested_exception_value,
-  })),
+): ProgramException => {
+  return {
+    programId,
+    exceptions: records.map(r => ({
+      schema: r.schema,
+      coreField: r.requested_core_field,
+      exceptionValue: r.requested_exception_value as ExceptionValueType,
+    })),
+  };
+};
+
+// relates to our TSV cols
+export const programValidators: FieldValidators<ProgramExceptionRecord> = {
+  program_name: checkProgramId,
+  schema: checkIsValidSchema,
+  requested_core_field: checkCoreField,
+  requested_exception_value: checkRequestedValue,
+};
+
+const createResult = ({
+  exception,
+  validationErrors = [],
+  error = { code: '', message: '' },
+  success = false,
+}: Result) => ({
+  exception,
+  error,
+  validationErrors,
+  success,
 });
 
-interface ProgramExceptionResult {
-  programException: undefined | DeepReadonly<ProgramException>;
-  errors: ValidationError[];
-  successful: boolean;
+export type Result = {
+  success?: boolean;
+  error?: { code: string; message: string };
+  exception?: ProgramException | undefined;
+  validationErrors?: ValidationResult[];
+};
+
+type Service = ({ programId }: { programId: string }) => Promise<Result>;
+
+function isProgramException(result: ProgramException | RepoError): result is ProgramException {
+  return (result as ProgramException).programId !== undefined;
+}
+
+function processResult({
+  result,
+  errorMessage,
+}: {
+  result: ProgramException | RepoError;
+  errorMessage: string;
+}) {
+  const SERVER_ERROR_MSG: string = 'Server error occurred';
+  if (isProgramException(result)) {
+    return createResult({ success: true, exception: result });
+  } else {
+    return createResult({
+      error: { code: result, message: errorMessage || SERVER_ERROR_MSG },
+    });
+  }
 }
 export namespace operations {
+  export const getProgramException: Service = async ({ programId }) => {
+    const result = await programExceptionRepository.find(programId);
+
+    return processResult({
+      result,
+      errorMessage: `no program level exceptions for program '${programId}'`,
+    });
+  };
+
+  export const deleteProgramException: Service = async ({ programId }) => {
+    const result = await programExceptionRepository.delete(programId);
+    return processResult({
+      result,
+      errorMessage: `no program level exceptions for program '${programId}'`,
+    });
+  };
+
   export const createProgramException = async ({
     programId,
     records,
   }: {
     programId: string;
     records: ReadonlyArray<ProgramExceptionRecord>;
-  }): Promise<ProgramExceptionResult> => {
-    const errors = await validateExceptionRecords(programId, records);
+  }): Promise<Result> => {
+    const errorMessage = `Cannot create exceptions for program '${programId}'`;
+
+    const errors = await validateRecords<ProgramExceptionRecord>(
+      programId,
+      records,
+      programValidators,
+    );
 
     if (errors.length > 0) {
-      return {
-        programException: undefined,
-        errors,
-        successful: false,
-      };
+      return createResult({
+        error: { code: RepoError.DOCUMENT_UNDEFINED, message: errorMessage },
+        validationErrors: errors,
+      });
     } else {
-      const exception = recordsToException(programId, records);
-      const result = await programExceptionRepository.create(exception);
-      return {
-        programException: result,
-        errors: [],
-        successful: true,
-      };
+      const exceptionToSave = recordsToException(programId, records);
+      const result = await programExceptionRepository.save(exceptionToSave);
+
+      return processResult({
+        result,
+        errorMessage,
+      });
     }
   };
 }
-
-interface ValidationError {
-  message: string;
-  row: number;
-}
-
-const validateExceptionRecords = async (
-  programId: string,
-  records: ReadonlyArray<ProgramExceptionRecord>,
-): Promise<ValidationError[]> => {
-  let errors: ValidationError[] = [];
-
-  for (const [idx, record] of records.entries()) {
-    const programErrors = checkProgramId(programId, record, idx);
-    const coreFieldErrors = await checkCoreField(record, idx);
-    const requestedValErrors = checkRequestedValue(record, idx);
-    errors = errors.concat(programErrors, coreFieldErrors, requestedValErrors);
-  }
-
-  return errors;
-};
-
-const createValidationError = (row: number, message: string) => ({
-  row: row + 1, // account for tsc header row
-  message,
-});
-
-const checkProgramId = (programId: string, record: ProgramExceptionRecord, idx: number) => {
-  if (programId !== record.program_name) {
-    return [
-      createValidationError(
-        idx,
-        `submitted program id of ${programId} does not match record program id of ${record.program_name}`,
-      ),
-    ];
-  }
-  return [];
-};
-
-const checkCoreField = async (record: ProgramExceptionRecord, idx: number) => {
-  const currentDictionary = await dictionaryManager.instance();
-
-  const requestedCoreField = record.requested_core_field;
-
-  if (requestedCoreField === undefined) {
-    return [createValidationError(idx, `requested_core_field field is not defined`)];
-  }
-
-  const fieldFilter = (field: { name: string; meta?: { core: boolean } }): boolean => {
-    return field.name === requestedCoreField && !!field.meta?.core;
-  };
-
-  const schemaFilter = (schema: SchemaWithFields): boolean => {
-    return schema.name === record.schema;
-  };
-
-  const existingDictionarySchema = await currentDictionary.getSchemasWithFields(
-    schemaFilter,
-    fieldFilter,
-  );
-
-  if (existingDictionarySchema[0] && existingDictionarySchema[0].fields.length === 0) {
-    return [
-      createValidationError(idx, `core field of ${record.requested_core_field} is not valid`),
-    ];
-  }
-
-  return [];
-};
-
-const checkRequestedValue = (record: ProgramExceptionRecord, idx: number) => {
-  const validRequests = Object.values(ExceptionValue);
-  const requestedExceptionValue = record.requested_exception_value;
-
-  if (requestedExceptionValue === undefined) {
-    return [createValidationError(idx, `requested_exception_value field is not defined`)];
-  } else if (typeof requestedExceptionValue !== 'string') {
-    return [createValidationError(idx, `requested_exception_value is not a string`)];
-  } else if (!validRequests.includes(requestedExceptionValue)) {
-    return [
-      createValidationError(
-        idx,
-        `requested_exception_value is not valid. must be one of ${validRequests.join(', ')}`,
-      ),
-    ];
-  }
-  return [];
-};

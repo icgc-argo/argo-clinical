@@ -745,7 +745,7 @@ paths:
                 programExceptionFile:
                   type: string
                   format: binary
-        description: the tsv program exception file
+        description: 'the tsv program exception file.  __Important:__ any exceptions provided replace the existing exceptions, so all exceptions must be provided (or some will be lost)'
         required: true
       responses:
         '201':

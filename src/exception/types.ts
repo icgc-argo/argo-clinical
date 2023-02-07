@@ -17,26 +17,33 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-export interface ProgramExceptionRecord {
-  program_name: string;
+export type ObjectValues<T> = T[keyof T];
+
+export type ExceptionRecord = {
   schema: string;
   requested_core_field: string;
-  requested_exception_value: ExceptionValue;
-}
+  requested_exception_value: string;
+};
+export type ProgramExceptionRecord = {
+  program_name: string;
+} & ExceptionRecord;
 
-export interface ProgramException {
+// type after validation
+export type ProgramException = {
   programId: string;
   exceptions: {
     schema: string;
     coreField: string;
-    exceptionValue: ExceptionValue;
+    exceptionValue: ExceptionValueType;
   }[];
-}
+};
 
-export enum ExceptionValue {
-  Unknown = 'Unknown',
-  NotApplicable = 'Not applicable',
-}
+export const ExceptionValue = {
+  Unknown: 'Unknown',
+  NotApplicable: 'Not applicable',
+} as const;
+
+export type ExceptionValueType = ObjectValues<typeof ExceptionValue>;
 
 export const isProgramExceptionRecord = (input: any): input is ProgramExceptionRecord => {
   return (
@@ -54,14 +61,14 @@ export const isProgramExceptionRecord = (input: any): input is ProgramExceptionR
     typeof input.requested_core_field === 'string' &&
     // requested_exception_value must exist and be string and be in enum list
     'requested_exception_value' in input &&
-    typeof input.requested_exception_value === 'string' &&
-    Object.values(ExceptionValue).includes(input.requested_exception_value)
+    typeof input.requested_exception_value === 'string'
   );
 };
 
 export const isArrayOf = <T>(input: any[], validator: (_: any) => _ is T): input is T[] => {
   return input.every(validator);
 };
+
 export const isReadonlyArrayOf = <T>(
   input: ReadonlyArray<any>,
   validator: (_: any) => _ is T,
