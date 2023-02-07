@@ -18,7 +18,7 @@
  */
 
 import { loggerFor } from '../logger';
-import { programExceptionRepository } from './exception-repo';
+import { programExceptionRepository, RepoError } from './exception-repo';
 import { ExceptionValueType, ProgramException, ProgramExceptionRecord } from './types';
 import {
   checkCoreField,
@@ -57,7 +57,7 @@ export const programValidators: FieldValidators<ProgramExceptionRecord> = {
 const createResult = ({
   exception,
   validationErrors = [],
-  error = '',
+  error = { code: '', message: '' },
   success = false,
 }: Result) => ({
   exception,
@@ -68,29 +68,49 @@ const createResult = ({
 
 export type Result = {
   success?: boolean;
-  error?: string;
+  error?: { code: string; message: string };
   exception?: ProgramException | undefined;
   validationErrors?: ValidationResult[];
 };
 
 type Service = ({ programId }: { programId: string }) => Promise<Result>;
 
+function isProgramException(result: ProgramException | RepoError): result is ProgramException {
+  return (result as ProgramException).programId !== undefined;
+}
+
+function processResult({
+  result,
+  errorMessage,
+}: {
+  result: ProgramException | RepoError;
+  errorMessage: string;
+}) {
+  const SERVER_ERROR_MSG: string = 'Server error occurred';
+  if (isProgramException(result)) {
+    return createResult({ success: true, exception: result });
+  } else {
+    return createResult({
+      error: { code: result, message: errorMessage || SERVER_ERROR_MSG },
+    });
+  }
+}
 export namespace operations {
   export const getProgramException: Service = async ({ programId }) => {
-    const exception = await programExceptionRepository.find(programId);
+    const result = await programExceptionRepository.find(programId);
 
-    const success = exception !== undefined;
-    const error = !success ? `no program level exceptions for program '${programId}'` : '';
-
-    return createResult({ success, error, exception });
+    return processResult({
+      result,
+      errorMessage: `no program level exceptions for program '${programId}'`,
+    });
   };
 
   export const deleteProgramException: Service = async ({ programId }) => {
-    const exception = await programExceptionRepository.delete(programId);
-    const success = exception !== undefined;
-    const error = !success ? `no program level exceptions for program '${programId}'` : '';
-
-    return createResult({ success, error, exception });
+    const result = await programExceptionRepository.delete(programId);
+    return processResult({
+      result,
+      errorMessage: `no program level exceptions for program '${programId}'`,
+    });
   };
 
   export const createProgramException = async ({
@@ -100,7 +120,7 @@ export namespace operations {
     programId: string;
     records: ReadonlyArray<ProgramExceptionRecord>;
   }): Promise<Result> => {
-    const errorMsg = `Cannot create exceptions for program '${programId}'`;
+    const errorMessage = `Cannot create exceptions for program '${programId}'`;
 
     const errors = await validateRecords<ProgramExceptionRecord>(
       programId,
@@ -110,18 +130,16 @@ export namespace operations {
 
     if (errors.length > 0) {
       return createResult({
-        error: errorMsg,
-        success: false,
+        error: { code: RepoError.DOCUMENT_UNDEFINED, message: errorMessage },
         validationErrors: errors,
       });
     } else {
       const exceptionToSave = recordsToException(programId, records);
-      const exception = await programExceptionRepository.save(exceptionToSave);
-      const success = exception !== undefined;
-      return createResult({
-        exception,
-        success,
-        error: success ? '' : errorMsg,
+      const result = await programExceptionRepository.save(exceptionToSave);
+
+      return processResult({
+        result,
+        errorMessage,
       });
     }
   };

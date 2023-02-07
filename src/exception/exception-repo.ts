@@ -19,7 +19,7 @@
 import { isArray } from 'lodash';
 import mongoose from 'mongoose';
 import { loggerFor } from '../logger';
-import { ExceptionValue, ProgramException } from './types';
+import { ExceptionValue, ObjectValues, ProgramException } from './types';
 
 const L = loggerFor(__filename);
 
@@ -39,7 +39,14 @@ export const ProgramExceptionModel = mongoose.model<ProgramException>(
   programExceptionSchema,
 );
 
-type RepoResponse = Promise<ProgramException | undefined>;
+type RepoResponse = Promise<ProgramException | RepoError>;
+
+export const RepoError = {
+  DOCUMENT_UNDEFINED: 'DOCUMENT_UNDEFINED',
+  SERVER_ERROR: 'SERVER_ERROR',
+} as const;
+
+export type RepoError = ObjectValues<typeof RepoError>;
 
 export interface ProgramExceptionRepository {
   save(exception: ProgramException): RepoResponse;
@@ -47,9 +54,9 @@ export interface ProgramExceptionRepository {
   delete(programId: string): RepoResponse;
 }
 
-const checkDoc = (doc: null | ProgramException): undefined | ProgramException => {
+const checkDoc = (doc: null | ProgramException): RepoError | ProgramException => {
   if (doc === null || (isArray(doc) && doc.length === 0)) {
-    return undefined;
+    return RepoError.DOCUMENT_UNDEFINED;
   }
   return doc;
 };
@@ -66,7 +73,7 @@ export const programExceptionRepository: ProgramExceptionRepository = {
       // L.info(`doc created ${doc}`);
     } catch (e) {
       L.error('failed to create program exception: ', e);
-      return undefined;
+      return RepoError.SERVER_ERROR;
     }
   },
 
@@ -77,7 +84,7 @@ export const programExceptionRepository: ProgramExceptionRepository = {
       return checkDoc(doc);
     } catch (e) {
       L.error('failed to find program exception', e);
-      return undefined;
+      return RepoError.SERVER_ERROR;
     }
   },
 
@@ -88,7 +95,7 @@ export const programExceptionRepository: ProgramExceptionRepository = {
       return checkDoc(doc);
     } catch (e) {
       L.error('failed to delete program exception', e);
-      return undefined;
+      return RepoError.SERVER_ERROR;
     }
   },
 };

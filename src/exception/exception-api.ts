@@ -21,6 +21,7 @@ import { Request, Response } from 'express';
 import { HasFullReadAccess, HasFullWriteAccess } from '../decorators';
 import { loggerFor } from '../logger';
 import { ControllerUtils, TsvUtils } from '../utils';
+import { RepoError } from './exception-repo';
 import * as exceptionService from './exception-service';
 import { isProgramExceptionRecord, isReadonlyArrayOf } from './types';
 
@@ -29,6 +30,16 @@ const L = loggerFor(__filename);
 const ProgramExceptionErrorMessage = {
   TSV_PARSING_FAILED: `This file is formatted incorrectly`,
 } as const;
+
+function getResStatus(result: exceptionService.Result): number {
+  if (result.success) {
+    return 200;
+  } else if (result.error?.code === RepoError.DOCUMENT_UNDEFINED) {
+    return 400;
+  } else {
+    return 500;
+  }
+}
 
 class ExceptionController {
   @HasFullWriteAccess()
@@ -69,16 +80,14 @@ class ExceptionController {
   async clearProgramException(req: Request, res: Response) {
     const programId = req.params.programId;
     const result = await exceptionService.operations.deleteProgramException({ programId });
-    const status = result.success ? 200 : 400;
-    return res.status(status).send(result);
+    return res.status(getResStatus(result)).send(result);
   }
 
   @HasFullReadAccess()
   async getProgramException(req: Request, res: Response) {
     const programId = req.params.programId;
     const result = await exceptionService.operations.getProgramException({ programId });
-    const status = result.success ? 200 : 400;
-    return res.status(status).send(result);
+    return res.status(getResStatus(result)).send(result);
   }
 }
 
