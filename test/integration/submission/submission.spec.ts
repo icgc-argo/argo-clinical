@@ -1413,7 +1413,7 @@ describe('Submission Api', () => {
       });
 
       return req.then((res: any) => {
-        res.body.successful.should.be.true;
+        res.body.successful?.should.be.true;
         submissionVersion = res.body.submission.version;
       });
     };

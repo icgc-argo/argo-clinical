@@ -457,11 +457,6 @@ describe('schema migration api', () => {
           invalidFieldCodeLists: [],
           valueTypeChanges: [],
         },
-        [ClinicalEntitySchemaNames.SPECIMEN]: {
-          missingFields: [SpecimenFieldsEnum.percent_tumour_cells_measurement_method],
-          invalidFieldCodeLists: [],
-          valueTypeChanges: [],
-        },
       });
     });
     it('should update the schema after regex and script changes invalidate donor2', async () => {
@@ -513,11 +508,6 @@ describe('schema migration api', () => {
           invalidFieldCodeLists: [],
           valueTypeChanges: [],
         },
-        [ClinicalEntitySchemaNames.SPECIMEN]: {
-          missingFields: [SpecimenFieldsEnum.percent_tumour_cells_measurement_method],
-          invalidFieldCodeLists: [],
-          valueTypeChanges: [],
-        },
       });
     });
 
@@ -543,11 +533,6 @@ describe('schema migration api', () => {
           invalidFieldCodeLists: [],
           valueTypeChanges: [DonorFieldsEnum.program_id, DonorFieldsEnum.submitter_donor_id],
         },
-        [ClinicalEntitySchemaNames.SPECIMEN]: {
-          missingFields: [SpecimenFieldsEnum.percent_tumour_cells_measurement_method],
-          invalidFieldCodeLists: [],
-          valueTypeChanges: [],
-        },
       });
     });
 
@@ -564,11 +549,6 @@ describe('schema migration api', () => {
       migration.newSchemaErrors.should.deep.eq({
         [ClinicalEntitySchemaNames.DONOR]: {
           missingFields: [DonorFieldsEnum.program_id],
-          invalidFieldCodeLists: [],
-          valueTypeChanges: [],
-        },
-        [ClinicalEntitySchemaNames.SPECIMEN]: {
-          missingFields: [SpecimenFieldsEnum.percent_tumour_cells_measurement_method],
           invalidFieldCodeLists: [],
           valueTypeChanges: [],
         },
