@@ -97,6 +97,7 @@ describe('schema migration api', () => {
         specimenType: 'Primary tumour',
         submitterId: 'sub-sp-pacaau-124',
         specimenId: 210001,
+        [SpecimenFieldsEnum.percent_tumour_cells_measurement_method]: 'Genomics',
       },
     ],
     primaryDiagnoses: [
