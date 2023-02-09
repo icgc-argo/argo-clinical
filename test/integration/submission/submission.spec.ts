@@ -1025,6 +1025,7 @@ describe('Submission Api', () => {
               percent_stromal_cells: 0.65,
               percent_necrosis: 0.65,
               percent_tumour_cells: 0.5,
+              percent_tumour_cells_measurement_method: 'Genomics',
             },
           },
           {
@@ -1051,6 +1052,7 @@ describe('Submission Api', () => {
               percent_stromal_cells: 0.2,
               percent_necrosis: 0.3,
               percent_tumour_cells: 0.1,
+              percent_tumour_cells_measurement_method: 'Genomics',
             },
           },
         ],
@@ -1978,6 +1980,7 @@ describe('Submission Api', () => {
               percent_stromal_cells: 0.65,
               percent_necrosis: 0.65,
               percent_tumour_cells: 0.5,
+              percent_tumour_cells_measurement_method: 'Genomics',
             },
           },
         ],

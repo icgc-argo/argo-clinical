@@ -1112,11 +1112,11 @@ export namespace operations {
         .getSchemaFieldNamesWithPriority(clinicalType, dictionary);
       const missingFields: string[] = [];
 
-      clinicalFieldNamesByPriorityMap.required.forEach(requriedField => {
-        if (!commonFieldNamesSet.has(requriedField)) {
-          missingFields.push(requriedField);
+      clinicalFieldNamesByPriorityMap.required.forEach(requiredField => {
+        if (!commonFieldNamesSet.has(requiredField)) {
+          missingFields.push(requiredField);
         } else {
-          commonFieldNamesSet.delete(requriedField);
+          commonFieldNamesSet.delete(requiredField);
         }
       });
 
