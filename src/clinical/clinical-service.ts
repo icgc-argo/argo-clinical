@@ -315,7 +315,7 @@ export const getDonorSubmissionErrorUpdates = async (
   clinicalMigrationErrors.forEach(migrationError => {
     const { errors } = migrationError;
     errors.forEach(error => {
-      const { entityName }: ClinicalEntityErrorRecord = error;
+      const { entityName } = error;
       if (!errorEntities.includes(entityName)) errorEntities = [...errorEntities, entityName];
     });
   });
