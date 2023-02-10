@@ -17,88 +17,87 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import * as dataValidator from './validation-clinical/validation';
-import {
-  donorDao,
-  FindByProgramAndSubmitterFilter,
-  DONOR_DOCUMENT_FIELDS,
-} from '../clinical/donor-repo';
+import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
-import { registrationRepository } from './registration-repo';
+import { v1 as uuid } from 'uuid';
 import {
   Donor,
+  DonorBySubmitterIdMap,
   DonorMap,
-  Specimen,
   Sample,
   SchemaMetadata,
-  DonorBySubmitterIdMap,
-  ClinicalEntity,
+  Specimen,
 } from '../clinical/clinical-entities';
 import {
-  ActiveRegistration,
-  SubmittedRegistrationRecord,
-  RegistrationStats,
-  SubmissionValidationError,
-  CreateRegistrationRecord,
-  CreateRegistrationCommand,
-  CreateRegistrationResult,
-  ClearSubmissionCommand,
-  SampleRegistrationFieldsEnum,
-  ClinicalSubmissionCommand,
-  MultiClinicalSubmissionCommand,
-  CreateSubmissionResult,
-  SUBMISSION_STATE,
-  ActiveClinicalSubmission,
-  SubmissionValidationUpdate,
-  ClinicalTypeValidateResult,
-  ClinicalEntities,
-  ClinicalSubmissionModifierCommand,
-  RegistrationStat,
-  NewClinicalEntity,
-  SubmissionBatchError,
-  SubmissionBatchErrorTypes,
-  ValidateSubmissionResult,
-  NewClinicalEntities,
-  BatchNameRegex,
-  ClinicalSubmissionRecordsByDonorIdMap,
-  RevalidateClinicalSubmissionCommand,
-  LegacyICGCImportRecord,
-  DataValidationErrors,
-} from './submission-entities';
-import * as dictionaryManager from '../dictionary/manager';
-import * as messenger from './submission-updates-messenger';
-import { loggerFor } from '../logger';
-import { DonorUtils } from '../utils';
-import {
-  Errors,
-  F,
-  isStringMatchRegex,
-  toString,
-  isEmptyString,
-  isNotAbsent,
-  notEmpty,
-} from '../utils';
-import { DeepReadonly } from 'deep-freeze';
-import { submissionRepository } from './submission-repo';
-import { v1 as uuid } from 'uuid';
-import dbRxNormService from '../rxnorm/service';
-import { RxNormConcept } from '../rxnorm/api';
-import { validateSubmissionData, checkUniqueRecords } from './validation-clinical/validation';
-import { batchErrorMessage, validationErrorMessage } from './submission-error-messages';
-import {
-  ClinicalSubmissionRecordsOperations,
-  usingInvalidProgramId,
-} from './validation-clinical/utils';
+  donorDao,
+  DONOR_DOCUMENT_FIELDS,
+  FindByProgramAndSubmitterFilter,
+} from '../clinical/donor-repo';
 import {
   ClinicalEntitySchemaNames,
   DonorFieldsEnum,
   TherapyRxNormFields,
 } from '../common-model/entities';
-
+import * as dictionaryManager from '../dictionary/manager';
+import { loggerFor } from '../logger';
+import { RxNormConcept } from '../rxnorm/api';
+import dbRxNormService from '../rxnorm/service';
+import {
+  DonorUtils,
+  Errors,
+  F,
+  isEmptyString,
+  isNotAbsent,
+  isStringMatchRegex,
+  notEmpty,
+  toString,
+} from '../utils';
+import { registrationRepository } from './registration-repo';
+import {
+  ActiveClinicalSubmission,
+  ActiveRegistration,
+  BatchNameRegex,
+  ClearSubmissionCommand,
+  ClinicalEntities,
+  ClinicalSubmissionCommand,
+  ClinicalSubmissionModifierCommand,
+  ClinicalSubmissionRecordsByDonorIdMap,
+  ClinicalTypeValidateResult,
+  CreateRegistrationCommand,
+  CreateRegistrationRecord,
+  CreateRegistrationResult,
+  CreateSubmissionResult,
+  DataValidationErrors,
+  LegacyICGCImportRecord,
+  MultiClinicalSubmissionCommand,
+  NewClinicalEntities,
+  NewClinicalEntity,
+  RegistrationStat,
+  RegistrationStats,
+  RevalidateClinicalSubmissionCommand,
+  SampleRegistrationFieldsEnum,
+  SubmissionBatchError,
+  SubmissionBatchErrorTypes,
+  SubmissionValidationError,
+  SubmissionValidationUpdate,
+  SUBMISSION_STATE,
+  SubmittedRegistrationRecord,
+  ValidateSubmissionResult,
+} from './submission-entities';
+import { batchErrorMessage, validationErrorMessage } from './submission-error-messages';
+import { submissionRepository } from './submission-repo';
+import * as messenger from './submission-updates-messenger';
+import {
+  ClinicalSubmissionRecordsOperations,
+  usingInvalidProgramId,
+} from './validation-clinical/utils';
+import * as dataValidator from './validation-clinical/validation';
+import { checkUniqueRecords, validateSubmissionData } from './validation-clinical/validation';
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
-import { programExceptionRepository } from '../exception/exception-repo';
-import { ProgramException } from '../exception/types';
 import { DataRecord } from '@overturebio-stack/lectern-client/lib/schema-entities';
+import { programExceptionRepository } from '../exception/exception-repo';
+import * as exceptionService from '../exception/exception-service';
+import { ProgramException } from '../exception/types';
 
 const L = loggerFor(__filename);
 
@@ -892,18 +891,14 @@ export namespace operations {
           .processParallel(command.clinicalType, record, index, schema);
 
         if (schemaResult.validationErrors.length > 0) {
-          const programException = await programExceptionRepository.find(command.programId);
+          const result = await programExceptionRepository.find(command.programId);
 
           // filter out valid exceptions before adding to error accumulator
           const validationErrors =
             // only filter is we have valid exceptions available
-            programException && programException?.exceptions.length > 0
+            exceptionService.isProgramException(result)
               ? schemaResult.validationErrors.filter(validationError => {
-                  return !applyExceptionIfExists(
-                    programException.exceptions,
-                    validationError,
-                    record,
-                  );
+                  return !applyExceptionIfExists(result.exceptions, validationError, record);
                 })
               : schemaResult.validationErrors;
 
