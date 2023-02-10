@@ -32,6 +32,13 @@ import {
 
 const L = loggerFor(__filename);
 
+/**
+ * records should be validated before using this function
+ * explicitly typing from tsv record input to ProgramException
+ * @param programId
+ * @param records
+ * @returns ProgramException
+ */
 const recordsToException = (
   programId: string,
   records: ReadonlyArray<ProgramExceptionRecord>,
