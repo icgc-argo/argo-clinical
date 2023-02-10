@@ -22,7 +22,11 @@ import _ from 'lodash';
 import { Sample, Donor, ClinicalEntityData } from './clinical-entities';
 import { ClinicalQuery, ClinicalSearchQuery } from './clinical-api';
 import { donorDao, DONOR_DOCUMENT_FIELDS } from './donor-repo';
-import { ClinicalErrorsResponseRecord, EntityAlias } from '../common-model/entities';
+import {
+  ClinicalEntityErrorRecord,
+  ClinicalErrorsResponseRecord,
+  EntityAlias,
+} from '../common-model/entities';
 import { Errors, notEmpty } from '../utils';
 import { forceRecalcDonorCoreEntityStats } from '../submission/submission-to-clinical/stat-calculator';
 import { migrationRepo } from '../submission/migration/migration-repo';
@@ -260,14 +264,12 @@ export const getClinicalEntityMigrationErrors = async (
 
         errors.forEach(entityErrorObject => {
           const currentEntityErrorData: [
-            string | EntityAlias,
+            string,
             readonly DeepReadonly<SchemaValidationError>[],
           ] = Object.entries(entityErrorObject)[0];
 
-          const entityName = currentEntityErrorData[0] as EntityAlias;
-          const entityErrors = currentEntityErrorData[1] as readonly DeepReadonly<
-            SchemaValidationError
-          >[];
+          const entityName = currentEntityErrorData[0];
+          const entityErrors = currentEntityErrorData[1];
 
           const updatedErrorEntries = entityErrors.map(error => ({
             ...error,
@@ -308,12 +310,12 @@ export const getDonorSubmissionErrorUpdates = async (
   let validDonors: number[] = [];
   const { clinicalErrors: clinicalMigrationErrors, migrationLastUpdated } = migrationErrors;
   const errorDonorIds = clinicalMigrationErrors.map(error => error.donorId);
-  let errorEntities: EntityAlias[] = [];
+  let errorEntities: Array<string | EntityAlias> = [];
 
   clinicalMigrationErrors.forEach(migrationError => {
     const { errors } = migrationError;
     errors.forEach(error => {
-      const { entityName } = error;
+      const { entityName }: ClinicalEntityErrorRecord = error;
       if (!errorEntities.includes(entityName)) errorEntities = [...errorEntities, entityName];
     });
   });

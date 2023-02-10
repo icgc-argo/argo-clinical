@@ -173,7 +173,7 @@ export function getClinicalEntitySubmittedData(
 }
 
 export const getRequiredDonorFieldsForEntityTypes = (
-  entityTypes: EntityAlias[],
+  entityTypes: Array<string | EntityAlias>,
 ): Array<EntityAlias | ClinicalEntitySchemaNames | 'completionStats'> => {
   let requiredFields: Array<EntityAlias | ClinicalEntitySchemaNames | 'completionStats'> = [];
   if (
