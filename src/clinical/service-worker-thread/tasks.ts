@@ -107,11 +107,11 @@ const sortDocs = (sort: string, entityName: string, completionStats: CompletionR
 
   // -1 Current lower index than Next, +1 Current higher index than Next
   let order = 0;
-  const isDescending = sort.includes('-') ? -1 : 1;
+  const isDescending = sort.startsWith('-') ? -1 : 1;
 
   if (isDefaultSort) {
-    const { donorId: currentDonorId } = currentRecord as Donor;
-    const { donorId: nextDonor } = nextRecord as Donor;
+    const { donorId: currentDonorId } = currentRecord;
+    const { donorId: nextDonor } = nextRecord;
 
     // Sort Clinically Incomplete donors to top (sorted by donorId at DB level)
     const completionA =
@@ -134,13 +134,7 @@ const sortDocs = (sort: string, entityName: string, completionStats: CompletionR
     const first: ClinicalInfo[string] = currentEntry[key] !== undefined && currentEntry[key];
     const next: ClinicalInfo[string] = nextEntry[key] !== undefined && nextEntry[key];
 
-    let valueSort: number;
-
-    if (first && next) {
-      valueSort = first > next ? 1 : first === next ? 0 : -1;
-    } else {
-      valueSort = first && !next ? 1 : next ? -1 : 0;
-    }
+    const valueSort = first === next ? 0 : first && (!next || first > next) ? 1 : -1;
 
     order = valueSort;
   }
