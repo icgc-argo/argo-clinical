@@ -152,9 +152,6 @@ const sortRecordsByColumn = (
   const first = currentRecord[key] !== undefined && currentRecord[key];
   const next = nextRecord[key] !== undefined && nextRecord[key];
   const valueSort = first === next ? 0 : first && (!next || first > next) ? 1 : -1;
-  console.log('\nvalueSort', valueSort);
-  console.log('\nfirst', first);
-  console.log('\next', next);
 
   return valueSort;
 };
