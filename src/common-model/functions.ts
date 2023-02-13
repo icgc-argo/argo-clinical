@@ -21,8 +21,8 @@ import { DeepReadonly } from 'deep-freeze';
 import { Donor, ClinicalEntity, ClinicalInfo, Treatment } from '../clinical/clinical-entities';
 import {
   ClinicalEntitySchemaNames,
-  ClinicalTherapySchemaNames,
   ClinicalUniqueIdentifier,
+  ClinicalTherapySchemaNames,
   EntityAlias,
 } from './entities';
 import _ from 'lodash';
