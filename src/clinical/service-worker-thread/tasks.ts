@@ -44,8 +44,10 @@ type RecordsMap = {
 
 type EntityClinicalInfo = {
   entityName: ClinicalEntitySchemaNames;
-  results: Array<ClinicalInfo | Donor>;
+  results: Array<ClinicalInfo>;
 };
+
+const DONOR_ID_FIELD = 'donor_id';
 
 const updateCompletionTumourStats = (
   specimen: ClinicalInfo,
@@ -93,55 +95,68 @@ function getSampleRegistrationDataFromDonor(donor: Donor) {
   return sample_registration;
 }
 
-const DONOR_ID_FIELD = 'donor_id';
-
 const isEntityInQuery = (entityName: ClinicalEntitySchemaNames, entityTypes: string[]) =>
   queryEntityNames.includes(aliasEntityNames[entityName]) &&
   entityTypes.includes(aliasEntityNames[entityName]);
 
-const sortDocs = (sort: string, entityName: string, completionStats: CompletionRecord[]) => (
-  currentRecord: ClinicalInfo | Donor,
-  nextRecord: ClinicalInfo | Donor,
+// Main Sort Function
+const sortDocs = (sortQuery: string, entityName: string, completionStats: CompletionRecord[]) => (
+  currentRecord: ClinicalInfo,
+  nextRecord: ClinicalInfo,
 ) => {
-  const isDefaultSort = entityName === ClinicalEntitySchemaNames.DONOR && sort.includes('donorId');
-
-  // -1 Current lower index than Next, +1 Current higher index than Next
+  // Sort Value: 0 order is Unchanged, -1 Current lower index than Next, +1 Current higher index than Next
   let order = 0;
-  const isDescending = sort.startsWith('-') ? -1 : 1;
+  const isDefaultSort =
+    entityName === ClinicalEntitySchemaNames.DONOR && sortQuery.includes('donorId');
+  const isDescending = sortQuery.startsWith('-') ? -1 : 1;
+  const key = isDescending === -1 ? sortQuery.split('-')[1] : sortQuery;
 
-  if (isDefaultSort) {
-    const { donorId: currentDonorId } = currentRecord;
-    const { donorId: nextDonor } = nextRecord;
-
-    // Sort Clinically Incomplete donors to top (sorted by donorId at DB level)
-    const completionA =
-      completionStats.find(record => record.donorId && record.donorId === currentDonorId)
-        ?.coreCompletionPercentage || 0;
-
-    const completionB =
-      completionStats.find(record => record.donorId && record.donorId === nextDonor)
-        ?.coreCompletionPercentage || 0;
-
-    const completionSort = completionA === completionB ? 0 : completionA > completionB ? -1 : 1;
-    order = completionSort;
+  if (isDefaultSort && currentRecord.programId) {
+    order = sortDonorRecordsByCompletion(currentRecord, nextRecord, completionStats);
   } else {
-    const currentEntry = currentRecord as ClinicalInfo;
-    const nextEntry = nextRecord as ClinicalInfo;
-
-    // Sort by Selected Column
-    const key = isDescending === -1 ? sort.split('-')[1] : sort;
-
-    const first: ClinicalInfo[string] = currentEntry[key] !== undefined && currentEntry[key];
-    const next: ClinicalInfo[string] = nextEntry[key] !== undefined && nextEntry[key];
-
-    const valueSort = first === next ? 0 : first && (!next || first > next) ? 1 : -1;
-
-    order = valueSort;
+    order = sortRecordsByColumn(currentRecord, nextRecord, key);
   }
 
-  order = isDescending * order;
+  order = order * isDescending;
 
   return order;
+};
+
+// Sort Clinically Incomplete donors to top (sorted by donorId at DB level)
+const sortDonorRecordsByCompletion = (
+  currentRecord: ClinicalInfo,
+  nextRecord: ClinicalInfo,
+  completionStats: CompletionRecord[],
+) => {
+  const { donorId: currentDonorId } = currentRecord;
+  const { donorId: nextDonorId } = nextRecord;
+
+  const completionA =
+    completionStats.find(record => record.donorId && record.donorId === currentDonorId)
+      ?.coreCompletionPercentage || 0;
+
+  const completionB =
+    completionStats.find(record => record.donorId && record.donorId === nextDonorId)
+      ?.coreCompletionPercentage || 0;
+
+  const completionSort = completionA === completionB ? 0 : completionA > completionB ? -1 : 1;
+  return completionSort;
+};
+
+// Sort by Selected Column
+const sortRecordsByColumn = (
+  currentRecord: ClinicalInfo,
+  nextRecord: ClinicalInfo,
+  key: string,
+) => {
+  const first = currentRecord[key] !== undefined && currentRecord[key];
+  const next = nextRecord[key] !== undefined && nextRecord[key];
+  const valueSort = first === next ? 0 : first && (!next || first > next) ? 1 : -1;
+  console.log('\nvalueSort', valueSort);
+  console.log('\nfirst', first);
+  console.log('\next', next);
+
+  return valueSort;
 };
 
 const mapEntityDocuments = (
