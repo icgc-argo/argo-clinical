@@ -111,7 +111,7 @@ const sortDocs = (sortQuery: string, entityName: string, completionStats: Comple
   const isDescending = sortQuery.startsWith('-') ? -1 : 1;
   const key = isDescending === -1 ? sortQuery.split('-')[1] : sortQuery;
 
-  if (isDefaultSort && currentRecord.programId) {
+  if (isDefaultSort) {
     order = sortDonorRecordsByCompletion(currentRecord, nextRecord, completionStats);
   } else {
     order = sortRecordsByColumn(currentRecord, nextRecord, key);
