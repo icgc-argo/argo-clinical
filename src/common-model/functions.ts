@@ -18,7 +18,7 @@
  */
 
 import { DeepReadonly } from 'deep-freeze';
-import { Donor, ClinicalInfo } from '../clinical/clinical-entities';
+import { Donor, ClinicalEntity, ClinicalInfo, Treatment } from '../clinical/clinical-entities';
 import {
   ClinicalEntitySchemaNames,
   ClinicalUniqueIdentifier,
@@ -131,19 +131,19 @@ export function getClinicalEntitiesFromDonorBySchemaName(
 export function getClinicalEntitySubmittedData(
   donor: DeepReadonly<Donor>,
   clinicalEntitySchemaName: ClinicalEntitySchemaNames,
-): ClinicalInfo[] | Donor[] {
+): ClinicalInfo[] {
   const result = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName) as any[];
 
   const clinicalRecords =
     clinicalEntitySchemaName === ClinicalEntitySchemaNames.DONOR
-      ? result.map((entity: any) => ({
+      ? result.map((entity: Donor) => ({
           donor_id: donor.donorId,
           program_id: donor.programId,
           updatedAt: donor.updatedAt,
           ...entity.clinicalInfo,
         }))
       : clinicalEntitySchemaName === ClinicalEntitySchemaNames.TREATMENT
-      ? result.map((treatment: any) => {
+      ? result.map((treatment: Treatment) => {
           const clinicalInfo = treatment.clinicalInfo || {};
           const therapy_type =
             treatment.therapies.length === 1
@@ -162,7 +162,7 @@ export function getClinicalEntitySubmittedData(
         })
       : result
           .filter(record => notEmpty(record.clinicalInfo))
-          .map((entity: any) => ({
+          .map((entity: ClinicalEntity) => ({
             donor_id: donor.donorId,
             program_id: donor.programId,
             submitter_id: donor.submitterId,
@@ -173,7 +173,7 @@ export function getClinicalEntitySubmittedData(
 }
 
 export const getRequiredDonorFieldsForEntityTypes = (
-  entityTypes: EntityAlias[],
+  entityTypes: Array<string | EntityAlias>,
 ): Array<EntityAlias | ClinicalEntitySchemaNames | 'completionStats'> => {
   let requiredFields: Array<EntityAlias | ClinicalEntitySchemaNames | 'completionStats'> = [];
   if (
