@@ -106,10 +106,13 @@ const sortDocs = (sortQuery: string, entityName: string, completionStats: Comple
 ) => {
   // Sort Value: 0 order is Unchanged, -1 Current lower index than Next, +1 Current higher index than Next
   let order = 0;
+  const isDescending = sortQuery.startsWith('-');
   const isDefaultSort =
-    entityName === ClinicalEntitySchemaNames.DONOR && sortQuery.includes('donorId');
-  const isDescending = sortQuery.startsWith('-') ? -1 : 1;
-  const key = isDescending === -1 ? sortQuery.split('-')[1] : sortQuery;
+    entityName === ClinicalEntitySchemaNames.DONOR &&
+    sortQuery.includes('completionStats.coreCompletionPercentage');
+
+  const queryKey = isDescending ? sortQuery.split('-')[1] : sortQuery;
+  const key = queryKey === 'donorId' ? 'donor_id' : queryKey;
 
   if (isDefaultSort) {
     order = sortDonorRecordsByCompletion(currentRecord, nextRecord, completionStats);
@@ -117,7 +120,7 @@ const sortDocs = (sortQuery: string, entityName: string, completionStats: Comple
     order = sortRecordsByColumn(currentRecord, nextRecord, key);
   }
 
-  order = order * isDescending;
+  order = isDescending ? -order : order;
 
   return order;
 };
