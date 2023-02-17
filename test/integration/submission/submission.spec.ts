@@ -2132,7 +2132,7 @@ describe('Submission Api', () => {
         });
     });
 
-    // TODO: Improve this Test
+    // TODO: Improve this Test, see Clinical issue #905
     // Test that request to /dictionary/template/all:
     // * returns a zip file
     // * zip file returned has the content from <method that generates our all templates zip>
