@@ -70,6 +70,11 @@ const coreClinicalSchemaNamesSet = new Set<CoreClinicalSchemaName>(
 const dnaSpecimenFilter = (specimen?: Specimen): boolean =>
   specimen && specimen.sampleType && dnaSampleTypes.includes(specimen.sampleType);
 
+const dnaSampleFilter = (specimen: Specimen): boolean =>
+  specimen &&
+  specimen.samples.length > 0 &&
+  specimen.samples.filter(sample => dnaSampleTypes.includes(sample.sampleType)).length > 0;
+
 // This is the main core stat caclulation function.
 // We consider only `required & core` fields for core field calculation, which are always submitted.
 // Additionally, `optional & core` fields are submitted in relation to `required & core` fields,
@@ -85,16 +90,14 @@ const calcDonorCoreEntityStats = (
 
   if (clinicalType === ClinicalEntitySchemaNames.SPECIMEN) {
     // for specimen, need to check all specimen has a record and at least one tumor and one normal exists
-    const tumorAndNormalExists =
-      donor.specimens.some(sp => sp.tumourNormalDesignation === 'Normal') &&
-      donor.specimens.some(sp => sp.tumourNormalDesignation === 'Tumour');
+    const filteredDonorSpecimens = donor.specimens.filter(dnaSampleFilter);
+    const filteredTumorNormalSpecimens =
+      [
+        filteredDonorSpecimens.find(sp => sp.tumourNormalDesignation === 'Normal'),
+        filteredDonorSpecimens.find(sp => sp.tumourNormalDesignation === 'Tumour'),
+      ].filter(notEmpty).length / 2;
 
-    if (tumorAndNormalExists) {
-      coreStats[schemaNameToCoreCompletenessStat[clinicalType]] =
-        donor.specimens.filter(dnaSpecimenFilter).filter(notEmpty).length / donor.specimens.length;
-    } else {
-      coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = 0;
-    }
+    coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = filteredTumorNormalSpecimens;
   } else {
     // for others we just need to find one clinical info for core entity
     const entities = getClinicalEntitiesFromDonorBySchemaName(donor, clinicalType);

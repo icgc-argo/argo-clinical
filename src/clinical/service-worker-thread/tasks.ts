@@ -28,6 +28,7 @@ import {
   getClinicalEntitiesFromDonorBySchemaName,
   getClinicalEntitySubmittedData,
 } from '../../common-model/functions';
+import { forceRecalcDonorCoreEntityStats } from '../../submission/submission-to-clinical/stat-calculator';
 import { notEmpty } from '../../utils';
 import { ClinicalQuery, ClinicalSearchQuery } from '../clinical-api';
 import {
@@ -216,6 +217,35 @@ const mapEntityDocuments = (
   };
 };
 
+export function filterDonorIdDataFromSearch(donors: Donor[], query: ClinicalSearchQuery) {
+  const { donorIds, submitterDonorIds } = query;
+
+  const useFilteredDonors =
+    (donorIds && donorIds.length) || (submitterDonorIds && submitterDonorIds.length);
+
+  const filteredDonors = useFilteredDonors
+    ? donors.filter(donor => {
+        const { donorId, submitterId } = donor;
+        const stringId = `${donorId}`;
+        const donorMatch = donorIds?.filter(id => stringId.includes(id));
+        const submitterMatch = submitterId
+          ? submitterDonorIds?.filter(id => submitterId.includes(id))
+          : [];
+        return donorMatch.length > 0 || submitterMatch.length > 0;
+      })
+    : donors;
+
+  const totalResults = filteredDonors.length;
+  const searchResults = filteredDonors.map((donor: Donor) => {
+    const { donorId, submitterId } = donor;
+    const submitterDonorId = submitterId;
+    return { donorId, submitterDonorId };
+  });
+
+  return { searchResults, totalResults };
+}
+
+// Main TSV Clinical Data Function
 function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
   const recordsMap = <RecordsMap>{};
 
@@ -250,34 +280,7 @@ function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
   return data;
 }
 
-export function filterDonorIdDataFromSearch(donors: Donor[], query: ClinicalSearchQuery) {
-  const { donorIds, submitterDonorIds } = query;
-
-  const useFilteredDonors =
-    (donorIds && donorIds.length) || (submitterDonorIds && submitterDonorIds.length);
-
-  const filteredDonors = useFilteredDonors
-    ? donors.filter(donor => {
-        const { donorId, submitterId } = donor;
-        const stringId = `${donorId}`;
-        const donorMatch = donorIds?.filter(id => stringId.includes(id));
-        const submitterMatch = submitterId
-          ? submitterDonorIds?.filter(id => submitterId.includes(id))
-          : [];
-        return donorMatch.length > 0 || submitterMatch.length > 0;
-      })
-    : donors;
-
-  const totalResults = filteredDonors.length;
-  const searchResults = filteredDonors.map((donor: Donor) => {
-    const { donorId, submitterId } = donor;
-    const submitterDonorId = submitterId;
-    return { donorId, submitterDonorId };
-  });
-
-  return { searchResults, totalResults };
-}
-
+// Main Clinical Entity Submitted Data Function
 export function extractEntityDataFromDonors(
   donors: Donor[],
   totalDonors: number,
@@ -287,9 +290,18 @@ export function extractEntityDataFromDonors(
   let clinicalEntityData: EntityClinicalInfo[] = [];
 
   const completionStats: CompletionRecord[] = donors
-    .map(({ completionStats, donorId }): CompletionRecord | undefined =>
-      completionStats && donorId ? { ...completionStats, donorId } : undefined,
-    )
+    .map((donor): CompletionRecord | undefined => {
+      const { completionStats, donorId } = donor;
+
+      let updatedStats = completionStats;
+
+      if (completionStats?.coreCompletion.specimens === 0 && donor.specimens.length > 0) {
+        const updatedDonor = forceRecalcDonorCoreEntityStats(donor, {});
+        updatedStats = updatedDonor.completionStats;
+      }
+
+      return updatedStats && donorId ? { ...updatedStats, donorId } : undefined;
+    })
     .filter(notEmpty);
 
   donors.forEach(d => {
