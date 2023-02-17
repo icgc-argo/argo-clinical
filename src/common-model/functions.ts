@@ -172,23 +172,35 @@ export function getClinicalEntitySubmittedData(
   return clinicalRecords;
 }
 
+export const DonorCompletionFields: Array<keyof Donor | EntityAlias> = [
+  'completionStats',
+  'specimens',
+  'followUps',
+  'treatments',
+  'primaryDiagnoses',
+  ClinicalEntitySchemaNames.REGISTRATION,
+];
+
+type ClinicalEntityDataFields = EntityAlias | ClinicalEntitySchemaNames | keyof Donor;
+
 export const getRequiredDonorFieldsForEntityTypes = (
   entityTypes: Array<string | EntityAlias>,
-): Array<EntityAlias | ClinicalEntitySchemaNames | 'completionStats'> => {
-  let requiredFields: Array<EntityAlias | ClinicalEntitySchemaNames | 'completionStats'> = [];
+): Array<ClinicalEntityDataFields> => {
+  let requiredFields: Array<ClinicalEntityDataFields> = [];
+
   if (
-    // Donor Completion Stats require Sample Registration data
-    // Sample Registration requires Specimen data
-    (entityTypes.includes('donor') && !entityTypes.includes('sampleRegistration')) ||
-    (entityTypes.includes('sampleRegistration') && !entityTypes.includes('specimens'))
+    // Donor Completion Stats require core entity data
+    entityTypes.includes('donor')
   ) {
-    requiredFields = [
-      ...requiredFields,
-      'completionStats',
-      'sampleRegistration',
-      ClinicalEntitySchemaNames.REGISTRATION,
-      'specimens',
-    ];
+    requiredFields = [...requiredFields, ...DonorCompletionFields];
+  }
+
+  if (
+    // Sample Registration requires Specimen data
+    entityTypes.includes('sampleRegistration') ||
+    entityTypes.includes('specimens')
+  ) {
+    requiredFields = [...requiredFields, ClinicalEntitySchemaNames.REGISTRATION, 'specimens'];
   }
   if (
     // Clinical Therapies require Treatments
@@ -199,7 +211,11 @@ export const getRequiredDonorFieldsForEntityTypes = (
   ) {
     requiredFields = [...requiredFields, 'treatments'];
   }
-  return requiredFields;
+
+  // Return w/ duplicate fields filtered out
+  const donorFields = requiredFields.filter((field, i) => requiredFields.indexOf(field) === i);
+
+  return donorFields;
 };
 
 export function getSingleClinicalEntityFromDonorBySchemaName(
