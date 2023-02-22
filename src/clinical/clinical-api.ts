@@ -41,7 +41,7 @@ export type ClinicalQuery = {
   programShortName: string;
   page: number;
   pageSize?: number;
-  entityTypes: EntityAlias[];
+  entityTypes: Array<string | EntityAlias>;
   sort: string;
   donorIds: number[];
   submitterDonorIds: string[];
