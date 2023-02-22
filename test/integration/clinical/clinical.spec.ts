@@ -101,7 +101,7 @@ describe('clinical Api', () => {
   before(() => {
     return (async () => {
       try {
-        mongoContainer = await new GenericContainer('mongo').withExposedPorts(27017).start();
+        mongoContainer = await new GenericContainer('mongo', '4.0').withExposedPorts(27017).start();
         dburl = `mongodb://${mongoContainer.getContainerIpAddress()}:${mongoContainer.getMappedPort(
           27017,
         )}/clinical`;

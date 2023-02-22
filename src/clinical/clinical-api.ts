@@ -40,8 +40,8 @@ import { DeepReadonly } from 'deep-freeze';
 export type ClinicalQuery = {
   programShortName: string;
   page: number;
-  pageSize: number;
-  entityTypes: EntityAlias[];
+  pageSize?: number;
+  entityTypes: Array<string | EntityAlias>;
   sort: string;
   donorIds: number[];
   submitterDonorIds: string[];
@@ -240,6 +240,13 @@ class ClinicalController {
     res.status(200).json(searchData);
   }
 
+  /**
+   * Finds all Program Migration Errors, then finds which invalid Donors are now Valid post-migration.
+   * Filters out any errors related to Valid Donors, and returns the remaining Errors.
+   * @param programId string program name
+   * @param donorIds array of donor IDs
+   * @returns { ClinicalErrorsResponseRecord[] }
+   */
   @HasProgramReadAccess((req: Request) => req.params.programId)
   async getProgramClinicalErrors(req: Request, res: Response) {
     const programId = req.params.programId;
@@ -248,8 +255,16 @@ class ClinicalController {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
 
-    const clinicalErrors = await service.getClinicalEntityMigrationErrors(programId, query);
+    let validDonorIds: number[] = [];
+    const migrationErrors = await service.getClinicalEntityMigrationErrors(programId, query);
 
+    if (migrationErrors) {
+      validDonorIds = await service.getDonorSubmissionErrorUpdates(programId, migrationErrors);
+    }
+
+    const clinicalErrors = migrationErrors.clinicalErrors.filter(
+      error => !validDonorIds.includes(error.donorId),
+    );
     res.status(200).json(clinicalErrors);
   }
 

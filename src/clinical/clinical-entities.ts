@@ -118,7 +118,7 @@ export interface ClinicalInfo {
 export type ClinicalEntityData = {
   entityName: string;
   totalDocs: number;
-  records: ClinicalInfo[];
+  records: Array<ClinicalInfo>;
   entityFields: string[];
   completionStats?: CompletionRecord[];
 };

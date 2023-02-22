@@ -16,7 +16,7 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+console.time('boot time');
 // Has to import config before any other import uses the configurations
 import { AppConfig, RxNormDbConfig, KafkaConfigurations } from './config';
 import dotenv from 'dotenv';
@@ -154,5 +154,6 @@ let server: Server;
       app.get('env'),
     );
     console.log('  Press CTRL-C to stop\n');
+    console.timeEnd('boot time');
   });
 })();
