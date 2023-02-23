@@ -68,6 +68,7 @@ export const specimen = {
   PATHOLOGICAL_N_CATEGORY: 'pathological_n_category',
   PATHOLOGICAL_M_CAREGORY: 'pathological_m_category',
   PERCENT_TUMOUR_CELLS: 'percent_tumour_cells',
+  PERCENT_TUMOUR_CELLS_MEASUREMENT_METHOD: 'percent_tumour_cells_measurement_method',
   PERCENT_PROLIFERATING_CELLS: 'percent_proliferating_cells',
   PERCENT_INFLAMMATORY_TISSUE: 'percent_inflammatory_tissue',
   PERCENT_STROMAL_CELLS: 'percent_stromal_cells',

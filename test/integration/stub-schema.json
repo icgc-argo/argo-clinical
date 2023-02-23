@@ -909,6 +909,20 @@
               }
             },
             {
+              "name": "percent_tumour_cells_measurement_method",
+              "description": "Indicate method used to measure percent_tumour_cells.",
+              "valueType": "string",
+              "meta": {
+                "core": true,
+                "dependsOn": "sample_registration.tumour_normal_designation",
+                "notes": "#/notes/if_tumour",
+                "displayName": "Percent Tumour Cells Measurement Method"
+              },
+              "restrictions": {
+                "codeList": ["Genomics", "Image analysis", "Pathology estimate by percent nuclei"]
+              }
+            },
+            {
               "name": "percent_proliferating_cells",
               "description": "Indicate a value, in decimals, that represents the count of proliferating cells determined during pathologic review of the specimen.",
               "valueType": "number",
