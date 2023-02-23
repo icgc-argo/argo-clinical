@@ -17,6 +17,8 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
+import { DataRecord } from '@overturebio-stack/lectern-client/lib/schema-entities';
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 import { v1 as uuid } from 'uuid';
@@ -39,6 +41,9 @@ import {
   TherapyRxNormFields,
 } from '../common-model/entities';
 import * as dictionaryManager from '../dictionary/manager';
+import { programExceptionRepository } from '../exception/exception-repo';
+import { ProgramException } from '../exception/types';
+import { isProgramException } from '../exception/util';
 import { loggerFor } from '../logger';
 import { RxNormConcept } from '../rxnorm/api';
 import dbRxNormService from '../rxnorm/service';
@@ -93,11 +98,6 @@ import {
 } from './validation-clinical/utils';
 import * as dataValidator from './validation-clinical/validation';
 import { checkUniqueRecords, validateSubmissionData } from './validation-clinical/validation';
-import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
-import { DataRecord } from '@overturebio-stack/lectern-client/lib/schema-entities';
-import { programExceptionRepository } from '../exception/exception-repo';
-import * as exceptionService from '../exception/exception-service';
-import { ProgramException } from '../exception/types';
 
 const L = loggerFor(__filename);
 
@@ -871,7 +871,7 @@ export namespace operations {
     }
   };
 
-  const checkClinicalEntity = async (
+  export const checkClinicalEntity = async (
     command: ClinicalSubmissionCommand,
     schema: dictionaryEntities.SchemasDictionary,
   ) => {
@@ -896,7 +896,7 @@ export namespace operations {
           // filter out valid exceptions before adding to error accumulator
           const validationErrors =
             // only filter is we have valid exceptions available
-            exceptionService.isProgramException(result)
+            isProgramException(result)
               ? schemaResult.validationErrors.filter(validationError => {
                   return !applyExceptionIfExists(result.exceptions, validationError, record);
                 })
