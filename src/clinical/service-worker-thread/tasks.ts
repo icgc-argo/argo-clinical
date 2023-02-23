@@ -28,7 +28,6 @@ import {
   getClinicalEntitiesFromDonorBySchemaName,
   getClinicalEntitySubmittedData,
 } from '../../common-model/functions';
-import { forceRecalcDonorCoreEntityStats } from '../../submission/submission-to-clinical/stat-calculator';
 import { notEmpty } from '../../utils';
 import { ClinicalQuery, ClinicalSearchQuery } from '../clinical-api';
 import {
@@ -290,18 +289,9 @@ export function extractEntityDataFromDonors(
   let clinicalEntityData: EntityClinicalInfo[] = [];
 
   const completionStats: CompletionRecord[] = donors
-    .map((donor): CompletionRecord | undefined => {
-      const { completionStats, donorId } = donor;
-
-      let updatedStats = completionStats;
-
-      if (completionStats?.coreCompletion.specimens === 0 && donor.specimens.length > 0) {
-        const updatedDonor = forceRecalcDonorCoreEntityStats(donor, {});
-        updatedStats = updatedDonor.completionStats;
-      }
-
-      return updatedStats && donorId ? { ...updatedStats, donorId } : undefined;
-    })
+    .map(({ completionStats, donorId }): CompletionRecord | undefined =>
+      completionStats && donorId ? { ...completionStats, donorId } : undefined,
+    )
     .filter(notEmpty);
 
   donors.forEach(d => {
