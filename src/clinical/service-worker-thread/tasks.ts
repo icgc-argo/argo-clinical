@@ -49,26 +49,16 @@ type EntityClinicalInfo = {
 
 const DONOR_ID_FIELD = 'donor_id';
 
-const updateCompletionTumourStats = (
-  specimen: ClinicalInfo,
-  type: string,
-  completionRecords: { completionStats: CompletionRecord[] },
-) => {
+const updateCompletionTumourStats = (type: string, completionRecord: CompletionRecord) => {
   const specimenType: CoreClinicalEntities =
     type === 'normal' ? 'normalSpecimens' : 'tumourSpecimens';
-  const index = completionRecords.completionStats.findIndex(
-    donor => donor.donorId === specimen.donor_id,
-  );
-  if (index !== -1) {
-    const original = completionRecords.completionStats[index];
-    completionRecords.completionStats[index] = {
-      ...original,
-      coreCompletion: {
-        ...original.coreCompletion,
-        [specimenType]: 1,
-      },
-    };
-  }
+
+  const coreCompletion = {
+    ...completionRecord.coreCompletion,
+    [specimenType]: 1,
+  };
+
+  return { ...completionRecord, coreCompletion };
 };
 
 function getSampleRegistrationDataFromDonor(donor: Donor) {
@@ -191,21 +181,6 @@ const mapEntityDocuments = (
   // Update Completion Stats to display Normal/Tumour stats
   const completionRecords =
     entityName === ClinicalEntitySchemaNames.DONOR ? { completionStats: [...completionStats] } : {};
-  const samples = originalResultsArray.find(result => result.entityName === 'sample_registration');
-
-  if (completionRecords.completionStats && samples !== undefined) {
-    const sampleResults = samples.results as ClinicalInfo[];
-    const sampleData = sampleResults.filter(
-      sample => typeof sample.sample_type === 'string' && !sample.sample_type?.includes('RNA'),
-    );
-
-    sampleData.forEach(sample => {
-      if (typeof sample.tumour_normal_designation === 'string') {
-        const designation = sample.tumour_normal_designation.toLowerCase();
-        updateCompletionTumourStats(sample, designation, completionRecords);
-      }
-    });
-  }
 
   return <ClinicalEntityData>{
     entityName,
@@ -288,12 +263,6 @@ export function extractEntityDataFromDonors(
 ) {
   let clinicalEntityData: EntityClinicalInfo[] = [];
 
-  const completionStats: CompletionRecord[] = donors
-    .map(({ completionStats, donorId }): CompletionRecord | undefined =>
-      completionStats && donorId ? { ...completionStats, donorId } : undefined,
-    )
-    .filter(notEmpty);
-
   donors.forEach(d => {
     Object.values(ClinicalEntitySchemaNames).forEach(entity => {
       const isQueriedType = isEntityInQuery(entity, query.entityTypes);
@@ -319,13 +288,50 @@ export function extractEntityDataFromDonors(
     });
   });
 
-  const donorCount = totalDonors;
+  const dnaSpecimens: ClinicalInfo[] | undefined = clinicalEntityData.find(
+    result => result.entityName === 'specimen',
+  )?.results;
+
+  const sampleResults = clinicalEntityData
+    .find(result => result.entityName === 'sample_registration')
+    ?.results.filter(
+      sample => typeof sample.sample_type === 'string' && !sample.sample_type?.includes('RNA'),
+    );
+
+  const completionStats: CompletionRecord[] = donors
+    .map(({ completionStats, donorId }): CompletionRecord | undefined =>
+      completionStats && donorId ? { ...completionStats, donorId } : undefined,
+    )
+    .filter(notEmpty)
+    .map(completionRecord => {
+      if (completionRecord.coreCompletion.specimens > 0 && dnaSpecimens?.length) {
+        // Find related Donor
+        const donorSpecimenData = dnaSpecimens.filter(
+          specimen => specimen.donor_id === completionRecord.donorId,
+        );
+        const donorSampleData =
+          sampleResults?.filter(specimen => specimen.donor_id === completionRecord.donorId) || [];
+        // reduce using includes(?) to normal/tumour counters
+
+        donorSampleData.forEach(sample => {
+          if (typeof sample.tumour_normal_designation === 'string') {
+            const designation = sample.tumour_normal_designation.toLowerCase();
+
+            // remove return, update object, use counters
+            return updateCompletionTumourStats(designation, completionRecord);
+          }
+        });
+      }
+
+      return completionRecord;
+    });
+
   const clinicalEntities: ClinicalEntityData[] = clinicalEntityData
     .map((entity: EntityClinicalInfo, index: number, originalResultsArray: EntityClinicalInfo[]) =>
       mapEntityDocuments(
         entity,
         originalResultsArray,
-        donorCount,
+        totalDonors,
         schemasWithFields,
         query,
         completionStats,
