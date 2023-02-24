@@ -90,14 +90,16 @@ const calcDonorCoreEntityStats = (
 
   if (clinicalType === ClinicalEntitySchemaNames.SPECIMEN) {
     // for specimen, need to check all specimen has a record and at least one tumor and one normal exists
-    const filteredDonorSpecimens = donor.specimens.filter(dnaSampleFilter);
-    const filteredTumorNormalSpecimens =
-      [
-        filteredDonorSpecimens.find(sp => sp.tumourNormalDesignation === 'Normal'),
-        filteredDonorSpecimens.find(sp => sp.tumourNormalDesignation === 'Tumour'),
-      ].filter(notEmpty).length / 2;
+    const tumorAndNormalExists =
+      donor.specimens.some(sp => sp.tumourNormalDesignation === 'Normal') &&
+      donor.specimens.some(sp => sp.tumourNormalDesignation === 'Tumour');
 
-    coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = filteredTumorNormalSpecimens;
+    if (tumorAndNormalExists) {
+      coreStats[schemaNameToCoreCompletenessStat[clinicalType]] =
+        donor.specimens.filter(dnaSpecimenFilter).filter(notEmpty).length / donor.specimens.length;
+    } else {
+      coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = 0;
+    }
   } else {
     // for others we just need to find one clinical info for core entity
     const entities = getClinicalEntitiesFromDonorBySchemaName(donor, clinicalType);
