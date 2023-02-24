@@ -70,11 +70,6 @@ const coreClinicalSchemaNamesSet = new Set<CoreClinicalSchemaName>(
 const dnaSpecimenFilter = (specimen?: Specimen): boolean =>
   specimen && specimen.sampleType && dnaSampleTypes.includes(specimen.sampleType);
 
-const dnaSampleFilter = (specimen: Specimen): boolean =>
-  specimen &&
-  specimen.samples.length > 0 &&
-  specimen.samples.filter(sample => dnaSampleTypes.includes(sample.sampleType)).length > 0;
-
 // This is the main core stat caclulation function.
 // We consider only `required & core` fields for core field calculation, which are always submitted.
 // Additionally, `optional & core` fields are submitted in relation to `required & core` fields,
