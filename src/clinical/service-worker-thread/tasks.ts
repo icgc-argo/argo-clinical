@@ -159,6 +159,7 @@ const sortRecordsByColumn = (
   return valueSort;
 };
 
+// Formats + Organizes Clinical Data
 const mapEntityDocuments = (
   entity: EntityClinicalInfo,
   originalResultsArray: EntityClinicalInfo[],
@@ -216,7 +217,8 @@ const mapEntityDocuments = (
   };
 };
 
-export function filterDonorIdDataFromSearch(donors: Donor[], query: ClinicalSearchQuery) {
+// Submitted Data Search Results
+function FilterDonorIdDataFromSearch(donors: Donor[], query: ClinicalSearchQuery) {
   const { donorIds, submitterDonorIds } = query;
 
   const useFilteredDonors =
@@ -280,7 +282,7 @@ function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
 }
 
 // Main Clinical Entity Submitted Data Function
-export function extractEntityDataFromDonors(
+function extractEntityDataFromDonors(
   donors: Donor[],
   totalDonors: number,
   schemasWithFields: any,
@@ -343,9 +345,11 @@ export function extractEntityDataFromDonors(
 export enum WorkerTasks {
   ExtractDataFromDonors,
   ExtractEntityDataFromDonors,
+  FilterDonorIdDataFromSearch,
 }
 
 export const WorkerTasksMap: Record<WorkerTasks, Function> = {
   [WorkerTasks.ExtractDataFromDonors]: extractDataFromDonors,
   [WorkerTasks.ExtractEntityDataFromDonors]: extractEntityDataFromDonors,
+  [WorkerTasks.FilterDonorIdDataFromSearch]: FilterDonorIdDataFromSearch,
 };
