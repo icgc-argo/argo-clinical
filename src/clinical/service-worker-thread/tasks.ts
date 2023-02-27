@@ -49,13 +49,25 @@ type EntityClinicalInfo = {
 
 const DONOR_ID_FIELD = 'donor_id';
 
-const updateCompletionTumourStats = (type: string, completionRecord: CompletionRecord) => {
-  const specimenType: CoreClinicalEntities =
-    type === 'normal' ? 'normalSpecimens' : 'tumourSpecimens';
+const updateCompletionSpecimenStats = (
+  donorSampleData: ClinicalInfo[],
+  donorSpecimenData: ClinicalInfo[],
+  completionRecord: CompletionRecord,
+) => {
+  const sampleNormalCount = donorSampleData.filter(
+    sample => sample.tumour_normal_designation === 'Normal',
+  );
+  const sampleTumourCount = donorSampleData.filter(
+    sample => sample.tumour_normal_designation === 'Tumour',
+  );
 
-  const coreCompletion = {
+  let specimenNormalCount = 0;
+  let specimenTumourCount = 0;
+
+  let coreCompletion = {
     ...completionRecord.coreCompletion,
-    [specimenType]: 1,
+    normalSpecimens: 0,
+    tumourSpecimens: 0,
   };
 
   return { ...completionRecord, coreCompletion };
@@ -311,16 +323,8 @@ export function extractEntityDataFromDonors(
         );
         const donorSampleData =
           sampleResults?.filter(specimen => specimen.donor_id === completionRecord.donorId) || [];
-        // reduce using includes(?) to normal/tumour counters
 
-        donorSampleData.forEach(sample => {
-          if (typeof sample.tumour_normal_designation === 'string') {
-            const designation = sample.tumour_normal_designation.toLowerCase();
-
-            // remove return, update object, use counters
-            return updateCompletionTumourStats(designation, completionRecord);
-          }
-        });
+        return updateCompletionSpecimenStats(donorSampleData, donorSpecimenData, completionRecord);
       }
 
       return completionRecord;
