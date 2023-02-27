@@ -227,20 +227,17 @@ function FilterDonorIdDataFromSearch(donors: Donor[], query: ClinicalSearchQuery
     ? donors.filter(donor => {
         const { donorId, submitterId } = donor;
         const stringId = `${donorId}`;
-        const donorMatch = donorIds?.filter(id => stringId.includes(id));
-        const submitterMatch = submitterId
-          ? submitterDonorIds?.filter(id => submitterId.includes(id))
-          : [];
-        return donorMatch.length > 0 || submitterMatch.length > 0;
+        const donorMatch = donorIds?.some(id => stringId.includes(id));
+        const submitterMatch = submitterDonorIds?.some(id => submitterId.includes(id));
+        return donorMatch || submitterMatch;
       })
     : donors;
 
   const totalResults = filteredDonors.length;
-  const searchResults = filteredDonors.map((donor: Donor) => {
-    const { donorId, submitterId } = donor;
-    const submitterDonorId = submitterId;
-    return { donorId, submitterDonorId };
-  });
+  const searchResults = filteredDonors.map(({ donorId, submitterId }: Donor) => ({
+    donorId,
+    submitterDonorId: submitterId,
+  }));
 
   return { searchResults, totalResults };
 }

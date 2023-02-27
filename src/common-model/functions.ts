@@ -172,7 +172,7 @@ export function getClinicalEntitySubmittedData(
   return clinicalRecords;
 }
 
-export const DonorCompletionFields: Array<keyof Donor | EntityAlias> = [
+export const donorCompletionFields: Array<keyof Donor | EntityAlias> = [
   'completionStats',
   'specimens',
   'followUps',
@@ -192,7 +192,7 @@ export const getRequiredDonorFieldsForEntityTypes = (
     // Donor Completion Stats require core entity data
     entityTypes.includes('donor')
   ) {
-    requiredFields = [...requiredFields, ...DonorCompletionFields];
+    requiredFields = [...requiredFields, ...donorCompletionFields];
   }
 
   if (
