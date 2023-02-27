@@ -221,8 +221,7 @@ const mapEntityDocuments = (
 function FilterDonorIdDataFromSearch(donors: Donor[], query: ClinicalSearchQuery) {
   const { donorIds, submitterDonorIds } = query;
 
-  const useFilteredDonors =
-    (donorIds && donorIds.length) || (submitterDonorIds && submitterDonorIds.length);
+  const useFilteredDonors = !isEmpty(donorIds) || !isEmpty(submitterDonorIds);
 
   const filteredDonors = useFilteredDonors
     ? donors.filter(donor => {
