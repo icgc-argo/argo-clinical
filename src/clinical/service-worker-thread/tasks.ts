@@ -30,13 +30,7 @@ import {
 } from '../../common-model/functions';
 import { notEmpty } from '../../utils';
 import { ClinicalQuery, ClinicalSearchQuery } from '../clinical-api';
-import {
-  Donor,
-  CompletionRecord,
-  ClinicalEntityData,
-  ClinicalInfo,
-  CoreClinicalEntities,
-} from '../clinical-entities';
+import { Donor, CompletionRecord, ClinicalEntityData, ClinicalInfo } from '../clinical-entities';
 
 type RecordsMap = {
   [key in ClinicalEntitySchemaNames]: ClinicalInfo[];
