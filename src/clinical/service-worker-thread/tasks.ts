@@ -17,7 +17,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import _, { isEmpty } from 'lodash';
+import _, { isEmpty, isArray, sample } from 'lodash';
 import {
   ClinicalEntitySchemaNames,
   aliasEntityNames,
@@ -56,18 +56,42 @@ const updateCompletionSpecimenStats = (
 ) => {
   const sampleNormalCount = donorSampleData.filter(
     sample => sample.tumour_normal_designation === 'Normal',
-  );
+  ).length;
+
   const sampleTumourCount = donorSampleData.filter(
     sample => sample.tumour_normal_designation === 'Tumour',
-  );
+  ).length;
 
-  let specimenNormalCount = 0;
-  let specimenTumourCount = 0;
+  const specimenNormalCount = donorSpecimenData
+    .map(specimen => {
+      const samples: any[] | false = isArray(specimen.samples) && specimen.samples;
+      const normalCount = samples
+        ? samples.filter(sample => sample.sample_type && sample.sample_type === 'Normal').length
+        : 0;
 
-  let coreCompletion = {
+      return normalCount;
+    })
+    .reduce((prev, next) => prev + next, 0);
+
+  const specimenTumourCount = donorSpecimenData
+    .map(specimen => {
+      const samples: any[] | false = isArray(specimen.samples) && specimen.samples;
+      const normalCount = samples
+        ? samples.filter(sample => sample.sample_type && sample.sample_type === 'Tumour').length
+        : 0;
+
+      return normalCount;
+    })
+    .reduce((prev, next) => prev + next, 0);
+
+  const normalRatio =
+    sampleNormalCount === 0 ? sampleNormalCount : specimenNormalCount / sampleNormalCount;
+  const tumourRatio = sampleTumourCount === 0 ? 0 : specimenTumourCount / sampleTumourCount;
+
+  const coreCompletion = {
     ...completionRecord.coreCompletion,
-    normalSpecimens: 0,
-    tumourSpecimens: 0,
+    normalSpecimens: normalRatio,
+    tumourSpecimens: tumourRatio,
   };
 
   return { ...completionRecord, coreCompletion };
@@ -317,12 +341,12 @@ export function extractEntityDataFromDonors(
     .filter(notEmpty)
     .map(completionRecord => {
       if (completionRecord.coreCompletion.specimens > 0 && dnaSpecimens?.length) {
-        // Find related Donor
+        const donorSampleData =
+          sampleResults?.filter(specimen => specimen.donor_id === completionRecord.donorId) || [];
+
         const donorSpecimenData = dnaSpecimens.filter(
           specimen => specimen.donor_id === completionRecord.donorId,
         );
-        const donorSampleData =
-          sampleResults?.filter(specimen => specimen.donor_id === completionRecord.donorId) || [];
 
         return updateCompletionSpecimenStats(donorSampleData, donorSpecimenData, completionRecord);
       }
