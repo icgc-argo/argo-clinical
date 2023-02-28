@@ -17,7 +17,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import _, { isEmpty, isArray, sample } from 'lodash';
+import _, { isEmpty, isArray } from 'lodash';
 import {
   ClinicalEntitySchemaNames,
   aliasEntityNames,
@@ -187,7 +187,6 @@ const sortRecordsByColumn = (
 
 const mapEntityDocuments = (
   entity: EntityClinicalInfo,
-  originalResultsArray: EntityClinicalInfo[],
   donorCount: number,
   schemas: any,
   query: ClinicalQuery,
@@ -355,15 +354,8 @@ export function extractEntityDataFromDonors(
     });
 
   const clinicalEntities: ClinicalEntityData[] = clinicalEntityData
-    .map((entity: EntityClinicalInfo, index: number, originalResultsArray: EntityClinicalInfo[]) =>
-      mapEntityDocuments(
-        entity,
-        originalResultsArray,
-        totalDonors,
-        schemasWithFields,
-        query,
-        completionStats,
-      ),
+    .map((entity: EntityClinicalInfo) =>
+      mapEntityDocuments(entity, totalDonors, schemasWithFields, query, completionStats),
     )
     .filter(notEmpty);
 
