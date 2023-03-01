@@ -172,17 +172,17 @@ export function getClinicalEntitySubmittedData(
   return clinicalRecords;
 }
 
-export const donorCompletionFields: Array<keyof Donor | EntityAlias> = [
+export const donorCompletionFields: Array<keyof Donor> = [
   'completionStats',
   'specimens',
   'followUps',
   'treatments',
   'primaryDiagnoses',
-  ClinicalEntitySchemaNames.REGISTRATION,
 ];
 
 type ClinicalEntityDataFields = EntityAlias | ClinicalEntitySchemaNames | keyof Donor;
 
+// needs to handle specimens / samples at tasks level
 export const getRequiredDonorFieldsForEntityTypes = (
   entityTypes: Array<string | EntityAlias>,
 ): Array<ClinicalEntityDataFields> => {
@@ -197,17 +197,18 @@ export const getRequiredDonorFieldsForEntityTypes = (
 
   if (
     // Sample Registration requires Specimen data
-    entityTypes.includes('sampleRegistration') ||
-    entityTypes.includes('specimens')
+    entityTypes.includes('sampleRegistration') &&
+    !requiredFields.includes('specimens')
   ) {
-    requiredFields = [...requiredFields, ClinicalEntitySchemaNames.REGISTRATION, 'specimens'];
+    requiredFields = [...requiredFields, 'specimens'];
   }
   if (
     // Clinical Therapies require Treatments
     // hormoneTherapy + treatment do not match schema names
     entityTypes.includes('hormoneTherapy') ||
     entityTypes.includes('treatment') ||
-    ClinicalTherapySchemaNames.some(entity => entityTypes.includes(entity))
+    (ClinicalTherapySchemaNames.some(entity => entityTypes.includes(entity)) &&
+      !requiredFields.includes('treatments'))
   ) {
     requiredFields = [...requiredFields, 'treatments'];
   }

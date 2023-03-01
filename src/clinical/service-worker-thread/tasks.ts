@@ -298,9 +298,13 @@ function extractEntityDataFromDonors(
       const isRequiredType = getRequiredDonorFieldsForEntityTypes(query.entityTypes).includes(
         entity,
       );
+      const requiresSampleRegistration =
+        entity === ClinicalEntitySchemaNames.REGISTRATION &&
+        (query.entityTypes.includes('donor') || query.entityTypes.includes('sampleRegistration'));
+
       const clinicalInfoRecords =
-        isQueriedType || isRequiredType
-          ? entity === ClinicalEntitySchemaNames.REGISTRATION
+        isQueriedType || isRequiredType || requiresSampleRegistration
+          ? requiresSampleRegistration
             ? getSampleRegistrationDataFromDonor(d)
                 .filter(notEmpty)
                 .map(sample => ({ donor_id: d.donorId, ...sample }))
