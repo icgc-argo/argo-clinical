@@ -179,6 +179,7 @@ const sortRecordsByColumn = (
   return valueSort;
 };
 
+// Formats + Organizes Clinical Data
 const mapEntityDocuments = (
   entity: EntityClinicalInfo,
   donorCount: number,
@@ -220,30 +221,27 @@ const mapEntityDocuments = (
   };
 };
 
-export function filterDonorIdDataFromSearch(donors: Donor[], query: ClinicalSearchQuery) {
+// Submitted Data Search Results
+function FilterDonorIdDataFromSearch(donors: Donor[], query: ClinicalSearchQuery) {
   const { donorIds, submitterDonorIds } = query;
 
-  const useFilteredDonors =
-    (donorIds && donorIds.length) || (submitterDonorIds && submitterDonorIds.length);
+  const useFilteredDonors = !isEmpty(donorIds) || !isEmpty(submitterDonorIds);
 
   const filteredDonors = useFilteredDonors
     ? donors.filter(donor => {
         const { donorId, submitterId } = donor;
         const stringId = `${donorId}`;
-        const donorMatch = donorIds?.filter(id => stringId.includes(id));
-        const submitterMatch = submitterId
-          ? submitterDonorIds?.filter(id => submitterId.includes(id))
-          : [];
-        return donorMatch.length > 0 || submitterMatch.length > 0;
+        const donorMatch = donorIds?.some(id => stringId.includes(id));
+        const submitterMatch = submitterDonorIds?.some(id => submitterId.includes(id));
+        return donorMatch || submitterMatch;
       })
     : donors;
 
   const totalResults = filteredDonors.length;
-  const searchResults = filteredDonors.map((donor: Donor) => {
-    const { donorId, submitterId } = donor;
-    const submitterDonorId = submitterId;
-    return { donorId, submitterDonorId };
-  });
+  const searchResults = filteredDonors.map(({ donorId, submitterId }: Donor) => ({
+    donorId,
+    submitterDonorId: submitterId,
+  }));
 
   return { searchResults, totalResults };
 }
@@ -284,7 +282,7 @@ function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
 }
 
 // Main Clinical Entity Submitted Data Function
-export function extractEntityDataFromDonors(
+function extractEntityDataFromDonors(
   donors: Donor[],
   totalDonors: number,
   schemasWithFields: any,
@@ -298,9 +296,13 @@ export function extractEntityDataFromDonors(
       const isRequiredType = getRequiredDonorFieldsForEntityTypes(query.entityTypes).includes(
         entity,
       );
+      const requiresSampleRegistration =
+        entity === ClinicalEntitySchemaNames.REGISTRATION &&
+        (query.entityTypes.includes('donor') || query.entityTypes.includes('sampleRegistration'));
+
       const clinicalInfoRecords =
-        isQueriedType || isRequiredType
-          ? entity === ClinicalEntitySchemaNames.REGISTRATION
+        isQueriedType || isRequiredType || requiresSampleRegistration
+          ? requiresSampleRegistration
             ? getSampleRegistrationDataFromDonor(d)
                 .filter(notEmpty)
                 .map(sample => ({ donor_id: d.donorId, ...sample }))
@@ -363,9 +365,11 @@ export function extractEntityDataFromDonors(
 export enum WorkerTasks {
   ExtractDataFromDonors,
   ExtractEntityDataFromDonors,
+  FilterDonorIdDataFromSearch,
 }
 
 export const WorkerTasksMap: Record<WorkerTasks, Function> = {
   [WorkerTasks.ExtractDataFromDonors]: extractDataFromDonors,
   [WorkerTasks.ExtractEntityDataFromDonors]: extractEntityDataFromDonors,
+  [WorkerTasks.FilterDonorIdDataFromSearch]: FilterDonorIdDataFromSearch,
 };

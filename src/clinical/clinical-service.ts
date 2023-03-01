@@ -36,11 +36,7 @@ import {
 } from '../submission/migration/migration-entities';
 import * as dictionaryManager from '../dictionary/manager';
 import { loggerFor } from '../logger';
-import {
-  WorkerTasks,
-  extractEntityDataFromDonors,
-  filterDonorIdDataFromSearch,
-} from './service-worker-thread/tasks';
+import { WorkerTasks } from './service-worker-thread/tasks';
 import { runTaskInWorkerThread } from './service-worker-thread/runner';
 import { SchemaValidationError } from '@overturebio-stack/lectern-client/lib/schema-entities';
 
@@ -195,12 +191,13 @@ export const getPaginatedClinicalData = async (programId: string, query: Clinica
   // Get all donors + records for given entity
   const { donors, totalDonors } = await donorDao.findByPaginatedProgramId(programId, query);
 
+  const taskToRun = WorkerTasks.ExtractEntityDataFromDonors;
+  const taskArgs = [donors as Donor[], totalDonors, allSchemasWithFields, query];
+
   // Return paginated data
-  const data = extractEntityDataFromDonors(
-    donors as Donor[],
-    totalDonors,
-    allSchemasWithFields,
-    query,
+  const data = await runTaskInWorkerThread<{ clinicalEntities: ClinicalEntityData[] }>(
+    taskToRun,
+    taskArgs,
   );
 
   const end = new Date().getTime() / 1000;
@@ -216,7 +213,9 @@ export const getClinicalSearchResults = async (programId: string, query: Clinica
   // Get list of donorIds + submitterDonorIds matching search results
   const { donors } = await donorDao.findByProgramDonorSearch(programId, query);
 
-  const data = filterDonorIdDataFromSearch(donors as Donor[], query);
+  const taskToRun = WorkerTasks.FilterDonorIdDataFromSearch;
+  const taskArgs = [donors as Donor[], query];
+  const data = await runTaskInWorkerThread<number[]>(taskToRun, taskArgs);
 
   const end = new Date().getTime() / 1000;
   L.debug(`getPaginatedClinicalData took ${end - start}s`);
