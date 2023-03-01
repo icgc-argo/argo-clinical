@@ -91,30 +91,6 @@ const updateCompletionSpecimenStats = (
   return { ...completionRecord, coreCompletion };
 };
 
-function getSampleRegistrationDataFromDonor(donor: Donor) {
-  const baseRegistrationRecord = {
-    program_id: donor.programId,
-    submitter_donor_id: donor.submitterId,
-    gender: donor.gender,
-  };
-
-  const sample_registration = donor.specimens
-    .map(sp =>
-      sp.samples.map(sm => ({
-        ...baseRegistrationRecord,
-        submitter_specimen_id: sp.submitterId,
-        specimen_tissue_source: sp.specimenTissueSource,
-        tumour_normal_designation: sp.tumourNormalDesignation,
-        specimen_type: sp.specimenType,
-        submitter_sample_id: sm.submitterId,
-        sample_type: sm.sampleType,
-      })),
-    )
-    .flat();
-
-  return sample_registration;
-}
-
 const isEntityInQuery = (entityName: ClinicalEntitySchemaNames, entityTypes: string[]) =>
   queryEntityNames.includes(aliasEntityNames[entityName]) &&
   entityTypes.includes(aliasEntityNames[entityName]);
@@ -251,10 +227,7 @@ function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
 
   donors.forEach(d => {
     Object.values(ClinicalEntitySchemaNames).forEach(entity => {
-      const clinicalInfoRecords =
-        entity === ClinicalEntitySchemaNames.REGISTRATION
-          ? getSampleRegistrationDataFromDonor(d)
-          : getClinicalEntitiesFromDonorBySchemaName(d, entity);
+      const clinicalInfoRecords = getClinicalEntitiesFromDonorBySchemaName(d, entity);
 
       recordsMap[entity] = _.concat(recordsMap[entity] || [], clinicalInfoRecords);
     });
@@ -291,22 +264,20 @@ function extractEntityDataFromDonors(
 
   donors.forEach(d => {
     Object.values(ClinicalEntitySchemaNames).forEach(entity => {
-      const isQueriedType = isEntityInQuery(entity, query.entityTypes);
-      const isRequiredType = getRequiredDonorFieldsForEntityTypes(query.entityTypes).includes(
+      const isQueriedEntity = isEntityInQuery(entity, query.entityTypes);
+      const isRelatedEntity = getRequiredDonorFieldsForEntityTypes(query.entityTypes).includes(
         entity,
       );
       const requiresSampleRegistration =
         entity === ClinicalEntitySchemaNames.REGISTRATION &&
         (query.entityTypes.includes('donor') || query.entityTypes.includes('sampleRegistration'));
+      const requiresSpecimens =
+        entity === ClinicalEntitySchemaNames.SPECIMEN && query.entityTypes.includes('donor');
 
-      const clinicalInfoRecords =
-        isQueriedType || isRequiredType || requiresSampleRegistration
-          ? requiresSampleRegistration
-            ? getSampleRegistrationDataFromDonor(d)
-                .filter(notEmpty)
-                .map(sample => ({ donor_id: d.donorId, ...sample }))
-            : getClinicalEntitySubmittedData(d, entity)
-          : [];
+      const isRequiredEntity =
+        isQueriedEntity || isRelatedEntity || requiresSampleRegistration || requiresSpecimens;
+
+      const clinicalInfoRecords = isRequiredEntity ? getClinicalEntitySubmittedData(d, entity) : [];
 
       const relatedEntity = clinicalEntityData.find(entityData => entityData.entityName === entity);
       if (relatedEntity) {
@@ -318,15 +289,12 @@ function extractEntityDataFromDonors(
     });
   });
 
-  const dnaSpecimens: ClinicalInfo[] | undefined = clinicalEntityData.find(
-    result => result.entityName === 'specimen',
-  )?.results;
+  // TODO: move into above donors.foreach function w/ if entity === donor
+  const sampleResults: ClinicalInfo[] =
+    clinicalEntityData.find(result => result.entityName === 'sample_registration')?.results || [];
 
-  const sampleResults = clinicalEntityData
-    .find(result => result.entityName === 'sample_registration')
-    ?.results.filter(
-      sample => typeof sample.sample_type === 'string' && !sample.sample_type?.includes('RNA'),
-    );
+  const specimenResults: ClinicalInfo[] =
+    clinicalEntityData.find(result => result.entityName === 'specimen')?.results || [];
 
   const completionStats: CompletionRecord[] = donors
     .map(({ completionStats, donorId }): CompletionRecord | undefined =>
@@ -334,12 +302,17 @@ function extractEntityDataFromDonors(
     )
     .filter(notEmpty)
     .map(completionRecord => {
-      if (completionRecord.coreCompletion.specimens > 0 && dnaSpecimens?.length) {
-        // Update Completion Stats to display Normal/Tumour stats
-        const donorSampleData =
-          sampleResults?.filter(specimen => specimen.donor_id === completionRecord.donorId) || [];
+      // Update Completion Stats to display Normal/Tumour stats
+      if (completionRecord.coreCompletion.specimens > 0 && sampleResults.length > 0) {
+        const donorSampleData = sampleResults
+          .filter(
+            // Only registered DNA Samples count towards completion
+            sample =>
+              typeof sample.sample_type === 'string' && !sample.sample_type?.includes('RNA'),
+          )
+          .filter(specimen => specimen.donor_id === completionRecord.donorId);
 
-        const donorSpecimenData = dnaSpecimens.filter(
+        const donorSpecimenData = specimenResults.filter(
           specimen => specimen.donor_id === completionRecord.donorId,
         );
 
