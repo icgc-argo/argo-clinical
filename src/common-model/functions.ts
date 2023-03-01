@@ -172,34 +172,51 @@ export function getClinicalEntitySubmittedData(
   return clinicalRecords;
 }
 
+export const donorCompletionFields: Array<keyof Donor> = [
+  'completionStats',
+  'specimens',
+  'followUps',
+  'treatments',
+  'primaryDiagnoses',
+];
+
+type ClinicalEntityDataFields = EntityAlias | ClinicalEntitySchemaNames | keyof Donor;
+
+// needs to handle specimens / samples at tasks level
 export const getRequiredDonorFieldsForEntityTypes = (
   entityTypes: Array<string | EntityAlias>,
-): Array<EntityAlias | ClinicalEntitySchemaNames | 'completionStats'> => {
-  let requiredFields: Array<EntityAlias | ClinicalEntitySchemaNames | 'completionStats'> = [];
+): Array<ClinicalEntityDataFields> => {
+  let requiredFields: Array<ClinicalEntityDataFields> = [];
+
   if (
-    // Donor Completion Stats require Sample Registration data
-    // Sample Registration requires Specimen data
-    (entityTypes.includes('donor') && !entityTypes.includes('sampleRegistration')) ||
-    (entityTypes.includes('sampleRegistration') && !entityTypes.includes('specimens'))
+    // Donor Completion Stats require core entity data
+    entityTypes.includes('donor')
   ) {
-    requiredFields = [
-      ...requiredFields,
-      'completionStats',
-      'sampleRegistration',
-      ClinicalEntitySchemaNames.REGISTRATION,
-      'specimens',
-    ];
+    requiredFields = [...requiredFields, ...donorCompletionFields];
+  }
+
+  if (
+    // Sample Registration requires Specimen data
+    entityTypes.includes('sampleRegistration') &&
+    !requiredFields.includes('specimens')
+  ) {
+    requiredFields = [...requiredFields, 'specimens'];
   }
   if (
     // Clinical Therapies require Treatments
     // hormoneTherapy + treatment do not match schema names
     entityTypes.includes('hormoneTherapy') ||
     entityTypes.includes('treatment') ||
-    ClinicalTherapySchemaNames.some(entity => entityTypes.includes(entity))
+    (ClinicalTherapySchemaNames.some(entity => entityTypes.includes(entity)) &&
+      !requiredFields.includes('treatments'))
   ) {
     requiredFields = [...requiredFields, 'treatments'];
   }
-  return requiredFields;
+
+  // Return w/ duplicate fields filtered out
+  const donorFields = requiredFields.filter((field, i) => requiredFields.indexOf(field) === i);
+
+  return donorFields;
 };
 
 export function getSingleClinicalEntityFromDonorBySchemaName(
