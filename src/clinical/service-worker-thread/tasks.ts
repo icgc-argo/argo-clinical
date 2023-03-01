@@ -208,7 +208,6 @@ const mapEntityDocuments = (
     records = records.slice(first, last);
   }
 
-  // Update Completion Stats to display Normal/Tumour stats
   const completionRecords =
     entityName === ClinicalEntitySchemaNames.DONOR ? { completionStats: [...completionStats] } : {};
 
@@ -336,6 +335,7 @@ function extractEntityDataFromDonors(
     .filter(notEmpty)
     .map(completionRecord => {
       if (completionRecord.coreCompletion.specimens > 0 && dnaSpecimens?.length) {
+        // Update Completion Stats to display Normal/Tumour stats
         const donorSampleData =
           sampleResults?.filter(specimen => specimen.donor_id === completionRecord.donorId) || [];
 
