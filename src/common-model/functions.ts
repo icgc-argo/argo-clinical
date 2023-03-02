@@ -171,6 +171,16 @@ export function getClinicalEntitySubmittedData(
     case ClinicalEntitySchemaNames.REGISTRATION:
       clinicalRecords = getSampleRegistrationDataFromDonor(donor, result);
       break;
+    case ClinicalEntitySchemaNames.SPECIMEN:
+      clinicalRecords = result.map(specimen => {
+        const { tumourNormalDesignation: tumour_normal_designation } = specimen;
+        return {
+          ...baseRecord,
+          tumour_normal_designation,
+          ...specimen.clinicalInfo,
+        };
+      });
+      break;
     default:
       clinicalRecords = result
         .filter(record => notEmpty(record.clinicalInfo))
@@ -189,6 +199,7 @@ export function getSampleRegistrationDataFromDonor(
   specimens: Specimen[],
 ) {
   const baseRegistrationRecord = {
+    donor_id: donor.donorId,
     program_id: donor.programId,
     submitter_donor_id: donor.submitterId,
     gender: donor.gender,

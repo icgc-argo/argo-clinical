@@ -56,30 +56,17 @@ const updateCompletionSpecimenStats = (
     sample => sample.tumour_normal_designation === 'Tumour',
   ).length;
 
-  const specimenNormalCount = donorSpecimenData
-    .map(specimen => {
-      const samples: any[] | false = isArray(specimen.samples) && specimen.samples;
-      const normalCount = samples
-        ? samples.filter(sample => sample.sample_type && sample.sample_type === 'Normal').length
-        : 0;
+  const specimenNormalCount = donorSpecimenData.filter(
+    specimen => specimen.tumour_normal_designation === 'Normal',
+  ).length;
 
-      return normalCount;
-    })
-    .reduce((prev, next) => prev + next, 0);
-
-  const specimenTumourCount = donorSpecimenData
-    .map(specimen => {
-      const samples: any[] | false = isArray(specimen.samples) && specimen.samples;
-      const normalCount = samples
-        ? samples.filter(sample => sample.sample_type && sample.sample_type === 'Tumour').length
-        : 0;
-
-      return normalCount;
-    })
-    .reduce((prev, next) => prev + next, 0);
+  const specimenTumourCount = donorSpecimenData.filter(
+    specimen => specimen.tumour_normal_designation === 'Tumour',
+  ).length;
 
   const normalRatio =
     sampleNormalCount === 0 ? sampleNormalCount : specimenNormalCount / sampleNormalCount;
+
   const tumourRatio = sampleTumourCount === 0 ? 0 : specimenTumourCount / sampleTumourCount;
 
   const coreCompletion = {
@@ -289,7 +276,6 @@ function extractEntityDataFromDonors(
     });
   });
 
-  // TODO: move into above donors.foreach function w/ if entity === donor
   const sampleResults: ClinicalInfo[] =
     clinicalEntityData.find(result => result.entityName === 'sample_registration')?.results || [];
 
