@@ -43,26 +43,19 @@ type EntityClinicalInfo = {
 
 const DONOR_ID_FIELD = 'donor_id';
 
+const countTumourNormalRecords = (recordArray: ClinicalInfo[], type: string) =>
+  recordArray.filter(sample => sample.tumour_normal_designation === type).length;
+
 const updateCompletionSpecimenStats = (
   donorSampleData: ClinicalInfo[],
   donorSpecimenData: ClinicalInfo[],
   completionRecord: CompletionRecord,
 ) => {
-  const sampleNormalCount = donorSampleData.filter(
-    sample => sample.tumour_normal_designation === 'Normal',
-  ).length;
+  const sampleNormalCount = countTumourNormalRecords(donorSampleData, 'Normal');
+  const sampleTumourCount = countTumourNormalRecords(donorSampleData, 'Tumour');
 
-  const sampleTumourCount = donorSampleData.filter(
-    sample => sample.tumour_normal_designation === 'Tumour',
-  ).length;
-
-  const specimenNormalCount = donorSpecimenData.filter(
-    specimen => specimen.tumour_normal_designation === 'Normal',
-  ).length;
-
-  const specimenTumourCount = donorSpecimenData.filter(
-    specimen => specimen.tumour_normal_designation === 'Tumour',
-  ).length;
+  const specimenNormalCount = countTumourNormalRecords(donorSpecimenData, 'Normal');
+  const specimenTumourCount = countTumourNormalRecords(donorSpecimenData, 'Tumour');
 
   const normalRatio =
     sampleNormalCount === 0 ? sampleNormalCount : specimenNormalCount / sampleNormalCount;
