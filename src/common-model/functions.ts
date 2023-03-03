@@ -55,10 +55,7 @@ export function getClinicalObjectsFromDonor(
     return [donor];
   }
 
-  if (
-    clinicalEntitySchemaName == ClinicalEntitySchemaNames.SPECIMEN ||
-    clinicalEntitySchemaName == ClinicalEntitySchemaNames.REGISTRATION
-  ) {
+  if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.SPECIMEN) {
     return donor.specimens;
   }
 
@@ -169,7 +166,7 @@ export function getClinicalEntitySubmittedData(
       });
       break;
     case ClinicalEntitySchemaNames.REGISTRATION:
-      clinicalRecords = getSampleRegistrationDataFromDonor(donor, result);
+      clinicalRecords = getSampleRegistrationDataFromDonor(donor);
       break;
     case ClinicalEntitySchemaNames.SPECIMEN:
       clinicalRecords = result.map(specimen => {
@@ -194,16 +191,15 @@ export function getClinicalEntitySubmittedData(
   return clinicalRecords;
 }
 
-export function getSampleRegistrationDataFromDonor(
-  donor: DeepReadonly<Donor>,
-  specimens: Specimen[],
-) {
+export function getSampleRegistrationDataFromDonor(donor: DeepReadonly<Donor>) {
   const baseRegistrationRecord = {
     donor_id: donor.donorId,
     program_id: donor.programId,
     submitter_donor_id: donor.submitterId,
     gender: donor.gender,
   };
+
+  const { specimens } = donor;
 
   const sample_registration = specimens
     .map(sp =>

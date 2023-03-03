@@ -17,6 +17,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import { DeepReadonly } from 'deep-freeze';
 import _, { isEmpty } from 'lodash';
 import {
   ClinicalEntitySchemaNames,
@@ -27,6 +28,7 @@ import {
   getRequiredDonorFieldsForEntityTypes,
   getClinicalEntitiesFromDonorBySchemaName,
   getClinicalEntitySubmittedData,
+  getSampleRegistrationDataFromDonor,
 } from '../../common-model/functions';
 import { notEmpty } from '../../utils';
 import { ClinicalQuery, ClinicalSearchQuery } from '../clinical-api';
@@ -202,12 +204,15 @@ function FilterDonorIdDataFromSearch(donors: Donor[], query: ClinicalSearchQuery
 }
 
 // Main TSV Clinical Data Function
-function extractDataFromDonors(donors: Donor[], schemasWithFields: any) {
+function extractDataFromDonors(donors: DeepReadonly<Donor>[], schemasWithFields: any) {
   const recordsMap = <RecordsMap>{};
 
   donors.forEach(d => {
     Object.values(ClinicalEntitySchemaNames).forEach(entity => {
-      const clinicalInfoRecords = getClinicalEntitiesFromDonorBySchemaName(d, entity);
+      const clinicalInfoRecords =
+        entity === ClinicalEntitySchemaNames.REGISTRATION
+          ? getSampleRegistrationDataFromDonor(d)
+          : getClinicalEntitiesFromDonorBySchemaName(d, entity);
 
       recordsMap[entity] = _.concat(recordsMap[entity] || [], clinicalInfoRecords);
     });
