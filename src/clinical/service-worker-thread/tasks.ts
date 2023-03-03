@@ -60,7 +60,7 @@ const updateCompletionSpecimenStats = (
   const specimenTumourCount = countTumourNormalRecords(donorSpecimenData, 'Tumour');
 
   const normalRatio =
-    sampleNormalCount === 0 ? sampleNormalCount : specimenNormalCount / sampleNormalCount;
+    sampleNormalCount === 0 ? specimenNormalCount : specimenNormalCount / sampleNormalCount;
 
   const tumourRatio = sampleTumourCount === 0 ? 0 : specimenTumourCount / sampleTumourCount;
 
