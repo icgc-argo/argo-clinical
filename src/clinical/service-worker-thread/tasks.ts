@@ -59,15 +59,24 @@ const updateCompletionSpecimenStats = (
   const specimenNormalCount = countTumourNormalRecords(donorSpecimenData, 'Normal');
   const specimenTumourCount = countTumourNormalRecords(donorSpecimenData, 'Tumour');
 
-  const normalRatio =
-    sampleNormalCount === 0 ? specimenNormalCount : specimenNormalCount / sampleNormalCount;
+  const normalCount =
+    specimenNormalCount === 0
+      ? 0
+      : specimenNormalCount < sampleNormalCount
+      ? specimenNormalCount
+      : 1;
 
-  const tumourRatio = sampleTumourCount === 0 ? 0 : specimenTumourCount / sampleTumourCount;
+  const tumourCount =
+    specimenTumourCount === 0
+      ? 0
+      : specimenTumourCount < sampleTumourCount
+      ? specimenTumourCount
+      : 1;
 
   const coreCompletion = {
     ...completionRecord.coreCompletion,
-    normalSpecimens: normalRatio,
-    tumourSpecimens: tumourRatio,
+    normalSpecimens: normalCount,
+    tumourSpecimens: tumourCount,
   };
 
   return { ...completionRecord, coreCompletion };
