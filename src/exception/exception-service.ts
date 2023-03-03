@@ -20,6 +20,7 @@
 import { loggerFor } from '../logger';
 import { programExceptionRepository, RepoError } from './exception-repo';
 import { ExceptionValueType, ProgramException, ProgramExceptionRecord } from './types';
+import { isProgramException } from './util';
 import {
   checkCoreField,
   checkIsValidSchema,
@@ -81,10 +82,6 @@ export type Result = {
 };
 
 type Service = ({ programId }: { programId: string }) => Promise<Result>;
-
-function isProgramException(result: ProgramException | RepoError): result is ProgramException {
-  return (result as ProgramException).programId !== undefined;
-}
 
 function processResult({
   result,

@@ -62,7 +62,7 @@ const schemaNameToCoreCompletenessStat: Record<
   [ClinicalEntitySchemaNames.SPECIMEN]: 'specimens',
 };
 
-const coreClinialSchemaNamesSet = new Set<CoreClinicalSchemaName>(
+const coreClinicalSchemaNamesSet = new Set<CoreClinicalSchemaName>(
   Object.keys(schemaNameToCoreCompletenessStat) as CoreClinicalSchemaName[],
 );
 
@@ -117,7 +117,7 @@ const calcDonorCoreEntityStats = (
 };
 
 export const recalculateDonorStatsHoldOverridden = (donor: Donor) => {
-  coreClinialSchemaNamesSet.forEach(type =>
+  coreClinicalSchemaNamesSet.forEach(type =>
     calcDonorCoreEntityStats(donor, type, {
       recalcEvenIfComplete: true,
       recalcEvenIfOverriden: false,
@@ -174,7 +174,7 @@ export const forceRecalcDonorCoreEntityStats = (
 
   const donorUpdated = cloneDeep(donor) as Donor;
 
-  coreClinialSchemaNamesSet.forEach(type =>
+  coreClinicalSchemaNamesSet.forEach(type =>
     calcDonorCoreEntityStats(donorUpdated, type as CoreClinicalSchemaName, {
       recalcEvenIfComplete: true,
       recalcEvenIfOverriden: true,
@@ -239,7 +239,7 @@ const getEmptyCoreStats = (): CoreCompletionFields => {
 };
 
 const isCoreEntitySchemaName = (clinicalType: string): clinicalType is CoreClinicalSchemaName =>
-  coreClinialSchemaNamesSet.has(clinicalType as CoreClinicalSchemaName);
+  coreClinicalSchemaNamesSet.has(clinicalType as CoreClinicalSchemaName);
 
 function noNeedToCalcCoreStat(
   donor: Donor,

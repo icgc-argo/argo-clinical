@@ -1674,6 +1674,7 @@ describe('data-validator', () => {
         SpecimenFieldsEnum.tumour_grading_system,
         SpecimenFieldsEnum.tumour_grade,
         SpecimenFieldsEnum.percent_tumour_cells,
+        SpecimenFieldsEnum.percent_tumour_cells_measurement_method,
         SpecimenFieldsEnum.tumour_histological_type,
         SpecimenFieldsEnum.reference_pathology_confirmed,
       ];
@@ -1735,6 +1736,7 @@ describe('data-validator', () => {
           [SpecimenFieldsEnum.tumour_grading_system]: 'WHO grading system for CNS tumours',
           [SpecimenFieldsEnum.tumour_grade]: 'Grade III',
           [SpecimenFieldsEnum.percent_tumour_cells]: 0.2,
+          [SpecimenFieldsEnum.percent_tumour_cells_measurement_method]: 'Genomics',
           [SpecimenFieldsEnum.tumour_histological_type]: '9691/36',
           [SpecimenFieldsEnum.reference_pathology_confirmed]: 'Yes',
           [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',

@@ -25,6 +25,7 @@ import {
   ClinicalTherapySchemaNames,
   EntityAlias,
 } from './entities';
+import { Specimen } from '../clinical/clinical-entities';
 import _ from 'lodash';
 import { notEmpty, convertToArray } from '../utils';
 
@@ -132,74 +133,135 @@ export function getClinicalEntitySubmittedData(
   donor: DeepReadonly<Donor>,
   clinicalEntitySchemaName: ClinicalEntitySchemaNames,
 ): ClinicalInfo[] {
+  const donor_id = donor.donorId;
+  const program_id = donor.programId;
+  const baseRecord: ClinicalInfo = { donor_id, program_id };
   const result = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName) as any[];
+  let clinicalRecords = [baseRecord];
 
-  const clinicalRecords =
-    clinicalEntitySchemaName === ClinicalEntitySchemaNames.DONOR
-      ? result.map((entity: Donor) => ({
-          donor_id: donor.donorId,
-          program_id: donor.programId,
-          updatedAt: donor.updatedAt,
+  switch (clinicalEntitySchemaName) {
+    case ClinicalEntitySchemaNames.DONOR:
+      clinicalRecords = result.map((entity: Donor) => ({
+        ...baseRecord,
+        updatedAt: donor.updatedAt,
+        ...entity.clinicalInfo,
+      }));
+      break;
+    case ClinicalEntitySchemaNames.TREATMENT:
+      clinicalRecords = result.map((treatment: Treatment) => {
+        const clinicalInfo = treatment.clinicalInfo || {};
+        const therapy_type =
+          treatment.therapies.length === 1
+            ? { therapy_type: treatment.therapies[0].therapyType }
+            : {};
+        const therapy_info =
+          treatment.therapies.length === 1 && treatment.therapies[0].clinicalInfo;
+        return {
+          ...baseRecord,
+          treatment_id: treatment.treatmentId,
+          ...clinicalInfo,
+          ...therapy_type,
+          ...therapy_info,
+        };
+      });
+      break;
+    case ClinicalEntitySchemaNames.REGISTRATION:
+      clinicalRecords = getSampleRegistrationDataFromDonor(donor);
+      break;
+    case ClinicalEntitySchemaNames.SPECIMEN:
+      clinicalRecords = result.map(specimen => {
+        const { tumourNormalDesignation: tumour_normal_designation } = specimen;
+        return {
+          ...baseRecord,
+          tumour_normal_designation,
+          ...specimen.clinicalInfo,
+        };
+      });
+      break;
+    default:
+      clinicalRecords = result
+        .filter(record => notEmpty(record.clinicalInfo))
+        .map((entity: ClinicalEntity) => ({
+          ...baseRecord,
+          submitter_id: donor.submitterId,
           ...entity.clinicalInfo,
-        }))
-      : clinicalEntitySchemaName === ClinicalEntitySchemaNames.TREATMENT
-      ? result.map((treatment: Treatment) => {
-          const clinicalInfo = treatment.clinicalInfo || {};
-          const therapy_type =
-            treatment.therapies.length === 1
-              ? { therapy_type: treatment.therapies[0].therapyType }
-              : {};
-          const therapy_info =
-            treatment.therapies.length === 1 && treatment.therapies[0].clinicalInfo;
-          return {
-            donor_id: donor.donorId,
-            program_id: donor.programId,
-            treatment_id: treatment.treatmentId,
-            ...clinicalInfo,
-            ...therapy_type,
-            ...therapy_info,
-          };
-        })
-      : result
-          .filter(record => notEmpty(record.clinicalInfo))
-          .map((entity: ClinicalEntity) => ({
-            donor_id: donor.donorId,
-            program_id: donor.programId,
-            submitter_id: donor.submitterId,
-            ...entity.clinicalInfo,
-          }));
+        }));
+  }
 
   return clinicalRecords;
 }
 
+export function getSampleRegistrationDataFromDonor(donor: DeepReadonly<Donor>) {
+  const baseRegistrationRecord = {
+    donor_id: donor.donorId,
+    program_id: donor.programId,
+    submitter_donor_id: donor.submitterId,
+    gender: donor.gender,
+  };
+
+  const { specimens } = donor;
+
+  const sample_registration = specimens
+    .map(sp =>
+      sp.samples.map(sm => ({
+        ...baseRegistrationRecord,
+        submitter_specimen_id: sp.submitterId,
+        specimen_tissue_source: sp.specimenTissueSource,
+        tumour_normal_designation: sp.tumourNormalDesignation,
+        specimen_type: sp.specimenType,
+        submitter_sample_id: sm.submitterId,
+        sample_type: sm.sampleType,
+      })),
+    )
+    .flat();
+
+  return sample_registration;
+}
+
+export const donorCompletionFields: Array<keyof Donor> = [
+  'completionStats',
+  'specimens',
+  'followUps',
+  'treatments',
+  'primaryDiagnoses',
+];
+
+type ClinicalEntityDataFields = EntityAlias | ClinicalEntitySchemaNames | keyof Donor;
+
 export const getRequiredDonorFieldsForEntityTypes = (
   entityTypes: Array<string | EntityAlias>,
-): Array<EntityAlias | ClinicalEntitySchemaNames | 'completionStats'> => {
-  let requiredFields: Array<EntityAlias | ClinicalEntitySchemaNames | 'completionStats'> = [];
+): Array<ClinicalEntityDataFields> => {
+  let requiredFields: Array<ClinicalEntityDataFields> = [];
+
   if (
-    // Donor Completion Stats require Sample Registration data
-    // Sample Registration requires Specimen data
-    (entityTypes.includes('donor') && !entityTypes.includes('sampleRegistration')) ||
-    (entityTypes.includes('sampleRegistration') && !entityTypes.includes('specimens'))
+    // Donor Completion Stats require core entity data
+    entityTypes.includes('donor')
   ) {
-    requiredFields = [
-      ...requiredFields,
-      'completionStats',
-      'sampleRegistration',
-      ClinicalEntitySchemaNames.REGISTRATION,
-      'specimens',
-    ];
+    requiredFields = [...requiredFields, ...donorCompletionFields];
+  }
+
+  if (
+    // Sample Registration requires Specimen data
+    entityTypes.includes('sampleRegistration') &&
+    !requiredFields.includes('specimens')
+  ) {
+    requiredFields = [...requiredFields, 'specimens'];
   }
   if (
     // Clinical Therapies require Treatments
     // hormoneTherapy + treatment do not match schema names
     entityTypes.includes('hormoneTherapy') ||
     entityTypes.includes('treatment') ||
-    ClinicalTherapySchemaNames.some(entity => entityTypes.includes(entity))
+    (ClinicalTherapySchemaNames.some(entity => entityTypes.includes(entity)) &&
+      !requiredFields.includes('treatments'))
   ) {
     requiredFields = [...requiredFields, 'treatments'];
   }
-  return requiredFields;
+
+  // Return w/ duplicate fields filtered out
+  const donorFields = requiredFields.filter((field, i) => requiredFields.indexOf(field) === i);
+
+  return donorFields;
 };
 
 export function getSingleClinicalEntityFromDonorBySchemaName(
