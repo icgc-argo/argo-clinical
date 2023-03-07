@@ -23,6 +23,7 @@ import {
   ClinicalEntitySchemaNames,
   PrimaryDiagnosisFieldsEnum,
   DonorFieldsEnum,
+  SpecimenFieldsEnum,
 } from '../../../src/common-model/entities';
 import { SampleRegistrationFieldsEnum } from '../../../src/submission/submission-entities';
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
@@ -96,6 +97,7 @@ describe('schema migration api', () => {
         specimenType: 'Primary tumour',
         submitterId: 'sub-sp-pacaau-124',
         specimenId: 210001,
+        [SpecimenFieldsEnum.percent_tumour_cells_measurement_method]: 'Genomics',
       },
     ],
     primaryDiagnoses: [
