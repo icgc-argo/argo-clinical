@@ -22,11 +22,11 @@ import * as dictionaryManager from '../dictionary/manager';
 import { SchemaWithFields } from '../dictionary/manager';
 import { loggerFor } from '../logger';
 import {
-  DonorExceptionRecord,
   ExceptionRecord,
   ExceptionValue,
   ObjectValues,
   ProgramExceptionRecord,
+  SpecimenExceptionRecord,
 } from './types';
 
 const L = loggerFor(__filename);
@@ -275,12 +275,12 @@ export const validateRecords = async <RecordT extends Object>(
   return errors;
 };
 
-export const validateDonorId: Validator<DonorExceptionRecord> = ({
+export const validateDonorId: Validator<SpecimenExceptionRecord> = ({
   fieldValue,
   fieldName,
-}): ValidationResult => ({ result: ValidationResultType.INVALID, message: '' });
+}): ValidationResult => ({ result: ValidationResultType.VALID, message: '' });
 
-export const validateSpecimenId: Validator<DonorExceptionRecord> = ({
+export const validateSpecimenId: Validator<SpecimenExceptionRecord> = ({
   fieldValue,
   fieldName,
-}): ValidationResult => ({ result: ValidationResultType.INVALID, message: '' });
+}): ValidationResult => ({ result: ValidationResultType.VALID, message: '' });
