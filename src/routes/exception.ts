@@ -20,7 +20,7 @@
 import * as express from 'express';
 import multer from 'multer';
 import exceptionApi, { parseTSV, requestContainsFile } from '../exception/exception-api';
-import { isDonorExceptionRecord, isProgramExceptionRecord } from '../exception/types';
+import { isEntityExceptionRecord, isProgramExceptionRecord } from '../exception/types';
 import { wrapAsync } from '../middleware';
 
 // config
@@ -37,9 +37,9 @@ router.post(
 );
 
 router.post(
-  '/donor',
-  parseTSV(isDonorExceptionRecord),
-  wrapAsync(exceptionApi.createDonorException),
+  '/entity',
+  parseTSV(isEntityExceptionRecord),
+  wrapAsync(exceptionApi.createEntityException),
 );
 
 router.get('/', wrapAsync(exceptionApi.getProgramException));

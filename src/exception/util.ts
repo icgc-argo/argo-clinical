@@ -17,8 +17,8 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { RepoError } from './program-repo';
-import { ProgramException } from './types';
+import { RepoError } from './repo/types';
+import { EntityException, ProgramException } from './types';
 
 export function isProgramException(
   result: ProgramException | RepoError,

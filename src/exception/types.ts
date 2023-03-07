@@ -27,11 +27,6 @@ export type ExceptionRecord = {
 };
 export type ProgramExceptionRecord = ExceptionRecord;
 
-export type DonorExceptionRecord = {
-  submitter_donor_id: string;
-  submitter_specimen_id: string;
-} & ExceptionRecord;
-
 // type after validation
 export type ProgramException = {
   programId: string;
@@ -41,6 +36,30 @@ export type ProgramException = {
     exceptionValue: ExceptionValueType;
   }[];
 };
+
+// Entity
+export type SpecimenExceptionRecord = {
+  program_name: string;
+  schema: string;
+  requested_core_field: string;
+  requested_exception_value: string;
+  submitter_donor_id: string;
+  submitter_specimen_id: string;
+};
+export type EntityExceptionRecord = SpecimenExceptionRecord;
+
+export type EntityException = {
+  programId: string;
+  specimen: SpecimenExceptionRecord[];
+};
+
+const EntityValues = {
+  specimen: 'specimen',
+} as const;
+
+export type Entity = ObjectValues<typeof EntityValues>;
+
+// Exception Values
 
 export const ExceptionValue = {
   Unknown: 'Unknown',
@@ -69,7 +88,7 @@ export const isProgramExceptionRecord = (input: any): input is ProgramExceptionR
   );
 };
 
-export const isDonorExceptionRecord = (input: any): input is any => true;
+export const isEntityExceptionRecord = (input: any): input is any => true;
 
 export const isArrayOf = <T>(input: any[], validator: (_: any) => _ is T): input is T[] => {
   return input.every(validator);
