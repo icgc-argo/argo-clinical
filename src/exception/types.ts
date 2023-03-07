@@ -65,6 +65,8 @@ export const isProgramExceptionRecord = (input: any): input is ProgramExceptionR
   );
 };
 
+export const isDonorExceptionRecord = (input: any): input is any => true;
+
 export const isArrayOf = <T>(input: any[], validator: (_: any) => _ is T): input is T[] => {
   return input.every(validator);
 };

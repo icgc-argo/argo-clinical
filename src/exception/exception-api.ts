@@ -17,13 +17,13 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { HasFullReadAccess, HasFullWriteAccess } from '../decorators';
 import { loggerFor } from '../logger';
 import { ControllerUtils, TsvUtils } from '../utils';
 import { RepoError } from './exception-repo';
 import * as exceptionService from './exception-service';
-import { isProgramExceptionRecord, isReadonlyArrayOf } from './types';
+import { isReadonlyArrayOf } from './types';
 
 const L = loggerFor(__filename);
 
@@ -43,37 +43,18 @@ function getResStatus(result: exceptionService.Result): number {
 
 class ExceptionController {
   @HasFullWriteAccess()
+  // program level exceptions
   async createProgramException(req: Request, res: Response) {
-    if (!requestContainsFile(req, res)) {
-      return false;
-    }
-
     const programId = req.params.programId;
-    const file = req.file;
+    const records = res.locals.records;
 
-    try {
-      const records = await TsvUtils.tsvToJson(file.path);
-      if (records.length === 0) {
-        throw new Error('TSV has no records!');
-      }
+    const result = await exceptionService.operations.createProgramException({
+      programId,
+      records,
+    });
 
-      if (!isReadonlyArrayOf(records, isProgramExceptionRecord)) {
-        throw new Error('TSV is incorrectly structured');
-      }
-
-      const result = await exceptionService.operations.createProgramException({
-        programId,
-        records,
-      });
-
-      if (!result.success) {
-        return res.status(422).send(result);
-      }
-      return res.status(201).send(result);
-    } catch (err) {
-      L.error(`Program Exception TSV_PARSING_FAILED`, err);
-      return ControllerUtils.unableToProcess(res, ProgramExceptionErrorMessage.TSV_PARSING_FAILED);
-    }
+    const status = !result.success ? 422 : 201;
+    return res.status(status).send(result);
   }
 
   @HasFullWriteAccess()
@@ -89,15 +70,43 @@ class ExceptionController {
     const result = await exceptionService.operations.getProgramException({ programId });
     return res.status(getResStatus(result)).send(result);
   }
+
+  // donor level exceptions
+  async createDonorException(req: Request, res: Response) {
+    // check if program exception exists
+    // const programExceptionExists = await exceptioncheckProgramException();
+
+    return res.status(400).send({});
+  }
 }
 
-const requestContainsFile = (req: Request, res: Response): boolean => {
+export const parseTSV = (guard: any) => async (req: Request, res: Response, next: NextFunction) => {
+  L.debug('parse tsv');
+  try {
+    const records = await TsvUtils.tsvToJson(req.file.path);
+    if (records.length === 0) {
+      throw new Error('TSV has no records!');
+    }
+
+    if (!isReadonlyArrayOf(records, guard)) {
+      throw new Error('TSV is incorrectly structured');
+    }
+
+    res.locals.records = records;
+  } catch (err) {
+    L.error(`Program Exception TSV_PARSING_FAILED`, err);
+    return ControllerUtils.unableToProcess(res, ProgramExceptionErrorMessage.TSV_PARSING_FAILED);
+  }
+  next();
+};
+
+export const requestContainsFile = (req: Request, res: Response, next: NextFunction) => {
+  L.debug('requestContainsFile');
   if (req.file === undefined || req.file.size <= 0) {
     L.debug(`File missing`);
-    ControllerUtils.badRequest(res, `Program exception file upload required`);
-    return false;
+    return ControllerUtils.badRequest(res, `Exception file upload required`);
   }
-  return true;
+  next();
 };
 
 export default new ExceptionController();

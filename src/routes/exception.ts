@@ -19,17 +19,27 @@
 
 import * as express from 'express';
 import multer from 'multer';
-import exceptionApi from '../exception/exception-api';
+import exceptionApi, { parseTSV, requestContainsFile } from '../exception/exception-api';
+import { isDonorExceptionRecord, isProgramExceptionRecord } from '../exception/types';
 import { wrapAsync } from '../middleware';
 
+// config
 const router = express.Router({ mergeParams: true });
-
 const upload = multer({ dest: '/tmp' });
+
+// routes
+router.post('*', upload.single('exceptionFile'), requestContainsFile);
 
 router.post(
   '/',
-  upload.single('programExceptionFile'),
+  parseTSV(isProgramExceptionRecord),
   wrapAsync(exceptionApi.createProgramException),
+);
+
+router.post(
+  '/donor',
+  parseTSV(isDonorExceptionRecord),
+  wrapAsync(exceptionApi.createDonorException),
 );
 
 router.get('/', wrapAsync(exceptionApi.getProgramException));
