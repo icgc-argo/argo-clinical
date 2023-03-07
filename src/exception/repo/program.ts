@@ -18,8 +18,9 @@
  */
 import { isArray } from 'lodash';
 import mongoose from 'mongoose';
-import { loggerFor } from '../logger';
-import { ExceptionValue, ObjectValues, ProgramException } from './types';
+import { loggerFor } from '../../logger';
+import { ExceptionValue, ProgramException } from '../types';
+import { RepoResponse, RepoError } from './types';
 
 const L = loggerFor(__filename);
 
@@ -39,19 +40,10 @@ export const ProgramExceptionModel = mongoose.model<ProgramException>(
   programExceptionSchema,
 );
 
-type RepoResponse = Promise<ProgramException | RepoError>;
-
-export const RepoError = {
-  DOCUMENT_UNDEFINED: 'DOCUMENT_UNDEFINED',
-  SERVER_ERROR: 'SERVER_ERROR',
-} as const;
-
-export type RepoError = ObjectValues<typeof RepoError>;
-
 export interface ProgramExceptionRepository {
-  save(exception: ProgramException): RepoResponse;
-  find(programId: string): RepoResponse;
-  delete(programId: string): RepoResponse;
+  save(exception: ProgramException): RepoResponse<ProgramException>;
+  find(programId: string): RepoResponse<ProgramException>;
+  delete(programId: string): RepoResponse<ProgramException>;
 }
 
 const checkDoc = (doc: null | ProgramException): RepoError | ProgramException => {

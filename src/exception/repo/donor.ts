@@ -16,12 +16,3 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-import { RepoError } from './program-repo';
-import { ProgramException } from './types';
-
-export function isProgramException(
-  result: ProgramException | RepoError,
-): result is ProgramException {
-  return (result as ProgramException).programId !== undefined;
-}
