@@ -18,12 +18,17 @@
  */
 
 import { loggerFor } from '../logger';
-import { programExceptionRepository, RepoError } from './exception-repo';
+import entityExceptionRepository from './repo/entity';
+import programExceptionRepository from './repo/program';
+import { RepoError } from './repo/types';
 import {
-  DonorExceptionRecord,
+  Entity,
+  EntityException,
+  EntityExceptionRecord,
   ExceptionValueType,
   ProgramException,
   ProgramExceptionRecord,
+  SpecimenExceptionRecord,
 } from './types';
 import { isProgramException } from './util';
 import {
@@ -48,7 +53,6 @@ const L = loggerFor(__filename);
  * @returns ProgramException
  */
 
-// TODO: Make this generic?
 const recordsToException = (
   programId: string,
   records: ReadonlyArray<ProgramExceptionRecord>,
@@ -63,6 +67,15 @@ const recordsToException = (
   };
 };
 
+const recordsToEntityException = (
+  programId: string,
+  records: EntityExceptionRecord[],
+): EntityException => {
+  return {
+    programId,
+    specimen: records,
+  };
+};
 // relates to our TSV cols
 export const programValidators: FieldValidators<ProgramExceptionRecord> = {
   program_name: checkProgramId,
@@ -157,7 +170,7 @@ export namespace operations {
     }
   };
 
-  export const donorValidators: FieldValidators<DonorExceptionRecord> = {
+  export const specimenValidators: FieldValidators<SpecimenExceptionRecord> = {
     program_name: checkProgramId,
     schema: checkIsValidSchema,
     requested_core_field: checkCoreField,
@@ -166,15 +179,30 @@ export namespace operations {
     submitter_specimen_id: validateSpecimenId,
   };
 
-  export const createDonorException = async ({
+  export const createEntityException = async ({
     programId,
     records,
   }: {
     programId: string;
-    records: ReadonlyArray<DonorExceptionRecord>;
+    records: ReadonlyArray<EntityExceptionRecord>;
+    entity?: Entity;
   }): Promise<any> => {
-    const errors = await validateRecords<DonorExceptionRecord>(programId, records, donorValidators);
+    const errors = await validateRecords<EntityExceptionRecord>(
+      programId,
+      records,
+      specimenValidators,
+    );
 
-    return null;
+    if (errors.length > 0) {
+      return createResult({
+        error: { code: 'doc', message: 'entity exception not created' },
+        validationErrors: errors,
+      });
+    } else {
+      const exceptionToSave = recordsToEntityException(programId, records.concat());
+      const result = await entityExceptionRepository.save(exceptionToSave);
+
+      return result;
+    }
   };
 }

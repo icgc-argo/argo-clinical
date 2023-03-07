@@ -21,7 +21,7 @@ import { NextFunction, Request, Response } from 'express';
 import { HasFullReadAccess, HasFullWriteAccess } from '../decorators';
 import { loggerFor } from '../logger';
 import { ControllerUtils, TsvUtils } from '../utils';
-import { RepoError } from './exception-repo';
+import { RepoError } from './repo/types';
 import * as exceptionService from './exception-service';
 import { isReadonlyArrayOf } from './types';
 
@@ -71,12 +71,26 @@ class ExceptionController {
     return res.status(getResStatus(result)).send(result);
   }
 
-  // donor level exceptions
-  async createDonorException(req: Request, res: Response) {
-    // check if program exception exists
-    // const programExceptionExists = await exceptioncheckProgramException();
+  @HasFullWriteAccess()
+  async createEntityException(req: Request, res: Response) {
+    const programId = req.params.programId;
+    const existingProgramException = await exceptionService.operations.getProgramException({
+      programId,
+    });
 
-    return res.status(400).send({});
+    if (existingProgramException.exception !== undefined) {
+      L.debug('program exception exists already');
+      return res.status(400).send('program exception already exists');
+    }
+
+    const records = res.locals.records;
+    const result = await exceptionService.operations.createEntityException({
+      programId,
+      records,
+    });
+
+    const status = !result.success ? 422 : 201;
+    return res.status(status).send(result);
   }
 }
 
