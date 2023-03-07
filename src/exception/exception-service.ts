@@ -28,7 +28,6 @@ import {
   ExceptionValueType,
   ProgramException,
   ProgramExceptionRecord,
-  SpecimenExceptionRecord,
 } from './types';
 import { isRepoError } from './util';
 import { commonValidators, validateRecords, ValidationResult } from './validation';
