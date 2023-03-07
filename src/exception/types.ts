@@ -20,12 +20,16 @@
 export type ObjectValues<T> = T[keyof T];
 
 export type ExceptionRecord = {
+  program_name: string;
   schema: string;
   requested_core_field: string;
   requested_exception_value: string;
 };
-export type ProgramExceptionRecord = {
-  program_name: string;
+export type ProgramExceptionRecord = ExceptionRecord;
+
+export type DonorExceptionRecord = {
+  submitter_donor_id: string;
+  submitter_specimen_id: string;
 } & ExceptionRecord;
 
 // type after validation

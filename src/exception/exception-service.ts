@@ -19,7 +19,12 @@
 
 import { loggerFor } from '../logger';
 import { programExceptionRepository, RepoError } from './exception-repo';
-import { ExceptionValueType, ProgramException, ProgramExceptionRecord } from './types';
+import {
+  DonorExceptionRecord,
+  ExceptionValueType,
+  ProgramException,
+  ProgramExceptionRecord,
+} from './types';
 import { isProgramException } from './util';
 import {
   checkCoreField,
@@ -27,7 +32,9 @@ import {
   checkProgramId,
   checkRequestedValue,
   FieldValidators,
+  validateDonorId,
   validateRecords,
+  validateSpecimenId,
   ValidationResult,
 } from './validation';
 
@@ -40,6 +47,8 @@ const L = loggerFor(__filename);
  * @param records
  * @returns ProgramException
  */
+
+// TODO: Make this generic?
 const recordsToException = (
   programId: string,
   records: ReadonlyArray<ProgramExceptionRecord>,
@@ -146,5 +155,26 @@ export namespace operations {
         errorMessage,
       });
     }
+  };
+
+  export const donorValidators: FieldValidators<DonorExceptionRecord> = {
+    program_name: checkProgramId,
+    schema: checkIsValidSchema,
+    requested_core_field: checkCoreField,
+    requested_exception_value: checkRequestedValue,
+    submitter_donor_id: validateDonorId,
+    submitter_specimen_id: validateSpecimenId,
+  };
+
+  export const createDonorException = async ({
+    programId,
+    records,
+  }: {
+    programId: string;
+    records: ReadonlyArray<DonorExceptionRecord>;
+  }): Promise<any> => {
+    const errors = await validateRecords<DonorExceptionRecord>(programId, records, donorValidators);
+
+    return null;
   };
 }

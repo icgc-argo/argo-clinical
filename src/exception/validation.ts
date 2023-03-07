@@ -21,7 +21,13 @@ import { isEqual } from 'lodash';
 import * as dictionaryManager from '../dictionary/manager';
 import { SchemaWithFields } from '../dictionary/manager';
 import { loggerFor } from '../logger';
-import { ExceptionRecord, ExceptionValue, ObjectValues, ProgramExceptionRecord } from './types';
+import {
+  DonorExceptionRecord,
+  ExceptionRecord,
+  ExceptionValue,
+  ObjectValues,
+  ProgramExceptionRecord,
+} from './types';
 
 const L = loggerFor(__filename);
 
@@ -45,6 +51,7 @@ type ValidationError = {
   field: string;
   recordIndex: number;
 } & ValidationResult;
+
 export const createValidationError = ({
   recordIndex,
   result,
@@ -267,3 +274,13 @@ export const validateRecords = async <RecordT extends Object>(
 
   return errors;
 };
+
+export const validateDonorId: Validator<DonorExceptionRecord> = ({
+  fieldValue,
+  fieldName,
+}): ValidationResult => ({ result: ValidationResultErrorType.INVALID, message: '' });
+
+export const validateSpecimenId: Validator<DonorExceptionRecord> = ({
+  fieldValue,
+  fieldName,
+}): ValidationResult => ({ result: ValidationResultErrorType.INVALID, message: '' });
