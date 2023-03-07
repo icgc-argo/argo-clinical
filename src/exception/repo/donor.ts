@@ -16,3 +16,37 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+import mongoose from 'mongoose';
+import { loggerFor } from '../../logger';
+import { DonorException, ProgramException } from '../types';
+import { RepoError, RepoResponse } from './types';
+
+const L = loggerFor(__filename);
+
+const donorExceptionSchema = new mongoose.Schema<DonorException>({
+  programId: String,
+});
+
+const DonorExceptionModel = mongoose.model<DonorException>('DonorException', donorExceptionSchema);
+
+export interface DonorExceptionRepository {
+  save(exception: DonorException): RepoResponse<DonorException>;
+}
+
+export const programExceptionRepository: DonorExceptionRepository = {
+  async save(exception: ProgramException) {
+    L.debug(`Creating new donor exception with: ${JSON.stringify(exception)}`);
+    try {
+      return await DonorExceptionModel.findOneAndUpdate(
+        { programId: exception.programId },
+        exception,
+        { upsert: true, new: true, overwrite: true },
+      ).lean(true);
+      // L.info(`doc created ${doc}`);
+    } catch (e) {
+      L.error('failed to create program exception: ', e);
+      return RepoError.SERVER_ERROR;
+    }
+  },
+};
