@@ -85,9 +85,11 @@ export type Validator<RecordT extends Object> = {
   }): Promise<ValidationResult> | ValidationResult;
 };
 
-export type FieldValidators<RecordT extends Object> = {
-  [key in keyof RecordT]: Validator<RecordT>;
-};
+export type FieldValidators<RecordT extends Object> = Partial<
+  {
+    [key in keyof RecordT]: Validator<RecordT>;
+  }
+>;
 
 export const checkCoreField: Validator<ExceptionRecord> = async ({ record, fieldName }) => {
   const currentDictionary = await dictionaryManager.instance();
@@ -275,12 +277,9 @@ export const validateRecords = async <RecordT extends Object>(
   return errors;
 };
 
-export const validateDonorId: Validator<SpecimenExceptionRecord> = ({
-  fieldValue,
-  fieldName,
-}): ValidationResult => ({ result: ValidationResultType.VALID, message: '' });
-
-export const validateSpecimenId: Validator<SpecimenExceptionRecord> = ({
-  fieldValue,
-  fieldName,
-}): ValidationResult => ({ result: ValidationResultType.VALID, message: '' });
+export const commonValidators: FieldValidators<ExceptionRecord> = {
+  program_name: checkProgramId,
+  schema: checkIsValidSchema,
+  requested_core_field: checkCoreField,
+  requested_exception_value: checkRequestedValue,
+};

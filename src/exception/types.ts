@@ -19,12 +19,12 @@
 
 export type ObjectValues<T> = T[keyof T];
 
-export type ExceptionRecord = {
+export type ExceptionRecord = Readonly<{
   program_name: string;
   schema: string;
   requested_core_field: string;
   requested_exception_value: string;
-};
+}>;
 export type ProgramExceptionRecord = ExceptionRecord;
 
 // type after validation
@@ -38,14 +38,13 @@ export type ProgramException = {
 };
 
 // Entity
-export type SpecimenExceptionRecord = {
-  program_name: string;
-  schema: string;
-  requested_core_field: string;
-  requested_exception_value: string;
-  submitter_donor_id: string;
-  submitter_specimen_id: string;
-};
+export type SpecimenExceptionRecord = Readonly<
+  {
+    submitter_donor_id: string;
+    submitter_specimen_id: string;
+  } & ExceptionRecord
+>;
+
 export type EntityExceptionRecord = SpecimenExceptionRecord;
 
 export type EntityException = {

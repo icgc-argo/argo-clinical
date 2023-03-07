@@ -28,20 +28,9 @@ import {
   ExceptionValueType,
   ProgramException,
   ProgramExceptionRecord,
-  SpecimenExceptionRecord,
 } from './types';
 import { isProgramException } from './util';
-import {
-  checkCoreField,
-  checkIsValidSchema,
-  checkProgramId,
-  checkRequestedValue,
-  FieldValidators,
-  validateDonorId,
-  validateRecords,
-  validateSpecimenId,
-  ValidationResult,
-} from './validation';
+import { commonValidators, validateRecords, ValidationResult } from './validation';
 
 const L = loggerFor(__filename);
 
@@ -75,13 +64,6 @@ const recordsToEntityException = (
     programId,
     specimen: records,
   };
-};
-// relates to our TSV cols
-export const programValidators: FieldValidators<ProgramExceptionRecord> = {
-  program_name: checkProgramId,
-  schema: checkIsValidSchema,
-  requested_core_field: checkCoreField,
-  requested_exception_value: checkRequestedValue,
 };
 
 const createResult = ({
@@ -151,7 +133,7 @@ export namespace operations {
     const errors = await validateRecords<ProgramExceptionRecord>(
       programId,
       records,
-      programValidators,
+      commonValidators,
     );
 
     if (errors.length > 0) {
@@ -170,15 +152,6 @@ export namespace operations {
     }
   };
 
-  export const specimenValidators: FieldValidators<SpecimenExceptionRecord> = {
-    program_name: checkProgramId,
-    schema: checkIsValidSchema,
-    requested_core_field: checkCoreField,
-    requested_exception_value: checkRequestedValue,
-    submitter_donor_id: validateDonorId,
-    submitter_specimen_id: validateSpecimenId,
-  };
-
   export const createEntityException = async ({
     programId,
     records,
@@ -190,7 +163,7 @@ export namespace operations {
     const errors = await validateRecords<EntityExceptionRecord>(
       programId,
       records,
-      specimenValidators,
+      commonValidators,
     );
 
     if (errors.length > 0) {
