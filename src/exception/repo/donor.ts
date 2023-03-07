@@ -34,7 +34,7 @@ export interface DonorExceptionRepository {
   save(exception: DonorException): RepoResponse<DonorException>;
 }
 
-export const programExceptionRepository: DonorExceptionRepository = {
+const donorExceptionRepository: DonorExceptionRepository = {
   async save(exception: ProgramException) {
     L.debug(`Creating new donor exception with: ${JSON.stringify(exception)}`);
     try {
@@ -50,3 +50,5 @@ export const programExceptionRepository: DonorExceptionRepository = {
     }
   },
 };
+
+export default donorExceptionRepository;
