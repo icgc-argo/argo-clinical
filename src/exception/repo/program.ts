@@ -35,7 +35,7 @@ const programExceptionSchema = new mongoose.Schema<ProgramException>({
   ],
 });
 
-export const ProgramExceptionModel = mongoose.model<ProgramException>(
+const ProgramExceptionModel = mongoose.model<ProgramException>(
   'ProgramException',
   programExceptionSchema,
 );
@@ -53,7 +53,7 @@ const checkDoc = (doc: null | ProgramException): RepoError | ProgramException =>
   return doc;
 };
 
-export const programExceptionRepository: ProgramExceptionRepository = {
+const programExceptionRepository: ProgramExceptionRepository = {
   async save(exception: ProgramException) {
     L.debug(`Creating new program exception with: ${JSON.stringify(exception)}`);
     try {
@@ -91,3 +91,5 @@ export const programExceptionRepository: ProgramExceptionRepository = {
     }
   },
 };
+
+export default programExceptionRepository;
