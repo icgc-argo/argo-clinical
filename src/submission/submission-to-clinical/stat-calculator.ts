@@ -66,13 +66,12 @@ const coreClinicalSchemaNamesSet = new Set<CoreClinicalSchemaName>(
   Object.keys(schemaNameToCoreCompletenessStat) as CoreClinicalSchemaName[],
 );
 
-// Only DNA Specimens are counted toward Core Completion
-const dnaSpecimenFilter = (specimen?: Specimen): boolean =>
-  specimen && specimen.sampleType && dnaSampleTypes.includes(specimen.sampleType);
-
 const dnaSampleFilter = (specimen: Specimen): boolean =>
+  // Specimens are submitted
   specimen &&
+  // Specimen has Sample records registered
   specimen.samples.length > 0 &&
+  // Only DNA records count towards completion
   specimen.samples.filter(sample => dnaSampleTypes.includes(sample.sampleType)).length > 0;
 
 // This is the main core stat caclulation function.
@@ -89,13 +88,23 @@ const calcDonorCoreEntityStats = (
   const coreStats = cloneDeep(donor.completionStats?.coreCompletion) || getEmptyCoreStats();
 
   if (clinicalType === ClinicalEntitySchemaNames.SPECIMEN) {
-    // for specimen, need to check all specimen has a record and at least one tumor and one normal exists
     const filteredDonorSpecimens = donor.specimens.filter(dnaSampleFilter);
+
+    const normalSubmissions = filteredDonorSpecimens.filter(
+      specimen =>
+        specimen.tumourNormalDesignation === 'Normal' &&
+        specimen.samples.find(sample => sample.sampleType === 'Normal'),
+    );
+
+    const tumourSubmissions = filteredDonorSpecimens.filter(
+      specimen =>
+        specimen.tumourNormalDesignation === 'Tumour' &&
+        specimen.samples.find(sample => sample.sampleType === 'Tumour'),
+    );
+
+    // Must have least one tumor and one normal
     const filteredTumorNormalSpecimens =
-      [
-        filteredDonorSpecimens.find(sp => sp.tumourNormalDesignation === 'Normal'),
-        filteredDonorSpecimens.find(sp => sp.tumourNormalDesignation === 'Tumour'),
-      ].filter(notEmpty).length / 2;
+      [normalSubmissions, tumourSubmissions].filter(notEmpty).length / 2;
 
     coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = filteredTumorNormalSpecimens;
   } else {
