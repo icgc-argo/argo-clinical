@@ -39,10 +39,10 @@ export type ProgramException = {
 
 // Entity
 export type SpecimenExceptionRecord = Readonly<
-  {
+  ExceptionRecord & {
     submitter_donor_id: string;
     submitter_specimen_id: string;
-  } & ExceptionRecord
+  }
 >;
 
 export type EntityExceptionRecord = SpecimenExceptionRecord;

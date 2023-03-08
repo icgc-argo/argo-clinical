@@ -18,7 +18,7 @@
  */
 
 import { loggerFor } from '../logger';
-import entityExceptionRepository from './repo/entity';
+import { default as entity, default as entityExceptionRepository } from './repo/entity';
 import programExceptionRepository from './repo/program';
 import { RepoError } from './repo/types';
 import {
@@ -29,7 +29,7 @@ import {
   ProgramException,
   ProgramExceptionRecord,
 } from './types';
-import { isProgramException } from './util';
+import { isRepoError } from './util';
 import { commonValidators, validateRecords, ValidationResult } from './validation';
 
 const L = loggerFor(__filename);
@@ -81,7 +81,7 @@ const createResult = ({
 export type Result = {
   success?: boolean;
   error?: { code: string; message: string };
-  exception?: ProgramException | undefined;
+  exception?: ProgramException | EntityException | undefined;
   validationErrors?: ValidationResult[];
 };
 
@@ -91,16 +91,17 @@ function processResult({
   result,
   errorMessage,
 }: {
-  result: ProgramException | RepoError;
+  result: ProgramException | EntityException | RepoError;
   errorMessage: string;
 }) {
   const SERVER_ERROR_MSG: string = 'Server error occurred';
-  if (isProgramException(result)) {
-    return createResult({ success: true, exception: result });
-  } else {
+
+  if (isRepoError(result)) {
     return createResult({
       error: { code: result, message: errorMessage || SERVER_ERROR_MSG },
     });
+  } else {
+    return createResult({ success: true, exception: result });
   }
 }
 export namespace operations {
@@ -159,7 +160,9 @@ export namespace operations {
     programId: string;
     records: ReadonlyArray<EntityExceptionRecord>;
     entity?: Entity;
-  }): Promise<any> => {
+  }): Promise<Result> => {
+    const errorMessage = `Cannot create exceptions for ${entity} entity in program '${programId}'`;
+
     const errors = await validateRecords<EntityExceptionRecord>(
       programId,
       records,
@@ -168,14 +171,17 @@ export namespace operations {
 
     if (errors.length > 0) {
       return createResult({
-        error: { code: 'doc', message: 'entity exception not created' },
+        error: { code: RepoError.DOCUMENT_UNDEFINED, message: errorMessage },
         validationErrors: errors,
       });
     } else {
-      const exceptionToSave = recordsToEntityException(programId, records.concat());
+      const exceptionToSave = recordsToEntityException(programId, [...records]);
       const result = await entityExceptionRepository.save(exceptionToSave);
 
-      return result;
+      return processResult({
+        result,
+        errorMessage,
+      });
     }
   };
 }

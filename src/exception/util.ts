@@ -25,3 +25,9 @@ export function isProgramException(
 ): result is ProgramException {
   return (result as ProgramException).programId !== undefined;
 }
+
+export function isRepoError(
+  result: ProgramException | EntityException | RepoError,
+): result is RepoError {
+  return result === RepoError.DOCUMENT_UNDEFINED || result === RepoError.SERVER_ERROR;
+}
