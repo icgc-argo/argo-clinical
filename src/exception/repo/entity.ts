@@ -50,15 +50,18 @@ export interface EntityExceptionRepository {
 const entityExceptionRepository: EntityExceptionRepository = {
   async save(exception: EntityException) {
     L.debug(`Creating new donor exception with: ${JSON.stringify(exception)}`);
+
+    const update = { $set: { programId: exception.programId, specimen: exception.specimen } };
+
     try {
       return await EntityExceptionModel.findOneAndUpdate(
         { programId: exception.programId },
-        exception,
-        { upsert: true, new: true, overwrite: true },
+        update,
+        { upsert: true, new: true },
       ).lean(true);
       // L.info(`doc created ${doc}`);
     } catch (e) {
-      L.error('failed to create program exception: ', e);
+      L.error('failed to create entity exception: ', e);
       return RepoError.SERVER_ERROR;
     }
   },
