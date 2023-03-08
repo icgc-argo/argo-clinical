@@ -185,4 +185,30 @@ export namespace operations {
       });
     }
   };
+
+  const deleteEntity = async (programId: string, entity: Entity) => {
+    let result, errorMessage;
+    if (entity) {
+      result = await entityExceptionRepository.deleteSingleEntity(programId, entity);
+      errorMessage = `no ${entity} entity exceptions for program '${programId}'`;
+    } else {
+      result = await entityExceptionRepository.delete(programId);
+      errorMessage = `no entity exceptions for program '${programId}'`;
+    }
+    return { result, errorMessage };
+  };
+
+  export const deleteEntityException = async ({
+    programId,
+    entity,
+  }: {
+    programId: string;
+    entity: Entity;
+  }) => {
+    const { result, errorMessage = '' } = await deleteEntity(programId, entity);
+    return processResult({
+      result,
+      errorMessage,
+    });
+  };
 }
