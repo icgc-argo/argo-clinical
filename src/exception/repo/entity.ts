@@ -46,6 +46,7 @@ const EntityExceptionModel = mongoose.model<EntityException>(
 
 export interface EntityExceptionRepository {
   save(exception: EntityException): RepoResponse<EntityException>;
+  find(programId: string): RepoResponse<EntityException>;
   delete(programId: string): RepoResponse<EntityException>;
   deleteSingleEntity(programId: string, entity: Entity): RepoResponse<EntityException>;
 }
@@ -68,6 +69,16 @@ const entityExceptionRepository: EntityExceptionRepository = {
     }
   },
 
+  async find(programId: string) {
+    L.debug(`finding entity exception with program id: ${JSON.stringify(programId)}`);
+    try {
+      const doc = await EntityExceptionModel.findOne({ programId }).lean(true);
+      return checkDoc(doc);
+    } catch (e) {
+      L.error('failed to find program exception', e);
+      return RepoError.SERVER_ERROR;
+    }
+  },
   async delete(programId: string) {
     L.debug(`deleting all entity exceptions with program id: ${JSON.stringify(programId)}`);
     try {

@@ -98,7 +98,7 @@ import {
 } from './validation-clinical/utils';
 import * as dataValidator from './validation-clinical/validation';
 import { checkUniqueRecords, validateSubmissionData } from './validation-clinical/validation';
-import entityExceptionRepository from 'src/exception/repo/entity';
+import entityExceptionRepository from '../exception/repo/entity';
 
 const L = loggerFor(__filename);
 
