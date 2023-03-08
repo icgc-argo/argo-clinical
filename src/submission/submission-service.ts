@@ -18,7 +18,6 @@
  */
 
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
-import { SchemaValidationError } from '@overturebio-stack/lectern-client/lib/schema-entities';
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 import { v1 as uuid } from 'uuid';
@@ -42,8 +41,9 @@ import {
 } from '../common-model/entities';
 import * as dictionaryManager from '../dictionary/manager';
 import programExceptionRepository from '../exception/repo/program';
-import { ProgramException, EntityException } from '../exception/types';
+import { ProgramException } from '../exception/types';
 import { isProgramException } from '../exception/util';
+import { FEATURE_SUBMISSION_EXCEPTIONS_ENABLED } from '../feature-flags';
 import { loggerFor } from '../logger';
 import { RxNormConcept } from '../rxnorm/api';
 import dbRxNormService from '../rxnorm/service';
@@ -98,11 +98,7 @@ import {
 } from './validation-clinical/utils';
 import * as dataValidator from './validation-clinical/validation';
 import { checkUniqueRecords, validateSubmissionData } from './validation-clinical/validation';
-<<<<<<< HEAD
-import { FEATURE_SUBMISSION_EXCEPTIONS_ENABLED } from '../feature-flags';
-=======
-import entityExceptionRepository from 'src/exception/repo/entity';
->>>>>>> 999053e (add entity exception filter for submissions)
+import entityExceptionRepository from '../exception/repo/entity';
 
 const L = loggerFor(__filename);
 
