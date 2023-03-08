@@ -138,7 +138,7 @@ export namespace operations {
     records: ReadonlyArray<EntityExceptionRecord>;
     entity?: Entity;
   }): Promise<Result> => {
-    const errorMessage = `Cannot create exceptions for ${entity} entity in program '${programId}'`;
+    const errorMessage = `Cannot create exceptions for ${'specimen'} entity in program '${programId}'`;
 
     const errors = await validateRecords<EntityExceptionRecord>(
       programId,
