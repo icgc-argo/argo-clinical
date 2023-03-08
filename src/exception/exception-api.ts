@@ -117,6 +117,13 @@ class ExceptionController {
     const status = !result.success ? 422 : 201;
     return res.status(status).send(result);
   }
+
+  @HasFullWriteAccess()
+  async deleteEntityException(req: Request, res: Response) {
+    const { programId, entity = null } = req.params;
+    const result = await exceptionService.operations.deleteEntityException({ programId, entity });
+    return res.status(getResStatus(result)).send(result);
+  }
 }
 
 const parseTSV = async (filepath: string) => {
