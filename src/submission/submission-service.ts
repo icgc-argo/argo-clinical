@@ -43,7 +43,7 @@ import {
 import * as dictionaryManager from '../dictionary/manager';
 import programExceptionRepository from '../exception/repo/program';
 import { ProgramException, EntityException } from '../exception/types';
-import { isProgramException } from '../exception/util';
+import { isProgramException, isEntityException } from '../exception/util';
 import { loggerFor } from '../logger';
 import { RxNormConcept } from '../rxnorm/api';
 import dbRxNormService from '../rxnorm/service';
@@ -891,7 +891,7 @@ export namespace operations {
     schemaValidationErrors,
   }: {
     programId: string;
-    record: any;
+    record: dictionaryEntities.DataRecord;
     schemaValidationErrors: dictionaryEntities.SchemaValidationError[];
   }): Promise<dictionaryEntities.SchemaValidationError[]> => {
     const t0 = performance.now();
@@ -907,10 +907,11 @@ export namespace operations {
     }
 
     // entity level exceptions
-    const entityExceptionResult = await entityExceptionRepository.find();
+    const entityExceptionResult = await entityExceptionRepository.find(programId);
     if (isEntityException(entityExceptionResult)) {
+      const entityExceptions = entityExceptionResult.specimen;
       return schemaValidationErrors.filter(validationError => {
-        return entityExceptionFilter();
+        return entityExceptionFilter(entityExceptions, validationError, record);
       });
     }
 
