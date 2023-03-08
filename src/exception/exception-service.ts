@@ -161,7 +161,7 @@ export namespace operations {
     records: ReadonlyArray<EntityExceptionRecord>;
     entity?: Entity;
   }): Promise<Result> => {
-    const errorMessage = `Cannot create exceptions for ${'specimen'} entity in program '${programId}'`;
+    const errorMessage = `Cannot create exceptions for ${entity} entity in program '${programId}'`;
 
     const errors = await validateRecords<EntityExceptionRecord>(
       programId,
@@ -176,7 +176,6 @@ export namespace operations {
       });
     } else {
       const exceptionToSave = recordsToEntityException(programId, [...records]);
-
       const result = await entityExceptionRepository.save(exceptionToSave);
 
       return processResult({
