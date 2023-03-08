@@ -19,7 +19,7 @@
 
 import mongoose from 'mongoose';
 import { loggerFor } from '../../logger';
-import { EntityException, ExceptionValue } from '../types';
+import { Entity, EntityException, ExceptionValue } from '../types';
 import { RepoError, RepoResponse } from './types';
 
 const L = loggerFor(__filename);
@@ -61,6 +61,31 @@ const entityExceptionRepository: EntityExceptionRepository = {
       ).lean(true);
     } catch (e) {
       L.error('failed to create entity exception: ', e);
+      return RepoError.SERVER_ERROR;
+    }
+  },
+
+  async delete(programId: string) {
+    L.debug(`deleting all entitiy exceptions with program id: ${JSON.stringify(programId)}`);
+    try {
+      const doc = await EntityExceptionModel.findOneAndDelete({ programId }).lean(true);
+    } catch (e) {
+      L.error('failed to delete exception', e);
+      return RepoError.SERVER_ERROR;
+    }
+  },
+
+  async deleteSingleEntity(programId: string, entity: Entity) {
+    L.debug(
+      `deleting single entity ${entity} exception with program id: ${JSON.stringify(programId)}`,
+    );
+    try {
+      const update = { $set: { [entity]: [] } };
+      const doc = await EntityExceptionModel.findOneAndUpdate({ programId }, update, {
+        new: true,
+      }).lean(true);
+    } catch (e) {
+      L.error('failed to delete exception', e);
       return RepoError.SERVER_ERROR;
     }
   },
