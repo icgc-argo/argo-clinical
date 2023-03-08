@@ -198,7 +198,7 @@ export const checkIsValidSchema: Validator<ExceptionRecord> = async ({ fieldValu
 
   return {
     result: isValid ? ValidationResultType.VALID : ValidationResultType.INVALID,
-    message: isValid ? '' : `record schema of ${fieldValue} is not valid`,
+    message: isValid ? '' : `record schema of '${fieldValue}' is not valid`,
   };
 };
 
