@@ -851,7 +851,8 @@ export namespace operations {
     );
   }
 
-  const applyExceptionIfExists = (
+  // TODO: don't fully understand these comments, provide more context
+  const programExceptionFilter = (
     exceptions: DeepReadonly<ProgramException['exceptions']>,
     validationError: dictionaryEntities.SchemaValidationError,
     record: DataRecord,
@@ -871,6 +872,30 @@ export namespace operations {
       );
       return exception?.requested_exception_value === record[validationErrorField];
     }
+  };
+
+  const applyExceptions = async ({
+    programId,
+    record,
+    schemaValidationErrors,
+  }: {
+    programId: string;
+    record: any;
+    schemaValidationErrors: dictionaryEntities.SchemaValidationError[];
+  }): Promise<dictionaryEntities.SchemaValidationError[]> => {
+    const t0 = performance.now();
+
+    // program level exceptions
+    const programExceptionResult = await programExceptionRepository.find(programId);
+    if (isProgramException(programExceptionResult)) {
+      return schemaValidationErrors.filter(validationError => {
+        return !programExceptionFilter(programExceptionResult.exceptions, validationError, record);
+      });
+    }
+
+    const t1 = performance.now();
+    L.debug('apply exceptions time: ' + (t1 - t0));
+    return schemaValidationErrors;
   };
 
   export const checkClinicalEntity = async (
@@ -893,16 +918,12 @@ export namespace operations {
           .processParallel(command.clinicalType, record, index, schema);
 
         if (schemaResult.validationErrors.length > 0) {
-          const result = await programExceptionRepository.find(command.programId);
-
           // filter out valid exceptions before adding to error accumulator
-          const validationErrors =
-            // only filter is we have valid exceptions available
-            isProgramException(result)
-              ? schemaResult.validationErrors.filter(validationError => {
-                  return !applyExceptionIfExists(result.exceptions, validationError, record);
-                })
-              : schemaResult.validationErrors;
+          const validationErrors = await applyExceptions({
+            programId: command.programId,
+            record,
+            schemaValidationErrors: [...schemaResult.validationErrors],
+          });
 
           errorsAccumulator = errorsAccumulator.concat(
             unifySchemaErrors(schemaName, validationErrors, index, command.records),
