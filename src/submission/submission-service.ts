@@ -42,7 +42,7 @@ import {
 } from '../common-model/entities';
 import * as dictionaryManager from '../dictionary/manager';
 import programExceptionRepository from '../exception/repo/program';
-import { ProgramException } from '../exception/types';
+import { ProgramException, EntityException } from '../exception/types';
 import { isProgramException } from '../exception/util';
 import { loggerFor } from '../logger';
 import { RxNormConcept } from '../rxnorm/api';
@@ -98,6 +98,7 @@ import {
 } from './validation-clinical/utils';
 import * as dataValidator from './validation-clinical/validation';
 import { checkUniqueRecords, validateSubmissionData } from './validation-clinical/validation';
+import entityExceptionRepository from 'src/exception/repo/entity';
 
 const L = loggerFor(__filename);
 
@@ -851,12 +852,18 @@ export namespace operations {
     );
   }
 
-  // TODO: don't fully understand these comments, provide more context
-  const programExceptionFilter = (
-    exceptions: DeepReadonly<ProgramException['exceptions']>,
+  type ExceptionFilter<T> = (
+    exceptions: DeepReadonly<T>,
     validationError: dictionaryEntities.SchemaValidationError,
     record: DataRecord,
-  ): boolean => {
+  ) => boolean;
+
+  // TODO: don't fully understand these comments, provide more context
+  const programExceptionFilter: ExceptionFilter<ProgramException['exceptions']> = (
+    exceptions,
+    validationError,
+    record,
+  ) => {
     // missing required field, validate as normal, exceptions still require a submitted value
     if (
       validationError.errorType ===
@@ -874,6 +881,10 @@ export namespace operations {
     }
   };
 
+  const entityExceptionFilter: ExceptionFilter<EntityException['specimen']> = () => {
+    return false;
+  };
+
   const applyExceptions = async ({
     programId,
     record,
@@ -884,12 +895,22 @@ export namespace operations {
     schemaValidationErrors: dictionaryEntities.SchemaValidationError[];
   }): Promise<dictionaryEntities.SchemaValidationError[]> => {
     const t0 = performance.now();
+    // program exceptions and entity exceptions are mutually exclusive
 
     // program level exceptions
     const programExceptionResult = await programExceptionRepository.find(programId);
     if (isProgramException(programExceptionResult)) {
+      return schemaValidationErrors.filter(
+        validationError =>
+          !programExceptionFilter(programExceptionResult.exceptions, validationError, record),
+      );
+    }
+
+    // entity level exceptions
+    const entityExceptionResult = await entityExceptionRepository.find();
+    if (isEntityException(entityExceptionResult)) {
       return schemaValidationErrors.filter(validationError => {
-        return !programExceptionFilter(programExceptionResult.exceptions, validationError, record);
+        return entityExceptionFilter();
       });
     }
 
