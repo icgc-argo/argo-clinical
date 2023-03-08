@@ -205,8 +205,9 @@ export namespace operations {
     programId: string;
     entity: Entity;
   }) => {
-    const { result, errorMessage = '' } = await deleteEntity(programId, entity);
+    const { result, errorMessage } = await deleteEntity(programId, entity);
     return processResult({
+      // @ts-expect-error v3.9.5, no yelling in v4
       result,
       errorMessage,
     });
