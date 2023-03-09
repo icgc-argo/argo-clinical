@@ -23,7 +23,13 @@ import { loggerFor } from '../logger';
 import { ControllerUtils, Errors, TsvUtils } from '../utils';
 import { RepoError } from './repo/types';
 import * as exceptionService from './exception-service';
-import { isReadonlyArrayOf, isProgramExceptionRecord, isEntityExceptionRecord } from './types';
+import {
+  isReadonlyArrayOf,
+  isProgramExceptionRecord,
+  isEntityExceptionRecord,
+  ProgramExceptionRecord,
+  EntityExceptionRecord,
+} from './types';
 
 const L = loggerFor(__filename);
 
@@ -37,7 +43,9 @@ function getResStatus(result: exceptionService.Result): number {
   }
 }
 
-const validateProgramExceptionRecords = (records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj>) => {
+const validateProgramExceptionRecords = (
+  records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj>,
+): ReadonlyArray<ProgramExceptionRecord> => {
   if (!isReadonlyArrayOf(records, isProgramExceptionRecord)) {
     L.debug(`Program Exception TSV_PARSING_FAILED`);
     throw new Errors.TSVParseError();
@@ -45,7 +53,9 @@ const validateProgramExceptionRecords = (records: ReadonlyArray<TsvUtils.TsvReco
   return records;
 };
 
-const validateEntityExceptionRecords = (records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj>) => {
+const validateEntityExceptionRecords = (
+  records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj>,
+): ReadonlyArray<EntityExceptionRecord> => {
   if (!isReadonlyArrayOf(records, isEntityExceptionRecord)) {
     L.debug(`Entity Exception TSV_PARSING_FAILED`);
     throw new Errors.TSVParseError();
