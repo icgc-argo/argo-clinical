@@ -21,7 +21,13 @@ import { isEqual } from 'lodash';
 import * as dictionaryManager from '../dictionary/manager';
 import { SchemaWithFields } from '../dictionary/manager';
 import { loggerFor } from '../logger';
-import { ExceptionRecord, ExceptionValue, ObjectValues, ProgramExceptionRecord } from './types';
+import {
+  ExceptionRecord,
+  ExceptionValue,
+  ObjectValues,
+  ProgramExceptionRecord,
+  SpecimenExceptionRecord,
+} from './types';
 
 const L = loggerFor(__filename);
 
@@ -30,7 +36,7 @@ export type ValidationResult = {
   result: ValidationResultErrorType;
 };
 
-export const ValidationResultErrorType = {
+export const ValidationResultType = {
   VALID: 'VALID',
   INVALID: 'INVALID',
   EMPTY_FIELD: 'EMPTY_FIELD',
@@ -39,12 +45,13 @@ export const ValidationResultErrorType = {
   PARAM_INVALID: 'INVALID_PARAM',
 } as const;
 
-type ValidationResultErrorType = ObjectValues<typeof ValidationResultErrorType>;
+type ValidationResultErrorType = ObjectValues<typeof ValidationResultType>;
 
 type ValidationError = {
   field: string;
   recordIndex: number;
 } & ValidationResult;
+
 export const createValidationError = ({
   recordIndex,
   result,
@@ -78,9 +85,11 @@ export type Validator<RecordT extends Object> = {
   }): Promise<ValidationResult> | ValidationResult;
 };
 
-export type FieldValidators<RecordT extends Object> = {
-  [key in keyof RecordT]: Validator<RecordT>;
-};
+export type FieldValidators<RecordT extends Object> = Partial<
+  {
+    [key in keyof RecordT]: Validator<RecordT>;
+  }
+>;
 
 export const checkCoreField: Validator<ExceptionRecord> = async ({ record, fieldName }) => {
   const currentDictionary = await dictionaryManager.instance();
@@ -89,7 +98,7 @@ export const checkCoreField: Validator<ExceptionRecord> = async ({ record, field
 
   if (requestedCoreField === undefined) {
     return {
-      result: ValidationResultErrorType.UNDEFINED,
+      result: ValidationResultType.UNDEFINED,
       message: `${fieldName} value is not defined`,
     };
   }
@@ -123,11 +132,11 @@ export const checkProgramId: Validator<ProgramExceptionRecord> = ({
 }) => {
   const result =
     programId === record.program_name
-      ? ValidationResultErrorType.VALID
-      : ValidationResultErrorType.PARAM_INVALID;
+      ? ValidationResultType.VALID
+      : ValidationResultType.PARAM_INVALID;
 
   const message =
-    result !== ValidationResultErrorType.VALID
+    result !== ValidationResultType.VALID
       ? `submitted exception '${fieldName}' of '${record.program_name}' does not match request parameter program id of '${programId}'`
       : '';
   return { result, message };
@@ -139,21 +148,21 @@ export const checkRequestedValue: Validator<ExceptionRecord> = ({ record, fieldN
 
   if (requestedExceptionValue === undefined) {
     return {
-      result: ValidationResultErrorType.UNDEFINED,
+      result: ValidationResultType.UNDEFINED,
       message: `${fieldName} value is not defined`,
     };
   } else if (typeof requestedExceptionValue !== 'string') {
     return {
-      result: ValidationResultErrorType.TYPE_ERROR,
+      result: ValidationResultType.TYPE_ERROR,
       message: `${fieldName} value is not a string`,
     };
   } else if (!validRequests.includes(requestedExceptionValue)) {
     return {
-      result: ValidationResultErrorType.INVALID,
+      result: ValidationResultType.INVALID,
       message: `${fieldName} value is not valid. Must be one of [${validRequests.join(', ')}]`,
     };
   } else {
-    return { result: ValidationResultErrorType.VALID, message: '' };
+    return { result: ValidationResultType.VALID, message: '' };
   }
 };
 
@@ -165,7 +174,7 @@ export const checkForEmptyField: Validator<ExceptionRecord> = ({
   const errorMessage = `${fieldName} cannot be empty`;
 
   return {
-    result: isValid ? ValidationResultErrorType.VALID : ValidationResultErrorType.EMPTY_FIELD,
+    result: isValid ? ValidationResultType.VALID : ValidationResultType.EMPTY_FIELD,
     message: isValid ? '' : errorMessage,
   };
 };
@@ -174,7 +183,7 @@ export const checkIsValidSchema: Validator<ExceptionRecord> = async ({ fieldValu
   const errorMessage = 'field is empty';
   if (!fieldValue) {
     return {
-      result: ValidationResultErrorType.EMPTY_FIELD,
+      result: ValidationResultType.EMPTY_FIELD,
       message: errorMessage,
     };
   }
@@ -190,8 +199,8 @@ export const checkIsValidSchema: Validator<ExceptionRecord> = async ({ fieldValu
   const isValid = existingDictionarySchema[0];
 
   return {
-    result: isValid ? ValidationResultErrorType.VALID : ValidationResultErrorType.INVALID,
-    message: isValid ? '' : `record schema of ${fieldValue} is not valid`,
+    result: isValid ? ValidationResultType.VALID : ValidationResultType.INVALID,
+    message: isValid ? '' : `record schema of '${fieldValue}' is not valid`,
   };
 };
 
@@ -202,10 +211,10 @@ class DuplicateChecker {
     const match = this.records.find(previousRecord => isEqual(previousRecord, record));
     if (match) {
       const message = `duplicate rows: ${this.records.indexOf(match) + 1} and ${recordIndex + 1}`;
-      return { result: ValidationResultErrorType.INVALID, message };
+      return { result: ValidationResultType.INVALID, message };
     } else {
       this.records.push(record);
-      return { result: ValidationResultErrorType.VALID, message: '' };
+      return { result: ValidationResultType.VALID, message: '' };
     }
   }
 }
@@ -219,7 +228,7 @@ const getValidator = <RecordT extends Object>(
     return v;
   } else {
     L.debug(`warning: no validation for ${fieldName}`);
-    return () => ({ result: ValidationResultErrorType.VALID, message: '' });
+    return () => ({ result: ValidationResultType.VALID, message: '' });
   }
 };
 
@@ -248,7 +257,7 @@ export const validateRecords = async <RecordT extends Object>(
       });
 
       const { message, result } = validationResult;
-      if (result !== ValidationResultErrorType.VALID) {
+      if (result !== ValidationResultType.VALID) {
         const error = createValidationError({ recordIndex, field: fieldName, result, message });
         errors = errors.concat([error]);
       }
@@ -256,7 +265,7 @@ export const validateRecords = async <RecordT extends Object>(
     // row level validations
     const duplicateValidation = duplicateChecker.validate(record, recordIndex);
     const { message, result } = duplicateValidation;
-    if (result !== ValidationResultErrorType.VALID) {
+    if (result !== ValidationResultType.VALID) {
       const error = createValidationError({
         recordIndex,
         result,
@@ -268,4 +277,11 @@ export const validateRecords = async <RecordT extends Object>(
   }
 
   return errors;
+};
+
+export const commonValidators: FieldValidators<ExceptionRecord> = {
+  program_name: checkProgramId,
+  schema: checkIsValidSchema,
+  requested_core_field: checkCoreField,
+  requested_exception_value: checkRequestedValue,
 };

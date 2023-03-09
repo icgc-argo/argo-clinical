@@ -41,7 +41,7 @@ import {
   TherapyRxNormFields,
 } from '../common-model/entities';
 import * as dictionaryManager from '../dictionary/manager';
-import { programExceptionRepository } from '../exception/exception-repo';
+import programExceptionRepository from '../exception/repo/program';
 import { ProgramException } from '../exception/types';
 import { isProgramException } from '../exception/util';
 import { loggerFor } from '../logger';

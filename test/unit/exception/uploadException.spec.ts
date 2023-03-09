@@ -19,10 +19,13 @@
 
 import chai from 'chai';
 import { ExceptionValue, ProgramExceptionRecord } from '../../../src/exception/types';
-import { validateRecords, ValidationResultErrorType } from '../../../src/exception/validation';
+import {
+  commonValidators,
+  validateRecords,
+  ValidationResultType,
+} from '../../../src/exception/validation';
 import sinon from 'sinon';
 import * as dictionaryManager from '../../../src/dictionary/manager';
-import { programValidators } from '../../../src/exception/exception-service';
 
 function expectToHaveNumberOfErrors(result: any, length = 1) {
   chai.expect(result).to.be.instanceOf(Array);
@@ -75,7 +78,7 @@ describe('program exception service', () => {
       });
 
       const record = createRecord();
-      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], programValidators);
+      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
       expectZeroValidationErrors(result);
     });
 
@@ -93,9 +96,9 @@ describe('program exception service', () => {
       const record = createRecord({
         program_name: 'NOT-TEST-IE',
       });
-      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], programValidators);
+      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
       expectToHaveNumberOfErrors(result);
-      expectValidationError(result[0], 1, ValidationResultErrorType.PARAM_INVALID);
+      expectValidationError(result[0], 1, ValidationResultType.PARAM_INVALID);
     });
   });
 
@@ -109,9 +112,9 @@ describe('program exception service', () => {
       });
 
       const record = createRecord({ schema: '' });
-      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], programValidators);
+      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
       expectToHaveNumberOfErrors(result);
-      expectValidationError(result[0], 1, ValidationResultErrorType.EMPTY_FIELD);
+      expectValidationError(result[0], 1, ValidationResultType.EMPTY_FIELD);
     });
 
     it('[negative] should error if there are empty fields', async () => {
@@ -123,10 +126,10 @@ describe('program exception service', () => {
       });
 
       const record = createRecord({ schema: '' });
-      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], programValidators);
+      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
 
       expectToHaveNumberOfErrors(result);
-      expectValidationError(result[0], 1, ValidationResultErrorType.EMPTY_FIELD);
+      expectValidationError(result[0], 1, ValidationResultType.EMPTY_FIELD);
     });
   });
 
@@ -143,7 +146,7 @@ describe('program exception service', () => {
       });
 
       const record = createRecord();
-      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], programValidators);
+      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
       expectZeroValidationErrors(result);
     });
 
@@ -154,10 +157,10 @@ describe('program exception service', () => {
       });
 
       const record = createRecord({ schema: 'not_a_valid_schema' });
-      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], programValidators);
+      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
 
       expectToHaveNumberOfErrors(result, 2);
-      expectValidationError(result[0], 1, ValidationResultErrorType.INVALID);
+      expectValidationError(result[0], 1, ValidationResultType.INVALID);
     });
   });
 
@@ -171,7 +174,7 @@ describe('program exception service', () => {
       });
 
       const record = createRecord();
-      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], programValidators);
+      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
       expectZeroValidationErrors(result);
     });
 
@@ -181,10 +184,10 @@ describe('program exception service', () => {
         getSchemasWithFields: () => [],
       });
       const record = createRecord({ schema: 'not_a_valid_schema' });
-      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], programValidators);
+      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
 
       expectToHaveNumberOfErrors(result, 2);
-      expectValidationError(result[0], 1, ValidationResultErrorType.INVALID);
+      expectValidationError(result[0], 1, ValidationResultType.INVALID);
     });
   });
 
@@ -200,7 +203,7 @@ describe('program exception service', () => {
         ],
       });
       const record = createRecord({ requested_exception_value: ExceptionValue.NotApplicable });
-      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], programValidators);
+      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
       expectZeroValidationErrors(result);
     });
 
@@ -215,9 +218,9 @@ describe('program exception service', () => {
         ],
       });
       const record = createRecord({ requested_exception_value: 'invalid!' });
-      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], programValidators);
+      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
       expectToHaveNumberOfErrors(result, 1);
-      expectValidationError(result[0], 1, ValidationResultErrorType.INVALID);
+      expectValidationError(result[0], 1, ValidationResultType.INVALID);
     });
   });
 
@@ -237,7 +240,7 @@ describe('program exception service', () => {
         createRecord(),
         createRecord({ requested_exception_value: ExceptionValue.NotApplicable }),
       ];
-      const result = await validateRecords(DEFAULT_PROGRAM_ID, records, programValidators);
+      const result = await validateRecords(DEFAULT_PROGRAM_ID, records, commonValidators);
 
       expectZeroValidationErrors(result);
     });
@@ -254,10 +257,10 @@ describe('program exception service', () => {
       });
 
       const records = new Array(2).fill(undefined).map(() => createRecord());
-      const result = await validateRecords(DEFAULT_PROGRAM_ID, records, programValidators);
+      const result = await validateRecords(DEFAULT_PROGRAM_ID, records, commonValidators);
 
       expectToHaveNumberOfErrors(result, 1);
-      expectValidationError(result[0], 2, ValidationResultErrorType.INVALID);
+      expectValidationError(result[0], 2, ValidationResultType.INVALID);
     });
   });
 });

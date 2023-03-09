@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 The Ontario Institute for Cancer Research. All rights reserved
+ * Copyright (c) 2022 The Ontario Institute for Cancer Research. All rights reserved
  *
  * This program and the accompanying materials are made available under the terms of
  * the GNU Affero General Public License v3.0. You should have received a copy of the
@@ -17,29 +17,13 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import * as express from 'express';
-import multer from 'multer';
-import exceptionApi, { requestContainsFile } from '../exception/exception-api';
-import { isEntityExceptionRecord, isProgramExceptionRecord } from '../exception/types';
-import { wrapAsync } from '../middleware';
-import { FEATURE_SUBMISSION_EXCEPTIONS_ENABLED } from '../feature-flags';
-import { Request, Response } from 'express';
+import { ObjectValues } from '../types';
 
-// config
-const router = express.Router({ mergeParams: true });
-const upload = multer({ dest: '/tmp' });
+export type RepoResponse<Exception> = Promise<Exception | RepoError>;
 
-// routes
-router.post('*', upload.single('exceptionFile'), requestContainsFile);
+export const RepoError = {
+  DOCUMENT_UNDEFINED: 'DOCUMENT_UNDEFINED',
+  SERVER_ERROR: 'SERVER_ERROR',
+} as const;
 
-router.post('/', wrapAsync(exceptionApi.createProgramException));
-
-router.post('/entity', wrapAsync(exceptionApi.createEntityException));
-
-router.get('/', wrapAsync(exceptionApi.getProgramException));
-
-router.delete('/', wrapAsync(exceptionApi.clearProgramException));
-
-export default FEATURE_SUBMISSION_EXCEPTIONS_ENABLED
-  ? router
-  : (req: Request, res: Response) => res.status(404).send();
+export type RepoError = ObjectValues<typeof RepoError>;
