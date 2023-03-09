@@ -18,7 +18,10 @@
  */
 
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
-import { DataRecord } from '@overturebio-stack/lectern-client/lib/schema-entities';
+import {
+  DataRecord,
+  SchemaValidationError,
+} from '@overturebio-stack/lectern-client/lib/schema-entities';
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 import { v1 as uuid } from 'uuid';
@@ -42,7 +45,13 @@ import {
 } from '../common-model/entities';
 import * as dictionaryManager from '../dictionary/manager';
 import programExceptionRepository from '../exception/repo/program';
-import { ProgramException, EntityException } from '../exception/types';
+import {
+  ProgramException,
+  EntityException,
+  EntityExceptionRecord,
+  Entity,
+  EntityValues,
+} from '../exception/types';
 import { isProgramException, isEntityException } from '../exception/util';
 import { loggerFor } from '../logger';
 import { RxNormConcept } from '../rxnorm/api';
@@ -853,12 +862,11 @@ export namespace operations {
   }
 
   type ExceptionFilter<T> = (
-    exceptions: DeepReadonly<T>,
+    exceptions: DeepReadonly<T[]>,
     validationError: dictionaryEntities.SchemaValidationError,
     record: DataRecord,
   ) => boolean;
 
-  // TODO: don't fully understand these comments, provide more context
   const programExceptionFilter: ExceptionFilter<ProgramException['exceptions']> = (
     exceptions,
     validationError,
@@ -881,16 +889,56 @@ export namespace operations {
     }
   };
 
-  const entityExceptionFilter: ExceptionFilter<EntityException['specimen']> = () => {
-    return false;
+  // TODO: object destructu
+  const entityExceptionFilter = (
+    exceptions: any[],
+    validationError: SchemaValidationError,
+    record: DataRecord,
+    entity: Entity,
+  ): boolean => {
+    // missing required field, validate as normal, exceptions still require a submitted value
+    if (
+      validationError.errorType ===
+      dictionaryEntities.SchemaValidationErrorTypes.MISSING_REQUIRED_FIELD
+    ) {
+      return false;
+    } else {
+      const validationErrorFieldName = validationError.fieldName;
+      const exception = exceptions.find(
+        exception =>
+          exception.requested_core_field === validationErrorFieldName &&
+          findExceptionByEntity(exception, entity, record),
+      );
+      console.log(JSON.stringify(exception));
+
+      const errorFieldValue = record[validationErrorFieldName];
+      const applyException = exception && exception.requested_exception_value === errorFieldValue;
+
+      return applyException;
+    }
+  };
+
+  const findExceptionByEntity = (
+    exception: any,
+    entity: Entity,
+    record: dictionaryEntities.DataRecord,
+  ) => {
+    switch (entity) {
+      case EntityValues.specimen:
+        return exception.submitter_specimen_id === record.submitter_specimen_id;
+      default:
+        return false;
+    }
   };
 
   const applyExceptions = async ({
     programId,
+    schema,
     record,
     schemaValidationErrors,
   }: {
     programId: string;
+    schema: string;
     record: dictionaryEntities.DataRecord;
     schemaValidationErrors: dictionaryEntities.SchemaValidationError[];
   }): Promise<dictionaryEntities.SchemaValidationError[]> => {
@@ -907,11 +955,14 @@ export namespace operations {
     }
 
     // entity level exceptions
+    // const entityExceptionResult = await entityExceptionRepository.find(programId, record.schema);
+
     const entityExceptionResult = await entityExceptionRepository.find(programId);
     if (isEntityException(entityExceptionResult)) {
-      const entityExceptions = entityExceptionResult.specimen;
+      const entityExceptions = entityExceptionResult;
+
       return schemaValidationErrors.filter(validationError => {
-        return entityExceptionFilter(entityExceptions, validationError, record);
+        return entityExceptionFilter(entityExceptions, validationError, record, schema);
       });
     }
 
@@ -941,8 +992,11 @@ export namespace operations {
 
         if (schemaResult.validationErrors.length > 0) {
           // filter out valid exceptions before adding to error accumulator
+          console.log(JSON.stringify(record));
+          console.log(JSON.stringify(schemaResult));
           const validationErrors = await applyExceptions({
             programId: command.programId,
+            schema: schema.name,
             record,
             schemaValidationErrors: [...schemaResult.validationErrors],
           });
