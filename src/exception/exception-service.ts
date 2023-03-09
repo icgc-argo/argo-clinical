@@ -18,7 +18,7 @@
  */
 
 import { loggerFor } from '../logger';
-import { default as entity, default as entityExceptionRepository } from './repo/entity';
+import { default as entityExceptionRepository } from './repo/entity';
 import programExceptionRepository from './repo/program';
 import { RepoError } from './repo/types';
 import {
