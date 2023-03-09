@@ -20,7 +20,6 @@
 import * as express from 'express';
 import multer from 'multer';
 import exceptionApi, { requestContainsFile } from '../exception/exception-api';
-import { isEntityExceptionRecord, isProgramExceptionRecord } from '../exception/types';
 import { wrapAsync } from '../middleware';
 import { FEATURE_SUBMISSION_EXCEPTIONS_ENABLED } from '../feature-flags';
 import { Request, Response } from 'express';
@@ -36,7 +35,7 @@ router.post('/', wrapAsync(exceptionApi.createProgramException));
 
 router.post('/entity', wrapAsync(exceptionApi.createEntityException));
 
-router.get('/', wrapAsync(exceptionApi.getProgramException));
+router.gets('/', wrapAsync(exceptionApi.getProgramException));
 
 router.delete('/', wrapAsync(exceptionApi.clearProgramException));
 
