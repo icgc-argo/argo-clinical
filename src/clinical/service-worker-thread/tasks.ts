@@ -190,10 +190,9 @@ const mapEntityDocuments = (
 // Submitted Data Search Results
 function FilterDonorIdDataFromSearch(donors: Donor[], query: ClinicalSearchQuery) {
   const { donorIds, submitterDonorIds } = query;
-
   const useFilteredDonors = !isEmpty(donorIds) || !isEmpty(submitterDonorIds);
 
-  const filteredDonors = useFilteredDonors
+  let filteredDonors = useFilteredDonors
     ? donors.filter(donor => {
         const { donorId, submitterId } = donor;
         const stringId = `${donorId}`;
@@ -202,6 +201,21 @@ function FilterDonorIdDataFromSearch(donors: Donor[], query: ClinicalSearchQuery
         return donorMatch || submitterMatch;
       })
     : donors;
+
+  // This filters out false positive search results ( i.e. where Donor.treatments = [] )
+  filteredDonors = donors.filter(donor => {
+    let found = false;
+    Object.values(ClinicalEntitySchemaNames).forEach(entity => {
+      let clinicalInfoRecords: ClinicalInfo[];
+      const isQueriedEntity = isEntityInQuery(entity, query.entityTypes);
+
+      if (isQueriedEntity) {
+        clinicalInfoRecords = getClinicalEntitySubmittedData(donor, entity);
+        found = !isEmpty(clinicalInfoRecords);
+      }
+    });
+    return found;
+  });
 
   const totalResults = filteredDonors.length;
   const searchResults = filteredDonors.map(({ donorId, submitterId }: Donor) => ({
