@@ -19,14 +19,13 @@
 
 export type ObjectValues<T> = T[keyof T];
 
-export type ExceptionRecord = {
+export type ExceptionRecord = Readonly<{
+  program_name: string;
   schema: string;
   requested_core_field: string;
   requested_exception_value: string;
-};
-export type ProgramExceptionRecord = {
-  program_name: string;
-} & ExceptionRecord;
+}>;
+export type ProgramExceptionRecord = ExceptionRecord;
 
 // type after validation
 export type ProgramException = {
@@ -38,6 +37,29 @@ export type ProgramException = {
   }[];
 };
 
+// Entity
+export type SpecimenExceptionRecord = Readonly<
+  ExceptionRecord & {
+    submitter_donor_id: string;
+    submitter_specimen_id: string;
+  }
+>;
+
+export type EntityExceptionRecord = SpecimenExceptionRecord;
+
+export type EntityException = {
+  programId: string;
+  specimen: SpecimenExceptionRecord[];
+};
+
+const EntityValues = {
+  specimen: 'specimen',
+} as const;
+
+export type Entity = ObjectValues<typeof EntityValues>;
+
+// Exception Values
+
 export const ExceptionValue = {
   Unknown: 'Unknown',
   NotApplicable: 'Not applicable',
@@ -45,7 +67,9 @@ export const ExceptionValue = {
 
 export type ExceptionValueType = ObjectValues<typeof ExceptionValue>;
 
-export const isProgramExceptionRecord = (input: any): input is ProgramExceptionRecord => {
+// tsv
+
+const isExceptionRecord = (input: any): input is ProgramExceptionRecord => {
   return (
     // input must not be null and be an object (typeof null = 'object', amusingly)
     typeof input === 'object' &&
@@ -64,6 +88,36 @@ export const isProgramExceptionRecord = (input: any): input is ProgramExceptionR
     typeof input.requested_exception_value === 'string'
   );
 };
+
+export const isProgramExceptionRecord = isExceptionRecord;
+
+export const isEntityExceptionRecord = (input: any): input is EntityExceptionRecord => {
+  return (
+    // input must not be null and be an object (typeof null = 'object', amusingly)
+    typeof input === 'object' &&
+    input !== null &&
+    // program_name must exist and be string
+    'program_name' in input &&
+    typeof input.program_name === 'string' &&
+    // schema must exist and be string
+    'schema' in input &&
+    typeof input.schema === 'string' &&
+    // requested_core_field must exist and be string
+    'requested_core_field' in input &&
+    typeof input.requested_core_field === 'string' &&
+    // requested_exception_value must exist and be string and be in enum list
+    'requested_exception_value' in input &&
+    typeof input.requested_exception_value === 'string' &&
+    // submitter_specimen_id must exist and be a string
+    'submitter_specimen_id' in input &&
+    typeof input.submitter_specimen_id === 'string' &&
+    // submitter_donor_id must exist and be a string
+    'submitter_donor_id' in input &&
+    typeof input.submitter_donor_id === 'string'
+  );
+};
+
+// helpers
 
 export const isArrayOf = <T>(input: any[], validator: (_: any) => _ is T): input is T[] => {
   return input.every(validator);

@@ -17,17 +17,13 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { RepoError } from './repo/types';
-import { EntityException, ProgramException } from './types';
+import { ObjectValues } from '../types';
 
-export function isProgramException(
-  result: ProgramException | RepoError,
-): result is ProgramException {
-  return (result as ProgramException).programId !== undefined;
-}
+export type RepoResponse<Exception> = Promise<Exception | RepoError>;
 
-export function isRepoError(
-  result: ProgramException | EntityException | RepoError,
-): result is RepoError {
-  return result === RepoError.DOCUMENT_UNDEFINED || result === RepoError.SERVER_ERROR;
-}
+export const RepoError = {
+  DOCUMENT_UNDEFINED: 'DOCUMENT_UNDEFINED',
+  SERVER_ERROR: 'SERVER_ERROR',
+} as const;
+
+export type RepoError = ObjectValues<typeof RepoError>;

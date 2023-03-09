@@ -18,18 +18,19 @@
  */
 
 import { loggerFor } from '../logger';
-import { programExceptionRepository, RepoError } from './exception-repo';
-import { ExceptionValueType, ProgramException, ProgramExceptionRecord } from './types';
-import { isProgramException } from './util';
+import { default as entity, default as entityExceptionRepository } from './repo/entity';
+import programExceptionRepository from './repo/program';
+import { RepoError } from './repo/types';
 import {
-  checkCoreField,
-  checkIsValidSchema,
-  checkProgramId,
-  checkRequestedValue,
-  FieldValidators,
-  validateRecords,
-  ValidationResult,
-} from './validation';
+  Entity,
+  EntityException,
+  EntityExceptionRecord,
+  ExceptionValueType,
+  ProgramException,
+  ProgramExceptionRecord,
+} from './types';
+import { isRepoError } from './util';
+import { commonValidators, validateRecords, ValidationResult } from './validation';
 
 const L = loggerFor(__filename);
 
@@ -40,6 +41,7 @@ const L = loggerFor(__filename);
  * @param records
  * @returns ProgramException
  */
+
 const recordsToException = (
   programId: string,
   records: ReadonlyArray<ProgramExceptionRecord>,
@@ -54,12 +56,14 @@ const recordsToException = (
   };
 };
 
-// relates to our TSV cols
-export const programValidators: FieldValidators<ProgramExceptionRecord> = {
-  program_name: checkProgramId,
-  schema: checkIsValidSchema,
-  requested_core_field: checkCoreField,
-  requested_exception_value: checkRequestedValue,
+const recordsToEntityException = (
+  programId: string,
+  records: EntityExceptionRecord[],
+): EntityException => {
+  return {
+    programId,
+    specimen: records,
+  };
 };
 
 const createResult = ({
@@ -77,7 +81,7 @@ const createResult = ({
 export type Result = {
   success?: boolean;
   error?: { code: string; message: string };
-  exception?: ProgramException | undefined;
+  exception?: ProgramException | EntityException | undefined;
   validationErrors?: ValidationResult[];
 };
 
@@ -87,16 +91,17 @@ function processResult({
   result,
   errorMessage,
 }: {
-  result: ProgramException | RepoError;
+  result: ProgramException | EntityException | RepoError;
   errorMessage: string;
 }) {
   const SERVER_ERROR_MSG: string = 'Server error occurred';
-  if (isProgramException(result)) {
-    return createResult({ success: true, exception: result });
-  } else {
+
+  if (isRepoError(result)) {
     return createResult({
       error: { code: result, message: errorMessage || SERVER_ERROR_MSG },
     });
+  } else {
+    return createResult({ success: true, exception: result });
   }
 }
 export namespace operations {
@@ -129,7 +134,7 @@ export namespace operations {
     const errors = await validateRecords<ProgramExceptionRecord>(
       programId,
       records,
-      programValidators,
+      commonValidators,
     );
 
     if (errors.length > 0) {
@@ -140,6 +145,39 @@ export namespace operations {
     } else {
       const exceptionToSave = recordsToException(programId, records);
       const result = await programExceptionRepository.save(exceptionToSave);
+
+      return processResult({
+        result,
+        errorMessage,
+      });
+    }
+  };
+
+  export const createEntityException = async ({
+    programId,
+    records,
+  }: {
+    programId: string;
+    records: ReadonlyArray<EntityExceptionRecord>;
+    entity?: Entity;
+  }): Promise<Result> => {
+    const errorMessage = `Cannot create exceptions for ${'specimen'} entity in program '${programId}'`;
+
+    const errors = await validateRecords<EntityExceptionRecord>(
+      programId,
+      records,
+      commonValidators,
+    );
+
+    if (errors.length > 0) {
+      return createResult({
+        error: { code: RepoError.DOCUMENT_UNDEFINED, message: errorMessage },
+        validationErrors: errors,
+      });
+    } else {
+      const exceptionToSave = recordsToEntityException(programId, [...records]);
+
+      const result = await entityExceptionRepository.save(exceptionToSave);
 
       return processResult({
         result,
