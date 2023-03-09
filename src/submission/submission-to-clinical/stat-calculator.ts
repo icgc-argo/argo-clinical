@@ -25,11 +25,11 @@ import {
   Specimen,
 } from '../../clinical/clinical-entities';
 import { ClinicalEntitySchemaNames } from '../../common-model/entities';
-import { notEmpty, F } from '../../../src/utils';
+import { F } from '../../../src/utils';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../../common-model/functions';
 
 import { DeepReadonly } from 'deep-freeze';
-import { cloneDeep, mean, pull } from 'lodash';
+import { cloneDeep, isEmpty, mean, pull } from 'lodash';
 
 type ForceRecaculateFlags = {
   recalcEvenIfComplete?: boolean; // used to force recalculate if stat is already 100%
@@ -90,21 +90,29 @@ const calcDonorCoreEntityStats = (
   if (clinicalType === ClinicalEntitySchemaNames.SPECIMEN) {
     const filteredDonorSpecimens = donor.specimens.filter(dnaSampleFilter);
 
-    const normalSubmissions = filteredDonorSpecimens.filter(
-      specimen =>
-        specimen.tumourNormalDesignation === 'Normal' &&
-        specimen.samples.find(sample => sample.sampleType === 'Normal'),
+    const normalRegistrations = filteredDonorSpecimens.filter(
+      specimen => specimen.tumourNormalDesignation === 'Normal',
     );
 
-    const tumourSubmissions = filteredDonorSpecimens.filter(
-      specimen =>
-        specimen.tumourNormalDesignation === 'Tumour' &&
-        specimen.samples.find(sample => sample.sampleType === 'Tumour'),
+    const normalSubmissions = normalRegistrations.filter(
+      specimen => !isEmpty(specimen.clinicalInfo),
     );
 
-    // Must have least one tumor and one normal
-    const filteredTumorNormalSpecimens =
-      [normalSubmissions, tumourSubmissions].filter(notEmpty).length / 2;
+    const tumourRegistrations = filteredDonorSpecimens.filter(
+      specimen => specimen.tumourNormalDesignation === 'Tumour',
+    );
+
+    const tumourSubmissions = tumourRegistrations.filter(
+      specimen => !isEmpty(specimen.clinicalInfo),
+    );
+
+    const normalRatio =
+      normalRegistrations.length === 0 ? 0 : normalSubmissions.length / normalRegistrations.length;
+
+    const tumourRatio =
+      tumourRegistrations.length === 0 ? 0 : tumourSubmissions.length / tumourRegistrations.length;
+
+    const filteredTumorNormalSpecimens = normalRatio + tumourRatio;
 
     coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = filteredTumorNormalSpecimens;
   } else {
