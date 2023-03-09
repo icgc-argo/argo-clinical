@@ -18,16 +18,22 @@
  */
 
 import { DeepReadonly } from 'deep-freeze';
-import { Donor, ClinicalEntity, ClinicalInfo, Treatment } from '../clinical/clinical-entities';
+import _, { isEmpty } from 'lodash';
+import {
+  Donor,
+  dnaSampleTypes,
+  ClinicalEntity,
+  ClinicalInfo,
+  Treatment,
+  Specimen,
+} from '../clinical/clinical-entities';
+import { notEmpty, convertToArray } from '../utils';
 import {
   ClinicalEntitySchemaNames,
   ClinicalUniqueIdentifier,
   ClinicalTherapySchemaNames,
   EntityAlias,
 } from './entities';
-import { Specimen } from '../clinical/clinical-entities';
-import _ from 'lodash';
-import { notEmpty, convertToArray } from '../utils';
 
 export function getSingleClinicalObjectFromDonor(
   donor: DeepReadonly<Donor>,
@@ -217,6 +223,35 @@ export function getSampleRegistrationDataFromDonor(donor: DeepReadonly<Donor>) {
 
   return sample_registration;
 }
+
+export const dnaSampleFilter = (specimen: Specimen): boolean =>
+  // All Specimen Have a Sample Registration
+  // Only DNA records count towards completion
+  specimen.samples.filter(sample => dnaSampleTypes.includes(sample.sampleType)).length > 0;
+
+export const filterTumourNormalRecords = (recordArray: Specimen[], type: string) =>
+  recordArray.filter(specimen => specimen.tumourNormalDesignation === type);
+
+export const calculateSpecimenCompletionStats = (donorSpecimenData: Specimen[]) => {
+  const normalRegistrations = filterTumourNormalRecords(donorSpecimenData, 'Normal');
+  const tumourRegistrations = filterTumourNormalRecords(donorSpecimenData, 'Tumour');
+
+  const normalSubmissions = normalRegistrations.filter(specimen => !isEmpty(specimen.clinicalInfo));
+  const tumourSubmissions = tumourRegistrations.filter(specimen => !isEmpty(specimen.clinicalInfo));
+
+  const normalRatio =
+    normalRegistrations.length === 0 ? 0 : normalSubmissions.length / normalRegistrations.length;
+
+  const tumourRatio =
+    tumourRegistrations.length === 0 ? 0 : tumourSubmissions.length / tumourRegistrations.length;
+
+  const completionValues = {
+    normalSpecimens: normalRatio,
+    tumourSpecimens: tumourRatio,
+  };
+
+  return completionValues;
+};
 
 export const donorCompletionFields: Array<keyof Donor> = [
   'completionStats',

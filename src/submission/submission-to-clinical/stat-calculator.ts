@@ -21,15 +21,17 @@ import {
   CoreClinicalEntities,
   CoreCompletionFields,
   Donor,
-  dnaSampleTypes,
-  Specimen,
 } from '../../clinical/clinical-entities';
 import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 import { F } from '../../../src/utils';
-import { getClinicalEntitiesFromDonorBySchemaName } from '../../common-model/functions';
+import {
+  calculateSpecimenCompletionStats,
+  dnaSampleFilter,
+  getClinicalEntitiesFromDonorBySchemaName,
+} from '../../common-model/functions';
 
 import { DeepReadonly } from 'deep-freeze';
-import { cloneDeep, isEmpty, mean, pull } from 'lodash';
+import { cloneDeep, mean, pull } from 'lodash';
 
 type ForceRecaculateFlags = {
   recalcEvenIfComplete?: boolean; // used to force recalculate if stat is already 100%
@@ -66,14 +68,6 @@ const coreClinicalSchemaNamesSet = new Set<CoreClinicalSchemaName>(
   Object.keys(schemaNameToCoreCompletenessStat) as CoreClinicalSchemaName[],
 );
 
-const dnaSampleFilter = (specimen: Specimen): boolean =>
-  // Specimens are submitted
-  specimen &&
-  // Specimen has Sample records registered
-  specimen.samples.length > 0 &&
-  // Only DNA records count towards completion
-  specimen.samples.filter(sample => dnaSampleTypes.includes(sample.sampleType)).length > 0;
-
 // This is the main core stat caclulation function.
 // We consider only `required & core` fields for core field calculation, which are always submitted.
 // Additionally, `optional & core` fields are submitted in relation to `required & core` fields,
@@ -90,29 +84,11 @@ const calcDonorCoreEntityStats = (
   if (clinicalType === ClinicalEntitySchemaNames.SPECIMEN) {
     const filteredDonorSpecimens = donor.specimens.filter(dnaSampleFilter);
 
-    const normalRegistrations = filteredDonorSpecimens.filter(
-      specimen => specimen.tumourNormalDesignation === 'Normal',
+    const { normalSpecimens, tumourSpecimens } = calculateSpecimenCompletionStats(
+      filteredDonorSpecimens,
     );
 
-    const normalSubmissions = normalRegistrations.filter(
-      specimen => !isEmpty(specimen.clinicalInfo),
-    );
-
-    const tumourRegistrations = filteredDonorSpecimens.filter(
-      specimen => specimen.tumourNormalDesignation === 'Tumour',
-    );
-
-    const tumourSubmissions = tumourRegistrations.filter(
-      specimen => !isEmpty(specimen.clinicalInfo),
-    );
-
-    const normalRatio =
-      normalRegistrations.length === 0 ? 0 : normalSubmissions.length / normalRegistrations.length;
-
-    const tumourRatio =
-      tumourRegistrations.length === 0 ? 0 : tumourSubmissions.length / tumourRegistrations.length;
-
-    const filteredTumorNormalSpecimens = normalRatio + tumourRatio;
+    const filteredTumorNormalSpecimens = normalSpecimens + tumourSpecimens;
 
     coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = filteredTumorNormalSpecimens;
   } else {
