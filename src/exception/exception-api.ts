@@ -137,15 +137,6 @@ const parseTSV = async (filepath: string) => {
   return records;
 };
 
-// if (!isReadonlyArrayOf(records, guard)) {
-//   throw new Error('TSV is incorrectly structured');
-// }
-// } catch (err) {
-//   L.error(`Program Exception TSV_PARSING_FAILED`, err);
-//   return ControllerUtils.unableToProcess(res, ProgramExceptionErrorMessage.TSV_PARSING_FAILED);
-// }
-// next();
-
 export const requestContainsFile = (req: Request, res: Response, next: NextFunction) => {
   L.debug('requestContainsFile');
   if (req.file === undefined || req.file.size <= 0) {
