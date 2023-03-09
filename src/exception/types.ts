@@ -67,7 +67,9 @@ export const ExceptionValue = {
 
 export type ExceptionValueType = ObjectValues<typeof ExceptionValue>;
 
-export const isProgramExceptionRecord = (input: any): input is ProgramExceptionRecord => {
+// tsv
+
+const isExceptionRecord = (input: any): input is ProgramExceptionRecord => {
   return (
     // input must not be null and be an object (typeof null = 'object', amusingly)
     typeof input === 'object' &&
@@ -87,7 +89,21 @@ export const isProgramExceptionRecord = (input: any): input is ProgramExceptionR
   );
 };
 
-export const isEntityExceptionRecord = (input: any): input is any => true;
+export const isProgramExceptionRecord = isExceptionRecord;
+
+export const isEntityExceptionRecord = (input: any): input is EntityExceptionRecord => {
+  return (
+    isExceptionRecord(input) &&
+    // submitter_specimen_id must exist and be a string
+    'submitter_specimen_id' in input &&
+    typeof input.submitter_specimen_id === 'string' &&
+    // submitter_donor_id must exist and be a string
+    'submitter_donor_id' in input &&
+    typeof input.submitter_donor_id === 'string'
+  );
+};
+
+// helpers
 
 export const isArrayOf = <T>(input: any[], validator: (_: any) => _ is T): input is T[] => {
   return input.every(validator);

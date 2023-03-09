@@ -23,7 +23,7 @@ import { loggerFor } from '../logger';
 import { ControllerUtils, TsvUtils } from '../utils';
 import { RepoError } from './repo/types';
 import * as exceptionService from './exception-service';
-import { isReadonlyArrayOf, isProgramExceptionRecord } from './types';
+import { isReadonlyArrayOf, isProgramExceptionRecord, isEntityExceptionRecord } from './types';
 
 const L = loggerFor(__filename);
 
@@ -41,9 +41,17 @@ function getResStatus(result: exceptionService.Result): number {
   }
 }
 
-const validateProgramExceptionRecord = (records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj>) => {
+const validateProgramExceptionRecords = (records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj>) => {
   if (!isReadonlyArrayOf(records, isProgramExceptionRecord)) {
     L.debug(`Program Exception TSV_PARSING_FAILED`);
+    throw new Error('TSV is incorrectly structured');
+  }
+  return records;
+};
+
+const validateEntityExceptionRecords = (records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj>) => {
+  if (!isReadonlyArrayOf(records, isEntityExceptionRecord)) {
+    L.debug(`Entity Exception TSV_PARSING_FAILED`);
     throw new Error('TSV is incorrectly structured');
   }
   return records;
@@ -55,7 +63,7 @@ class ExceptionController {
   async createProgramException(req: Request, res: Response) {
     const programId = req.params.programId;
     const records = await parseTSV(req.file.path);
-    const programExceptionRecords = validateProgramExceptionRecord(records);
+    const programExceptionRecords = validateProgramExceptionRecords(records);
 
     const result = await exceptionService.operations.createProgramException({
       programId,
@@ -92,10 +100,12 @@ class ExceptionController {
       return res.status(400).send('program exception already exists');
     }
 
-    const records = res.locals.records;
+    const records = await parseTSV(req.file.path);
+    const entityExceptionRecords = validateEntityExceptionRecords(records);
+
     const result = await exceptionService.operations.createEntityException({
       programId,
-      records,
+      records: entityExceptionRecords,
     });
 
     const status = !result.success ? 422 : 201;
