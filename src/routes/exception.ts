@@ -40,6 +40,8 @@ router.get('/', wrapAsync(exceptionApi.getProgramException));
 
 router.delete('/', wrapAsync(exceptionApi.clearProgramException));
 
+router.delete('/entity', wrapAsync(exceptionApi.deleteEntityException));
+
 export default FEATURE_SUBMISSION_EXCEPTIONS_ENABLED
   ? router
   : (req: Request, res: Response) => res.status(404).send();

@@ -20,6 +20,7 @@ import { isArray } from 'lodash';
 import mongoose from 'mongoose';
 import { loggerFor } from '../../logger';
 import { ExceptionValue, ProgramException } from '../types';
+import { checkDoc } from './common';
 import { RepoResponse, RepoError } from './types';
 
 const L = loggerFor(__filename);
@@ -45,13 +46,6 @@ export interface ProgramExceptionRepository {
   find(programId: string): RepoResponse<ProgramException>;
   delete(programId: string): RepoResponse<ProgramException>;
 }
-
-const checkDoc = (doc: null | ProgramException): RepoError | ProgramException => {
-  if (doc === null || (isArray(doc) && doc.length === 0)) {
-    return RepoError.DOCUMENT_UNDEFINED;
-  }
-  return doc;
-};
 
 const programExceptionRepository: ProgramExceptionRepository = {
   async save(exception: ProgramException) {
