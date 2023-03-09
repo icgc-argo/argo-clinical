@@ -93,7 +93,21 @@ export const isProgramExceptionRecord = isExceptionRecord;
 
 export const isEntityExceptionRecord = (input: any): input is EntityExceptionRecord => {
   return (
-    isExceptionRecord(input) &&
+    // input must not be null and be an object (typeof null = 'object', amusingly)
+    typeof input === 'object' &&
+    input !== null &&
+    // program_name must exist and be string
+    'program_name' in input &&
+    typeof input.program_name === 'string' &&
+    // schema must exist and be string
+    'schema' in input &&
+    typeof input.schema === 'string' &&
+    // requested_core_field must exist and be string
+    'requested_core_field' in input &&
+    typeof input.requested_core_field === 'string' &&
+    // requested_exception_value must exist and be string and be in enum list
+    'requested_exception_value' in input &&
+    typeof input.requested_exception_value === 'string' &&
     // submitter_specimen_id must exist and be a string
     'submitter_specimen_id' in input &&
     typeof input.submitter_specimen_id === 'string' &&

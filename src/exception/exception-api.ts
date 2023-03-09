@@ -20,16 +20,12 @@
 import { NextFunction, Request, Response } from 'express';
 import { HasFullReadAccess, HasFullWriteAccess } from '../decorators';
 import { loggerFor } from '../logger';
-import { ControllerUtils, TsvUtils } from '../utils';
+import { ControllerUtils, Errors, TsvUtils } from '../utils';
 import { RepoError } from './repo/types';
 import * as exceptionService from './exception-service';
 import { isReadonlyArrayOf, isProgramExceptionRecord, isEntityExceptionRecord } from './types';
 
 const L = loggerFor(__filename);
-
-const ProgramExceptionErrorMessage = {
-  TSV_PARSING_FAILED: `This file is formatted incorrectly`,
-} as const;
 
 function getResStatus(result: exceptionService.Result): number {
   if (result.success) {
@@ -44,7 +40,7 @@ function getResStatus(result: exceptionService.Result): number {
 const validateProgramExceptionRecords = (records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj>) => {
   if (!isReadonlyArrayOf(records, isProgramExceptionRecord)) {
     L.debug(`Program Exception TSV_PARSING_FAILED`);
-    throw new Error('TSV is incorrectly structured');
+    throw new Errors.TSVParseError();
   }
   return records;
 };
@@ -52,7 +48,7 @@ const validateProgramExceptionRecords = (records: ReadonlyArray<TsvUtils.TsvReco
 const validateEntityExceptionRecords = (records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj>) => {
   if (!isReadonlyArrayOf(records, isEntityExceptionRecord)) {
     L.debug(`Entity Exception TSV_PARSING_FAILED`);
-    throw new Error('TSV is incorrectly structured');
+    throw new Errors.TSVParseError();
   }
   return records;
 };
@@ -117,19 +113,10 @@ const parseTSV = async (filepath: string) => {
   L.debug('parse tsv');
   const records = await TsvUtils.tsvToJson(filepath);
   if (records.length === 0) {
-    throw new Error('TSV has no records!');
+    throw new Errors.TSVParseError('TSV has no records');
   }
   return records;
 };
-
-// if (!isReadonlyArrayOf(records, guard)) {
-//   throw new Error('TSV is incorrectly structured');
-// }
-// } catch (err) {
-//   L.error(`Program Exception TSV_PARSING_FAILED`, err);
-//   return ControllerUtils.unableToProcess(res, ProgramExceptionErrorMessage.TSV_PARSING_FAILED);
-// }
-// next();
 
 export const requestContainsFile = (req: Request, res: Response, next: NextFunction) => {
   L.debug('requestContainsFile');

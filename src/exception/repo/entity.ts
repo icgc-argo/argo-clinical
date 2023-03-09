@@ -59,7 +59,6 @@ const entityExceptionRepository: EntityExceptionRepository = {
         update,
         { upsert: true, new: true },
       ).lean(true);
-      // L.info(`doc created ${doc}`);
     } catch (e) {
       L.error('failed to create entity exception: ', e);
       return RepoError.SERVER_ERROR;
