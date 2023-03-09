@@ -17,31 +17,12 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import * as express from 'express';
-import multer from 'multer';
-import exceptionApi, { requestContainsFile } from '../exception/exception-api';
-import { isEntityExceptionRecord, isProgramExceptionRecord } from '../exception/types';
-import { wrapAsync } from '../middleware';
-import { FEATURE_SUBMISSION_EXCEPTIONS_ENABLED } from '../feature-flags';
-import { Request, Response } from 'express';
+import { isArray } from 'lodash';
+import { RepoError } from './types';
 
-// config
-const router = express.Router({ mergeParams: true });
-const upload = multer({ dest: '/tmp' });
-
-// routes
-router.post('*', upload.single('exceptionFile'), requestContainsFile);
-
-router.post('/', wrapAsync(exceptionApi.createProgramException));
-
-router.post('/entity', wrapAsync(exceptionApi.createEntityException));
-
-router.get('/', wrapAsync(exceptionApi.getProgramException));
-
-router.delete('/', wrapAsync(exceptionApi.clearProgramException));
-
-router.delete('/entity', wrapAsync(exceptionApi.deleteEntityException));
-
-export default FEATURE_SUBMISSION_EXCEPTIONS_ENABLED
-  ? router
-  : (req: Request, res: Response) => res.status(404).send();
+export function checkDoc<Exception>(doc: Exception | null): RepoError | Exception {
+  if (doc === null || (isArray(doc) && doc.length === 0)) {
+    return RepoError.DOCUMENT_UNDEFINED;
+  }
+  return doc;
+}
