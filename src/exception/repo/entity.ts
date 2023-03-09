@@ -19,7 +19,8 @@
 
 import mongoose from 'mongoose';
 import { loggerFor } from '../../logger';
-import { EntityException, ExceptionValue } from '../types';
+import { Entity, EntityException, ExceptionValue } from '../types';
+import { checkDoc } from './common';
 import { RepoError, RepoResponse } from './types';
 
 const L = loggerFor(__filename);
@@ -45,6 +46,8 @@ const EntityExceptionModel = mongoose.model<EntityException>(
 
 export interface EntityExceptionRepository {
   save(exception: EntityException): RepoResponse<EntityException>;
+  delete(programId: string): RepoResponse<EntityException>;
+  deleteSingleEntity(programId: string, entity: Entity): RepoResponse<EntityException>;
 }
 
 const entityExceptionRepository: EntityExceptionRepository = {
@@ -61,6 +64,33 @@ const entityExceptionRepository: EntityExceptionRepository = {
       ).lean(true);
     } catch (e) {
       L.error('failed to create entity exception: ', e);
+      return RepoError.SERVER_ERROR;
+    }
+  },
+
+  async delete(programId: string) {
+    L.debug(`deleting all entity exceptions with program id: ${JSON.stringify(programId)}`);
+    try {
+      const doc = await EntityExceptionModel.findOneAndDelete({ programId }).lean(true);
+      return checkDoc<EntityException>(doc);
+    } catch (e) {
+      L.error('failed to delete exception', e);
+      return RepoError.SERVER_ERROR;
+    }
+  },
+
+  async deleteSingleEntity(programId: string, entity: Entity) {
+    L.debug(
+      `deleting single entity ${entity} exception with program id: ${JSON.stringify(programId)}`,
+    );
+    try {
+      const update = { $set: { [entity]: [] } };
+      const doc = await EntityExceptionModel.findOneAndUpdate({ programId }, update, {
+        new: true,
+      }).lean(true);
+      return checkDoc(doc);
+    } catch (e) {
+      L.error('failed to delete exception', e);
       return RepoError.SERVER_ERROR;
     }
   },
