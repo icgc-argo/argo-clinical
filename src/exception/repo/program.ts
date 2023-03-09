@@ -18,8 +18,9 @@
  */
 import { isArray } from 'lodash';
 import mongoose from 'mongoose';
-import { loggerFor } from '../logger';
-import { ExceptionValue, ObjectValues, ProgramException } from './types';
+import { loggerFor } from '../../logger';
+import { ExceptionValue, ProgramException } from '../types';
+import { RepoResponse, RepoError } from './types';
 
 const L = loggerFor(__filename);
 
@@ -34,24 +35,15 @@ const programExceptionSchema = new mongoose.Schema<ProgramException>({
   ],
 });
 
-export const ProgramExceptionModel = mongoose.model<ProgramException>(
+const ProgramExceptionModel = mongoose.model<ProgramException>(
   'ProgramException',
   programExceptionSchema,
 );
 
-type RepoResponse = Promise<ProgramException | RepoError>;
-
-export const RepoError = {
-  DOCUMENT_UNDEFINED: 'DOCUMENT_UNDEFINED',
-  SERVER_ERROR: 'SERVER_ERROR',
-} as const;
-
-export type RepoError = ObjectValues<typeof RepoError>;
-
 export interface ProgramExceptionRepository {
-  save(exception: ProgramException): RepoResponse;
-  find(programId: string): RepoResponse;
-  delete(programId: string): RepoResponse;
+  save(exception: ProgramException): RepoResponse<ProgramException>;
+  find(programId: string): RepoResponse<ProgramException>;
+  delete(programId: string): RepoResponse<ProgramException>;
 }
 
 const checkDoc = (doc: null | ProgramException): RepoError | ProgramException => {
@@ -61,7 +53,7 @@ const checkDoc = (doc: null | ProgramException): RepoError | ProgramException =>
   return doc;
 };
 
-export const programExceptionRepository: ProgramExceptionRepository = {
+const programExceptionRepository: ProgramExceptionRepository = {
   async save(exception: ProgramException) {
     L.debug(`Creating new program exception with: ${JSON.stringify(exception)}`);
     try {
@@ -99,3 +91,5 @@ export const programExceptionRepository: ProgramExceptionRepository = {
     }
   },
 };
+
+export default programExceptionRepository;

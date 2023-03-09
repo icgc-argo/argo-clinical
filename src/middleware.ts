@@ -54,6 +54,9 @@ export const errorHandler = (err: Error, req: Request, res: Response, next: Next
     case err instanceof Errors.StateConflict:
       status = 409;
       break;
+    case err instanceof Errors.TSVParseError:
+      status = 422;
+      break;
     case (err as any).name == 'CastError':
       status = 404;
       err.name = 'Not found';
