@@ -17,6 +17,8 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import { DeepReadonly } from 'deep-freeze';
+
 export type ObjectValues<T> = T[keyof T];
 
 export type ExceptionRecord = Readonly<{
@@ -35,22 +37,26 @@ export type ProgramException = {
 };
 
 // Entity
-export type SpecimenExceptionRecord = Readonly<
-  ExceptionRecord & {
-    submitter_donor_id: string;
-    submitter_specimen_id: string;
-  }
->;
+export type SpecimenExceptionRecord = ExceptionRecord & {
+  submitter_donor_id: string;
+  submitter_specimen_id: string;
+};
 
-export type EntityExceptionRecord = SpecimenExceptionRecord;
+export type FollowUpExceptionRecord = ExceptionRecord & {
+  submitter_followup_id: string;
+};
+
+export type EntityExceptionRecord = SpecimenExceptionRecord | FollowUpExceptionRecord;
 
 export type EntityException = {
   programId: string;
-  specimen: SpecimenExceptionRecord[];
+  specimen: DeepReadonly<SpecimenExceptionRecord[]>;
+  followup: DeepReadonly<FollowUpExceptionRecord[]>;
 };
 
-const EntityValues = {
+export const EntityValues = {
   specimen: 'specimen',
+  followup: 'followup',
 } as const;
 
 export type Entity = ObjectValues<typeof EntityValues>;
