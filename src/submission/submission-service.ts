@@ -869,9 +869,7 @@ export namespace operations {
       const exception = exceptions.find(
         exception => exception.requested_core_field === validationErrorField,
       );
-      return !exception
-        ? false
-        : exception.requested_exception_value === record[validationErrorField];
+      return exception?.requested_exception_value === record[validationErrorField];
     }
   };
 
