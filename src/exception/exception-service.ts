@@ -34,28 +34,6 @@ import { commonValidators, validateRecords, ValidationResult } from './validatio
 
 const L = loggerFor(__filename);
 
-/**
- * records should be validated before using this function
- * explicitly typing from tsv record input to ProgramException
- * @param programId
- * @param records
- * @returns ProgramException
- */
-
-const recordsToException = (
-  programId: string,
-  records: ReadonlyArray<ProgramExceptionRecord>,
-): ProgramException => {
-  return {
-    programId,
-    exceptions: records.map(r => ({
-      schema: r.schema,
-      coreField: r.requested_core_field,
-      exceptionValue: r.requested_exception_value as ExceptionValueType,
-    })),
-  };
-};
-
 const recordsToEntityException = (
   programId: string,
   records: EntityExceptionRecord[],
@@ -143,8 +121,8 @@ export namespace operations {
         validationErrors: errors,
       });
     } else {
-      const exceptionToSave = recordsToException(programId, records);
-      const result = await programExceptionRepository.save(exceptionToSave);
+      //const exceptionToSave = recordsToException(programId, records);
+      const result = await programExceptionRepository.save({ programId, exceptions: records });
 
       return processResult({
         result,
