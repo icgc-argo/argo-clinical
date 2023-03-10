@@ -21,12 +21,12 @@ import { DeepReadonly } from 'deep-freeze';
 
 export type ObjectValues<T> = T[keyof T];
 
-export type ExceptionRecord = Readonly<{
+export type ExceptionRecord = {
   program_name: string;
   schema: string;
   requested_core_field: string;
   requested_exception_value: string;
-}>;
+};
 
 export type ProgramExceptionRecord = ExceptionRecord;
 
@@ -50,8 +50,8 @@ export type EntityExceptionRecord = SpecimenExceptionRecord | FollowUpExceptionR
 
 export type EntityException = {
   programId: string;
-  specimen: DeepReadonly<SpecimenExceptionRecord[]>;
-  followup: DeepReadonly<FollowUpExceptionRecord[]>;
+  specimen: SpecimenExceptionRecord[];
+  followup: FollowUpExceptionRecord[];
 };
 
 export const EntityValues = {
@@ -70,9 +70,8 @@ export const ExceptionValue = {
 
 export type ExceptionValueType = ObjectValues<typeof ExceptionValue>;
 
-// tsv
-
-const isExceptionRecord = (input: any): input is ProgramExceptionRecord => {
+// predicate helpers
+const isExceptionRecordCheck = (input: any) => {
   return (
     // input must not be null and be an object (typeof null = 'object', amusingly)
     typeof input === 'object' &&
@@ -92,36 +91,28 @@ const isExceptionRecord = (input: any): input is ProgramExceptionRecord => {
   );
 };
 
-export const isProgramExceptionRecord = isExceptionRecord;
-
-export const isEntityExceptionRecord = (input: any): input is EntityExceptionRecord => {
+const isSpecimenExceptionRecord = (input: any): boolean => {
   return (
-    // input must not be null and be an object (typeof null = 'object', amusingly)
-    typeof input === 'object' &&
-    input !== null &&
-    // program_name must exist and be string
-    'program_name' in input &&
-    typeof input.program_name === 'string' &&
-    // schema must exist and be string
-    'schema' in input &&
-    typeof input.schema === 'string' &&
-    // requested_core_field must exist and be string
-    'requested_core_field' in input &&
-    typeof input.requested_core_field === 'string' &&
-    // requested_exception_value must exist and be string and be in enum list
-    'requested_exception_value' in input &&
-    typeof input.requested_exception_value === 'string' &&
     // submitter_specimen_id must exist and be a string
-    'submitter_specimen_id' in input &&
-    typeof input.submitter_specimen_id === 'string' &&
-    // submitter_donor_id must exist and be a string
-    'submitter_donor_id' in input &&
-    typeof input.submitter_donor_id === 'string'
+    'submitter_specimen_id' in input && typeof input.submitter_specimen_id === 'string'
   );
 };
 
-// helpers
+// predicate
 
+const isEntityExceptionRecord = (input: any): input is EntityException => {
+  return isExceptionRecordCheck(input) && isSpecimenExceptionRecord(input);
+};
+
+const isExceptionRecord = (input: any): input is ExceptionRecord => isExceptionRecordCheck(input);
+
+export const isProgramExceptionRecord = isExceptionRecord;
+
+export type EntityExceptionRecords = (SpecimenExceptionRecord | FollowUpExceptionRecord)[];
+export const isArrayOfEntityExceptionRecord = (input: any): input is EntityExceptionRecords =>
+  input.every((i: any) => isEntityExceptionRecord(i));
+
+// array helpers
 export const isArrayOf = <T>(input: any[], validator: (_: any) => _ is T): input is T[] => {
   return input.every(validator);
 };

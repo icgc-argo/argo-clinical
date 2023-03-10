@@ -51,6 +51,13 @@ import {
   EntityExceptionRecord,
   Entity,
   EntityValues,
+  EntityExceptionAtomicRecords,
+  SpecimenExceptionRecord,
+  FollowUpExceptionRecord,
+  isEntityExceptionRecord,
+  ProgramExceptionRecord,
+  isArrayOfEntityExceptionRecord,
+  EntityExceptionRecords,
 } from '../exception/types';
 import { isProgramException, isEntityException } from '../exception/util';
 import { loggerFor } from '../logger';
@@ -861,84 +868,82 @@ export namespace operations {
     );
   }
 
-  type ExceptionFilter<T> = (
-    exceptions: DeepReadonly<T[]>,
-    validationError: dictionaryEntities.SchemaValidationError,
-    record: DataRecord,
-  ) => boolean;
-
-  const programExceptionFilter: ExceptionFilter<ProgramException['exceptions']> = (
+  const isException = ({
+    record,
     exceptions,
     validationError,
+  }: {
+    record: dictionaryEntities.DataRecord;
+    exceptions: ProgramExceptionRecord[] | SpecimenExceptionRecord[] | FollowUpExceptionRecord[];
+    validationError: dictionaryEntities.SchemaValidationError;
+  }): boolean => {
+    // missing required field error, validate as normal, exceptions still require a submitted value
+    if (
+      validationError.errorType ===
+      dictionaryEntities.SchemaValidationErrorTypes.MISSING_REQUIRED_FIELD
+    ) {
+      return false;
+    }
+
+    // find exception for field
+    const validationErrorFieldName = validationError.fieldName;
+    const exception = findException({ exceptions, record, validationErrorFieldName });
+
+    // check exception value matches error field value
+    const errorFieldValue = record[validationErrorFieldName];
+    const applyException =
+      exception !== undefined && exception.requested_exception_value === errorFieldValue;
+
+    return applyException;
+  };
+
+  const findException = ({
+    exceptions,
     record,
-  ) => {
-    // missing required field, validate as normal, exceptions still require a submitted value
-    if (
-      validationError.errorType ===
-      dictionaryEntities.SchemaValidationErrorTypes.MISSING_REQUIRED_FIELD
-    ) {
-      return false;
-    }
-    // every other validation of SchemaValidationErrorTypes check for exception
-    else {
-      const validationErrorField = validationError.fieldName;
-      const exception = exceptions.find(
-        exception => exception.requested_core_field === validationErrorField,
-      );
-      return exception?.requested_exception_value === record[validationErrorField];
-    }
-  };
-
-  // TODO: object destructu
-  const entityExceptionFilter = (
-    exceptions: any[],
-    validationError: SchemaValidationError,
-    record: DataRecord,
-    entity: Entity,
-  ): boolean => {
-    // missing required field, validate as normal, exceptions still require a submitted value
-    if (
-      validationError.errorType ===
-      dictionaryEntities.SchemaValidationErrorTypes.MISSING_REQUIRED_FIELD
-    ) {
-      return false;
+    validationErrorFieldName,
+  }: {
+    exceptions: ProgramExceptionRecord[] | EntityExceptionRecords;
+    record: DataRecord;
+    validationErrorFieldName: string;
+  }): ProgramExceptionRecord | EntityExceptionRecord | undefined => {
+    if (isArrayOfEntityExceptionRecord(exceptions)) {
+      // entity exception
+      return exceptions.find(exception => {
+        exception.requested_core_field === validationErrorFieldName &&
+          findExceptionByEntity({ exception, record });
+      });
     } else {
-      const validationErrorFieldName = validationError.fieldName;
-      const exception = exceptions.find(
-        exception =>
-          exception.requested_core_field === validationErrorFieldName &&
-          findExceptionByEntity(exception, entity, record),
-      );
-      console.log(JSON.stringify(exception));
-
-      const errorFieldValue = record[validationErrorFieldName];
-      const applyException = exception && exception.requested_exception_value === errorFieldValue;
-
-      return applyException;
+      // program exception
+      return exceptions.find(exception => {
+        exception.requested_core_field === validationErrorFieldName;
+      });
     }
   };
 
-  const findExceptionByEntity = (
-    exception: any,
-    entity: Entity,
-    record: dictionaryEntities.DataRecord,
-  ) => {
-    switch (entity) {
-      case EntityValues.specimen:
-        return exception.submitter_specimen_id === record.submitter_specimen_id;
-      default:
-        return false;
+  const specimenKeyField: keyof SpecimenExceptionRecord = 'submitter_specimen_id';
+  const findExceptionByEntity = ({
+    exception,
+    record,
+  }: {
+    exception: EntityExceptionRecord;
+    record: DataRecord;
+  }) => {
+    // NB: keep type checks as string literals for current project TS version 3.9.5
+    if ('submitter_specimen_id' in exception) {
+      return exception[specimenKeyField] === record[specimenKeyField];
+    } else {
+      return false;
     }
   };
 
   const applyExceptions = async ({
     programId,
-    schema,
+    entity,
     record,
     schemaValidationErrors,
   }: {
     programId: string;
-    schema: string;
+    entity: Entity;
     record: dictionaryEntities.DataRecord;
     schemaValidationErrors: dictionaryEntities.SchemaValidationError[];
   }): Promise<dictionaryEntities.SchemaValidationError[]> => {
@@ -950,20 +955,19 @@ export namespace operations {
     if (isProgramException(programExceptionResult)) {
       return schemaValidationErrors.filter(
         validationError =>
-          !programExceptionFilter(programExceptionResult.exceptions, validationError, record),
+          !isException({ exceptions: programExceptionResult.exceptions, validationError, record }),
       );
     }
 
     // entity level exceptions
-    // const entityExceptionResult = await entityExceptionRepository.find(programId, record.schema);
-
+    // const entityExceptionResult = await entityExceptionRepository.find(programId, schema);
     const entityExceptionResult = await entityExceptionRepository.find(programId);
     if (isEntityException(entityExceptionResult)) {
-      const entityExceptions = entityExceptionResult;
+      const entityExceptions = entityExceptionResult[entity];
 
-      return schemaValidationErrors.filter(validationError => {
-        return entityExceptionFilter(entityExceptions, validationError, record, schema);
-      });
+      return schemaValidationErrors.filter(
+        validationError => !isException({ exceptions: entityExceptions, validationError, record }),
+      );
     }
 
     const t1 = performance.now();
@@ -996,7 +1000,7 @@ export namespace operations {
           console.log(JSON.stringify(schemaResult));
           const validationErrors = await applyExceptions({
             programId: command.programId,
-            schema: schema.name,
+            entity: schema.name,
             record,
             schemaValidationErrors: [...schemaResult.validationErrors],
           });
