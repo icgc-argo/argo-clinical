@@ -41,7 +41,6 @@ import {
 } from '../common-model/entities';
 import * as dictionaryManager from '../dictionary/manager';
 import programExceptionRepository from '../exception/repo/program';
-import { ProgramException } from '../exception/types';
 import { isProgramException } from '../exception/util';
 import { FEATURE_SUBMISSION_EXCEPTIONS_ENABLED } from '../feature-flags';
 import { loggerFor } from '../logger';
@@ -850,45 +849,6 @@ export namespace operations {
       }),
     );
   }
-
-  /**
-   * Checks if there is a program exception matching the record value
-   *
-   * @param exceptions
-   * @param validationError
-   * @param recordValue
-   * @returns true if an exception match exists, false otherwise
-   */
-  const checkExceptionExists = (
-    exceptions: DeepReadonly<ProgramException['exceptions']>,
-    validationError: DeepReadonly<dictionaryEntities.SchemaValidationError>,
-    recordValue: string,
-  ): boolean => {
-    // missing required field, validate as normal, exceptions still require a submitted value
-    if (
-      validationError.errorType ===
-      dictionaryEntities.SchemaValidationErrorTypes.MISSING_REQUIRED_FIELD
-    ) {
-      return false;
-    }
-    // every other validation of SchemaValidationErrorTypes check for exception
-    else {
-      const exception = exceptions.find(
-        exception => exception.coreField === validationError.fieldName,
-      );
-
-      return exception?.exceptionValue === recordValue;
-    }
-  };
-
-  /**
-   * Normalizes input string to start with Upper case, remaining
-   * characters lowercase and to trim whitespace
-   *
-   * @param value
-   * returns normalized string
-   */
-  const normalizeExceptionValue = (value: string) => _.upperFirst(value.trim().toLowerCase());
 
   export const checkClinicalEntity = async (
     command: ClinicalSubmissionCommand,
