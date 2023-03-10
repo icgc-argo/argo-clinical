@@ -20,12 +20,12 @@
 import { DeepReadonly } from 'deep-freeze';
 import _, { isEmpty } from 'lodash';
 import {
-  Donor,
-  dnaSampleTypes,
   ClinicalEntity,
   ClinicalInfo,
-  Treatment,
+  dnaSampleTypes,
+  Donor,
   Specimen,
+  Treatment,
 } from '../clinical/clinical-entities';
 import { notEmpty, convertToArray } from '../utils';
 import {
