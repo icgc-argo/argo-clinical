@@ -205,17 +205,15 @@ function FilterDonorIdDataFromSearch(donors: Donor[], query: ClinicalSearchQuery
     })
     .filter(donor => {
       // This filters out false positive search results ( i.e. where Donor.treatments = [] )
-      let found = false;
-      Object.values(ClinicalEntitySchemaNames).forEach(entity => {
-        let clinicalInfoRecords: ClinicalInfo[];
-        const isQueriedEntity = isEntityInQuery(entity, query.entityTypes);
+      const queriedEntities = Object.values(ClinicalEntitySchemaNames).filter(entity =>
+        isEntityInQuery(entity, query.entityTypes),
+      );
 
-        if (isQueriedEntity) {
-          clinicalInfoRecords = getClinicalEntitySubmittedData(donor, entity);
-          found = !isEmpty(clinicalInfoRecords);
-        }
-      });
-      return found;
+      const clinicalInfoRecords = queriedEntities
+        .map(entity => getClinicalEntitySubmittedData(donor, entity))
+        .filter(record => !isEmpty(record));
+
+      return clinicalInfoRecords.length > 0;
     });
 
   const totalResults = filteredDonors.length;
