@@ -88,7 +88,7 @@ const calcDonorCoreEntityStats = (
       filteredDonorSpecimens,
     );
 
-    const filteredTumorNormalSpecimens = normalSpecimens + tumourSpecimens;
+    const filteredTumorNormalSpecimens = (normalSpecimens + tumourSpecimens) / 2;
 
     coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = filteredTumorNormalSpecimens;
   } else {
