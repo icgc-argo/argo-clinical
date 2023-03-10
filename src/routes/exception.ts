@@ -33,7 +33,7 @@ router.post('/', wrapAsync(exceptionApi.createProgramException));
 
 router.post('/entity', wrapAsync(exceptionApi.createEntityException));
 
-router.gets('/', wrapAsync(exceptionApi.getProgramException));
+router.get('/', wrapAsync(exceptionApi.getProgramException));
 
 router.delete('/', wrapAsync(exceptionApi.clearProgramException));
 
