@@ -866,8 +866,10 @@ export namespace operations {
     // every other validation of SchemaValidationErrorTypes check for exception
     else {
       const validationErrorField = validationError.fieldName;
-      const exception = exceptions.find(exception => exception.coreField === validationErrorField);
-      return !exception ? false : exception.exceptionValue === record[validationErrorField];
+      const exception = exceptions.find(
+        exception => exception.requested_core_field === validationErrorField,
+      );
+      return exception?.requested_exception_value === record[validationErrorField];
     }
   };
 
