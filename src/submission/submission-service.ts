@@ -18,10 +18,7 @@
  */
 
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
-import {
-  DataRecord,
-  SchemaValidationError,
-} from '@overturebio-stack/lectern-client/lib/schema-entities';
+import { DataRecord } from '@overturebio-stack/lectern-client/lib/schema-entities';
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 import { v1 as uuid } from 'uuid';
@@ -44,22 +41,19 @@ import {
   TherapyRxNormFields,
 } from '../common-model/entities';
 import * as dictionaryManager from '../dictionary/manager';
+import entityExceptionRepository from '../exception/repo/entity';
 import programExceptionRepository from '../exception/repo/program';
 import {
-  ProgramException,
-  EntityException,
-  EntityExceptionRecord,
   Entity,
-  EntityValues,
-  EntityExceptionAtomicRecords,
-  SpecimenExceptionRecord,
-  FollowUpExceptionRecord,
-  isEntityExceptionRecord,
-  ProgramExceptionRecord,
-  isArrayOfEntityExceptionRecord,
+  EntityExceptionRecord,
   EntityExceptionRecords,
+  FollowUpExceptionRecord,
+  isArrayOfEntityExceptionRecord,
+  ProgramExceptionRecord,
+  SpecimenExceptionRecord,
+  EntityValues,
 } from '../exception/types';
-import { isProgramException, isEntityException } from '../exception/util';
+import { isEntityException, isProgramException } from '../exception/util';
 import { loggerFor } from '../logger';
 import { RxNormConcept } from '../rxnorm/api';
 import dbRxNormService from '../rxnorm/service';
@@ -114,7 +108,6 @@ import {
 } from './validation-clinical/utils';
 import * as dataValidator from './validation-clinical/validation';
 import { checkUniqueRecords, validateSubmissionData } from './validation-clinical/validation';
-import entityExceptionRepository from '../exception/repo/entity';
 
 const L = loggerFor(__filename);
 
@@ -868,13 +861,19 @@ export namespace operations {
     );
   }
 
+  // TODO: export from types from union existing types
+  type X =
+    | ReadonlyArray<ProgramExceptionRecord>
+    | ReadonlyArray<SpecimenExceptionRecord>
+    | ReadonlyArray<FollowUpExceptionRecord>;
+
   const isException = ({
     record,
     exceptions,
     validationError,
   }: {
     record: dictionaryEntities.DataRecord;
-    exceptions: ProgramExceptionRecord[] | SpecimenExceptionRecord[] | FollowUpExceptionRecord[];
+    exceptions: X;
     validationError: dictionaryEntities.SchemaValidationError;
   }): boolean => {
     // missing required field error, validate as normal, exceptions still require a submitted value
@@ -898,7 +897,7 @@ export namespace operations {
     record,
     validationErrorFieldName,
   }: {
-    exceptions: ProgramExceptionRecord[] | EntityExceptionRecords;
+    exceptions: X;
     record: DataRecord;
     validationErrorFieldName: string;
   }): ProgramExceptionRecord | EntityExceptionRecord | undefined => {
@@ -939,7 +938,7 @@ export namespace operations {
     schemaValidationErrors,
   }: {
     programId: string;
-    entity: Entity;
+    entity: string;
     record: dictionaryEntities.DataRecord;
     schemaValidationErrors: dictionaryEntities.SchemaValidationError[];
   }): Promise<dictionaryEntities.SchemaValidationError[]> => {
@@ -958,7 +957,10 @@ export namespace operations {
     // entity level exceptions
     // const entityExceptionResult = await entityExceptionRepository.find(programId, schema);
     const entityExceptionResult = await entityExceptionRepository.find(programId);
-    if (isEntityException(entityExceptionResult)) {
+    if (
+      isEntityException(entityExceptionResult) &&
+      (entity === EntityValues.followup || entity === EntityValues.specimen)
+    ) {
       const entityExceptions = entityExceptionResult[entity];
 
       return schemaValidationErrors.filter(

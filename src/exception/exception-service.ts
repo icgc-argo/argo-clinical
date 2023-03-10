@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 The Ontario Institute for Cancer Research. All rights reserved
+ * Copyright (c) 2023 The Ontario Institute for Cancer Research. All rights reserved
  *
  * This program and the accompanying materials are made available under the terms of
  * the GNU Affero General Public License v3.0. You should have received a copy of the
@@ -18,14 +18,15 @@
  */
 
 import { loggerFor } from '../logger';
-import { default as entity, default as entityExceptionRepository } from './repo/entity';
+import entityExceptionRepository from './repo/entity';
 import programExceptionRepository from './repo/program';
 import { RepoError } from './repo/types';
 import {
   Entity,
   EntityException,
   EntityExceptionRecord,
-  ExceptionValueType,
+  isArrayOf,
+  isSpecimenExceptionRecord,
   ProgramException,
   ProgramExceptionRecord,
 } from './types';
@@ -34,14 +35,21 @@ import { commonValidators, validateRecords, ValidationResult } from './validatio
 
 const L = loggerFor(__filename);
 
-const recordsToEntityException = (
-  programId: string,
-  records: EntityExceptionRecord[],
-): EntityException => {
-  return {
-    programId,
-    specimen: records,
-  };
+const recordsToEntityException = ({
+  programId,
+  records,
+}: {
+  programId: string;
+  records: ReadonlyArray<EntityExceptionRecord>;
+  entity: Entity;
+}) => {
+  const exception: EntityException = { programId, specimen: [], followup: [] };
+
+  if (isArrayOf(records, isSpecimenExceptionRecord)) {
+    exception.specimen = records;
+  }
+
+  return exception;
 };
 
 const createResult = ({
@@ -133,10 +141,11 @@ export namespace operations {
   export const createEntityException = async ({
     programId,
     records,
+    entity,
   }: {
     programId: string;
     records: ReadonlyArray<EntityExceptionRecord>;
-    entity?: Entity;
+    entity: Entity;
   }): Promise<Result> => {
     const errorMessage = `Cannot create exceptions for ${'specimen'} entity in program '${programId}'`;
 
@@ -152,7 +161,7 @@ export namespace operations {
         validationErrors: errors,
       });
     } else {
-      const exceptionToSave = recordsToEntityException(programId, [...records]);
+      const exceptionToSave = recordsToEntityException({ programId, records, entity });
 
       const result = await entityExceptionRepository.save(exceptionToSave);
 

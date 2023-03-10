@@ -17,8 +17,6 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { DeepReadonly } from 'deep-freeze';
-
 export type ObjectValues<T> = T[keyof T];
 
 export type ExceptionRecord = {
@@ -91,17 +89,27 @@ const isExceptionRecordCheck = (input: any) => {
   );
 };
 
-const isSpecimenExceptionRecord = (input: any): boolean => {
+export const isSpecimenExceptionRecord = (input: any): input is SpecimenExceptionRecord => {
   return (
     // submitter_specimen_id must exist and be a string
     'submitter_specimen_id' in input && typeof input.submitter_specimen_id === 'string'
   );
 };
 
+const isFollowupExceptionRecord = (input: any): boolean => {
+  return (
+    // submitter_followup_id must exist and be a string
+    'submitter_followup_id' in input && typeof input.submitter_followup_id === 'string'
+  );
+};
+
 // predicate
 
-const isEntityExceptionRecord = (input: any): input is EntityException => {
-  return isExceptionRecordCheck(input) && isSpecimenExceptionRecord(input);
+export const isEntityExceptionRecord = (input: any): input is EntityExceptionRecord => {
+  return (
+    isExceptionRecordCheck(input) &&
+    (isSpecimenExceptionRecord(input) || isFollowupExceptionRecord(input))
+  );
 };
 
 const isExceptionRecord = (input: any): input is ExceptionRecord => isExceptionRecordCheck(input);
@@ -113,7 +121,10 @@ export const isArrayOfEntityExceptionRecord = (input: any): input is EntityExcep
   input.every((i: any) => isEntityExceptionRecord(i));
 
 // array helpers
-export const isArrayOf = <T>(input: any[], validator: (_: any) => _ is T): input is T[] => {
+export const isArrayOf = <T>(
+  input: any[] | readonly any[],
+  validator: (_: any) => _ is T,
+): input is T[] => {
   return input.every(validator);
 };
 
