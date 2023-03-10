@@ -849,7 +849,6 @@ export namespace operations {
       }),
     );
   }
-
   export const checkClinicalEntity = async (
     command: ClinicalSubmissionCommand,
     schema: dictionaryEntities.SchemasDictionary,
