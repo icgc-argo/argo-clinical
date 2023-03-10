@@ -25,6 +25,7 @@ export type ExceptionRecord = Readonly<{
   requested_core_field: string;
   requested_exception_value: string;
 }>;
+
 export type ProgramExceptionRecord = ExceptionRecord;
 
 // type after validation
