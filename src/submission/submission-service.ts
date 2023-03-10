@@ -883,18 +883,14 @@ export namespace operations {
       dictionaryEntities.SchemaValidationErrorTypes.MISSING_REQUIRED_FIELD
     ) {
       return false;
+    } else {
+      // find exception for field
+      const validationErrorFieldName = validationError.fieldName;
+      const exception = findException({ exceptions, record, validationErrorFieldName });
+
+      // check exception value matches error field value
+      return exception?.requested_exception_value === record[validationErrorFieldName];
     }
-
-    // find exception for field
-    const validationErrorFieldName = validationError.fieldName;
-    const exception = findException({ exceptions, record, validationErrorFieldName });
-
-    // check exception value matches error field value
-    const errorFieldValue = record[validationErrorFieldName];
-    const applyException =
-      exception !== undefined && exception.requested_exception_value === errorFieldValue;
-
-    return applyException;
   };
 
   const findException = ({
