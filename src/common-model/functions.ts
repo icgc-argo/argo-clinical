@@ -240,10 +240,14 @@ export const calculateSpecimenCompletionStats = (donorSpecimenData: Specimen[]) 
   const tumourSubmissions = tumourRegistrations.filter(specimen => !isEmpty(specimen.clinicalInfo));
 
   const normalRatio =
-    normalRegistrations.length === 0 ? 0 : normalSubmissions.length / normalRegistrations.length;
+    normalRegistrations.length === 0 || normalSubmissions.length === 0
+      ? 0
+      : normalSubmissions.length / normalRegistrations.length;
 
   const tumourRatio =
-    tumourRegistrations.length === 0 ? 0 : tumourSubmissions.length / tumourRegistrations.length;
+    tumourRegistrations.length === 0 || tumourSubmissions.length === 0
+      ? 0
+      : tumourSubmissions.length / tumourRegistrations.length;
 
   const completionValues = {
     normalSpecimens: normalRatio,
