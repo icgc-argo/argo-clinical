@@ -121,7 +121,6 @@ export namespace operations {
         validationErrors: errors,
       });
     } else {
-      //const exceptionToSave = recordsToException(programId, records);
       const result = await programExceptionRepository.save({ programId, exceptions: records });
 
       return processResult({
