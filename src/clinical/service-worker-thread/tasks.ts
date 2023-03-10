@@ -190,32 +190,33 @@ const mapEntityDocuments = (
 // Submitted Data Search Results
 function FilterDonorIdDataFromSearch(donors: Donor[], query: ClinicalSearchQuery) {
   const { donorIds, submitterDonorIds } = query;
-  const useFilteredDonors = !isEmpty(donorIds) || !isEmpty(submitterDonorIds);
+  const useQueriedDonors = !isEmpty(donorIds) || !isEmpty(submitterDonorIds);
 
-  let filteredDonors = useFilteredDonors
-    ? donors.filter(donor => {
+  const filteredDonors = donors
+    .filter(donor => {
+      if (useQueriedDonors) {
         const { donorId, submitterId } = donor;
         const stringId = `${donorId}`;
         const donorMatch = donorIds?.some(id => stringId.includes(id));
         const submitterMatch = submitterDonorIds?.some(id => submitterId.includes(id));
         return donorMatch || submitterMatch;
-      })
-    : donors;
-
-  // This filters out false positive search results ( i.e. where Donor.treatments = [] )
-  filteredDonors = donors.filter(donor => {
-    let found = false;
-    Object.values(ClinicalEntitySchemaNames).forEach(entity => {
-      let clinicalInfoRecords: ClinicalInfo[];
-      const isQueriedEntity = isEntityInQuery(entity, query.entityTypes);
-
-      if (isQueriedEntity) {
-        clinicalInfoRecords = getClinicalEntitySubmittedData(donor, entity);
-        found = !isEmpty(clinicalInfoRecords);
       }
+      return donor;
+    })
+    .filter(donor => {
+      // This filters out false positive search results ( i.e. where Donor.treatments = [] )
+      let found = false;
+      Object.values(ClinicalEntitySchemaNames).forEach(entity => {
+        let clinicalInfoRecords: ClinicalInfo[];
+        const isQueriedEntity = isEntityInQuery(entity, query.entityTypes);
+
+        if (isQueriedEntity) {
+          clinicalInfoRecords = getClinicalEntitySubmittedData(donor, entity);
+          found = !isEmpty(clinicalInfoRecords);
+        }
+      });
+      return found;
     });
-    return found;
-  });
 
   const totalResults = filteredDonors.length;
   const searchResults = filteredDonors.map(({ donorId, submitterId }: Donor) => ({
