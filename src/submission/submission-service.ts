@@ -903,10 +903,11 @@ export namespace operations {
   }): ProgramExceptionRecord | EntityExceptionRecord | undefined => {
     if (isArrayOfEntityExceptionRecord(exceptions)) {
       // entity exception
-      return exceptions.find(exception => {
-        exception.requested_core_field === validationErrorFieldName &&
-          findExceptionByEntity({ exception, record });
-      });
+      return exceptions.find(
+        exception =>
+          exception.requested_core_field === validationErrorFieldName &&
+          findExceptionByEntity({ exception, record }),
+      );
     } else {
       // program exception
       return exceptions.find(exception => {
@@ -985,6 +986,7 @@ export namespace operations {
     let errorsAccumulator: DeepReadonly<SubmissionValidationError[]> = [];
     const validRecordsAccumulator: any[] = [];
 
+    // TODO: get this workinng with basic exception
     await Promise.all(
       command.records.map(async (record, index) => {
         let processedRecord: any = {};
@@ -994,11 +996,9 @@ export namespace operations {
 
         if (schemaResult.validationErrors.length > 0) {
           // filter out valid exceptions before adding to error accumulator
-          console.log(JSON.stringify(record));
-          console.log(JSON.stringify(schemaResult));
           const validationErrors = await applyExceptions({
             programId: command.programId,
-            entity: schema.name,
+            entity: command.clinicalType,
             record,
             schemaValidationErrors: [...schemaResult.validationErrors],
           });
