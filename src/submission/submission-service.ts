@@ -861,6 +861,7 @@ export namespace operations {
     let errorsAccumulator: DeepReadonly<SubmissionValidationError[]> = [];
     const validRecordsAccumulator: any[] = [];
 
+    // TODO: get this workinng with basic exception
     await Promise.all(
       command.records.map(async (record, index) => {
         let processedRecord: any = {};
