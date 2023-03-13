@@ -44,14 +44,12 @@ import * as dictionaryManager from '../dictionary/manager';
 import entityExceptionRepository from '../exception/repo/entity';
 import programExceptionRepository from '../exception/repo/program';
 import {
-  Entity,
   EntityExceptionRecord,
-  EntityExceptionRecords,
-  FollowUpExceptionRecord,
+  EntityValues,
+  ExceptionRecords,
   isArrayOfEntityExceptionRecord,
   ProgramExceptionRecord,
   SpecimenExceptionRecord,
-  EntityValues,
 } from '../exception/types';
 import { isEntityException, isProgramException } from '../exception/util';
 import { loggerFor } from '../logger';
@@ -861,19 +859,13 @@ export namespace operations {
     );
   }
 
-  // TODO: export from types from union existing types
-  type X =
-    | ReadonlyArray<ProgramExceptionRecord>
-    | ReadonlyArray<SpecimenExceptionRecord>
-    | ReadonlyArray<FollowUpExceptionRecord>;
-
   const isException = ({
     record,
     exceptions,
     validationError,
   }: {
     record: dictionaryEntities.DataRecord;
-    exceptions: X;
+    exceptions: ExceptionRecords;
     validationError: dictionaryEntities.SchemaValidationError;
   }): boolean => {
     // missing required field error, validate as normal, exceptions still require a submitted value
@@ -897,7 +889,7 @@ export namespace operations {
     record,
     validationErrorFieldName,
   }: {
-    exceptions: X;
+    exceptions: ExceptionRecords;
     record: DataRecord;
     validationErrorFieldName: string;
   }): ProgramExceptionRecord | EntityExceptionRecord | undefined => {
@@ -956,7 +948,6 @@ export namespace operations {
     }
 
     // entity level exceptions
-    // const entityExceptionResult = await entityExceptionRepository.find(programId, schema);
     const entityExceptionResult = await entityExceptionRepository.find(programId);
     if (
       isEntityException(entityExceptionResult) &&
@@ -986,7 +977,6 @@ export namespace operations {
     let errorsAccumulator: DeepReadonly<SubmissionValidationError[]> = [];
     const validRecordsAccumulator: any[] = [];
 
-    // TODO: get this workinng with basic exception
     await Promise.all(
       command.records.map(async (record, index) => {
         let processedRecord: any = {};
