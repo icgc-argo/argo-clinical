@@ -195,6 +195,7 @@ function FilterDonorIdDataFromSearch(donors: Donor[], query: ClinicalSearchQuery
   const filteredDonors = donors
     .filter(donor => {
       if (useQueriedDonors) {
+        // Enables Search by DonorId using partial terms, i.e. searching '262' returns all Donors where DonorId includes 262
         const { donorId, submitterId } = donor;
         const stringId = `${donorId}`;
         const donorMatch = donorIds?.some(id => stringId.includes(id));
