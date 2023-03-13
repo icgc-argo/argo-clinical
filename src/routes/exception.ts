@@ -21,9 +21,12 @@ import * as express from 'express';
 import multer from 'multer';
 import exceptionApi from '../exception/exception-api';
 import { wrapAsync } from '../middleware';
+import { FEATURE_SUBMISSION_EXCEPTIONS_ENABLED } from '../feature-flags';
+import { Request, Response } from 'express';
+
+console.log('FEATURE_SUBMISSION_EXCEPTIONS_ENABLED', FEATURE_SUBMISSION_EXCEPTIONS_ENABLED);
 
 const router = express.Router({ mergeParams: true });
-
 const upload = multer({ dest: '/tmp' });
 
 router.post(
@@ -36,4 +39,6 @@ router.get('/', wrapAsync(exceptionApi.getProgramException));
 
 router.delete('/', wrapAsync(exceptionApi.clearProgramException));
 
-export default router;
+export default FEATURE_SUBMISSION_EXCEPTIONS_ENABLED
+  ? router
+  : (req: Request, res: Response) => res.status(404).send();
