@@ -24,8 +24,6 @@ import { wrapAsync } from '../middleware';
 import { FEATURE_SUBMISSION_EXCEPTIONS_ENABLED } from '../feature-flags';
 import { Request, Response } from 'express';
 
-console.log('FEATURE_SUBMISSION_EXCEPTIONS_ENABLED', FEATURE_SUBMISSION_EXCEPTIONS_ENABLED);
-
 const router = express.Router({ mergeParams: true });
 const upload = multer({ dest: '/tmp' });
 
