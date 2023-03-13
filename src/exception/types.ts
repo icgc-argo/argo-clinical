@@ -45,6 +45,11 @@ export type FollowUpExceptionRecord = ExceptionRecord & {
 };
 
 export type EntityExceptionRecord = SpecimenExceptionRecord | FollowUpExceptionRecord;
+export type EntityExceptionRecords = (SpecimenExceptionRecord | FollowUpExceptionRecord)[];
+export type ExceptionRecords =
+  | ReadonlyArray<ProgramExceptionRecord>
+  | ReadonlyArray<SpecimenExceptionRecord>
+  | ReadonlyArray<FollowUpExceptionRecord>;
 
 export type EntityException = {
   programId: string;
@@ -68,7 +73,7 @@ export const ExceptionValue = {
 
 export type ExceptionValueType = ObjectValues<typeof ExceptionValue>;
 
-// predicate helpers
+// type guard helpers
 const isExceptionRecordCheck = (input: any) => {
   return (
     // input must not be null and be an object (typeof null = 'object', amusingly)
@@ -103,8 +108,7 @@ const isFollowupExceptionRecord = (input: any): boolean => {
   );
 };
 
-// predicate
-
+// type guards
 export const isEntityExceptionRecord = (input: any): input is EntityExceptionRecord => {
   return (
     isExceptionRecordCheck(input) &&
@@ -116,7 +120,6 @@ const isExceptionRecord = (input: any): input is ExceptionRecord => isExceptionR
 
 export const isProgramExceptionRecord = isExceptionRecord;
 
-export type EntityExceptionRecords = (SpecimenExceptionRecord | FollowUpExceptionRecord)[];
 export const isArrayOfEntityExceptionRecord = (input: any): input is EntityExceptionRecords =>
   input.every((i: any) => isEntityExceptionRecord(i));
 
