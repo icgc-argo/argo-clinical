@@ -136,7 +136,7 @@ export function getClinicalEntitySubmittedData(
   const program_id = donor.programId;
   const baseRecord: ClinicalInfo = { donor_id, program_id };
   const result = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName) as any[];
-  let clinicalRecords = [baseRecord];
+  let clinicalRecords = [];
 
   switch (clinicalEntitySchemaName) {
     case ClinicalEntitySchemaNames.DONOR:
