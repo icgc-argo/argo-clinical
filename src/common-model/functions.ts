@@ -18,7 +18,7 @@
  */
 
 import { DeepReadonly } from 'deep-freeze';
-import _, { isEmpty } from 'lodash';
+import { filter, find, isEmpty } from 'lodash';
 import {
   ClinicalEntity,
   ClinicalInfo,
@@ -41,7 +41,7 @@ export function getSingleClinicalObjectFromDonor(
   constraints: object, // similar to mongo filters, e.g. {submitted_donor_id: 'DR_01'}
 ) {
   const entities = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName);
-  return _.find(entities, constraints);
+  return find(entities, constraints);
 }
 
 export function findClinicalObjects(
@@ -50,7 +50,7 @@ export function findClinicalObjects(
   constraints: object,
 ) {
   const entities = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName);
-  return _.filter(entities, constraints);
+  return filter(entities, constraints);
 }
 
 export function getClinicalObjectsFromDonor(
@@ -227,7 +227,7 @@ export function getSampleRegistrationDataFromDonor(donor: DeepReadonly<Donor>) {
 export const dnaSampleFilter = (specimen: Specimen): boolean =>
   // All Specimen Have a Sample Registration
   // Only DNA records count towards completion
-  specimen.samples.filter(sample => dnaSampleTypes.includes(sample.sampleType)).length > 0;
+  specimen.samples.some(sample => dnaSampleTypes.includes(sample.sampleType));
 
 export const filterTumourNormalRecords = (recordArray: Specimen[], type: string) =>
   recordArray.filter(specimen => specimen.tumourNormalDesignation === type);
@@ -312,14 +312,14 @@ export function getSingleClinicalEntityFromDonorBySchemaName(
     throw new Error('Sample_registration has no clincal info to return');
   }
   const uniqueIdNames: string[] = convertToArray(ClinicalUniqueIdentifier[clinicalEntityType]);
-  if (_.isEmpty(uniqueIdNames)) {
+  if (isEmpty(uniqueIdNames)) {
     throw new Error("Illegal state, couldn't find entity id field name");
   }
   const constraints: ClinicalInfo = {};
   uniqueIdNames.forEach(idN => (constraints[idN] = clinicalInfoRef[idN]));
 
   const clinicalInfos = getClinicalEntitiesFromDonorBySchemaName(donor, clinicalEntityType);
-  return _(clinicalInfos).find(constraints);
+  return find(clinicalInfos, constraints);
 }
 
 export function getEntitySubmitterIdFieldName(entityName: ClinicalEntitySchemaNames) {
