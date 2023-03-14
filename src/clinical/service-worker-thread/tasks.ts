@@ -191,6 +191,9 @@ const mapEntityDocuments = (
 function FilterDonorIdDataFromSearch(donors: Donor[], query: ClinicalSearchQuery) {
   const { donorIds, submitterDonorIds } = query;
   const useQueriedDonors = !isEmpty(donorIds) || !isEmpty(submitterDonorIds);
+  const queriedEntities = Object.values(ClinicalEntitySchemaNames).filter(entity =>
+    isEntityInQuery(entity, query.entityTypes),
+  );
 
   const filteredDonors = donors
     .filter(donor => {
@@ -205,16 +208,20 @@ function FilterDonorIdDataFromSearch(donors: Donor[], query: ClinicalSearchQuery
       return donor;
     })
     .filter(donor => {
-      // This filters out false positive search results ( i.e. where Donor.treatments = [] )
-      const queriedEntities = Object.values(ClinicalEntitySchemaNames).filter(entity =>
-        isEntityInQuery(entity, query.entityTypes),
-      );
+      //  This filters out false positive search results ( i.e. where Donor.treatments = [] )
+      if (!queriedEntities.includes(ClinicalEntitySchemaNames.DONOR)) {
+        const clinicalInfoRecords = queriedEntities.map(entity =>
+          getClinicalEntitySubmittedData(donor, entity),
+        );
 
-      const clinicalInfoRecords = queriedEntities
-        .map(entity => getClinicalEntitySubmittedData(donor, entity))
-        .filter(record => !isEmpty(record));
+        // Only include Donor if it has related records
+        const hasRecords = !(
+          clinicalInfoRecords.length === 1 && clinicalInfoRecords[0].length === 0
+        );
 
-      return clinicalInfoRecords.length > 0;
+        return hasRecords;
+      }
+      return donor;
     });
 
   const totalResults = filteredDonors.length;
@@ -222,6 +229,8 @@ function FilterDonorIdDataFromSearch(donors: Donor[], query: ClinicalSearchQuery
     donorId,
     submitterDonorId: submitterId,
   }));
+
+  console.log('\nsearchResults', searchResults);
 
   return { searchResults, totalResults };
 }

@@ -19,14 +19,13 @@
 
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, ClinicalEntity, ClinicalInfo, Treatment } from '../clinical/clinical-entities';
+import _ from 'lodash';
 import {
   ClinicalEntitySchemaNames,
   ClinicalUniqueIdentifier,
   ClinicalTherapySchemaNames,
   EntityAlias,
 } from './entities';
-import { Specimen } from '../clinical/clinical-entities';
-import _ from 'lodash';
 import { notEmpty, convertToArray } from '../utils';
 
 export function getSingleClinicalObjectFromDonor(
@@ -179,13 +178,11 @@ export function getClinicalEntitySubmittedData(
       });
       break;
     default:
-      clinicalRecords = result
-        .filter(record => notEmpty(record.clinicalInfo))
-        .map((entity: ClinicalEntity) => ({
-          ...baseRecord,
-          submitter_id: donor.submitterId,
-          ...entity.clinicalInfo,
-        }));
+      clinicalRecords = result.map((entity: ClinicalEntity) => ({
+        ...baseRecord,
+        submitter_id: donor.submitterId,
+        ...entity.clinicalInfo,
+      }));
   }
 
   return clinicalRecords;
