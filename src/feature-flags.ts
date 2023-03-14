@@ -18,4 +18,4 @@
  */
 
 export const FEATURE_SUBMISSION_EXCEPTIONS_ENABLED =
-  process.env.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED === 'true' || false;
+  process.env.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED === 'true';
