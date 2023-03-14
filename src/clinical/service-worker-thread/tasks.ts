@@ -230,8 +230,6 @@ function FilterDonorIdDataFromSearch(donors: Donor[], query: ClinicalSearchQuery
     submitterDonorId: submitterId,
   }));
 
-  console.log('\nsearchResults', searchResults);
-
   return { searchResults, totalResults };
 }
 
