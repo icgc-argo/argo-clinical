@@ -35,7 +35,7 @@ import {
   DonorFieldsEnum,
   SurgeryFieldsEnum,
 } from '../../common-model/entities';
-import { checkTreatementHasCorrectTypeForTherapy, getTreatment } from './therapy';
+import { checkTreatmentHasCorrectTypeForTherapy, getTreatment } from './therapy';
 import * as utils from './utils';
 import _ from 'mongoose-sequence';
 
@@ -51,7 +51,7 @@ export const validate = async (
 
   const treatment = getTreatment(therapyRecord, mergedDonor, errors);
   if (!treatment) return { errors };
-  checkTreatementHasCorrectTypeForTherapy(therapyRecord, treatment, errors);
+  checkTreatmentHasCorrectTypeForTherapy(therapyRecord, treatment, errors);
 
   // sub_sp_id is submitted in tsv?
   if (therapyRecord[SurgeryFieldsEnum.submitter_specimen_id]) {

@@ -48,11 +48,11 @@ export const validate = async (
   const errors: SubmissionValidationError[] = [];
   const treatment = getTreatment(therapyRecord, mergedDonor, errors);
   if (!treatment) return { errors };
-  checkTreatementHasCorrectTypeForTherapy(therapyRecord, treatment, errors);
+  checkTreatmentHasCorrectTypeForTherapy(therapyRecord, treatment, errors);
   return { errors };
 };
 
-export function checkTreatementHasCorrectTypeForTherapy(
+export function checkTreatmentHasCorrectTypeForTherapy(
   therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
   treatment: DeepReadonly<Treatment>,
   errors: SubmissionValidationError[],
