@@ -45,9 +45,10 @@ export const validate = async (
     throw new Error("Can't call this function without a registerd donor & therapy record");
   }
 
-  const errors: SubmissionValidationError[] = [];
+  let errors: SubmissionValidationError[] = [];
   const treatment = getTreatment(therapyRecord, mergedDonor, errors);
   if (!treatment) return { errors };
+
   checkTreatmentHasCorrectTypeForTherapy(therapyRecord, treatment, errors);
 
   const {
@@ -60,15 +61,17 @@ export const validate = async (
     treatment_type?.includes('Radiation therapy') &&
     therapies.some(therapy => therapy.therapyType === 'radiation');
 
-  if (isRadiationTreatment) radiation(therapyRecord, treatment, errors);
+  const radiationErrors: SubmissionValidationError[] = isRadiationTreatment
+    ? radiation(therapyRecord, treatment)
+    : [];
 
+  errors = [...errors, ...radiationErrors];
   return { errors };
 };
 
 const radiation = (
   therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
   treatment: DeepReadonly<Treatment>,
-  errors: SubmissionValidationError[],
 ) => {
   const {
     clinicalInfo: { submitter_donor_id: treatmentDonorId, submitter_treatment_id, treatment_type },
@@ -82,8 +85,11 @@ const radiation = (
 
   const donorMatch = treatmentDonorId === therapyDonorId;
 
+  let errors: SubmissionValidationError[] = [];
+
   if (!donorMatch) {
-    errors.push(
+    errors = [
+      ...errors,
       utils.buildSubmissionError(
         therapyRecord,
         DataValidationErrors.INVALID_SUBMITTER_DONOR_ID,
@@ -93,14 +99,15 @@ const radiation = (
           therapyType: 'Radiation',
         },
       ),
-    );
+    ];
   }
 
   if (typeof radiation_boost === 'string' && radiation_boost.toLowerCase() === 'yes') {
     const treatmentMatch = submitter_treatment_id === reference_radiation_treatment_id;
 
     if (!treatmentMatch) {
-      errors.push(
+      errors = [
+        ...errors,
         utils.buildSubmissionError(
           therapyRecord,
           DataValidationErrors.REFERENCE_RADIATION_ID_CONFLICT,
@@ -110,9 +117,11 @@ const radiation = (
             therapyType: 'Radiation',
           },
         ),
-      );
+      ];
     }
   }
+
+  return errors;
 };
 
 export function checkTreatmentHasCorrectTypeForTherapy(
