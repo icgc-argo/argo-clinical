@@ -49,7 +49,18 @@ export const validate = async (
   const treatment = getTreatment(therapyRecord, mergedDonor, errors);
   if (!treatment) return { errors };
   checkTreatmentHasCorrectTypeForTherapy(therapyRecord, treatment, errors);
-  radiation(therapyRecord, treatment, errors);
+
+  const {
+    clinicalInfo: { treatment_type },
+    therapies,
+  } = treatment;
+
+  const isRadiationTreatment =
+    Array.isArray(treatment_type) &&
+    treatment_type?.includes('Radiation therapy') &&
+    therapies.some(therapy => therapy.therapyType === 'radiation');
+
+  if (isRadiationTreatment) radiation(therapyRecord, treatment, errors);
 
   return { errors };
 };
@@ -60,19 +71,30 @@ const radiation = (
   errors: SubmissionValidationError[],
 ) => {
   const {
-    submitter_donor_id: treatmentDonorId,
-    submitter_treatment_id,
-    treatment_type,
-  } = treatment.clinicalInfo;
-  const { submitter_donor_id: therapyDonorId, reference_radiation_treatment_id } = therapyRecord;
+    clinicalInfo: { submitter_donor_id: treatmentDonorId, submitter_treatment_id, treatment_type },
+  } = treatment;
 
-  // treatment_type: [ 'Chemotherapy', 'Radiation therapy' ] vs therapies: [ { therapyType: 'radiation' }]
-  // reference_radiation_treatment_id is undefined
+  const {
+    submitter_donor_id: therapyDonorId,
+    radiation_boost,
+    reference_radiation_treatment_id,
+  } = therapyRecord;
 
   const donorMatch = treatmentDonorId === therapyDonorId;
   const treatmentMatch = submitter_treatment_id === reference_radiation_treatment_id;
-  const isRadiation =
-    Array.isArray(treatment_type) && treatment_type?.includes('Radiation therapy');
+
+  if (!donorMatch || !treatmentMatch)
+    errors.push(
+      utils.buildSubmissionError(
+        therapyRecord,
+        DataValidationErrors.INCOMPATIBLE_PARENT_TREATMENT_TYPE,
+        TreatmentFieldsEnum.submitter_treatment_id,
+        {
+          [TreatmentFieldsEnum.treatment_type]: treatment_type,
+          therapyType: 'Radiation',
+        },
+      ),
+    );
 };
 
 export function checkTreatmentHasCorrectTypeForTherapy(
