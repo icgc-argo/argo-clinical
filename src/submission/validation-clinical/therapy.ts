@@ -81,13 +81,12 @@ const radiation = (
   } = therapyRecord;
 
   const donorMatch = treatmentDonorId === therapyDonorId;
-  const treatmentMatch = submitter_treatment_id === reference_radiation_treatment_id;
 
-  if (!donorMatch || !treatmentMatch)
+  if (!donorMatch) {
     errors.push(
       utils.buildSubmissionError(
         therapyRecord,
-        DataValidationErrors.INCOMPATIBLE_PARENT_TREATMENT_TYPE,
+        DataValidationErrors.INVALID_SUBMITTER_DONOR_ID,
         TreatmentFieldsEnum.submitter_treatment_id,
         {
           [TreatmentFieldsEnum.treatment_type]: treatment_type,
@@ -95,6 +94,25 @@ const radiation = (
         },
       ),
     );
+  }
+
+  if (typeof radiation_boost === 'string' && radiation_boost.toLowerCase() === 'yes') {
+    const treatmentMatch = submitter_treatment_id === reference_radiation_treatment_id;
+
+    if (!treatmentMatch) {
+      errors.push(
+        utils.buildSubmissionError(
+          therapyRecord,
+          DataValidationErrors.REFERENCE_RADIATION_ID_CONFLICT,
+          TreatmentFieldsEnum.submitter_treatment_id,
+          {
+            [TreatmentFieldsEnum.treatment_type]: treatment_type,
+            therapyType: 'Radiation',
+          },
+        ),
+      );
+    }
+  }
 };
 
 export function checkTreatmentHasCorrectTypeForTherapy(
