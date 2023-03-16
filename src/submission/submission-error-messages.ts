@@ -115,8 +115,10 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
     `The combination of submitter_donor_id '${data.info.submitter_donor_id}' and submitter_treatment_id '${data.info.submitter_treatment_id}' can only be associated with one surgery_type. Please correct your data submission.`,
   DUPLICATE_SURGERY_WHEN_SPECIMEN_NOT_SUBMITTED: data =>
     `When submitter_specimen_id is not submitted, the combination of [submitter_donor_id = '${data.info.submitter_donor_id}' and submitter_treatment_id = '${data.info.submitter_treatment_id}' ] should only be submitted once in the Surgery schema. Please correct your data submission.`,
-  REFERENCE_RADIATION_ID_CONFLICT: () =>
+  RADIATION_REFERENCE_ID_CONFLICT: () =>
     `The submitter_treatment_id submitted in the "reference_radiation_treatment_id" field does not exist.`,
+  RADIATION_THERAPY_TREATMENT_CONFLICT: () =>
+    `The submitter_treatment_id submitted in the "reference_radiation_treatment_id" field is not for radiation treatment.`,
 };
 
 const BATCH_ERROR_MESSAGES: Record<SubmissionBatchErrorTypes, (errorData: any) => string> = {

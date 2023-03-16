@@ -110,7 +110,22 @@ const radiation = (
         ...errors,
         utils.buildSubmissionError(
           therapyRecord,
-          DataValidationErrors.REFERENCE_RADIATION_ID_CONFLICT,
+          DataValidationErrors.RADIATION_REFERENCE_ID_CONFLICT,
+          TreatmentFieldsEnum.submitter_treatment_id,
+          {
+            [TreatmentFieldsEnum.treatment_type]: treatment_type,
+            therapyType: 'Radiation',
+          },
+        ),
+      ];
+    }
+
+    if (treatmentMatch && treatment_type !== 'Radiation therapy') {
+      errors = [
+        ...errors,
+        utils.buildSubmissionError(
+          therapyRecord,
+          DataValidationErrors.RADIATION_THERAPY_TREATMENT_CONFLICT,
           TreatmentFieldsEnum.submitter_treatment_id,
           {
             [TreatmentFieldsEnum.treatment_type]: treatment_type,
