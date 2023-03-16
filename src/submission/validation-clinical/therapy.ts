@@ -49,7 +49,30 @@ export const validate = async (
   const treatment = getTreatment(therapyRecord, mergedDonor, errors);
   if (!treatment) return { errors };
   checkTreatmentHasCorrectTypeForTherapy(therapyRecord, treatment, errors);
+  radiation(therapyRecord, treatment, errors);
+
   return { errors };
+};
+
+const radiation = (
+  therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
+  treatment: DeepReadonly<Treatment>,
+  errors: SubmissionValidationError[],
+) => {
+  const {
+    submitter_donor_id: treatmentDonorId,
+    submitter_treatment_id,
+    treatment_type,
+  } = treatment.clinicalInfo;
+  const { submitter_donor_id: therapyDonorId, reference_radiation_treatment_id } = therapyRecord;
+
+  // treatment_type: [ 'Chemotherapy', 'Radiation therapy' ] vs therapies: [ { therapyType: 'radiation' }]
+  // reference_radiation_treatment_id is undefined
+
+  const donorMatch = treatmentDonorId === therapyDonorId;
+  const treatmentMatch = submitter_treatment_id === reference_radiation_treatment_id;
+  const isRadiation =
+    Array.isArray(treatment_type) && treatment_type?.includes('Radiation therapy');
 };
 
 export function checkTreatmentHasCorrectTypeForTherapy(
