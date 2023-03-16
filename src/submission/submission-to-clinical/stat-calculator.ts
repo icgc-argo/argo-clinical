@@ -21,12 +21,14 @@ import {
   CoreClinicalEntities,
   CoreCompletionFields,
   Donor,
-  dnaSampleTypes,
-  Specimen,
 } from '../../clinical/clinical-entities';
 import { ClinicalEntitySchemaNames } from '../../common-model/entities';
-import { notEmpty, F } from '../../../src/utils';
-import { getClinicalEntitiesFromDonorBySchemaName } from '../../common-model/functions';
+import { F } from '../../../src/utils';
+import {
+  calculateSpecimenCompletionStats,
+  dnaSampleFilter,
+  getClinicalEntitiesFromDonorBySchemaName,
+} from '../../common-model/functions';
 
 import { DeepReadonly } from 'deep-freeze';
 import { cloneDeep, mean, pull } from 'lodash';
@@ -66,10 +68,6 @@ const coreClinicalSchemaNamesSet = new Set<CoreClinicalSchemaName>(
   Object.keys(schemaNameToCoreCompletenessStat) as CoreClinicalSchemaName[],
 );
 
-// Only DNA Specimens are counted toward Core Completion
-const dnaSpecimenFilter = (specimen?: Specimen): boolean =>
-  specimen && specimen.sampleType && dnaSampleTypes.includes(specimen.sampleType);
-
 // This is the main core stat caclulation function.
 // We consider only `required & core` fields for core field calculation, which are always submitted.
 // Additionally, `optional & core` fields are submitted in relation to `required & core` fields,
@@ -84,17 +82,15 @@ const calcDonorCoreEntityStats = (
   const coreStats = cloneDeep(donor.completionStats?.coreCompletion) || getEmptyCoreStats();
 
   if (clinicalType === ClinicalEntitySchemaNames.SPECIMEN) {
-    // for specimen, need to check all specimen has a record and at least one tumor and one normal exists
-    const tumorAndNormalExists =
-      donor.specimens.some(sp => sp.tumourNormalDesignation === 'Normal') &&
-      donor.specimens.some(sp => sp.tumourNormalDesignation === 'Tumour');
+    const filteredDonorSpecimens = donor.specimens.filter(dnaSampleFilter);
 
-    if (tumorAndNormalExists) {
-      coreStats[schemaNameToCoreCompletenessStat[clinicalType]] =
-        donor.specimens.filter(dnaSpecimenFilter).filter(notEmpty).length / donor.specimens.length;
-    } else {
-      coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = 0;
-    }
+    const { normalSpecimens, tumourSpecimens } = calculateSpecimenCompletionStats(
+      filteredDonorSpecimens,
+    );
+
+    const filteredTumorNormalSpecimens = (normalSpecimens + tumourSpecimens) / 2;
+
+    coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = filteredTumorNormalSpecimens;
   } else {
     // for others we just need to find one clinical info for core entity
     const entities = getClinicalEntitiesFromDonorBySchemaName(donor, clinicalType);
