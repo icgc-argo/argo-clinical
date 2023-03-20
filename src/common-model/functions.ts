@@ -18,16 +18,22 @@
  */
 
 import { DeepReadonly } from 'deep-freeze';
-import { Donor, ClinicalEntity, ClinicalInfo, Treatment } from '../clinical/clinical-entities';
+import { filter, find, isEmpty } from 'lodash';
+import {
+  ClinicalEntity,
+  ClinicalInfo,
+  dnaSampleTypes,
+  Donor,
+  Specimen,
+  Treatment,
+} from '../clinical/clinical-entities';
+import { notEmpty, convertToArray } from '../utils';
 import {
   ClinicalEntitySchemaNames,
   ClinicalUniqueIdentifier,
   ClinicalTherapySchemaNames,
   EntityAlias,
 } from './entities';
-import { Specimen } from '../clinical/clinical-entities';
-import _ from 'lodash';
-import { notEmpty, convertToArray } from '../utils';
 
 export function getSingleClinicalObjectFromDonor(
   donor: DeepReadonly<Donor>,
@@ -35,7 +41,7 @@ export function getSingleClinicalObjectFromDonor(
   constraints: object, // similar to mongo filters, e.g. {submitted_donor_id: 'DR_01'}
 ) {
   const entities = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName);
-  return _.find(entities, constraints);
+  return find(entities, constraints);
 }
 
 export function findClinicalObjects(
@@ -44,7 +50,7 @@ export function findClinicalObjects(
   constraints: object,
 ) {
   const entities = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName);
-  return _.filter(entities, constraints);
+  return filter(entities, constraints);
 }
 
 export function getClinicalObjectsFromDonor(
@@ -137,7 +143,7 @@ export function getClinicalEntitySubmittedData(
   const program_id = donor.programId;
   const baseRecord: ClinicalInfo = { donor_id, program_id };
   const result = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName) as any[];
-  let clinicalRecords = [baseRecord];
+  let clinicalRecords = [];
 
   switch (clinicalEntitySchemaName) {
     case ClinicalEntitySchemaNames.DONOR:
@@ -179,13 +185,11 @@ export function getClinicalEntitySubmittedData(
       });
       break;
     default:
-      clinicalRecords = result
-        .filter(record => notEmpty(record.clinicalInfo))
-        .map((entity: ClinicalEntity) => ({
-          ...baseRecord,
-          submitter_id: donor.submitterId,
-          ...entity.clinicalInfo,
-        }));
+      clinicalRecords = result.map((entity: ClinicalEntity) => ({
+        ...baseRecord,
+        submitter_id: donor.submitterId,
+        ...entity.clinicalInfo,
+      }));
   }
 
   return clinicalRecords;
@@ -217,6 +221,39 @@ export function getSampleRegistrationDataFromDonor(donor: DeepReadonly<Donor>) {
 
   return sample_registration;
 }
+
+export const dnaSampleFilter = (specimen: Specimen): boolean =>
+  // All Specimen Have a Sample Registration
+  // Only DNA records count towards completion
+  specimen.samples.some(sample => dnaSampleTypes.includes(sample.sampleType));
+
+export const filterTumourNormalRecords = (recordArray: Specimen[], type: string) =>
+  recordArray.filter(specimen => specimen.tumourNormalDesignation === type);
+
+export const calculateSpecimenCompletionStats = (donorSpecimenData: Specimen[]) => {
+  const normalRegistrations = filterTumourNormalRecords(donorSpecimenData, 'Normal');
+  const tumourRegistrations = filterTumourNormalRecords(donorSpecimenData, 'Tumour');
+
+  const normalSubmissions = normalRegistrations.filter(specimen => !isEmpty(specimen.clinicalInfo));
+  const tumourSubmissions = tumourRegistrations.filter(specimen => !isEmpty(specimen.clinicalInfo));
+
+  const normalRatio =
+    normalRegistrations.length === 0 || normalSubmissions.length === 0
+      ? 0
+      : normalSubmissions.length / normalRegistrations.length;
+
+  const tumourRatio =
+    tumourRegistrations.length === 0 || tumourSubmissions.length === 0
+      ? 0
+      : tumourSubmissions.length / tumourRegistrations.length;
+
+  const completionValues = {
+    normalSpecimens: normalRatio,
+    tumourSpecimens: tumourRatio,
+  };
+
+  return completionValues;
+};
 
 export const donorCompletionFields: Array<keyof Donor> = [
   'completionStats',
@@ -273,14 +310,14 @@ export function getSingleClinicalEntityFromDonorBySchemaName(
     throw new Error('Sample_registration has no clincal info to return');
   }
   const uniqueIdNames: string[] = convertToArray(ClinicalUniqueIdentifier[clinicalEntityType]);
-  if (_.isEmpty(uniqueIdNames)) {
+  if (isEmpty(uniqueIdNames)) {
     throw new Error("Illegal state, couldn't find entity id field name");
   }
   const constraints: ClinicalInfo = {};
   uniqueIdNames.forEach(idN => (constraints[idN] = clinicalInfoRef[idN]));
 
   const clinicalInfos = getClinicalEntitiesFromDonorBySchemaName(donor, clinicalEntityType);
-  return _(clinicalInfos).find(constraints);
+  return find(clinicalInfos, constraints);
 }
 
 export function getEntitySubmitterIdFieldName(entityName: ClinicalEntitySchemaNames) {
