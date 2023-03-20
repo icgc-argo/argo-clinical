@@ -143,7 +143,7 @@ export function getClinicalEntitySubmittedData(
   const program_id = donor.programId;
   const baseRecord: ClinicalInfo = { donor_id, program_id };
   const result = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName) as any[];
-  let clinicalRecords = [baseRecord];
+  let clinicalRecords = [];
 
   switch (clinicalEntitySchemaName) {
     case ClinicalEntitySchemaNames.DONOR:
@@ -185,13 +185,11 @@ export function getClinicalEntitySubmittedData(
       });
       break;
     default:
-      clinicalRecords = result
-        .filter(record => notEmpty(record.clinicalInfo))
-        .map((entity: ClinicalEntity) => ({
-          ...baseRecord,
-          submitter_id: donor.submitterId,
-          ...entity.clinicalInfo,
-        }));
+      clinicalRecords = result.map((entity: ClinicalEntity) => ({
+        ...baseRecord,
+        submitter_id: donor.submitterId,
+        ...entity.clinicalInfo,
+      }));
   }
 
   return clinicalRecords;
