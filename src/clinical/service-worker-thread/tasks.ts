@@ -155,18 +155,39 @@ const mapEntityDocuments = (
 // Submitted Data Search Results
 function FilterDonorIdDataFromSearch(donors: Donor[], query: ClinicalSearchQuery) {
   const { donorIds, submitterDonorIds } = query;
+  const useQueriedDonors = !isEmpty(donorIds) || !isEmpty(submitterDonorIds);
+  const queriedEntities = Object.values(ClinicalEntitySchemaNames).filter(entity =>
+    isEntityInQuery(entity, query.entityTypes),
+  );
 
-  const useFilteredDonors = !isEmpty(donorIds) || !isEmpty(submitterDonorIds);
-
-  const filteredDonors = useFilteredDonors
-    ? donors.filter(donor => {
+  const filteredDonors = donors
+    .filter(donor => {
+      if (useQueriedDonors) {
+        // Enables Search by DonorId using partial terms, i.e. searching '262' returns all Donors where DonorId includes 262
         const { donorId, submitterId } = donor;
         const stringId = `${donorId}`;
         const donorMatch = donorIds?.some(id => stringId.includes(id));
         const submitterMatch = submitterDonorIds?.some(id => submitterId.includes(id));
         return donorMatch || submitterMatch;
-      })
-    : donors;
+      }
+      return donor;
+    })
+    .filter(donor => {
+      //  This filters out false positive search results ( i.e. where Donor.treatments = [] )
+      if (!queriedEntities.includes(ClinicalEntitySchemaNames.DONOR)) {
+        const clinicalInfoRecords = queriedEntities.map(entity =>
+          getClinicalEntitySubmittedData(donor, entity),
+        );
+
+        // Only include Donor if it has related records
+        const hasRecords = !(
+          clinicalInfoRecords.length === 1 && clinicalInfoRecords[0].length === 0
+        );
+
+        return hasRecords;
+      }
+      return donor;
+    });
 
   const totalResults = filteredDonors.length;
   const searchResults = filteredDonors.map(({ donorId, submitterId }: Donor) => ({
