@@ -48,7 +48,7 @@ export const validate = async (
   let errors: SubmissionValidationError[] = [];
   const treatment = getTreatment(therapyRecord, mergedDonor, errors);
   if (!treatment) return { errors };
-
+  // TODO: Refactor use of push
   checkTreatmentHasCorrectTypeForTherapy(therapyRecord, treatment, errors);
 
   const {
