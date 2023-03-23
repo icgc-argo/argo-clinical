@@ -5,7 +5,7 @@ module.exports = {
     try {
       const donors = await db
         .collection('donors')
-        .find({})
+        .find({ completionStats: { $exists: true } })
         .toArray();
 
       donors.forEach(donor => {
