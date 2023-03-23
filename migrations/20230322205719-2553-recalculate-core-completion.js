@@ -5,11 +5,11 @@ module.exports = {
     try {
       const donors = await db
         .collection('donors')
-        .find(filterUp)
+        .find({})
         .toArray();
 
       donors.forEach(donor => {
-        const updatedDonor = forceRecalcDonorCoreEntityStats(donor, coreCompletionOverride);
+        const updatedDonor = forceRecalcDonorCoreEntityStats(donor, {});
 
         db.collection('donors').save(updatedDonor);
       });
