@@ -128,6 +128,8 @@ export const radiation = {
   RADIATION_THERAPY_FRACTIONS: 'radiation_therapy_fractions',
   RADIATION_THERAPY_DOSAGE: 'radiation_therapy_dosage',
   ANATOMICAL_SITE_IRRADIATED: 'anatomical_site_irradiated',
+  RADIATION_BOOST: 'radiation_boost',
+  REFERENCE_RADIATION_TREATMENT_ID: 'reference_radiation_treatment_id',
 };
 
 export const hormonetherapy = {
