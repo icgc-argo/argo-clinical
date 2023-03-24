@@ -1,7 +1,7 @@
 import { forceRecalcDonorCoreEntityStats } from '../src/submission/submission-to-clinical/stat-calculator';
 
 module.exports = {
-  async up(db, client) {
+  async up(db) {
     try {
       const donors = await db
         .collection('donors')
@@ -17,5 +17,9 @@ module.exports = {
       console.error('failed', err);
       throw err;
     }
+  },
+
+  async down() {
+    // No action
   },
 };
