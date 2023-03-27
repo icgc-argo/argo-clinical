@@ -64,6 +64,7 @@ module.exports = {
         .toArray();
 
       donors.forEach(async donor => {
+        const { donorId } = donor;
         const coreStats = cloneDeep(donor.completionStats?.coreCompletion) || getEmptyCoreStats();
 
         const filteredDonorSpecimens = donor.specimens.filter(dnaSampleFilter);
@@ -76,16 +77,20 @@ module.exports = {
 
         const coreCompletionPercentage = getCoreCompletionPercentage(coreStats);
         const coreCompletionDate = getCoreCompletionDate(donor, coreCompletionPercentage);
-        donor.completionStats = {
-          completionStats: {
-            ...donor.completionStats,
-            coreCompletion: coreStats,
-            coreCompletionDate,
-            coreCompletionPercentage,
-          },
-        };
 
-        db.collection('donors').save(donor);
+        await db.collection('donors').updateOne(
+          { donorId: donorId },
+          {
+            $set: {
+              completionStats: {
+                ...donor.completionStats,
+                coreCompletion: coreStats,
+                coreCompletionDate,
+                coreCompletionPercentage,
+              },
+            },
+          },
+        );
       });
     } catch (err) {
       console.error('failed', err);
