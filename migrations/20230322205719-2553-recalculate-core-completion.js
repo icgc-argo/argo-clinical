@@ -1,4 +1,6 @@
-import { forceRecalcDonorCoreEntityStats } from '../src/submission/submission-to-clinical/stat-calculator';
+const {
+  forceRecalcDonorCoreEntityStats,
+} = require('../dist/src/submission/submission-to-clinical/stat-calculator');
 
 module.exports = {
   async up(db) {
@@ -10,8 +12,16 @@ module.exports = {
 
       donors.forEach(donor => {
         const updatedDonor = forceRecalcDonorCoreEntityStats(donor, {});
+        const { donorId, completionStats } = updatedDonor;
 
-        db.collection('donors').save(updatedDonor);
+        db.collection('donors').updateOne(
+          { donorId: donorId },
+          {
+            $set: {
+              completionStats,
+            },
+          },
+        );
       });
     } catch (err) {
       console.error('failed', err);
