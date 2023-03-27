@@ -5,6 +5,14 @@ const mean = require('lodash/mean');
 // Unable to import, see https://github.com/balmasi/migrate-mongoose/issues/64
 // Functions copied from src/submission/submission-to-clinical/stat-calculator.ts
 
+const schemaNameToCoreCompletenessStat = [
+  'donor',
+  'primaryDiagnoses',
+  'treatments',
+  'followUps',
+  'specimens',
+];
+
 const dnaSampleTypes = ['Amplified DNA', 'ctDNA', 'Other DNA enrichments', 'Total DNA'];
 
 const getCoreCompletionPercentage = fields => mean(Object.values(fields || {})) || 0;
@@ -55,6 +63,17 @@ const calculateSpecimenCompletionStats = donorSpecimenData => {
   return completionValues;
 };
 
+const specimensCalculation = donor => {
+  const filteredDonorSpecimens = donor.specimens.filter(dnaSampleFilter);
+  const { normalSpecimens, tumourSpecimens } = calculateSpecimenCompletionStats(
+    filteredDonorSpecimens,
+  );
+
+  const filteredTumorNormalSpecimens = (normalSpecimens + tumourSpecimens) / 2;
+
+  return filteredTumorNormalSpecimens;
+};
+
 module.exports = {
   async up(db) {
     try {
@@ -67,13 +86,15 @@ module.exports = {
         const { donorId } = donor;
         const coreStats = cloneDeep(donor.completionStats?.coreCompletion) || getEmptyCoreStats();
 
-        const filteredDonorSpecimens = donor.specimens.filter(dnaSampleFilter);
-        const { normalSpecimens, tumourSpecimens } = calculateSpecimenCompletionStats(
-          filteredDonorSpecimens,
-        );
-        const filteredTumorNormalSpecimens = (normalSpecimens + tumourSpecimens) / 2;
-
-        coreStats.specimens = filteredTumorNormalSpecimens;
+        schemaNameToCoreCompletenessStat.forEach(clinicalType => {
+          if (clinicalType === 'donor') {
+            coreStats.specimens = !isEmpty(donor.clinicalInfo) ? 1 : 0;
+          } else if (clinicalType === 'specimens') {
+            coreStats.specimens = specimensCalculation(donor);
+          } else {
+            coreStats[clinicalType] = donor[clinicalType].length >= 1 ? 1 : 0;
+          }
+        });
 
         const coreCompletionPercentage = getCoreCompletionPercentage(coreStats);
         const coreCompletionDate = getCoreCompletionDate(donor, coreCompletionPercentage);
