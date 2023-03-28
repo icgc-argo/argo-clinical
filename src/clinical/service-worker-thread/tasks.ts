@@ -27,6 +27,7 @@ import {
 import {
   calculateSpecimenCompletionStats,
   dnaSampleFilter,
+  filterTumourNormalRecords,
   getRequiredDonorFieldsForEntityTypes,
   getClinicalEntitiesFromDonorBySchemaName,
   getClinicalEntitySubmittedData,
@@ -278,11 +279,22 @@ function extractEntityDataFromDonors(
       if (completionRecord && completionRecord.coreCompletion?.specimens > 0) {
         const donorSpecimenData = specimens.filter(dnaSampleFilter);
 
+        const specimenStats = calculateSpecimenCompletionStats(donorSpecimenData);
+
+        if (specimenStats.normalSpecimens < 1) {
+          const normalRegistrations = filterTumourNormalRecords(donorSpecimenData, 'Normal');
+          specimenStats.normalSpecimens = -normalRegistrations.length;
+        }
+        if (specimenStats.tumourSpecimens < 1) {
+          const tumourRegistrations = filterTumourNormalRecords(donorSpecimenData, 'Tumour');
+          specimenStats.tumourSpecimens = -tumourRegistrations.length;
+        }
+
         completionRecord = {
           ...completionRecord,
           coreCompletion: {
             ...completionRecord.coreCompletion,
-            ...calculateSpecimenCompletionStats(donorSpecimenData),
+            ...specimenStats,
           },
         };
       }
