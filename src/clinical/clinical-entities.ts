@@ -145,7 +145,6 @@ export interface SpecimenCoreCompletion {
   tumourSubmissions: number;
 }
 
-//
 export interface CompletionDisplayRecord extends CompletionStats {
   donorId?: number;
   entityData?: { specimens?: SpecimenCoreCompletion };
