@@ -147,14 +147,14 @@ const mapEntityDocuments = (
     records = records.slice(first, last);
   }
 
-  const CompletionDisplayRecords =
+  const completionDisplayRecords =
     entityName === ClinicalEntitySchemaNames.DONOR ? { completionStats: [...completionStats] } : {};
 
   return <ClinicalEntityData>{
     entityName,
     totalDocs,
     records,
-    ...CompletionDisplayRecords,
+    ...completionDisplayRecords,
     entityFields: [DONOR_ID_FIELD, ...relevantSchemaWithFields.fields],
   };
 };
