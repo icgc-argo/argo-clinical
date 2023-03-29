@@ -84,13 +84,9 @@ const calcDonorCoreEntityStats = (
   if (clinicalType === ClinicalEntitySchemaNames.SPECIMEN) {
     const filteredDonorSpecimens = donor.specimens.filter(dnaSampleFilter);
 
-    const { normalSpecimens, tumourSpecimens } = calculateSpecimenCompletionStats(
-      filteredDonorSpecimens,
-    );
+    const { coreCompletionPercentage } = calculateSpecimenCompletionStats(filteredDonorSpecimens);
 
-    const filteredTumorNormalSpecimens = (normalSpecimens + tumourSpecimens) / 2;
-
-    coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = filteredTumorNormalSpecimens;
+    coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = coreCompletionPercentage;
   } else {
     // for others we just need to find one clinical info for core entity
     const entities = getClinicalEntitiesFromDonorBySchemaName(donor, clinicalType);

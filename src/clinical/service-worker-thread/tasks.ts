@@ -35,7 +35,12 @@ import {
 } from '../../common-model/functions';
 import { notEmpty } from '../../utils';
 import { ClinicalQuery, ClinicalSearchQuery } from '../clinical-api';
-import { ClinicalEntityData, ClinicalInfo, CompletionRecord, Donor } from '../clinical-entities';
+import {
+  ClinicalEntityData,
+  ClinicalInfo,
+  CompletionDisplayRecord,
+  Donor,
+} from '../clinical-entities';
 
 type RecordsMap = {
   [key in ClinicalEntitySchemaNames]: ClinicalInfo[];
@@ -53,10 +58,11 @@ const isEntityInQuery = (entityName: ClinicalEntitySchemaNames, entityTypes: str
   entityTypes.includes(aliasEntityNames[entityName]);
 
 // Main Sort Function
-const sortDocs = (sortQuery: string, entityName: string, completionStats: CompletionRecord[]) => (
-  currentRecord: ClinicalInfo,
-  nextRecord: ClinicalInfo,
-) => {
+const sortDocs = (
+  sortQuery: string,
+  entityName: string,
+  completionStats: CompletionDisplayRecord[],
+) => (currentRecord: ClinicalInfo, nextRecord: ClinicalInfo) => {
   // Sort Value: 0 order is Unchanged, -1 Current lower index than Next, +1 Current higher index than Next
   let order = 0;
   const isDescending = sortQuery.startsWith('-');
@@ -82,7 +88,7 @@ const sortDocs = (sortQuery: string, entityName: string, completionStats: Comple
 const sortDonorRecordsByCompletion = (
   currentRecord: ClinicalInfo,
   nextRecord: ClinicalInfo,
-  completionStats: CompletionRecord[],
+  completionStats: CompletionDisplayRecord[],
 ) => {
   const { donorId: currentDonorId } = currentRecord;
   const { donorId: nextDonorId } = nextRecord;
@@ -118,7 +124,7 @@ const mapEntityDocuments = (
   donorCount: number,
   schemas: any,
   query: ClinicalQuery,
-  completionStats: CompletionRecord[],
+  completionStats: CompletionDisplayRecord[],
 ) => {
   const { entityName, results } = entity;
 
@@ -141,14 +147,14 @@ const mapEntityDocuments = (
     records = records.slice(first, last);
   }
 
-  const completionRecords =
+  const CompletionDisplayRecords =
     entityName === ClinicalEntitySchemaNames.DONOR ? { completionStats: [...completionStats] } : {};
 
   return <ClinicalEntityData>{
     entityName,
     totalDocs,
     records,
-    ...completionRecords,
+    ...CompletionDisplayRecords,
     entityFields: [DONOR_ID_FIELD, ...relevantSchemaWithFields.fields],
   };
 };
@@ -270,33 +276,20 @@ function extractEntityDataFromDonors(
     });
   });
 
-  const completionStats: CompletionRecord[] = donors
-    .map(({ completionStats, donorId, specimens }): CompletionRecord | undefined => {
-      let completionRecord =
-        completionStats && donorId ? { ...completionStats, donorId } : undefined;
+  const completionStats: CompletionDisplayRecord[] = donors
+    .map(({ completionStats, donorId, specimens: donorSpecimenRecords }):
+      | CompletionDisplayRecord
+      | undefined => {
+      const filteredSpecimenData = donorSpecimenRecords.filter(dnaSampleFilter);
+      const specimens = { specimens: calculateSpecimenCompletionStats(filteredSpecimenData) };
+
+      const completionRecord: CompletionDisplayRecord | undefined =
+        completionStats && donorId
+          ? { ...completionStats, donorId, entityData: specimens }
+          : undefined;
 
       // Update Completion Stats to display Normal/Tumour stats
       if (completionRecord && completionRecord.coreCompletion?.specimens > 0) {
-        const donorSpecimenData = specimens.filter(dnaSampleFilter);
-
-        const specimenStats = calculateSpecimenCompletionStats(donorSpecimenData);
-
-        if (specimenStats.normalSpecimens < 1) {
-          const normalRegistrations = filterTumourNormalRecords(donorSpecimenData, 'Normal');
-          specimenStats.normalSpecimens = -normalRegistrations.length;
-        }
-        if (specimenStats.tumourSpecimens < 1) {
-          const tumourRegistrations = filterTumourNormalRecords(donorSpecimenData, 'Tumour');
-          specimenStats.tumourSpecimens = -tumourRegistrations.length;
-        }
-
-        completionRecord = {
-          ...completionRecord,
-          coreCompletion: {
-            ...completionRecord.coreCompletion,
-            ...specimenStats,
-          },
-        };
       }
 
       return completionRecord;

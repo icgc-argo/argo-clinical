@@ -120,7 +120,7 @@ export type ClinicalEntityData = {
   totalDocs: number;
   records: Array<ClinicalInfo>;
   entityFields: string[];
-  completionStats?: CompletionRecord[];
+  completionStats?: CompletionDisplayRecord[];
 };
 
 export type DonorMap = Readonly<{ [submitterId: string]: Donor }>;
@@ -133,12 +133,22 @@ export interface CoreCompletionFields {
   primaryDiagnosis: number;
   followUps: number;
   treatments: number;
-  normalSpecimens?: number;
-  tumourSpecimens?: number;
 }
 
-export interface CompletionRecord extends CompletionStats {
+export interface SpecimenCoreCompletion {
+  coreCompletionPercentage: number;
+  normalSpecimensPercentage: number;
+  tumourSpecimensPercentage: number;
+  normalRegistrations: number;
+  normalSubmissions: number;
+  tumourRegistrations: number;
+  tumourSubmissions: number;
+}
+
+//
+export interface CompletionDisplayRecord extends CompletionStats {
   donorId?: number;
+  entityData?: { specimens?: SpecimenCoreCompletion };
 }
 
 export type CoreClinicalEntities = keyof CoreCompletionFields;
