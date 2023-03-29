@@ -42,7 +42,7 @@ import {
 } from '../common-model/entities';
 import * as dictionaryManager from '../dictionary/manager';
 import { programExceptionRepository } from '../exception/exception-repo';
-import { ProgramException } from '../exception/types';
+import { ProgramException, ExceptionValueType } from '../exception/types';
 import { isProgramException } from '../exception/util';
 import { loggerFor } from '../logger';
 import { RxNormConcept } from '../rxnorm/api';
@@ -851,7 +851,37 @@ export namespace operations {
     );
   }
 
-  const applyExceptionIfExists = (
+  const normalizeFields = (values: (string | string[] | undefined)[]) =>
+    values.map(v => {
+      if (Array.isArray(v)) {
+        // account for array of strings as lectern types, this is primitive sort/compare
+        return [...v.map(str => str.toLowerCase().trim())].sort();
+      } else if (typeof v === 'string') {
+        return v.toLowerCase().trim();
+      } else {
+        return '';
+      }
+    });
+
+  const checkExceptionRecordEquality = ({
+    exceptionValue,
+    recordValue,
+  }: {
+    exceptionValue: ExceptionValueType | undefined;
+    recordValue: string | string[] | undefined;
+  }) => {
+    if (!exceptionValue || !recordValue) return false;
+
+    const [normalizedExceptionValue, normalizedRecordValue] = normalizeFields([
+      exceptionValue,
+      recordValue,
+    ]);
+
+    // stringify to account for primitively sorted arrays
+    return JSON.stringify(normalizedExceptionValue) === JSON.stringify(normalizedRecordValue);
+  };
+
+  const checkExceptionExists = (
     exceptions: DeepReadonly<ProgramException['exceptions']>,
     validationError: dictionaryEntities.SchemaValidationError,
     record: DataRecord,
@@ -866,8 +896,14 @@ export namespace operations {
     // every other validation of SchemaValidationErrorTypes check for exception
     else {
       const validationErrorField = validationError.fieldName;
+      const recordValue = record[validationErrorField];
+
       const exception = exceptions.find(exception => exception.coreField === validationErrorField);
-      return !exception ? false : exception.exceptionValue === record[validationErrorField];
+
+      return checkExceptionRecordEquality({
+        exceptionValue: exception?.exceptionValue,
+        recordValue,
+      });
     }
   };
 
@@ -898,7 +934,7 @@ export namespace operations {
             // only filter is we have valid exceptions available
             isProgramException(result)
               ? schemaResult.validationErrors.filter(validationError => {
-                  return !applyExceptionIfExists(result.exceptions, validationError, record);
+                  return !checkExceptionExists(result.exceptions, validationError, record);
                 })
               : schemaResult.validationErrors;
 
