@@ -122,6 +122,7 @@ Notes:
 - the scripts are sorted by date & time
 - a collection in db called changelog will keep track of executed scripts.
 - the docker image will excute the scripts automatically before starting the server and if fails it runs rollback script and exits
+- The Recalculate Core Completion migration depends on imports from the TS ./dist folder and requires a compiled build before executing a migration
 
 ## Extending stub-schema for running DB migration Tests
 

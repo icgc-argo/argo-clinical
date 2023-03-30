@@ -72,6 +72,9 @@ const coreClinicalSchemaNamesSet = new Set<CoreClinicalSchemaName>(
 // We consider only `required & core` fields for core field calculation, which are always submitted.
 // Additionally, `optional & core` fields are submitted in relation to `required & core` fields,
 // which are verified at upload/data-validate step. So can assume record is valid.
+
+// This function is referenced in the recalculate-core-completion migration file,
+// Any code updates should validate that migration is unaffected
 const calcDonorCoreEntityStats = (
   donor: Donor,
   clinicalType: CoreClinicalSchemaName,
@@ -84,13 +87,9 @@ const calcDonorCoreEntityStats = (
   if (clinicalType === ClinicalEntitySchemaNames.SPECIMEN) {
     const filteredDonorSpecimens = donor.specimens.filter(dnaSampleFilter);
 
-    const { normalSpecimens, tumourSpecimens } = calculateSpecimenCompletionStats(
-      filteredDonorSpecimens,
-    );
+    const { coreCompletionPercentage } = calculateSpecimenCompletionStats(filteredDonorSpecimens);
 
-    const filteredTumorNormalSpecimens = (normalSpecimens + tumourSpecimens) / 2;
-
-    coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = filteredTumorNormalSpecimens;
+    coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = coreCompletionPercentage;
   } else {
     // for others we just need to find one clinical info for core entity
     const entities = getClinicalEntitiesFromDonorBySchemaName(donor, clinicalType);
@@ -160,6 +159,8 @@ export const updateDonorStatsFromSubmissionCommit = (
   }
 };
 
+// This function is referenced in the recalculate-core-completion migration file,
+// Any code updates should validate that migration is unaffected
 export const forceRecalcDonorCoreEntityStats = (
   donor: DeepReadonly<Donor>,
   coreStatOverride: any = {},

@@ -98,6 +98,7 @@ import {
 } from './validation-clinical/utils';
 import * as dataValidator from './validation-clinical/validation';
 import { checkUniqueRecords, validateSubmissionData } from './validation-clinical/validation';
+import { FEATURE_SUBMISSION_EXCEPTIONS_ENABLED } from '../feature-flags';
 
 const L = loggerFor(__filename);
 
@@ -895,7 +896,10 @@ export namespace operations {
           .processParallel(command.clinicalType, record, index, schema);
 
         if (schemaResult.validationErrors.length > 0) {
-          // check for program exception
+
+          let validationErrors = schemaResult.validationErrors;
+          if (FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
+            // check for program exception
           const result = await programExceptionRepository.find(command.programId);
 
           let validationErrors: DeepReadonly<SchemaValidationError>[] = [];
@@ -934,7 +938,7 @@ export namespace operations {
           } else {
             validationErrors = [...schemaResult.validationErrors];
           }
-
+          
           errorsAccumulator = errorsAccumulator.concat(
             unifySchemaErrors(schemaName, validationErrors, index, command.records),
           );
