@@ -896,49 +896,50 @@ export namespace operations {
           .processParallel(command.clinicalType, record, index, schema);
 
         if (schemaResult.validationErrors.length > 0) {
+          let validationErrors: DeepReadonly<SchemaValidationError>[] = [
+            ...schemaResult.validationErrors,
+          ];
 
-          let validationErrors = schemaResult.validationErrors;
           if (FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
             // check for program exception
-          const result = await programExceptionRepository.find(command.programId);
+            const result = await programExceptionRepository.find(command.programId);
 
-          let validationErrors: DeepReadonly<SchemaValidationError>[] = [];
+            validationErrors = [];
 
-          if (isProgramException(result)) {
-            schemaResult.validationErrors.forEach(validationError => {
-              const validationErrorFieldName = validationError.fieldName;
-              const recordValue = record[validationErrorFieldName];
+            if (isProgramException(result)) {
+              schemaResult.validationErrors.forEach(validationError => {
+                const validationErrorFieldName = validationError.fieldName;
+                const recordValue = record[validationErrorFieldName];
 
-              // Zero Array type exceptions exist, but recordValue type is string | string[]
-              if (Array.isArray(recordValue)) {
-                validationErrors.push(validationError);
-                return;
-              }
+                // Zero Array type exceptions exist, but recordValue type is string | string[]
+                if (Array.isArray(recordValue)) {
+                  validationErrors.push(validationError);
+                  return;
+                }
 
-              const normalizedRecordValue = normalizeExceptionValue(recordValue);
+                const normalizedRecordValue = normalizeExceptionValue(recordValue);
 
-              const exceptionExists = checkExceptionExists(
-                result.exceptions,
-                validationError,
-                normalizedRecordValue,
-              );
+                const exceptionExists = checkExceptionExists(
+                  result.exceptions,
+                  validationError,
+                  normalizedRecordValue,
+                );
 
-              if (exceptionExists) {
-                // ensure value is normalized exception value
-                const normalizedExceptionRecord = {
-                  ...record,
-                  ...{ [validationErrorFieldName]: normalizedRecordValue },
-                };
-                processedRecord = normalizedExceptionRecord;
-              } else {
-                // only add validation errors that don't have exceptions
-                validationErrors.push(validationError);
-              }
-            });
-          } else {
-            validationErrors = [...schemaResult.validationErrors];
+                if (exceptionExists) {
+                  // ensure value is normalized exception value
+                  const normalizedExceptionRecord = {
+                    ...record,
+                    ...{ [validationErrorFieldName]: normalizedRecordValue },
+                  };
+                  processedRecord = normalizedExceptionRecord;
+                } else {
+                  // only add validation errors that don't have exceptions
+                  validationErrors.push(validationError);
+                }
+              });
+            }
           }
-          
+
           errorsAccumulator = errorsAccumulator.concat(
             unifySchemaErrors(schemaName, validationErrors, index, command.records),
           );
