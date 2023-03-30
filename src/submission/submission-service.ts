@@ -18,9 +18,12 @@
  */
 
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
-import { DataRecord } from '@overturebio-stack/lectern-client/lib/schema-entities';
+import {
+  DataRecord,
+  SchemaValidationError,
+} from '@overturebio-stack/lectern-client/lib/schema-entities';
 import { DeepReadonly } from 'deep-freeze';
-import _ from 'lodash';
+import _, { upperFirst, isEmpty } from 'lodash';
 import { v1 as uuid } from 'uuid';
 import {
   Donor,
@@ -851,40 +854,10 @@ export namespace operations {
     );
   }
 
-  const normalizeFields = (values: (string | string[] | undefined)[]) =>
-    values.map(v => {
-      if (Array.isArray(v)) {
-        // account for array of strings as lectern types, this is primitive sort/compare
-        return [...v.map(str => str.toLowerCase().trim())].sort();
-      } else if (typeof v === 'string') {
-        return v.toLowerCase().trim();
-      } else {
-        return '';
-      }
-    });
-
-  const checkExceptionRecordEquality = ({
-    exceptionValue,
-    recordValue,
-  }: {
-    exceptionValue: ExceptionValueType | undefined;
-    recordValue: string | string[] | undefined;
-  }) => {
-    if (!exceptionValue || !recordValue) return false;
-
-    const [normalizedExceptionValue, normalizedRecordValue] = normalizeFields([
-      exceptionValue,
-      recordValue,
-    ]);
-
-    // stringify to account for primitively sorted arrays
-    return JSON.stringify(normalizedExceptionValue) === JSON.stringify(normalizedRecordValue);
-  };
-
   const checkExceptionExists = (
     exceptions: DeepReadonly<ProgramException['exceptions']>,
-    validationError: dictionaryEntities.SchemaValidationError,
-    record: DataRecord,
+    validationError: DeepReadonly<dictionaryEntities.SchemaValidationError>,
+    recordValue: string,
   ): boolean => {
     // missing required field, validate as normal, exceptions still require a submitted value
     if (
@@ -895,17 +868,15 @@ export namespace operations {
     }
     // every other validation of SchemaValidationErrorTypes check for exception
     else {
-      const validationErrorField = validationError.fieldName;
-      const recordValue = record[validationErrorField];
+      const exception = exceptions.find(
+        exception => exception.coreField === validationError.fieldName,
+      );
 
-      const exception = exceptions.find(exception => exception.coreField === validationErrorField);
-
-      return checkExceptionRecordEquality({
-        exceptionValue: exception?.exceptionValue,
-        recordValue,
-      });
+      return exception?.exceptionValue === recordValue;
     }
   };
+
+  const normalizeExceptionValue = (value: string) => upperFirst(value.trim().toLowerCase());
 
   export const checkClinicalEntity = async (
     command: ClinicalSubmissionCommand,
@@ -927,23 +898,55 @@ export namespace operations {
           .processParallel(command.clinicalType, record, index, schema);
 
         if (schemaResult.validationErrors.length > 0) {
+          // check for program exception
           const result = await programExceptionRepository.find(command.programId);
 
-          // filter out valid exceptions before adding to error accumulator
-          const validationErrors =
-            // only filter is we have valid exceptions available
-            isProgramException(result)
-              ? schemaResult.validationErrors.filter(validationError => {
-                  return !checkExceptionExists(result.exceptions, validationError, record);
-                })
-              : schemaResult.validationErrors;
+          let validationErrors: DeepReadonly<SchemaValidationError>[] = [];
+
+          if (isProgramException(result)) {
+            schemaResult.validationErrors.forEach(validationError => {
+              const validationErrorFieldName = validationError.fieldName;
+              const recordValue = record[validationErrorFieldName];
+
+              // Zero Array type exceptions exist, but recordValue type is string | string[]
+              if (Array.isArray(recordValue)) {
+                validationErrors.push(validationError);
+                return;
+              }
+
+              const normalizedRecordValue = normalizeExceptionValue(recordValue);
+
+              const exceptionExists = checkExceptionExists(
+                result.exceptions,
+                validationError,
+                normalizedRecordValue,
+              );
+
+              if (exceptionExists) {
+                // ensure value is normalized exception value
+                const normalizedExceptionRecord = {
+                  ...record,
+                  ...{ [validationErrorFieldName]: normalizedRecordValue },
+                };
+                processedRecord = normalizedExceptionRecord;
+              } else {
+                // only add validation errors that don't have exceptions
+                validationErrors.push(validationError);
+              }
+            });
+          } else {
+            validationErrors = [...schemaResult.validationErrors];
+          }
 
           errorsAccumulator = errorsAccumulator.concat(
             unifySchemaErrors(schemaName, validationErrors, index, command.records),
           );
         }
 
-        processedRecord = schemaResult.processedRecord;
+        if (isEmpty(processedRecord)) {
+          processedRecord = schemaResult.processedRecord;
+        }
+
         const programIdError = usingInvalidProgramId(
           ClinicalEntitySchemaNames.REGISTRATION,
           index,
