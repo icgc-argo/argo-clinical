@@ -18,12 +18,9 @@
  */
 
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
-import {
-  DataRecord,
-  SchemaValidationError,
-} from '@overturebio-stack/lectern-client/lib/schema-entities';
+import { SchemaValidationError } from '@overturebio-stack/lectern-client/lib/schema-entities';
 import { DeepReadonly } from 'deep-freeze';
-import _, { upperFirst, isEmpty } from 'lodash';
+import _, { isEmpty, upperFirst } from 'lodash';
 import { v1 as uuid } from 'uuid';
 import {
   Donor,
@@ -45,7 +42,7 @@ import {
 } from '../common-model/entities';
 import * as dictionaryManager from '../dictionary/manager';
 import { programExceptionRepository } from '../exception/exception-repo';
-import { ProgramException, ExceptionValueType } from '../exception/types';
+import { ProgramException } from '../exception/types';
 import { isProgramException } from '../exception/util';
 import { loggerFor } from '../logger';
 import { RxNormConcept } from '../rxnorm/api';
