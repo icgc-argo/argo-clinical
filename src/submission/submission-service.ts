@@ -98,6 +98,7 @@ import {
 } from './validation-clinical/utils';
 import * as dataValidator from './validation-clinical/validation';
 import { checkUniqueRecords, validateSubmissionData } from './validation-clinical/validation';
+import { FEATURE_SUBMISSION_EXCEPTIONS_ENABLED } from '../feature-flags';
 
 const L = loggerFor(__filename);
 
@@ -891,17 +892,19 @@ export namespace operations {
           .processParallel(command.clinicalType, record, index, schema);
 
         if (schemaResult.validationErrors.length > 0) {
-          const result = await programExceptionRepository.find(command.programId);
+          let validationErrors = schemaResult.validationErrors;
+          if (FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
+            const result = await programExceptionRepository.find(command.programId);
 
-          // filter out valid exceptions before adding to error accumulator
-          const validationErrors =
-            // only filter is we have valid exceptions available
-            isProgramException(result)
-              ? schemaResult.validationErrors.filter(validationError => {
-                  return !applyExceptionIfExists(result.exceptions, validationError, record);
-                })
-              : schemaResult.validationErrors;
-
+            // filter out valid exceptions before adding to error accumulator
+            validationErrors =
+              // only filter is we have valid exceptions available
+              isProgramException(result)
+                ? schemaResult.validationErrors.filter(validationError => {
+                    return !applyExceptionIfExists(result.exceptions, validationError, record);
+                  })
+                : schemaResult.validationErrors;
+          }
           errorsAccumulator = errorsAccumulator.concat(
             unifySchemaErrors(schemaName, validationErrors, index, command.records),
           );
