@@ -279,7 +279,7 @@ function extractEntityDataFromDonors(
   const completionStats: CompletionDisplayRecord[] = donors
     .map(({ completionStats, donorId, specimens: donorSpecimenRecords }) => {
       // Add display data for Specimen Normal/Tumour completion stats
-      const filteredSpecimenData = donorSpecimenRecords.filter(dnaSampleFilter);
+      const filteredSpecimenData = donorSpecimenRecords?.filter(dnaSampleFilter) || [];
       const specimens = { specimens: calculateSpecimenCompletionStats(filteredSpecimenData) };
 
       const completionRecord: CompletionDisplayRecord | undefined =
