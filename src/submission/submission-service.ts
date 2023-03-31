@@ -911,9 +911,7 @@ export namespace operations {
           .processParallel(command.clinicalType, record, index, schema);
 
         if (schemaResult.validationErrors.length > 0) {
-          let validationErrors: DeepReadonly<SchemaValidationError>[] = [
-            ...schemaResult.validationErrors,
-          ];
+          let validationErrors = [...schemaResult.validationErrors];
 
           if (FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
             // check for program exception
