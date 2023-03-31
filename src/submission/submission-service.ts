@@ -852,6 +852,14 @@ export namespace operations {
     );
   }
 
+  /**
+   * Checks if there is a program exception matching the record value
+   *
+   * @param exceptions
+   * @param validationError
+   * @param recordValue
+   * @returns true if an exception match exists, false otherwise
+   */
   const checkExceptionExists = (
     exceptions: DeepReadonly<ProgramException['exceptions']>,
     validationError: DeepReadonly<dictionaryEntities.SchemaValidationError>,
@@ -874,6 +882,13 @@ export namespace operations {
     }
   };
 
+  /**
+   * Normalizes input string to start with Upper case, remaining
+   * characters lowercase and to trim whitespace
+   *
+   * @param value
+   * returns normalized string
+   */
   const normalizeExceptionValue = (value: string) => _.upperFirst(value.trim().toLowerCase());
 
   export const checkClinicalEntity = async (
@@ -906,12 +921,22 @@ export namespace operations {
 
             validationErrors = [];
 
+            /***
+             * Checking if a valid exception exists and the record value matches it
+             * If there's a match, we allow the value to pass schema validation and
+             * the value is returned normalized
+             *
+             * Normalizing is setting it to start Upper case and to trim whitespace
+             */
             if (isProgramException(result)) {
               schemaResult.validationErrors.forEach(validationError => {
                 const validationErrorFieldName = validationError.fieldName;
                 const recordValue = record[validationErrorFieldName];
 
-                // Zero Array type exceptions exist, but recordValue type is string | string[]
+                /**
+                 * Zero Array type exceptions exist, but recordValue type is string | string[]
+                 * therefore no exception is present for arrays, validation error is valid
+                 */
                 if (Array.isArray(recordValue)) {
                   validationErrors.push(validationError);
                   return;
