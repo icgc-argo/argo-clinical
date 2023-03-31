@@ -20,7 +20,7 @@
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
 import { SchemaValidationError } from '@overturebio-stack/lectern-client/lib/schema-entities';
 import { DeepReadonly } from 'deep-freeze';
-import _, { isEmpty, upperFirst } from 'lodash';
+import _ from 'lodash';
 import { v1 as uuid } from 'uuid';
 import {
   Donor,
@@ -874,7 +874,7 @@ export namespace operations {
     }
   };
 
-  const normalizeExceptionValue = (value: string) => upperFirst(value.trim().toLowerCase());
+  const normalizeExceptionValue = (value: string) => _.upperFirst(value.trim().toLowerCase());
 
   export const checkClinicalEntity = async (
     command: ClinicalSubmissionCommand,
@@ -945,7 +945,7 @@ export namespace operations {
           );
         }
 
-        if (isEmpty(processedRecord)) {
+        if (_.isEmpty(processedRecord)) {
           processedRecord = schemaResult.processedRecord;
         }
 
