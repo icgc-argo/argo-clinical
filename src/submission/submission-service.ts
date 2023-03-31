@@ -954,7 +954,7 @@ export namespace operations {
                   // ensure value is normalized exception value
                   const normalizedExceptionRecord = {
                     ...record,
-                    ...{ [validationErrorFieldName]: normalizedRecordValue },
+                    [validationErrorFieldName]: normalizedRecordValue,
                   };
                   processedRecord = normalizedExceptionRecord;
                 } else {
