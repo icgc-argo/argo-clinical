@@ -1,3 +1,18 @@
+// early return. query for program exceptions, entity, will be arrays
+const queryForExceptions = async (programId: string) => {
+  // query program exceptions first, because they cover entire programs
+  const programException = await programExceptionRepository.find(programId);
+  if (isProgramException(programException) || isEntityException(programException)) {
+    return programException;
+  }
+
+  // if we don't have program exception, query for entity exceptions
+  const entityException = await entityExceptionRepository.find(programId);
+  return entityException;
+};
+
+// CAN I USE GENERICS???
+
 /**
  * Checks if there is a program exception matching the record value
  *
