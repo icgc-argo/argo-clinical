@@ -56,6 +56,7 @@ import {
   notEmpty,
   toString,
 } from '../utils';
+import { checkExceptionExists, normalizeExceptionValue } from './exceptions/exceptions';
 import { registrationRepository } from './registration-repo';
 import {
   ActiveClinicalSubmission,
@@ -871,9 +872,17 @@ export namespace operations {
 
         if (schemaResult.validationErrors.length > 0) {
           let validationErrors = [...schemaResult.validationErrors];
+          //
+          // if (FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
+          //   const exceptionExists = checkForProgramAndEntityExceptions(programId)
+          //   if(exceptionExists)
+          //   validationErrors = []
+          //   record = []
+          // }
+          //
 
           if (FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
-            // check for program exception
+            // check for program exception TODO: THIS CAN BE CLEANED Ups
             const result = await programExceptionRepository.find(command.programId);
 
             validationErrors = [];
