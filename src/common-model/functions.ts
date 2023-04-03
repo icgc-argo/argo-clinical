@@ -259,7 +259,10 @@ export const calculateSpecimenCompletionStats = (
       ? 0
       : tumourSubmissions / tumourRegistrations;
 
-  const coreCompletionPercentage = (normalSpecimensPercentage + tumourSpecimensPercentage) / 2;
+  const coreCompletionPercentage =
+    normalSubmissions === 0 || tumourSubmissions === 0
+      ? 0
+      : (normalSpecimensPercentage + tumourSpecimensPercentage) / 2;
 
   const completionValues = {
     coreCompletionPercentage,
