@@ -40,8 +40,6 @@ import {
   TherapyRxNormFields,
 } from '../common-model/entities';
 import * as dictionaryManager from '../dictionary/manager';
-import programExceptionRepository from '../exception/repo/program';
-import { isProgramException } from '../exception/util';
 import { FEATURE_SUBMISSION_EXCEPTIONS_ENABLED } from '../feature-flags';
 import { loggerFor } from '../logger';
 import { RxNormConcept } from '../rxnorm/api';
@@ -56,7 +54,7 @@ import {
   notEmpty,
   toString,
 } from '../utils';
-import { checkExceptionExists, normalizeExceptionValue } from './exceptions/exceptions';
+import { checkForProgramOrEntityExceptions as checkForProgramAndEntityExceptions } from './exceptions/exceptions';
 import { registrationRepository } from './registration-repo';
 import {
   ActiveClinicalSubmission,
@@ -872,63 +870,22 @@ export namespace operations {
 
         if (schemaResult.validationErrors.length > 0) {
           let validationErrors = [...schemaResult.validationErrors];
-          //
-          // if (FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
-          //   const exceptionExists = checkForProgramAndEntityExceptions(programId)
-          //   if(exceptionExists)
-          //   validationErrors = []
-          //   record = []
-          // }
-          //
 
           if (FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
-            // check for program exception TODO: THIS CAN BE CLEANED Ups
-            const result = await programExceptionRepository.find(command.programId);
-
-            validationErrors = [];
-
             /***
              * Checking if a valid exception exists and the record value matches it
-             * If there's a match, we allow the value to pass schema validation and
-             * the value is returned normalized
+             * If there's a match, we allow the value to pass schema validation
+             * Filtered schema validation errors and the normalized record value are returned
              *
-             * Normalizing is setting it to start Upper case and to trim whitespace
+             * Normalizing is setting the value to start Upper case and to trim whitespace
              */
-            if (isProgramException(result)) {
-              schemaResult.validationErrors.forEach(validationError => {
-                const validationErrorFieldName = validationError.fieldName;
-                const recordValue = record[validationErrorFieldName];
-
-                /**
-                 * Zero Array type exceptions exist, but recordValue type is string | string[]
-                 * therefore no exception is present for arrays, validation error is valid
-                 */
-                if (Array.isArray(recordValue)) {
-                  validationErrors.push(validationError);
-                  return;
-                }
-
-                const normalizedRecordValue = normalizeExceptionValue(recordValue);
-
-                const exceptionExists = checkExceptionExists(
-                  result.exceptions,
-                  validationError,
-                  normalizedRecordValue,
-                );
-
-                if (exceptionExists) {
-                  // ensure value is normalized exception value
-                  const normalizedExceptionRecord = {
-                    ...record,
-                    [validationErrorFieldName]: normalizedRecordValue,
-                  };
-                  processedRecord = normalizedExceptionRecord;
-                } else {
-                  // only add validation errors that don't have exceptions
-                  validationErrors.push(validationError);
-                }
-              });
-            }
+            const { filteredErrors, normalizedRecord } = await checkForProgramAndEntityExceptions({
+              programId: command.programId,
+              record,
+              schemaValidationErrors: schemaResult.validationErrors,
+            });
+            validationErrors = filteredErrors;
+            processedRecord = normalizedRecord;
           }
 
           errorsAccumulator = errorsAccumulator.concat(
