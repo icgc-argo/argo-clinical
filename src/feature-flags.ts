@@ -17,30 +17,5 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import * as express from 'express';
-import multer from 'multer';
-import exceptionApi, { requestContainsFile } from '../exception/exception-api';
-import { wrapAsync } from '../middleware';
-import { FEATURE_SUBMISSION_EXCEPTIONS_ENABLED } from '../feature-flags';
-import { Request, Response } from 'express';
-
-// config
-const router = express.Router({ mergeParams: true });
-const upload = multer({ dest: '/tmp' });
-
-// routes
-router.post('*', upload.single('exceptionFile'), requestContainsFile);
-
-router.post('/', wrapAsync(exceptionApi.createProgramException));
-
-router.post('/entity', wrapAsync(exceptionApi.createEntityException));
-
-router.get('/', wrapAsync(exceptionApi.getProgramException));
-
-router.delete('/', wrapAsync(exceptionApi.clearProgramException));
-
-router.delete('/entity', wrapAsync(exceptionApi.deleteEntityException));
-
-export default FEATURE_SUBMISSION_EXCEPTIONS_ENABLED
-  ? router
-  : (req: Request, res: Response) => res.status(404).send();
+export const FEATURE_SUBMISSION_EXCEPTIONS_ENABLED =
+  process.env.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED === 'true';

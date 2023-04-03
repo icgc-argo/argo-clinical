@@ -119,7 +119,9 @@ export const checkCoreField: Validator<ExceptionRecord> = async ({ record, field
   const isValid = existingDictionarySchema[0] && existingDictionarySchema[0].fields.length > 0;
   return {
     result: isValid ? ValidationResultType.VALID : ValidationResultType.INVALID,
-    message: isValid ? '' : `${fieldName} value of '${record.requested_core_field}' is not valid`,
+    message: isValid
+      ? ''
+      : `The requested_core_field '${record.requested_core_field}' does not match schema '${record.schema}'. Please update your exception request form.`,
   };
 };
 
