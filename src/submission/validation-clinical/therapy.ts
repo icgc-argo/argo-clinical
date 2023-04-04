@@ -58,18 +58,18 @@ export const validate = async (
 
   const isRadiationTreatment =
     Array.isArray(treatment_type) &&
-    treatment_type?.includes('Radiation therapy') &&
+    treatment_type.includes('Radiation therapy') &&
     therapies.some(therapy => therapy.therapyType === 'radiation');
 
   const radiationErrors: SubmissionValidationError[] = isRadiationTreatment
-    ? radiation(therapyRecord, treatment)
+    ? validateRadiationRecords(therapyRecord, treatment)
     : [];
 
   errors = [...errors, ...radiationErrors];
   return { errors };
 };
 
-const radiation = (
+const validateRadiationRecords = (
   therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
   treatment: DeepReadonly<Treatment>,
 ) => {
