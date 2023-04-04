@@ -16,12 +16,11 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-import { isArray } from 'lodash';
 import mongoose from 'mongoose';
 import { loggerFor } from '../../logger';
 import { ExceptionValue, ProgramException } from '../types';
 import { checkDoc } from './common';
-import { RepoResponse, RepoError } from './types';
+import { RepoError, RepoResponse } from './types';
 
 const L = loggerFor(__filename);
 

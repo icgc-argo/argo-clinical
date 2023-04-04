@@ -19,12 +19,12 @@
 
 export type ObjectValues<T> = T[keyof T];
 
-export type ExceptionRecord = Readonly<{
+export type ExceptionRecord = {
   program_name: string;
   schema: string;
   requested_core_field: string;
   requested_exception_value: string;
-}>;
+};
 
 export type ProgramExceptionRecord = ExceptionRecord;
 
@@ -35,22 +35,31 @@ export type ProgramException = {
 };
 
 // Entity
-export type SpecimenExceptionRecord = Readonly<
-  ExceptionRecord & {
-    submitter_donor_id: string;
-    submitter_specimen_id: string;
-  }
->;
+export type SpecimenExceptionRecord = ExceptionRecord & {
+  submitter_donor_id: string;
+  submitter_specimen_id: string;
+};
 
-export type EntityExceptionRecord = SpecimenExceptionRecord;
+export type FollowUpExceptionRecord = ExceptionRecord & {
+  submitter_followup_id: string;
+};
+
+export type EntityExceptionRecord = SpecimenExceptionRecord | FollowUpExceptionRecord;
+export type EntityExceptionRecords = (SpecimenExceptionRecord | FollowUpExceptionRecord)[];
+export type ExceptionRecords =
+  | ReadonlyArray<ProgramExceptionRecord>
+  | ReadonlyArray<SpecimenExceptionRecord>
+  | ReadonlyArray<FollowUpExceptionRecord>;
 
 export type EntityException = {
   programId: string;
   specimen: SpecimenExceptionRecord[];
+  followup: FollowUpExceptionRecord[];
 };
 
-const EntityValues = {
+export const EntityValues = {
   specimen: 'specimen',
+  followup: 'followup',
 } as const;
 
 export type Entity = ObjectValues<typeof EntityValues>;
@@ -64,9 +73,8 @@ export const ExceptionValue = {
 
 export type ExceptionValueType = ObjectValues<typeof ExceptionValue>;
 
-// tsv
-
-const isExceptionRecord = (input: any): input is ProgramExceptionRecord => {
+// type guard helpers
+const isExceptionRecordCheck = (input: any) => {
   return (
     // input must not be null and be an object (typeof null = 'object', amusingly)
     typeof input === 'object' &&
@@ -86,37 +94,40 @@ const isExceptionRecord = (input: any): input is ProgramExceptionRecord => {
   );
 };
 
-export const isProgramExceptionRecord = isExceptionRecord;
-
-export const isEntityExceptionRecord = (input: any): input is EntityExceptionRecord => {
+export const isSpecimenExceptionRecord = (input: any): input is SpecimenExceptionRecord => {
   return (
-    // input must not be null and be an object (typeof null = 'object', amusingly)
-    typeof input === 'object' &&
-    input !== null &&
-    // program_name must exist and be string
-    'program_name' in input &&
-    typeof input.program_name === 'string' &&
-    // schema must exist and be string
-    'schema' in input &&
-    typeof input.schema === 'string' &&
-    // requested_core_field must exist and be string
-    'requested_core_field' in input &&
-    typeof input.requested_core_field === 'string' &&
-    // requested_exception_value must exist and be string and be in enum list
-    'requested_exception_value' in input &&
-    typeof input.requested_exception_value === 'string' &&
     // submitter_specimen_id must exist and be a string
-    'submitter_specimen_id' in input &&
-    typeof input.submitter_specimen_id === 'string' &&
-    // submitter_donor_id must exist and be a string
-    'submitter_donor_id' in input &&
-    typeof input.submitter_donor_id === 'string'
+    'submitter_specimen_id' in input && typeof input.submitter_specimen_id === 'string'
   );
 };
 
-// helpers
+const isFollowupExceptionRecord = (input: any): boolean => {
+  return (
+    // submitter_followup_id must exist and be a string
+    'submitter_followup_id' in input && typeof input.submitter_followup_id === 'string'
+  );
+};
 
-export const isArrayOf = <T>(input: any[], validator: (_: any) => _ is T): input is T[] => {
+// type guards
+export const isEntityExceptionRecord = (input: any): input is EntityExceptionRecord => {
+  return (
+    isExceptionRecordCheck(input) &&
+    (isSpecimenExceptionRecord(input) || isFollowupExceptionRecord(input))
+  );
+};
+
+const isExceptionRecord = (input: any): input is ExceptionRecord => isExceptionRecordCheck(input);
+
+export const isProgramExceptionRecord = isExceptionRecord;
+
+export const isArrayOfEntityExceptionRecord = (input: any): input is EntityExceptionRecords =>
+  input.every((i: any) => isEntityExceptionRecord(i));
+
+// array helpers
+export const isArrayOf = <T>(
+  input: any[] | readonly any[],
+  validator: (_: any) => _ is T,
+): input is T[] => {
   return input.every(validator);
 };
 
