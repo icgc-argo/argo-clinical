@@ -54,7 +54,7 @@ import {
   notEmpty,
   toString,
 } from '../utils';
-import { checkForProgramOrEntityExceptions as checkForProgramAndEntityExceptions } from './exceptions/exceptions';
+import { checkForProgramAndEntityExceptions } from './exceptions/exceptions';
 import { registrationRepository } from './registration-repo';
 import {
   ActiveClinicalSubmission,
@@ -882,7 +882,8 @@ export namespace operations {
             const { filteredErrors, normalizedRecord } = await checkForProgramAndEntityExceptions({
               programId: command.programId,
               record,
-              schemaValidationErrors: schemaResult.validationErrors,
+              schemaName,
+              schemaValidationErrors: [...schemaResult.validationErrors],
             });
             validationErrors = filteredErrors;
             processedRecord = normalizedRecord;

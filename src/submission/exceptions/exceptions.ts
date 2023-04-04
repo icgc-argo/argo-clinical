@@ -19,11 +19,12 @@
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
 import { DataRecord } from '@overturebio-stack/lectern-client/lib/schema-entities';
 import _ from 'lodash';
-import { ClinicalEntitySchemaNames, aliasEntityNames } from '../../common-model/entities';
+import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 import entityExceptionRepository from '../../exception/repo/entity';
 import programExceptionRepository from '../../exception/repo/program';
+import { RepoError } from '../../exception/repo/types';
+import { EntityException, ExceptionRecord, ProgramException } from '../../exception/types';
 import { isEntityException, isProgramException } from '../../exception/util';
-import { EntityException, ExceptionRecord } from '../../exception/types';
 
 /**
  * Check if a valid exception exists and the record value matches it
@@ -47,7 +48,7 @@ export const checkForProgramAndEntityExceptions = async ({
   schemaName: ClinicalEntitySchemaNames;
   schemaValidationErrors: dictionaryEntities.SchemaValidationError[];
 }) => {
-  const filteredErrors: any[] = [];
+  const filteredErrors: dictionaryEntities.SchemaValidationError[] = [];
   let normalizedRecord = {};
 
   // retrieve submitted exceptions for program id (both program level and donor level)
@@ -131,8 +132,8 @@ export const validateFieldValueWithExceptions = ({
   fieldValue,
   validationErrorFieldName,
 }: {
-  programException: any;
-  entityException: any;
+  programException: ProgramException | RepoError;
+  entityException: EntityException | RepoError;
   schemaName: ClinicalEntitySchemaNames;
   fieldValue: string;
   validationErrorFieldName: string;
