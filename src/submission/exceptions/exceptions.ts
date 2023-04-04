@@ -18,207 +18,182 @@
  */
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
 import { DataRecord } from '@overturebio-stack/lectern-client/lib/schema-entities';
-import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
+import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 import entityExceptionRepository from '../../exception/repo/entity';
 import programExceptionRepository from '../../exception/repo/program';
-import {
-  EntityExceptionRecord,
-  ExceptionRecords,
-  isArrayOfEntityExceptionRecord,
-  ProgramException,
-  ProgramExceptionRecord,
-  SpecimenExceptionRecord,
-} from '../../exception/types';
+import { RepoError } from '../../exception/repo/types';
+import { EntityException, ExceptionRecord, ProgramException } from '../../exception/types';
 import { isEntityException, isProgramException } from '../../exception/util';
 
 /**
+ * Check if a valid exception exists and the record value matches it
+ * If there's a match, we allow the value to pass schema validation
+ * Filtered schema validation errors and the normalized record value are returned
+ *
+ * Normalizing is setting the value to start Upper case and to trim whitespace
  *
  * @param programId
  * @param record
  * @param schemaValidationErrors
  */
-export const checkForProgramOrEntityExceptions = async (
+export const checkForProgramAndEntityExceptions = async ({
   programId,
   record,
+  schemaName,
   schemaValidationErrors,
-) => {
-  let filteredErrors: any[] = [];
-  let processedRecord = {};
+}: {
+  programId: string;
+  record: DataRecord;
+  schemaName: ClinicalEntitySchemaNames;
+  schemaValidationErrors: dictionaryEntities.SchemaValidationError[];
+}) => {
+  const filteredErrors: dictionaryEntities.SchemaValidationError[] = [];
+  let normalizedRecord = {};
 
-  const exception = await queryForExceptions(programId);
+  // retrieve submitted exceptions for program id (both program level and donor level)
+  const { programException, entityException } = await queryForExceptions(programId);
 
-  if (isProgramException(exception) || isEntityException(exception)) {
+  // if there are submitted exceptions for this program, check if they match record values
+  if (isProgramException(programException) || isEntityException(entityException)) {
     schemaValidationErrors.forEach(validationError => {
       const validationErrorFieldName = validationError.fieldName;
-      const recordValue = record[validationErrorFieldName];
+      const fieldValue = record[validationErrorFieldName];
 
       /**
        * Zero Array type exceptions exist, but recordValue type is string | string[]
        * therefore no exception is present for arrays. validation error is valid
        */
-      if (Array.isArray(recordValue)) {
+      if (Array.isArray(fieldValue)) {
         filteredErrors.push(validationError);
         return;
       }
 
-      const normalizedRecordValue = normalizeExceptionValue(recordValue);
+      // normalize submitted record field value to match submitted exceptions
+      const normalizedFieldValue = normalizeExceptionValue(fieldValue);
 
-      const exceptionExists = validateRecordValueWithExceptions(
-        result.exceptions,
-        validationError,
-        normalizedRecordValue,
-      );
+      // missing required field, validate as normal, exceptions still require a submitted value
+      const isMissingRequiredField =
+        validationError.errorType ===
+        dictionaryEntities.SchemaValidationErrorTypes.MISSING_REQUIRED_FIELD;
 
-      if (exceptionExists) {
+      const valueHasException = !isMissingRequiredField
+        ? validateFieldValueWithExceptions({
+            programException,
+            entityException,
+            schemaName,
+            fieldValue: normalizedFieldValue,
+            validationErrorFieldName: validationError.fieldName,
+          })
+        : false;
+
+      if (valueHasException) {
         // ensure value is normalized exception value
         const normalizedExceptionRecord = {
           ...record,
-          [validationErrorFieldName]: normalizedRecordValue,
+          [validationErrorFieldName]: normalizedFieldValue,
         };
-        processedRecord = normalizedExceptionRecord;
+        normalizedRecord = normalizedExceptionRecord;
       } else {
         // only add validation errors that don't have exceptions
         filteredErrors.push(validationError);
       }
     });
-    return { filteredErrors, processedRecord };
+    return { filteredErrors, normalizedRecord };
   } else {
-    // no exceptions. return values as is.
-    return { filteredErrors: schemaValidationErrors, processedRecord: record };
+    // no exceptions. return values without change.
+    return { filteredErrors: schemaValidationErrors, normalizedRecord: record };
   }
 };
-
-// early return. query for program exceptions, entity, will be arrays
-const queryForExceptions = async (programId: string) => {
-  // query program exceptions first, because they cover entire programs
-  const programException = await programExceptionRepository.find(programId);
-  if (isProgramException(programException) || isEntityException(programException)) {
-    return programException;
-  }
-
-  // if we don't have program exception, query for entity exceptions
-  const entityException = await entityExceptionRepository.find(programId);
-  return entityException;
-};
-
-// CAN I USE GENERICS???
 
 /**
- * Checks if there is a program exception matching the record value
+ * query db for program or entity exceptions
+ * @param programId
+ * @returns program and donor level exceptions for this programId
+ */
+const queryForExceptions = async (programId: string) => {
+  const programException = await programExceptionRepository.find(programId);
+  const entityException = await entityExceptionRepository.find(programId);
+  return { programException, entityException };
+};
+
+/**
+ * Checks if there is a program exception or entity exception matching the record value
  *
  * @param exceptions
  * @param validationError
- * @param recordValue
+ * @param fieldValue
  * @returns true if an exception match exists, false otherwise
  */
-export const validateRecordValueWithExceptions = (
-  exceptions: DeepReadonly<ProgramException['exceptions']>,
-  validationError: DeepReadonly<dictionaryEntities.SchemaValidationError>,
-  recordValue: string,
-): boolean => {
-  // missing required field, validate as normal, exceptions still require a submitted value
-  if (
-    validationError.errorType ===
-    dictionaryEntities.SchemaValidationErrorTypes.MISSING_REQUIRED_FIELD
-  ) {
-    return false;
-  } else {
-    // find exception for field
-    const validationErrorFieldName = validationError.fieldName;
-    const exception = findException({ exceptions, record, validationErrorFieldName });
-
-    // check exception value matches error field value
-    return exception?.requested_exception_value === record[validationErrorFieldName];
-  }
-};
-
-const findException = ({
-  exceptions,
-  record,
+export const validateFieldValueWithExceptions = ({
+  programException,
+  entityException,
+  schemaName,
+  fieldValue,
   validationErrorFieldName,
 }: {
-  exceptions: ExceptionRecords;
-  record: DataRecord;
+  programException: ProgramException | RepoError;
+  entityException: EntityException | RepoError;
+  schemaName: ClinicalEntitySchemaNames;
+  fieldValue: string;
   validationErrorFieldName: string;
-}): ProgramExceptionRecord | EntityExceptionRecord | undefined => {
-  if (isArrayOfEntityExceptionRecord(exceptions)) {
-    // entity exception
-    return exceptions.find(
-      exception =>
-        exception.requested_core_field === validationErrorFieldName &&
-        findExceptionByEntity({ exception, record }),
-    );
-  } else {
-    // program exception
-    return exceptions.find(exception => {
+}): boolean => {
+  let exceptionValue: string | undefined = '';
+  // program level is applicable to ALL donors
+  if (isProgramException(programException)) {
+    exceptionValue = programException.exceptions.find(exception => {
       exception.requested_core_field === validationErrorFieldName;
-    });
+    })?.requested_core_field;
+  } else if (isEntityException(entityException)) {
+    const exceptionSchemaName = mapClinicalEntityNameToExceptionName(schemaName);
+    if (exceptionSchemaName) {
+      const exceptions: Array<ExceptionRecord> = entityException[exceptionSchemaName];
+      exceptionValue = exceptions.find(
+        exception => exception.requested_core_field === validationErrorFieldName,
+      )?.requested_core_field;
+    } else {
+      return false;
+    }
   }
+  // check submitted exception value matches record validation error field value
+  return exceptionValue === fieldValue;
 };
-
-const specimenKeyField: keyof SpecimenExceptionRecord = 'submitter_specimen_id';
-const findExceptionByEntity = ({
-  exception,
-  record,
-}: {
-  exception: EntityExceptionRecord;
-  record: DataRecord;
-}) => {
-  // keep type checks as string literals, not dynamic properties, for current project TS version 3.9.5
-  if ('submitter_specimen_id' in exception) {
-    return exception[specimenKeyField] === record[specimenKeyField];
-  } else {
-    return false;
-  }
-};
-
-// const applyExceptions = async ({
-//   programId,
-//   entity,
-//   record,
-//   schemaValidationErrors,
-// }: {
-//   programId: string;
-//   entity: string;
-//   record: dictionaryEntities.DataRecord;
-//   schemaValidationErrors: dictionaryEntities.SchemaValidationError[];
-// }): Promise<dictionaryEntities.SchemaValidationError[]> => {
-//   const t0 = performance.now();
-//   // program exceptions and entity exceptions are mutually exclusive
-
-//   // program level exceptions
-//   const programExceptionResult = await programExceptionRepository.find(programId);
-//   if (isProgramException(programExceptionResult)) {
-//     return schemaValidationErrors.filter(
-//       validationError =>
-//         !isException({ exceptions: programExceptionResult.exceptions, validationError, record }),
-//     );
-//   }
-
-//   // entity level exceptions
-//   const entityExceptionResult = await entityExceptionRepository.find(programId);
-//   if (
-//     isEntityException(entityExceptionResult) &&
-//     (entity === EntityValues.followup || entity === EntityValues.specimen)
-//   ) {
-//     const entityExceptions = entityExceptionResult[entity];
-
-//     return schemaValidationErrors.filter(
-//       validationError => !isException({ exceptions: entityExceptions, validationError, record }),
-//     );
-//   }
-
-//   const t1 = performance.now();
-//   L.debug('apply exceptions time: ' + (t1 - t0));
-//   return schemaValidationErrors;
-// };
 
 /**
  * Normalizes input string to start with Upper case, remaining
  * characters lowercase and to trim whitespace
  *
  * @param value
- * returns normalized string
+ * @returns normalized string
  */
 export const normalizeExceptionValue = (value: string) => _.upperFirst(value.trim().toLowerCase());
+
+/**
+ * map uploaded clinical type schema name with underscores to exception schema name camel cased
+ * Partial<> until all donor entities are accounted for
+ * @param schemaName
+ */
+
+const clinicalEntities: Partial<Record<
+  ClinicalEntitySchemaNames,
+  Exclude<keyof EntityException, 'programId'>
+>> = {
+  // donor: 'donor',
+  specimen: 'specimen',
+  //   primary_diagnosis: 'primaryDiagnoses',
+  //   family_history: 'familyHistory',
+  //   treatment: 'treatment',
+  //   chemotherapy: 'chemotherapy',
+  //   immunotherapy: 'immunotherapy',
+  //   surgery: 'surgery',
+  //   radiation: 'radiation',
+  //   follow_up: 'followUps',
+  //   hormone_therapy: 'hormoneTherapy',
+  //   exposure: 'exposure',
+  //   comorbidity: 'comorbidity',
+  //   biomarker: 'biomarker',
+  //   sample_registration: 'sampleRegistration',
+};
+
+const mapClinicalEntityNameToExceptionName = (schemaName: ClinicalEntitySchemaNames) =>
+  clinicalEntities[schemaName];
