@@ -178,7 +178,7 @@ const clinicalEntities: Partial<Record<
   ClinicalEntitySchemaNames,
   Exclude<keyof EntityException, 'programId'>
 >> = {
-  //donor: 'donor',
+  // donor: 'donor',
   specimen: 'specimen',
   //   primary_diagnosis: 'primaryDiagnoses',
   //   family_history: 'familyHistory',
