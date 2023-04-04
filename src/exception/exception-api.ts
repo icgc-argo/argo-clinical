@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 The Ontario Institute for Cancer Research. All rights reserved
+ * Copyright (c) 2023 The Ontario Institute for Cancer Research. All rights reserved
  *
  * This program and the accompanying materials are made available under the terms of
  * the GNU Affero General Public License v3.0. You should have received a copy of the
@@ -29,6 +29,7 @@ import {
   isEntityExceptionRecord,
   ProgramExceptionRecord,
   EntityExceptionRecord,
+  EntityValues,
 } from './types';
 
 const L = loggerFor(__filename);
@@ -43,9 +44,9 @@ function getResStatus(result: exceptionService.Result): number {
   }
 }
 
-const validateProgramExceptionRecords = (
-  records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj>,
-): ReadonlyArray<ProgramExceptionRecord> => {
+type ValidateRecords<T> = (records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj>) => ReadonlyArray<T>;
+
+const validateProgramExceptionRecords: ValidateRecords<ProgramExceptionRecord> = records => {
   if (!isReadonlyArrayOf(records, isProgramExceptionRecord)) {
     L.debug(`Program Exception TSV_PARSING_FAILED`);
     throw new Errors.TSVParseError();
@@ -53,9 +54,7 @@ const validateProgramExceptionRecords = (
   return records;
 };
 
-const validateEntityExceptionRecords = (
-  records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj>,
-): ReadonlyArray<EntityExceptionRecord> => {
+const validateEntityExceptionRecords: ValidateRecords<EntityExceptionRecord> = records => {
   if (!isReadonlyArrayOf(records, isEntityExceptionRecord)) {
     L.debug(`Entity Exception TSV_PARSING_FAILED`);
     throw new Errors.TSVParseError();
@@ -112,6 +111,7 @@ class ExceptionController {
     const result = await exceptionService.operations.createEntityException({
       programId,
       records: entityExceptionRecords,
+      entity: EntityValues.specimen,
     });
 
     const status = !result.success ? 422 : 201;

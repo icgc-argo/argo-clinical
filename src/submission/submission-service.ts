@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 The Ontario Institute for Cancer Research. All rights reserved
+ * Copyright (c) 2023 The Ontario Institute for Cancer Research. All rights reserved
  *
  * This program and the accompanying materials are made available under the terms of
  * the GNU Affero General Public License v3.0. You should have received a copy of the
@@ -18,7 +18,6 @@
  */
 
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
-import { SchemaValidationError } from '@overturebio-stack/lectern-client/lib/schema-entities';
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 import { v1 as uuid } from 'uuid';
@@ -41,9 +40,7 @@ import {
   TherapyRxNormFields,
 } from '../common-model/entities';
 import * as dictionaryManager from '../dictionary/manager';
-import programExceptionRepository from '../exception/repo/program';
-import { ProgramException } from '../exception/types';
-import { isProgramException } from '../exception/util';
+import { FEATURE_SUBMISSION_EXCEPTIONS_ENABLED } from '../feature-flags';
 import { loggerFor } from '../logger';
 import { RxNormConcept } from '../rxnorm/api';
 import dbRxNormService from '../rxnorm/service';
@@ -57,6 +54,7 @@ import {
   notEmpty,
   toString,
 } from '../utils';
+import { checkForProgramAndEntityExceptions } from './exceptions/exceptions';
 import { registrationRepository } from './registration-repo';
 import {
   ActiveClinicalSubmission,
@@ -98,7 +96,6 @@ import {
 } from './validation-clinical/utils';
 import * as dataValidator from './validation-clinical/validation';
 import { checkUniqueRecords, validateSubmissionData } from './validation-clinical/validation';
-import { FEATURE_SUBMISSION_EXCEPTIONS_ENABLED } from '../feature-flags';
 
 const L = loggerFor(__filename);
 
@@ -852,45 +849,6 @@ export namespace operations {
     );
   }
 
-  /**
-   * Checks if there is a program exception matching the record value
-   *
-   * @param exceptions
-   * @param validationError
-   * @param recordValue
-   * @returns true if an exception match exists, false otherwise
-   */
-  const checkExceptionExists = (
-    exceptions: DeepReadonly<ProgramException['exceptions']>,
-    validationError: DeepReadonly<dictionaryEntities.SchemaValidationError>,
-    recordValue: string,
-  ): boolean => {
-    // missing required field, validate as normal, exceptions still require a submitted value
-    if (
-      validationError.errorType ===
-      dictionaryEntities.SchemaValidationErrorTypes.MISSING_REQUIRED_FIELD
-    ) {
-      return false;
-    }
-    // every other validation of SchemaValidationErrorTypes check for exception
-    else {
-      const exception = exceptions.find(
-        exception => exception.coreField === validationError.fieldName,
-      );
-
-      return exception?.exceptionValue === recordValue;
-    }
-  };
-
-  /**
-   * Normalizes input string to start with Upper case, remaining
-   * characters lowercase and to trim whitespace
-   *
-   * @param value
-   * returns normalized string
-   */
-  const normalizeExceptionValue = (value: string) => _.upperFirst(value.trim().toLowerCase());
-
   export const checkClinicalEntity = async (
     command: ClinicalSubmissionCommand,
     schema: dictionaryEntities.SchemasDictionary,
@@ -914,53 +872,21 @@ export namespace operations {
           let validationErrors = [...schemaResult.validationErrors];
 
           if (FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
-            // check for program exception
-            const result = await programExceptionRepository.find(command.programId);
-
-            validationErrors = [];
-
             /***
              * Checking if a valid exception exists and the record value matches it
-             * If there's a match, we allow the value to pass schema validation and
-             * the value is returned normalized
+             * If there's a match, we allow the value to pass schema validation
+             * Filtered schema validation errors and the normalized record value are returned
              *
-             * Normalizing is setting it to start Upper case and to trim whitespace
+             * Normalizing is setting the value to start Upper case and to trim whitespace
              */
-            if (isProgramException(result)) {
-              schemaResult.validationErrors.forEach(validationError => {
-                const validationErrorFieldName = validationError.fieldName;
-                const recordValue = record[validationErrorFieldName];
-
-                /**
-                 * Zero Array type exceptions exist, but recordValue type is string | string[]
-                 * therefore no exception is present for arrays, validation error is valid
-                 */
-                if (Array.isArray(recordValue)) {
-                  validationErrors.push(validationError);
-                  return;
-                }
-
-                const normalizedRecordValue = normalizeExceptionValue(recordValue);
-
-                const exceptionExists = checkExceptionExists(
-                  result.exceptions,
-                  validationError,
-                  normalizedRecordValue,
-                );
-
-                if (exceptionExists) {
-                  // ensure value is normalized exception value
-                  const normalizedExceptionRecord = {
-                    ...record,
-                    [validationErrorFieldName]: normalizedRecordValue,
-                  };
-                  processedRecord = normalizedExceptionRecord;
-                } else {
-                  // only add validation errors that don't have exceptions
-                  validationErrors.push(validationError);
-                }
-              });
-            }
+            const { filteredErrors, normalizedRecord } = await checkForProgramAndEntityExceptions({
+              programId: command.programId,
+              record,
+              schemaName,
+              schemaValidationErrors: [...schemaResult.validationErrors],
+            });
+            validationErrors = filteredErrors;
+            processedRecord = normalizedRecord;
           }
 
           errorsAccumulator = errorsAccumulator.concat(
