@@ -118,6 +118,13 @@ class ExceptionController {
     return res.status(status).send(result);
   }
 
+  @HasFullReadAccess()
+  async getEntityException(req: Request, res: Response) {
+    const programId = req.params.programId;
+    const result = await exceptionService.operations.getEntityException({ programId });
+    return res.status(getResStatus(result)).send(result);
+  }
+
   @HasFullWriteAccess()
   async deleteEntityException(req: Request, res: Response) {
     const { programId } = req.params;

@@ -172,6 +172,15 @@ export namespace operations {
     }
   };
 
+  export const getEntityException: Service = async ({ programId }) => {
+    const result = await entityExceptionRepository.find(programId);
+
+    return processResult({
+      result,
+      errorMessage: `no entity level exceptions for program '${programId}'`,
+    });
+  };
+
   const deleteEntity = async (programId: string, entity: Entity) => {
     let result, errorMessage;
     if (entity) {
