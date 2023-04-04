@@ -150,7 +150,7 @@ export const validateFieldValueWithExceptions = ({
       const exceptions: Array<ExceptionRecord> = entityException[exceptionSchemaName];
       exceptionValue = exceptions.find(
         exception => exception.requested_core_field === validationErrorFieldName,
-      )?.requested_core_field;
+      )?.requested_exception_value;
     } else {
       return false;
     }
