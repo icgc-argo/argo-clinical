@@ -19,22 +19,33 @@
 
 import mongoose from 'mongoose';
 import { loggerFor } from '../../logger';
-import { Entity, EntityException, ExceptionValue } from '../types';
+import { Entity, EntityException, ExceptionValue, ExceptionRecord } from '../types';
 import { checkDoc } from './common';
 import { RepoError, RepoResponse } from './types';
 
 const L = loggerFor(__filename);
 
+const BaseExceptionSchema = new mongoose.Schema<ExceptionRecord>({
+  program_name: String,
+  schema: String,
+  requested_core_field: String,
+  requested_exception_value: { type: String, enum: Object.values(ExceptionValue) },
+});
+
 const entityExceptionSchema = new mongoose.Schema<EntityException>({
   programId: String,
   specimen: [
     {
-      program_name: String,
-      schema: String,
-      requested_core_field: String,
-      requested_exception_value: { type: String, enum: Object.values(ExceptionValue) },
+      ...BaseExceptionSchema.obj,
       submitter_donor_id: String,
       submitter_specimen_id: String,
+    },
+  ],
+  followUp: [
+    {
+      ...BaseExceptionSchema.obj,
+      submitter_donor_id: String,
+      submitter_followup_id: String,
     },
   ],
 });
@@ -55,7 +66,7 @@ const entityExceptionRepository: EntityExceptionRepository = {
   async save(exception: EntityException) {
     L.debug(`Creating new donor exception with: ${JSON.stringify(exception)}`);
 
-    const update = { $set: { programId: exception.programId, specimen: exception.specimen } };
+    const update = { $set: exception };
 
     try {
       return await EntityExceptionModel.findOneAndUpdate(
