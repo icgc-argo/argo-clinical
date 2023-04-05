@@ -54,12 +54,16 @@ export type ExceptionRecords =
 export type EntityException = {
   programId: string;
   specimen: SpecimenExceptionRecord[];
-  followup: FollowUpExceptionRecord[];
+  followUp: FollowUpExceptionRecord[];
 };
 
-export const EntityValues = {
+/**
+ * entity values to be valid EntityException exceptions arrays
+ * provide typing to tsv schema string to exception schema string
+ */
+export const EntityValues: Record<string, Exclude<keyof EntityException, 'programId'>> = {
   specimen: 'specimen',
-  followup: 'followup',
+  followUp: 'followUp',
 } as const;
 
 export type Entity = ObjectValues<typeof EntityValues>;

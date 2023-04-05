@@ -18,18 +18,19 @@
  */
 
 import { NextFunction, Request, Response } from 'express';
+import _ from 'lodash';
 import { HasFullReadAccess, HasFullWriteAccess } from '../decorators';
 import { loggerFor } from '../logger';
 import { ControllerUtils, Errors, TsvUtils } from '../utils';
-import { RepoError } from './repo/types';
 import * as exceptionService from './exception-service';
+import { RepoError } from './repo/types';
 import {
-  isReadonlyArrayOf,
-  isProgramExceptionRecord,
-  isEntityExceptionRecord,
-  ProgramExceptionRecord,
   EntityExceptionRecord,
   EntityValues,
+  isEntityExceptionRecord,
+  isProgramExceptionRecord,
+  isReadonlyArrayOf,
+  ProgramExceptionRecord,
 } from './types';
 
 const L = loggerFor(__filename);
@@ -61,6 +62,13 @@ const validateEntityExceptionRecords: ValidateRecords<EntityExceptionRecord> = r
   }
   return records;
 };
+
+/**
+ * map submitted text from tsv schema column, to camelCase used in exception services
+ * @param record
+ * @returns camelCased schema name
+ */
+const getSchemaEntity = (record: EntityExceptionRecord) => EntityValues[_.camelCase(record.schema)];
 
 class ExceptionController {
   @HasFullWriteAccess()
@@ -108,10 +116,17 @@ class ExceptionController {
     const records = await parseTSV(req.file.path);
     const entityExceptionRecords = validateEntityExceptionRecords(records);
 
+    /**
+     * records have been validated
+     * schema is valid
+     * map tsv schema string to exception schema string
+     */
+    const schemaEntity = getSchemaEntity(entityExceptionRecords[0]);
+
     const result = await exceptionService.operations.createEntityException({
       programId,
       records: entityExceptionRecords,
-      entity: EntityValues.specimen,
+      entity: schemaEntity,
     });
 
     const status = !result.success ? 422 : 201;

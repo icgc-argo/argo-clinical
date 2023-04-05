@@ -43,7 +43,7 @@ const recordsToEntityException = ({
   records: ReadonlyArray<EntityExceptionRecord>;
   entity: Entity;
 }) => {
-  const exception: EntityException = { programId, specimen: [], followup: [] };
+  const exception: EntityException = { programId, specimen: [], followUp: [] };
 
   if (isArrayOf(records, isSpecimenExceptionRecord)) {
     exception.specimen = records;
