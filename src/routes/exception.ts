@@ -30,12 +30,11 @@ const upload = multer({ dest: '/tmp' });
 
 // routes
 router.post('*', upload.single('exceptionFile'), requestContainsFile);
-
 router.post('/', wrapAsync(exceptionApi.createProgramException));
-
 router.post('/entity', wrapAsync(exceptionApi.createEntityException));
 
 router.get('/', wrapAsync(exceptionApi.getProgramException));
+router.get('/entity', wrapAsync(exceptionApi.getEntityException));
 
 router.delete('/', wrapAsync(exceptionApi.clearProgramException));
 
