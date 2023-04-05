@@ -105,7 +105,7 @@ export const isSpecimenExceptionRecord = (input: any): input is SpecimenExceptio
   );
 };
 
-const isFollowupExceptionRecord = (input: any): boolean => {
+export const isFollowupExceptionRecord = (input: any): input is FollowUpExceptionRecord => {
   return (
     // submitter_followup_id must exist and be a string
     'submitter_followup_id' in input && typeof input.submitter_followup_id === 'string'
