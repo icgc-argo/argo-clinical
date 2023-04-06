@@ -168,8 +168,7 @@ export namespace operations {
     records: ReadonlyArray<EntityExceptionRecord>;
     entity: Entity;
   }): Promise<Result> => {
-    // TODO which entity?
-    const errorMessage = `Cannot create exceptions for ${'specimen'} entity in program '${programId}'`;
+    const errorMessage = `Cannot create exceptions for ${entity} entity in program '${programId}'`;
 
     const normalizedRecords = normalizeRecords(records);
 
