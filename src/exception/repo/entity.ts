@@ -19,7 +19,7 @@
 
 import mongoose from 'mongoose';
 import { loggerFor } from '../../logger';
-import { Entity, EntityException, ExceptionValue, ExceptionRecord } from '../types';
+import { Entity, EntityException, ExceptionValue, ExceptionRecord, OnlyRequired } from '../types';
 import { checkDoc } from './common';
 import { RepoError, RepoResponse } from './types';
 
@@ -56,14 +56,14 @@ const EntityExceptionModel = mongoose.model<EntityException>(
 );
 
 export interface EntityExceptionRepository {
-  save(exception: EntityException): RepoResponse<EntityException>;
+  save(exception: OnlyRequired<EntityException, 'programId'>): RepoResponse<EntityException>;
   find(programId: string): RepoResponse<EntityException>;
   delete(programId: string): RepoResponse<EntityException>;
   deleteSingleEntity(programId: string, entity: Entity): RepoResponse<EntityException>;
 }
 
 const entityExceptionRepository: EntityExceptionRepository = {
-  async save(exception: EntityException) {
+  async save(exception: OnlyRequired<EntityException, 'programId'>) {
     L.debug(`Creating new donor exception with: ${JSON.stringify(exception)}`);
 
     const update = { $set: exception };

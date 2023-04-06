@@ -30,6 +30,7 @@ import {
   ProgramException,
   ProgramExceptionRecord,
   isFollowupExceptionRecord,
+  OnlyRequired,
 } from './types';
 import { isRepoError } from './util';
 import { commonValidators, validateRecords, ValidationResult } from './validation';
@@ -49,7 +50,7 @@ const recordsToEntityException = ({
   programId: string;
   records: ReadonlyArray<EntityExceptionRecord>;
 }) => {
-  const exception: EntityException = { programId, specimen: [], followUp: [] };
+  const exception: OnlyRequired<EntityException, 'programId'> = { programId };
 
   if (isArrayOf(records, isSpecimenExceptionRecord)) {
     exception.specimen = records;
@@ -167,6 +168,7 @@ export namespace operations {
     records: ReadonlyArray<EntityExceptionRecord>;
     entity: Entity;
   }): Promise<Result> => {
+    // TODO which entity?
     const errorMessage = `Cannot create exceptions for ${'specimen'} entity in program '${programId}'`;
 
     const normalizedRecords = normalizeRecords(records);

@@ -141,3 +141,6 @@ export const isReadonlyArrayOf = <T>(
 ): input is ReadonlyArray<T> => {
   return input.every(validator);
 };
+
+// utility
+export type OnlyRequired<T, K extends keyof T> = Omit<Partial<T>, K> & Required<Pick<T, K>>;
