@@ -170,6 +170,7 @@ export const normalizeExceptionValue = (value: string) => _.upperFirst(value.tri
 
 /**
  * map uploaded clinical type schema name with underscores to exception schema name camel cased
+ * eg. follow_up: 'followUp',
  * Partial<> until all donor entities are accounted for
  * @param schemaName
  */

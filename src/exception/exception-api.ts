@@ -18,18 +18,19 @@
  */
 
 import { NextFunction, Request, Response } from 'express';
+import _ from 'lodash';
 import { HasFullReadAccess, HasFullWriteAccess } from '../decorators';
 import { loggerFor } from '../logger';
 import { ControllerUtils, Errors, TsvUtils } from '../utils';
-import { RepoError } from './repo/types';
 import * as exceptionService from './exception-service';
+import { RepoError } from './repo/types';
 import {
-  isReadonlyArrayOf,
-  isProgramExceptionRecord,
-  isEntityExceptionRecord,
-  ProgramExceptionRecord,
   EntityExceptionRecord,
   EntityValues,
+  isEntityExceptionRecord,
+  isProgramExceptionRecord,
+  isReadonlyArrayOf,
+  ProgramExceptionRecord,
 } from './types';
 
 const L = loggerFor(__filename);
@@ -106,12 +107,12 @@ class ExceptionController {
     }
 
     const records = await parseTSV(req.file.path);
+    // validate tsv structure using cols, does not validate field data
     const entityExceptionRecords = validateEntityExceptionRecords(records);
 
     const result = await exceptionService.operations.createEntityException({
       programId,
       records: entityExceptionRecords,
-      entity: EntityValues.specimen,
     });
 
     const status = !result.success ? 422 : 201;
