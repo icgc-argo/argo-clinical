@@ -29,28 +29,49 @@ import {
   isSpecimenExceptionRecord,
   ProgramException,
   ProgramExceptionRecord,
+  isFollowupExceptionRecord,
+  OnlyRequired,
 } from './types';
 import { isRepoError } from './util';
 import { commonValidators, validateRecords, ValidationResult } from './validation';
+import _ from 'lodash';
 
 const L = loggerFor(__filename);
 
+/**
+ * creates exception object with tsv style records
+ * @param param0
+ * @returns valid EntityException array
+ */
 const recordsToEntityException = ({
   programId,
   records,
 }: {
   programId: string;
   records: ReadonlyArray<EntityExceptionRecord>;
-  entity: Entity;
 }) => {
-  const exception: EntityException = { programId, specimen: [], followup: [] };
+  const exception: OnlyRequired<EntityException, 'programId'> = { programId };
 
   if (isArrayOf(records, isSpecimenExceptionRecord)) {
     exception.specimen = records;
+  } else if (isArrayOf(records, isFollowupExceptionRecord)) {
+    exception.followUp = records;
   }
 
   return exception;
 };
+
+/**
+ * normalize before schema validation
+ * tsv record values may contain different casing, validation needs normalized casing
+ * eg. tsv record value may be 'Follow Up', this will not pass schema validation for 'follow_up'
+ * @param records
+ */
+const normalizeRecords = (records: readonly EntityExceptionRecord[]) =>
+  records.map(r => ({
+    ...r,
+    schema: _.snakeCase(r.schema),
+  }));
 
 const createResult = ({
   exception,
@@ -141,17 +162,19 @@ export namespace operations {
   export const createEntityException = async ({
     programId,
     records,
-    entity,
   }: {
     programId: string;
     records: ReadonlyArray<EntityExceptionRecord>;
-    entity: Entity;
   }): Promise<Result> => {
-    const errorMessage = `Cannot create exceptions for ${'specimen'} entity in program '${programId}'`;
+    // default error msg
+    const errorMessage = `Cannot create exceptions for entity in program '${programId}'`;
 
+    const normalizedRecords = normalizeRecords(records);
+
+    // validate rows
     const errors = await validateRecords<EntityExceptionRecord>(
       programId,
-      records,
+      normalizedRecords,
       commonValidators,
     );
 
@@ -161,7 +184,7 @@ export namespace operations {
         validationErrors: errors,
       });
     } else {
-      const exceptionToSave = recordsToEntityException({ programId, records, entity });
+      const exceptionToSave = recordsToEntityException({ programId, records });
 
       const result = await entityExceptionRepository.save(exceptionToSave);
 

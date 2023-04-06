@@ -54,12 +54,16 @@ export type ExceptionRecords =
 export type EntityException = {
   programId: string;
   specimen: SpecimenExceptionRecord[];
-  followup: FollowUpExceptionRecord[];
+  followUp: FollowUpExceptionRecord[];
 };
 
-export const EntityValues = {
+/**
+ * entity values to be valid EntityException exceptions arrays
+ * provide typing to tsv schema string to exception schema string
+ */
+export const EntityValues: Record<string, Exclude<keyof EntityException, 'programId'>> = {
   specimen: 'specimen',
-  followup: 'followup',
+  followUp: 'followUp',
 } as const;
 
 export type Entity = ObjectValues<typeof EntityValues>;
@@ -101,7 +105,7 @@ export const isSpecimenExceptionRecord = (input: any): input is SpecimenExceptio
   );
 };
 
-const isFollowupExceptionRecord = (input: any): boolean => {
+export const isFollowupExceptionRecord = (input: any): input is FollowUpExceptionRecord => {
   return (
     // submitter_followup_id must exist and be a string
     'submitter_followup_id' in input && typeof input.submitter_followup_id === 'string'
@@ -137,3 +141,6 @@ export const isReadonlyArrayOf = <T>(
 ): input is ReadonlyArray<T> => {
   return input.every(validator);
 };
+
+// utility
+export type OnlyRequired<T, K extends keyof T> = Omit<Partial<T>, K> & Required<Pick<T, K>>;
