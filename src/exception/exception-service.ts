@@ -162,16 +162,16 @@ export namespace operations {
   export const createEntityException = async ({
     programId,
     records,
-    entity,
   }: {
     programId: string;
     records: ReadonlyArray<EntityExceptionRecord>;
-    entity: Entity;
   }): Promise<Result> => {
-    const errorMessage = `Cannot create exceptions for ${entity} entity in program '${programId}'`;
+    // default error msg
+    const errorMessage = `Cannot create exceptions for entity in program '${programId}'`;
 
     const normalizedRecords = normalizeRecords(records);
 
+    // validate rows
     const errors = await validateRecords<EntityExceptionRecord>(
       programId,
       normalizedRecords,

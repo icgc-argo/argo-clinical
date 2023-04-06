@@ -63,13 +63,6 @@ const validateEntityExceptionRecords: ValidateRecords<EntityExceptionRecord> = r
   return records;
 };
 
-/**
- * map submitted text from tsv schema column, to camelCase used in exception services
- * @param record
- * @returns camelCased schema name
- */
-const getSchemaEntity = (record: EntityExceptionRecord) => EntityValues[_.camelCase(record.schema)];
-
 class ExceptionController {
   @HasFullWriteAccess()
   // program level exceptions
@@ -114,19 +107,12 @@ class ExceptionController {
     }
 
     const records = await parseTSV(req.file.path);
+    // validate tsv structure using cols, does not validate field data
     const entityExceptionRecords = validateEntityExceptionRecords(records);
-
-    /**
-     * records have been validated
-     * schema is valid
-     * map tsv schema string to exception schema string
-     */
-    const schemaEntity = getSchemaEntity(entityExceptionRecords[0]);
 
     const result = await exceptionService.operations.createEntityException({
       programId,
       records: entityExceptionRecords,
-      entity: schemaEntity,
     });
 
     const status = !result.success ? 422 : 201;
