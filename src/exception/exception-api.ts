@@ -128,10 +128,14 @@ class ExceptionController {
 
   @HasFullWriteAccess()
   async deleteEntityException(req: Request, res: Response) {
-    const { programId } = req.params;
-    const { entity } = req.body;
+    const { programId, entity } = req.params;
+    const { submitterDonorIds } = req.body;
 
-    const result = await exceptionService.operations.deleteEntityException({ programId, entity });
+    const result = await exceptionService.operations.deleteEntityException({
+      programId,
+      entity,
+      submitterDonorIds,
+    });
     return res.status(getResStatus(result)).send(result);
   }
 }

@@ -18,7 +18,8 @@
  */
 
 import { RepoError } from './repo/types';
-import { EntityException, ProgramException } from './types';
+import { EntityException, ProgramException, EntityValues, Entity } from './types';
+import _ from 'lodash';
 
 export function isProgramException(
   result: ProgramException | RepoError,
@@ -37,4 +38,22 @@ export function isRepoError(
   result: ProgramException | EntityException | RepoError,
 ): result is RepoError {
   return result === RepoError.DOCUMENT_UNDEFINED || result === RepoError.SERVER_ERROR;
+}
+
+/**
+ *
+ * @param fileType
+ * @returns snaked_cased string
+ */
+export function normalizeEntityFileType(fileType: string) {
+  return _.snakeCase(fileType);
+}
+
+/**
+ *
+ * @param fileType
+ * @returns true if valid Entity
+ */
+export function isValidEntityType(fileType: string): fileType is Entity {
+  return Object.keys(EntityValues).includes(fileType);
 }

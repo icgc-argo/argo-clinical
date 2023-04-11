@@ -59,7 +59,11 @@ export interface EntityExceptionRepository {
   save(exception: OnlyRequired<EntityException, 'programId'>): RepoResponse<EntityException>;
   find(programId: string): RepoResponse<EntityException>;
   delete(programId: string): RepoResponse<EntityException>;
-  deleteSingleEntity(programId: string, entity: Entity): RepoResponse<EntityException>;
+  deleteSingleEntity(
+    programId: string,
+    entity: Entity,
+    submittedIds: string[],
+  ): RepoResponse<EntityException>;
 }
 
 const entityExceptionRepository: EntityExceptionRepository = {
@@ -90,6 +94,7 @@ const entityExceptionRepository: EntityExceptionRepository = {
       return RepoError.SERVER_ERROR;
     }
   },
+
   async delete(programId: string) {
     L.debug(`deleting all entity exceptions with program id: ${JSON.stringify(programId)}`);
     try {
@@ -101,15 +106,21 @@ const entityExceptionRepository: EntityExceptionRepository = {
     }
   },
 
-  async deleteSingleEntity(programId: string, entity: Entity) {
+  async deleteSingleEntity(programId: string, entity: Entity, submitterDonorIds: string[]) {
     L.debug(
       `deleting single entity ${entity} exception with program id: ${JSON.stringify(programId)}`,
     );
     try {
-      const update = { $set: { [entity]: [] } };
-      const doc = await EntityExceptionModel.findOneAndUpdate({ programId }, update, {
-        new: true,
-      }).lean(true);
+      const entityException = await EntityExceptionModel.findOne({ programId });
+      if (entityException) {
+        entityException[entity] = entityException[entity].filter(
+          doc => !submitterDonorIds.includes(doc.submitter_donor_id),
+        );
+        const doc = await entityException.save();
+      } else {
+        return checkDoc(doc);
+      }
+
       return checkDoc(doc);
     } catch (e) {
       L.error('failed to delete exception', e);
