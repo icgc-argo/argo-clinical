@@ -111,17 +111,21 @@ const entityExceptionRepository: EntityExceptionRepository = {
       `deleting single entity ${entity} exception with program id: ${JSON.stringify(programId)}`,
     );
     try {
-      const entityException = await EntityExceptionModel.findOne({ programId });
-      if (entityException) {
-        entityException[entity] = entityException[entity].filter(
+      const entityExceptionDoc = await EntityExceptionModel.findOne({ programId });
+      if (entityExceptionDoc) {
+        const entityToFilter = entityExceptionDoc[entity];
+        let filteredEntity: any = [];
+        // @ts-ignore
+        filteredEntity = entityToFilter.filter(
+          // @ts-ignore
           doc => !submitterDonorIds.includes(doc.submitter_donor_id),
         );
-        const doc = await entityException.save();
-      } else {
+        entityExceptionDoc[entity] = filteredEntity;
+        const doc = await entityExceptionDoc.save();
         return checkDoc(doc);
+      } else {
+        return RepoError.DOCUMENT_UNDEFINED;
       }
-
-      return checkDoc(doc);
     } catch (e) {
       L.error('failed to delete exception', e);
       return RepoError.SERVER_ERROR;

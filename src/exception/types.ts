@@ -21,6 +21,7 @@ export type ObjectValues<T> = T[keyof T];
 
 export type ExceptionRecord = {
   program_name: string;
+  submitter_donor_id: string;
   schema: string;
   requested_core_field: string;
   requested_exception_value: string;
@@ -36,7 +37,6 @@ export type ProgramException = {
 
 // Entity
 export type SpecimenExceptionRecord = ExceptionRecord & {
-  submitter_donor_id: string;
   submitter_specimen_id: string;
 };
 
@@ -68,7 +68,11 @@ export const EntityValues: Record<string, Exclude<keyof EntityException, 'progra
 
 export type Entity = ObjectValues<typeof EntityValues>;
 
-// Exception Values
+export type EntityException = {
+  programId: string;
+  [EntityValues.specimen]: SpecimenExceptionRecord[];
+  [EntityValues.follow_up]: FollowUpExceptionRecord[];
+};
 
 export const ExceptionValue = {
   Unknown: 'Unknown',

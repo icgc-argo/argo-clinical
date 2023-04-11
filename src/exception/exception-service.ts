@@ -32,12 +32,7 @@ import {
   isFollowupExceptionRecord,
   OnlyRequired,
 } from './types';
-import {
-  isRepoError,
-  validateEntityFileType,
-  normalizeEntityFileType,
-  isValidEntityType,
-} from './util';
+import { isRepoError, normalizeEntityFileType, isValidEntityType } from './util';
 import { commonValidators, validateRecords, ValidationResult } from './validation';
 import _ from 'lodash';
 
@@ -219,21 +214,24 @@ export namespace operations {
     submitterDonorIds: string[];
   }) => {
     const normalizedEntityFileType = normalizeEntityFileType(entity);
-    if (isValidEntityType(normalizedEntityFileType)) {
-      // const errorMessage = `no ${entity} entity exceptions for program '${programId}'`;
 
+    if (isValidEntityType(normalizedEntityFileType)) {
       const result = await entityExceptionRepository.deleteSingleEntity(
         programId,
         normalizedEntityFileType,
         submitterDonorIds,
       );
+      return processResult({
+        result,
+        errorMessage: '',
+      });
     } else {
       // not valid entity
+      const errorMessage = `${entity} is not a valid entity file type for program '${programId}'`;
+      return processResult({
+        result: 'DOCUMENT_UNDEFINED',
+        errorMessage,
+      });
     }
-
-    return processResult({
-      result,
-      errorMessage,
-    });
   };
 }
