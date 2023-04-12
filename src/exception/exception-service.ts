@@ -55,7 +55,7 @@ const recordsToEntityException = ({
   if (isArrayOf(records, isSpecimenExceptionRecord)) {
     exception.specimen = records;
   } else if (isArrayOf(records, isFollowupExceptionRecord)) {
-    exception.followUp = records;
+    exception.follow_up = records;
   }
 
   return exception;

@@ -28,6 +28,7 @@ const L = loggerFor(__filename);
 const BaseExceptionSchema = new mongoose.Schema<ExceptionRecord>({
   program_name: String,
   schema: String,
+  submitter_donor_id: String,
   requested_core_field: String,
   requested_exception_value: { type: String, enum: Object.values(ExceptionValue) },
 });
@@ -37,14 +38,12 @@ const entityExceptionSchema = new mongoose.Schema<EntityException>({
   specimen: [
     {
       ...BaseExceptionSchema.obj,
-      submitter_donor_id: String,
       submitter_specimen_id: String,
     },
   ],
-  followUp: [
+  follow_up: [
     {
       ...BaseExceptionSchema.obj,
-      submitter_donor_id: String,
       submitter_followup_id: String,
     },
   ],
@@ -73,11 +72,12 @@ const entityExceptionRepository: EntityExceptionRepository = {
     const update = { $set: exception };
 
     try {
-      return await EntityExceptionModel.findOneAndUpdate(
+      const doc = await EntityExceptionModel.findOneAndUpdate(
         { programId: exception.programId },
         update,
-        { upsert: true, new: true },
+        { upsert: true, new: true, returnDocument: 'after' },
       ).lean(true);
+      return checkDoc(doc);
     } catch (e) {
       L.error('failed to create entity exception: ', e);
       return RepoError.SERVER_ERROR;
