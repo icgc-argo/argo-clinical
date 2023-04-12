@@ -65,6 +65,9 @@ export const EntityValues: Record<string, Exclude<keyof EntityException, 'progra
 
 export type Entity = ObjectValues<typeof EntityValues>;
 
+/**
+ * entity keys are same as clinical submission which are the same as dictionary values eg. follow_up
+ */
 export type EntityException = {
   programId: string;
   specimen: SpecimenExceptionRecord[];
