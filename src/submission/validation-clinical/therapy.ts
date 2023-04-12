@@ -62,7 +62,7 @@ export const validate = async (
     therapies.some(therapy => therapy.therapyType === 'radiation');
 
   const radiationErrors: SubmissionValidationError[] = isRadiationTreatment
-    ? validateRadiationRecords(therapyRecord, treatment)
+    ? validateRadiationRecords(therapyRecord, treatment, mergedDonor)
     : [];
 
   errors = [...errors, ...radiationErrors];
@@ -72,7 +72,14 @@ export const validate = async (
 const validateRadiationRecords = (
   therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
   treatment: DeepReadonly<Treatment>,
+  donor: Donor,
 ) => {
+  const { treatments } = donor;
+
+  const radiationTreatments = treatments?.filter(treatmentRecord => {
+    treatmentRecord.therapies.some(therapy => therapy.therapyType === 'radiation');
+  });
+
   const {
     clinicalInfo: { submitter_donor_id: treatmentDonorId, submitter_treatment_id, treatment_type },
   } = treatment;
@@ -85,9 +92,15 @@ const validateRadiationRecords = (
 
   const donorMatch = treatmentDonorId === therapyDonorId;
 
+  const previousDonorMatch = radiationTreatments?.find(radiationRecord =>
+    radiationRecord.therapies.some(
+      record => record.clinicalInfo.submitter_donor_id === therapyDonorId,
+    ),
+  );
+
   let errors: SubmissionValidationError[] = [];
 
-  if (!donorMatch) {
+  if (!donorMatch || !previousDonorMatch) {
     errors = [
       ...errors,
       utils.buildSubmissionError(
@@ -105,7 +118,13 @@ const validateRadiationRecords = (
   if (typeof radiation_boost === 'string' && radiation_boost.toLowerCase() === 'yes') {
     const treatmentMatch = submitter_treatment_id === reference_radiation_treatment_id;
 
-    if (!treatmentMatch) {
+    const previousTreatmentMatch = radiationTreatments?.find(radiationRecord =>
+      radiationRecord.therapies.some(
+        record => record.clinicalInfo.submitter_treatment_id === reference_radiation_treatment_id,
+      ),
+    );
+
+    if (!treatmentMatch || !previousTreatmentMatch) {
       errors = [
         ...errors,
         utils.buildSubmissionError(
