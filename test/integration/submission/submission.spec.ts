@@ -1749,7 +1749,7 @@ describe('Submission Api', () => {
       await validateSubmission();
       await commitActiveSubmission();
       const [DonorBeforeUpdate] = await findInDb(dburl, 'donors', donorFilter);
-      console.log('\nDonorBeforeUpdate 2', DonorBeforeUpdate);
+
       DonorBeforeUpdate.completionStats.coreCompletion.should.deep.include({
         donor: 1,
         primaryDiagnosis: 1,
@@ -1796,7 +1796,7 @@ describe('Submission Api', () => {
           res.body.should.be.empty;
           await assertDbCollectionEmpty(dburl, 'activesubmissions');
           const [UpdatedDonor] = await findInDb(dburl, 'donors', donorFilter);
-          console.log('\nUpdatedDonor 2', UpdatedDonor);
+
           UpdatedDonor.completionStats.coreCompletion.should.deep.include({
             donor: 1,
             primaryDiagnosis: 1,

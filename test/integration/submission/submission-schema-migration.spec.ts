@@ -348,8 +348,7 @@ describe('schema migration api', () => {
         res.should.have.status(200);
       });
       const updatedDonor = await findInDb(dburl, 'donors', {});
-      console.log('\nupdatedDonor 1', updatedDonor);
-      console.log('\nupdatedDonor 1 completion', updatedDonor[0].completionStats);
+
       // donor 1 stats after migration, added entity completion
       chai.expect(updatedDonor[0].completionStats.coreCompletion).to.deep.include({
         donor: 1,
