@@ -229,7 +229,7 @@ export namespace operations {
       // not valid entity
       const errorMessage = `${entity} is not a valid entity file type for program '${programId}'`;
       return processResult({
-        result: 'DOCUMENT_UNDEFINED',
+        result: RepoError.DOCUMENT_UNDEFINED,
         errorMessage,
       });
     }
