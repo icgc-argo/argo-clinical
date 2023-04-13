@@ -192,34 +192,6 @@ export const forceRecalcDonorCoreEntityStats = (
   return donorUpdated;
 };
 
-// currently invalid core entities are set to zero
-export const setInvalidCoreEntityStatsForMigration = (
-  donor: DeepReadonly<Donor>,
-  invalidEntities: string[],
-) => {
-  const mutableDonor = cloneDeep(donor) as Donor;
-
-  const overriddenCoreEntities = mutableDonor.completionStats?.overriddenCoreCompletion || [];
-  const coreCompletion = mutableDonor.completionStats?.coreCompletion || getEmptyCoreStats();
-
-  invalidEntities.filter(isCoreEntitySchemaName).forEach(coreEntity => {
-    coreCompletion[schemaNameToCoreCompletenessStat[coreEntity]] = 0;
-    pull(overriddenCoreEntities, schemaNameToCoreCompletenessStat[coreEntity]);
-  });
-
-  const coreCompletionPercentage = getCoreCompletionPercentage(coreCompletion);
-  const coreCompletionDate = getCoreCompletionDate(mutableDonor, coreCompletionPercentage);
-
-  mutableDonor.completionStats = {
-    ...mutableDonor.completionStats,
-    coreCompletion,
-    coreCompletionDate,
-    coreCompletionPercentage,
-    overriddenCoreCompletion: overriddenCoreEntities,
-  };
-  return mutableDonor;
-};
-
 const getEmptyCoreStats = (): CoreCompletionFields => {
   return cloneDeep({
     donor: 0,
