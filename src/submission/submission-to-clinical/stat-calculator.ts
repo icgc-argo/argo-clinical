@@ -147,11 +147,6 @@ export const updateDonorStatsFromSubmissionCommit = (
   if (clinicalType === ClinicalEntitySchemaNames.REGISTRATION) return;
 
   if (isCoreEntitySchemaName(clinicalType)) {
-    // if donor is invalid don't recalculate, just remove from overriden, will be fully recalculated once it becomes valid
-    if (!donor.schemaMetadata.isValid) {
-      removeEntityFromOverridenCore(donor, clinicalType);
-      return;
-    }
     calcDonorCoreEntityStats(donor, clinicalType as CoreClinicalSchemaName, {
       recalcEvenIfComplete: false,
       recalcEvenIfOverriden: true,
