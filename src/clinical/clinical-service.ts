@@ -28,7 +28,7 @@ import {
   EntityAlias,
 } from '../common-model/entities';
 import { Errors, notEmpty } from '../utils';
-import { forceRecalcDonorCoreEntityStats } from '../submission/submission-to-clinical/stat-calculator';
+import { recalcDonorCoreCompletionStats } from '../submission/submission-to-clinical/stat-calculator';
 import { migrationRepo } from '../submission/migration/migration-repo';
 import {
   DictionaryMigration,
@@ -158,7 +158,7 @@ export const updateDonorStats = async (donorId: number, coreCompletionOverride: 
   if (!donor) return undefined;
 
   // Update core
-  const updatedDonor = forceRecalcDonorCoreEntityStats(donor, coreCompletionOverride);
+  const updatedDonor = recalcDonorCoreCompletionStats(donor, coreCompletionOverride);
 
   return await donorDao.update(updatedDonor);
 };
