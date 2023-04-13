@@ -156,7 +156,7 @@ export const updateDonorStatsFromSubmissionCommit = (
 
 // This function is referenced in the recalculate-core-completion migration file,
 // Any code updates should validate that migration is unaffected
-export const forceRecalcDonorCoreEntityStats = (
+export const recalcDonorCoreCompletionStats = (
   donor: DeepReadonly<Donor>,
   coreStatOverride: any = {},
 ) => {
