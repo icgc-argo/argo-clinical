@@ -19,7 +19,16 @@
 
 import mongoose from 'mongoose';
 import { loggerFor } from '../../logger';
-import { Entity, EntityException, ExceptionValue, ExceptionRecord, OnlyRequired } from '../types';
+import {
+  Entity,
+  EntityException,
+  ExceptionValue,
+  ExceptionRecord,
+  OnlyRequired,
+  SpecimenExceptionRecord,
+  FollowUpExceptionRecord,
+  BaseEntityExceptionRecord,
+} from '../types';
 import { checkDoc } from './common';
 import { RepoError, RepoResponse } from './types';
 
@@ -113,14 +122,18 @@ const entityExceptionRepository: EntityExceptionRepository = {
     try {
       const entityExceptionDoc = await EntityExceptionModel.findOne({ programId });
       if (entityExceptionDoc) {
-        const entityToFilter = entityExceptionDoc[entity];
-        let filteredEntity: any = [];
-        // @ts-ignore
-        filteredEntity = entityToFilter.filter(
-          // @ts-ignore
-          doc => !submitterDonorIds.includes(doc.submitter_donor_id),
+        /**
+         * typescript union array methods don't work well particulary pre v4 (currently on 3.9.5)
+         * all our entity types union with BaseEntityExceptionRecord
+         * filter only uses the `submitter_donor_id` field which is in BaseEntityExceptionRecord
+         * explicitly adding `any` typings so it's very obvious we loose type data here
+         */
+        const entitiesToFilter: any = entityExceptionDoc[entity];
+        const filteredEntities = entitiesToFilter.filter(
+          (entity: BaseEntityExceptionRecord) =>
+            !submitterDonorIds.includes(entity.submitter_donor_id),
         );
-        entityExceptionDoc[entity] = filteredEntity;
+        entityExceptionDoc[entity] = filteredEntities as any;
         const doc = await entityExceptionDoc.save();
         return checkDoc(doc);
       } else {
