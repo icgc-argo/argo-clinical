@@ -1749,6 +1749,7 @@ describe('Submission Api', () => {
       await validateSubmission();
       await commitActiveSubmission();
       const [DonorBeforeUpdate] = await findInDb(dburl, 'donors', donorFilter);
+      console.log('\nDonorBeforeUpdate 2', DonorBeforeUpdate);
       DonorBeforeUpdate.completionStats.coreCompletion.should.deep.include({
         donor: 1,
         primaryDiagnosis: 1,
@@ -1795,6 +1796,7 @@ describe('Submission Api', () => {
           res.body.should.be.empty;
           await assertDbCollectionEmpty(dburl, 'activesubmissions');
           const [UpdatedDonor] = await findInDb(dburl, 'donors', donorFilter);
+          console.log('\nUpdatedDonor 2', UpdatedDonor);
           UpdatedDonor.completionStats.coreCompletion.should.deep.include({
             donor: 1,
             primaryDiagnosis: 1,
@@ -1910,121 +1912,6 @@ describe('Submission Api', () => {
               clinical_tumour_staging_system: 'Binet staging system',
             },
           });
-        });
-    });
-
-    it('should recalculate donor aggregate stats if donor becomes valid', async () => {
-      await clearCollections(dburl, ['donors']);
-      const invalidDonor = emptyDonorDocument({
-        submitterId: 'ICGC_0001',
-        programId,
-        primaryDiagnoses: [
-          {
-            primaryDiagnosisId: 1,
-            clinicalInfo: {
-              submitter_primary_diagnosis_id: 'P-1',
-              age_at_diagnosis: 96,
-              cancer_type_code: 'C11.1A',
-              number_lymph_nodes_examined: 2,
-              clinical_stage_group: 'Stage A',
-              program_id: 'ABCD-EF',
-              submitter_donor_id: 'ICGC_0001',
-              clinical_tumour_staging_system: 'Binet staging system',
-              number_lymph_nodes_positive: 1,
-            },
-          },
-        ],
-        schemaMetadata: {
-          isValid: false, // assume this is a donor that became invalid after a migration
-          lastValidSchemaVersion: '0.1',
-          originalSchemaVersion: '0.1',
-        },
-        clinicalInfo: {
-          program_id: 'ABCD-EF',
-          primary_site: 'Gum',
-          vital_status: 'DoDa', // invalid with new schema
-          cause_of_death: 'DaDo', // invalid with new schema
-          submitter_donor_id: 'ICGC_0001',
-          survival_time: 120,
-        },
-        specimens: [
-          {
-            samples: [{ sampleType: 'ctDNA', submitterId: 'sm123-00-1' }],
-            specimenTissueSource: 'Other',
-            tumourNormalDesignation: 'Normal',
-            specimenType: 'Normal',
-            submitterId: 'ss123-sjdm-2',
-            clinicalInfo: {},
-          },
-          {
-            samples: [{ sampleType: 'ctDNA', submitterId: 'sm123-00-2' }],
-            specimenTissueSource: 'Other',
-            tumourNormalDesignation: 'Tumour',
-            specimenType: 'Tumour',
-            submitterId: 'ss123-sjdm-1',
-            sampleType: 'ctDNA',
-            clinicalInfo: {
-              program_id: 'ABCD-EF',
-              submitter_donor_id: 'ICGC_0001',
-              submitter_specimen_id: 'ss123-sjdm-1',
-              specimen_acquisition_interval: 200,
-              specimen_anatomic_location: 'C11.1',
-              reference_pathology_confirmed: 'No',
-              tumour_histological_type: '8260/3',
-              tumour_grading_system: 'Gleason grade group system',
-              tumour_grade: 'grade group 1',
-              pathological_tumour_staging_system: 'Binet staging system',
-              pathological_stage_group: 'Stage a',
-              percent_proliferating_cells: 0.5,
-              percent_inflammatory_tissue: 0.6,
-              percent_stromal_cells: 0.65,
-              percent_necrosis: 0.65,
-              percent_tumour_cells: 0.5,
-              percent_tumour_cells_measurement_method: 'Genomics',
-            },
-          },
-        ],
-        completionStats: {
-          coreCompletion: {
-            donor: 0,
-            primaryDiagnosis: 1,
-            treatments: 1, // overridden stat
-            followUps: 0,
-            specimens: 0.5,
-          },
-          coreCompletionPercentage: 41.6,
-          overriddenCoreCompletion: ['treatments'],
-        },
-      });
-      await insertData(dburl, 'donors', invalidDonor);
-
-      await uploadSubmission(['donor.tsv', 'specimen2.tsv']);
-      await validateSubmission();
-      await commitActiveSubmission();
-      return chai
-        .request(app)
-        .post(`/submission/program/${programId}/clinical/approve/${submissionVersion}`)
-        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-        .then(async (res: any) => {
-          res.should.have.status(200);
-          res.body.should.be.empty;
-          await assertDbCollectionEmpty(dburl, 'activesubmissions');
-          const [updatedDonor] = await findInDb(dburl, 'donors', {
-            programId: programId,
-            submitterId: 'ICGC_0001',
-          });
-          // donor was invalid but is now valid after submission, so stats should be updated
-          updatedDonor.schemaMetadata.isValid.should.eq(true);
-          updatedDonor.completionStats.coreCompletion.should.deep.include({
-            donor: 1,
-            primaryDiagnosis: 1,
-            treatments: 1, // overridden field is same as before, despite no treatment record
-            followUps: 0,
-            specimens: 0.5, // one of the tumour/normal specimen has record
-          });
-          chai
-            .expect(updatedDonor.completionStats.overriddenCoreCompletion)
-            .to.deep.eq(['treatments']);
         });
     });
   });

@@ -46,7 +46,7 @@ export interface CompletionStats {
   coreCompletion: CoreCompletionFields;
   coreCompletionDate?: string;
   coreCompletionPercentage: number;
-  overriddenCoreCompletion: CoreClinicalEntities[];
+  overriddenCoreCompletion?: CoreClinicalEntities[];
 }
 
 export interface SchemaMetadata {

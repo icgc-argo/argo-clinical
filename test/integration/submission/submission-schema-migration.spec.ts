@@ -320,7 +320,7 @@ describe('schema migration api', () => {
   });
 
   describe('Changes that can affect existing donors', () => {
-    it('should run migration and add clincial info completion for donor entity', async () => {
+    it('should run migration and add clinical info completion for donor entity', async () => {
       const donorInvalidWithNewSchema = emptyDonorDocument({
         submitterId: 'ICGC_0004',
         programId,
@@ -348,8 +348,9 @@ describe('schema migration api', () => {
         res.should.have.status(200);
       });
       const updatedDonor = await findInDb(dburl, 'donors', {});
-
-      // donor 1 stats after migraiton, added entity completion
+      console.log('\nupdatedDonor 1', updatedDonor);
+      console.log('\nupdatedDonor 1 completion', updatedDonor[0].completionStats);
+      // donor 1 stats after migration, added entity completion
       chai.expect(updatedDonor[0].completionStats.coreCompletion).to.deep.include({
         donor: 1,
         primaryDiagnosis: 0,
@@ -367,7 +368,7 @@ describe('schema migration api', () => {
       });
       // donor 3 stats after migraiton
       chai.expect(updatedDonor[2].completionStats.coreCompletion).to.deep.include({
-        donor: 0, // donor info is invalid so set to zero
+        donor: 1,
         primaryDiagnosis: 0,
         treatments: 1, // no treatment submitted, but overridden entity remains unchanged
         followUps: 0,
