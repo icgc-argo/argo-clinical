@@ -30,7 +30,7 @@ import {
   BaseEntityExceptionRecord,
 } from '../types';
 import { checkDoc } from './common';
-import { RepoError, RepoResponse } from './types';
+import { RepoError, RepoResult } from './types';
 
 const L = loggerFor(__filename);
 
@@ -64,14 +64,10 @@ const EntityExceptionModel = mongoose.model<EntityException>(
 );
 
 export interface EntityExceptionRepository {
-  save(exception: OnlyRequired<EntityException, 'programId'>): RepoResponse<EntityException>;
-  find(programId: string): RepoResponse<EntityException>;
-  delete(programId: string): RepoResponse<EntityException>;
-  deleteSingleEntity(
-    programId: string,
-    entity: Entity,
-    submittedIds: string[],
-  ): RepoResponse<EntityException>;
+  save(exception: OnlyRequired<EntityException, 'programId'>): RepoResult<EntityException>;
+  find(programId: string): RepoResult<EntityException>;
+  delete(programId: string): RepoResult<EntityException>;
+  deleteSingleEntity(programId: string, entity: Entity): RepoResult<EntityException>;
 }
 
 const entityExceptionRepository: EntityExceptionRepository = {

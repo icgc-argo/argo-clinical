@@ -73,6 +73,10 @@ const normalizeRecords = (records: readonly EntityExceptionRecord[]) =>
     schema: _.snakeCase(r.schema),
   }));
 
+/**
+ * result handling
+ */
+
 const createResult = ({
   exception,
   validationErrors = [],
@@ -111,7 +115,14 @@ function processResult({
     return createResult({ success: true, exception: result });
   }
 }
+
+/**
+ * main
+ */
 export namespace operations {
+  /**
+   * program exceptions
+   */
   export const getProgramException: Service = async ({ programId }) => {
     const result = await programExceptionRepository.find(programId);
 
@@ -159,6 +170,9 @@ export namespace operations {
     }
   };
 
+  /**
+   * entity exceptions
+   */
   export const createEntityException = async ({
     programId,
     records,

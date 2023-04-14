@@ -20,7 +20,7 @@ import mongoose from 'mongoose';
 import { loggerFor } from '../../logger';
 import { ExceptionValue, ProgramException } from '../types';
 import { checkDoc } from './common';
-import { RepoError, RepoResponse } from './types';
+import { RepoError, RepoResult } from './types';
 
 const L = loggerFor(__filename);
 
@@ -41,9 +41,9 @@ const ProgramExceptionModel = mongoose.model<ProgramException>(
 );
 
 export interface ProgramExceptionRepository {
-  save(exception: ProgramException): RepoResponse<ProgramException>;
-  find(programId: string): RepoResponse<ProgramException>;
-  delete(programId: string): RepoResponse<ProgramException>;
+  save(exception: ProgramException): RepoResult<ProgramException>;
+  find(programId: string): RepoResult<ProgramException>;
+  delete(programId: string): RepoResult<ProgramException>;
 }
 
 const programExceptionRepository: ProgramExceptionRepository = {

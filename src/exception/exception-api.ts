@@ -65,7 +65,9 @@ const validateEntityExceptionRecords: ValidateRecords<EntityExceptionRecord> = r
 
 class ExceptionController {
   @HasFullWriteAccess()
-  // program level exceptions
+  /**
+   * program exceptions
+   */
   async createProgramException(req: Request, res: Response) {
     const programId = req.params.programId;
     const records = await parseTSV(req.file.path);
@@ -94,6 +96,9 @@ class ExceptionController {
     return res.status(getResStatus(result)).send(result);
   }
 
+  /**
+   * entity exceptions
+   */
   @HasFullWriteAccess()
   async createEntityException(req: Request, res: Response) {
     const programId = req.params.programId;
