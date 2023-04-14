@@ -471,7 +471,7 @@ export namespace MigrationManager {
         if (result && result.length > 0) {
           // if invalid mark as invalid and update document metadata
           if (!dryRun) {
-            const updatedDonor = await calcDonorCoreEntityStats(donor as Donor, {});
+            const updatedDonor = await calcDonorCoreEntityStats(_.cloneDeep(donor) as Donor, {});
             const invalidDonor = await markDonorAsInvalid(updatedDonor, migrationId);
             updateSetOfProgramsWithChanges(updatedDonor, invalidDonor, programsWithChanges);
           } else {
