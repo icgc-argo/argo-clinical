@@ -66,7 +66,7 @@ const EntityExceptionModel = mongoose.model<EntityException>(
 
 export interface EntityExceptionRepository {
   save(exception: OnlyRequired<EntityException, 'programId'>): any;
-  find(programId: string): any;
+  find(programId: string): Promise<EntityException>;
   delete(programId: string): any;
   deleteSingleEntity(programId: string, entity: Entity): any;
 }

@@ -228,13 +228,9 @@ export namespace operations {
     // }
   };
 
-  export const getEntityException: Service = async ({ programId }) => {
-    const result = await entityExceptionRepository.find(programId);
-
-    return processResult({
-      result,
-      errorMessage: `no entity level exceptions for program '${programId}'`,
-    });
+  export const getEntityException = async ({ programId }: { programId: string }) => {
+    const doc = await entityExceptionRepository.find(programId);
+    return success(doc);
   };
 
   export const deleteEntityException = async ({
