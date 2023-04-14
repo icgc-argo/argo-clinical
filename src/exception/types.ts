@@ -19,6 +19,7 @@
 
 export type ObjectValues<T> = T[keyof T];
 
+// base
 export type ExceptionRecord = {
   program_name: string;
   schema: string;
@@ -26,6 +27,7 @@ export type ExceptionRecord = {
   requested_exception_value: string;
 };
 
+// program exception
 export type ProgramExceptionRecord = ExceptionRecord;
 
 // type after validation
@@ -35,12 +37,13 @@ export type ProgramException = {
 };
 
 // Entity
-export type SpecimenExceptionRecord = ExceptionRecord & {
-  submitter_donor_id: string;
+export type BaseEntityExceptionRecord = ExceptionRecord & { submitter_donor_id: string };
+
+export type SpecimenExceptionRecord = BaseEntityExceptionRecord & {
   submitter_specimen_id: string;
 };
 
-export type FollowUpExceptionRecord = ExceptionRecord & {
+export type FollowUpExceptionRecord = BaseEntityExceptionRecord & {
   submitter_followup_id: string;
 };
 
@@ -51,24 +54,25 @@ export type ExceptionRecords =
   | ReadonlyArray<SpecimenExceptionRecord>
   | ReadonlyArray<FollowUpExceptionRecord>;
 
-export type EntityException = {
-  programId: string;
-  specimen: SpecimenExceptionRecord[];
-  followUp: FollowUpExceptionRecord[];
-};
-
 /**
  * entity values to be valid EntityException exceptions arrays
  * provide typing to tsv schema string to exception schema string
  */
 export const EntityValues: Record<string, Exclude<keyof EntityException, 'programId'>> = {
   specimen: 'specimen',
-  followUp: 'followUp',
+  follow_up: 'follow_up',
 } as const;
 
 export type Entity = ObjectValues<typeof EntityValues>;
 
-// Exception Values
+/**
+ * entity keys are same as clinical submission which are the same as dictionary values eg. follow_up
+ */
+export type EntityException = {
+  programId: string;
+  specimen: SpecimenExceptionRecord[];
+  follow_up: FollowUpExceptionRecord[];
+};
 
 export const ExceptionValue = {
   Unknown: 'Unknown',
