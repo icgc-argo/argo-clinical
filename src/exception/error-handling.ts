@@ -17,32 +17,39 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import * as express from 'express';
-import multer from 'multer';
-import exceptionApi, { requestContainsFile } from '../exception/exception-api';
-import { wrapAsync } from '../middleware';
-import { FEATURE_SUBMISSION_EXCEPTIONS_ENABLED } from '../feature-flags';
-import { Request, Response } from 'express';
-import { ExceptionErrorHandler } from '../exception/error-handling';
+import { RepoError } from './repo/types';
 
-// config
-const router = express.Router({ mergeParams: true });
-const upload = multer({ dest: '/tmp' });
+// types
+export type Success<T> = { success: true; data: T };
+export type Failure = { success: false; message: string };
+export type Result<T> = Success<T> | Failure;
 
-// routes
-router.post('*', upload.single('exceptionFile'), requestContainsFile);
-router.post('/', wrapAsync(exceptionApi.createProgramException));
-router.post('/entity', wrapAsync(exceptionApi.createEntityException));
+// helpers
+export const success = <T>(data: T): Success<T> => ({ success: true, data });
 
-router.get('/', wrapAsync(exceptionApi.getProgramException));
-router.get('/entity', wrapAsync(exceptionApi.getEntityException));
+// middleware
+export const ExceptionErrorHandler = (err: any, req: any, res: any, next: any) => {
+  console.log('Exception --- error handler --- midlleware');
+  console.log(JSON.stringify(err));
+  res.status(404).send('custom error handler ran');
+};
 
-router.delete('/', wrapAsync(exceptionApi.clearProgramException));
+// errors
+export class ValidationError extends Error {
+  constructor(errors: any) {
+    super('message');
+    this.name = this.constructor.name;
+  }
+}
 
-router.delete('/entity/:entity', wrapAsync(exceptionApi.deleteEntityException));
-
-router.use(ExceptionErrorHandler);
-
-export default FEATURE_SUBMISSION_EXCEPTIONS_ENABLED
-  ? router
-  : (req: Request, res: Response) => res.status(404).send();
+export class DatabaseError extends Error {
+  constructor(message?: string, cause?: RepoError) {
+    super();
+    if (cause === RepoError.DOCUMENT_UNDEFINED) {
+      this.message = '';
+    } else if (cause === RepoError.SERVER_ERROR) {
+      this.message = '';
+    }
+    this.name = this.constructor.name;
+  }
+}

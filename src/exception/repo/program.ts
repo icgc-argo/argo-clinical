@@ -41,9 +41,9 @@ const ProgramExceptionModel = mongoose.model<ProgramException>(
 );
 
 export interface ProgramExceptionRepository {
-  save(exception: ProgramException): RepoResult<ProgramException>;
-  find(programId: string): RepoResult<ProgramException>;
-  delete(programId: string): RepoResult<ProgramException>;
+  save(exception: ProgramException): any;
+  find(programId: string): any;
+  delete(programId: string): any;
 }
 
 const programExceptionRepository: ProgramExceptionRepository = {

@@ -31,6 +31,7 @@ import {
 } from '../types';
 import { checkDoc } from './common';
 import { RepoError, RepoResult } from './types';
+import { DatabaseError } from '../error-handling';
 
 const L = loggerFor(__filename);
 
@@ -64,10 +65,10 @@ const EntityExceptionModel = mongoose.model<EntityException>(
 );
 
 export interface EntityExceptionRepository {
-  save(exception: OnlyRequired<EntityException, 'programId'>): RepoResult<EntityException>;
-  find(programId: string): RepoResult<EntityException>;
-  delete(programId: string): RepoResult<EntityException>;
-  deleteSingleEntity(programId: string, entity: Entity): RepoResult<EntityException>;
+  save(exception: OnlyRequired<EntityException, 'programId'>): any;
+  find(programId: string): any;
+  delete(programId: string): any;
+  deleteSingleEntity(programId: string, entity: Entity): any;
 }
 
 const entityExceptionRepository: EntityExceptionRepository = {
@@ -85,7 +86,7 @@ const entityExceptionRepository: EntityExceptionRepository = {
       return checkDoc(doc);
     } catch (e) {
       L.error('failed to create entity exception: ', e);
-      return RepoError.SERVER_ERROR;
+      throw new DatabaseError();
     }
   },
 
@@ -96,7 +97,7 @@ const entityExceptionRepository: EntityExceptionRepository = {
       return checkDoc(doc);
     } catch (e) {
       L.error('failed to find program exception', e);
-      return RepoError.SERVER_ERROR;
+      throw new DatabaseError();
     }
   },
 
@@ -107,7 +108,7 @@ const entityExceptionRepository: EntityExceptionRepository = {
       return checkDoc<EntityException>(doc);
     } catch (e) {
       L.error('failed to delete exception', e);
-      return RepoError.SERVER_ERROR;
+      throw new DatabaseError();
     }
   },
 
@@ -137,7 +138,7 @@ const entityExceptionRepository: EntityExceptionRepository = {
       }
     } catch (e) {
       L.error('failed to delete exception', e);
-      return RepoError.SERVER_ERROR;
+      throw new DatabaseError();
     }
   },
 };
