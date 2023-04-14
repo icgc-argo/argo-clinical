@@ -170,7 +170,7 @@ export const updateDonorStatsFromSubmissionCommit = (
   // registration has no buisness here
   if (clinicalType === ClinicalEntitySchemaNames.REGISTRATION) return;
 
-  let updatedDonor = cloneDeep(donor) as Donor;
+  let updatedDonor = cloneDeep(donor);
 
   if (isCoreEntitySchemaName(clinicalType)) {
     updatedDonor = calcDonorCoreEntityStats(donor, {
