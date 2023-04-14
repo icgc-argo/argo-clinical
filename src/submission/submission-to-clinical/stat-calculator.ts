@@ -104,7 +104,7 @@ export const calcDonorCoreEntityStats = (
     (clinicalType: CoreClinicalSchemaName) =>
       !noNeedToCalcCoreStat(updatedDonor, clinicalType, forceFlags),
   );
-  console.log('\nupdatedEntities', updatedEntities);
+
   updatedEntities.forEach(clinicalType => {
     if (clinicalType === ClinicalEntitySchemaNames.SPECIMEN) {
       const filteredDonorSpecimens = donor.specimens.filter(dnaSampleFilter);
@@ -115,9 +115,7 @@ export const calcDonorCoreEntityStats = (
     } else {
       // for others we just need to find one clinical info for core entity
       const entities = getClinicalEntitiesFromDonorBySchemaName(donor, clinicalType);
-      if (clinicalType === ClinicalEntitySchemaNames.DONOR) {
-        console.log('\ndonor entities', entities);
-      }
+
       coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = entities.length >= 1 ? 1 : 0;
     }
   });
