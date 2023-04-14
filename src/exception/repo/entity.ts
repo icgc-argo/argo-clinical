@@ -19,7 +19,16 @@
 
 import mongoose from 'mongoose';
 import { loggerFor } from '../../logger';
-import { Entity, EntityException, ExceptionValue, ExceptionRecord, OnlyRequired } from '../types';
+import {
+  Entity,
+  EntityException,
+  ExceptionValue,
+  ExceptionRecord,
+  OnlyRequired,
+  SpecimenExceptionRecord,
+  FollowUpExceptionRecord,
+  BaseEntityExceptionRecord,
+} from '../types';
 import { checkDoc } from './common';
 import { RepoError, RepoResponse } from './types';
 
@@ -28,6 +37,7 @@ const L = loggerFor(__filename);
 const BaseExceptionSchema = new mongoose.Schema<ExceptionRecord>({
   program_name: String,
   schema: String,
+  submitter_donor_id: String,
   requested_core_field: String,
   requested_exception_value: { type: String, enum: Object.values(ExceptionValue) },
 });
@@ -37,14 +47,12 @@ const entityExceptionSchema = new mongoose.Schema<EntityException>({
   specimen: [
     {
       ...BaseExceptionSchema.obj,
-      submitter_donor_id: String,
       submitter_specimen_id: String,
     },
   ],
-  followUp: [
+  follow_up: [
     {
       ...BaseExceptionSchema.obj,
-      submitter_donor_id: String,
       submitter_followup_id: String,
     },
   ],
@@ -59,7 +67,11 @@ export interface EntityExceptionRepository {
   save(exception: OnlyRequired<EntityException, 'programId'>): RepoResponse<EntityException>;
   find(programId: string): RepoResponse<EntityException>;
   delete(programId: string): RepoResponse<EntityException>;
-  deleteSingleEntity(programId: string, entity: Entity): RepoResponse<EntityException>;
+  deleteSingleEntity(
+    programId: string,
+    entity: Entity,
+    submittedIds: string[],
+  ): RepoResponse<EntityException>;
 }
 
 const entityExceptionRepository: EntityExceptionRepository = {
@@ -69,11 +81,12 @@ const entityExceptionRepository: EntityExceptionRepository = {
     const update = { $set: exception };
 
     try {
-      return await EntityExceptionModel.findOneAndUpdate(
+      const doc = await EntityExceptionModel.findOneAndUpdate(
         { programId: exception.programId },
         update,
-        { upsert: true, new: true },
+        { upsert: true, new: true, returnDocument: 'after' },
       ).lean(true);
+      return checkDoc(doc);
     } catch (e) {
       L.error('failed to create entity exception: ', e);
       return RepoError.SERVER_ERROR;
@@ -90,6 +103,7 @@ const entityExceptionRepository: EntityExceptionRepository = {
       return RepoError.SERVER_ERROR;
     }
   },
+
   async delete(programId: string) {
     L.debug(`deleting all entity exceptions with program id: ${JSON.stringify(programId)}`);
     try {
@@ -101,16 +115,30 @@ const entityExceptionRepository: EntityExceptionRepository = {
     }
   },
 
-  async deleteSingleEntity(programId: string, entity: Entity) {
+  async deleteSingleEntity(programId: string, entity: Entity, submitterDonorIds: string[]) {
     L.debug(
       `deleting single entity ${entity} exception with program id: ${JSON.stringify(programId)}`,
     );
     try {
-      const update = { $set: { [entity]: [] } };
-      const doc = await EntityExceptionModel.findOneAndUpdate({ programId }, update, {
-        new: true,
-      }).lean(true);
-      return checkDoc(doc);
+      const entityExceptionDoc = await EntityExceptionModel.findOne({ programId });
+      if (entityExceptionDoc) {
+        /**
+         * typescript union array methods don't work well particulary pre v4 (currently on 3.9.5)
+         * all our entity types union with BaseEntityExceptionRecord
+         * filter only uses the `submitter_donor_id` field which is in BaseEntityExceptionRecord
+         * explicitly adding `any` typings so it's very obvious we loose type data here
+         */
+        const entitiesToFilter: any = entityExceptionDoc[entity];
+        const filteredEntities = entitiesToFilter.filter(
+          (entity: BaseEntityExceptionRecord) =>
+            !submitterDonorIds.includes(entity.submitter_donor_id),
+        );
+        entityExceptionDoc[entity] = filteredEntities as any;
+        const doc = await entityExceptionDoc.save();
+        return checkDoc(doc);
+      } else {
+        return RepoError.DOCUMENT_UNDEFINED;
+      }
     } catch (e) {
       L.error('failed to delete exception', e);
       return RepoError.SERVER_ERROR;
