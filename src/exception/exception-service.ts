@@ -182,7 +182,7 @@ export namespace operations {
   }: {
     programId: string;
     records: ReadonlyArray<EntityExceptionRecord>;
-  }): Promise<Result> => {
+  }): Promise<Result<EntityException>> => {
     const normalizedRecords = normalizeRecords(records);
 
     // validate rows
