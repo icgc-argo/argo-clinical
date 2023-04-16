@@ -140,7 +140,8 @@ class ExceptionController {
       entity,
       submitterDonorIds,
     });
-    return res.status(getResStatus(result)).send(result);
+
+    return res.status(result.success ? 200 : 400).send(result);
   }
 }
 

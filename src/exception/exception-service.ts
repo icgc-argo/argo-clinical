@@ -219,26 +219,18 @@ export namespace operations {
     programId: string;
     entity: string;
     submitterDonorIds: string[];
-  }) => {
+  }): Promise<Result<EntityException>> => {
     const normalizedEntityFileType = normalizeEntityFileType(entity);
 
     if (isValidEntityType(normalizedEntityFileType)) {
-      const result = await entityExceptionRepository.deleteSingleEntity(
+      const doc = await entityExceptionRepository.deleteSingleEntity(
         programId,
         normalizedEntityFileType,
         submitterDonorIds,
       );
-      return processResult({
-        result,
-        errorMessage: '',
-      });
+      return doc ? success(doc) : failure(`Cannot delete entity exception for ${programId}`);
     } else {
-      // not valid entity
-      const errorMessage = `${entity} is not a valid entity file type for program '${programId}'`;
-      return processResult({
-        result: RepoError.DOCUMENT_UNDEFINED,
-        errorMessage,
-      });
+      return failure('not a valid entity type');
     }
   };
 }

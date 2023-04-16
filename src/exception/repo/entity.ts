@@ -113,7 +113,11 @@ const entityExceptionRepository = {
     }
   },
 
-  async deleteSingleEntity(programId: string, entity: Entity, submitterDonorIds: string[]) {
+  async deleteSingleEntity(
+    programId: string,
+    entity: Entity,
+    submitterDonorIds: string[],
+  ): Promise<EntityException | null> {
     L.debug(
       `deleting single entity ${entity} exception with program id: ${JSON.stringify(programId)}`,
     );
@@ -133,10 +137,9 @@ const entityExceptionRepository = {
         );
         entityExceptionDoc[entity] = filteredEntities as any;
         const doc = await entityExceptionDoc.save();
-        return checkDoc(doc);
-      } else {
-        return RepoError.DOCUMENT_UNDEFINED;
+        return doc;
       }
+      return null;
     } catch (e) {
       L.error('failed to delete exception', e);
       throw new DatabaseError();
