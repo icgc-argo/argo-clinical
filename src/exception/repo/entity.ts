@@ -139,9 +139,9 @@ const entityExceptionRepository = {
         const doc = await entityExceptionDoc.save();
         return doc;
       }
-      // tslint:disable-next-line
       // mongo will return nulls for non existent docs
       // tslint doesn't complain about a null from a lib
+      // tslint:disable-next-line
       return null;
     } catch (e) {
       L.error('failed to delete exception', e);
