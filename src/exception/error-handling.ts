@@ -21,7 +21,8 @@ import { RepoError } from './repo/types';
 
 // types
 export type Success<T> = { success: true; data: T };
-export type Failure = { success: false; message: string };
+// TODO: build out Failure to include error object eg. on POST
+export type Failure = { success: boolean; message: string };
 export type Result<T> = Success<T> | Failure;
 
 // helpers

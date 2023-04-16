@@ -17,7 +17,9 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import _ from 'lodash';
 import { loggerFor } from '../logger';
+import { failure, Result, success, ValidationError } from './error-handling';
 import entityExceptionRepository from './repo/entity';
 import programExceptionRepository from './repo/program';
 import { RepoError } from './repo/types';
@@ -26,11 +28,11 @@ import {
   EntityException,
   EntityExceptionRecord,
   isArrayOf,
+  isFollowupExceptionRecord,
   isSpecimenExceptionRecord,
+  OnlyRequired,
   ProgramException,
   ProgramExceptionRecord,
-  isFollowupExceptionRecord,
-  OnlyRequired,
 } from './types';
 import { isRepoError, normalizeEntityFileType, isValidEntityType } from './util';
 import { commonValidators, validateRecords, ValidationResult } from './validation';
@@ -90,12 +92,12 @@ const createResult = ({
   success,
 });
 
-export type Result = {
-  success?: boolean;
-  error?: { code: string; message: string }; // api was using this
-  exception?: ProgramException | EntityException | undefined;
-  validationErrors?: ValidationResult[];
-};
+// export type Result = {
+//   success?: boolean;
+//   error?: { code: string; message: string }; // api was using this
+//   exception?: ProgramException | EntityException | undefined;
+//   validationErrors?: ValidationResult[];
+// };
 
 type Service = ({ programId }: { programId: string }) => Promise<Result>;
 
@@ -181,10 +183,6 @@ export namespace operations {
     programId: string;
     records: ReadonlyArray<EntityExceptionRecord>;
   }): Promise<Result> => {
-    // default error msg
-    // TODO move to error handling
-    const errorMessage = `Cannot create exceptions for entity in program '${programId}'`;
-
     const normalizedRecords = normalizeRecords(records);
 
     // validate rows
@@ -200,37 +198,17 @@ export namespace operations {
     }
 
     const exceptionToSave = recordsToEntityException({ programId, records });
-    const result = await entityExceptionRepository.save(exceptionToSave);
-    return success(result);
-
-    // } catch (err) {
-    //   // either validation error or saving error
-    //   // throw new XError('my error msg')
-    //   // or
-    //   // throw new XError(SYMBOL => maps to error msg)
-    //   throw new Error();
-    // }
-
-    // if (errors.length > 0) {
-    //   return createResult({
-    //     error: { code: RepoError.DOCUMENT_UNDEFINED, message: errorMessage },
-    //     validationErrors: errors,
-    //   });
-    // } else {
-    //   const exceptionToSave = recordsToEntityException({ programId, records });
-
-    //   const result = await entityExceptionRepository.save(exceptionToSave);
-
-    //   return processResult({
-    //     result,
-    //     errorMessage,
-    //   });
-    // }
+    const doc = await entityExceptionRepository.save(exceptionToSave);
+    return success(doc);
   };
 
-  export const getEntityException = async ({ programId }: { programId: string }) => {
+  export const getEntityException = async ({
+    programId,
+  }: {
+    programId: string;
+  }): Promise<Result<EntityException>> => {
     const doc = await entityExceptionRepository.find(programId);
-    return success(doc);
+    return doc ? success(doc) : failure(`Cannot find entity exception for ${programId}`);
   };
 
   export const deleteEntityException = async ({

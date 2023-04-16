@@ -120,15 +120,14 @@ class ExceptionController {
       records: entityExceptionRecords,
     });
 
-    const status = !result.success ? 422 : 201;
-    return res.status(status).send(result);
+    return res.status(200).send(result);
   }
 
   @HasFullReadAccess()
   async getEntityException(req: Request, res: Response) {
     const programId = req.params.programId;
     const result = await exceptionService.operations.getEntityException({ programId });
-    return res.status(200).send(result);
+    return res.status(result.success ? 200 : 404).send(result);
   }
 
   @HasFullWriteAccess()
