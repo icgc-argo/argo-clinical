@@ -17,12 +17,12 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import { isArray } from 'lodash';
 import { RepoError } from './types';
-import { DatabaseError } from '../error-handling';
 
 export function checkDoc<Exception>(doc: Exception | null): RepoError | Exception {
-  if (doc === null || (Array.isArray(doc) && doc.length === 0)) {
-    throw new DatabaseError('');
+  if (doc === null || (isArray(doc) && doc.length === 0)) {
+    return RepoError.DOCUMENT_UNDEFINED;
   }
   return doc;
 }

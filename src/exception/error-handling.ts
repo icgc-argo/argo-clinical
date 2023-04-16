@@ -27,12 +27,19 @@ export type Result<T> = Success<T> | Failure;
 
 // helpers
 export const success = <T>(data: T): Success<T> => ({ success: true, data });
+export const failure = (message: string) => ({ success: false, message });
 
 // middleware
 export const ExceptionErrorHandler = (err: any, req: any, res: any, next: any) => {
   console.log('Exception --- error handler --- midlleware');
   console.log(JSON.stringify(err));
   res.status(404).send('custom error handler ran');
+  // ----------
+  if (err instanceof DatabaseError) {
+    // err.statusCode + err.msg
+  }
+
+  return res.status(err.status).send(err.data);
 };
 
 // errors
@@ -40,17 +47,16 @@ export class ValidationError extends Error {
   constructor(errors: any) {
     super('message');
     this.name = this.constructor.name;
+    // const errorMessage = `Cannot create exceptions for entity in program '${programId}'`;
   }
 }
 
 export class DatabaseError extends Error {
-  constructor(message?: string, cause?: RepoError) {
-    super();
-    if (cause === RepoError.DOCUMENT_UNDEFINED) {
-      this.message = '';
-    } else if (cause === RepoError.SERVER_ERROR) {
-      this.message = '';
-    }
+  constructor(message?: string, cause: RepoError = RepoError.SERVER_ERROR) {
+    super('Server error');
     this.name = this.constructor.name;
+
+    if (cause === RepoError.DOCUMENT_UNDEFINED)
+      this.message = 'Failed to save exception. Document is undefined';
   }
 }
