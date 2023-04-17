@@ -43,8 +43,8 @@ import { notEmpty, Errors, sleep, isEmpty, toString } from '../../utils';
 import _ from 'lodash';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../../common-model/functions';
 import {
+  calcDonorCoreEntityStats,
   recalculateDonorStatsHoldOverridden,
-  setInvalidCoreEntityStatsForMigration,
 } from '../submission-to-clinical/stat-calculator';
 import { setStatus, Status } from '../../app-health';
 import * as messenger from '../submission-updates-messenger';
@@ -471,9 +471,9 @@ export namespace MigrationManager {
         if (result && result.length > 0) {
           // if invalid mark as invalid and update document metadata
           if (!dryRun) {
-            const updatedDonor = await updateStatsForInvalidDonorToBe(donor, result);
+            const updatedDonor = await calcDonorCoreEntityStats(donor, {});
             const invalidDonor = await markDonorAsInvalid(updatedDonor, migrationId);
-            updateSetOfProgramsWithChanges(donor, invalidDonor, programsWithChanges);
+            updateSetOfProgramsWithChanges(updatedDonor, invalidDonor, programsWithChanges);
           } else {
             await updateMigrationIdOnly(donor, migrationId);
           }
@@ -583,14 +583,6 @@ export namespace MigrationManager {
       }
     }
     return donorSchemaErrors;
-  };
-
-  const updateStatsForInvalidDonorToBe = async (
-    donorBeforeSetInvalid: DeepReadonly<Donor>,
-    results: DonorMigrationSchemaErrors,
-  ) => {
-    const invalidEntities = results.map(r => Object.keys(r)).flat();
-    return setInvalidCoreEntityStatsForMigration(donorBeforeSetInvalid, invalidEntities);
   };
 
   const updateStatsForValidDonorToBe = async (donorBeforeSetValid: DeepReadonly<Donor>) => {

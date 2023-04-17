@@ -154,12 +154,10 @@ const performCommitSubmission = async (
         L.info(`donor ${ud._id} is now valid`);
         ud.schemaMetadata.isValid = true;
         ud.schemaMetadata.lastValidSchemaVersion = currentDictionary.version;
-        // recalculate the donors stats
-        verifiedDonorDTOs.push(recalculateDonorStatsHoldOverridden(ud));
-        return;
       }
     }
-    verifiedDonorDTOs.push(ud);
+    // recalculate the donors stats
+    verifiedDonorDTOs.push(recalculateDonorStatsHoldOverridden(ud));
   });
 
   try {
