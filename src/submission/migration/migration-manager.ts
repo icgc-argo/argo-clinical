@@ -471,9 +471,7 @@ export namespace MigrationManager {
         if (result && result.length > 0) {
           // if invalid mark as invalid and update document metadata
           if (!dryRun) {
-            // Intentionally create a mutable Donor copy for coreCompletion updates
-            const donorCopy = _.cloneDeep(donor) as Donor;
-            const updatedDonor = await calcDonorCoreEntityStats(donorCopy, {});
+            const updatedDonor = await calcDonorCoreEntityStats(donor, {});
             const invalidDonor = await markDonorAsInvalid(updatedDonor, migrationId);
             updateSetOfProgramsWithChanges(updatedDonor, invalidDonor, programsWithChanges);
           } else {
