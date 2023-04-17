@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 The Ontario Institute for Cancer Research. All rights reserved
+ * Copyright (c) 2023 The Ontario Institute for Cancer Research. All rights reserved
  *
  * This program and the accompanying materials are made available under the terms of
  * the GNU Affero General Public License v3.0. You should have received a copy of the
@@ -120,7 +120,7 @@ export type ClinicalEntityData = {
   totalDocs: number;
   records: Array<ClinicalInfo>;
   entityFields: string[];
-  completionStats?: CompletionRecord[];
+  completionStats?: CompletionDisplayRecord[];
 };
 
 export type DonorMap = Readonly<{ [submitterId: string]: Donor }>;
@@ -133,12 +133,21 @@ export interface CoreCompletionFields {
   primaryDiagnosis: number;
   followUps: number;
   treatments: number;
-  normalSpecimens?: number;
-  tumourSpecimens?: number;
 }
 
-export interface CompletionRecord extends CompletionStats {
+export interface SpecimenCoreCompletion {
+  coreCompletionPercentage: number;
+  normalSpecimensPercentage: number;
+  tumourSpecimensPercentage: number;
+  normalRegistrations: number;
+  normalSubmissions: number;
+  tumourRegistrations: number;
+  tumourSubmissions: number;
+}
+
+export interface CompletionDisplayRecord extends CompletionStats {
   donorId?: number;
+  entityData?: { specimens?: SpecimenCoreCompletion };
 }
 
 export type CoreClinicalEntities = keyof CoreCompletionFields;

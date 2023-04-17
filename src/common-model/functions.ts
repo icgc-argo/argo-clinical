@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 The Ontario Institute for Cancer Research. All rights reserved
+ * Copyright (c) 2023 The Ontario Institute for Cancer Research. All rights reserved
  *
  * This program and the accompanying materials are made available under the terms of
  * the GNU Affero General Public License v3.0. You should have received a copy of the
@@ -25,6 +25,7 @@ import {
   dnaSampleTypes,
   Donor,
   Specimen,
+  SpecimenCoreCompletion,
   Treatment,
 } from '../clinical/clinical-entities';
 import { notEmpty, convertToArray } from '../utils';
@@ -230,26 +231,44 @@ export const dnaSampleFilter = (specimen: Specimen): boolean =>
 export const filterTumourNormalRecords = (recordArray: Specimen[], type: string) =>
   recordArray.filter(specimen => specimen.tumourNormalDesignation === type);
 
-export const calculateSpecimenCompletionStats = (donorSpecimenData: Specimen[]) => {
-  const normalRegistrations = filterTumourNormalRecords(donorSpecimenData, 'Normal');
-  const tumourRegistrations = filterTumourNormalRecords(donorSpecimenData, 'Tumour');
+export const calculateSpecimenCompletionStats = (
+  donorSpecimenData: Specimen[],
+): SpecimenCoreCompletion => {
+  const normalRegisteredSamples = filterTumourNormalRecords(donorSpecimenData, 'Normal');
+  const tumourRegisteredSamples = filterTumourNormalRecords(donorSpecimenData, 'Tumour');
 
-  const normalSubmissions = normalRegistrations.filter(specimen => !isEmpty(specimen.clinicalInfo));
-  const tumourSubmissions = tumourRegistrations.filter(specimen => !isEmpty(specimen.clinicalInfo));
+  const normalSubmittedRecords = normalRegisteredSamples.filter(
+    specimen => !isEmpty(specimen.clinicalInfo),
+  );
+  const tumourSubmittedRecords = tumourRegisteredSamples.filter(
+    specimen => !isEmpty(specimen.clinicalInfo),
+  );
 
-  const normalRatio =
-    normalRegistrations.length === 0 || normalSubmissions.length === 0
+  const normalRegistrations = normalRegisteredSamples.length;
+  const tumourRegistrations = tumourRegisteredSamples.length;
+  const normalSubmissions = normalSubmittedRecords.length;
+  const tumourSubmissions = tumourSubmittedRecords.length;
+
+  const normalSpecimensPercentage =
+    normalRegistrations === 0 || normalSubmissions === 0
       ? 0
-      : normalSubmissions.length / normalRegistrations.length;
+      : normalSubmissions / normalRegistrations;
 
-  const tumourRatio =
-    tumourRegistrations.length === 0 || tumourSubmissions.length === 0
+  const tumourSpecimensPercentage =
+    tumourRegistrations === 0 || tumourSubmissions === 0
       ? 0
-      : tumourSubmissions.length / tumourRegistrations.length;
+      : tumourSubmissions / tumourRegistrations;
+
+  const coreCompletionPercentage = (normalSpecimensPercentage + tumourSpecimensPercentage) / 2;
 
   const completionValues = {
-    normalSpecimens: normalRatio,
-    tumourSpecimens: tumourRatio,
+    coreCompletionPercentage,
+    normalSpecimensPercentage,
+    tumourSpecimensPercentage,
+    normalRegistrations,
+    tumourRegistrations,
+    normalSubmissions,
+    tumourSubmissions,
   };
 
   return completionValues;

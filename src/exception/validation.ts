@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 The Ontario Institute for Cancer Research. All rights reserved
+ * Copyright (c) 2023 The Ontario Institute for Cancer Research. All rights reserved
  *
  * This program and the accompanying materials are made available under the terms of
  * the GNU Affero General Public License v3.0. You should have received a copy of the
@@ -110,7 +110,9 @@ export const checkCoreField: Validator<ExceptionRecord> = async ({ record, field
   const isValid = existingDictionarySchema[0] && existingDictionarySchema[0].fields.length > 0;
   return {
     result: isValid ? ValidationResultErrorType.VALID : ValidationResultErrorType.INVALID,
-    message: isValid ? '' : `${fieldName} value of '${record.requested_core_field}' is not valid`,
+    message: isValid
+      ? ''
+      : `The requested_core_field '${record.requested_core_field}' does not match schema '${record.schema}'. Please update your exception request form.`,
   };
 };
 

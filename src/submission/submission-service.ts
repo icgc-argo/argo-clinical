@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 The Ontario Institute for Cancer Research. All rights reserved
+ * Copyright (c) 2023 The Ontario Institute for Cancer Research. All rights reserved
  *
  * This program and the accompanying materials are made available under the terms of
  * the GNU Affero General Public License v3.0. You should have received a copy of the
@@ -18,7 +18,7 @@
  */
 
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
-import { DataRecord } from '@overturebio-stack/lectern-client/lib/schema-entities';
+import { SchemaValidationError } from '@overturebio-stack/lectern-client/lib/schema-entities';
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 import { v1 as uuid } from 'uuid';
@@ -98,6 +98,7 @@ import {
 } from './validation-clinical/utils';
 import * as dataValidator from './validation-clinical/validation';
 import { checkUniqueRecords, validateSubmissionData } from './validation-clinical/validation';
+import { FEATURE_SUBMISSION_EXCEPTIONS_ENABLED } from '../feature-flags';
 
 const L = loggerFor(__filename);
 
@@ -851,10 +852,18 @@ export namespace operations {
     );
   }
 
-  const applyExceptionIfExists = (
+  /**
+   * Checks if there is a program exception matching the record value
+   *
+   * @param exceptions
+   * @param validationError
+   * @param recordValue
+   * @returns true if an exception match exists, false otherwise
+   */
+  const checkExceptionExists = (
     exceptions: DeepReadonly<ProgramException['exceptions']>,
-    validationError: dictionaryEntities.SchemaValidationError,
-    record: DataRecord,
+    validationError: DeepReadonly<dictionaryEntities.SchemaValidationError>,
+    recordValue: string,
   ): boolean => {
     // missing required field, validate as normal, exceptions still require a submitted value
     if (
@@ -865,11 +874,22 @@ export namespace operations {
     }
     // every other validation of SchemaValidationErrorTypes check for exception
     else {
-      const validationErrorField = validationError.fieldName;
-      const exception = exceptions.find(exception => exception.coreField === validationErrorField);
-      return !exception ? false : exception.exceptionValue === record[validationErrorField];
+      const exception = exceptions.find(
+        exception => exception.coreField === validationError.fieldName,
+      );
+
+      return exception?.exceptionValue === recordValue;
     }
   };
+
+  /**
+   * Normalizes input string to start with Upper case, remaining
+   * characters lowercase and to trim whitespace
+   *
+   * @param value
+   * returns normalized string
+   */
+  const normalizeExceptionValue = (value: string) => _.upperFirst(value.trim().toLowerCase());
 
   export const checkClinicalEntity = async (
     command: ClinicalSubmissionCommand,
@@ -891,23 +911,67 @@ export namespace operations {
           .processParallel(command.clinicalType, record, index, schema);
 
         if (schemaResult.validationErrors.length > 0) {
-          const result = await programExceptionRepository.find(command.programId);
+          let validationErrors = [...schemaResult.validationErrors];
 
-          // filter out valid exceptions before adding to error accumulator
-          const validationErrors =
-            // only filter is we have valid exceptions available
-            isProgramException(result)
-              ? schemaResult.validationErrors.filter(validationError => {
-                  return !applyExceptionIfExists(result.exceptions, validationError, record);
-                })
-              : schemaResult.validationErrors;
+          if (FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
+            // check for program exception
+            const result = await programExceptionRepository.find(command.programId);
+
+            validationErrors = [];
+
+            /***
+             * Checking if a valid exception exists and the record value matches it
+             * If there's a match, we allow the value to pass schema validation and
+             * the value is returned normalized
+             *
+             * Normalizing is setting it to start Upper case and to trim whitespace
+             */
+            if (isProgramException(result)) {
+              schemaResult.validationErrors.forEach(validationError => {
+                const validationErrorFieldName = validationError.fieldName;
+                const recordValue = record[validationErrorFieldName];
+
+                /**
+                 * Zero Array type exceptions exist, but recordValue type is string | string[]
+                 * therefore no exception is present for arrays, validation error is valid
+                 */
+                if (Array.isArray(recordValue)) {
+                  validationErrors.push(validationError);
+                  return;
+                }
+
+                const normalizedRecordValue = normalizeExceptionValue(recordValue);
+
+                const exceptionExists = checkExceptionExists(
+                  result.exceptions,
+                  validationError,
+                  normalizedRecordValue,
+                );
+
+                if (exceptionExists) {
+                  // ensure value is normalized exception value
+                  const normalizedExceptionRecord = {
+                    ...record,
+                    [validationErrorFieldName]: normalizedRecordValue,
+                  };
+                  processedRecord = normalizedExceptionRecord;
+                } else {
+                  // only add validation errors that don't have exceptions
+                  validationErrors.push(validationError);
+                }
+              });
+            }
+          }
 
           errorsAccumulator = errorsAccumulator.concat(
             unifySchemaErrors(schemaName, validationErrors, index, command.records),
           );
         }
 
-        processedRecord = schemaResult.processedRecord;
+        if (_.isEmpty(processedRecord)) {
+          processedRecord = schemaResult.processedRecord;
+        }
+
         const programIdError = usingInvalidProgramId(
           ClinicalEntitySchemaNames.REGISTRATION,
           index,
