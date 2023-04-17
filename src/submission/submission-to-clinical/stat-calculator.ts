@@ -69,17 +69,16 @@ const coreClinicalSchemaNamesSet = new Set<CoreClinicalSchemaName>(
   Object.keys(schemaNameToCoreCompletenessStat) as CoreClinicalSchemaName[],
 );
 
-const getEmptyCoreStats = (): CompletionStats =>
-  cloneDeep({
-    coreCompletion: {
-      donor: 0,
-      specimens: 0,
-      primaryDiagnosis: 0,
-      followUps: 0,
-      treatments: 0,
-    },
-    coreCompletionPercentage: 0,
-  });
+const getEmptyCoreStats = (): CompletionStats => ({
+  coreCompletion: {
+    donor: 0,
+    specimens: 0,
+    primaryDiagnosis: 0,
+    followUps: 0,
+    treatments: 0,
+  },
+  coreCompletionPercentage: 0,
+});
 
 // This is the main core stat calculation function.
 // We consider only `required & core` fields for core field calculation, which are always submitted.
@@ -90,13 +89,14 @@ const getEmptyCoreStats = (): CompletionStats =>
 // This function is referenced in the recalculate-core-completion migration file.
 // Any code updates should validate that migration is unaffected.
 export const calcDonorCoreEntityStats = (
-  donor: Donor,
+  donor: Donor | DeepReadonly<Donor>,
   forceFlags: ForceRecaculateFlags, // used to control recalculate under certain conditions
 ) => {
-  const updatedDonor = cloneDeep(donor);
+  // We have to be able to modify core completion, this creates a duplicate w/ readonly removed
+  const updatedDonor = JSON.parse(JSON.stringify(donor)) as Donor;
 
-  let newCompletionStats = donor.completionStats
-    ? { ...donor.completionStats }
+  let newCompletionStats = updatedDonor.completionStats
+    ? { ...updatedDonor.completionStats }
     : getEmptyCoreStats();
   const coreStats = newCompletionStats.coreCompletion;
 
@@ -107,14 +107,14 @@ export const calcDonorCoreEntityStats = (
 
   updatedEntities.forEach(clinicalType => {
     if (clinicalType === ClinicalEntitySchemaNames.SPECIMEN) {
-      const filteredDonorSpecimens = donor.specimens.filter(dnaSampleFilter);
+      const filteredDonorSpecimens = updatedDonor.specimens.filter(dnaSampleFilter);
 
       const { coreCompletionPercentage } = calculateSpecimenCompletionStats(filteredDonorSpecimens);
 
       coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = coreCompletionPercentage;
     } else {
       // for others we just need to find one clinical info for core entity
-      const entities = getClinicalEntitiesFromDonorBySchemaName(donor, clinicalType);
+      const entities = getClinicalEntitiesFromDonorBySchemaName(updatedDonor, clinicalType);
 
       coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = entities.length >= 1 ? 1 : 0;
     }
