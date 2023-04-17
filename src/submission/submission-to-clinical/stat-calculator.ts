@@ -89,11 +89,11 @@ const getEmptyCoreStats = (): CompletionStats => ({
 // This function is referenced in the recalculate-core-completion migration file.
 // Any code updates should validate that migration is unaffected.
 export const calcDonorCoreEntityStats = (
-  donor: Donor | DeepReadonly<Donor>,
+  donor: Donor,
   forceFlags: ForceRecaculateFlags, // used to control recalculate under certain conditions
 ) => {
   // We have to be able to modify core completion, this creates a duplicate w/ readonly removed
-  const updatedDonor = JSON.parse(JSON.stringify(donor)) as Donor;
+  const updatedDonor = cloneDeep(donor);
 
   let newCompletionStats = updatedDonor.completionStats
     ? { ...updatedDonor.completionStats }
