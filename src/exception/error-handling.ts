@@ -21,12 +21,12 @@ import { RepoError } from './repo/types';
 import { Errors } from '../utils';
 
 // types
-export type Success<T> = { success: true; data: T };
+export type Success<T> = { success: true; exception: T };
 export type Failure = { success: boolean; message: string; errors?: any };
 export type Result<T> = Success<T> | Failure;
 
 // helpers
-export const success = <T>(data: T): Success<T> => ({ success: true, data });
+export const success = <T>(data: T): Success<T> => ({ success: true, exception: data });
 export const failure = (message: string, errors?: any): Failure => ({
   success: false,
   message,
