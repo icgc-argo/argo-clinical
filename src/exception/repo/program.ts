@@ -18,10 +18,8 @@
  */
 import mongoose from 'mongoose';
 import { loggerFor } from '../../logger';
-import { ExceptionValue, ProgramException } from '../types';
-import { checkDoc } from './common';
-import { RepoError } from './types';
 import { DatabaseError } from '../error-handling';
+import { ExceptionValue, ProgramException } from '../types';
 
 const L = loggerFor(__filename);
 
@@ -45,11 +43,12 @@ const programExceptionRepository = {
   async save(exception: ProgramException): Promise<ProgramException> {
     L.debug(`Creating new program exception with: ${JSON.stringify(exception)}`);
     try {
-      return await ProgramExceptionModel.findOneAndUpdate(
+      const doc = await ProgramExceptionModel.findOneAndUpdate(
         { programId: exception.programId },
         exception,
         { upsert: true, new: true, overwrite: true },
       ).lean(true);
+      return doc;
       // L.info(`doc created ${doc}`);
     } catch (e) {
       L.error('failed to create program exception: ', e);
@@ -61,7 +60,7 @@ const programExceptionRepository = {
     L.debug(`finding program exception with id: ${JSON.stringify(programId)}`);
     try {
       const doc = await ProgramExceptionModel.findOne({ programId }).lean(true);
-      return checkDoc(doc);
+      return doc;
     } catch (e) {
       L.error('failed to find program exception', e);
       throw new DatabaseError('Cannot save program exception.');
@@ -72,7 +71,7 @@ const programExceptionRepository = {
     L.debug(`deleting program exception with program id: ${JSON.stringify(programId)}`);
     try {
       const doc = await ProgramExceptionModel.findOneAndDelete({ programId }).lean(true);
-      return checkDoc(doc);
+      return doc;
     } catch (e) {
       L.error('failed to delete program exception', e);
       throw new DatabaseError('Cannot save program exception.');
