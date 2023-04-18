@@ -22,7 +22,6 @@ import { loggerFor } from '../logger';
 import { failure, Result, success, ValidationError } from './error-handling';
 import entityExceptionRepository from './repo/entity';
 import programExceptionRepository from './repo/program';
-import { RepoError } from './repo/types';
 import {
   EntityException,
   EntityExceptionRecord,
@@ -30,10 +29,9 @@ import {
   isFollowupExceptionRecord,
   isSpecimenExceptionRecord,
   OnlyRequired,
-  ProgramException,
   ProgramExceptionRecord,
 } from './types';
-import { isRepoError, isValidEntityType, normalizeEntityFileType } from './util';
+import { isValidEntityType, normalizeEntityFileType } from './util';
 import { commonValidators, validateRecords } from './validation';
 
 const L = loggerFor(__filename);
@@ -73,71 +71,18 @@ const normalizeRecords = (records: readonly EntityExceptionRecord[]) =>
     schema: _.snakeCase(r.schema),
   }));
 
-/**
- * result handling
- */
-
-const createResult = ({
-  exception,
-  validationErrors = [],
-  error = { code: '', message: '' },
-  success = false,
-}: Result) => ({
-  exception,
-  error,
-  validationErrors,
-  success,
-});
-
-// export type Result = {
-//   success?: boolean;
-//   error?: { code: string; message: string }; // api was using this
-//   exception?: ProgramException | EntityException | undefined;
-//   validationErrors?: ValidationResult[];
-// };
-
 type Service = ({ programId }: { programId: string }) => Promise<Result>;
 
-function processResult({
-  result,
-  errorMessage,
-}: {
-  result: ProgramException | EntityException | RepoError;
-  errorMessage: string;
-}) {
-  const SERVER_ERROR_MSG: string = 'Server error occurred';
-
-  if (isRepoError(result)) {
-    return createResult({
-      error: { code: result, message: errorMessage || SERVER_ERROR_MSG },
-    });
-  } else {
-    return createResult({ success: true, exception: result });
-  }
-}
-
-/**
- * main
- */
 export namespace operations {
-  /**
-   * program exceptions
-   */
+  // program exceptions
   export const getProgramException: Service = async ({ programId }) => {
-    const result = await programExceptionRepository.find(programId);
-
-    return processResult({
-      result,
-      errorMessage: `no program level exceptions for program '${programId}'`,
-    });
+    const doc = await programExceptionRepository.find(programId);
+    return doc ? success(doc) : failure(`Cannot find program exceptions for ${programId}`);
   };
 
   export const deleteProgramException: Service = async ({ programId }) => {
-    const result = await programExceptionRepository.delete(programId);
-    return processResult({
-      result,
-      errorMessage: `no program level exceptions for program '${programId}'`,
-    });
+    const doc = await programExceptionRepository.delete(programId);
+    return doc ? success(doc) : failure(`Cannot find program exceptions for ${programId}`);
   };
 
   export const createProgramException = async ({
@@ -156,23 +101,14 @@ export namespace operations {
     );
 
     if (errors.length > 0) {
-      return createResult({
-        error: { code: RepoError.DOCUMENT_UNDEFINED, message: errorMessage },
-        validationErrors: errors,
-      });
+      throw new ValidationError(errors);
     } else {
-      const result = await programExceptionRepository.save({ programId, exceptions: records });
-
-      return processResult({
-        result,
-        errorMessage,
-      });
+      const doc = await programExceptionRepository.save({ programId, exceptions: records });
+      return success(doc);
     }
   };
 
-  /**
-   * entity exceptions
-   */
+  // entity exceptions
   export const createEntityException = async ({
     programId,
     records,
@@ -190,7 +126,6 @@ export namespace operations {
     );
 
     if (errors.length > 0) {
-      // ProgramExceptionValidationErr and EntityExceptionValidationErr
       throw new ValidationError(errors);
     }
 
