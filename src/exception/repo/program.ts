@@ -27,9 +27,10 @@ const programExceptionSchema = new mongoose.Schema<ProgramException>({
   programId: String,
   exceptions: [
     {
+      program_name: String,
       schema: String,
-      coreField: String,
-      exceptionValue: { type: String, enum: Object.values(ExceptionValue) },
+      requested_core_field: String,
+      requested_exception_value: { type: String, enum: Object.values(ExceptionValue) },
     },
   ],
 });
@@ -48,8 +49,9 @@ const programExceptionRepository = {
         exception,
         { upsert: true, new: true, overwrite: true },
       ).lean(true);
+      L.info(`doc created ${JSON.stringify(doc)}`);
+
       return doc;
-      // L.info(`doc created ${doc}`);
     } catch (e) {
       L.error('failed to create program exception: ', e);
       throw new DatabaseError('Cannot save program exception.');
