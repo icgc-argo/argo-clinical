@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 The Ontario Institute for Cancer Research. All rights reserved
+ * Copyright (c) 2023 The Ontario Institute for Cancer Research. All rights reserved
  *
  * This program and the accompanying materials are made available under the terms of
  * the GNU Affero General Public License v3.0. You should have received a copy of the
@@ -320,7 +320,7 @@ describe('schema migration api', () => {
   });
 
   describe('Changes that can affect existing donors', () => {
-    it('should run migration and add clincial info completion for donor entity', async () => {
+    it('should run migration and add clinical info completion for donor entity', async () => {
       const donorInvalidWithNewSchema = emptyDonorDocument({
         submitterId: 'ICGC_0004',
         programId,
@@ -349,7 +349,7 @@ describe('schema migration api', () => {
       });
       const updatedDonor = await findInDb(dburl, 'donors', {});
 
-      // donor 1 stats after migraiton, added entity completion
+      // donor 1 stats after migration, added entity completion
       chai.expect(updatedDonor[0].completionStats.coreCompletion).to.deep.include({
         donor: 1,
         primaryDiagnosis: 0,
@@ -367,7 +367,7 @@ describe('schema migration api', () => {
       });
       // donor 3 stats after migraiton
       chai.expect(updatedDonor[2].completionStats.coreCompletion).to.deep.include({
-        donor: 0, // donor info is invalid so set to zero
+        donor: 1,
         primaryDiagnosis: 0,
         treatments: 1, // no treatment submitted, but overridden entity remains unchanged
         followUps: 0,

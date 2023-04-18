@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 The Ontario Institute for Cancer Research. All rights reserved
+ * Copyright (c) 2023 The Ontario Institute for Cancer Research. All rights reserved
  *
  * This program and the accompanying materials are made available under the terms of
  * the GNU Affero General Public License v3.0. You should have received a copy of the
@@ -154,12 +154,10 @@ const performCommitSubmission = async (
         L.info(`donor ${ud._id} is now valid`);
         ud.schemaMetadata.isValid = true;
         ud.schemaMetadata.lastValidSchemaVersion = currentDictionary.version;
-        // recalculate the donors stats
-        verifiedDonorDTOs.push(recalculateDonorStatsHoldOverridden(ud));
-        return;
       }
     }
-    verifiedDonorDTOs.push(ud);
+    // recalculate the donors stats
+    verifiedDonorDTOs.push(recalculateDonorStatsHoldOverridden(ud));
   });
 
   try {

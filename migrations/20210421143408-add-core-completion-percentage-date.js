@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 The Ontario Institute for Cancer Research. All rights reserved
+ * Copyright (c) 2023 The Ontario Institute for Cancer Research. All rights reserved
  *
  * This program and the accompanying materials are made available under the terms of
  * the GNU Affero General Public License v3.0. You should have received a copy of the
@@ -19,26 +19,23 @@
 
 const mean = require('lodash/mean');
 
-const getCoreCompletionPercentage = (fields) =>
-  mean(Object.values(fields || {})) || 0;
+const getCoreCompletionPercentage = fields => mean(Object.values(fields || {})) || 0;
 
 const getCoreCompletionDate = (donor, percentage) =>
-  percentage === 1
-    ? donor.updatedAt || new Date().toDateString()
-    : undefined;
+  percentage === 1 ? donor.updatedAt || new Date().toDateString() : undefined;
 
 const filterUp = {
   completionStats: { $exists: true },
-  "completionStats.coreCompletion": { $exists: true },
-  "completionStats.coreCompletionDate": { $exists: false },
-  "completionStats.coreCompletionPercentage": { $exists: false }
+  'completionStats.coreCompletion': { $exists: true },
+  'completionStats.coreCompletionDate': { $exists: false },
+  'completionStats.coreCompletionPercentage': { $exists: false },
 };
 
 const filterDown = {
   completionStats: { $exists: true },
-  "completionStats.coreCompletion": { $exists: true },
-  "completionStats.coreCompletionDate": { $exists: true },
-  "completionStats.coreCompletionPercentage": { $exists: true }
+  'completionStats.coreCompletion': { $exists: true },
+  'completionStats.coreCompletionDate': { $exists: true },
+  'completionStats.coreCompletionPercentage': { $exists: true },
 };
 
 module.exports = {
@@ -48,12 +45,14 @@ module.exports = {
         .collection('donors')
         .find(filterUp)
         .toArray();
-      
+
       donors.forEach(donor => {
-        const coreCompletionPercentage = getCoreCompletionPercentage(donor.completionStats.coreCompletion);
+        const coreCompletionPercentage = getCoreCompletionPercentage(
+          donor.completionStats.coreCompletion,
+        );
         const coreCompletionDate = getCoreCompletionDate(donor, coreCompletionPercentage);
         donor.completionStats.coreCompletionPercentage = coreCompletionPercentage;
-        donor.completionStats.coreCompletionDate = coreCompletionDate; 
+        donor.completionStats.coreCompletionDate = coreCompletionDate;
         db.collection('donors').save(donor);
       });
     } catch (err) {
@@ -68,7 +67,7 @@ module.exports = {
         .collection('donors')
         .find(filterDown)
         .toArray();
-      
+
       donors.forEach(donor => {
         delete donor.completionStats.coreCompletionDate;
         delete donor.completionStats.coreCompletionPercentage;
@@ -78,5 +77,5 @@ module.exports = {
       console.error('failed', err);
       throw err;
     }
-  }
+  },
 };
