@@ -25,7 +25,6 @@
   "include": ["src/**/*", "test/**/*"],
 
   "ts-node": {
-    // server wont run if there are type errors, leave it to build step to typecheck
-    "transpileOnly": true
+    "logError": true
   }
 }
