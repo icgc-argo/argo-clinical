@@ -24,7 +24,6 @@ import entityExceptionRepository from './repo/entity';
 import programExceptionRepository from './repo/program';
 import { RepoError } from './repo/types';
 import {
-  Entity,
   EntityException,
   EntityExceptionRecord,
   isArrayOf,
@@ -34,10 +33,8 @@ import {
   ProgramException,
   ProgramExceptionRecord,
 } from './types';
-import { isRepoError, normalizeEntityFileType, isValidEntityType } from './util';
-import { commonValidators, validateRecords, ValidationResult } from './validation';
-import _ from 'lodash';
-import { success, ValidationError } from './error-handling';
+import { isRepoError, isValidEntityType, normalizeEntityFileType } from './util';
+import { commonValidators, validateRecords } from './validation';
 
 const L = loggerFor(__filename);
 
@@ -208,7 +205,7 @@ export namespace operations {
     programId: string;
   }): Promise<Result<EntityException>> => {
     const doc = await entityExceptionRepository.find(programId);
-    return doc ? success(doc) : failure(`Cannot find entity exception for ${programId}`);
+    return doc ? success(doc) : failure(`Cannot find entity exceptions for ${programId}`);
   };
 
   export const deleteEntityException = async ({

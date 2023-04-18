@@ -32,6 +32,8 @@ import {
   isReadonlyArrayOf,
   ProgramExceptionRecord,
 } from './types';
+import programExceptionRepository from './repo/program';
+import { ExceptionTSVError } from './error-handling';
 
 const L = loggerFor(__filename);
 
@@ -50,7 +52,7 @@ type ValidateRecords<T> = (records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj>) 
 const validateProgramExceptionRecords: ValidateRecords<ProgramExceptionRecord> = records => {
   if (!isReadonlyArrayOf(records, isProgramExceptionRecord)) {
     L.debug(`Program Exception TSV_PARSING_FAILED`);
-    throw new Errors.TSVParseError();
+    throw new ExceptionTSVError('Invalid program exception tsv file');
   }
   return records;
 };
@@ -58,7 +60,7 @@ const validateProgramExceptionRecords: ValidateRecords<ProgramExceptionRecord> =
 const validateEntityExceptionRecords: ValidateRecords<EntityExceptionRecord> = records => {
   if (!isReadonlyArrayOf(records, isEntityExceptionRecord)) {
     L.debug(`Entity Exception TSV_PARSING_FAILED`);
-    throw new Errors.TSVParseError();
+    throw new ExceptionTSVError('Invalid entity exception tsv file');
   }
   return records;
 };
@@ -102,11 +104,9 @@ class ExceptionController {
   @HasFullWriteAccess()
   async createEntityException(req: Request, res: Response) {
     const programId = req.params.programId;
-    const existingProgramException = await exceptionService.operations.getProgramException({
-      programId,
-    });
+    const doc = await programExceptionRepository.find(programId);
 
-    if (existingProgramException.exception !== undefined) {
+    if (doc && doc.exception !== undefined) {
       L.debug('program exception exists already');
       return res.status(400).send('program exception already exists');
     }
@@ -149,7 +149,7 @@ const parseTSV = async (filepath: string) => {
   L.debug('parse tsv');
   const records = await TsvUtils.tsvToJson(filepath);
   if (records.length === 0) {
-    throw new Errors.TSVParseError('TSV has no records');
+    throw new ExceptionTSVError();
   }
   return records;
 };

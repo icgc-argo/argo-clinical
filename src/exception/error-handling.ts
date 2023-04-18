@@ -18,45 +18,58 @@
  */
 
 import { RepoError } from './repo/types';
+import { Errors } from '../utils';
 
 // types
 export type Success<T> = { success: true; data: T };
-// TODO: build out Failure to include error object eg. on POST
-export type Failure = { success: boolean; message: string };
+export type Failure = { success: boolean; message: string; errors?: any };
 export type Result<T> = Success<T> | Failure;
 
 // helpers
 export const success = <T>(data: T): Success<T> => ({ success: true, data });
-export const failure = (message: string) => ({ success: false, message });
+export const failure = (message: string, errors?: any): Failure => ({
+  success: false,
+  message,
+  errors,
+});
 
 // middleware
 export const ExceptionErrorHandler = (err: any, req: any, res: any, next: any) => {
-  console.log('Exception --- error handler --- midlleware');
-  console.log(JSON.stringify(err));
-  res.status(404).send('custom error handler ran');
-  // ----------
-  if (err instanceof DatabaseError) {
-    // err.statusCode + err.msg
+  const defaultErrorMessage = `Cannot create exceptions for entity in program '${req.params.programId}'`;
+
+  if (err instanceof ValidationError) {
+    const message = `${defaultErrorMessage}. Validation errors in exceptions file.`;
+    return res.status(404).send(failure(message, err.data));
   }
 
-  return res.status(err.status).send(err.data);
+  res.status(404).send(failure(err.message || defaultErrorMessage));
+
+  next(err);
 };
 
 // errors
 export class ValidationError extends Error {
+  data: ValidationError[];
   constructor(errors: any) {
-    super('message');
+    super();
     this.name = this.constructor.name;
-    // const errorMessage = `Cannot create exceptions for entity in program '${programId}'`;
+    this.data = errors;
   }
 }
 
 export class DatabaseError extends Error {
   constructor(message?: string, cause: RepoError = RepoError.SERVER_ERROR) {
-    super('Server error');
+    super(message || 'Failed to save exception.');
     this.name = this.constructor.name;
 
     if (cause === RepoError.DOCUMENT_UNDEFINED)
       this.message = 'Failed to save exception. Document is undefined';
+  }
+}
+
+export class ExceptionTSVError extends Errors.TSVParseError {
+  constructor(message?: string) {
+    super(message || 'TSV parsing error.');
+    this.name = this.constructor.name;
   }
 }
