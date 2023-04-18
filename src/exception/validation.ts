@@ -42,13 +42,11 @@ export const ValidationResultType = {
 type ValidationResultErrorType = ObjectValues<typeof ValidationResultType>;
 
 export type ValidationError = {
-  message: string;
-  result: ValidationResultErrorType;
   field: string;
   recordIndex: number;
-};
+} & ValidationResult;
 
-export const createValidationError = ({
+const createValidationError = ({
   recordIndex,
   result,
   message,
