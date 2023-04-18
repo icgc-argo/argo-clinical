@@ -20,7 +20,8 @@ import mongoose from 'mongoose';
 import { loggerFor } from '../../logger';
 import { ExceptionValue, ProgramException } from '../types';
 import { checkDoc } from './common';
-import { RepoError, RepoResult } from './types';
+import { RepoError } from './types';
+import { DatabaseError } from '../error-handling';
 
 const L = loggerFor(__filename);
 
@@ -40,14 +41,8 @@ const ProgramExceptionModel = mongoose.model<ProgramException>(
   programExceptionSchema,
 );
 
-export interface ProgramExceptionRepository {
-  save(exception: ProgramException): any;
-  find(programId: string): any;
-  delete(programId: string): any;
-}
-
-const programExceptionRepository: ProgramExceptionRepository = {
-  async save(exception: ProgramException) {
+const programExceptionRepository = {
+  async save(exception: ProgramException): Promise<ProgramException> {
     L.debug(`Creating new program exception with: ${JSON.stringify(exception)}`);
     try {
       return await ProgramExceptionModel.findOneAndUpdate(
@@ -58,29 +53,29 @@ const programExceptionRepository: ProgramExceptionRepository = {
       // L.info(`doc created ${doc}`);
     } catch (e) {
       L.error('failed to create program exception: ', e);
-      return RepoError.SERVER_ERROR;
+      throw new DatabaseError('Cannot save program exception.');
     }
   },
 
-  async find(programId: string) {
+  async find(programId: string): Promise<ProgramException | null> {
     L.debug(`finding program exception with id: ${JSON.stringify(programId)}`);
     try {
       const doc = await ProgramExceptionModel.findOne({ programId }).lean(true);
       return checkDoc(doc);
     } catch (e) {
       L.error('failed to find program exception', e);
-      return RepoError.SERVER_ERROR;
+      throw new DatabaseError('Cannot save program exception.');
     }
   },
 
-  async delete(programId: string) {
+  async delete(programId: string): Promise<ProgramException | null> {
     L.debug(`deleting program exception with program id: ${JSON.stringify(programId)}`);
     try {
       const doc = await ProgramExceptionModel.findOneAndDelete({ programId }).lean(true);
       return checkDoc(doc);
     } catch (e) {
       L.error('failed to delete program exception', e);
-      return RepoError.SERVER_ERROR;
+      throw new DatabaseError('Cannot save program exception.');
     }
   },
 };
