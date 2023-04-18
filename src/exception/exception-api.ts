@@ -90,9 +90,9 @@ class ExceptionController {
     const programId = req.params.programId;
     const doc = await programExceptionRepository.find(programId);
 
-    if (doc && doc.exceptions !== undefined) {
+    if (doc?.exceptions && doc.exceptions.length > 0) {
       L.debug('program exception exists already');
-      return res.status(400).send('program exception already exists');
+      return res.status(400).send('Program exception already exists');
     }
 
     const records = await parseTSV(req.file.path);
