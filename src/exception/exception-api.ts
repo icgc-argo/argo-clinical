@@ -90,7 +90,7 @@ class ExceptionController {
     const programId = req.params.programId;
     const doc = await programExceptionRepository.find(programId);
 
-    if (doc && doc.exception !== undefined) {
+    if (doc && doc.exceptions !== undefined) {
       L.debug('program exception exists already');
       return res.status(400).send('program exception already exists');
     }
