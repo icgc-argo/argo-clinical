@@ -92,17 +92,6 @@ const entityExceptionRepository = {
     }
   },
 
-  async delete(programId: string) {
-    L.debug(`deleting all entity exceptions with program id: ${JSON.stringify(programId)}`);
-    try {
-      const doc = await EntityExceptionModel.findOneAndDelete({ programId }).lean(true);
-      return checkDoc<EntityException>(doc);
-    } catch (e) {
-      L.error('failed to delete exception', e);
-      throw new DatabaseError('Cannot save entity exception.');
-    }
-  },
-
   async deleteSingleEntity(
     programId: string,
     entity: Entity,
