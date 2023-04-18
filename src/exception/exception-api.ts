@@ -18,34 +18,21 @@
  */
 
 import { NextFunction, Request, Response } from 'express';
-import _ from 'lodash';
 import { HasFullReadAccess, HasFullWriteAccess } from '../decorators';
 import { loggerFor } from '../logger';
-import { ControllerUtils, Errors, TsvUtils } from '../utils';
+import { ControllerUtils, TsvUtils } from '../utils';
+import { ExceptionTSVError } from './error-handling';
 import * as exceptionService from './exception-service';
-import { RepoError } from './repo/types';
+import programExceptionRepository from './repo/program';
 import {
   EntityExceptionRecord,
-  EntityValues,
   isEntityExceptionRecord,
   isProgramExceptionRecord,
   isReadonlyArrayOf,
   ProgramExceptionRecord,
 } from './types';
-import programExceptionRepository from './repo/program';
-import { ExceptionTSVError } from './error-handling';
 
 const L = loggerFor(__filename);
-
-function getResStatus(result: exceptionService.Result): number {
-  if (result.success) {
-    return 200;
-  } else if (result.error?.code === RepoError.DOCUMENT_UNDEFINED) {
-    return 400;
-  } else {
-    return 500;
-  }
-}
 
 type ValidateRecords<T> = (records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj>) => ReadonlyArray<T>;
 
@@ -67,9 +54,8 @@ const validateEntityExceptionRecords: ValidateRecords<EntityExceptionRecord> = r
 
 class ExceptionController {
   @HasFullWriteAccess()
-  /**
-   * program exceptions
-   */
+
+  // program exceptions
   async createProgramException(req: Request, res: Response) {
     const programId = req.params.programId;
     const records = await parseTSV(req.file.path);
@@ -88,19 +74,17 @@ class ExceptionController {
   async clearProgramException(req: Request, res: Response) {
     const programId = req.params.programId;
     const result = await exceptionService.operations.deleteProgramException({ programId });
-    return res.status(getResStatus(result)).send(result);
+    return res.status(result.success ? 200 : 400).send(result);
   }
 
   @HasFullReadAccess()
   async getProgramException(req: Request, res: Response) {
     const programId = req.params.programId;
     const result = await exceptionService.operations.getProgramException({ programId });
-    return res.status(getResStatus(result)).send(result);
+    return res.status(result.success ? 200 : 400).send(result);
   }
 
-  /**
-   * entity exceptions
-   */
+  // entity exceptions
   @HasFullWriteAccess()
   async createEntityException(req: Request, res: Response) {
     const programId = req.params.programId;

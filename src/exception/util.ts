@@ -21,13 +21,11 @@ import { RepoError } from './repo/types';
 import { EntityException, ProgramException, EntityValues, Entity } from './types';
 import _ from 'lodash';
 
-export function isProgramException(
-  result: ProgramException | RepoError,
-): result is ProgramException {
+export function isProgramException(result: ProgramException | null): result is ProgramException {
   return (result as ProgramException).programId !== undefined;
 }
 
-export function isEntityException(result: EntityException | RepoError): result is EntityException {
+export function isEntityException(result: EntityException | null): result is EntityException {
   return (
     (result as EntityException).programId !== undefined &&
     (result as EntityException).specimen !== undefined
