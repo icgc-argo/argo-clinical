@@ -18,7 +18,6 @@
  */
 
 import _ from 'lodash';
-import { loggerFor } from '../logger';
 import { failure, Result, success, ValidationError } from './error-handling';
 import entityExceptionRepository from './repo/entity';
 import programExceptionRepository from './repo/program';
@@ -29,12 +28,11 @@ import {
   isFollowupExceptionRecord,
   isSpecimenExceptionRecord,
   OnlyRequired,
+  ProgramException,
   ProgramExceptionRecord,
 } from './types';
 import { isValidEntityType, normalizeEntityFileType } from './util';
 import { commonValidators, validateRecords } from './validation';
-
-const L = loggerFor(__filename);
 
 /**
  * creates exception object with tsv style records
@@ -71,16 +69,24 @@ const normalizeRecords = (records: readonly EntityExceptionRecord[]) =>
     schema: _.snakeCase(r.schema),
   }));
 
-type Service = ({ programId }: { programId: string }) => Promise<Result>;
+type ServiceResult<T> = Promise<Result<T>>;
 
 export namespace operations {
   // program exceptions
-  export const getProgramException: Service = async ({ programId }) => {
+  export const getProgramException = async ({
+    programId,
+  }: {
+    programId: string;
+  }): ServiceResult<ProgramException> => {
     const doc = await programExceptionRepository.find(programId);
     return doc ? success(doc) : failure(`Cannot find program exceptions for ${programId}`);
   };
 
-  export const deleteProgramException: Service = async ({ programId }) => {
+  export const deleteProgramException = async ({
+    programId,
+  }: {
+    programId: string;
+  }): ServiceResult<ProgramException> => {
     const doc = await programExceptionRepository.delete(programId);
     return doc ? success(doc) : failure(`Cannot find program exceptions for ${programId}`);
   };
@@ -91,7 +97,7 @@ export namespace operations {
   }: {
     programId: string;
     records: ReadonlyArray<ProgramExceptionRecord>;
-  }): Promise<Result> => {
+  }): ServiceResult<ProgramException> => {
     const errorMessage = `Cannot create exceptions for program '${programId}'`;
 
     const errors = await validateRecords<ProgramExceptionRecord>(
@@ -115,7 +121,7 @@ export namespace operations {
   }: {
     programId: string;
     records: ReadonlyArray<EntityExceptionRecord>;
-  }): Promise<Result<EntityException>> => {
+  }): ServiceResult<EntityException> => {
     const normalizedRecords = normalizeRecords(records);
 
     // validate rows
@@ -138,7 +144,7 @@ export namespace operations {
     programId,
   }: {
     programId: string;
-  }): Promise<Result<EntityException>> => {
+  }): ServiceResult<EntityException> => {
     const doc = await entityExceptionRepository.find(programId);
     return doc ? success(doc) : failure(`Cannot find entity exceptions for ${programId}`);
   };
@@ -151,7 +157,7 @@ export namespace operations {
     programId: string;
     entity: string;
     submitterDonorIds: string[];
-  }): Promise<Result<EntityException>> => {
+  }): ServiceResult<EntityException> => {
     const normalizedEntityFileType = normalizeEntityFileType(entity);
 
     if (isValidEntityType(normalizedEntityFileType)) {
