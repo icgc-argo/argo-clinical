@@ -90,39 +90,37 @@ const validateRadiationRecords = (
     reference_radiation_treatment_id,
   } = therapyRecord;
 
-  const donorMatch = treatmentDonorId === therapyDonorId;
-
-  const previousDonorMatch = radiationTreatments?.find(radiationRecord =>
-    radiationRecord.therapies.some(
-      record => record.clinicalInfo.submitter_donor_id === therapyDonorId,
-    ),
-  );
-
   let errors: SubmissionValidationError[] = [];
-
-  if (!donorMatch || !previousDonorMatch) {
-    errors = [
-      ...errors,
-      utils.buildSubmissionError(
-        therapyRecord,
-        DataValidationErrors.INVALID_SUBMITTER_DONOR_ID,
-        TreatmentFieldsEnum.submitter_treatment_id,
-        {
-          [TreatmentFieldsEnum.treatment_type]: treatment_type,
-          therapyType: 'Radiation',
-        },
-      ),
-    ];
-  }
 
   if (typeof radiation_boost === 'string' && radiation_boost.toLowerCase() === 'yes') {
     const treatmentMatch = submitter_treatment_id === reference_radiation_treatment_id;
-
     const previousTreatmentMatch = radiationTreatments?.find(radiationRecord =>
       radiationRecord.therapies.some(
         record => record.clinicalInfo.submitter_treatment_id === reference_radiation_treatment_id,
       ),
     );
+
+    const donorMatch = treatmentDonorId === therapyDonorId;
+    const previousDonorMatch = radiationTreatments?.find(radiationRecord =>
+      radiationRecord.therapies.some(
+        record => record.clinicalInfo.submitter_donor_id === therapyDonorId,
+      ),
+    );
+
+    if (!donorMatch || !previousDonorMatch) {
+      errors = [
+        ...errors,
+        utils.buildSubmissionError(
+          therapyRecord,
+          DataValidationErrors.INVALID_SUBMITTER_DONOR_ID,
+          TreatmentFieldsEnum.submitter_treatment_id,
+          {
+            [TreatmentFieldsEnum.treatment_type]: treatment_type,
+            therapyType: 'Radiation',
+          },
+        ),
+      ];
+    }
 
     if (!treatmentMatch || !previousTreatmentMatch) {
       errors = [
