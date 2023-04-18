@@ -1,5 +1,5 @@
 const {
-  forceRecalcDonorCoreEntityStats,
+  calcDonorCoreEntityStats,
 } = require('../dist/src/submission/submission-to-clinical/stat-calculator');
 
 module.exports = {
@@ -11,7 +11,7 @@ module.exports = {
         .toArray();
 
       donors.forEach(donor => {
-        const updatedDonor = forceRecalcDonorCoreEntityStats(donor, {});
+        const updatedDonor = calcDonorCoreEntityStats(donor, {});
         const { donorId, completionStats } = updatedDonor;
 
         db.collection('donors').updateOne(

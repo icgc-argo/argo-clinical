@@ -22,13 +22,9 @@ import _ from 'lodash';
 import { Sample, Donor, ClinicalEntityData } from './clinical-entities';
 import { ClinicalQuery, ClinicalSearchQuery } from './clinical-api';
 import { donorDao, DONOR_DOCUMENT_FIELDS } from './donor-repo';
-import {
-  ClinicalEntityErrorRecord,
-  ClinicalErrorsResponseRecord,
-  EntityAlias,
-} from '../common-model/entities';
-import { Errors, notEmpty } from '../utils';
-import { forceRecalcDonorCoreEntityStats } from '../submission/submission-to-clinical/stat-calculator';
+import { ClinicalErrorsResponseRecord, EntityAlias } from '../common-model/entities';
+import { Errors } from '../utils';
+import { patchCoreCompletionWithOverride } from '../submission/submission-to-clinical/stat-calculator';
 import { migrationRepo } from '../submission/migration/migration-repo';
 import {
   DictionaryMigration,
@@ -158,7 +154,7 @@ export const updateDonorStats = async (donorId: number, coreCompletionOverride: 
   if (!donor) return undefined;
 
   // Update core
-  const updatedDonor = forceRecalcDonorCoreEntityStats(donor, coreCompletionOverride);
+  const updatedDonor = patchCoreCompletionWithOverride(donor, coreCompletionOverride);
 
   return await donorDao.update(updatedDonor);
 };
