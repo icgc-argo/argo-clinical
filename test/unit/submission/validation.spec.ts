@@ -44,6 +44,7 @@ import {
   ClinicalUniqueIdentifier,
   PrimaryDiagnosisFieldsEnum,
   SurgeryFieldsEnum,
+  RadiationFieldsEnum,
 } from '../../../src/common-model/entities';
 
 const genderMutatedErr: SubmissionValidationError = {
@@ -2037,7 +2038,7 @@ describe('data-validator', () => {
         .to.deep.include(immunotherapyTreatmentInvalidErr);
     });
 
-    it('should detect deleted therapies from treatement', async () => {
+    it('should detect deleted therapies from treatment', async () => {
       // a donor with Chemo, Radiation therapies in treatement T_03
       const existingDonorMock: Donor = stubs.validation.existingDonor10();
       const newDonorRecords = {};
@@ -2120,6 +2121,54 @@ describe('data-validator', () => {
       chai.expect(result.radiation.dataErrors.length).to.eq(1);
       chai.expect(result.radiation.dataErrors).to.deep.include(chemoTretmentInvalidErr);
     });
+
+    it('should validate reference radiation treatment id fields', async () => {
+      const existingDonorMock: Donor = stubs.validation.existingDonor01();
+
+      const newDonorAB1Records = {};
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.TREATMENT,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+          [TreatmentFieldsEnum.treatment_type]: ['Radiation therapy'],
+          index: 0,
+        },
+      );
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.RADIATION,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+          index: 0,
+          [RadiationFieldsEnum.radiation_boost]: 'Yes',
+          [RadiationFieldsEnum.reference_radiation_treatment_id]: 'T_02',
+        },
+      );
+
+      const result = await dv
+        .validateSubmissionData({ AB1: newDonorAB1Records }, { AB1: existingDonorMock })
+        .catch((err: any) => fail(err));
+
+      const referenceIdConflictErr: SubmissionValidationError = {
+        type: DataValidationErrors.RADIATION_REFERENCE_ID_CONFLICT,
+        fieldName: TreatmentFieldsEnum.submitter_treatment_id,
+        index: 0,
+        info: {
+          treatment_type: ['Radiation therapy'],
+          therapyType: ClinicalEntitySchemaNames.RADIATION,
+          donorSubmitterId: 'AB1',
+          value: 'T_03',
+        },
+        message: `The submitter_treatment_id submitted in the "reference_radiation_treatment_id" field does not exist.`,
+      };
+
+      chai.expect(result.radiation.dataErrors.length).to.eq(2);
+      chai.expect(result.radiation.dataErrors).to.deep.include(referenceIdConflictErr);
+    });
+
     it('should detect hormone therapy record for treatment', async () => {
       const existingDonorMock: Donor = stubs.validation.existingDonor01();
       const newDonorAB1Records = {};

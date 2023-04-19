@@ -116,7 +116,7 @@ const validateRadiationRecords = (
           TreatmentFieldsEnum.submitter_treatment_id,
           {
             [TreatmentFieldsEnum.treatment_type]: treatment_type,
-            therapyType: 'Radiation',
+            therapyType: ClinicalEntitySchemaNames.RADIATION,
           },
         ),
       ];
@@ -131,7 +131,7 @@ const validateRadiationRecords = (
           TreatmentFieldsEnum.submitter_treatment_id,
           {
             [TreatmentFieldsEnum.treatment_type]: treatment_type,
-            therapyType: 'Radiation',
+            therapyType: ClinicalEntitySchemaNames.RADIATION,
           },
         ),
       ];
@@ -146,7 +146,7 @@ const validateRadiationRecords = (
           TreatmentFieldsEnum.submitter_treatment_id,
           {
             [TreatmentFieldsEnum.treatment_type]: treatment_type,
-            therapyType: 'Radiation',
+            therapyType: ClinicalEntitySchemaNames.RADIATION,
           },
         ),
       ];
