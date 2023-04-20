@@ -2122,6 +2122,54 @@ describe('data-validator', () => {
       chai.expect(result.radiation.dataErrors).to.deep.include(chemoTretmentInvalidErr);
     });
 
+    it('should validate reference radiation treatment id belongs to the right Donor', async () => {
+      const existingDonorMock: Donor = stubs.validation.existingDonor01();
+
+      const newDonorAB1Records = {};
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.TREATMENT,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+          [TreatmentFieldsEnum.treatment_type]: ['Radiation therapy'],
+          index: 0,
+        },
+      );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.RADIATION,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+          index: 0,
+          [RadiationFieldsEnum.radiation_boost]: 'Yes',
+          [RadiationFieldsEnum.reference_radiation_treatment_id]: 'T_03',
+        },
+      );
+
+      const result = await dv
+        .validateSubmissionData({ AB1: newDonorAB1Records }, { AB1: existingDonorMock })
+        .catch((err: any) => fail(err));
+
+      const therapyConflictErr: SubmissionValidationError = {
+        type: DataValidationErrors.INVALID_SUBMITTER_DONOR_ID,
+        fieldName: TreatmentFieldsEnum.submitter_treatment_id,
+        index: 0,
+        info: {
+          treatment_type: ['Radiation therapy'],
+          therapyType: ClinicalEntitySchemaNames.RADIATION,
+          donorSubmitterId: 'AB2',
+          value: 'T_03',
+        },
+        message: `Submitter Donor ID does not match. Please include the correct Submitter ID.`,
+      };
+
+      chai.expect(result.radiation.dataErrors.length).to.eq(2);
+      chai.expect(result.radiation.dataErrors).to.deep.include(therapyConflictErr);
+    });
+
     it('should validate reference radiation treatment id is a radiation treatment', async () => {
       const existingDonorMock: Donor = stubs.validation.existingDonor01();
 
