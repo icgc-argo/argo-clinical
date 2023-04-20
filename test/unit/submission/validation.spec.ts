@@ -2122,7 +2122,55 @@ describe('data-validator', () => {
       chai.expect(result.radiation.dataErrors).to.deep.include(chemoTretmentInvalidErr);
     });
 
-    it('should validate reference radiation treatment id fields', async () => {
+    it('should validate reference radiation treatment id is a radiation treatment', async () => {
+      const existingDonorMock: Donor = stubs.validation.existingDonor01();
+
+      const newDonorAB1Records = {};
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.TREATMENT,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+          [TreatmentFieldsEnum.treatment_type]: ['Bone marrow transplant'],
+          index: 0,
+        },
+      );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.RADIATION,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+          index: 0,
+          [RadiationFieldsEnum.radiation_boost]: 'Yes',
+          [RadiationFieldsEnum.reference_radiation_treatment_id]: 'T_03',
+        },
+      );
+
+      const result = await dv
+        .validateSubmissionData({ AB1: newDonorAB1Records }, { AB1: existingDonorMock })
+        .catch((err: any) => fail(err));
+
+      const therapyConflictErr: SubmissionValidationError = {
+        type: DataValidationErrors.RADIATION_THERAPY_TREATMENT_CONFLICT,
+        fieldName: TreatmentFieldsEnum.submitter_treatment_id,
+        index: 0,
+        info: {
+          treatment_type: ['Bone marrow transplant'],
+          therapyType: ClinicalEntitySchemaNames.RADIATION,
+          donorSubmitterId: 'AB1',
+          value: 'T_03',
+        },
+        message: `The submitter_treatment_id submitted in the "reference_radiation_treatment_id" field is not for radiation treatment.`,
+      };
+
+      chai.expect(result.radiation.dataErrors.length).to.eq(2);
+      chai.expect(result.radiation.dataErrors).to.deep.include(therapyConflictErr);
+    });
+
+    it('should validate reference radiation treatment id matches submitter treatment id', async () => {
       const existingDonorMock: Donor = stubs.validation.existingDonor01();
 
       const newDonorAB1Records = {};
@@ -2165,7 +2213,7 @@ describe('data-validator', () => {
         message: `The submitter_treatment_id submitted in the "reference_radiation_treatment_id" field does not exist.`,
       };
 
-      chai.expect(result.radiation.dataErrors.length).to.eq(2);
+      chai.expect(result.radiation.dataErrors.length).to.eq(1);
       chai.expect(result.radiation.dataErrors).to.deep.include(referenceIdConflictErr);
     });
 

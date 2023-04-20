@@ -25,8 +25,9 @@ import {
 } from '../submission-entities';
 import {
   ClinicalEntitySchemaNames,
-  TreatmentFieldsEnum,
   ClinicalTherapyType,
+  RadiationFieldsEnum,
+  TreatmentFieldsEnum,
 } from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, Treatment } from '../../clinical/clinical-entities';
@@ -51,28 +52,26 @@ export const validate = async (
   // TODO: Refactor use of push
   checkTreatmentHasCorrectTypeForTherapy(therapyRecord, treatment, errors);
 
-  const {
-    clinicalInfo: { treatment_type },
-    therapies,
-  } = treatment;
+  const { therapies } = treatment;
 
-  const isRadiationTreatment =
-    Array.isArray(treatment_type) &&
-    treatment_type.includes('Radiation therapy') &&
-    therapies.some(therapy => therapy.therapyType === 'radiation');
+  const isRadiationRecord = Object.values(RadiationFieldsEnum).some(field =>
+    Object.keys(therapyRecord).includes(field),
+  );
+  const hasRadiationTherapies = therapies.some(therapy => therapy.therapyType === 'radiation');
 
-  const radiationErrors: SubmissionValidationError[] = isRadiationTreatment
-    ? validateRadiationRecords(therapyRecord, treatment, mergedDonor)
-    : [];
+  const radiationErrors: SubmissionValidationError[] =
+    isRadiationRecord && hasRadiationTherapies
+      ? validateRadiationRecords(mergedDonor, treatment, therapyRecord)
+      : [];
 
   errors = [...errors, ...radiationErrors];
   return { errors };
 };
 
 const validateRadiationRecords = (
-  therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
-  treatment: DeepReadonly<Treatment>,
   donor: Donor,
+  treatment: DeepReadonly<Treatment>,
+  therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
 ) => {
   const { treatments } = donor;
 
@@ -99,7 +98,6 @@ const validateRadiationRecords = (
         record => record.clinicalInfo.submitter_treatment_id === reference_radiation_treatment_id,
       ),
     );
-
     const donorMatch = treatmentDonorId === therapyDonorId;
     const previousDonorMatch = radiationTreatments?.find(radiationRecord =>
       radiationRecord.therapies.some(
@@ -107,7 +105,7 @@ const validateRadiationRecords = (
       ),
     );
 
-    if (!donorMatch || !previousDonorMatch) {
+    if (!donorMatch && !previousDonorMatch) {
       errors = [
         ...errors,
         utils.buildSubmissionError(
@@ -122,7 +120,7 @@ const validateRadiationRecords = (
       ];
     }
 
-    if (!treatmentMatch || !previousTreatmentMatch) {
+    if (!treatmentMatch && !previousTreatmentMatch) {
       errors = [
         ...errors,
         utils.buildSubmissionError(
