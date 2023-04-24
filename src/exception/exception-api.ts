@@ -88,9 +88,9 @@ class ExceptionController {
   @HasFullWriteAccess()
   async createEntityException(req: Request, res: Response) {
     const programId = req.params.programId;
-    const doc = await programExceptionRepository.find(programId);
+    const programException = await programExceptionRepository.find(programId);
 
-    if (doc?.exceptions && doc.exceptions.length > 0) {
+    if (programException?.exceptions?.length) {
       L.debug('program exception exists already');
       return res.status(400).send('Program exception already exists');
     }
