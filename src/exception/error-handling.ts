@@ -39,7 +39,7 @@ export const ExceptionErrorHandler = (err: any, req: any, res: any, next: any) =
 
   if (err instanceof ValidationError) {
     const message = `${defaultErrorMessage}. Validation errors in exceptions file.`;
-    return res.status(404).send(failure(message, err.data));
+    return res.status(400).send(failure(message, err.data));
   }
 
   res.status(404).send(failure(err.message || defaultErrorMessage));
