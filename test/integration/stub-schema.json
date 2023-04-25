@@ -915,7 +915,7 @@
               "meta": {
                 "core": true,
                 "dependsOn": "sample_registration.tumour_normal_designation",
-                "notes": "#/notes/if_tumour",
+                "notes": "This field is only required if the specimen is a tumour.",
                 "displayName": "Percent Tumour Cells Measurement Method"
               },
               "restrictions": {
@@ -2866,7 +2866,7 @@
               "description": "A radiation boost is an extra radiation treatment targeted at the tumor bed, given after the regular sessions of radiation is complete (Reference NCIt: C137812). Indicate if this radiation treatment was a radiation boost.",
               "valueType": "string",
               "restrictions": {
-                "codeList": "#/list/yes_no_na"
+                "codeList": ["Yes", "No"]
               },
               "meta": {
                 "displayName": "Radiation Boost"
@@ -2877,8 +2877,7 @@
               "description": "If a radiation boost was given, indicate the 'submitter_treatment_id' of the primary radiation treatment the radiation boost treatment is linked to.",
               "valueType": "string",
               "restrictions": {
-                "script": "#/script/radiation/radiationBoost",
-                "codeList": "#/list/yes_no_na"
+                "codeList": ["Yes", "No"]
               },
               "meta": {
                 "displayName": "Reference Radiation Treatment for Boost"
@@ -3769,7 +3768,9 @@
                 ]
               },
               "valueType": "string",
-              "displayName": "Relationship Type"
+              "meta": {
+                "displayName": "Relationship Type"
+              }
             },
             {
               "description": "The self-reported gender of related individual.",
@@ -3778,14 +3779,18 @@
                 "codeList": ["Female", "Male", "Other", "Unknown"]
               },
               "valueType": "string",
-              "displayName": "Gender of Relative"
+              "meta": {
+                "displayName": "Gender of Relative"
+              }
             },
             {
               "description": "The age (in years) when the patient's relative was first diagnosed. (Reference: caDSR CDE ID 5300571)",
               "name": "age_of_relative_at_diagnosis",
               "restrictions": {},
               "valueType": "integer",
-              "displayName": "Age Of Relative At Diagnosis"
+              "meta": {
+                "displayName": "Age Of Relative At Diagnosis"
+              }
             },
             {
               "name": "cancer_type_code_of_relative",
@@ -3817,7 +3822,9 @@
               "name": "relative_survival_time",
               "restrictions": {},
               "valueType": "integer",
-              "displayName": "Survival Time Of Relative"
+              "meta": {
+                "displayName": "Survival Time Of Relative"
+              }
             }
           ]
         },
