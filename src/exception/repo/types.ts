@@ -19,7 +19,7 @@
 
 import { ObjectValues } from '../types';
 
-export type RepoResponse<Exception> = Promise<Exception | RepoError>;
+export type RepoResult<TException> = Promise<TException>;
 
 export const RepoError = {
   DOCUMENT_UNDEFINED: 'DOCUMENT_UNDEFINED',

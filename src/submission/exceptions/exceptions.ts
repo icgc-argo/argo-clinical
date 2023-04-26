@@ -132,8 +132,8 @@ export const validateFieldValueWithExceptions = ({
   fieldValue,
   validationErrorFieldName,
 }: {
-  programException: ProgramException | RepoError;
-  entityException: EntityException | RepoError;
+  programException: ProgramException | null;
+  entityException: EntityException | null;
   schemaName: ClinicalEntitySchemaNames;
   fieldValue: string;
   validationErrorFieldName: string;

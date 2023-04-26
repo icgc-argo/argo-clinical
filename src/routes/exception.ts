@@ -23,6 +23,7 @@ import exceptionApi, { requestContainsFile } from '../exception/exception-api';
 import { wrapAsync } from '../middleware';
 import { FEATURE_SUBMISSION_EXCEPTIONS_ENABLED } from '../feature-flags';
 import { Request, Response } from 'express';
+import { ExceptionErrorHandler } from '../exception/error-handling';
 
 // config
 const router = express.Router({ mergeParams: true });
@@ -39,6 +40,8 @@ router.get('/entity', wrapAsync(exceptionApi.getEntityException));
 router.delete('/', wrapAsync(exceptionApi.clearProgramException));
 
 router.delete('/entity/:entity', wrapAsync(exceptionApi.deleteEntityException));
+
+router.use(ExceptionErrorHandler);
 
 export default FEATURE_SUBMISSION_EXCEPTIONS_ENABLED
   ? router
