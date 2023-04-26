@@ -25,7 +25,7 @@ import { ExceptionRecord, ExceptionValue, ObjectValues, ProgramExceptionRecord }
 
 const L = loggerFor(__filename);
 
-export type ValidationResult = {
+type ValidationResult = {
   message: string;
   result: ValidationResultErrorType;
 };
@@ -41,12 +41,12 @@ export const ValidationResultType = {
 
 type ValidationResultErrorType = ObjectValues<typeof ValidationResultType>;
 
-type ValidationError = {
+export type ValidationError = {
   field: string;
   recordIndex: number;
 } & ValidationResult;
 
-export const createValidationError = ({
+const createValidationError = ({
   recordIndex,
   result,
   message,
@@ -93,7 +93,7 @@ export const checkCoreField: Validator<ExceptionRecord> = async ({ record, field
   if (requestedCoreField === undefined) {
     return {
       result: ValidationResultType.UNDEFINED,
-      message: `${fieldName} value is not defined`,
+      message: `'${fieldName}' value is not defined`,
     };
   }
 
@@ -131,7 +131,7 @@ export const checkProgramId: Validator<ProgramExceptionRecord> = ({
 
   const message =
     result !== ValidationResultType.VALID
-      ? `submitted exception '${fieldName}' of '${record.program_name}' does not match request parameter program id of '${programId}'`
+      ? `Submitted exception '${fieldName}' of '${record.program_name}' does not match request parameter program id of '${programId}'`
       : '';
   return { result, message };
 };
@@ -153,7 +153,7 @@ export const checkRequestedValue: Validator<ExceptionRecord> = ({ record, fieldN
   } else if (!validRequests.includes(requestedExceptionValue)) {
     return {
       result: ValidationResultType.INVALID,
-      message: `${fieldName} value is not valid. Must be one of [${validRequests.join(', ')}]`,
+      message: `'${fieldName}' value is not valid. Must be one of [${validRequests.join(', ')}]`,
     };
   } else {
     return { result: ValidationResultType.VALID, message: '' };
@@ -194,7 +194,7 @@ export const checkIsValidSchema: Validator<ExceptionRecord> = async ({ fieldValu
 
   return {
     result: isValid ? ValidationResultType.VALID : ValidationResultType.INVALID,
-    message: isValid ? '' : `record schema of '${fieldValue}' is not valid`,
+    message: isValid ? '' : `Record schema of '${fieldValue}' is invalid`,
   };
 };
 
@@ -230,8 +230,8 @@ export const validateRecords = async <RecordT extends Object>(
   programId: string,
   records: ReadonlyArray<RecordT>,
   fieldValidators: FieldValidators<RecordT>,
-): Promise<ValidationResult[]> => {
-  let errors: ValidationResult[] = [];
+): Promise<ValidationError[]> => {
+  let errors: ValidationError[] = [];
 
   // operates on rows rather than field
   const duplicateChecker = new DuplicateChecker();

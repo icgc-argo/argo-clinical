@@ -18,15 +18,14 @@
  */
 
 import { NextFunction, Request, Response } from 'express';
-import _ from 'lodash';
 import { HasFullReadAccess, HasFullWriteAccess } from '../decorators';
 import { loggerFor } from '../logger';
-import { ControllerUtils, Errors, TsvUtils } from '../utils';
+import { ControllerUtils, TsvUtils } from '../utils';
+import { ExceptionTSVError } from './error-handling';
 import * as exceptionService from './exception-service';
-import { RepoError } from './repo/types';
+import programExceptionRepository from './repo/program';
 import {
   EntityExceptionRecord,
-  EntityValues,
   isEntityExceptionRecord,
   isProgramExceptionRecord,
   isReadonlyArrayOf,
@@ -35,22 +34,12 @@ import {
 
 const L = loggerFor(__filename);
 
-function getResStatus(result: exceptionService.Result): number {
-  if (result.success) {
-    return 200;
-  } else if (result.error?.code === RepoError.DOCUMENT_UNDEFINED) {
-    return 400;
-  } else {
-    return 500;
-  }
-}
-
 type ValidateRecords<T> = (records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj>) => ReadonlyArray<T>;
 
 const validateProgramExceptionRecords: ValidateRecords<ProgramExceptionRecord> = records => {
   if (!isReadonlyArrayOf(records, isProgramExceptionRecord)) {
     L.debug(`Program Exception TSV_PARSING_FAILED`);
-    throw new Errors.TSVParseError();
+    throw new ExceptionTSVError('Invalid program exception tsv file');
   }
   return records;
 };
@@ -58,14 +47,15 @@ const validateProgramExceptionRecords: ValidateRecords<ProgramExceptionRecord> =
 const validateEntityExceptionRecords: ValidateRecords<EntityExceptionRecord> = records => {
   if (!isReadonlyArrayOf(records, isEntityExceptionRecord)) {
     L.debug(`Entity Exception TSV_PARSING_FAILED`);
-    throw new Errors.TSVParseError();
+    throw new ExceptionTSVError('Invalid entity exception tsv file');
   }
   return records;
 };
 
 class ExceptionController {
   @HasFullWriteAccess()
-  // program level exceptions
+
+  // program exceptions
   async createProgramException(req: Request, res: Response) {
     const programId = req.params.programId;
     const records = await parseTSV(req.file.path);
@@ -84,26 +74,25 @@ class ExceptionController {
   async clearProgramException(req: Request, res: Response) {
     const programId = req.params.programId;
     const result = await exceptionService.operations.deleteProgramException({ programId });
-    return res.status(getResStatus(result)).send(result);
+    return res.status(result.success ? 200 : 400).send(result);
   }
 
   @HasFullReadAccess()
   async getProgramException(req: Request, res: Response) {
     const programId = req.params.programId;
     const result = await exceptionService.operations.getProgramException({ programId });
-    return res.status(getResStatus(result)).send(result);
+    return res.status(result.success ? 200 : 400).send(result);
   }
 
+  // entity exceptions
   @HasFullWriteAccess()
   async createEntityException(req: Request, res: Response) {
     const programId = req.params.programId;
-    const existingProgramException = await exceptionService.operations.getProgramException({
-      programId,
-    });
+    const programException = await programExceptionRepository.find(programId);
 
-    if (existingProgramException.exception !== undefined) {
+    if (programException?.exceptions?.length) {
       L.debug('program exception exists already');
-      return res.status(400).send('program exception already exists');
+      return res.status(400).send('Program exception already exists');
     }
 
     const records = await parseTSV(req.file.path);
@@ -115,15 +104,14 @@ class ExceptionController {
       records: entityExceptionRecords,
     });
 
-    const status = !result.success ? 422 : 201;
-    return res.status(status).send(result);
+    return res.status(200).send(result);
   }
 
   @HasFullReadAccess()
   async getEntityException(req: Request, res: Response) {
     const programId = req.params.programId;
     const result = await exceptionService.operations.getEntityException({ programId });
-    return res.status(getResStatus(result)).send(result);
+    return res.status(result.success ? 200 : 400).send(result);
   }
 
   @HasFullWriteAccess()
@@ -136,7 +124,8 @@ class ExceptionController {
       entity,
       submitterDonorIds,
     });
-    return res.status(getResStatus(result)).send(result);
+
+    return res.status(result.success ? 200 : 400).send(result);
   }
 }
 
@@ -144,7 +133,7 @@ const parseTSV = async (filepath: string) => {
   L.debug('parse tsv');
   const records = await TsvUtils.tsvToJson(filepath);
   if (records.length === 0) {
-    throw new Errors.TSVParseError('TSV has no records');
+    throw new ExceptionTSVError();
   }
   return records;
 };

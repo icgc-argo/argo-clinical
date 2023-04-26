@@ -19,18 +19,16 @@
 
 import mongoose from 'mongoose';
 import { loggerFor } from '../../logger';
+import { DatabaseError } from '../error-handling';
 import {
+  BaseEntityExceptionRecord,
   Entity,
   EntityException,
-  ExceptionValue,
   ExceptionRecord,
+  ExceptionValue,
   OnlyRequired,
-  SpecimenExceptionRecord,
-  FollowUpExceptionRecord,
-  BaseEntityExceptionRecord,
 } from '../types';
 import { checkDoc } from './common';
-import { RepoError, RepoResponse } from './types';
 
 const L = loggerFor(__filename);
 
@@ -63,19 +61,8 @@ const EntityExceptionModel = mongoose.model<EntityException>(
   entityExceptionSchema,
 );
 
-export interface EntityExceptionRepository {
-  save(exception: OnlyRequired<EntityException, 'programId'>): RepoResponse<EntityException>;
-  find(programId: string): RepoResponse<EntityException>;
-  delete(programId: string): RepoResponse<EntityException>;
-  deleteSingleEntity(
-    programId: string,
-    entity: Entity,
-    submittedIds: string[],
-  ): RepoResponse<EntityException>;
-}
-
-const entityExceptionRepository: EntityExceptionRepository = {
-  async save(exception: OnlyRequired<EntityException, 'programId'>) {
+const entityExceptionRepository = {
+  async save(exception: OnlyRequired<EntityException, 'programId'>): Promise<EntityException> {
     L.debug(`Creating new donor exception with: ${JSON.stringify(exception)}`);
 
     const update = { $set: exception };
@@ -86,36 +73,30 @@ const entityExceptionRepository: EntityExceptionRepository = {
         update,
         { upsert: true, new: true, returnDocument: 'after' },
       ).lean(true);
-      return checkDoc(doc);
+      return doc;
     } catch (e) {
       L.error('failed to create entity exception: ', e);
-      return RepoError.SERVER_ERROR;
+      throw new DatabaseError('Cannot save entity exception.');
     }
   },
 
-  async find(programId: string) {
+  async find(programId: string): Promise<EntityException | null> {
     L.debug(`finding entity exception with program id: ${JSON.stringify(programId)}`);
     try {
+      // first found document, or null
       const doc = await EntityExceptionModel.findOne({ programId }).lean(true);
-      return checkDoc(doc);
+      return doc;
     } catch (e) {
       L.error('failed to find program exception', e);
-      return RepoError.SERVER_ERROR;
+      throw new DatabaseError();
     }
   },
 
-  async delete(programId: string) {
-    L.debug(`deleting all entity exceptions with program id: ${JSON.stringify(programId)}`);
-    try {
-      const doc = await EntityExceptionModel.findOneAndDelete({ programId }).lean(true);
-      return checkDoc<EntityException>(doc);
-    } catch (e) {
-      L.error('failed to delete exception', e);
-      return RepoError.SERVER_ERROR;
-    }
-  },
-
-  async deleteSingleEntity(programId: string, entity: Entity, submitterDonorIds: string[]) {
+  async deleteSingleEntity(
+    programId: string,
+    entity: Entity,
+    submitterDonorIds: string[],
+  ): Promise<EntityException | null> {
     L.debug(
       `deleting single entity ${entity} exception with program id: ${JSON.stringify(programId)}`,
     );
@@ -135,13 +116,15 @@ const entityExceptionRepository: EntityExceptionRepository = {
         );
         entityExceptionDoc[entity] = filteredEntities as any;
         const doc = await entityExceptionDoc.save();
-        return checkDoc(doc);
-      } else {
-        return RepoError.DOCUMENT_UNDEFINED;
+        return doc;
       }
+      // mongo will return nulls for non existent docs
+      // tslint doesn't complain about a null from a lib
+      // tslint:disable-next-line
+      return null;
     } catch (e) {
       L.error('failed to delete exception', e);
-      return RepoError.SERVER_ERROR;
+      throw new DatabaseError('Cannot save entity exception.');
     }
   },
 };

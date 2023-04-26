@@ -17,26 +17,22 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { loggerFor } from '../logger';
+import _ from 'lodash';
+import { failure, Result, success, ValidationError } from './error-handling';
 import entityExceptionRepository from './repo/entity';
 import programExceptionRepository from './repo/program';
-import { RepoError } from './repo/types';
 import {
-  Entity,
   EntityException,
   EntityExceptionRecord,
   isArrayOf,
+  isFollowupExceptionRecord,
   isSpecimenExceptionRecord,
+  OnlyRequired,
   ProgramException,
   ProgramExceptionRecord,
-  isFollowupExceptionRecord,
-  OnlyRequired,
 } from './types';
-import { isRepoError, normalizeEntityFileType, isValidEntityType } from './util';
-import { commonValidators, validateRecords, ValidationResult } from './validation';
-import _ from 'lodash';
-
-const L = loggerFor(__filename);
+import { isValidEntityType, normalizeEntityFileType } from './util';
+import { commonValidators, validateRecords } from './validation';
 
 /**
  * creates exception object with tsv style records
@@ -73,60 +69,26 @@ const normalizeRecords = (records: readonly EntityExceptionRecord[]) =>
     schema: _.snakeCase(r.schema),
   }));
 
-const createResult = ({
-  exception,
-  validationErrors = [],
-  error = { code: '', message: '' },
-  success = false,
-}: Result) => ({
-  exception,
-  error,
-  validationErrors,
-  success,
-});
+type ServiceResult<T> = Promise<Result<T>>;
 
-export type Result = {
-  success?: boolean;
-  error?: { code: string; message: string };
-  exception?: ProgramException | EntityException | undefined;
-  validationErrors?: ValidationResult[];
-};
-
-type Service = ({ programId }: { programId: string }) => Promise<Result>;
-
-function processResult({
-  result,
-  errorMessage,
-}: {
-  result: ProgramException | EntityException | RepoError;
-  errorMessage: string;
-}) {
-  const SERVER_ERROR_MSG: string = 'Server error occurred';
-
-  if (isRepoError(result)) {
-    return createResult({
-      error: { code: result, message: errorMessage || SERVER_ERROR_MSG },
-    });
-  } else {
-    return createResult({ success: true, exception: result });
-  }
-}
 export namespace operations {
-  export const getProgramException: Service = async ({ programId }) => {
-    const result = await programExceptionRepository.find(programId);
-
-    return processResult({
-      result,
-      errorMessage: `no program level exceptions for program '${programId}'`,
-    });
+  // program exceptions
+  export const getProgramException = async ({
+    programId,
+  }: {
+    programId: string;
+  }): ServiceResult<ProgramException> => {
+    const doc = await programExceptionRepository.find(programId);
+    return doc ? success(doc) : failure(`Cannot find program exceptions for ${programId}`);
   };
 
-  export const deleteProgramException: Service = async ({ programId }) => {
-    const result = await programExceptionRepository.delete(programId);
-    return processResult({
-      result,
-      errorMessage: `no program level exceptions for program '${programId}'`,
-    });
+  export const deleteProgramException = async ({
+    programId,
+  }: {
+    programId: string;
+  }): ServiceResult<ProgramException> => {
+    const doc = await programExceptionRepository.delete(programId);
+    return doc ? success(doc) : failure(`Cannot find program exceptions for ${programId}`);
   };
 
   export const createProgramException = async ({
@@ -135,7 +97,7 @@ export namespace operations {
   }: {
     programId: string;
     records: ReadonlyArray<ProgramExceptionRecord>;
-  }): Promise<Result> => {
+  }): ServiceResult<ProgramException> => {
     const errorMessage = `Cannot create exceptions for program '${programId}'`;
 
     const errors = await validateRecords<ProgramExceptionRecord>(
@@ -145,30 +107,21 @@ export namespace operations {
     );
 
     if (errors.length > 0) {
-      return createResult({
-        error: { code: RepoError.DOCUMENT_UNDEFINED, message: errorMessage },
-        validationErrors: errors,
-      });
+      throw new ValidationError(errors);
     } else {
-      const result = await programExceptionRepository.save({ programId, exceptions: records });
-
-      return processResult({
-        result,
-        errorMessage,
-      });
+      const doc = await programExceptionRepository.save({ programId, exceptions: records });
+      return success(doc);
     }
   };
 
+  // entity exceptions
   export const createEntityException = async ({
     programId,
     records,
   }: {
     programId: string;
     records: ReadonlyArray<EntityExceptionRecord>;
-  }): Promise<Result> => {
-    // default error msg
-    const errorMessage = `Cannot create exceptions for entity in program '${programId}'`;
-
+  }): ServiceResult<EntityException> => {
     const normalizedRecords = normalizeRecords(records);
 
     // validate rows
@@ -179,29 +132,21 @@ export namespace operations {
     );
 
     if (errors.length > 0) {
-      return createResult({
-        error: { code: RepoError.DOCUMENT_UNDEFINED, message: errorMessage },
-        validationErrors: errors,
-      });
-    } else {
-      const exceptionToSave = recordsToEntityException({ programId, records });
-
-      const result = await entityExceptionRepository.save(exceptionToSave);
-
-      return processResult({
-        result,
-        errorMessage,
-      });
+      throw new ValidationError(errors);
     }
+
+    const exceptionToSave = recordsToEntityException({ programId, records });
+    const doc = await entityExceptionRepository.save(exceptionToSave);
+    return success(doc);
   };
 
-  export const getEntityException: Service = async ({ programId }) => {
-    const result = await entityExceptionRepository.find(programId);
-
-    return processResult({
-      result,
-      errorMessage: `no entity level exceptions for program '${programId}'`,
-    });
+  export const getEntityException = async ({
+    programId,
+  }: {
+    programId: string;
+  }): ServiceResult<EntityException> => {
+    const doc = await entityExceptionRepository.find(programId);
+    return doc ? success(doc) : failure(`Cannot find entity exceptions for ${programId}`);
   };
 
   export const deleteEntityException = async ({
@@ -212,26 +157,18 @@ export namespace operations {
     programId: string;
     entity: string;
     submitterDonorIds: string[];
-  }) => {
+  }): ServiceResult<EntityException> => {
     const normalizedEntityFileType = normalizeEntityFileType(entity);
 
     if (isValidEntityType(normalizedEntityFileType)) {
-      const result = await entityExceptionRepository.deleteSingleEntity(
+      const doc = await entityExceptionRepository.deleteSingleEntity(
         programId,
         normalizedEntityFileType,
         submitterDonorIds,
       );
-      return processResult({
-        result,
-        errorMessage: '',
-      });
+      return doc ? success(doc) : failure(`Cannot delete entity exception for ${programId}`);
     } else {
-      // not valid entity
-      const errorMessage = `${entity} is not a valid entity file type for program '${programId}'`;
-      return processResult({
-        result: RepoError.DOCUMENT_UNDEFINED,
-        errorMessage,
-      });
+      return failure('not a valid entity type');
     }
   };
 }
