@@ -50,7 +50,8 @@ describe('submission service apply exceptions', () => {
 
   describe('program level Exceptions', () => {
     beforeEach(() => {
-      // @ts-ignore
+      // repo gives back nulls, idiomatic to mongoose
+      // tslint:disable-next-line
       sinon.stub(entityExceptionRepository, 'find').returns(Promise.resolve(null));
 
       const programExceptionStub = {
@@ -104,6 +105,8 @@ describe('submission service apply exceptions', () => {
 
   describe('entity Level Exceptions', () => {
     beforeEach(() => {
+      // repo gives back nulls, idiomatic to mongoose
+      // tslint:disable-next-line
       sinon.stub(programExceptionRepository, 'find').returns(Promise.resolve(null));
 
       const entityStub: EntityException = {
