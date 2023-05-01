@@ -25,7 +25,7 @@
     "migrate-up": "migrate-mongo up",
     "migrate-down": "migrate-mongo down",
     "migrate-status": "migrate-mongo status",
-    "watch-tests-exceptions": " mocha --exit --timeout 5000 -r ts-node/register test/unit/**/*.spec.ts --watch --watch-files test, ./src"
+    "watch-tests": " mocha --exit --timeout 5000 -r ts-node/register test/unit/**/*.spec.ts --watch --watch-files test, ./src"
   },
   "repository": {
     "type": "git",
