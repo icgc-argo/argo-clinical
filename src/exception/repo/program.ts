@@ -35,10 +35,9 @@ const programExceptionSchema = new mongoose.Schema<ProgramException>({
   ],
 });
 
-const ProgramExceptionModel = mongoose.model<ProgramException>(
-  'ProgramException',
-  programExceptionSchema,
-);
+const ProgramExceptionModel =
+  mongoose.models.ProgramException ||
+  mongoose.model<ProgramException>('ProgramException', programExceptionSchema);
 
 const programExceptionRepository = {
   async save(exception: ProgramException): Promise<ProgramException> {
