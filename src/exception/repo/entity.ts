@@ -56,6 +56,7 @@ const entityExceptionSchema = new mongoose.Schema<EntityException>({
   ],
 });
 
+// check if model exists already to account for file watchers eg. test runner with live reload
 const EntityExceptionModel =
   mongoose.models.EntityException ||
   mongoose.model<EntityException>('EntityException', entityExceptionSchema);
