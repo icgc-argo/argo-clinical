@@ -22,11 +22,12 @@ import { EntityException, ProgramException, EntityValues, Entity } from './types
 import _ from 'lodash';
 
 export function isProgramException(result: ProgramException | null): result is ProgramException {
-  return (result as ProgramException).programId !== undefined;
+  return result !== null && result.programId !== undefined;
 }
 
 export function isEntityException(result: EntityException | null): result is EntityException {
   return (
+    result !== null &&
     (result as EntityException).programId !== undefined &&
     (result as EntityException).specimen !== undefined
   );
