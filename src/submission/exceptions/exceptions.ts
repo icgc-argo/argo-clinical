@@ -27,11 +27,11 @@ import { EntityException, ExceptionRecord, ProgramException } from '../../except
 import { isEntityException, isProgramException } from '../../exception/util';
 
 /**
- * Check if a valid exception exists and the record value matches it
- * If there's a match, we allow the value to pass schema validation
- * Filtered schema validation errors and the normalized record value are returned
+ * Check if a valid exception exists and the record value matches it.
+ * If there's a match, we allow the value to pass schema validation.
+ * Filtered schema validation errors and the normalized record value are returned.
  *
- * Normalizing is setting the value to start Upper case and to trim whitespace
+ * Normalizing is setting the value to start Upper case and to trim whitespace.
  *
  * @param programId
  * @param record
@@ -49,9 +49,9 @@ export const checkForProgramAndEntityExceptions = async ({
   schemaValidationErrors: dictionaryEntities.SchemaValidationError[];
 }) => {
   const filteredErrors: dictionaryEntities.SchemaValidationError[] = [];
-  let normalizedRecord = {};
+  let normalizedRecord = record;
 
-  // retrieve submitted exceptions for program id (both program level and donor level)
+  // retrieve submitted exceptions for program id (both program level and entity level)
   const { programException, entityException } = await queryForExceptions(programId);
 
   // if there are submitted exceptions for this program, check if they match record values
@@ -59,6 +59,12 @@ export const checkForProgramAndEntityExceptions = async ({
     schemaValidationErrors.forEach(validationError => {
       const validationErrorFieldName = validationError.fieldName;
       const fieldValue = record[validationErrorFieldName];
+
+      // field value is not matching
+      if (!fieldValue) {
+        filteredErrors.push(validationError);
+        return;
+      }
 
       /**
        * Zero Array type exceptions exist, but recordValue type is string | string[]
@@ -114,6 +120,7 @@ export const checkForProgramAndEntityExceptions = async ({
 const queryForExceptions = async (programId: string) => {
   const programException = await programExceptionRepository.find(programId);
   const entityException = await entityExceptionRepository.find(programId);
+
   return { programException, entityException };
 };
 
@@ -141,9 +148,9 @@ export const validateFieldValueWithExceptions = ({
   let exceptionValue: string | undefined = '';
   // program level is applicable to ALL donors
   if (isProgramException(programException)) {
-    exceptionValue = programException.exceptions.find(exception => {
-      exception.requested_core_field === validationErrorFieldName;
-    })?.requested_core_field;
+    exceptionValue = programException.exceptions.find(
+      exception => exception.requested_core_field === validationErrorFieldName,
+    )?.requested_exception_value;
   } else if (isEntityException(entityException)) {
     const exceptionSchemaName = mapClinicalEntityNameToExceptionName(schemaName);
     if (exceptionSchemaName) {
@@ -155,6 +162,7 @@ export const validateFieldValueWithExceptions = ({
       return false;
     }
   }
+
   // check submitted exception value matches record validation error field value
   return exceptionValue === fieldValue;
 };
