@@ -21,7 +21,7 @@ import { RepoError } from './repo/types';
 import { Errors } from '../utils';
 
 // types
-export type Success<T> = { success: true; exception: T };
+export type Success<T> = { success: boolean; exception: T };
 export type Failure = { success: boolean; message: string; errors?: any };
 export type Result<T> = Success<T> | Failure;
 
