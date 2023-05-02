@@ -66,7 +66,7 @@ class ExceptionController {
       records: programExceptionRecords,
     });
 
-    const status = !result.success ? 422 : 201;
+    const status = result.success ? 201 : 422;
     return res.status(status).send(result);
   }
 
