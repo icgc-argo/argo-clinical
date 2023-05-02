@@ -124,7 +124,7 @@ const entityExceptionRepository = {
       return null;
     } catch (e) {
       L.error('failed to delete exception', e);
-      throw new DatabaseError('Cannot save entity exception.');
+      throw new DatabaseError('Cannot delete entity exception.');
     }
   },
 };
