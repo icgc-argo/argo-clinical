@@ -188,6 +188,12 @@ export namespace Errors {
       super(msg);
     }
   }
+
+  export class TSVParseError extends Error {
+    constructor(msg?: string) {
+      super(msg || `TSV file is formatted incorrectly`);
+    }
+  }
 }
 
 export namespace MongooseUtils {

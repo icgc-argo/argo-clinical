@@ -17,87 +17,134 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { HasFullReadAccess, HasFullWriteAccess } from '../decorators';
 import { loggerFor } from '../logger';
 import { ControllerUtils, TsvUtils } from '../utils';
-import { RepoError } from './exception-repo';
+import { ExceptionTSVError } from './error-handling';
 import * as exceptionService from './exception-service';
-import { isProgramExceptionRecord, isReadonlyArrayOf } from './types';
+import programExceptionRepository from './repo/program';
+import {
+  EntityExceptionRecord,
+  isEntityExceptionRecord,
+  isProgramExceptionRecord,
+  isReadonlyArrayOf,
+  ProgramExceptionRecord,
+} from './types';
 
 const L = loggerFor(__filename);
 
-const ProgramExceptionErrorMessage = {
-  TSV_PARSING_FAILED: `This file is formatted incorrectly`,
-} as const;
+type ValidateRecords<T> = (records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj>) => ReadonlyArray<T>;
 
-function getResStatus(result: exceptionService.Result): number {
-  if (result.success) {
-    return 200;
-  } else if (result.error?.code === RepoError.DOCUMENT_UNDEFINED) {
-    return 400;
-  } else {
-    return 500;
+const validateProgramExceptionRecords: ValidateRecords<ProgramExceptionRecord> = records => {
+  if (!isReadonlyArrayOf(records, isProgramExceptionRecord)) {
+    L.debug(`Program Exception TSV_PARSING_FAILED`);
+    throw new ExceptionTSVError('Invalid program exception tsv file');
   }
-}
+  return records;
+};
+
+const validateEntityExceptionRecords: ValidateRecords<EntityExceptionRecord> = records => {
+  if (!isReadonlyArrayOf(records, isEntityExceptionRecord)) {
+    L.debug(`Entity Exception TSV_PARSING_FAILED`);
+    throw new ExceptionTSVError('Invalid entity exception tsv file');
+  }
+  return records;
+};
 
 class ExceptionController {
   @HasFullWriteAccess()
+
+  // program exceptions
   async createProgramException(req: Request, res: Response) {
-    if (!requestContainsFile(req, res)) {
-      return false;
-    }
-
     const programId = req.params.programId;
-    const file = req.file;
+    const records = await parseTSV(req.file.path);
+    const programExceptionRecords = validateProgramExceptionRecords(records);
 
-    try {
-      const records = await TsvUtils.tsvToJson(file.path);
-      if (records.length === 0) {
-        throw new Error('TSV has no records!');
-      }
+    const result = await exceptionService.operations.createProgramException({
+      programId,
+      records: programExceptionRecords,
+    });
 
-      if (!isReadonlyArrayOf(records, isProgramExceptionRecord)) {
-        throw new Error('TSV is incorrectly structured');
-      }
-
-      const result = await exceptionService.operations.createProgramException({
-        programId,
-        records,
-      });
-
-      if (!result.success) {
-        return res.status(422).send(result);
-      }
-      return res.status(201).send(result);
-    } catch (err) {
-      L.error(`Program Exception TSV_PARSING_FAILED`, err);
-      return ControllerUtils.unableToProcess(res, ProgramExceptionErrorMessage.TSV_PARSING_FAILED);
-    }
+    const status = result.success ? 201 : 422;
+    return res.status(status).send(result);
   }
 
   @HasFullWriteAccess()
   async clearProgramException(req: Request, res: Response) {
     const programId = req.params.programId;
     const result = await exceptionService.operations.deleteProgramException({ programId });
-    return res.status(getResStatus(result)).send(result);
+    return res.status(result.success ? 200 : 400).send(result);
   }
 
   @HasFullReadAccess()
   async getProgramException(req: Request, res: Response) {
     const programId = req.params.programId;
     const result = await exceptionService.operations.getProgramException({ programId });
-    return res.status(getResStatus(result)).send(result);
+    return res.status(result.success ? 200 : 400).send(result);
+  }
+
+  // entity exceptions
+  @HasFullWriteAccess()
+  async createEntityException(req: Request, res: Response) {
+    const programId = req.params.programId;
+    const programException = await programExceptionRepository.find(programId);
+
+    if (programException?.exceptions?.length) {
+      L.debug('program exception exists already');
+      return res.status(400).send('Program exception already exists');
+    }
+
+    const records = await parseTSV(req.file.path);
+    // validate tsv structure using cols, does not validate field data
+    const entityExceptionRecords = validateEntityExceptionRecords(records);
+
+    const result = await exceptionService.operations.createEntityException({
+      programId,
+      records: entityExceptionRecords,
+    });
+
+    return res.status(200).send(result);
+  }
+
+  @HasFullReadAccess()
+  async getEntityException(req: Request, res: Response) {
+    const programId = req.params.programId;
+    const result = await exceptionService.operations.getEntityException({ programId });
+    return res.status(result.success ? 200 : 400).send(result);
+  }
+
+  @HasFullWriteAccess()
+  async deleteEntityException(req: Request, res: Response) {
+    const { programId, entity } = req.params;
+    const { submitterDonorIds } = req.body;
+
+    const result = await exceptionService.operations.deleteEntityException({
+      programId,
+      entity,
+      submitterDonorIds,
+    });
+
+    return res.status(result.success ? 200 : 400).send(result);
   }
 }
 
-const requestContainsFile = (req: Request, res: Response): boolean => {
+const parseTSV = async (filepath: string) => {
+  L.debug('parse tsv');
+  const records = await TsvUtils.tsvToJson(filepath);
+  if (records.length === 0) {
+    throw new ExceptionTSVError();
+  }
+  return records;
+};
+
+export const requestContainsFile = (req: Request, res: Response, next: NextFunction) => {
+  L.debug('requestContainsFile');
   if (req.file === undefined || req.file.size <= 0) {
     L.debug(`File missing`);
-    ControllerUtils.badRequest(res, `Program exception file upload required`);
-    return false;
+    return ControllerUtils.badRequest(res, `Exception file upload required`);
   }
-  return true;
+  next();
 };
 
 export default new ExceptionController();

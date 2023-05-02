@@ -17,104 +17,78 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { loggerFor } from '../logger';
-import { programExceptionRepository, RepoError } from './exception-repo';
-import { ExceptionValueType, ProgramException, ProgramExceptionRecord } from './types';
-import { isProgramException } from './util';
+import _ from 'lodash';
+import { failure, Result, success, ValidationError } from './error-handling';
+import entityExceptionRepository from './repo/entity';
+import programExceptionRepository from './repo/program';
 import {
-  checkCoreField,
-  checkIsValidSchema,
-  checkProgramId,
-  checkRequestedValue,
-  FieldValidators,
-  validateRecords,
-  ValidationResult,
-} from './validation';
-
-const L = loggerFor(__filename);
+  EntityException,
+  EntityExceptionRecord,
+  isArrayOf,
+  isFollowupExceptionRecord,
+  isSpecimenExceptionRecord,
+  OnlyRequired,
+  ProgramException,
+  ProgramExceptionRecord,
+} from './types';
+import { isValidEntityType, normalizeEntityFileType } from './util';
+import { commonValidators, validateRecords } from './validation';
 
 /**
- * records should be validated before using this function
- * explicitly typing from tsv record input to ProgramException
- * @param programId
- * @param records
- * @returns ProgramException
+ * creates exception object with tsv style records
+ * @param param0
+ * @returns valid EntityException array
  */
-const recordsToException = (
-  programId: string,
-  records: ReadonlyArray<ProgramExceptionRecord>,
-): ProgramException => {
-  return {
-    programId,
-    exceptions: records.map(r => ({
-      schema: r.schema,
-      coreField: r.requested_core_field,
-      exceptionValue: r.requested_exception_value as ExceptionValueType,
-    })),
-  };
-};
-
-// relates to our TSV cols
-export const programValidators: FieldValidators<ProgramExceptionRecord> = {
-  program_name: checkProgramId,
-  schema: checkIsValidSchema,
-  requested_core_field: checkCoreField,
-  requested_exception_value: checkRequestedValue,
-};
-
-const createResult = ({
-  exception,
-  validationErrors = [],
-  error = { code: '', message: '' },
-  success = false,
-}: Result) => ({
-  exception,
-  error,
-  validationErrors,
-  success,
-});
-
-export type Result = {
-  success?: boolean;
-  error?: { code: string; message: string };
-  exception?: ProgramException | undefined;
-  validationErrors?: ValidationResult[];
-};
-
-type Service = ({ programId }: { programId: string }) => Promise<Result>;
-
-function processResult({
-  result,
-  errorMessage,
+const recordsToEntityException = ({
+  programId,
+  records,
 }: {
-  result: ProgramException | RepoError;
-  errorMessage: string;
-}) {
-  const SERVER_ERROR_MSG: string = 'Server error occurred';
-  if (isProgramException(result)) {
-    return createResult({ success: true, exception: result });
-  } else {
-    return createResult({
-      error: { code: result, message: errorMessage || SERVER_ERROR_MSG },
-    });
-  }
-}
-export namespace operations {
-  export const getProgramException: Service = async ({ programId }) => {
-    const result = await programExceptionRepository.find(programId);
+  programId: string;
+  records: ReadonlyArray<EntityExceptionRecord>;
+}) => {
+  const exception: OnlyRequired<EntityException, 'programId'> = { programId };
 
-    return processResult({
-      result,
-      errorMessage: `no program level exceptions for program '${programId}'`,
-    });
+  if (isArrayOf(records, isSpecimenExceptionRecord)) {
+    exception.specimen = records;
+  } else if (isArrayOf(records, isFollowupExceptionRecord)) {
+    exception.follow_up = records;
+  }
+
+  return exception;
+};
+
+/**
+ * normalize before schema validation
+ * tsv record values may contain different casing, validation needs normalized casing
+ * eg. tsv record value may be 'Follow Up', this will not pass schema validation for 'follow_up'
+ * @param records
+ */
+const normalizeRecords = (records: readonly EntityExceptionRecord[]) =>
+  records.map(record => ({
+    ...record,
+    schema: _.snakeCase(record.schema),
+  }));
+
+type ServiceResult<T> = Promise<Result<T>>;
+
+export namespace operations {
+  // program exceptions
+  export const getProgramException = async ({
+    programId,
+  }: {
+    programId: string;
+  }): ServiceResult<ProgramException> => {
+    const doc = await programExceptionRepository.find(programId);
+    return doc ? success(doc) : failure(`Cannot find program exceptions for ${programId}`);
   };
 
-  export const deleteProgramException: Service = async ({ programId }) => {
-    const result = await programExceptionRepository.delete(programId);
-    return processResult({
-      result,
-      errorMessage: `no program level exceptions for program '${programId}'`,
-    });
+  export const deleteProgramException = async ({
+    programId,
+  }: {
+    programId: string;
+  }): ServiceResult<ProgramException> => {
+    const doc = await programExceptionRepository.delete(programId);
+    return doc ? success(doc) : failure(`Cannot find program exceptions for ${programId}`);
   };
 
   export const createProgramException = async ({
@@ -123,28 +97,78 @@ export namespace operations {
   }: {
     programId: string;
     records: ReadonlyArray<ProgramExceptionRecord>;
-  }): Promise<Result> => {
+  }): ServiceResult<ProgramException> => {
     const errorMessage = `Cannot create exceptions for program '${programId}'`;
 
     const errors = await validateRecords<ProgramExceptionRecord>(
       programId,
       records,
-      programValidators,
+      commonValidators,
     );
 
     if (errors.length > 0) {
-      return createResult({
-        error: { code: RepoError.DOCUMENT_UNDEFINED, message: errorMessage },
-        validationErrors: errors,
-      });
+      throw new ValidationError(errors);
     } else {
-      const exceptionToSave = recordsToException(programId, records);
-      const result = await programExceptionRepository.save(exceptionToSave);
+      const doc = await programExceptionRepository.save({ programId, exceptions: records });
+      return success(doc);
+    }
+  };
 
-      return processResult({
-        result,
-        errorMessage,
-      });
+  // entity exceptions
+  export const createEntityException = async ({
+    programId,
+    records,
+  }: {
+    programId: string;
+    records: ReadonlyArray<EntityExceptionRecord>;
+  }): ServiceResult<EntityException> => {
+    const normalizedRecords = normalizeRecords(records);
+
+    // validate rows
+    const errors = await validateRecords<EntityExceptionRecord>(
+      programId,
+      normalizedRecords,
+      commonValidators,
+    );
+
+    if (errors.length > 0) {
+      throw new ValidationError(errors);
+    }
+
+    const exceptionToSave = recordsToEntityException({ programId, records });
+    const doc = await entityExceptionRepository.save(exceptionToSave);
+    return success(doc);
+  };
+
+  export const getEntityException = async ({
+    programId,
+  }: {
+    programId: string;
+  }): ServiceResult<EntityException> => {
+    const doc = await entityExceptionRepository.find(programId);
+    return doc ? success(doc) : failure(`Cannot find entity exceptions for ${programId}`);
+  };
+
+  export const deleteEntityException = async ({
+    programId,
+    entity,
+    submitterDonorIds,
+  }: {
+    programId: string;
+    entity: string;
+    submitterDonorIds: string[];
+  }): ServiceResult<EntityException> => {
+    const normalizedEntityFileType = normalizeEntityFileType(entity);
+
+    if (isValidEntityType(normalizedEntityFileType)) {
+      const doc = await entityExceptionRepository.deleteSingleEntity(
+        programId,
+        normalizedEntityFileType,
+        submitterDonorIds,
+      );
+      return doc ? success(doc) : failure(`Cannot delete entity exception for ${programId}`);
+    } else {
+      return failure('not a valid entity type');
     }
   };
 }

@@ -19,23 +19,29 @@
 
 import * as express from 'express';
 import multer from 'multer';
-import exceptionApi from '../exception/exception-api';
+import exceptionApi, { requestContainsFile } from '../exception/exception-api';
 import { wrapAsync } from '../middleware';
 import { FEATURE_SUBMISSION_EXCEPTIONS_ENABLED } from '../feature-flags';
 import { Request, Response } from 'express';
+import { ExceptionErrorHandler } from '../exception/error-handling';
 
+// config
 const router = express.Router({ mergeParams: true });
 const upload = multer({ dest: '/tmp' });
 
-router.post(
-  '/',
-  upload.single('programExceptionFile'),
-  wrapAsync(exceptionApi.createProgramException),
-);
+// routes
+router.post('*', upload.single('exceptionFile'), requestContainsFile);
+router.post('/', wrapAsync(exceptionApi.createProgramException));
+router.post('/entity', wrapAsync(exceptionApi.createEntityException));
 
 router.get('/', wrapAsync(exceptionApi.getProgramException));
+router.get('/entity', wrapAsync(exceptionApi.getEntityException));
 
 router.delete('/', wrapAsync(exceptionApi.clearProgramException));
+
+router.delete('/entity/:entity', wrapAsync(exceptionApi.deleteEntityException));
+
+router.use(ExceptionErrorHandler);
 
 export default FEATURE_SUBMISSION_EXCEPTIONS_ENABLED
   ? router
