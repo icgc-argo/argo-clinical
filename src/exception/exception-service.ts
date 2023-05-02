@@ -64,9 +64,9 @@ const recordsToEntityException = ({
  * @param records
  */
 const normalizeRecords = (records: readonly EntityExceptionRecord[]) =>
-  records.map(r => ({
-    ...r,
-    schema: _.snakeCase(r.schema),
+  records.map(record => ({
+    ...record,
+    schema: _.snakeCase(record.schema),
   }));
 
 type ServiceResult<T> = Promise<Result<T>>;
