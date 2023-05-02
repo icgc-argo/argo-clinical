@@ -123,7 +123,7 @@ const entityExceptionRepository = {
       // tslint:disable-next-line
       return null;
     } catch (e) {
-      L.error('failed to delete exception', e);
+      L.error('Failed to delete exception', e);
       throw new DatabaseError('Cannot delete entity exception.');
     }
   },
