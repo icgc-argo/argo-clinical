@@ -88,7 +88,7 @@ const entityExceptionRepository = {
       return doc;
     } catch (e) {
       L.error('failed to find program exception', e);
-      throw new DatabaseError();
+      throw new DatabaseError('Cannot find entity exception.');
     }
   },
 
