@@ -75,7 +75,7 @@ const entityExceptionRepository = {
       ).lean(true);
       return doc;
     } catch (e) {
-      L.error('failed to create entity exception: ', e);
+      L.error('Failed to create entity exception: ', e);
       throw new DatabaseError('Cannot save entity exception.');
     }
   },
