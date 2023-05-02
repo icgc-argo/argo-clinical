@@ -98,7 +98,7 @@ const entityExceptionRepository = {
     submitterDonorIds: string[],
   ): Promise<EntityException | null> {
     L.debug(
-      `deleting single entity ${entity} exception with program id: ${JSON.stringify(programId)}`,
+      `Deleting single entity ${entity} exception with program id: ${JSON.stringify(programId)}`,
     );
     try {
       const entityExceptionDoc = await EntityExceptionModel.findOne({ programId });
