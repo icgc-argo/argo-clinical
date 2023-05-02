@@ -126,6 +126,10 @@ export const isEntityExceptionRecord = (input: any): input is EntityExceptionRec
 
 const isExceptionRecord = (input: any): input is ExceptionRecord => isExceptionRecordCheck(input);
 
+/**
+ * isProgramExceptionRecord hasn't got any additional logic to isExceptionRecord
+ * keeping it defined seperately reads more cleanly and is trivial to alter
+ */
 export const isProgramExceptionRecord = isExceptionRecord;
 
 export const isArrayOfEntityExceptionRecord = (input: any): input is EntityExceptionRecords =>
