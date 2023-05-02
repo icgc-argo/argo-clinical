@@ -16,15 +16,110 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
 import { DataRecord } from '@overturebio-stack/lectern-client/lib/schema-entities';
 import _ from 'lodash';
 import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 import entityExceptionRepository from '../../exception/repo/entity';
 import programExceptionRepository from '../../exception/repo/program';
-import { RepoError } from '../../exception/repo/types';
 import { EntityException, ExceptionRecord, ProgramException } from '../../exception/types';
 import { isEntityException, isProgramException } from '../../exception/util';
+
+/**
+ * query db for program or entity exceptions
+ * @param programId
+ * @returns program and donor level exceptions for this programId
+ */
+const queryForExceptions = async (programId: string) => {
+  const programException = await programExceptionRepository.find(programId);
+  const entityException = await entityExceptionRepository.find(programId);
+
+  return { programException, entityException };
+};
+
+/**
+ * Checks if there is a program exception or entity exception matching the record value
+ *
+ * @param exceptions
+ * @param validationError
+ * @param fieldValue
+ * @returns true if an exception match exists, false otherwise
+ */
+const validateFieldValueWithExceptions = ({
+  programException,
+  entityException,
+  schemaName,
+  fieldValue,
+  validationErrorFieldName,
+}: {
+  programException: ProgramException | null;
+  entityException: EntityException | null;
+  schemaName: ClinicalEntitySchemaNames;
+  fieldValue: string;
+  validationErrorFieldName: string;
+}): boolean => {
+  let exceptionValue: string | undefined = '';
+  // program level is applicable to ALL donors
+  if (isProgramException(programException)) {
+    exceptionValue = programException.exceptions.find(
+      exception => exception.requested_core_field === validationErrorFieldName,
+    )?.requested_exception_value;
+  } else if (isEntityException(entityException)) {
+    const exceptionSchemaName = mapClinicalEntityNameToExceptionName(schemaName);
+    if (exceptionSchemaName) {
+      const exceptions: Array<ExceptionRecord> = entityException[exceptionSchemaName];
+      exceptionValue = exceptions.find(
+        exception => exception.requested_core_field === validationErrorFieldName,
+      )?.requested_exception_value;
+    } else {
+      return false;
+    }
+  }
+
+  // check submitted exception value matches record validation error field value
+  return exceptionValue === fieldValue;
+};
+
+/**
+ * Normalizes input string to start with Upper case, remaining
+ * characters lowercase and to trim whitespace
+ *
+ * @param value
+ * @returns normalized string
+ */
+const normalizeExceptionValue = (value: string) => _.upperFirst(value.trim().toLowerCase());
+
+/**
+ * map uploaded clinical type schema name with underscores to exception schema name camel cased
+ * eg. follow_up: 'followUp',
+ * Partial<> until all donor entities are accounted for
+ * @param schemaName
+ */
+
+const clinicalEntities: Partial<Record<
+  ClinicalEntitySchemaNames,
+  Exclude<keyof EntityException, 'programId'>
+>> = {
+  // donor: 'donor',
+  specimen: 'specimen',
+  //   primary_diagnosis: 'primaryDiagnoses',
+  //   family_history: 'familyHistory',
+  //   treatment: 'treatment',
+  //   chemotherapy: 'chemotherapy',
+  //   immunotherapy: 'immunotherapy',
+  //   surgery: 'surgery',
+  //   radiation: 'radiation',
+  //   follow_up: 'followUps',
+  //   hormone_therapy: 'hormoneTherapy',
+  //   exposure: 'exposure',
+  //   comorbidity: 'comorbidity',
+  //   biomarker: 'biomarker',
+  //   sample_registration: 'sampleRegistration',
+};
+
+const mapClinicalEntityNameToExceptionName = (schemaName: ClinicalEntitySchemaNames) =>
+  clinicalEntities[schemaName];
 
 /**
  * Check if a valid exception exists and the record value matches it.
@@ -111,98 +206,3 @@ export const checkForProgramAndEntityExceptions = async ({
     return { filteredErrors: schemaValidationErrors, normalizedRecord: record };
   }
 };
-
-/**
- * query db for program or entity exceptions
- * @param programId
- * @returns program and donor level exceptions for this programId
- */
-const queryForExceptions = async (programId: string) => {
-  const programException = await programExceptionRepository.find(programId);
-  const entityException = await entityExceptionRepository.find(programId);
-
-  return { programException, entityException };
-};
-
-/**
- * Checks if there is a program exception or entity exception matching the record value
- *
- * @param exceptions
- * @param validationError
- * @param fieldValue
- * @returns true if an exception match exists, false otherwise
- */
-export const validateFieldValueWithExceptions = ({
-  programException,
-  entityException,
-  schemaName,
-  fieldValue,
-  validationErrorFieldName,
-}: {
-  programException: ProgramException | null;
-  entityException: EntityException | null;
-  schemaName: ClinicalEntitySchemaNames;
-  fieldValue: string;
-  validationErrorFieldName: string;
-}): boolean => {
-  let exceptionValue: string | undefined = '';
-  // program level is applicable to ALL donors
-  if (isProgramException(programException)) {
-    exceptionValue = programException.exceptions.find(
-      exception => exception.requested_core_field === validationErrorFieldName,
-    )?.requested_exception_value;
-  } else if (isEntityException(entityException)) {
-    const exceptionSchemaName = mapClinicalEntityNameToExceptionName(schemaName);
-    if (exceptionSchemaName) {
-      const exceptions: Array<ExceptionRecord> = entityException[exceptionSchemaName];
-      exceptionValue = exceptions.find(
-        exception => exception.requested_core_field === validationErrorFieldName,
-      )?.requested_exception_value;
-    } else {
-      return false;
-    }
-  }
-
-  // check submitted exception value matches record validation error field value
-  return exceptionValue === fieldValue;
-};
-
-/**
- * Normalizes input string to start with Upper case, remaining
- * characters lowercase and to trim whitespace
- *
- * @param value
- * @returns normalized string
- */
-export const normalizeExceptionValue = (value: string) => _.upperFirst(value.trim().toLowerCase());
-
-/**
- * map uploaded clinical type schema name with underscores to exception schema name camel cased
- * eg. follow_up: 'followUp',
- * Partial<> until all donor entities are accounted for
- * @param schemaName
- */
-
-const clinicalEntities: Partial<Record<
-  ClinicalEntitySchemaNames,
-  Exclude<keyof EntityException, 'programId'>
->> = {
-  // donor: 'donor',
-  specimen: 'specimen',
-  //   primary_diagnosis: 'primaryDiagnoses',
-  //   family_history: 'familyHistory',
-  //   treatment: 'treatment',
-  //   chemotherapy: 'chemotherapy',
-  //   immunotherapy: 'immunotherapy',
-  //   surgery: 'surgery',
-  //   radiation: 'radiation',
-  //   follow_up: 'followUps',
-  //   hormone_therapy: 'hormoneTherapy',
-  //   exposure: 'exposure',
-  //   comorbidity: 'comorbidity',
-  //   biomarker: 'biomarker',
-  //   sample_registration: 'sampleRegistration',
-};
-
-const mapClinicalEntityNameToExceptionName = (schemaName: ClinicalEntitySchemaNames) =>
-  clinicalEntities[schemaName];
