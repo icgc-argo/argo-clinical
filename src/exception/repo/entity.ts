@@ -56,10 +56,10 @@ const entityExceptionSchema = new mongoose.Schema<EntityException>({
   ],
 });
 
-const EntityExceptionModel = mongoose.model<EntityException>(
-  'EntityException',
-  entityExceptionSchema,
-);
+// check if model exists already to account for file watchers eg. test runner with live reload
+const EntityExceptionModel =
+  mongoose.models.EntityException ||
+  mongoose.model<EntityException>('EntityException', entityExceptionSchema);
 
 const entityExceptionRepository = {
   async save(exception: OnlyRequired<EntityException, 'programId'>): Promise<EntityException> {

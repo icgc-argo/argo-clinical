@@ -35,10 +35,10 @@ const programExceptionSchema = new mongoose.Schema<ProgramException>({
   ],
 });
 
-const ProgramExceptionModel = mongoose.model<ProgramException>(
-  'ProgramException',
-  programExceptionSchema,
-);
+// check if model exists already to account for file watchers eg. test runner with live reload
+const ProgramExceptionModel =
+  mongoose.models.ProgramException ||
+  mongoose.model<ProgramException>('ProgramException', programExceptionSchema);
 
 const programExceptionRepository = {
   async save(exception: ProgramException): Promise<ProgramException> {
