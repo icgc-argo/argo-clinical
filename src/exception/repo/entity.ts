@@ -87,7 +87,7 @@ const entityExceptionRepository = {
       const doc = await EntityExceptionModel.findOne({ programId }).lean(true);
       return doc;
     } catch (e) {
-      L.error('failed to find program exception', e);
+      L.error('Failed to find program exception', e);
       throw new DatabaseError('Cannot find entity exception.');
     }
   },
