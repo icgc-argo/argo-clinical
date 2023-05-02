@@ -65,7 +65,7 @@ const programExceptionRepository = {
       return doc;
     } catch (e) {
       L.error('failed to find program exception', e);
-      throw new DatabaseError('Cannot save program exception.');
+      throw new DatabaseError('Cannot find program exception.');
     }
   },
 
