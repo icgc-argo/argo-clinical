@@ -135,8 +135,7 @@ export const isEntityExceptionRecord = (input: any): input is EntityExceptionRec
     // remove based exception record fields to validate specific entity
     const entityFields = _.omit(input, baseEntityExceptionFields);
     // can't have more than one identifying field eg. submitter_specimen_id AND submitter_followup_id
-    if (Object.keys(entityFields).length > 1) return false;
-    return isSpecimenExceptionRecord(entityFields) || isFollowupExceptionRecord(entityFields);
+    return Object.keys(entityFields).length === 1;
   }
   return false;
 };
@@ -148,9 +147,6 @@ const isExceptionRecord = (input: any): input is ExceptionRecord => isExceptionR
  * keeping it defined seperately reads more cleanly and is trivial to alter
  */
 export const isProgramExceptionRecord = isExceptionRecord;
-
-export const isArrayOfEntityExceptionRecord = (input: any): input is EntityExceptionRecords =>
-  input.every((i: any) => isEntityExceptionRecord(i));
 
 // array helpers
 export const isArrayOf = <T>(
