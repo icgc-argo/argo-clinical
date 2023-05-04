@@ -30,7 +30,10 @@ import {
   isProgramExceptionRecord,
   isReadonlyArrayOf,
   ProgramExceptionRecord,
+  isSpecimenExceptionRecord,
+  isFollowupExceptionRecord,
 } from './types';
+import { ClinicalEntitySchemaNames } from '../common-model/entities';
 
 const L = loggerFor(__filename);
 
@@ -44,12 +47,28 @@ const validateProgramExceptionRecords: ValidateRecords<ProgramExceptionRecord> =
   return records;
 };
 
-const validateEntityExceptionRecords: ValidateRecords<EntityExceptionRecord> = records => {
+type ValidateEntityRecords<T> = (
+  records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj>,
+) => { records: ReadonlyArray<T>; schema: ClinicalEntitySchemaNames };
+
+const validateEntityExceptionRecords: ValidateEntityRecords<EntityExceptionRecord> = records => {
+  // check base entity exception record
   if (!isReadonlyArrayOf(records, isEntityExceptionRecord)) {
     L.debug(`Entity Exception TSV_PARSING_FAILED`);
     throw new ExceptionTSVError('Invalid entity exception tsv file');
   }
-  return records;
+
+  // at this point we know it's an entity exception record
+  // get specific type of entity
+  if (isReadonlyArrayOf(records, isSpecimenExceptionRecord)) {
+    return { records, schema: ClinicalEntitySchemaNames.SPECIMEN };
+  } else if (isReadonlyArrayOf(records, isFollowupExceptionRecord)) {
+    return { records, schema: ClinicalEntitySchemaNames.FOLLOW_UP };
+  } else {
+    throw new ExceptionTSVError(
+      'Invalid file. Please check columns. Only Specimen and Follow Up are accepted.',
+    );
+  }
 };
 
 class ExceptionController {
@@ -97,11 +116,12 @@ class ExceptionController {
 
     const records = await parseTSV(req.file.path);
     // validate tsv structure using cols, does not validate field data
-    const entityExceptionRecords = validateEntityExceptionRecords(records);
+    const { records: entityExceptionRecords, schema } = validateEntityExceptionRecords(records);
 
     const result = await exceptionService.operations.createEntityException({
       programId,
       records: entityExceptionRecords,
+      schema,
     });
 
     return res.status(200).send(result);
