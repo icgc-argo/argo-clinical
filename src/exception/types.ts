@@ -17,6 +17,8 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import _ from 'lodash';
+
 export type ObjectValues<T> = T[keyof T];
 
 // base
@@ -81,6 +83,14 @@ export const ExceptionValue = {
 
 export type ExceptionValueType = ObjectValues<typeof ExceptionValue>;
 
+const baseEntityExceptionFields = [
+  'program_name',
+  'schema',
+  'requested_core_field',
+  'requested_exception_value',
+  'submitter_donor_id',
+];
+
 // type guard helpers
 const isExceptionRecordCheck = (input: any) => {
   return (
@@ -118,10 +128,16 @@ export const isFollowupExceptionRecord = (input: any): input is FollowUpExceptio
 
 // type guards
 export const isEntityExceptionRecord = (input: any): input is EntityExceptionRecord => {
-  return (
-    isExceptionRecordCheck(input) &&
-    (isSpecimenExceptionRecord(input) || isFollowupExceptionRecord(input))
-  );
+  const hasDonorIdField =
+    'submitter_donor_id' in input && typeof input.submitter_donor_id === 'string';
+
+  if (hasDonorIdField && isExceptionRecord(input)) {
+    // remove based exception record fields to validate specific entity
+    const entityFields = _.omit(input, baseEntityExceptionFields);
+    // can't have more than one identifying field eg. submitter_specimen_id AND submitter_followup_id
+    return Object.keys(entityFields).length === 1;
+  }
+  return false;
 };
 
 const isExceptionRecord = (input: any): input is ExceptionRecord => isExceptionRecordCheck(input);
@@ -131,9 +147,6 @@ const isExceptionRecord = (input: any): input is ExceptionRecord => isExceptionR
  * keeping it defined seperately reads more cleanly and is trivial to alter
  */
 export const isProgramExceptionRecord = isExceptionRecord;
-
-export const isArrayOfEntityExceptionRecord = (input: any): input is EntityExceptionRecords =>
-  input.every((i: any) => isEntityExceptionRecord(i));
 
 // array helpers
 export const isArrayOf = <T>(

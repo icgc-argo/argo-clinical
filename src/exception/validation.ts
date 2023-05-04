@@ -173,7 +173,11 @@ export const checkForEmptyField: Validator<ExceptionRecord> = ({
   };
 };
 
-export const checkIsValidSchema: Validator<ExceptionRecord> = async ({ fieldValue }) => {
+/**
+ * checks if schema is valid dictionary schema
+ * does not check if schema is valid to rest of record
+ */
+export const checkIsValidDictionarySchema: Validator<ExceptionRecord> = async ({ fieldValue }) => {
   const errorMessage = 'field is empty';
   if (!fieldValue) {
     return {
@@ -194,7 +198,7 @@ export const checkIsValidSchema: Validator<ExceptionRecord> = async ({ fieldValu
 
   return {
     result: isValid ? ValidationResultType.VALID : ValidationResultType.INVALID,
-    message: isValid ? '' : `Record schema of '${fieldValue}' is invalid`,
+    message: isValid ? '' : `Record schema of '${fieldValue}' is invalid.`,
   };
 };
 
@@ -226,6 +230,12 @@ const getValidator = <RecordT extends Object>(
   }
 };
 
+/**
+ * iterates through each record and runs provided validators
+ * @param programId
+ * @param records
+ * @param fieldValidators
+ */
 export const validateRecords = async <RecordT extends Object>(
   programId: string,
   records: ReadonlyArray<RecordT>,
@@ -275,7 +285,7 @@ export const validateRecords = async <RecordT extends Object>(
 
 export const commonValidators: FieldValidators<ExceptionRecord> = {
   program_name: checkProgramId,
-  schema: checkIsValidSchema,
+  schema: checkIsValidDictionarySchema,
   requested_core_field: checkCoreField,
   requested_exception_value: checkRequestedValue,
 };

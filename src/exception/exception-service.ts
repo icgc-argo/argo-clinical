@@ -30,28 +30,41 @@ import {
   OnlyRequired,
   ProgramException,
   ProgramExceptionRecord,
+  SpecimenExceptionRecord,
+  FollowUpExceptionRecord,
 } from './types';
 import { isValidEntityType, normalizeEntityFileType } from './util';
-import { commonValidators, validateRecords } from './validation';
+import {
+  commonValidators,
+  validateRecords,
+  Validator,
+  ValidationResultType,
+  checkIsValidDictionarySchema,
+} from './validation';
+import { ClinicalEntitySchemaNames } from '../common-model/entities';
 
 /**
  * creates exception object with tsv style records
- * @param param0
+ * @param programId
+ * @param records
+ * @param schema
  * @returns valid EntityException array
  */
 const recordsToEntityException = ({
   programId,
   records,
+  schema,
 }: {
   programId: string;
   records: ReadonlyArray<EntityExceptionRecord>;
+  schema: ClinicalEntitySchemaNames;
 }) => {
   const exception: OnlyRequired<EntityException, 'programId'> = { programId };
 
-  if (isArrayOf(records, isSpecimenExceptionRecord)) {
-    exception.specimen = records;
-  } else if (isArrayOf(records, isFollowupExceptionRecord)) {
-    exception.follow_up = records;
+  if (schema === ClinicalEntitySchemaNames.SPECIMEN) {
+    exception.specimen = records as SpecimenExceptionRecord[];
+  } else if (schema === ClinicalEntitySchemaNames.FOLLOW_UP) {
+    exception.follow_up = records as FollowUpExceptionRecord[];
   }
 
   return exception;
@@ -118,24 +131,66 @@ export namespace operations {
   export const createEntityException = async ({
     programId,
     records,
+    schema,
   }: {
     programId: string;
     records: ReadonlyArray<EntityExceptionRecord>;
+    schema: ClinicalEntitySchemaNames;
   }): ServiceResult<EntityException> => {
     const normalizedRecords = normalizeRecords(records);
 
-    // validate rows
+    /**
+     * specific entity schema record field validator
+     * checks schema field value against the schema type
+     * example: schema field value of "donor" is not valid for "specimen" upload
+     */
+    const checkFieldSchema: Validator<EntityExceptionRecord> = ({ record }) => {
+      const isValid = record.schema === schema;
+
+      return {
+        result: isValid ? ValidationResultType.VALID : ValidationResultType.INVALID,
+        message: isValid ? '' : 'Schema in field does not match file upload.',
+      };
+    };
+
+    /**
+     * perform all checks in one schema validation function
+     * validateRecords can only handle single validator functions not arrays
+     */
+    const schemaValidator: Validator<EntityExceptionRecord> = async args => {
+      const isValidSchemaField = await checkFieldSchema(args);
+      const isValidSchemaDict = await checkIsValidDictionarySchema(args);
+
+      const result =
+        isValidSchemaField.result === ValidationResultType.VALID &&
+        isValidSchemaDict.result === ValidationResultType.VALID
+          ? ValidationResultType.VALID
+          : ValidationResultType.INVALID;
+
+      const message = `${isValidSchemaDict.message} ${isValidSchemaField.message}`.trim();
+
+      return { result, message };
+    };
+
+    // use common validators also
+    const validators = {
+      ...commonValidators,
+      schema: schemaValidator,
+    };
+
+    // columns haven been validated
+    // validate data in rows
     const errors = await validateRecords<EntityExceptionRecord>(
       programId,
       normalizedRecords,
-      commonValidators,
+      validators,
     );
 
     if (errors.length > 0) {
       throw new ValidationError(errors);
     }
 
-    const exceptionToSave = recordsToEntityException({ programId, records });
+    const exceptionToSave = recordsToEntityException({ programId, records, schema });
     const doc = await entityExceptionRepository.save(exceptionToSave);
     return success(doc);
   };
