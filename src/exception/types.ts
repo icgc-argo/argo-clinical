@@ -18,6 +18,7 @@
  */
 
 import _ from 'lodash';
+import { ClinicalEntitySchemaNames } from '../common-model/entities';
 
 export type ObjectValues<T> = T[keyof T];
 
@@ -75,6 +76,11 @@ export type EntityException = {
   specimen: SpecimenExceptionRecord[];
   follow_up: FollowUpExceptionRecord[];
 };
+
+export type EntityExceptionSchemaNames = Extract<
+  ClinicalEntitySchemaNames,
+  ClinicalEntitySchemaNames.SPECIMEN | ClinicalEntitySchemaNames.FOLLOW_UP
+>;
 
 export const ExceptionValue = {
   Unknown: 'Unknown',

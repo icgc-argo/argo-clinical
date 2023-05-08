@@ -20,10 +20,14 @@
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
 import { DataRecord } from '@overturebio-stack/lectern-client/lib/schema-entities';
 import _ from 'lodash';
-import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 import entityExceptionRepository from '../../exception/repo/entity';
 import programExceptionRepository from '../../exception/repo/program';
-import { EntityException, ExceptionRecord, ProgramException } from '../../exception/types';
+import {
+  EntityException,
+  EntityExceptionSchemaNames,
+  ExceptionRecord,
+  ProgramException,
+} from '../../exception/types';
 import { isEntityException, isProgramException } from '../../exception/util';
 
 /**
@@ -55,7 +59,7 @@ const validateFieldValueWithExceptions = ({
 }: {
   programException: ProgramException | null;
   entityException: EntityException | null;
-  schemaName: ClinicalEntitySchemaNames;
+  schemaName: EntityExceptionSchemaNames;
   fieldValue: string;
   validationErrorFieldName: string;
 }): boolean => {
@@ -66,15 +70,10 @@ const validateFieldValueWithExceptions = ({
       exception => exception.requested_core_field === validationErrorFieldName,
     )?.requested_exception_value;
   } else if (isEntityException(entityException)) {
-    const exceptionSchemaName = mapClinicalEntityNameToExceptionName(schemaName);
-    if (exceptionSchemaName) {
-      const exceptions: Array<ExceptionRecord> = entityException[exceptionSchemaName];
-      exceptionValue = exceptions.find(
-        exception => exception.requested_core_field === validationErrorFieldName,
-      )?.requested_exception_value;
-    } else {
-      return false;
-    }
+    const exceptions: Array<ExceptionRecord> = entityException[schemaName];
+    exceptionValue = exceptions.find(
+      exception => exception.requested_core_field === validationErrorFieldName,
+    )?.requested_exception_value;
   }
 
   // check submitted exception value matches record validation error field value
@@ -89,37 +88,6 @@ const validateFieldValueWithExceptions = ({
  * @returns normalized string
  */
 const normalizeExceptionValue = (value: string) => _.upperFirst(value.trim().toLowerCase());
-
-/**
- * map uploaded clinical type schema name with underscores to exception schema name camel cased
- * eg. follow_up: 'followUp',
- * Partial<> until all donor entities are accounted for
- * @param schemaName
- */
-
-const clinicalEntities: Partial<Record<
-  ClinicalEntitySchemaNames,
-  Exclude<keyof EntityException, 'programId'>
->> = {
-  // donor: 'donor',
-  specimen: 'specimen',
-  //   primary_diagnosis: 'primaryDiagnoses',
-  //   family_history: 'familyHistory',
-  //   treatment: 'treatment',
-  //   chemotherapy: 'chemotherapy',
-  //   immunotherapy: 'immunotherapy',
-  //   surgery: 'surgery',
-  //   radiation: 'radiation',
-  //   follow_up: 'followUps',
-  //   hormone_therapy: 'hormoneTherapy',
-  //   exposure: 'exposure',
-  //   comorbidity: 'comorbidity',
-  //   biomarker: 'biomarker',
-  //   sample_registration: 'sampleRegistration',
-};
-
-const mapClinicalEntityNameToExceptionName = (schemaName: ClinicalEntitySchemaNames) =>
-  clinicalEntities[schemaName];
 
 /**
  * Check if a valid exception exists and the record value matches it.
@@ -140,7 +108,7 @@ export const checkForProgramAndEntityExceptions = async ({
 }: {
   programId: string;
   record: DataRecord;
-  schemaName: ClinicalEntitySchemaNames;
+  schemaName: EntityExceptionSchemaNames;
   schemaValidationErrors: dictionaryEntities.SchemaValidationError[];
 }) => {
   const filteredErrors: dictionaryEntities.SchemaValidationError[] = [];
