@@ -20,6 +20,7 @@
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
 import { DataRecord } from '@overturebio-stack/lectern-client/lib/schema-entities';
 import _ from 'lodash';
+import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 import entityExceptionRepository from '../../exception/repo/entity';
 import programExceptionRepository from '../../exception/repo/program';
 import {
@@ -108,7 +109,7 @@ export const checkForProgramAndEntityExceptions = async ({
 }: {
   programId: string;
   record: DataRecord;
-  schemaName: EntityExceptionSchemaNames;
+  schemaName: ClinicalEntitySchemaNames;
   schemaValidationErrors: dictionaryEntities.SchemaValidationError[];
 }) => {
   const filteredErrors: dictionaryEntities.SchemaValidationError[] = [];
@@ -134,6 +135,15 @@ export const checkForProgramAndEntityExceptions = async ({
        * therefore no exception is present for arrays. validation error is valid
        */
       if (Array.isArray(fieldValue)) {
+        filteredErrors.push(validationError);
+        return;
+      }
+
+      // schema is not accepted type that can have exceptions
+      if (
+        schemaName !== ClinicalEntitySchemaNames.FOLLOW_UP &&
+        schemaName !== ClinicalEntitySchemaNames.SPECIMEN
+      ) {
         filteredErrors.push(validationError);
         return;
       }
