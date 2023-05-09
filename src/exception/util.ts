@@ -17,11 +17,41 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { RepoError } from './exception-repo';
-import { ProgramException } from './types';
+import { RepoError } from './repo/types';
+import { EntityException, ProgramException, EntityValues, Entity } from './types';
+import _ from 'lodash';
 
-export function isProgramException(
-  result: ProgramException | RepoError,
-): result is ProgramException {
-  return (result as ProgramException).programId !== undefined;
+export function isProgramException(result: ProgramException | null): result is ProgramException {
+  return result?.programId !== undefined;
+}
+
+export function isEntityException(result: EntityException | null): result is EntityException {
+  return (
+    result?.programId !== undefined &&
+    (result?.specimen !== undefined || result?.follow_up !== undefined)
+  );
+}
+
+export function isRepoError(
+  result: ProgramException | EntityException | RepoError,
+): result is RepoError {
+  return result === RepoError.DOCUMENT_UNDEFINED || result === RepoError.SERVER_ERROR;
+}
+
+/**
+ *
+ * @param fileType
+ * @returns snaked_cased string
+ */
+export function normalizeEntityFileType(fileType: string) {
+  return _.snakeCase(fileType);
+}
+
+/**
+ *
+ * @param fileType
+ * @returns true if valid Entity
+ */
+export function isValidEntityType(fileType: string): fileType is Entity {
+  return Object.keys(EntityValues).includes(fileType);
 }
