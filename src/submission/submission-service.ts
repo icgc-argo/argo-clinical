@@ -372,21 +372,21 @@ export namespace operations {
 
     const currentDictionary = await dictionaryManager.instance().getCurrent();
 
-    // Step 1 map dataArray to entitesMap
-    const { newClinicalEntitesMap, dataToEntityMapErrors } = mapClinicalDataToEntity(
+    // Step 1 map dataArray to entitiesMap
+    const { newClinicalEntitiesMap, dataToEntityMapErrors } = mapClinicalDataToEntity(
       command.newClinicalData,
       Object.values(ClinicalEntitySchemaNames).filter(
         type => type !== ClinicalEntitySchemaNames.REGISTRATION,
       ),
     );
 
-    // Step 2 filter entites with invalid fieldNames
-    const { filteredClinicalEntites, fieldNameErrors } = await checkEntityFieldNames(
-      newClinicalEntitesMap,
+    // Step 2 filter entities with invalid fieldNames
+    const { filteredClinicalEntities, fieldNameErrors } = await checkEntityFieldNames(
+      newClinicalEntitiesMap,
       currentDictionary,
     );
 
-    const updatedClinicalEntites: ClinicalEntities = clearClinicalEnitytStats(
+    const updatedClinicalEntities: ClinicalEntities = clearClinicalEnitytStats(
       exsistingActiveSubmission.clinicalEntities,
     );
 
@@ -395,7 +395,7 @@ export namespace operations {
     // object to store all errors for entity
     const schemaErrors: { [k: string]: SubmissionValidationError[] } = {};
 
-    for (const [clinicalType, newClinicalEnity] of Object.entries(filteredClinicalEntites)) {
+    for (const [clinicalType, newClinicalEnity] of Object.entries(filteredClinicalEntities)) {
       const { schemaErrorsTemp, processedRecords } = await checkClinicalEntity(
         {
           records: newClinicalEnity.records,
@@ -411,12 +411,12 @@ export namespace operations {
       if (schemaErrorsTemp.length > 0) {
         // store errors found and remove clinical type from clinical entities
         schemaErrors[clinicalType] = schemaErrorsTemp;
-        delete updatedClinicalEntites[clinicalType];
+        delete updatedClinicalEntities[clinicalType];
         continue;
       }
 
       // update or add entity
-      updatedClinicalEntites[clinicalType] = {
+      updatedClinicalEntities[clinicalType] = {
         batchName: newClinicalEnity.batchName,
         creator: newClinicalEnity.creator,
         createdAt: createdAt,
@@ -430,7 +430,7 @@ export namespace operations {
       programId: command.programId,
       state: SUBMISSION_STATE.OPEN,
       version: '', // version is irrelevant here, repo will set it
-      clinicalEntities: updatedClinicalEntites,
+      clinicalEntities: updatedClinicalEntities,
       updatedBy: command.updater,
     };
 
@@ -660,7 +660,7 @@ export namespace operations {
       );
     }
     // remove stats from clinical entities
-    const updatedClinicalEntites: ClinicalEntities = clearClinicalEnitytStats(
+    const updatedClinicalEntities: ClinicalEntities = clearClinicalEnitytStats(
       exsistingActiveSubmission.clinicalEntities,
     );
 
@@ -668,7 +668,7 @@ export namespace operations {
       programId: command.programId,
       state: SUBMISSION_STATE.OPEN,
       version: command.versionId, // version is irrelevant here, repo will set it
-      clinicalEntities: updatedClinicalEntites,
+      clinicalEntities: updatedClinicalEntities,
       updatedBy: command.updater,
     };
 
@@ -686,14 +686,14 @@ export namespace operations {
   const clearClinicalEnitytStats = (
     clinicalEntities: DeepReadonly<ClinicalEntities>,
   ): ClinicalEntities => {
-    const statClearedClinicalEntites: ClinicalEntities = {};
+    const statClearedClinicalEntities: ClinicalEntities = {};
     Object.entries(clinicalEntities).forEach(([clinicalType, clinicalEntity]) => {
-      statClearedClinicalEntites[clinicalType] = {
+      statClearedClinicalEntities[clinicalType] = {
         ...clinicalEntity,
         ...emptySubmission,
       };
     });
-    return statClearedClinicalEntites;
+    return statClearedClinicalEntities;
   };
 
   const addNewDonorToStats = (
@@ -1134,17 +1134,17 @@ export namespace operations {
 
   const mapClinicalDataToEntity = (
     clinicalData: ReadonlyArray<NewClinicalEntity>,
-    expectedClinicalEntites: ReadonlyArray<ClinicalEntitySchemaNames>,
+    expectedClinicalEntities: ReadonlyArray<ClinicalEntitySchemaNames>,
   ): DeepReadonly<{
-    newClinicalEntitesMap: NewClinicalEntities;
+    newClinicalEntitiesMap: NewClinicalEntities;
     dataToEntityMapErrors: Array<SubmissionBatchError>;
   }> => {
     const mutableClinicalData = [...clinicalData];
     const dataToEntityMapErrors: Array<SubmissionBatchError> = [];
-    const newClinicalEntitesMap: { [clinicalType: string]: NewClinicalEntity } = {};
+    const newClinicalEntitiesMap: { [clinicalType: string]: NewClinicalEntity } = {};
 
     // check for double files and map files to clinical type
-    expectedClinicalEntites.forEach(clinicalType => {
+    expectedClinicalEntities.forEach(clinicalType => {
       const dataMatchToType = _.remove(mutableClinicalData, clinicalData =>
         isStringMatchRegex(BatchNameRegex[clinicalType], clinicalData.batchName),
       );
@@ -1158,7 +1158,7 @@ export namespace operations {
           code: SubmissionBatchErrorTypes.MULTIPLE_TYPED_FILES,
         });
       } else if (dataMatchToType.length == 1) {
-        newClinicalEntitesMap[clinicalType] = dataMatchToType[0];
+        newClinicalEntitiesMap[clinicalType] = dataMatchToType[0];
       }
     });
 
@@ -1181,26 +1181,26 @@ export namespace operations {
     if (mutableClinicalData.length > 0) {
       dataToEntityMapErrors.push({
         message: batchErrorMessage(SubmissionBatchErrorTypes.INVALID_FILE_NAME, {
-          isRegistration: expectedClinicalEntites.includes(ClinicalEntitySchemaNames.REGISTRATION),
+          isRegistration: expectedClinicalEntities.includes(ClinicalEntitySchemaNames.REGISTRATION),
         }),
         batchNames: mutableClinicalData.map(data => data.batchName),
         code: SubmissionBatchErrorTypes.INVALID_FILE_NAME,
       });
     }
 
-    return F({ newClinicalEntitesMap, dataToEntityMapErrors });
+    return F({ newClinicalEntitiesMap, dataToEntityMapErrors });
   };
 
   const checkEntityFieldNames = async (
-    newClinicalEntitesMap: DeepReadonly<NewClinicalEntities>,
+    newClinicalEntitiesMap: DeepReadonly<NewClinicalEntities>,
     dictionary: dictionaryEntities.SchemasDictionary,
   ) => {
     const fieldNameErrors: SubmissionBatchError[] = [];
-    const filteredClinicalEntites: NewClinicalEntities = {};
+    const filteredClinicalEntities: NewClinicalEntities = {};
 
-    for (const [clinicalType, newClinicalEnity] of Object.entries(newClinicalEntitesMap)) {
+    for (const [clinicalType, newClinicalEnity] of Object.entries(newClinicalEntitiesMap)) {
       if (!newClinicalEnity.fieldNames) {
-        filteredClinicalEntites[clinicalType] = { ...(newClinicalEnity as NewClinicalEntity) };
+        filteredClinicalEntities[clinicalType] = { ...(newClinicalEnity as NewClinicalEntity) };
         continue;
       }
       const commonFieldNamesSet = new Set(newClinicalEnity.fieldNames);
@@ -1224,7 +1224,7 @@ export namespace operations {
       const unknownFields = Array.from(commonFieldNamesSet); // remaining are unknown
 
       if (missingFields.length === 0 && unknownFields.length === 0) {
-        filteredClinicalEntites[clinicalType] = { ...(newClinicalEnity as NewClinicalEntity) };
+        filteredClinicalEntities[clinicalType] = { ...(newClinicalEnity as NewClinicalEntity) };
         continue;
       }
 
@@ -1248,7 +1248,7 @@ export namespace operations {
         });
       }
     }
-    return { filteredClinicalEntites, fieldNameErrors };
+    return { filteredClinicalEntities, fieldNameErrors };
   };
 
   // pre check registration create command
@@ -1257,7 +1257,7 @@ export namespace operations {
     dictionary: dictionaryEntities.SchemasDictionary,
   ): Promise<DeepReadonly<SubmissionBatchError[] | undefined>> => {
     const {
-      newClinicalEntitesMap: registrationMapped,
+      newClinicalEntitiesMap: registrationMapped,
       dataToEntityMapErrors,
     } = mapClinicalDataToEntity(
       [
