@@ -751,10 +751,10 @@ paths:
             schema:
               type: object
               properties:
-                programExceptionFile:
+                exceptionFile:
                   type: string
                   format: binary
-        description: 'the tsv program exception file.  __Important:__ any exceptions provided replace the existing exceptions, so all exceptions must be provided (or some will be lost)'
+        description: 'The tsv program exception file. There is no required format for the filename. <br/><br/> The "schema" field must use snake case eg. follow_up <br/><br/> __Important:__ Be careful when you submit request form, every new submission will override existing program level exceptions, please check the current exceptions using the GET endpoint before posting new submission.'
         required: true
       responses:
         '201':
@@ -805,7 +805,7 @@ paths:
                 exceptionFile:
                   type: string
                   format: binary
-        description: the entity exception file
+        description: 'The tsv exception file. There is no required format for the filename. <br/><br/> The "schema" field must use snake case eg. follow_up <br/><br/> __Important__ Only "specimen" and "follow_up" are currently accepted schemas. <br/><br/> __Important:__ Be careful when you submit request form, every new submission will override existing entity level exceptions, please check the current exceptions using the GET endpoint before posting new submission.'
         required: true
         responses:
           '200':
