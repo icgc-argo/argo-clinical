@@ -359,9 +359,9 @@ export namespace operations {
     command: MultiClinicalSubmissionCommand,
   ): Promise<CreateSubmissionResult> => {
     // get program or create new one
-    let exsistingActiveSubmission = await submissionRepository.findByProgramId(command.programId);
-    if (!exsistingActiveSubmission) {
-      exsistingActiveSubmission = await submissionRepository.create({
+    let existingActiveSubmission = await submissionRepository.findByProgramId(command.programId);
+    if (!existingActiveSubmission) {
+      existingActiveSubmission = await submissionRepository.create({
         programId: command.programId,
         state: SUBMISSION_STATE.OPEN,
         version: uuid(),
@@ -387,7 +387,7 @@ export namespace operations {
     );
 
     const updatedClinicalEntities: ClinicalEntities = clearClinicalEnitytStats(
-      exsistingActiveSubmission.clinicalEntities,
+      existingActiveSubmission.clinicalEntities,
     );
 
     const createdAt: DeepReadonly<Date> = new Date();
@@ -437,7 +437,7 @@ export namespace operations {
     // insert into database
     let updated = (await updateSubmissionWithVersionOrDeleteEmpty(
       command.programId,
-      exsistingActiveSubmission.version,
+      existingActiveSubmission.version,
       newActiveSubmission,
     )) as ActiveClinicalSubmission;
 
@@ -479,13 +479,13 @@ export namespace operations {
     dryRun = false,
   ): Promise<CreateSubmissionResult> => {
     // get program or create new one
-    const exsistingActiveSubmission = await submissionRepository.findByProgramId(command.programId);
-    if (!exsistingActiveSubmission) {
+    const existingActiveSubmission = await submissionRepository.findByProgramId(command.programId);
+    if (!existingActiveSubmission) {
       throw new Error('trying to migrate non existing submission');
     }
 
     const existingClinicalEntities = _.cloneDeep(
-      exsistingActiveSubmission.clinicalEntities,
+      existingActiveSubmission.clinicalEntities,
     ) as ClinicalEntities;
     const schemaErrors: { [k: string]: SubmissionValidationError[] } = {}; // object to store all errors for entity
 
@@ -509,7 +509,7 @@ export namespace operations {
     }
 
     const successful = Object.keys(schemaErrors).length === 0;
-    let state = exsistingActiveSubmission.state;
+    let state = existingActiveSubmission.state;
 
     // special state to indicate that the submission is invalid my migration process.
     if (!successful) {
@@ -521,7 +521,7 @@ export namespace operations {
       state: state,
       version: '', // version is irrelevant here, repo will set it
       clinicalEntities: existingClinicalEntities,
-      updatedBy: exsistingActiveSubmission.updatedBy,
+      updatedBy: existingActiveSubmission.updatedBy,
     };
 
     // if dry run, then we don't actually want to update the submission we just return the result now
@@ -536,7 +536,7 @@ export namespace operations {
     // update the submission, it will not delete since we keep all clinical entities
     const updated = await updateSubmissionWithVersionOrDeleteEmpty(
       command.programId,
-      exsistingActiveSubmission.version,
+      existingActiveSubmission.version,
       newActiveSubmission,
     );
 
@@ -554,18 +554,18 @@ export namespace operations {
   export const validateMultipleClinical = async (
     command: Readonly<ClinicalSubmissionModifierCommand>,
   ): Promise<ValidateSubmissionResult> => {
-    const exsistingActiveSubmission = await submissionRepository.findByProgramId(command.programId);
-    if (!exsistingActiveSubmission || exsistingActiveSubmission.version !== command.versionId) {
+    const existingActiveSubmission = await submissionRepository.findByProgramId(command.programId);
+    if (!existingActiveSubmission || existingActiveSubmission.version !== command.versionId) {
       throw new Errors.NotFound(
         `No active submission found with programId: ${command.programId} & versionId: ${command.versionId}`,
       );
     }
     if (
-      exsistingActiveSubmission.state !== SUBMISSION_STATE.OPEN ||
-      _.isEmpty(exsistingActiveSubmission.clinicalEntities)
+      existingActiveSubmission.state !== SUBMISSION_STATE.OPEN ||
+      _.isEmpty(existingActiveSubmission.clinicalEntities)
     ) {
       return {
-        submission: exsistingActiveSubmission,
+        submission: existingActiveSubmission,
         successful: true,
       };
     }
@@ -573,8 +573,8 @@ export namespace operations {
     const clinicalSubmissionRecords: ClinicalSubmissionRecordsByDonorIdMap = {};
     const filters: FindByProgramAndSubmitterFilter[] = [];
     // map records to submitterDonorId and build filters
-    for (const clinicalType in exsistingActiveSubmission.clinicalEntities) {
-      const clinicalEnity = exsistingActiveSubmission.clinicalEntities[clinicalType];
+    for (const clinicalType in existingActiveSubmission.clinicalEntities) {
+      const clinicalEnity = existingActiveSubmission.clinicalEntities[clinicalType];
       clinicalEnity.records.forEach((rc, index) => {
         const donorId = rc[SampleRegistrationFieldsEnum.submitter_donor_id];
         filters.push({
@@ -606,7 +606,7 @@ export namespace operations {
     // update data errors/updates and stats
     let invalid: boolean = false;
     const validatedClinicalEntities = _.cloneDeep(
-      exsistingActiveSubmission.clinicalEntities,
+      existingActiveSubmission.clinicalEntities,
     ) as ClinicalEntities;
     for (const clinicalType in validateResult) {
       validatedClinicalEntities[clinicalType].stats = validateResult[clinicalType].stats;
@@ -623,7 +623,7 @@ export namespace operations {
     }
 
     const newActiveSubmission: ActiveClinicalSubmission = {
-      programId: exsistingActiveSubmission.programId,
+      programId: existingActiveSubmission.programId,
       state: invalid ? SUBMISSION_STATE.INVALID : SUBMISSION_STATE.VALID,
       version: '', // version is irrelevant here, repo will set it
       clinicalEntities: validatedClinicalEntities,
@@ -633,7 +633,7 @@ export namespace operations {
     // insert into database
     const updated = await submissionRepository.updateSubmissionWithVersion(
       command.programId,
-      exsistingActiveSubmission.version,
+      existingActiveSubmission.version,
       newActiveSubmission,
     );
 
@@ -648,20 +648,20 @@ export namespace operations {
    * @param command ClinicalSubmissionModifierCommand
    */
   export const reopenClinicalSubmission = async (command: ClinicalSubmissionModifierCommand) => {
-    const exsistingActiveSubmission = await submissionRepository.findByProgramId(command.programId);
-    if (!exsistingActiveSubmission || exsistingActiveSubmission.version !== command.versionId) {
+    const existingActiveSubmission = await submissionRepository.findByProgramId(command.programId);
+    if (!existingActiveSubmission || existingActiveSubmission.version !== command.versionId) {
       throw new Errors.NotFound(
         `No active submission found with programId: ${command.programId} & versionId: ${command.versionId}`,
       );
     }
-    if (exsistingActiveSubmission.state !== SUBMISSION_STATE.PENDING_APPROVAL) {
+    if (existingActiveSubmission.state !== SUBMISSION_STATE.PENDING_APPROVAL) {
       throw new Errors.StateConflict(
         'Active submission does not have state PENDING_APPROVAL and cannot be reopened.',
       );
     }
     // remove stats from clinical entities
     const updatedClinicalEntities: ClinicalEntities = clearClinicalEnitytStats(
-      exsistingActiveSubmission.clinicalEntities,
+      existingActiveSubmission.clinicalEntities,
     );
 
     const reopenedActiveSubmission: ActiveClinicalSubmission = {
