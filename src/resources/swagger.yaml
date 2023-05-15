@@ -807,9 +807,11 @@ paths:
                   format: binary
         description: 'The tsv exception file. There is no required format for the filename. <br/><br/> The "schema" field must use snake case eg. follow_up <br/><br/> __Important__ Only "specimen" and "follow_up" are currently accepted schemas. <br/><br/> __Important:__ Be careful when you submit request form, every new submission will override existing entity level exceptions, please check the current exceptions using the GET endpoint before posting new submission.'
         required: true
-        responses:
-          '200':
-          '400':
+      responses:
+        '200':
+          description: 'entity exception object by program or empty object if resource not found'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
 
   /exception/{programId}/entity/{entity}:
     delete:
@@ -836,8 +838,8 @@ paths:
                     type: string
         description: submitter donor ids
         required: true
-        responses:
-          '200':
+      responses:
+        '200':
           description: 'returns new entity exception after deletion'
 
   /clinical/donors:
