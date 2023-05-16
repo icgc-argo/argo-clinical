@@ -34,7 +34,7 @@ import {
   getSampleRegistrationDataFromDonor,
 } from '../../common-model/functions';
 import { notEmpty } from '../../utils';
-import { ClinicalQuery, ClinicalSearchQuery } from '../clinical-api';
+import { ClinicalQuery, ClinicalSearchQuery } from '../clinical-service';
 import {
   ClinicalEntityData,
   ClinicalInfo,
@@ -54,7 +54,6 @@ type EntityClinicalInfo = {
 const DONOR_ID_FIELD = 'donor_id';
 
 const isEntityInQuery = (entityName: ClinicalEntitySchemaNames, entityTypes: string[]) =>
-  queryEntityNames.includes(aliasEntityNames[entityName]) &&
   entityTypes.includes(aliasEntityNames[entityName]);
 
 // Main Sort Function

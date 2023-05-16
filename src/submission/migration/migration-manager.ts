@@ -577,9 +577,7 @@ export namespace MigrationManager {
       // not fields since we only need to check the whole schema once.
       const errors = validateDonorEntityAgainstNewSchema(schemaName, newSchema, donor);
       if (errors && errors.length > 0) {
-        donorSchemaErrors.push({
-          [schemaName]: errors,
-        });
+        donorSchemaErrors.push([schemaName, errors]);
       }
     }
     return donorSchemaErrors;

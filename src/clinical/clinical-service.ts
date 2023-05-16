@@ -20,9 +20,13 @@
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 import { Sample, Donor, ClinicalEntityData } from './clinical-entities';
-import { ClinicalQuery, ClinicalSearchQuery } from './clinical-api';
 import { donorDao, DONOR_DOCUMENT_FIELDS } from './donor-repo';
-import { ClinicalErrorsResponseRecord, EntityAlias } from '../common-model/entities';
+import {
+  ClinicalEntitySchemaNames,
+  ClinicalErrorsResponseRecord,
+  EntityAlias,
+  aliasEntityNames,
+} from '../common-model/entities';
 import { Errors } from '../utils';
 import { patchCoreCompletionWithOverride } from '../submission/submission-to-clinical/stat-calculator';
 import { migrationRepo } from '../submission/migration/migration-repo';
@@ -34,9 +38,27 @@ import * as dictionaryManager from '../dictionary/manager';
 import { loggerFor } from '../logger';
 import { WorkerTasks } from './service-worker-thread/tasks';
 import { runTaskInWorkerThread } from './service-worker-thread/runner';
-import { SchemaValidationError } from '@overturebio-stack/lectern-client/lib/schema-entities';
 
 const L = loggerFor(__filename);
+
+export type ClinicalQuery = {
+  programShortName: string;
+  page: number;
+  pageSize?: number;
+  entityTypes: Array<EntityAlias>;
+  sort: string;
+  donorIds: number[];
+  submitterDonorIds: string[];
+  completionState?: {};
+};
+
+export type ClinicalSearchQuery = {
+  programShortName: string;
+  donorIds: string[];
+  submitterDonorIds: string[];
+  entityTypes: EntityAlias[];
+  completionState?: {};
+};
 
 export async function updateDonorSchemaMetadata(
   donor: DeepReadonly<Donor>,
@@ -229,7 +251,7 @@ interface DonorMigration extends Omit<DictionaryMigration, 'invalidDonorsErrors'
  */
 export const getClinicalEntityMigrationErrors = async (
   programId: string,
-  query: string[],
+  query: number[],
 ): Promise<{
   clinicalErrors: ClinicalErrorsResponseRecord[];
   migrationLastUpdated: string | undefined;
@@ -245,26 +267,18 @@ export const getClinicalEntityMigrationErrors = async (
   const migrationLastUpdated = migration?.updatedAt;
 
   if (migration) {
-    const { invalidDonorsErrors }: DeepReadonly<DonorMigration> = migration;
+    const { invalidDonorsErrors } = migration;
     invalidDonorsErrors
-      .filter(
-        donor =>
-          donor.programId.toString() === programId && query.includes(donor.donorId.toString()),
-      )
+      .filter(donor => donor.programId.toString() === programId && query.includes(donor.donorId))
       .forEach(donor => {
         const { donorId, submitterDonorId, errors } = donor;
         // Overwrite donor.errors + flatten entityName to simplify query
         // Input: Donor.Errors = [{ [entityName] : [{error}] }]
         // =>  Output: Donor.Errors = [{ ...error, entityName}]
 
-        errors.forEach(entityErrorObject => {
-          const currentEntityErrorData: [
-            string,
-            readonly DeepReadonly<SchemaValidationError>[],
-          ] = Object.entries(entityErrorObject)[0];
-
-          const entityName = currentEntityErrorData[0];
-          const entityErrors = currentEntityErrorData[1];
+        errors.forEach(entityErrorTuple => {
+          const entityName = entityErrorTuple[0];
+          const entityErrors = entityErrorTuple[1];
 
           const updatedErrorEntries = entityErrors.map(error => ({
             ...error,
@@ -303,9 +317,9 @@ export const getDonorSubmissionErrorUpdates = async (
   const start = new Date().getTime() / 1000;
 
   let validDonors: number[] = [];
-  const { clinicalErrors: clinicalMigrationErrors, migrationLastUpdated } = migrationErrors;
+  const { clinicalErrors: clinicalMigrationErrors } = migrationErrors;
   const errorDonorIds = clinicalMigrationErrors.map(error => error.donorId);
-  let errorEntities: Array<string | EntityAlias> = [];
+  let errorEntities: Array<ClinicalEntitySchemaNames> = [];
 
   clinicalMigrationErrors.forEach(migrationError => {
     const { errors } = migrationError;
@@ -319,7 +333,7 @@ export const getDonorSubmissionErrorUpdates = async (
     programShortName: programId,
     page: 0,
     sort: 'donorId',
-    entityTypes: ['donor', ...errorEntities],
+    entityTypes: ['donor', ...errorEntities.map(schemaName => aliasEntityNames[schemaName])],
     donorIds: errorDonorIds,
     submitterDonorIds: [],
   };

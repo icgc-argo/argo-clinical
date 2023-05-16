@@ -20,7 +20,7 @@
 import * as express from 'express';
 
 import { wrapAsync } from '../middleware';
-import clinicalApi from '../clinical/clinical-api';
+import clinicalApi from '../clinical/api/clinical-api';
 
 const router = express.Router();
 
