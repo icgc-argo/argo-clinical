@@ -807,9 +807,11 @@ paths:
                   format: binary
         description: the entity exception file
         required: true
-        responses:
-          '200':
-          '400':
+      responses:
+        '200':
+          description: Entity exception created
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
 
   /exception/{programId}/entity/{entity}:
     delete:
@@ -920,19 +922,13 @@ paths:
         '200':
           description: 'Stream of newline `\n` delimited JSON objects'
   /clinical/program/{programId}/clinical-data:
-    get:
+    post:
       tags:
         - Clinical Data
       summary: Get all program submitted data from db. Returns clinicalEntities[].
+      description: This request fetches clinical data from donors, for the specified clinical entities, filtered by the search parameters provided in the request body. The request is paginated and sorted based on query parameters in the URL. This does not update data any clinical data.
       parameters:
         - $ref: '#/components/parameters/PathProgramId'
-        - in: query
-          name: entityTypes
-          schema:
-            type: array
-            items:
-              type: string
-          description: Clinical Entity data types to return
         - in: query
           name: page
           schema:
@@ -944,29 +940,36 @@ paths:
             type: integer
           description: Number of paginated results per page
         - in: query
-          name: donorIds
-          schema:
-            type: array
-            items:
-              type: integer
-          description: Donor ID values to return
-        - in: query
-          name: submitterDonorIds
-          schema:
-            type: array
-            items:
-              type: string
-          description: Submitter ID values to return
-        - in: query
-          name: completionState
-          schema:
-            type: string
-          description: Entity CompletionStates to filter by, one of 'all' | 'invalid' | 'complete' | 'incomplete'
-        - in: query
           name: sort
           schema:
             type: string
           description: Donor Field to sort results by, preceding '-' indicates descending
+      requestBody:
+        description: JSON object containing search filters
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                completionState:
+                  $ref: '#/components/schemas/CompletionState'
+                  default: 'all'
+                entityTypes:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/EntityName'
+                  default: []
+                donorIds:
+                  type: array
+                  items:
+                    type: number
+                  default: []
+                submitterDonorIds:
+                  type: array
+                  items:
+                    type: string
+                  default: []
       responses:
         '401':
           $ref: '#/components/responses/UnauthorizedError'
@@ -979,19 +982,26 @@ paths:
         '200':
           description: 'Array of Clinical Entity objects'
   /clinical/program/{programId}/clinical-errors:
-    get:
+    post:
       tags:
         - Clinical Data
       summary: Get all clinical errors for a given program. Returns clinicalErrors[].
+      description: This request fetches the migration errors attached to donors, filtered by the list of donor IDs provided in the request body. This does not update data any clinical data.
       parameters:
         - $ref: '#/components/parameters/PathProgramId'
-        - in: query
-          name: donorIds
-          schema:
-            type: array
-            items:
-              type: integer
-          description: Donor IDs to filter error results
+      requestBody:
+        description: JSON object containing search filters
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                donorIds:
+                  type: array
+                  items:
+                    type: number
+                  default: []
       responses:
         '401':
           $ref: '#/components/responses/UnauthorizedError'
@@ -1003,40 +1013,42 @@ paths:
           $ref: '#/components/responses/ServerError'
         '200':
           description: 'Array of Clinical Error objects'
-
   /clinical/program/{programId}/clinical-search-results:
-    get:
+    post:
       tags:
         - Clinical Data
       summary: Get donorIds and submitter donor IDs which match a query for a given program. Returns DonorId[] + SubmitterDonorId[].
+      description: This request fetches donorIds based on search filters provided in request body. This does not update data any clinical data.
       parameters:
         - $ref: '#/components/parameters/PathProgramId'
-        - in: query
-          name: entityTypes
-          schema:
-            type: array
-            items:
-              type: string
-          description: Clinical Entity data types to return
-        - in: query
-          name: donorIds
-          schema:
-            type: array
-            items:
-              type: integer
-          description: Donor ID values to query
-        - in: query
-          name: submitterDonorIds
-          schema:
-            type: array
-            items:
-              type: string
-          description: Submitter ID values to query
-        - in: query
-          name: completionState
-          schema:
-            type: string
-          description: Entity CompletionStates to filter by, one of 'all' | 'invalid' | 'complete' | 'incomplete'
+      requestBody:
+        description: JSON object containing search filters
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                completionState:
+                  $ref: '#/components/schemas/CompletionState'
+                  default: 'all'
+                entityTypes:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/EntityName'
+                  default: []
+                donorIds:
+                  description: List of donor IDs or partial IDs to search for. Results will be returned for any partial matches with the input strings.
+                  type: array
+                  items:
+                    type: string
+                  default: []
+                submitterDonorIds:
+                  description: List of submitter donor IDs or partial IDs to search for. Results will be returned for any partial matches with the input strings.
+                  type: array
+                  items:
+                    type: string
+                  default: []
       responses:
         '401':
           $ref: '#/components/responses/UnauthorizedError'
@@ -1048,45 +1060,40 @@ paths:
           $ref: '#/components/responses/ServerError'
         '200':
           description: 'Array of DonorIds + SubmitterDonorIds'
-
   /clinical/program/{programId}/clinical-tsv:
-    get:
+    post:
       tags:
         - Clinical Data
       summary: Get filtered clinical data as TSV files for a program
       description: Returns a zip file with commited clinical entity data in tsvs, filtered by request query. Exported data may not be valid with current dictionary.
       parameters:
         - $ref: '#/components/parameters/PathProgramId'
-        - in: query
-          name: entityTypes
-          explode: false
-          required: true
-          schema:
-            type: array
-            items:
-              type: string
-          description: Clinical Entity data types to return (ex. donor, specimen, sample_registration)
-        - in: query
-          name: donorIds
-          explode: false
-          schema:
-            type: array
-            items:
-              type: integer
-          description: Donor ID values to return
-        - in: query
-          name: submitterDonorIds
-          explode: false
-          schema:
-            type: array
-            items:
-              type: string
-          description: Submitter ID values to return
-        - in: query
-          name: completionState
-          schema:
-            type: string
-          description: Entity CompletionStates to filter by, one of 'all' | 'invalid' | 'complete' | 'incomplete'
+      requestBody:
+        description: JSON object containing search filters
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                completionState:
+                  $ref: '#/components/schemas/CompletionState'
+                  default: 'all'
+                entityTypes:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/EntityName'
+                  default: []
+                donorIds:
+                  type: array
+                  items:
+                    type: number
+                  default: []
+                submitterDonorIds:
+                  type: array
+                  items:
+                    type: string
+                  default: []
       responses:
         '200':
           description: 'A zip file with tsv file(s) inside'
@@ -1407,6 +1414,7 @@ components:
       required: true
       schema:
         type: string
+
   responses:
     ServiceUnavailableError:
       description: Endpoint service unavailable
@@ -1838,3 +1846,29 @@ components:
                       type: array
                       items:
                         type: string
+
+    CompletionState:
+      type: string
+      enum: [all, invalid, complete, incomplete]
+
+    EntityName:
+      type: string
+      enum:
+        [
+          donor,
+          sampleRegistration,
+          specimens,
+          primaryDiagnoses,
+          familyHistory,
+          treatment,
+          treatments,
+          chemotherapy,
+          immunotherapy,
+          surgery,
+          radiation,
+          followUps,
+          hormoneTherapy,
+          exposure,
+          comorbidity,
+          biomarker,
+        ]
