@@ -97,8 +97,6 @@ class ClinicalController {
     const programShortName: string = req.params.programId;
     if (!programShortName) {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
-    } else if (!req.query.entityTypes) {
-      return ControllerUtils.badRequest(res, 'Must request specific EntityTypes');
     }
     const sort: string = 'donorId';
     const page: number = 0;
