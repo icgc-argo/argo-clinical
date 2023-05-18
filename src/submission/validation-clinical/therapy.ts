@@ -105,21 +105,6 @@ const validateRadiationRecords = (
       ),
     );
 
-    if (!donorMatch && !previousDonorMatch) {
-      errors = [
-        ...errors,
-        utils.buildSubmissionError(
-          therapyRecord,
-          DataValidationErrors.INVALID_SUBMITTER_DONOR_ID,
-          TreatmentFieldsEnum.submitter_treatment_id,
-          {
-            [TreatmentFieldsEnum.treatment_type]: treatment_type,
-            therapyType: ClinicalEntitySchemaNames.RADIATION,
-          },
-        ),
-      ];
-    }
-
     if (!treatmentMatch && !previousTreatmentMatch) {
       errors = [
         ...errors,
@@ -130,6 +115,7 @@ const validateRadiationRecords = (
           {
             [TreatmentFieldsEnum.treatment_type]: treatment_type,
             therapyType: ClinicalEntitySchemaNames.RADIATION,
+            reference_radiation_treatment_id,
           },
         ),
       ];
@@ -145,6 +131,22 @@ const validateRadiationRecords = (
           {
             [TreatmentFieldsEnum.treatment_type]: treatment_type,
             therapyType: ClinicalEntitySchemaNames.RADIATION,
+          },
+        ),
+      ];
+    }
+
+    if (treatmentMatch && previousDonorMatch && !donorMatch) {
+      errors = [
+        ...errors,
+        utils.buildSubmissionError(
+          therapyRecord,
+          DataValidationErrors.INVALID_RADIATION_REFERENCE_TREATMENT_ID,
+          TreatmentFieldsEnum.submitter_treatment_id,
+          {
+            [TreatmentFieldsEnum.treatment_type]: treatment_type,
+            therapyType: ClinicalEntitySchemaNames.RADIATION,
+            reference_radiation_treatment_id,
           },
         ),
       ];
