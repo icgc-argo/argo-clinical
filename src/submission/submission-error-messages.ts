@@ -31,8 +31,6 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
   SPECIMEN_BELONGS_TO_OTHER_DONOR: errorData =>
     `Specimens can only be registered to a single donor. This specimen has already been registered to donor ${errorData.info.otherDonorSubmitterId}. Please correct your file or contact DCC to update the registered data.`,
   INVALID_PROGRAM_ID: () => 'Program ID does not match. Please include the correct Program ID.',
-  INVALID_SUBMITTER_DONOR_ID: () =>
-    'Submitter Donor ID does not match. Please include the correct Submitter ID.',
   MUTATING_EXISTING_DATA: errorData =>
     `The value does not match the previously registered value of ${errorData.info.originalValue}. Please correct your file or contact DCC to update the registered data.`,
   NEW_SAMPLE_ATTR_CONFLICT: () =>
@@ -115,10 +113,12 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
     `The combination of submitter_donor_id '${data.info.submitter_donor_id}' and submitter_treatment_id '${data.info.submitter_treatment_id}' can only be associated with one surgery_type. Please correct your data submission.`,
   DUPLICATE_SURGERY_WHEN_SPECIMEN_NOT_SUBMITTED: data =>
     `When submitter_specimen_id is not submitted, the combination of [submitter_donor_id = '${data.info.submitter_donor_id}' and submitter_treatment_id = '${data.info.submitter_treatment_id}' ] should only be submitted once in the Surgery schema. Please correct your data submission.`,
-  RADIATION_REFERENCE_ID_CONFLICT: () =>
-    `The submitter_treatment_id submitted in the "reference_radiation_treatment_id" field does not exist.`,
+  RADIATION_REFERENCE_ID_CONFLICT: ({ reference_radiation_treatment_id }) =>
+    `The submitter_treatment_id "${reference_radiation_treatment_id}" submitted in the "reference_radiation_treatment_id" field does not exist.`,
   RADIATION_THERAPY_TREATMENT_CONFLICT: () =>
     `The submitter_treatment_id submitted in the "reference_radiation_treatment_id" field is not for radiation treatment.`,
+  INVALID_RADIATION_REFERENCE_TREATMENT_ID: ({ reference_radiation_treatment_id }) =>
+    `The 'reference_radiation_treatment_id' "${reference_radiation_treatment_id}" belongs to submitter_donor_id "DN425", not "DN290"`,
 };
 
 const BATCH_ERROR_MESSAGES: Record<SubmissionBatchErrorTypes, (errorData: any) => string> = {
