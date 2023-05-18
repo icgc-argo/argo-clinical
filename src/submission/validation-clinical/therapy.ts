@@ -93,7 +93,11 @@ const validateRadiationRecords = (
 
   if (typeof radiation_boost === 'string' && radiation_boost.toLowerCase() === 'yes') {
     const treatmentMatch = submitter_treatment_id === reference_radiation_treatment_id;
-    const previousTreatmentMatch = radiationTreatments?.find(radiationRecord =>
+    const previousTreatmentMatch = treatments?.find(
+      treatmentRecord =>
+        treatmentRecord.clinicalInfo.submitter_treatment_id === reference_radiation_treatment_id,
+    );
+    const previousRadiationTreatmentMatch = radiationTreatments?.find(radiationRecord =>
       radiationRecord.therapies.some(
         record => record.clinicalInfo.submitter_treatment_id === reference_radiation_treatment_id,
       ),
@@ -121,7 +125,11 @@ const validateRadiationRecords = (
       ];
     }
 
-    if (treatmentMatch && treatment_type !== 'Radiation therapy') {
+    if (
+      (treatmentMatch && treatment_type !== 'Radiation therapy') ||
+      (previousTreatmentMatch &&
+        previousTreatmentMatch.clinicalInfo.treatment_type !== 'Radiation therapy')
+    ) {
       errors = [
         ...errors,
         utils.buildSubmissionError(
@@ -136,7 +144,7 @@ const validateRadiationRecords = (
       ];
     }
 
-    if (treatmentMatch && previousDonorMatch && !donorMatch) {
+    if (previousRadiationTreatmentMatch && previousDonorMatch && !donorMatch) {
       errors = [
         ...errors,
         utils.buildSubmissionError(
