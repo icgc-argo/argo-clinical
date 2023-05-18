@@ -728,12 +728,21 @@ paths:
           description: imported successfully - will indicate number of new donors and number of updated donors
 
   /exception/{programId}:
-    parameters:
-      - $ref: '#/components/parameters/PathProgramId'
+    get:
+      tags:
+        - Exception
+      summary: Get program exception
+      parameters:
+        - $ref: '#/components/parameters/PathProgramId'
+      responses:
+        '200':
+          description: 'exception or empty object if resource not found'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
     post:
       tags:
         - Exception
-      summary: Upload exception files
+      summary: Upload program exception files
       parameters:
         - $ref: '#/components/parameters/PathProgramId'
       requestBody:
@@ -742,10 +751,10 @@ paths:
             schema:
               type: object
               properties:
-                programExceptionFile:
+                exceptionFile:
                   type: string
                   format: binary
-        description: 'the tsv program exception file.  __Important:__ any exceptions provided replace the existing exceptions, so all exceptions must be provided (or some will be lost)'
+        description: 'The tsv program exception file. There is no required format for the filename. <br/><br/> The "schema" field must use snake case eg. follow_up <br/><br/> __Important:__ Be careful when you submit request form, every new submission will override existing program level exceptions, please check the current exceptions using the GET endpoint before posting new submission.'
         required: true
       responses:
         '201':
@@ -754,15 +763,7 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
         '422':
           description: 'unsuccessful validation on file'
-    get:
-      tags:
-        - Exception
-      summary: Get exception
-      responses:
-        '200':
-          description: 'exception or empty object if resource not found'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
+
     delete:
       tags:
         - Exception
@@ -776,6 +777,70 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
         '404':
           description: 'unsuccessful resource not found'
+
+  /exception/{programId}/entity:
+    get:
+      tags:
+        - Exception
+      summary: Get entity exception
+      parameters:
+        - $ref: '#/components/parameters/PathProgramId'
+      responses:
+        '200':
+          description: 'entity exception object by program or empty object if resource not found'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+    post:
+      tags:
+        - Exception
+      summary: Create entity exception
+      parameters:
+        - $ref: '#/components/parameters/PathProgramId'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                exceptionFile:
+                  type: string
+                  format: binary
+        description: 'The tsv exception file. There is no required format for the filename. <br/><br/> The "schema" field must use snake case eg. follow_up <br/><br/> __Important__ Only "specimen" and "follow_up" are currently accepted schemas. <br/><br/> __Important:__ Be careful when you submit request form, every new submission will override existing entity level exceptions, please check the current exceptions using the GET endpoint before posting new submission.'
+        required: true
+      responses:
+        '200':
+          description: 'entity exception object by program or empty object if resource not found'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /exception/{programId}/entity/{entity}:
+    delete:
+      tags:
+        - Exception
+      summary: Delete entity exception
+      parameters:
+        - $ref: '#/components/parameters/PathProgramId'
+        - in: path
+          name: entity
+          schema:
+            type: string
+          required: true
+          description: 'Entity to delete records from'
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                submitterDonorIds:
+                  type: array
+                  items:
+                    type: string
+        description: submitter donor ids
+        required: true
+      responses:
+        '200':
+          description: 'returns new entity exception after deletion'
 
   /clinical/donors:
     get:
@@ -1280,7 +1345,7 @@ tags:
   - name: Submission
     description: Uploading, Validating, and Committing clinical data
   - name: Exception
-    description: Uploading exceptions
+    description: Uploading, Deleting, Retrieving exceptions
   - name: Clinical Data
     description: ''
   - name: Patch Operations
