@@ -113,12 +113,12 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
     `The combination of submitter_donor_id '${data.info.submitter_donor_id}' and submitter_treatment_id '${data.info.submitter_treatment_id}' can only be associated with one surgery_type. Please correct your data submission.`,
   DUPLICATE_SURGERY_WHEN_SPECIMEN_NOT_SUBMITTED: data =>
     `When submitter_specimen_id is not submitted, the combination of [submitter_donor_id = '${data.info.submitter_donor_id}' and submitter_treatment_id = '${data.info.submitter_treatment_id}' ] should only be submitted once in the Surgery schema. Please correct your data submission.`,
-  RADIATION_REFERENCE_ID_CONFLICT: ({ reference_radiation_treatment_id }) =>
-    `The submitter_treatment_id "${reference_radiation_treatment_id}" submitted in the "reference_radiation_treatment_id" field does not exist.`,
+  RADIATION_REFERENCE_ID_CONFLICT: ({ info: { reference_radiation_treatment_id } }) =>
+    `The submitter_treatment_id ${reference_radiation_treatment_id} submitted in the "reference_radiation_treatment_id" field does not exist.`,
   RADIATION_THERAPY_TREATMENT_CONFLICT: () =>
     `The submitter_treatment_id submitted in the "reference_radiation_treatment_id" field is not for radiation treatment.`,
-  INVALID_RADIATION_REFERENCE_TREATMENT_ID: ({ reference_radiation_treatment_id }) =>
-    `The 'reference_radiation_treatment_id' "${reference_radiation_treatment_id}" belongs to submitter_donor_id "DN425", not "DN290"`,
+  INVALID_RADIATION_REFERENCE_TREATMENT_ID: ({ info: { reference_radiation_treatment_id } }) =>
+    `The 'reference_radiation_treatment_id' ${reference_radiation_treatment_id} belongs to submitter_donor_id "DN425", not "DN290"`,
 };
 
 const BATCH_ERROR_MESSAGES: Record<SubmissionBatchErrorTypes, (errorData: any) => string> = {
