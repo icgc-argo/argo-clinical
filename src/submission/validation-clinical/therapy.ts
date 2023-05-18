@@ -97,15 +97,10 @@ const validateRadiationRecords = (
       treatmentRecord =>
         treatmentRecord.clinicalInfo.submitter_treatment_id === reference_radiation_treatment_id,
     );
+    const previousTreatmentType = previousTreatmentMatch?.clinicalInfo.treatment_type;
     const previousRadiationTreatmentMatch = radiationTreatments?.find(radiationRecord =>
       radiationRecord.therapies.some(
         record => record.clinicalInfo.submitter_treatment_id === reference_radiation_treatment_id,
-      ),
-    );
-    const donorMatch = treatmentDonorId === therapyDonorId;
-    const previousDonorMatch = radiationTreatments?.find(radiationRecord =>
-      radiationRecord.therapies.some(
-        record => record.clinicalInfo.submitter_donor_id === therapyDonorId,
       ),
     );
 
@@ -114,7 +109,7 @@ const validateRadiationRecords = (
         ...errors,
         utils.buildSubmissionError(
           therapyRecord,
-          DataValidationErrors.RADIATION_REFERENCE_ID_CONFLICT,
+          DataValidationErrors.INVALID_REFERENCE_RADIATION_DONOR_ID,
           TreatmentFieldsEnum.submitter_treatment_id,
           {
             [TreatmentFieldsEnum.treatment_type]: treatment_type,
@@ -127,8 +122,7 @@ const validateRadiationRecords = (
 
     if (
       (treatmentMatch && treatment_type !== 'Radiation therapy') ||
-      (previousTreatmentMatch &&
-        previousTreatmentMatch.clinicalInfo.treatment_type !== 'Radiation therapy')
+      (previousTreatmentMatch && previousTreatmentType !== 'Radiation therapy')
     ) {
       errors = [
         ...errors,
@@ -144,12 +138,15 @@ const validateRadiationRecords = (
       ];
     }
 
-    if (previousRadiationTreatmentMatch && previousDonorMatch && !donorMatch) {
+    const previousRadiationDonorId =
+      previousRadiationTreatmentMatch?.clinicalInfo.submitter_treatment_id;
+
+    if (previousTreatmentMatch && previousRadiationDonorId !== therapyDonorId) {
       errors = [
         ...errors,
         utils.buildSubmissionError(
           therapyRecord,
-          DataValidationErrors.INVALID_RADIATION_REFERENCE_TREATMENT_ID,
+          DataValidationErrors.REFERENCE_RADIATION_ID_CONFLICT,
           TreatmentFieldsEnum.submitter_treatment_id,
           {
             [TreatmentFieldsEnum.treatment_type]: treatment_type,

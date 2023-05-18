@@ -2154,16 +2154,17 @@ describe('data-validator', () => {
         .catch((err: any) => fail(err));
 
       const therapyConflictErr: SubmissionValidationError = {
-        type: DataValidationErrors.INVALID_SUBMITTER_DONOR_ID,
+        type: DataValidationErrors.REFERENCE_RADIATION_ID_CONFLICT,
         fieldName: TreatmentFieldsEnum.submitter_treatment_id,
         index: 0,
         info: {
           treatment_type: ['Radiation therapy'],
           therapyType: ClinicalEntitySchemaNames.RADIATION,
+          reference_radiation_treatment_id: 'T_03',
           donorSubmitterId: 'AB2',
           value: 'T_03',
         },
-        message: `Submitter Donor ID does not match. Please include the correct Submitter ID.`,
+        message: `The 'reference_radiation_treatment_id' T_03 belongs to submitter_donor_id "DN425", not "DN290"`,
       };
 
       chai.expect(result.radiation.dataErrors.length).to.eq(2);
@@ -2214,11 +2215,11 @@ describe('data-validator', () => {
         message: `The submitter_treatment_id submitted in the "reference_radiation_treatment_id" field is not for radiation treatment.`,
       };
 
-      chai.expect(result.radiation.dataErrors.length).to.eq(2);
+      chai.expect(result.radiation.dataErrors.length).to.eq(3);
       chai.expect(result.radiation.dataErrors).to.deep.include(therapyConflictErr);
     });
 
-    it('should validate reference radiation treatment id matches submitter treatment id', async () => {
+    it('should validate reference radiation treatment id matches an existing submitter treatment id', async () => {
       const existingDonorMock: Donor = stubs.validation.existingDonor01();
 
       const newDonorAB1Records = {};
@@ -2249,16 +2250,17 @@ describe('data-validator', () => {
         .catch((err: any) => fail(err));
 
       const referenceIdConflictErr: SubmissionValidationError = {
-        type: DataValidationErrors.RADIATION_REFERENCE_ID_CONFLICT,
+        type: DataValidationErrors.INVALID_REFERENCE_RADIATION_DONOR_ID,
         fieldName: TreatmentFieldsEnum.submitter_treatment_id,
         index: 0,
         info: {
           treatment_type: ['Radiation therapy'],
           therapyType: ClinicalEntitySchemaNames.RADIATION,
+          reference_radiation_treatment_id: 'T_02',
           donorSubmitterId: 'AB1',
           value: 'T_03',
         },
-        message: `The submitter_treatment_id submitted in the "reference_radiation_treatment_id" field does not exist.`,
+        message: `The submitter_treatment_id T_02 submitted in the "reference_radiation_treatment_id" field does not exist.`,
       };
 
       chai.expect(result.radiation.dataErrors.length).to.eq(1);
