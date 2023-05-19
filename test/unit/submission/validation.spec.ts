@@ -2155,14 +2155,15 @@ describe('data-validator', () => {
 
       const therapyConflictErr: SubmissionValidationError = {
         type: DataValidationErrors.REFERENCE_RADIATION_ID_CONFLICT,
-        fieldName: TreatmentFieldsEnum.submitter_treatment_id,
+        fieldName: TreatmentFieldsEnum.submitter_donor_id,
         index: 0,
         info: {
-          treatment_type: ['Radiation therapy'],
-          therapyType: ClinicalEntitySchemaNames.RADIATION,
+          submitter_donor_id: 'AB2',
           reference_radiation_treatment_id: 'T_03',
+          therapyType: ClinicalEntitySchemaNames.RADIATION,
+          previousTreatmentDonorId: 'AB1',
           donorSubmitterId: 'AB2',
-          value: 'AB1',
+          value: 'AB2',
         },
         message: `The 'reference_radiation_treatment_id' T_03 belongs to submitter_donor_id AB1, not AB2`,
       };
@@ -2215,7 +2216,7 @@ describe('data-validator', () => {
         message: `The submitter_treatment_id submitted in the "reference_radiation_treatment_id" field is not for radiation treatment.`,
       };
 
-      chai.expect(result.radiation.dataErrors.length).to.eq(3);
+      chai.expect(result.radiation.dataErrors.length).to.eq(2);
       chai.expect(result.radiation.dataErrors).to.deep.include(therapyConflictErr);
     });
 

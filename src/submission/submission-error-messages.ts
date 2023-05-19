@@ -118,9 +118,9 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
   RADIATION_THERAPY_TREATMENT_CONFLICT: () =>
     `The submitter_treatment_id submitted in the "reference_radiation_treatment_id" field is not for radiation treatment.`,
   REFERENCE_RADIATION_ID_CONFLICT: ({
-    info: { reference_radiation_treatment_id, previousRadiationDonorId, therapyDonorId },
+    info: { reference_radiation_treatment_id, previousTreatmentDonorId, submitter_donor_id },
   }) =>
-    `The 'reference_radiation_treatment_id' ${reference_radiation_treatment_id} belongs to submitter_donor_id ${previousRadiationDonorId}, not ${therapyDonorId}`,
+    `The 'reference_radiation_treatment_id' ${reference_radiation_treatment_id} belongs to submitter_donor_id ${previousTreatmentDonorId}, not ${submitter_donor_id}`,
 };
 
 const BATCH_ERROR_MESSAGES: Record<SubmissionBatchErrorTypes, (errorData: any) => string> = {
