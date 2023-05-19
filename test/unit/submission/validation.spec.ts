@@ -2167,7 +2167,7 @@ describe('data-validator', () => {
         message: `The 'reference_radiation_treatment_id' T_03 belongs to submitter_donor_id AB1, not AB2`,
       };
 
-      chai.expect(result.radiation.dataErrors.length).to.eq(1);
+      chai.expect(result.radiation.dataErrors.length).to.eq(2);
       chai.expect(result.radiation.dataErrors).to.deep.include(therapyConflictErr);
     });
 
@@ -2215,7 +2215,7 @@ describe('data-validator', () => {
         message: `The submitter_treatment_id submitted in the "reference_radiation_treatment_id" field is not for radiation treatment.`,
       };
 
-      chai.expect(result.radiation.dataErrors.length).to.eq(2);
+      chai.expect(result.radiation.dataErrors.length).to.eq(3);
       chai.expect(result.radiation.dataErrors).to.deep.include(therapyConflictErr);
     });
 

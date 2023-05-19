@@ -75,10 +75,6 @@ const validateRadiationRecords = (
 ) => {
   const { treatments } = donor;
 
-  const radiationTreatments = treatments?.filter(treatmentRecord => {
-    treatmentRecord.therapies.some(therapy => therapy.therapyType === 'radiation');
-  });
-
   const {
     clinicalInfo: { submitter_donor_id: treatmentDonorId, submitter_treatment_id, treatment_type },
   } = treatment;
@@ -98,11 +94,9 @@ const validateRadiationRecords = (
         treatmentRecord.clinicalInfo.submitter_treatment_id === reference_radiation_treatment_id,
     );
     const previousTreatmentType = previousTreatmentMatch?.clinicalInfo.treatment_type;
-    const previousRadiationTreatmentMatch = radiationTreatments?.find(radiationRecord =>
-      radiationRecord.therapies.some(
-        record => record.clinicalInfo.submitter_treatment_id === reference_radiation_treatment_id,
-      ),
-    );
+    const previousTreatmentIsRadiation =
+      previousTreatmentType && previousTreatmentType === 'radiation';
+    const previousTreatmentDonorId = previousTreatmentMatch?.clinicalInfo.submitter_treatment_id;
 
     if (!treatmentMatch && !previousTreatmentMatch) {
       errors = [
@@ -122,7 +116,7 @@ const validateRadiationRecords = (
 
     if (
       (treatmentMatch && treatment_type !== 'Radiation therapy') ||
-      (previousTreatmentMatch && previousTreatmentType !== 'Radiation therapy')
+      (previousTreatmentMatch && previousTreatmentIsRadiation)
     ) {
       errors = [
         ...errors,
@@ -138,20 +132,19 @@ const validateRadiationRecords = (
       ];
     }
 
-    const previousRadiationDonorId =
-      previousRadiationTreatmentMatch?.clinicalInfo.submitter_treatment_id;
-
-    if (previousTreatmentMatch && previousRadiationDonorId !== therapyDonorId) {
+    if (previousTreatmentMatch && previousTreatmentDonorId !== therapyDonorId) {
       errors = [
         ...errors,
         utils.buildSubmissionError(
           therapyRecord,
           DataValidationErrors.REFERENCE_RADIATION_ID_CONFLICT,
-          TreatmentFieldsEnum.submitter_treatment_id,
+          TreatmentFieldsEnum.submitter_donor_id,
           {
-            [TreatmentFieldsEnum.treatment_type]: treatment_type,
+            [TreatmentFieldsEnum.submitter_donor_id]: therapyDonorId,
             therapyType: ClinicalEntitySchemaNames.RADIATION,
             reference_radiation_treatment_id,
+            previousTreatmentDonorId,
+            therapyDonorId,
           },
         ),
       ];
