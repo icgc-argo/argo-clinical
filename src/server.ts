@@ -153,6 +153,7 @@ let server: Server;
       app.get('port'),
       app.get('env'),
     );
+    console.debug(`Swagger Docs available at http://localhost:${app.get('port')}/api-docs`);
     console.log('  Press CTRL-C to stop\n');
     console.timeEnd('boot time');
   });
