@@ -22,6 +22,7 @@ import {
   SubmittedClinicalRecord,
   DataValidationErrors,
   SubmissionValidationOutput,
+  ClinicalSubmissionRecordsByDonorIdMap,
 } from '../submission-entities';
 import {
   ClinicalEntitySchemaNames,
@@ -40,6 +41,7 @@ export const validate = async (
   therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
   existentDonor: DeepReadonly<Donor>,
   mergedDonor: Donor,
+  submittedRecords: DeepReadonly<ClinicalSubmissionRecordsByDonorIdMap>,
 ): Promise<SubmissionValidationOutput> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
   if (!therapyRecord || !mergedDonor || !existentDonor) {
@@ -52,26 +54,42 @@ export const validate = async (
   // TODO: Refactor use of push
   checkTreatmentHasCorrectTypeForTherapy(therapyRecord, treatment, errors);
 
-  const { therapies } = treatment;
+  const crossFileErrors = crossFileValidator(
+    mergedDonor,
+    treatment,
+    therapyRecord,
+    submittedRecords,
+  );
 
+  errors = [...errors, ...crossFileErrors];
+  return { errors };
+};
+
+const crossFileValidator = (
+  donor: Donor,
+  treatment: DeepReadonly<Treatment>,
+  therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
+  // submitted records needed to validate current submission
+  submittedRecords: DeepReadonly<ClinicalSubmissionRecordsByDonorIdMap>,
+) => {
   const isRadiationRecord = Object.values(RadiationFieldsEnum).some(field =>
     Object.keys(therapyRecord).includes(field),
   );
-  const hasRadiationTherapies = therapies.some(therapy => therapy.therapyType === 'radiation');
 
-  const radiationErrors: SubmissionValidationError[] =
-    isRadiationRecord && hasRadiationTherapies
-      ? validateRadiationRecords(mergedDonor, treatment, therapyRecord)
-      : [];
+  const radiationErrors: SubmissionValidationError[] = isRadiationRecord
+    ? validateRadiationRecords(donor, treatment, therapyRecord, submittedRecords)
+    : [];
 
-  errors = [...errors, ...radiationErrors];
-  return { errors };
+  const crossFileErrors = [...radiationErrors];
+
+  return crossFileErrors;
 };
 
 const validateRadiationRecords = (
   donor: Donor,
   treatment: DeepReadonly<Treatment>,
   therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
+  submittedRecords: DeepReadonly<ClinicalSubmissionRecordsByDonorIdMap>,
 ) => {
   const { treatments } = donor;
 
@@ -88,11 +106,15 @@ const validateRadiationRecords = (
   let errors: SubmissionValidationError[] = [];
 
   if (typeof radiation_boost === 'string' && radiation_boost.toLowerCase() === 'yes') {
+    // submittedTreatment matches current Donor
     const treatmentMatch = submitter_treatment_id === reference_radiation_treatment_id;
+
+    // allTreatments -- submission + db
     const previousTreatmentMatch = treatments?.find(
       treatmentRecord =>
         treatmentRecord.clinicalInfo.submitter_treatment_id === reference_radiation_treatment_id,
     );
+
     const previousTreatmentType = previousTreatmentMatch?.clinicalInfo.treatment_type;
     const previousTreatmentIsRadiation =
       previousTreatmentType && previousTreatmentType === 'radiation';
@@ -132,7 +154,10 @@ const validateRadiationRecords = (
       ];
     }
 
-    if (previousTreatmentMatch && previousTreatmentDonorId !== therapyDonorId) {
+    if (
+      (treatmentMatch && treatmentDonorId !== therapyDonorId) ||
+      (previousTreatmentMatch && previousTreatmentDonorId !== therapyDonorId)
+    ) {
       errors = [
         ...errors,
         utils.buildSubmissionError(
