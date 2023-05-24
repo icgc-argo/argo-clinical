@@ -129,7 +129,8 @@ describe('submission service apply exceptions', () => {
     it('should return zero validation errors if valid entity exception exists', async () => {
       const record = {
         program_id: TEST_PROGRAM_ID,
-        submitter_donor_id: 'DO-1',
+        submitter_donor_id: 'DO-0',
+        submitter_specimen_id: 'SP-0',
         specimen_acquisition_interval: 'not applicable',
       };
 
