@@ -166,30 +166,33 @@ const validateRadiationRecords = async (
     }
 
     // Therapy + Treatment are associated with Radiation
-    // const previousTreatmentIsRadiation =
-    //     previousTreatmentType && previousTreatmentType === 'radiation';
+    const currentTreatmentIsRadiation = treatment_type && treatment_type === 'radiation';
+
+    const submittedTreatmentIsRadiation =
+      submissionTreatmentIdMatch && submissionTreatmentIdMatch.treatment_type === 'radiation';
+
+    const storedTreatmentIsRadiation =
+      submissionTreatmentIdMatch && submissionTreatmentIdMatch.treatment_type === 'radiation';
+
+    const isRadiation =
+      currentTreatmentIsRadiation || submittedTreatmentIsRadiation || storedTreatmentIsRadiation;
+
+    if (!isRadiation) {
+      errors = [
+        ...errors,
+        utils.buildSubmissionError(
+          therapyRecord,
+          DataValidationErrors.RADIATION_THERAPY_TREATMENT_CONFLICT,
+          TreatmentFieldsEnum.submitter_treatment_id,
+          {
+            [TreatmentFieldsEnum.treatment_type]: treatment_type,
+            therapyType: ClinicalEntitySchemaNames.RADIATION,
+          },
+        ),
+      ];
+    }
 
     // const previousTreatmentDonorId = previousDonorMatch?.clinicalInfo?.submitter_donor_id;
-
-    // if (
-    //     (treatmentMatch && treatment_type !== 'Radiation therapy') ||
-    //     (previousDonorMatch && previousTreatmentIsRadiation)
-    //   ) {
-    //       errors = [
-    //           ...errors,
-    //           utils.buildSubmissionError(
-    //               therapyRecord,
-    //               DataValidationErrors.RADIATION_THERAPY_TREATMENT_CONFLICT,
-    //               TreatmentFieldsEnum.submitter_treatment_id,
-    //               {
-    //                   [TreatmentFieldsEnum.treatment_type]: treatment_type,
-    //                   therapyType: ClinicalEntitySchemaNames.RADIATION,
-    //                 },
-    //               ),
-    //             ];
-    //           }
-
-    // const previousTreatmentType = previousDonorMatch?.clinicalInfo?.treatment_type;
 
     //   if (
     //     (treatmentMatch && treatmentDonorId !== therapyDonorId) ||
