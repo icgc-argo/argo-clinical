@@ -175,6 +175,7 @@ describe('data-validator', () => {
   let donorDaoFindBySpecimenSubmitterIdAndProgramIdStub: sinon.SinonStub<[any], any>;
   let donorDaoFindBySampleSubmitterIdAndProgramIdStub: sinon.SinonStub<[any], any>;
   let donorDaoFindByClinicalEntitySubmitterIdAndProgramIdStub: sinon.SinonStub<[any, any], any>;
+  let donorDaoFindByPaginatedProgramId: sinon.SinonStub<[any, any], any>;
 
   beforeEach(done => {
     donorDaoCountByStub = sinon.stub(donorDao, 'countBy');
@@ -191,6 +192,8 @@ describe('data-validator', () => {
       donorDao,
       'findByClinicalEntitySubmitterIdAndProgramId',
     );
+
+    donorDaoFindByPaginatedProgramId = sinon.stub(donorDao, 'findByPaginatedProgramId');
     done();
   });
 
@@ -199,6 +202,7 @@ describe('data-validator', () => {
     donorDaoFindBySpecimenSubmitterIdAndProgramIdStub.restore();
     donorDaoFindBySampleSubmitterIdAndProgramIdStub.restore();
     donorDaoFindByClinicalEntitySubmitterIdAndProgramIdStub.restore();
+    donorDaoFindByPaginatedProgramId.restore();
     done();
   });
 
@@ -2216,7 +2220,7 @@ describe('data-validator', () => {
         message: `The submitter_treatment_id submitted in the "reference_radiation_treatment_id" field is not for radiation treatment.`,
       };
 
-      chai.expect(result.radiation.dataErrors.length).to.eq(2);
+      chai.expect(result.radiation.dataErrors.length).to.eq(3);
       chai.expect(result.radiation.dataErrors).to.deep.include(therapyConflictErr);
     });
 
@@ -2264,7 +2268,7 @@ describe('data-validator', () => {
         message: `The submitter_treatment_id T_02 submitted in the "reference_radiation_treatment_id" field does not exist.`,
       };
 
-      chai.expect(result.radiation.dataErrors.length).to.eq(1);
+      chai.expect(result.radiation.dataErrors.length).to.eq(3);
       chai.expect(result.radiation.dataErrors).to.deep.include(referenceIdConflictErr);
     });
 

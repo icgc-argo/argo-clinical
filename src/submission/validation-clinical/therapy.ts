@@ -87,6 +87,12 @@ const crossFileValidator = async (
   return crossFileErrors;
 };
 
+interface DonorResult {
+  donors: DeepReadonly<Donor>[];
+}
+
+const emptyDonorResult: DonorResult = { donors: [] };
+
 const validateRadiationRecords = async (
   donor: Donor,
   treatment: DeepReadonly<Treatment>,
@@ -128,9 +134,15 @@ const validateRadiationRecords = async (
   };
 
   // Compare across all Treatments
-  const { donors } = await donorDao.findByPaginatedProgramId(programId, query);
+  const { donors } =
+    (await donorDao.findByPaginatedProgramId(programId, query)) || emptyDonorResult;
 
-  const storedTreatments = donors.map(donor => donor.treatments).flat();
+  const storedTreatments = donors.length
+    ? donors
+        .map(donor => donor.treatments)
+        .filter(treatments => Boolean(treatments))
+        .flat()
+    : [];
 
   let errors: SubmissionValidationError[] = [];
 
