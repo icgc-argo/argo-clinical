@@ -91,7 +91,7 @@ const validateFieldValueWithExceptions = ({
       case ClinicalEntitySchemaNames.FOLLOW_UP:
         const submitterFollowupId = record[FollowupFieldsEnum.submitter_follow_up_id] || undefined;
         entityException.follow_up
-          .filter(exception => exception.submitter_followup_id === submitterFollowupId)
+          .filter(exception => exception.submitter_follow_up_id === submitterFollowupId)
           .forEach(exception => exceptions.push(exception));
         break;
     }
