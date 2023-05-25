@@ -20,7 +20,11 @@
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
 import { DataRecord } from '@overturebio-stack/lectern-client/lib/schema-entities';
 import _ from 'lodash';
-import { ClinicalEntitySchemaNames } from '../../common-model/entities';
+import {
+  ClinicalEntitySchemaNames,
+  FollowupFieldsEnum,
+  SpecimenFieldsEnum,
+} from '../../common-model/entities';
 import entityExceptionRepository from '../../exception/repo/entity';
 import programExceptionRepository from '../../exception/repo/program';
 import {
@@ -29,7 +33,6 @@ import {
   ExceptionRecord,
   ProgramException,
 } from '../../exception/types';
-import { isEntityException, isProgramException } from '../../exception/util';
 
 /**
  * query db for program or entity exceptions
@@ -52,33 +55,54 @@ const queryForExceptions = async (programId: string) => {
  * @returns true if an exception match exists, false otherwise
  */
 const validateFieldValueWithExceptions = ({
+  record,
   programException,
   entityException,
   schemaName,
   fieldValue,
   validationErrorFieldName,
 }: {
+  record: DataRecord;
   programException: ProgramException | null;
   entityException: EntityException | null;
   schemaName: EntityExceptionSchemaNames;
   fieldValue: string;
   validationErrorFieldName: string;
 }): boolean => {
-  let exceptionValue: string | undefined = '';
+  const allowedValues: Set<string> = new Set();
+
   // program level is applicable to ALL donors
-  if (isProgramException(programException)) {
-    exceptionValue = programException.exceptions.find(
-      exception => exception.requested_core_field === validationErrorFieldName,
-    )?.requested_exception_value;
-  } else if (isEntityException(entityException)) {
-    const exceptions: Array<ExceptionRecord> = entityException[schemaName];
-    exceptionValue = exceptions.find(
-      exception => exception.requested_core_field === validationErrorFieldName,
-    )?.requested_exception_value;
+  if (programException) {
+    programException.exceptions
+      .filter(exception => exception.requested_core_field === validationErrorFieldName)
+      .forEach(matchingException => allowedValues.add(matchingException.requested_exception_value));
+  }
+
+  if (entityException) {
+    const exceptions: ExceptionRecord[] = [];
+
+    switch (schemaName) {
+      case ClinicalEntitySchemaNames.SPECIMEN:
+        const submitterSpecimenId = record[SpecimenFieldsEnum.submitter_specimen_id] || undefined;
+        entityException.specimen
+          .filter(exception => exception.submitter_specimen_id === submitterSpecimenId)
+          .forEach(exception => exceptions.push(exception));
+        break;
+      case ClinicalEntitySchemaNames.FOLLOW_UP:
+        const submitterFollowupId = record[FollowupFieldsEnum.submitter_follow_up_id] || undefined;
+        entityException.follow_up
+          .filter(exception => exception.submitter_follow_up_id === submitterFollowupId)
+          .forEach(exception => exceptions.push(exception));
+        break;
+    }
+
+    exceptions
+      .filter(exception => exception.requested_core_field === validationErrorFieldName)
+      .forEach(matchingException => allowedValues.add(matchingException.requested_exception_value));
   }
 
   // check submitted exception value matches record validation error field value
-  return exceptionValue === fieldValue;
+  return allowedValues.has(fieldValue);
 };
 
 /**
@@ -119,68 +143,74 @@ export const checkForProgramAndEntityExceptions = async ({
   const { programException, entityException } = await queryForExceptions(programId);
 
   // if there are submitted exceptions for this program, check if they match record values
-  if (isProgramException(programException) || isEntityException(entityException)) {
-    schemaValidationErrors.forEach(validationError => {
-      const validationErrorFieldName = validationError.fieldName;
-      const fieldValue = record[validationErrorFieldName];
-
-      // field value is not matching
-      if (!fieldValue) {
-        filteredErrors.push(validationError);
-        return;
-      }
-
-      /**
-       * Zero Array type exceptions exist, but recordValue type is string | string[]
-       * therefore no exception is present for arrays. validation error is valid
-       */
-      if (Array.isArray(fieldValue)) {
-        filteredErrors.push(validationError);
-        return;
-      }
-
-      // schema is not accepted type that can have exceptions
-      if (
-        schemaName !== ClinicalEntitySchemaNames.FOLLOW_UP &&
-        schemaName !== ClinicalEntitySchemaNames.SPECIMEN
-      ) {
-        filteredErrors.push(validationError);
-        return;
-      }
-
-      // normalize submitted record field value to match submitted exceptions
-      const normalizedFieldValue = normalizeExceptionValue(fieldValue);
-
-      // missing required field, validate as normal, exceptions still require a submitted value
-      const isMissingRequiredField =
-        validationError.errorType ===
-        dictionaryEntities.SchemaValidationErrorTypes.MISSING_REQUIRED_FIELD;
-
-      const valueHasException = !isMissingRequiredField
-        ? validateFieldValueWithExceptions({
-            programException,
-            entityException,
-            schemaName,
-            fieldValue: normalizedFieldValue,
-            validationErrorFieldName: validationError.fieldName,
-          })
-        : false;
-
-      if (valueHasException) {
-        // ensure value is normalized exception value
-        const normalizedExceptionRecord = {
-          ...record,
-          [validationErrorFieldName]: normalizedFieldValue,
-        };
-        normalizedRecord = normalizedExceptionRecord;
-      } else {
-        // only add validation errors that don't have exceptions
-        filteredErrors.push(validationError);
-      }
-    });
-    return { filteredErrors, normalizedRecord };
-  } else {
-    // no exceptions. return values without change.
+  if (!(programException || entityException)) {
     return { filteredErrors: schemaValidationErrors, normalizedRecord: record };
   }
+
+  // check each validation error for a matching exception, and remove the validaiton if the value matches the exception value
+  schemaValidationErrors.forEach(validationError => {
+    const validationErrorFieldName = validationError.fieldName;
+    const fieldValue = record[validationErrorFieldName];
+
+    // field value is not matching
+    if (!fieldValue) {
+      filteredErrors.push(validationError);
+      return;
+    }
+
+    /**
+     * Zero Array type exceptions exist, but recordValue type is string | string[]
+     * therefore no exception is present for arrays. validation error is valid
+     */
+    if (Array.isArray(fieldValue)) {
+      filteredErrors.push(validationError);
+      return;
+    }
+
+    // schema is not accepted type that can have exceptions
+    if (
+      !(
+        schemaName === ClinicalEntitySchemaNames.FOLLOW_UP ||
+        schemaName === ClinicalEntitySchemaNames.SPECIMEN
+      )
+    ) {
+      filteredErrors.push(validationError);
+      return;
+    }
+
+    // normalize submitted record field value to match submitted exceptions
+    const normalizedFieldValue = normalizeExceptionValue(fieldValue);
+
+    // missing required field, validate as normal, exceptions still require a submitted value
+    const isMissingRequiredField =
+      validationError.errorType ===
+      dictionaryEntities.SchemaValidationErrorTypes.MISSING_REQUIRED_FIELD;
+
+    if (isMissingRequiredField) {
+      filteredErrors.push(validationError);
+      return;
+    }
+
+    const valueHasException = validateFieldValueWithExceptions({
+      record,
+      programException,
+      entityException,
+      schemaName,
+      fieldValue: normalizedFieldValue,
+      validationErrorFieldName: validationError.fieldName,
+    });
+
+    if (valueHasException) {
+      // ensure value is normalized exception value
+      const normalizedExceptionRecord = {
+        ...record,
+        [validationErrorFieldName]: normalizedFieldValue,
+      };
+      normalizedRecord = normalizedExceptionRecord;
+    } else {
+      // only add validation errors that don't have exceptions
+      filteredErrors.push(validationError);
+    }
+  });
+  return { filteredErrors, normalizedRecord };
 };
