@@ -47,7 +47,7 @@ export type SpecimenExceptionRecord = BaseEntityExceptionRecord & {
 };
 
 export type FollowUpExceptionRecord = BaseEntityExceptionRecord & {
-  submitter_followup_id: string;
+  submitter_follow_up_id: string;
 };
 
 export type EntityExceptionRecord = SpecimenExceptionRecord | FollowUpExceptionRecord;
@@ -127,8 +127,8 @@ export const isSpecimenExceptionRecord = (input: any): input is SpecimenExceptio
 
 export const isFollowupExceptionRecord = (input: any): input is FollowUpExceptionRecord => {
   return (
-    // submitter_followup_id must exist and be a string
-    'submitter_followup_id' in input && typeof input.submitter_followup_id === 'string'
+    // submitter_follow_up_id must exist and be a string
+    'submitter_follow_up_id' in input && typeof input.submitter_follow_up_id === 'string'
   );
 };
 
@@ -140,7 +140,7 @@ export const isEntityExceptionRecord = (input: any): input is EntityExceptionRec
   if (hasDonorIdField && isExceptionRecord(input)) {
     // remove based exception record fields to validate specific entity
     const entityFields = _.omit(input, baseEntityExceptionFields);
-    // can't have more than one identifying field eg. submitter_specimen_id AND submitter_followup_id
+    // can't have more than one identifying field eg. submitter_specimen_id AND submitter_follow_up_id
     return Object.keys(entityFields).length === 1;
   }
   return false;
