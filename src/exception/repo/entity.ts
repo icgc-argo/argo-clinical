@@ -51,7 +51,7 @@ const entityExceptionSchema = new mongoose.Schema<EntityException>({
   follow_up: [
     {
       ...BaseExceptionSchema.obj,
-      submitter_followup_id: String,
+      submitter_follow_up_id: String,
     },
   ],
 });
