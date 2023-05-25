@@ -926,7 +926,7 @@ paths:
       tags:
         - Clinical Data
       summary: Get all program submitted data from db. Returns clinicalEntities[].
-      description: This request fetches clinical data from donors, for the specified clinical entities, filtered by the search parameters provided in the request body. The request is paginated and sorted based on query parameters in the URL. This does not update data any clinical data.
+      description: This request fetches clinical data from donors, for the specified clinical entities, filtered by the search parameters provided in the request body. The request is paginated and sorted based on query parameters in the URL. This does not update any clinical data.
       parameters:
         - $ref: '#/components/parameters/PathProgramId'
         - in: query
@@ -986,7 +986,7 @@ paths:
       tags:
         - Clinical Data
       summary: Get all clinical errors for a given program. Returns clinicalErrors[].
-      description: This request fetches the migration errors attached to donors, filtered by the list of donor IDs provided in the request body. This does not update data any clinical data.
+      description: This request fetches the migration errors attached to donors, filtered by the list of donor IDs provided in the request body. This does not update any clinical data.
       parameters:
         - $ref: '#/components/parameters/PathProgramId'
       requestBody:
@@ -1018,7 +1018,7 @@ paths:
       tags:
         - Clinical Data
       summary: Get donorIds and submitter donor IDs which match a query for a given program. Returns DonorId[] + SubmitterDonorId[].
-      description: This request fetches donorIds based on search filters provided in request body. This does not update data any clinical data.
+      description: This request fetches donorIds based on search filters provided in request body. This does not update any clinical data.
       parameters:
         - $ref: '#/components/parameters/PathProgramId'
       requestBody:
