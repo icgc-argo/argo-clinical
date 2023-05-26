@@ -74,8 +74,9 @@ const crossFileValidator = async (
   // submitted records needed to validate current submission
   submittedRecords: DeepReadonly<ClinicalSubmissionRecordsByDonorIdMap>,
 ) => {
+  const therapyRecordKeys = Object.keys(therapyRecord);
   const isRadiationRecord = Object.values(RadiationFieldsEnum).some(field =>
-    Object.keys(therapyRecord).includes(field),
+    therapyRecordKeys.includes(field),
   );
 
   const radiationErrors: SubmissionValidationError[] = isRadiationRecord
