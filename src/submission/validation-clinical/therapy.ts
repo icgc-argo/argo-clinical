@@ -137,12 +137,7 @@ const validateRadiationRecords = async (
   const { donors } =
     (await donorDao.findByPaginatedProgramId(programId, query)) || emptyDonorResult;
 
-  const storedTreatments = donors.length
-    ? donors
-        .map(donor => donor.treatments)
-        .filter(treatments => Boolean(treatments))
-        .flat()
-    : [];
+  const storedTreatments = donors.filter(donor => Boolean(donor?.treatments)).flat();
 
   let errors: SubmissionValidationError[] = [];
 
