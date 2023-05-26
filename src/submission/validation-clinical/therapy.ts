@@ -180,7 +180,7 @@ const validateRadiationRecords = async (
     }
 
     // Therapy + Treatment are associated with Radiation
-    const currentTreatmentIsRadiation = treatment_type && treatment_type === 'radiation';
+    const currentTreatmentIsRadiation = treatment_type === 'radiation';
 
     const submittedTreatmentIsRadiation =
       submissionTreatmentIdMatch && submissionTreatmentIdMatch.treatment_type === 'radiation';
