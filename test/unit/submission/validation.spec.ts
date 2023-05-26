@@ -193,7 +193,10 @@ describe('data-validator', () => {
       'findByClinicalEntitySubmitterIdAndProgramId',
     );
 
-    donorDaoFindByPaginatedProgramId = sinon.stub(donorDao, 'findByPaginatedProgramId');
+    donorDaoFindByPaginatedProgramId = sinon
+      .stub(donorDao, 'findByPaginatedProgramId')
+      .resolves({ donors: [], totalDonors: 0 });
+
     done();
   });
 
