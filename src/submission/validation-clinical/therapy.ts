@@ -186,7 +186,7 @@ const validateRadiationRecords = async (
       submissionTreatmentIdMatch && submissionTreatmentIdMatch.treatment_type === 'radiation';
 
     const storedTreatmentIsRadiation =
-      storedTreatmentIdMatch && storedTreatmentIdMatch.clinicalInfo?.treatment_type === 'radiation';
+      storedTreatmentIdMatch?.clinicalInfo?.treatment_type === 'radiation';
 
     const isRadiation =
       currentTreatmentIsRadiation || submittedTreatmentIsRadiation || storedTreatmentIsRadiation;
