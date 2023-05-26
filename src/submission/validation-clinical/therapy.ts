@@ -114,7 +114,7 @@ const validateRadiationRecords = async (
   let submittedTreatments: DeepReadonly<ClinicalInfo>[] = [];
 
   for (const donorId in submittedRecords) {
-    const submittedTreatmentRecords = [...submittedRecords[donorId].treatment] as ClinicalInfo[];
+    const submittedTreatmentRecords = submittedRecords[donorId].treatment;
     if (submittedTreatmentRecords && submittedTreatmentRecords.length)
       submittedTreatments = [...submittedTreatments, ...submittedTreatmentRecords];
   }
