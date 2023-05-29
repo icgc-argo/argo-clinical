@@ -237,6 +237,18 @@ export const buildDynamicStubSchema = () => {
     fieldNames.specimen.PERCENT_TUMOUR_CELLS_MEASUREMENT_METHOD,
   ).valueType = dictionaryEntities.ValueType.STRING;
 
+  getField(
+    schemaV17,
+    ClinicalEntitySchemaNames.RADIATION,
+    fieldNames.radiation.RADIATION_BOOST,
+  ).valueType = dictionaryEntities.ValueType.STRING;
+
+  getField(
+    schemaV17,
+    ClinicalEntitySchemaNames.RADIATION,
+    fieldNames.radiation.REFERENCE_RADIATION_TREATMENT_ID,
+  ).valueType = dictionaryEntities.ValueType.STRING;
+
   const newDictionaries = _.concat(
     legacyStubSchemas.dictionaries.slice(0, 3) as Array<dictionaryEntities.SchemasDictionary>,
     [

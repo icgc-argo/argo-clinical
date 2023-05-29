@@ -174,6 +174,7 @@ export const validateSubmissionData = async (
           record,
           existentDonor,
           mergedDonor,
+          newRecordsToDonorMap,
         );
         const result = buildRecordValidationResult(
           record,
