@@ -27,12 +27,7 @@ import {
 } from '../../common-model/entities';
 import entityExceptionRepository from '../../exception/repo/entity';
 import programExceptionRepository from '../../exception/repo/program';
-import {
-  EntityException,
-  EntityExceptionSchemaNames,
-  ExceptionRecord,
-  ProgramException,
-} from '../../exception/types';
+import { EntityException, ExceptionRecord, ProgramException } from '../../exception/types';
 
 /**
  * query db for program or entity exceptions
@@ -65,7 +60,7 @@ const validateFieldValueWithExceptions = ({
   record: DataRecord;
   programException: ProgramException | null;
   entityException: EntityException | null;
-  schemaName: EntityExceptionSchemaNames;
+  schemaName: ClinicalEntitySchemaNames;
   fieldValue: string;
   validationErrorFieldName: string;
 }): boolean => {
@@ -74,7 +69,11 @@ const validateFieldValueWithExceptions = ({
   // program level is applicable to ALL donors
   if (programException) {
     programException.exceptions
-      .filter(exception => exception.requested_core_field === validationErrorFieldName)
+      .filter(
+        exception =>
+          exception.requested_core_field === validationErrorFieldName &&
+          exception.schema === schemaName,
+      )
       .forEach(matchingException => allowedValues.add(matchingException.requested_exception_value));
   }
 
@@ -93,6 +92,9 @@ const validateFieldValueWithExceptions = ({
         entityException.follow_up
           .filter(exception => exception.submitter_follow_up_id === submitterFollowupId)
           .forEach(exception => exceptions.push(exception));
+        break;
+      default:
+        // schema is neither speicmen nor followup, do not filter for entity exceptions
         break;
     }
 
@@ -163,17 +165,6 @@ export const checkForProgramAndEntityExceptions = async ({
      * therefore no exception is present for arrays. validation error is valid
      */
     if (Array.isArray(fieldValue)) {
-      filteredErrors.push(validationError);
-      return;
-    }
-
-    // schema is not accepted type that can have exceptions
-    if (
-      !(
-        schemaName === ClinicalEntitySchemaNames.FOLLOW_UP ||
-        schemaName === ClinicalEntitySchemaNames.SPECIMEN
-      )
-    ) {
       filteredErrors.push(validationError);
       return;
     }
