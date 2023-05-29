@@ -108,4 +108,6 @@ const crossFileValidator = async (
   mergedDonor: DeepReadonly<Donor>,
   errors: SubmissionValidationError[],
   submittedRecords: DeepReadonly<ClinicalSubmissionRecordsByDonorIdMap>,
-) => {};
+) => {
+  return { errors };
+};
