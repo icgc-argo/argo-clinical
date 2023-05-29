@@ -356,9 +356,9 @@ export namespace operations {
     command: MultiClinicalSubmissionCommand,
   ): Promise<CreateSubmissionResult> => {
     // get program or create new one
-    let exsistingActiveSubmission = await submissionRepository.findByProgramId(command.programId);
-    if (!exsistingActiveSubmission) {
-      exsistingActiveSubmission = await submissionRepository.create({
+    let existingActiveSubmission = await submissionRepository.findByProgramId(command.programId);
+    if (!existingActiveSubmission) {
+      existingActiveSubmission = await submissionRepository.create({
         programId: command.programId,
         state: SUBMISSION_STATE.OPEN,
         version: uuid(),
@@ -369,22 +369,22 @@ export namespace operations {
 
     const currentDictionary = await dictionaryManager.instance().getCurrent();
 
-    // Step 1 map dataArray to entitesMap
-    const { newClinicalEntitesMap, dataToEntityMapErrors } = mapClinicalDataToEntity(
+    // Step 1 map dataArray to entitiesMap
+    const { newClinicalEntitiesMap, dataToEntityMapErrors } = mapClinicalDataToEntity(
       command.newClinicalData,
       Object.values(ClinicalEntitySchemaNames).filter(
         type => type !== ClinicalEntitySchemaNames.REGISTRATION,
       ),
     );
 
-    // Step 2 filter entites with invalid fieldNames
-    const { filteredClinicalEntites, fieldNameErrors } = await checkEntityFieldNames(
-      newClinicalEntitesMap,
+    // Step 2 filter entities with invalid fieldNames
+    const { filteredClinicalEntities, fieldNameErrors } = await checkEntityFieldNames(
+      newClinicalEntitiesMap,
       currentDictionary,
     );
 
-    const updatedClinicalEntites: ClinicalEntities = clearClinicalEnitytStats(
-      exsistingActiveSubmission.clinicalEntities,
+    const updatedClinicalEntities: ClinicalEntities = clearClinicalEnitytStats(
+      existingActiveSubmission.clinicalEntities,
     );
 
     const createdAt: DeepReadonly<Date> = new Date();
@@ -392,7 +392,7 @@ export namespace operations {
     // object to store all errors for entity
     const schemaErrors: { [k: string]: SubmissionValidationError[] } = {};
 
-    for (const [clinicalType, newClinicalEnity] of Object.entries(filteredClinicalEntites)) {
+    for (const [clinicalType, newClinicalEnity] of Object.entries(filteredClinicalEntities)) {
       const { schemaErrorsTemp, processedRecords } = await checkClinicalEntity(
         {
           records: newClinicalEnity.records,
@@ -408,12 +408,12 @@ export namespace operations {
       if (schemaErrorsTemp.length > 0) {
         // store errors found and remove clinical type from clinical entities
         schemaErrors[clinicalType] = schemaErrorsTemp;
-        delete updatedClinicalEntites[clinicalType];
+        delete updatedClinicalEntities[clinicalType];
         continue;
       }
 
       // update or add entity
-      updatedClinicalEntites[clinicalType] = {
+      updatedClinicalEntities[clinicalType] = {
         batchName: newClinicalEnity.batchName,
         creator: newClinicalEnity.creator,
         createdAt: createdAt,
@@ -427,14 +427,14 @@ export namespace operations {
       programId: command.programId,
       state: SUBMISSION_STATE.OPEN,
       version: '', // version is irrelevant here, repo will set it
-      clinicalEntities: updatedClinicalEntites,
+      clinicalEntities: updatedClinicalEntities,
       updatedBy: command.updater,
     };
 
     // insert into database
     let updated = (await updateSubmissionWithVersionOrDeleteEmpty(
       command.programId,
-      exsistingActiveSubmission.version,
+      existingActiveSubmission.version,
       newActiveSubmission,
     )) as ActiveClinicalSubmission;
 
@@ -476,13 +476,13 @@ export namespace operations {
     dryRun = false,
   ): Promise<CreateSubmissionResult> => {
     // get program or create new one
-    const exsistingActiveSubmission = await submissionRepository.findByProgramId(command.programId);
-    if (!exsistingActiveSubmission) {
+    const existingActiveSubmission = await submissionRepository.findByProgramId(command.programId);
+    if (!existingActiveSubmission) {
       throw new Error('trying to migrate non existing submission');
     }
 
     const existingClinicalEntities = _.cloneDeep(
-      exsistingActiveSubmission.clinicalEntities,
+      existingActiveSubmission.clinicalEntities,
     ) as ClinicalEntities;
     const schemaErrors: { [k: string]: SubmissionValidationError[] } = {}; // object to store all errors for entity
 
@@ -506,7 +506,7 @@ export namespace operations {
     }
 
     const successful = Object.keys(schemaErrors).length === 0;
-    let state = exsistingActiveSubmission.state;
+    let state = existingActiveSubmission.state;
 
     // special state to indicate that the submission is invalid my migration process.
     if (!successful) {
@@ -518,7 +518,7 @@ export namespace operations {
       state: state,
       version: '', // version is irrelevant here, repo will set it
       clinicalEntities: existingClinicalEntities,
-      updatedBy: exsistingActiveSubmission.updatedBy,
+      updatedBy: existingActiveSubmission.updatedBy,
     };
 
     // if dry run, then we don't actually want to update the submission we just return the result now
@@ -533,7 +533,7 @@ export namespace operations {
     // update the submission, it will not delete since we keep all clinical entities
     const updated = await updateSubmissionWithVersionOrDeleteEmpty(
       command.programId,
-      exsistingActiveSubmission.version,
+      existingActiveSubmission.version,
       newActiveSubmission,
     );
 
@@ -551,18 +551,18 @@ export namespace operations {
   export const validateMultipleClinical = async (
     command: Readonly<ClinicalSubmissionModifierCommand>,
   ): Promise<ValidateSubmissionResult> => {
-    const exsistingActiveSubmission = await submissionRepository.findByProgramId(command.programId);
-    if (!exsistingActiveSubmission || exsistingActiveSubmission.version !== command.versionId) {
+    const existingActiveSubmission = await submissionRepository.findByProgramId(command.programId);
+    if (!existingActiveSubmission || existingActiveSubmission.version !== command.versionId) {
       throw new Errors.NotFound(
         `No active submission found with programId: ${command.programId} & versionId: ${command.versionId}`,
       );
     }
     if (
-      exsistingActiveSubmission.state !== SUBMISSION_STATE.OPEN ||
-      _.isEmpty(exsistingActiveSubmission.clinicalEntities)
+      existingActiveSubmission.state !== SUBMISSION_STATE.OPEN ||
+      _.isEmpty(existingActiveSubmission.clinicalEntities)
     ) {
       return {
-        submission: exsistingActiveSubmission,
+        submission: existingActiveSubmission,
         successful: true,
       };
     }
@@ -570,8 +570,8 @@ export namespace operations {
     const clinicalSubmissionRecords: ClinicalSubmissionRecordsByDonorIdMap = {};
     const filters: FindByProgramAndSubmitterFilter[] = [];
     // map records to submitterDonorId and build filters
-    for (const clinicalType in exsistingActiveSubmission.clinicalEntities) {
-      const clinicalEnity = exsistingActiveSubmission.clinicalEntities[clinicalType];
+    for (const clinicalType in existingActiveSubmission.clinicalEntities) {
+      const clinicalEnity = existingActiveSubmission.clinicalEntities[clinicalType];
       clinicalEnity.records.forEach((rc, index) => {
         const donorId = rc[SampleRegistrationFieldsEnum.submitter_donor_id];
         filters.push({
@@ -603,7 +603,7 @@ export namespace operations {
     // update data errors/updates and stats
     let invalid: boolean = false;
     const validatedClinicalEntities = _.cloneDeep(
-      exsistingActiveSubmission.clinicalEntities,
+      existingActiveSubmission.clinicalEntities,
     ) as ClinicalEntities;
     for (const clinicalType in validateResult) {
       validatedClinicalEntities[clinicalType].stats = validateResult[clinicalType].stats;
@@ -620,7 +620,7 @@ export namespace operations {
     }
 
     const newActiveSubmission: ActiveClinicalSubmission = {
-      programId: exsistingActiveSubmission.programId,
+      programId: existingActiveSubmission.programId,
       state: invalid ? SUBMISSION_STATE.INVALID : SUBMISSION_STATE.VALID,
       version: '', // version is irrelevant here, repo will set it
       clinicalEntities: validatedClinicalEntities,
@@ -630,7 +630,7 @@ export namespace operations {
     // insert into database
     const updated = await submissionRepository.updateSubmissionWithVersion(
       command.programId,
-      exsistingActiveSubmission.version,
+      existingActiveSubmission.version,
       newActiveSubmission,
     );
 
@@ -645,27 +645,27 @@ export namespace operations {
    * @param command ClinicalSubmissionModifierCommand
    */
   export const reopenClinicalSubmission = async (command: ClinicalSubmissionModifierCommand) => {
-    const exsistingActiveSubmission = await submissionRepository.findByProgramId(command.programId);
-    if (!exsistingActiveSubmission || exsistingActiveSubmission.version !== command.versionId) {
+    const existingActiveSubmission = await submissionRepository.findByProgramId(command.programId);
+    if (!existingActiveSubmission || existingActiveSubmission.version !== command.versionId) {
       throw new Errors.NotFound(
         `No active submission found with programId: ${command.programId} & versionId: ${command.versionId}`,
       );
     }
-    if (exsistingActiveSubmission.state !== SUBMISSION_STATE.PENDING_APPROVAL) {
+    if (existingActiveSubmission.state !== SUBMISSION_STATE.PENDING_APPROVAL) {
       throw new Errors.StateConflict(
         'Active submission does not have state PENDING_APPROVAL and cannot be reopened.',
       );
     }
     // remove stats from clinical entities
-    const updatedClinicalEntites: ClinicalEntities = clearClinicalEnitytStats(
-      exsistingActiveSubmission.clinicalEntities,
+    const updatedClinicalEntities: ClinicalEntities = clearClinicalEnitytStats(
+      existingActiveSubmission.clinicalEntities,
     );
 
     const reopenedActiveSubmission: ActiveClinicalSubmission = {
       programId: command.programId,
       state: SUBMISSION_STATE.OPEN,
       version: command.versionId, // version is irrelevant here, repo will set it
-      clinicalEntities: updatedClinicalEntites,
+      clinicalEntities: updatedClinicalEntities,
       updatedBy: command.updater,
     };
 
@@ -683,14 +683,14 @@ export namespace operations {
   const clearClinicalEnitytStats = (
     clinicalEntities: DeepReadonly<ClinicalEntities>,
   ): ClinicalEntities => {
-    const statClearedClinicalEntites: ClinicalEntities = {};
+    const statClearedClinicalEntities: ClinicalEntities = {};
     Object.entries(clinicalEntities).forEach(([clinicalType, clinicalEntity]) => {
-      statClearedClinicalEntites[clinicalType] = {
+      statClearedClinicalEntities[clinicalType] = {
         ...clinicalEntity,
         ...emptySubmission,
       };
     });
-    return statClearedClinicalEntites;
+    return statClearedClinicalEntities;
   };
 
   const addNewDonorToStats = (
@@ -1060,17 +1060,17 @@ export namespace operations {
 
   const mapClinicalDataToEntity = (
     clinicalData: ReadonlyArray<NewClinicalEntity>,
-    expectedClinicalEntites: ReadonlyArray<ClinicalEntitySchemaNames>,
+    expectedClinicalEntities: ReadonlyArray<ClinicalEntitySchemaNames>,
   ): DeepReadonly<{
-    newClinicalEntitesMap: NewClinicalEntities;
+    newClinicalEntitiesMap: NewClinicalEntities;
     dataToEntityMapErrors: Array<SubmissionBatchError>;
   }> => {
     const mutableClinicalData = [...clinicalData];
     const dataToEntityMapErrors: Array<SubmissionBatchError> = [];
-    const newClinicalEntitesMap: { [clinicalType: string]: NewClinicalEntity } = {};
+    const newClinicalEntitiesMap: { [clinicalType: string]: NewClinicalEntity } = {};
 
     // check for double files and map files to clinical type
-    expectedClinicalEntites.forEach(clinicalType => {
+    expectedClinicalEntities.forEach(clinicalType => {
       const dataMatchToType = _.remove(mutableClinicalData, clinicalData =>
         isStringMatchRegex(BatchNameRegex[clinicalType], clinicalData.batchName),
       );
@@ -1084,7 +1084,7 @@ export namespace operations {
           code: SubmissionBatchErrorTypes.MULTIPLE_TYPED_FILES,
         });
       } else if (dataMatchToType.length == 1) {
-        newClinicalEntitesMap[clinicalType] = dataMatchToType[0];
+        newClinicalEntitiesMap[clinicalType] = dataMatchToType[0];
       }
     });
 
@@ -1107,26 +1107,26 @@ export namespace operations {
     if (mutableClinicalData.length > 0) {
       dataToEntityMapErrors.push({
         message: batchErrorMessage(SubmissionBatchErrorTypes.INVALID_FILE_NAME, {
-          isRegistration: expectedClinicalEntites.includes(ClinicalEntitySchemaNames.REGISTRATION),
+          isRegistration: expectedClinicalEntities.includes(ClinicalEntitySchemaNames.REGISTRATION),
         }),
         batchNames: mutableClinicalData.map(data => data.batchName),
         code: SubmissionBatchErrorTypes.INVALID_FILE_NAME,
       });
     }
 
-    return F({ newClinicalEntitesMap, dataToEntityMapErrors });
+    return F({ newClinicalEntitiesMap, dataToEntityMapErrors });
   };
 
   const checkEntityFieldNames = async (
-    newClinicalEntitesMap: DeepReadonly<NewClinicalEntities>,
+    newClinicalEntitiesMap: DeepReadonly<NewClinicalEntities>,
     dictionary: dictionaryEntities.SchemasDictionary,
   ) => {
     const fieldNameErrors: SubmissionBatchError[] = [];
-    const filteredClinicalEntites: NewClinicalEntities = {};
+    const filteredClinicalEntities: NewClinicalEntities = {};
 
-    for (const [clinicalType, newClinicalEnity] of Object.entries(newClinicalEntitesMap)) {
+    for (const [clinicalType, newClinicalEnity] of Object.entries(newClinicalEntitiesMap)) {
       if (!newClinicalEnity.fieldNames) {
-        filteredClinicalEntites[clinicalType] = { ...(newClinicalEnity as NewClinicalEntity) };
+        filteredClinicalEntities[clinicalType] = { ...(newClinicalEnity as NewClinicalEntity) };
         continue;
       }
       const commonFieldNamesSet = new Set(newClinicalEnity.fieldNames);
@@ -1150,7 +1150,7 @@ export namespace operations {
       const unknownFields = Array.from(commonFieldNamesSet); // remaining are unknown
 
       if (missingFields.length === 0 && unknownFields.length === 0) {
-        filteredClinicalEntites[clinicalType] = { ...(newClinicalEnity as NewClinicalEntity) };
+        filteredClinicalEntities[clinicalType] = { ...(newClinicalEnity as NewClinicalEntity) };
         continue;
       }
 
@@ -1174,7 +1174,7 @@ export namespace operations {
         });
       }
     }
-    return { filteredClinicalEntites, fieldNameErrors };
+    return { filteredClinicalEntities, fieldNameErrors };
   };
 
   // pre check registration create command
@@ -1183,7 +1183,7 @@ export namespace operations {
     dictionary: dictionaryEntities.SchemasDictionary,
   ): Promise<DeepReadonly<SubmissionBatchError[] | undefined>> => {
     const {
-      newClinicalEntitesMap: registrationMapped,
+      newClinicalEntitiesMap: registrationMapped,
       dataToEntityMapErrors,
     } = mapClinicalDataToEntity(
       [

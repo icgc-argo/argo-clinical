@@ -17,42 +17,223 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import { DeepReadonly } from 'deep-freeze';
+import _ from 'lodash';
+import * as utils from './utils';
 import {
   SubmissionValidationError,
   SubmittedClinicalRecord,
   DataValidationErrors,
   SubmissionValidationOutput,
+  ClinicalSubmissionRecordsByDonorIdMap,
 } from '../submission-entities';
 import {
   ClinicalEntitySchemaNames,
-  TreatmentFieldsEnum,
   ClinicalTherapyType,
+  RadiationFieldsEnum,
+  TreatmentFieldsEnum,
 } from '../../common-model/entities';
-import { DeepReadonly } from 'deep-freeze';
-import { Donor, Treatment } from '../../clinical/clinical-entities';
-import * as utils from './utils';
-import _ from 'lodash';
 import { getSingleClinicalObjectFromDonor } from '../../common-model/functions';
+import { donorDao } from '../../clinical/donor-repo';
+import { ClinicalInfo, Donor, Treatment } from '../../clinical/clinical-entities';
+import { ClinicalQuery } from '../../clinical/clinical-api';
 import { isValueEqual } from '../../utils';
 
 export const validate = async (
   therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
   existentDonor: DeepReadonly<Donor>,
   mergedDonor: Donor,
+  submittedRecords: DeepReadonly<ClinicalSubmissionRecordsByDonorIdMap>,
 ): Promise<SubmissionValidationOutput> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
   if (!therapyRecord || !mergedDonor || !existentDonor) {
     throw new Error("Can't call this function without a registerd donor & therapy record");
   }
 
-  const errors: SubmissionValidationError[] = [];
+  let errors: SubmissionValidationError[] = [];
   const treatment = getTreatment(therapyRecord, mergedDonor, errors);
   if (!treatment) return { errors };
-  checkTreatementHasCorrectTypeForTherapy(therapyRecord, treatment, errors);
+
+  checkTreatmentHasCorrectTypeForTherapy(therapyRecord, treatment, errors);
+
+  const crossFileErrors = await crossFileValidator(
+    mergedDonor,
+    treatment,
+    therapyRecord,
+    submittedRecords,
+  );
+
+  errors = [...errors, ...crossFileErrors];
   return { errors };
 };
 
-export function checkTreatementHasCorrectTypeForTherapy(
+const crossFileValidator = async (
+  donor: Donor,
+  treatment: DeepReadonly<Treatment>,
+  therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
+  // submitted records needed to validate current submission
+  submittedRecords: DeepReadonly<ClinicalSubmissionRecordsByDonorIdMap>,
+) => {
+  const therapyRecordKeys = Object.keys(therapyRecord);
+  const isRadiationRecord = Object.values(RadiationFieldsEnum).some(field =>
+    therapyRecordKeys.includes(field),
+  );
+
+  const radiationErrors: SubmissionValidationError[] = isRadiationRecord
+    ? await validateRadiationRecords(donor, treatment, therapyRecord, submittedRecords)
+    : [];
+
+  const crossFileErrors = [...radiationErrors];
+
+  return crossFileErrors;
+};
+
+const validateRadiationRecords = async (
+  donor: Donor,
+  treatment: DeepReadonly<Treatment>,
+  therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
+  submittedRecords: DeepReadonly<ClinicalSubmissionRecordsByDonorIdMap>,
+) => {
+  const { programId } = donor;
+
+  const {
+    clinicalInfo: {
+      submitter_donor_id: relatedTreatmentDonorId,
+      submitter_treatment_id,
+      treatment_type,
+    },
+  } = treatment;
+
+  const {
+    submitter_donor_id: submittedTherapyDonorId,
+    radiation_boost,
+    reference_radiation_treatment_id,
+  } = therapyRecord;
+
+  // Compare across other Submissions
+  let submittedTreatments: DeepReadonly<ClinicalInfo>[] = [];
+
+  for (const donorId in submittedRecords) {
+    const submittedTreatmentRecords = submittedRecords[donorId].treatment;
+    if (submittedTreatmentRecords && submittedTreatmentRecords.length)
+      submittedTreatments = [...submittedTreatments, ...submittedTreatmentRecords];
+  }
+
+  const query: ClinicalQuery = {
+    programShortName: programId,
+    entityTypes: [ClinicalEntitySchemaNames.TREATMENT, ClinicalEntitySchemaNames.RADIATION],
+    page: 0,
+    sort: 'donorId',
+    donorIds: [],
+    submitterDonorIds: [],
+  };
+
+  // Compare across all Treatments
+  const { donors } = await donorDao.findByPaginatedProgramId(programId, query);
+
+  const storedTreatments = donors.filter(donor => Boolean(donor?.treatments)).flat();
+
+  let errors: SubmissionValidationError[] = [];
+
+  if (typeof radiation_boost === 'string' && radiation_boost.toLowerCase() === 'yes') {
+    // Reference Radiation ID Matches a Submitted/Previous Submitter Treatment ID
+    const submittedTreatmentIdMatch = submitter_treatment_id === reference_radiation_treatment_id;
+
+    const submissionTreatmentIdMatch = submittedTreatments.find(
+      treatmentRecord =>
+        treatmentRecord.submitter_treatment_id === reference_radiation_treatment_id,
+    );
+
+    const storedTreatmentIdMatch = storedTreatments.find(treatmentRecord => {
+      const clinicalInfo = treatmentRecord?.clinicalInfo;
+      return clinicalInfo?.submitter_treatment_id === reference_radiation_treatment_id;
+    });
+
+    const treatmentIdMatch =
+      submittedTreatmentIdMatch || submissionTreatmentIdMatch || storedTreatmentIdMatch;
+
+    if (!treatmentIdMatch) {
+      errors = [
+        ...errors,
+        utils.buildSubmissionError(
+          therapyRecord,
+          DataValidationErrors.INVALID_REFERENCE_RADIATION_DONOR_ID,
+          TreatmentFieldsEnum.submitter_treatment_id,
+          {
+            [TreatmentFieldsEnum.treatment_type]: treatment_type,
+            reference_radiation_treatment_id,
+            therapyType: ClinicalEntitySchemaNames.RADIATION,
+          },
+        ),
+      ];
+    }
+
+    // Therapy + Treatment are associated with Radiation
+    const currentTreatmentIsRadiation = treatment_type === 'radiation';
+
+    const submittedTreatmentIsRadiation =
+      submissionTreatmentIdMatch && submissionTreatmentIdMatch.treatment_type === 'radiation';
+
+    const storedTreatmentIsRadiation =
+      storedTreatmentIdMatch?.clinicalInfo?.treatment_type === 'radiation';
+
+    const isRadiation =
+      currentTreatmentIsRadiation || submittedTreatmentIsRadiation || storedTreatmentIsRadiation;
+
+    if (!isRadiation) {
+      errors = [
+        ...errors,
+        utils.buildSubmissionError(
+          therapyRecord,
+          DataValidationErrors.RADIATION_THERAPY_TREATMENT_CONFLICT,
+          TreatmentFieldsEnum.submitter_treatment_id,
+          {
+            [TreatmentFieldsEnum.treatment_type]: treatment_type,
+            therapyType: ClinicalEntitySchemaNames.RADIATION,
+          },
+        ),
+      ];
+    }
+
+    // Submitted Donor ID matches existing Treatment Donor Id
+    const treatmentDonorIdMatch = submittedTherapyDonorId === relatedTreatmentDonorId;
+
+    const submittedTreatmentDonorIdMatch =
+      submissionTreatmentIdMatch?.submitter_donor_id === relatedTreatmentDonorId;
+
+    const storedTreatmentDonorIdMatch =
+      storedTreatmentIdMatch?.clinicalInfo?.submittedTherapyDonorId === relatedTreatmentDonorId;
+
+    const previousTreatmentDonorId =
+      relatedTreatmentDonorId ||
+      submissionTreatmentIdMatch?.submitter_donor_id ||
+      storedTreatmentIdMatch?.clinicalInfo?.submittedTherapyDonorId;
+
+    const donorIdMatch =
+      treatmentDonorIdMatch && submittedTreatmentDonorIdMatch && storedTreatmentDonorIdMatch;
+
+    if (!donorIdMatch) {
+      errors = [
+        ...errors,
+        utils.buildSubmissionError(
+          therapyRecord,
+          DataValidationErrors.REFERENCE_RADIATION_ID_CONFLICT,
+          TreatmentFieldsEnum.submitter_donor_id,
+          {
+            reference_radiation_treatment_id,
+            [TreatmentFieldsEnum.submitter_donor_id]: submittedTherapyDonorId,
+            previousTreatmentDonorId,
+            therapyType: ClinicalEntitySchemaNames.RADIATION,
+          },
+        ),
+      ];
+    }
+  }
+
+  return errors;
+};
+
+export function checkTreatmentHasCorrectTypeForTherapy(
   therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
   treatment: DeepReadonly<Treatment>,
   errors: SubmissionValidationError[],

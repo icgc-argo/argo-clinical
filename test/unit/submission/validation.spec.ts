@@ -44,6 +44,7 @@ import {
   ClinicalUniqueIdentifier,
   PrimaryDiagnosisFieldsEnum,
   SurgeryFieldsEnum,
+  RadiationFieldsEnum,
 } from '../../../src/common-model/entities';
 
 const genderMutatedErr: SubmissionValidationError = {
@@ -174,6 +175,7 @@ describe('data-validator', () => {
   let donorDaoFindBySpecimenSubmitterIdAndProgramIdStub: sinon.SinonStub<[any], any>;
   let donorDaoFindBySampleSubmitterIdAndProgramIdStub: sinon.SinonStub<[any], any>;
   let donorDaoFindByClinicalEntitySubmitterIdAndProgramIdStub: sinon.SinonStub<[any, any], any>;
+  let donorDaoFindByPaginatedProgramId: sinon.SinonStub<[any, any], any>;
 
   beforeEach(done => {
     donorDaoCountByStub = sinon.stub(donorDao, 'countBy');
@@ -190,6 +192,11 @@ describe('data-validator', () => {
       donorDao,
       'findByClinicalEntitySubmitterIdAndProgramId',
     );
+
+    donorDaoFindByPaginatedProgramId = sinon
+      .stub(donorDao, 'findByPaginatedProgramId')
+      .resolves({ donors: [], totalDonors: 0 });
+
     done();
   });
 
@@ -198,6 +205,7 @@ describe('data-validator', () => {
     donorDaoFindBySpecimenSubmitterIdAndProgramIdStub.restore();
     donorDaoFindBySampleSubmitterIdAndProgramIdStub.restore();
     donorDaoFindByClinicalEntitySubmitterIdAndProgramIdStub.restore();
+    donorDaoFindByPaginatedProgramId.restore();
     done();
   });
 
@@ -2037,7 +2045,7 @@ describe('data-validator', () => {
         .to.deep.include(immunotherapyTreatmentInvalidErr);
     });
 
-    it('should detect deleted therapies from treatement', async () => {
+    it('should detect deleted therapies from treatment', async () => {
       // a donor with Chemo, Radiation therapies in treatement T_03
       const existingDonorMock: Donor = stubs.validation.existingDonor10();
       const newDonorRecords = {};
@@ -2120,6 +2128,153 @@ describe('data-validator', () => {
       chai.expect(result.radiation.dataErrors.length).to.eq(1);
       chai.expect(result.radiation.dataErrors).to.deep.include(chemoTretmentInvalidErr);
     });
+
+    it('should validate reference radiation treatment id belongs to the right Donor', async () => {
+      const existingDonorMock: Donor = stubs.validation.existingDonor01();
+
+      const newDonorAB1Records = {};
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.TREATMENT,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+          [TreatmentFieldsEnum.treatment_type]: ['Radiation therapy'],
+          index: 0,
+        },
+      );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.RADIATION,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+          index: 0,
+          [RadiationFieldsEnum.radiation_boost]: 'Yes',
+          [RadiationFieldsEnum.reference_radiation_treatment_id]: 'T_03',
+        },
+      );
+
+      const result = await dv
+        .validateSubmissionData({ AB1: newDonorAB1Records }, { AB1: existingDonorMock })
+        .catch((err: any) => fail(err));
+
+      const therapyConflictErr: SubmissionValidationError = {
+        type: DataValidationErrors.REFERENCE_RADIATION_ID_CONFLICT,
+        fieldName: TreatmentFieldsEnum.submitter_donor_id,
+        index: 0,
+        info: {
+          submitter_donor_id: 'AB2',
+          reference_radiation_treatment_id: 'T_03',
+          therapyType: ClinicalEntitySchemaNames.RADIATION,
+          previousTreatmentDonorId: 'AB1',
+          donorSubmitterId: 'AB2',
+          value: 'AB2',
+        },
+        message: `The 'reference_radiation_treatment_id' T_03 belongs to submitter_donor_id AB1, not AB2`,
+      };
+
+      chai.expect(result.radiation.dataErrors.length).to.eq(2);
+      chai.expect(result.radiation.dataErrors).to.deep.include(therapyConflictErr);
+    });
+
+    it('should validate reference radiation treatment id is a radiation treatment', async () => {
+      const existingDonorMock: Donor = stubs.validation.existingDonor01();
+
+      const newDonorAB1Records = {};
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.TREATMENT,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+          [TreatmentFieldsEnum.treatment_type]: ['Bone marrow transplant'],
+          index: 0,
+        },
+      );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.RADIATION,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+          index: 0,
+          [RadiationFieldsEnum.radiation_boost]: 'Yes',
+          [RadiationFieldsEnum.reference_radiation_treatment_id]: 'T_03',
+        },
+      );
+
+      const result = await dv
+        .validateSubmissionData({ AB1: newDonorAB1Records }, { AB1: existingDonorMock })
+        .catch((err: any) => fail(err));
+
+      const therapyConflictErr: SubmissionValidationError = {
+        type: DataValidationErrors.RADIATION_THERAPY_TREATMENT_CONFLICT,
+        fieldName: TreatmentFieldsEnum.submitter_treatment_id,
+        index: 0,
+        info: {
+          treatment_type: ['Bone marrow transplant'],
+          therapyType: ClinicalEntitySchemaNames.RADIATION,
+          donorSubmitterId: 'AB1',
+          value: 'T_03',
+        },
+        message: `The submitter_treatment_id submitted in the "reference_radiation_treatment_id" field is not for radiation treatment.`,
+      };
+
+      chai.expect(result.radiation.dataErrors.length).to.eq(3);
+      chai.expect(result.radiation.dataErrors).to.deep.include(therapyConflictErr);
+    });
+
+    it('should validate reference radiation treatment id matches an existing submitter treatment id', async () => {
+      const existingDonorMock: Donor = stubs.validation.existingDonor01();
+
+      const newDonorAB1Records = {};
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.TREATMENT,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+          [TreatmentFieldsEnum.treatment_type]: ['Radiation therapy'],
+          index: 0,
+        },
+      );
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.RADIATION,
+        newDonorAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+          index: 0,
+          [RadiationFieldsEnum.radiation_boost]: 'Yes',
+          [RadiationFieldsEnum.reference_radiation_treatment_id]: 'T_02',
+        },
+      );
+
+      const result = await dv
+        .validateSubmissionData({ AB1: newDonorAB1Records }, { AB1: existingDonorMock })
+        .catch((err: any) => fail(err));
+
+      const referenceIdConflictErr: SubmissionValidationError = {
+        type: DataValidationErrors.INVALID_REFERENCE_RADIATION_DONOR_ID,
+        fieldName: TreatmentFieldsEnum.submitter_treatment_id,
+        index: 0,
+        info: {
+          treatment_type: ['Radiation therapy'],
+          therapyType: ClinicalEntitySchemaNames.RADIATION,
+          reference_radiation_treatment_id: 'T_02',
+          donorSubmitterId: 'AB1',
+          value: 'T_03',
+        },
+        message: `The submitter_treatment_id T_02 submitted in the "reference_radiation_treatment_id" field does not exist.`,
+      };
+
+      chai.expect(result.radiation.dataErrors.length).to.eq(3);
+      chai.expect(result.radiation.dataErrors).to.deep.include(referenceIdConflictErr);
+    });
+
     it('should detect hormone therapy record for treatment', async () => {
       const existingDonorMock: Donor = stubs.validation.existingDonor01();
       const newDonorAB1Records = {};
