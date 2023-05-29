@@ -17,23 +17,25 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import _ from 'lodash';
+import { DeepReadonly } from 'deep-freeze';
+import * as utils from './utils';
 import {
+  ClinicalSubmissionRecordsByDonorIdMap,
   DataValidationErrors,
+  DonorVitalStatusValues,
   SubmittedClinicalRecord,
   SubmissionValidationError,
-  DonorVitalStatusValues,
   SubmissionValidationOutput,
 } from '../submission-entities';
 import { SpecimenFieldsEnum, DonorFieldsEnum } from '../../common-model/entities';
-import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
-import * as utils from './utils';
-import _ from 'lodash';
 
 export const validate = async (
   submittedDonorClinicalRecord: DeepReadonly<SubmittedClinicalRecord>,
   existentDonor: DeepReadonly<Donor>,
   mergedDonor: Donor,
+  submittedRecords: DeepReadonly<ClinicalSubmissionRecordsByDonorIdMap>,
 ): Promise<SubmissionValidationOutput> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
 
@@ -47,6 +49,12 @@ export const validate = async (
   checkTimeConflictWithSpecimens(submittedDonorClinicalRecord, mergedDonor, errors);
 
   // other checks here and add to `errors`
+  const crossFileErrors = crossFileValidator(
+    submittedDonorClinicalRecord,
+    mergedDonor,
+    errors,
+    submittedRecords,
+  );
 
   return { errors };
 };
@@ -94,3 +102,10 @@ function checkTimeConflictWithSpecimens(
     );
   }
 }
+
+const crossFileValidator = async (
+  donorRecord: DeepReadonly<SubmittedClinicalRecord>,
+  mergedDonor: DeepReadonly<Donor>,
+  errors: SubmissionValidationError[],
+  submittedRecords: DeepReadonly<ClinicalSubmissionRecordsByDonorIdMap>,
+) => {};
