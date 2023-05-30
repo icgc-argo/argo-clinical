@@ -28,8 +28,14 @@ import {
   SubmissionValidationError,
   SubmissionValidationOutput,
 } from '../submission-entities';
-import { SpecimenFieldsEnum, DonorFieldsEnum } from '../../common-model/entities';
-import { Donor } from '../../clinical/clinical-entities';
+import {
+  DonorFieldsEnum,
+  ClinicalEntitySchemaNames,
+  SpecimenFieldsEnum,
+} from '../../common-model/entities';
+import { donorDao } from '../../clinical/donor-repo';
+import { ClinicalInfo, Donor, Treatment } from '../../clinical/clinical-entities';
+import { ClinicalQuery } from '../../clinical/clinical-api';
 
 export const validate = async (
   submittedDonorClinicalRecord: DeepReadonly<SubmittedClinicalRecord>,
@@ -39,7 +45,7 @@ export const validate = async (
 ): Promise<SubmissionValidationOutput> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
 
-  if (!existentDonor || !mergedDonor || !submittedDonorClinicalRecord) {
+  if (!existentDonor && !mergedDonor && !submittedDonorClinicalRecord) {
     throw new Error("Can't call this function without donor & donor record");
   }
 
@@ -109,5 +115,23 @@ const crossFileValidator = async (
   errors: SubmissionValidationError[],
   submittedRecords: DeepReadonly<ClinicalSubmissionRecordsByDonorIdMap>,
 ) => {
+  const { programId } = mergedDonor;
+
+  const query: ClinicalQuery = {
+    programShortName: programId,
+    entityTypes: [
+      ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+      ClinicalEntitySchemaNames.TREATMENT,
+      ClinicalEntitySchemaNames.FOLLOW_UP,
+    ],
+    page: 0,
+    sort: 'donorId',
+    donorIds: [],
+    submitterDonorIds: [],
+  };
+
+  // Compare across all Treatments
+  const { donors } = await donorDao.findByPaginatedProgramId(programId, query);
+
   return { errors };
 };
