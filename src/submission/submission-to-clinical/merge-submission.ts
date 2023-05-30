@@ -111,15 +111,15 @@ export const mergeActiveSubmissionWithDonors = async (
   return updatedDonors;
 };
 
-// This function will return a merged donor of records mapped by clinical type and the DB exsistentDonor
+// This function will return a merged donor of records mapped by clinical type and the DB existentDonor
 export const mergeRecordsMapIntoDonor = (
   unmutableSubmittedRecordsMap: DeepReadonly<SubmittedClinicalRecordsMap>,
-  exsistentDonor: DeepReadonly<Donor>,
+  existentDonor: DeepReadonly<Donor>,
 ) => {
   const submittedRecordsMap = _.cloneDeep(
     unmutableSubmittedRecordsMap,
   ) as SubmittedClinicalRecordsMap;
-  const mergedDonor: any = _.cloneDeep(exsistentDonor);
+  const mergedDonor: any = _.cloneDeep(existentDonor) || {};
 
   submittedRecordsMap[ClinicalEntitySchemaNames.DONOR]?.forEach(r =>
     updateDonorInfo(mergedDonor, r),
