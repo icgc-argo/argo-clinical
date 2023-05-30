@@ -132,6 +132,7 @@ export enum DonorFieldsEnum {
   vital_status = 'vital_status',
   survival_time = 'survival_time',
   cause_of_death = 'cause_of_death',
+  lost_to_followup_after_clinical_event_id = 'lost_to_followup_after_clinical_event_id',
 }
 
 export enum SpecimenFieldsEnum {

@@ -57,9 +57,9 @@ export const validate = async (
   // other checks here and add to `errors`
   const crossFileErrors = crossFileValidator(
     submittedDonorClinicalRecord,
+    existentDonor,
     mergedDonor,
     errors,
-    submittedRecords,
   );
 
   return { errors };
@@ -110,28 +110,69 @@ function checkTimeConflictWithSpecimens(
 }
 
 const crossFileValidator = async (
-  donorRecord: DeepReadonly<SubmittedClinicalRecord>,
-  mergedDonor: DeepReadonly<Donor>,
+  submittedDonorRecord: DeepReadonly<SubmittedClinicalRecord>,
+  storedDonor: DeepReadonly<Donor> | undefined,
+  mergedDonor: DeepReadonly<Donor> | undefined,
   errors: SubmissionValidationError[],
-  submittedRecords: DeepReadonly<ClinicalSubmissionRecordsByDonorIdMap>,
 ) => {
-  const { programId } = mergedDonor;
+  const { lost_to_followup_after_clinical_event_id } = submittedDonorRecord;
 
-  const query: ClinicalQuery = {
-    programShortName: programId,
-    entityTypes: [
-      ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
-      ClinicalEntitySchemaNames.TREATMENT,
-      ClinicalEntitySchemaNames.FOLLOW_UP,
-    ],
-    page: 0,
-    sort: 'donorId',
-    donorIds: [],
-    submitterDonorIds: [],
-  };
+  const currentDonor = storedDonor || mergedDonor;
 
-  // Compare across all Treatments
-  const { donors } = await donorDao.findByPaginatedProgramId(programId, query);
+  if (currentDonor) {
+    const { primaryDiagnoses, treatments, followUps } = currentDonor;
+
+    const primaryDiagnosisMatch = primaryDiagnoses?.find(
+      followUpRecord =>
+        followUpRecord.clinicalInfo?.submitter_primary_diagnosis_id ===
+        lost_to_followup_after_clinical_event_id,
+    );
+
+    const treatmentMatch = treatments?.find(
+      followUpRecord =>
+        followUpRecord.clinicalInfo?.submitter_treatment_id ===
+        lost_to_followup_after_clinical_event_id,
+    );
+
+    const followUpMatch = followUps?.find(
+      followUpRecord =>
+        followUpRecord.clinicalInfo?.submitter_follow_up_id ===
+        lost_to_followup_after_clinical_event_id,
+    );
+
+    const entityIdMatch = primaryDiagnosisMatch || treatmentMatch || followUpMatch;
+
+    if (!entityIdMatch) {
+      errors = [
+        ...errors,
+        utils.buildSubmissionError(
+          submittedDonorRecord,
+          DataValidationErrors.INVALID_LOST_TO_FOLLOW_UP_ID,
+          DonorFieldsEnum.lost_to_followup_after_clinical_event_id,
+          {
+            lost_to_followup_after_clinical_event_id,
+          },
+        ),
+      ];
+    }
+  } else {
+    // Compare across all Donors
+    const programId = 'TEST-CA';
+    const query: ClinicalQuery = {
+      programShortName: programId,
+      entityTypes: [
+        ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+        ClinicalEntitySchemaNames.TREATMENT,
+        ClinicalEntitySchemaNames.FOLLOW_UP,
+      ],
+      page: 0,
+      sort: 'donorId',
+      donorIds: [],
+      submitterDonorIds: [],
+    };
+
+    const { donors } = await donorDao.findByPaginatedProgramId(programId, query);
+  }
 
   return { errors };
 };

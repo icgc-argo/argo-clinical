@@ -121,6 +121,8 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
     info: { reference_radiation_treatment_id, previousTreatmentDonorId, submitter_donor_id },
   }) =>
     `The 'reference_radiation_treatment_id' ${reference_radiation_treatment_id} belongs to submitter_donor_id ${previousTreatmentDonorId}, not ${submitter_donor_id}`,
+  INVALID_LOST_TO_FOLLOW_UP_ID: ({ info: { lost_to_followup_after_clinical_event_id } }) =>
+    `The identifier '${lost_to_followup_after_clinical_event_id}' submitted in the 'lost_to_followup_after_clinical_event_id' field does not exist in your clinical submission."`,
 };
 
 const BATCH_ERROR_MESSAGES: Record<SubmissionBatchErrorTypes, (errorData: any) => string> = {
