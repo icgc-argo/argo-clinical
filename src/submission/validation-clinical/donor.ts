@@ -44,6 +44,9 @@ export const validate = async (
   submittedRecords: DeepReadonly<ClinicalSubmissionRecordsByDonorIdMap>,
 ): Promise<SubmissionValidationOutput> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
+  console.log('\n !existentDonor', !existentDonor);
+  console.log('\n !mergedDonor', !mergedDonor);
+  console.log('\n !submittedDonorClinicalRecord', !submittedDonorClinicalRecord);
 
   if (!existentDonor && !mergedDonor && !submittedDonorClinicalRecord) {
     throw new Error("Can't call this function without donor & donor record");
@@ -154,8 +157,19 @@ const crossFileValidator = async (
           },
         ),
       ];
+    } else {
+      const { interval_of_followup } = entityIdMatch;
+      console.log('\ninterval_of_followup', interval_of_followup);
+      const invalidTreatments = treatments?.filter(treatment => {
+        const {
+          clinicalInfo: { treatment_start_interval },
+        } = treatment;
+
+        return;
+      });
     }
   } else {
+    // move to top
     // Compare across all Donors
     const programId = 'TEST-CA';
     const query: ClinicalQuery = {
