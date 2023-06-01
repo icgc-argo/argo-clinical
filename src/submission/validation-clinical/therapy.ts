@@ -171,20 +171,18 @@ const validateRadiationRecords = async (
     // Therapy + Treatment are associated with Radiation
     const currentTreatmentIsRadiation =
       treatment_type &&
-      (treatment_type === 'radiation' ||
-        (Array.isArray(treatment_type) && treatment_type.includes('Radiation therapy')));
+      Array.isArray(treatment_type) &&
+      treatment_type.includes('Radiation therapy');
 
     const submittedTreatmentIsRadiation =
       submissionTreatmentIdMatch &&
-      (submissionTreatmentIdMatch.treatment_type === 'radiation' ||
-        (Array.isArray(submissionTreatmentIdMatch.treatment_type) &&
-          submissionTreatmentIdMatch.treatment_type.includes('Radiation therapy')));
+      Array.isArray(submissionTreatmentIdMatch.treatment_type) &&
+      submissionTreatmentIdMatch.treatment_type.includes('Radiation therapy');
 
     const storedTreatmentIsRadiation =
       storedTreatmentIdMatch?.clinicalInfo?.treatment_type &&
-      (storedTreatmentIdMatch.clinicalInfo.treatment_type === 'radiation' ||
-        (Array.isArray(storedTreatmentIdMatch.clinicalInfo.treatment_type) &&
-          storedTreatmentIdMatch.clinicalInfo.treatment_type.includes('Radiation therapy')));
+      Array.isArray(storedTreatmentIdMatch.clinicalInfo.treatment_type) &&
+      storedTreatmentIdMatch.clinicalInfo.treatment_type.includes('Radiation therapy');
 
     const isRadiation =
       currentTreatmentIsRadiation || submittedTreatmentIsRadiation || storedTreatmentIsRadiation;
