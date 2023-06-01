@@ -161,7 +161,7 @@ export const validateSubmissionData = async (
     // Check if donor exsists
     if (!existentDonor) {
       addErrorsForNoDonor(submittedRecords, recordValidationResultMap);
-      // continue;
+      continue;
     }
 
     const mergedDonor = mergeRecordsMapIntoDonor(submittedRecords, existentDonor);

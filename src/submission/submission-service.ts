@@ -392,11 +392,7 @@ export namespace operations {
     // object to store all errors for entity
     const schemaErrors: { [k: string]: SubmissionValidationError[] } = {};
 
-    // test
-    const testClinicalEntities = newClinicalEntitiesMap as NewClinicalEntities;
-    console.log('\ntestClinicalEntities', testClinicalEntities);
-
-    for (const [clinicalType, newClinicalEnity] of Object.entries(testClinicalEntities)) {
+    for (const [clinicalType, newClinicalEnity] of Object.entries(filteredClinicalEntities)) {
       const { schemaErrorsTemp, processedRecords } = await checkClinicalEntity(
         {
           records: newClinicalEnity.records,
@@ -409,12 +405,12 @@ export namespace operations {
       // because there was a requirement to not keep an open empty submission
       // we have to return a fake submission object in case there are schema errors
       // after the update/delete submission is callled below
-      // if (schemaErrorsTemp.length > 0) {
-      // store errors found and remove clinical type from clinical entities
-      //   schemaErrors[clinicalType] = schemaErrorsTemp;
-      //   delete updatedClinicalEntities[clinicalType];
-      //   continue;
-      // }
+      if (schemaErrorsTemp.length > 0) {
+        // store errors found and remove clinical type from clinical entities
+        schemaErrors[clinicalType] = schemaErrorsTemp;
+        delete updatedClinicalEntities[clinicalType];
+        continue;
+      }
 
       // update or add entity
       updatedClinicalEntities[clinicalType] = {
@@ -434,7 +430,7 @@ export namespace operations {
       clinicalEntities: updatedClinicalEntities,
       updatedBy: command.updater,
     };
-    console.log('\nupdatedClinicalEntities', updatedClinicalEntities);
+
     // insert into database
     let updated = (await updateSubmissionWithVersionOrDeleteEmpty(
       command.programId,
