@@ -156,7 +156,6 @@ export const validateSubmissionData = async (
   for (const donorSubmitterId in newRecordsToDonorMap) {
     const submittedRecords: DeepReadonly<SubmittedClinicalRecordsMap> =
       newRecordsToDonorMap[donorSubmitterId];
-    console.log('\nsubmittedRecords', submittedRecords);
     const existentDonor = existingDonors[donorSubmitterId];
 
     // Check if donor exsists
@@ -169,18 +168,14 @@ export const validateSubmissionData = async (
 
     // call submission validator or each clinical type
     for (const clinicalType in submittedRecords) {
-      // test
-      const testClinicalType = 'donor';
-      const clinicalRecords = submittedRecords[testClinicalType];
+      const clinicalRecords = submittedRecords[clinicalType];
       for (const record of clinicalRecords) {
-        const { errors, warnings } = await submissionValidator(testClinicalType).validate(
+        const { errors, warnings } = await submissionValidator(clinicalType).validate(
           record,
           existentDonor,
           mergedDonor,
           newRecordsToDonorMap,
         );
-        console.log('\nerrors', errors);
-        console.log('\nwarnings', warnings);
         const result = buildRecordValidationResult(
           record,
           errors,
