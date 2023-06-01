@@ -169,7 +169,7 @@ export const validateSubmissionData = async (
 
     // call submission validator or each clinical type
     for (const clinicalType in submittedRecords) {
-      //test
+      // test
       const testClinicalType = 'donor';
       const clinicalRecords = submittedRecords[testClinicalType];
       for (const record of clinicalRecords) {

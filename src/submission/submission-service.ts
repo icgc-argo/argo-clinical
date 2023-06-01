@@ -392,7 +392,7 @@ export namespace operations {
     // object to store all errors for entity
     const schemaErrors: { [k: string]: SubmissionValidationError[] } = {};
 
-    //test
+    // test
     const testClinicalEntities = newClinicalEntitiesMap as NewClinicalEntities;
     console.log('\ntestClinicalEntities', testClinicalEntities);
 
