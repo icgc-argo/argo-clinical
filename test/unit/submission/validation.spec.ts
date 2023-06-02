@@ -2237,7 +2237,7 @@ describe('data-validator', () => {
         },
         message: `The 'reference_radiation_treatment_id' T_03 belongs to submitter_donor_id AB1, not AB2`,
       };
-      console.log('\nresult.radiation.dataErrors', result.radiation.dataErrors);
+
       chai.expect(result.radiation.dataErrors.length).to.eq(1);
       chai.expect(result.radiation.dataErrors).to.deep.include(therapyConflictErr);
     });
