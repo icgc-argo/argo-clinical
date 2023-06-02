@@ -57,9 +57,9 @@ export const validate = async (
   // other checks here and add to `errors`
   const crossFileErrors = await crossFileValidator(
     submittedDonorClinicalRecord,
+    submittedRecords,
     existentDonor,
     mergedDonor,
-    submittedRecords,
   );
 
   errors = [...errors, ...crossFileErrors];
@@ -113,13 +113,32 @@ function checkTimeConflictWithSpecimens(
 
 const crossFileValidator = async (
   submittedDonorRecord: DeepReadonly<SubmittedClinicalRecord>,
+  submittedRecords: DeepReadonly<ClinicalSubmissionRecordsByDonorIdMap>,
   storedDonor: DeepReadonly<Donor> | undefined,
   mergedDonor: DeepReadonly<Donor> | undefined,
   // submitted records needed to validate current submission
-  submittedRecords: DeepReadonly<ClinicalSubmissionRecordsByDonorIdMap>,
 ) => {
   const { lost_to_followup_after_clinical_event_id } = submittedDonorRecord;
+  console.log('submittedDonorRecord', submittedDonorRecord);
+  console.log('submittedRecords', submittedRecords);
   const errors: SubmissionValidationError[] = [];
+
+  // Compare across all Donors
+  const programId = 'TEST-CA';
+  const query: ClinicalQuery = {
+    programShortName: programId,
+    entityTypes: [
+      ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+      ClinicalEntitySchemaNames.TREATMENT,
+      ClinicalEntitySchemaNames.FOLLOW_UP,
+    ],
+    page: 0,
+    sort: 'donorId',
+    donorIds: [],
+    submitterDonorIds: [],
+  };
+
+  // const { donors } = await donorDao.findByPaginatedProgramId(programId, query);
 
   const currentDonor = storedDonor || mergedDonor;
 
@@ -168,23 +187,6 @@ const crossFileValidator = async (
         return;
       });
     }
-  } else {
-    // move to top
-    // Compare across all Donors
-    const programId = 'TEST-CA';
-    const query: ClinicalQuery = {
-      programShortName: programId,
-      entityTypes: [
-        ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
-        ClinicalEntitySchemaNames.TREATMENT,
-        ClinicalEntitySchemaNames.FOLLOW_UP,
-      ],
-      page: 0,
-      sort: 'donorId',
-      donorIds: [],
-      submitterDonorIds: [],
-    };
-    const { donors } = await donorDao.findByPaginatedProgramId(programId, query);
   }
 
   return errors;

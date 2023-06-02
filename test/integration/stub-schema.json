@@ -427,6 +427,16 @@
               "meta": {
                 "displayName": "Number of Children"
               }
+            },
+            {
+              "description": "If the donor became lost to follow up, indicate the identifier of the clinical event (eg. submitter_primary_diagnosis_id, submitter_treatment_id or submitter_follow_up_id) after which the donor became lost to follow up.",
+              "name": "lost_to_followup_after_clinical_event_id",
+              "valueType": "string",
+              "meta": {
+                "displayName": "Lost To Follow Up After Clinical Event",
+                "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
+                "validationDependency": false
+              }
             }
           ]
         },
