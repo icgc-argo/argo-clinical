@@ -1392,7 +1392,7 @@
               "meta": {
                 "displayName": "Lost To Follow Up After Clinical Event",
                 "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": false
+                "validationDependency": true
               }
             }
           ]
@@ -6560,7 +6560,7 @@
               "meta": {
                 "displayName": "Lost To Follow Up After Clinical Event",
                 "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": false
+                "validationDependency": true
               }
             }
           ]
@@ -11723,7 +11723,7 @@
               "meta": {
                 "displayName": "Lost To Follow Up After Clinical Event",
                 "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": false
+                "validationDependency": true
               }
             },
             {
@@ -16894,7 +16894,7 @@
               "meta": {
                 "displayName": "Lost To Follow Up After Clinical Event",
                 "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": false
+                "validationDependency": true
               }
             }
           ]
@@ -22068,7 +22068,7 @@
               "meta": {
                 "displayName": "Lost To Follow Up After Clinical Event",
                 "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": false
+                "validationDependency": true
               }
             }
           ]
@@ -27230,7 +27230,7 @@
               "meta": {
                 "displayName": "Lost To Follow Up After Clinical Event",
                 "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": false
+                "validationDependency": true
               }
             },
             {
@@ -32384,7 +32384,7 @@
               "meta": {
                 "displayName": "Lost To Follow Up After Clinical Event",
                 "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": false
+                "validationDependency": true
               }
             }
           ]
@@ -37547,7 +37547,7 @@
               "meta": {
                 "displayName": "Lost To Follow Up After Clinical Event",
                 "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": false
+                "validationDependency": true
               }
             }
           ]
@@ -42713,7 +42713,7 @@
               "meta": {
                 "displayName": "Lost To Follow Up After Clinical Event",
                 "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": false
+                "validationDependency": true
               }
             }
           ]
@@ -47876,7 +47876,7 @@
               "meta": {
                 "displayName": "Lost To Follow Up After Clinical Event",
                 "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": false
+                "validationDependency": true
               }
             }
           ]
@@ -53039,7 +53039,7 @@
               "meta": {
                 "displayName": "Lost To Follow Up After Clinical Event",
                 "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": false
+                "validationDependency": true
               }
             }
           ]
@@ -58098,7 +58098,7 @@
               "meta": {
                 "displayName": "Lost To Follow Up After Clinical Event",
                 "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": false
+                "validationDependency": true
               }
             }
           ]
@@ -63228,7 +63228,7 @@
               "meta": {
                 "displayName": "Lost To Follow Up After Clinical Event",
                 "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": false
+                "validationDependency": true
               }
             }
           ]
@@ -68391,7 +68391,7 @@
               "meta": {
                 "displayName": "Lost To Follow Up After Clinical Event",
                 "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": false
+                "validationDependency": true
               }
             }
           ]
@@ -73554,7 +73554,7 @@
               "meta": {
                 "displayName": "Lost To Follow Up After Clinical Event",
                 "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": false
+                "validationDependency": true
               }
             }
           ]
@@ -78717,7 +78717,7 @@
               "meta": {
                 "displayName": "Lost To Follow Up After Clinical Event",
                 "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": false
+                "validationDependency": true
               }
             }
           ]
