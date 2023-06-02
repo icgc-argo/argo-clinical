@@ -1384,19 +1384,6 @@
               "meta": {
                 "displayName": "Number of Children"
               }
-            },
-            {
-              "description": "If the donor became lost to follow up, indicate the identifier of the clinical event (eg. submitter_primary_diagnosis_id, submitter_treatment_id or submitter_follow_up_id) after which the donor became lost to follow up.",
-              "name": "lost_to_followup_after_clinical_event",
-              "valueType": "string",
-              "restrictions": {
-                "script": "#/script/donor/lost_to_followup"
-              },
-              "meta": {
-                "displayName": "Lost To Follow Up After Clinical Event",
-                "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": true
-              }
             }
           ]
         },
@@ -6555,19 +6542,6 @@
               "meta": {
                 "displayName": "Number of Children"
               }
-            },
-            {
-              "description": "If the donor became lost to follow up, indicate the identifier of the clinical event (eg. submitter_primary_diagnosis_id, submitter_treatment_id or submitter_follow_up_id) after which the donor became lost to follow up.",
-              "name": "lost_to_followup_after_clinical_event",
-              "valueType": "string",
-              "restrictions": {
-                "script": "#/script/donor/lost_to_followup"
-              },
-              "meta": {
-                "displayName": "Lost To Follow Up After Clinical Event",
-                "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": true
-              }
             }
           ]
         },
@@ -11720,19 +11694,6 @@
               "valueType": "integer",
               "meta": {
                 "displayName": "Number of Children"
-              }
-            },
-            {
-              "description": "If the donor became lost to follow up, indicate the identifier of the clinical event (eg. submitter_primary_diagnosis_id, submitter_treatment_id or submitter_follow_up_id) after which the donor became lost to follow up.",
-              "name": "lost_to_followup_after_clinical_event",
-              "valueType": "string",
-              "restrictions": {
-                "script": "#/script/donor/lost_to_followup"
-              },
-              "meta": {
-                "displayName": "Lost To Follow Up After Clinical Event",
-                "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": true
               }
             },
             {
@@ -16894,19 +16855,6 @@
               "valueType": "integer",
               "meta": {
                 "displayName": "Number of Children"
-              }
-            },
-            {
-              "description": "If the donor became lost to follow up, indicate the identifier of the clinical event (eg. submitter_primary_diagnosis_id, submitter_treatment_id or submitter_follow_up_id) after which the donor became lost to follow up.",
-              "name": "lost_to_followup_after_clinical_event",
-              "valueType": "string",
-              "restrictions": {
-                "script": "#/script/donor/lost_to_followup"
-              },
-              "meta": {
-                "displayName": "Lost To Follow Up After Clinical Event",
-                "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": true
               }
             }
           ]
@@ -22072,19 +22020,6 @@
               "meta": {
                 "displayName": "Number of Children"
               }
-            },
-            {
-              "description": "If the donor became lost to follow up, indicate the identifier of the clinical event (eg. submitter_primary_diagnosis_id, submitter_treatment_id or submitter_follow_up_id) after which the donor became lost to follow up.",
-              "name": "lost_to_followup_after_clinical_event",
-              "valueType": "string",
-              "restrictions": {
-                "script": "#/script/donor/lost_to_followup"
-              },
-              "meta": {
-                "displayName": "Lost To Follow Up After Clinical Event",
-                "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": true
-              }
             }
           ]
         },
@@ -27239,19 +27174,6 @@
               }
             },
             {
-              "description": "If the donor became lost to follow up, indicate the identifier of the clinical event (eg. submitter_primary_diagnosis_id, submitter_treatment_id or submitter_follow_up_id) after which the donor became lost to follow up.",
-              "name": "lost_to_followup_after_clinical_event",
-              "valueType": "string",
-              "restrictions": {
-                "script": "#/script/donor/lost_to_followup"
-              },
-              "meta": {
-                "displayName": "Lost To Follow Up After Clinical Event",
-                "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": true
-              }
-            },
-            {
               "description": "colour of their eye",
               "name": "eye_colour",
               "restrictions": {
@@ -32393,19 +32315,6 @@
               "valueType": "integer",
               "meta": {
                 "displayName": "Number of Children"
-              }
-            },
-            {
-              "description": "If the donor became lost to follow up, indicate the identifier of the clinical event (eg. submitter_primary_diagnosis_id, submitter_treatment_id or submitter_follow_up_id) after which the donor became lost to follow up.",
-              "name": "lost_to_followup_after_clinical_event",
-              "valueType": "string",
-              "restrictions": {
-                "script": "#/script/donor/lost_to_followup"
-              },
-              "meta": {
-                "displayName": "Lost To Follow Up After Clinical Event",
-                "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": true
               }
             }
           ]
@@ -37559,19 +37468,6 @@
               "valueType": "integer",
               "meta": {
                 "displayName": "Number of Children"
-              }
-            },
-            {
-              "description": "If the donor became lost to follow up, indicate the identifier of the clinical event (eg. submitter_primary_diagnosis_id, submitter_treatment_id or submitter_follow_up_id) after which the donor became lost to follow up.",
-              "name": "lost_to_followup_after_clinical_event",
-              "valueType": "string",
-              "restrictions": {
-                "script": "#/script/donor/lost_to_followup"
-              },
-              "meta": {
-                "displayName": "Lost To Follow Up After Clinical Event",
-                "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": true
               }
             }
           ]
@@ -42729,19 +42625,6 @@
               "meta": {
                 "displayName": "Number of Children"
               }
-            },
-            {
-              "description": "If the donor became lost to follow up, indicate the identifier of the clinical event (eg. submitter_primary_diagnosis_id, submitter_treatment_id or submitter_follow_up_id) after which the donor became lost to follow up.",
-              "name": "lost_to_followup_after_clinical_event",
-              "valueType": "string",
-              "restrictions": {
-                "script": "#/script/donor/lost_to_followup"
-              },
-              "meta": {
-                "displayName": "Lost To Follow Up After Clinical Event",
-                "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": true
-              }
             }
           ]
         },
@@ -47894,19 +47777,6 @@
               "valueType": "integer",
               "meta": {
                 "displayName": "Number of Children"
-              }
-            },
-            {
-              "description": "If the donor became lost to follow up, indicate the identifier of the clinical event (eg. submitter_primary_diagnosis_id, submitter_treatment_id or submitter_follow_up_id) after which the donor became lost to follow up.",
-              "name": "lost_to_followup_after_clinical_event",
-              "valueType": "string",
-              "restrictions": {
-                "script": "#/script/donor/lost_to_followup"
-              },
-              "meta": {
-                "displayName": "Lost To Follow Up After Clinical Event",
-                "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": true
               }
             }
           ]
@@ -53061,19 +52931,6 @@
               "meta": {
                 "displayName": "Number of Children"
               }
-            },
-            {
-              "description": "If the donor became lost to follow up, indicate the identifier of the clinical event (eg. submitter_primary_diagnosis_id, submitter_treatment_id or submitter_follow_up_id) after which the donor became lost to follow up.",
-              "name": "lost_to_followup_after_clinical_event",
-              "valueType": "string",
-              "restrictions": {
-                "script": "#/script/donor/lost_to_followup"
-              },
-              "meta": {
-                "displayName": "Lost To Follow Up After Clinical Event",
-                "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": true
-              }
             }
           ]
         },
@@ -58122,19 +57979,6 @@
               "valueType": "integer",
               "meta": {
                 "displayName": "Number of Children"
-              }
-            },
-            {
-              "description": "If the donor became lost to follow up, indicate the identifier of the clinical event (eg. submitter_primary_diagnosis_id, submitter_treatment_id or submitter_follow_up_id) after which the donor became lost to follow up.",
-              "name": "lost_to_followup_after_clinical_event",
-              "valueType": "string",
-              "restrictions": {
-                "script": "#/script/donor/lost_to_followup"
-              },
-              "meta": {
-                "displayName": "Lost To Follow Up After Clinical Event",
-                "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": true
               }
             }
           ]
@@ -63255,19 +63099,6 @@
               "valueType": "integer",
               "meta": {
                 "displayName": "Number of Children"
-              }
-            },
-            {
-              "description": "If the donor became lost to follow up, indicate the identifier of the clinical event (eg. submitter_primary_diagnosis_id, submitter_treatment_id or submitter_follow_up_id) after which the donor became lost to follow up.",
-              "name": "lost_to_followup_after_clinical_event",
-              "valueType": "string",
-              "restrictions": {
-                "script": "#/script/donor/lost_to_followup"
-              },
-              "meta": {
-                "displayName": "Lost To Follow Up After Clinical Event",
-                "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": true
               }
             }
           ]
@@ -68422,19 +68253,6 @@
               "meta": {
                 "displayName": "Number of Children"
               }
-            },
-            {
-              "description": "If the donor became lost to follow up, indicate the identifier of the clinical event (eg. submitter_primary_diagnosis_id, submitter_treatment_id or submitter_follow_up_id) after which the donor became lost to follow up.",
-              "name": "lost_to_followup_after_clinical_event",
-              "valueType": "string",
-              "restrictions": {
-                "script": "#/script/donor/lost_to_followup"
-              },
-              "meta": {
-                "displayName": "Lost To Follow Up After Clinical Event",
-                "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": true
-              }
             }
           ]
         },
@@ -73587,19 +73405,6 @@
               "valueType": "integer",
               "meta": {
                 "displayName": "Number of Children"
-              }
-            },
-            {
-              "description": "If the donor became lost to follow up, indicate the identifier of the clinical event (eg. submitter_primary_diagnosis_id, submitter_treatment_id or submitter_follow_up_id) after which the donor became lost to follow up.",
-              "name": "lost_to_followup_after_clinical_event",
-              "valueType": "string",
-              "restrictions": {
-                "script": "#/script/donor/lost_to_followup"
-              },
-              "meta": {
-                "displayName": "Lost To Follow Up After Clinical Event",
-                "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
-                "validationDependency": true
               }
             }
           ]

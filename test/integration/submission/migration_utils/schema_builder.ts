@@ -249,12 +249,6 @@ export const buildDynamicStubSchema = () => {
     fieldNames.radiation.REFERENCE_RADIATION_TREATMENT_ID,
   ).valueType = dictionaryEntities.ValueType.STRING;
 
-  getField(
-    schemaV17,
-    ClinicalEntitySchemaNames.DONOR,
-    fieldNames.donor.LOST_TO_FOLLOWUP_AFTER_CLINICAL_EVENT,
-  ).valueType = dictionaryEntities.ValueType.STRING;
-
   const newDictionaries = _.concat(
     legacyStubSchemas.dictionaries.slice(0, 3) as Array<dictionaryEntities.SchemasDictionary>,
     [

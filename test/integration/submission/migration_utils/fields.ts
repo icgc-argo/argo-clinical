@@ -34,7 +34,6 @@ export const donor = {
   VITAL_STATUS: 'vital_status',
   CAUSE_OF_DEATH: 'cause_of_death',
   SURVIVAL_TIME: 'survival_time',
-  LOST_TO_FOLLOWUP_AFTER_CLINICAL_EVENT: 'lost_to_followup_after_clinical_event',
 };
 
 export const primaryDiagnosis = {

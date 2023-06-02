@@ -1534,12 +1534,14 @@ describe('data-validator', () => {
 
       const therapyConflictErr: SubmissionValidationError = {
         type: DataValidationErrors['INVALID_LOST_TO_FOLLOW_UP_ID'],
-        fieldName: 'lost_to_followup_after_clinical_event_id',
+        // temp
+        fieldName: DonorFieldsEnum.vital_status,
         index: 0,
         info: {
           lost_to_followup_after_clinical_event_id: 'FL-22',
           donorSubmitterId: 'DN190',
-          value: 'FL-22',
+          // temp FL-22
+          value: 'alive',
         },
         message: `The identifier 'FL-22' submitted in the 'lost_to_followup_after_clinical_event_id' field does not exist in your clinical submission."`,
       };
@@ -1547,7 +1549,7 @@ describe('data-validator', () => {
       const result = await dv
         .validateSubmissionData({ AB1: submittedAB1Records }, { AB1: existingDonorAB1Mock })
         .catch(err => fail(err));
-
+      console.log('\nresult', result[ClinicalEntitySchemaNames.DONOR].dataErrors);
       chai.expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors.length).to.eq(1);
       chai
         .expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors)
