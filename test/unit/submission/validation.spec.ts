@@ -1547,7 +1547,6 @@ describe('data-validator', () => {
       const result = await dv
         .validateSubmissionData({ AB1: submittedAB1Records }, { AB1: existingDonorAB1Mock })
         .catch(err => fail(err));
-      console.log('\ndataErrors', result.donor.dataErrors);
 
       chai.expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors.length).to.eq(1);
       chai
