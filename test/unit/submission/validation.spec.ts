@@ -1534,14 +1534,12 @@ describe('data-validator', () => {
 
       const therapyConflictErr: SubmissionValidationError = {
         type: DataValidationErrors['INVALID_LOST_TO_FOLLOW_UP_ID'],
-        // temp
-        fieldName: DonorFieldsEnum.vital_status,
+        fieldName: DonorFieldsEnum.lost_to_followup_after_clinical_event_id,
         index: 0,
         info: {
           lost_to_followup_after_clinical_event_id: 'FL-22',
           donorSubmitterId: 'DN190',
-          // temp FL-22
-          value: 'alive',
+          value: 'FL-22',
         },
         message: `The identifier 'FL-22' submitted in the 'lost_to_followup_after_clinical_event_id' field does not exist in your clinical submission."`,
       };

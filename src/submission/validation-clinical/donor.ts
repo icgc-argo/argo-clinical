@@ -170,8 +170,7 @@ const crossFileValidator = async (
         utils.buildSubmissionError(
           submittedDonorRecord,
           DataValidationErrors.INVALID_LOST_TO_FOLLOW_UP_ID,
-          // temp
-          DonorFieldsEnum.vital_status,
+          DonorFieldsEnum.lost_to_followup_after_clinical_event_id,
           {
             lost_to_followup_after_clinical_event_id,
           },
