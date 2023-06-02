@@ -45,7 +45,7 @@ export const validate = async (
 ): Promise<SubmissionValidationOutput> => {
   // ***Basic pre-check (to prevent execution if missing required variables)***
 
-  if (!existentDonor && !mergedDonor && !submittedDonorClinicalRecord) {
+  if (!existentDonor || !mergedDonor || !submittedDonorClinicalRecord) {
     throw new Error("Can't call this function without donor & donor record");
   }
 
@@ -59,6 +59,7 @@ export const validate = async (
     submittedDonorClinicalRecord,
     existentDonor,
     mergedDonor,
+    submittedRecords,
   );
 
   errors = [...errors, ...crossFileErrors];
@@ -114,13 +115,15 @@ const crossFileValidator = async (
   submittedDonorRecord: DeepReadonly<SubmittedClinicalRecord>,
   storedDonor: DeepReadonly<Donor> | undefined,
   mergedDonor: DeepReadonly<Donor> | undefined,
+  // submitted records needed to validate current submission
+  submittedRecords: DeepReadonly<ClinicalSubmissionRecordsByDonorIdMap>,
 ) => {
   const { lost_to_followup_after_clinical_event_id } = submittedDonorRecord;
   const errors: SubmissionValidationError[] = [];
 
   const currentDonor = storedDonor || mergedDonor;
 
-  if (currentDonor && lost_to_followup_after_clinical_event_id) {
+  if (currentDonor !== undefined && lost_to_followup_after_clinical_event_id) {
     const { primaryDiagnoses, treatments, followUps } = currentDonor;
 
     const primaryDiagnosisMatch = primaryDiagnoses?.find(
@@ -154,35 +157,33 @@ const crossFileValidator = async (
           },
         ),
       );
+    } else {
+      const { interval_of_followup } = entityIdMatch;
+      console.log('\ninterval_of_followup', interval_of_followup);
+      const invalidTreatments = treatments?.filter(treatment => {
+        const {
+          clinicalInfo: { treatment_start_interval },
+        } = treatment;
+        return;
+      });
     }
-
-    //   else {
-    //     const { interval_of_followup } = entityIdMatch;
-    //     console.log('\ninterval_of_followup', interval_of_followup);
-    //     const invalidTreatments = treatments?.filter(treatment => {
-    //       const {
-    //         clinicalInfo: { treatment_start_interval },
-    //       } = treatment;
-    //       return;
-    //     });
-    //   }
-    // } else {
+  } else {
     // move to top
     // Compare across all Donors
-    //   const programId = 'TEST-CA';
-    //   const query: ClinicalQuery = {
-    //     programShortName: programId,
-    //     entityTypes: [
-    //       ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
-    //       ClinicalEntitySchemaNames.TREATMENT,
-    //       ClinicalEntitySchemaNames.FOLLOW_UP,
-    //     ],
-    //     page: 0,
-    //     sort: 'donorId',
-    //     donorIds: [],
-    //     submitterDonorIds: [],
-    //   };
-    //   const { donors } = await donorDao.findByPaginatedProgramId(programId, query);
+    const programId = 'TEST-CA';
+    const query: ClinicalQuery = {
+      programShortName: programId,
+      entityTypes: [
+        ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+        ClinicalEntitySchemaNames.TREATMENT,
+        ClinicalEntitySchemaNames.FOLLOW_UP,
+      ],
+      page: 0,
+      sort: 'donorId',
+      donorIds: [],
+      submitterDonorIds: [],
+    };
+    const { donors } = await donorDao.findByPaginatedProgramId(programId, query);
   }
 
   return errors;
