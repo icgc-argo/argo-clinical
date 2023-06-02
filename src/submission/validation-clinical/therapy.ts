@@ -172,13 +172,13 @@ const validateRadiationRecords = async (
     const currentTreatmentIsRadiation =
       Array.isArray(treatment_type) && treatment_type.includes('Radiation therapy');
 
+    const submittedTreatmentType = submissionTreatmentIdMatch?.treatment_type;
     const submittedTreatmentIsRadiation =
-      Array.isArray(submissionTreatmentIdMatch?.treatment_type) &&
-      submissionTreatmentIdMatch?.treatment_type.includes('Radiation therapy');
+      Array.isArray(submittedTreatmentType) && submittedTreatmentType.includes('Radiation therapy');
 
+    const storedTreatmentType = storedTreatmentIdMatch?.clinicalInfo?.treatment_type;
     const storedTreatmentIsRadiation =
-      Array.isArray(storedTreatmentIdMatch?.clinicalInfo?.treatment_type) &&
-      storedTreatmentIdMatch?.clinicalInfo?.treatment_type.includes('Radiation therapy');
+      Array.isArray(storedTreatmentType) && storedTreatmentType.includes('Radiation therapy');
 
     const isRadiation =
       currentTreatmentIsRadiation || submittedTreatmentIsRadiation || storedTreatmentIsRadiation;
