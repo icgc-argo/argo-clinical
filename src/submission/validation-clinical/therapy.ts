@@ -169,13 +169,16 @@ const validateRadiationRecords = async (
     }
 
     // Therapy + Treatment are associated with Radiation
-    const currentTreatmentIsRadiation = treatment_type === 'radiation';
+    const currentTreatmentIsRadiation =
+      Array.isArray(treatment_type) && treatment_type.includes('Radiation therapy');
 
+    const submittedTreatmentType = submissionTreatmentIdMatch?.treatment_type;
     const submittedTreatmentIsRadiation =
-      submissionTreatmentIdMatch && submissionTreatmentIdMatch.treatment_type === 'radiation';
+      Array.isArray(submittedTreatmentType) && submittedTreatmentType.includes('Radiation therapy');
 
+    const storedTreatmentType = storedTreatmentIdMatch?.clinicalInfo?.treatment_type;
     const storedTreatmentIsRadiation =
-      storedTreatmentIdMatch?.clinicalInfo?.treatment_type === 'radiation';
+      Array.isArray(storedTreatmentType) && storedTreatmentType.includes('Radiation therapy');
 
     const isRadiation =
       currentTreatmentIsRadiation || submittedTreatmentIsRadiation || storedTreatmentIsRadiation;
@@ -199,20 +202,20 @@ const validateRadiationRecords = async (
     const treatmentDonorIdMatch = submittedTherapyDonorId === relatedTreatmentDonorId;
 
     const submittedTreatmentDonorIdMatch =
-      submissionTreatmentIdMatch?.submitter_donor_id === relatedTreatmentDonorId;
+      submissionTreatmentIdMatch?.submitter_donor_id === submittedTherapyDonorId;
 
     const storedTreatmentDonorIdMatch =
-      storedTreatmentIdMatch?.clinicalInfo?.submittedTherapyDonorId === relatedTreatmentDonorId;
+      storedTreatmentIdMatch?.clinicalInfo?.submittedTherapyDonorId === submittedTherapyDonorId;
 
-    const previousTreatmentDonorId =
-      relatedTreatmentDonorId ||
-      submissionTreatmentIdMatch?.submitter_donor_id ||
-      storedTreatmentIdMatch?.clinicalInfo?.submittedTherapyDonorId;
+    const previousTreatmentDonorIdMatch =
+      treatmentDonorIdMatch || submittedTreatmentDonorIdMatch || storedTreatmentDonorIdMatch;
 
-    const donorIdMatch =
-      treatmentDonorIdMatch && submittedTreatmentDonorIdMatch && storedTreatmentDonorIdMatch;
+    if (treatmentIdMatch && !previousTreatmentDonorIdMatch) {
+      const previousTreatmentDonorId =
+        relatedTreatmentDonorId ||
+        submissionTreatmentIdMatch?.submitter_donor_id ||
+        storedTreatmentIdMatch?.clinicalInfo?.submittedTherapyDonorId;
 
-    if (!donorIdMatch) {
       errors = [
         ...errors,
         utils.buildSubmissionError(
@@ -220,9 +223,10 @@ const validateRadiationRecords = async (
           DataValidationErrors.REFERENCE_RADIATION_ID_CONFLICT,
           TreatmentFieldsEnum.submitter_donor_id,
           {
-            reference_radiation_treatment_id,
+            value: submittedTherapyDonorId,
             [TreatmentFieldsEnum.submitter_donor_id]: submittedTherapyDonorId,
             previousTreatmentDonorId,
+            reference_radiation_treatment_id,
             therapyType: ClinicalEntitySchemaNames.RADIATION,
           },
         ),
