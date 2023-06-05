@@ -140,9 +140,11 @@ const crossFileValidator = async (
 
   const { donors } = await donorDao.findByPaginatedProgramId(programId, query);
 
-  const storedTreatments = donors.map(donor => donor.treatments).filter(notEmpty);
-  const storedPrimaryDiagnosis = donors.map(donor => donor.primaryDiagnoses).filter(notEmpty);
-  const storedFollowUps = donors.map(donor => donor.followUps).filter(notEmpty);
+  const storedTreatments = donors.map(donor => donor.treatments).filter(donor => Boolean(donor));
+  const storedPrimaryDiagnosis = donors
+    .map(donor => donor.primaryDiagnoses)
+    .filter(donor => Boolean(donor));
+  const storedFollowUps = donors.map(donor => donor.followUps).filter(donor => Boolean(donor));
 
   const currentDonor = storedDonor || mergedDonor;
 

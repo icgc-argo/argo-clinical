@@ -1514,7 +1514,7 @@ describe('data-validator', () => {
         {
           [FollowupFieldsEnum.submitter_donor_id]: 'DN190',
           [FollowupFieldsEnum.program_id]: 'TEST-CA',
-          [FollowupFieldsEnum.submitter_follow_up_id]: 'FL-23',
+          [FollowupFieldsEnum.submitter_follow_up_id]: 'FL-21',
           [FollowupFieldsEnum.interval_of_followup]: 230,
           index: 0,
         },
@@ -1533,7 +1533,7 @@ describe('data-validator', () => {
       );
 
       const therapyConflictErr: SubmissionValidationError = {
-        type: DataValidationErrors['INVALID_SUBMISSION_AFTER_LOST_TO_FOLLOW_UP'],
+        type: DataValidationErrors['INVALID_LOST_TO_FOLLOW_UP_ID'],
         fieldName: DonorFieldsEnum.lost_to_followup_after_clinical_event_id,
         index: 0,
         info: {
@@ -1541,7 +1541,7 @@ describe('data-validator', () => {
           donorSubmitterId: 'DN190',
           value: 'FL-23',
         },
-        message: `A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up 230 days after their primary diagnosis ("lost_to_followup_after_clinical_event_id" = "FL23"), but a new treatment ("TR-33") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.`,
+        message: `The identifier 'FL-23' submitted in the 'lost_to_followup_after_clinical_event_id' field does not exist in your clinical submission."`,
       };
 
       const result = await dv
@@ -1574,7 +1574,7 @@ describe('data-validator', () => {
         submittedAB1Records,
         {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
-          [SampleRegistrationFieldsEnum.program_id]: 'PEME-CA',
+          [SampleRegistrationFieldsEnum.program_id]: 'TEST-CA',
           [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP1',
           [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
           [SpecimenFieldsEnum.specimen_acquisition_interval]: 5020,
@@ -1594,15 +1594,15 @@ describe('data-validator', () => {
       );
 
       const therapyConflictErr: SubmissionValidationError = {
-        type: DataValidationErrors['INVALID_LOST_TO_FOLLOW_UP_ID'],
+        type: DataValidationErrors['INVALID_SUBMISSION_AFTER_LOST_TO_FOLLOW_UP'],
         fieldName: DonorFieldsEnum.lost_to_followup_after_clinical_event_id,
         index: 0,
         info: {
-          lost_to_followup_after_clinical_event_id: 'FL-22',
+          lost_to_followup_after_clinical_event_id: 'FL-23',
           donorSubmitterId: 'DN190',
-          value: 'FL-22',
+          value: 'FL-23',
         },
-        message: `The identifier 'FL-22' submitted in the 'lost_to_followup_after_clinical_event_id' field does not exist in your clinical submission."`,
+        message: `A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up 230 days after their primary diagnosis ("lost_to_followup_after_clinical_event_id" = "FL23"), but a new treatment ("TR-33") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.`,
       };
 
       const result = await dv
