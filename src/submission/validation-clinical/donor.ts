@@ -118,15 +118,14 @@ const crossFileValidator = async (
   mergedDonor: DeepReadonly<Donor> | undefined,
   // submitted records needed to validate current submission
 ) => {
-  const { lost_to_followup_after_clinical_event_id } = submittedDonorRecord;
-  console.log('submittedDonorRecord', submittedDonorRecord);
-  console.log('submittedRecords', submittedRecords);
+  const { lost_to_followup_after_clinical_event_id, program_id } = submittedDonorRecord;
+  const programShortName = program_id as string;
   const errors: SubmissionValidationError[] = [];
 
   // Compare across all Donors
   const programId = 'TEST-CA';
   const query: ClinicalQuery = {
-    programShortName: programId,
+    programShortName,
     entityTypes: [
       ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
       ClinicalEntitySchemaNames.TREATMENT,
@@ -138,7 +137,7 @@ const crossFileValidator = async (
     submitterDonorIds: [],
   };
 
-  // const { donors } = await donorDao.findByPaginatedProgramId(programId, query);
+  const { donors } = await donorDao.findByPaginatedProgramId(programId, query);
 
   const currentDonor = storedDonor || mergedDonor;
 
