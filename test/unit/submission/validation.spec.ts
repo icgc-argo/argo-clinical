@@ -1576,7 +1576,6 @@ describe('data-validator', () => {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
           [SampleRegistrationFieldsEnum.program_id]: 'TEST-CA',
           [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP1',
-          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
           [SpecimenFieldsEnum.specimen_acquisition_interval]: 5020,
           index: 0,
         },

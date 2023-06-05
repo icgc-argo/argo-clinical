@@ -34,7 +34,13 @@ import {
   SpecimenFieldsEnum,
 } from '../../common-model/entities';
 import { donorDao } from '../../clinical/donor-repo';
-import { Donor } from '../../clinical/clinical-entities';
+import {
+  ClinicalInfo,
+  Donor,
+  FollowUp,
+  PrimaryDiagnosis,
+  Treatment,
+} from '../../clinical/clinical-entities';
 import { ClinicalQuery } from '../../clinical/clinical-api';
 import { notEmpty } from '../../utils';
 
@@ -59,7 +65,6 @@ export const validate = async (
   const crossFileErrors = await crossFileValidator(
     submittedDonorClinicalRecord,
     submittedRecords,
-    existentDonor,
     mergedDonor,
   );
 
@@ -115,15 +120,37 @@ function checkTimeConflictWithSpecimens(
 const crossFileValidator = async (
   submittedDonorRecord: DeepReadonly<SubmittedClinicalRecord>,
   submittedRecords: DeepReadonly<ClinicalSubmissionRecordsByDonorIdMap>,
-  storedDonor: DeepReadonly<Donor> | undefined,
-  mergedDonor: DeepReadonly<Donor> | undefined,
+  mergedDonor: DeepReadonly<Donor>,
   // submitted records needed to validate current submission
 ) => {
   const { lost_to_followup_after_clinical_event_id, program_id } = submittedDonorRecord;
+  const { primaryDiagnoses, treatments, followUps } = mergedDonor;
   const programShortName = program_id as string;
   const errors: SubmissionValidationError[] = [];
 
-  // Compare across all Donors
+  // Compare across other Submissions
+  let submittedTreatments: DeepReadonly<ClinicalInfo>[] = [];
+  let submittedPrimaryDiagnoses: DeepReadonly<ClinicalInfo>[] = [];
+  let submittedFollowUps: DeepReadonly<ClinicalInfo>[] = [];
+
+  for (const donorId in submittedRecords) {
+    const submittedTreatmentRecords = submittedRecords[donorId].treatment;
+    const submittedPrimaryDiagnosisRecords = submittedRecords[donorId].primaryDiagnoses;
+    const submittedFollowUpRecords = submittedRecords[donorId].followUps;
+    if (submittedTreatmentRecords && submittedTreatmentRecords.length)
+      submittedTreatments = [...submittedTreatments, ...submittedTreatmentRecords];
+
+    if (submittedPrimaryDiagnosisRecords && submittedPrimaryDiagnosisRecords.length)
+      submittedPrimaryDiagnoses = [
+        ...submittedPrimaryDiagnoses,
+        ...submittedPrimaryDiagnosisRecords,
+      ];
+
+    if (submittedFollowUpRecords && submittedFollowUpRecords.length)
+      submittedFollowUps = [...submittedFollowUps, ...submittedFollowUpRecords];
+  }
+
+  // Compare across all Donors in DB
   const programId = 'TEST-CA';
   const query: ClinicalQuery = {
     programShortName,
@@ -141,29 +168,37 @@ const crossFileValidator = async (
   const { donors } = await donorDao.findByPaginatedProgramId(programId, query);
 
   const storedTreatments = donors.map(donor => donor.treatments).filter(donor => Boolean(donor));
-  const storedPrimaryDiagnosis = donors
+  const storedPrimaryDiagnoses = donors
     .map(donor => donor.primaryDiagnoses)
     .filter(donor => Boolean(donor));
   const storedFollowUps = donors.map(donor => donor.followUps).filter(donor => Boolean(donor));
 
-  const currentDonor = storedDonor || mergedDonor;
+  const allTreatments = [treatments, submittedTreatments, storedTreatments]
+    .filter(notEmpty)
+    .flat() as Treatment[];
 
-  if (currentDonor !== undefined && lost_to_followup_after_clinical_event_id) {
-    const { primaryDiagnoses, treatments, followUps } = currentDonor;
+  const allPrimaryDiagnoses = [primaryDiagnoses, submittedPrimaryDiagnoses, storedPrimaryDiagnoses]
+    .filter(notEmpty)
+    .flat() as PrimaryDiagnosis[];
 
-    const primaryDiagnosisMatch = primaryDiagnoses?.find(
-      followUpRecord =>
-        followUpRecord.clinicalInfo?.submitter_primary_diagnosis_id ===
+  const allFollowUps = [followUps, submittedFollowUps, storedFollowUps]
+    .filter(notEmpty)
+    .flat() as FollowUp[];
+
+  if (lost_to_followup_after_clinical_event_id) {
+    const primaryDiagnosisMatch = allPrimaryDiagnoses?.find(
+      primaryDiagnosisRecord =>
+        primaryDiagnosisRecord.clinicalInfo?.submitter_primary_diagnosis_id ===
         lost_to_followup_after_clinical_event_id,
     );
 
-    const treatmentMatch = treatments?.find(
-      followUpRecord =>
-        followUpRecord.clinicalInfo?.submitter_treatment_id ===
+    const treatmentMatch = allTreatments?.find(
+      treatmentRecord =>
+        treatmentRecord.clinicalInfo?.submitter_treatment_id ===
         lost_to_followup_after_clinical_event_id,
     );
 
-    const followUpMatch = followUps?.find(
+    const followUpMatch = allFollowUps?.find(
       followUpRecord =>
         followUpRecord.clinicalInfo?.submitter_follow_up_id ===
         lost_to_followup_after_clinical_event_id,
