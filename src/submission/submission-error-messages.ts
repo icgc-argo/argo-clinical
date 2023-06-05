@@ -123,6 +123,10 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
     `The 'reference_radiation_treatment_id' ${reference_radiation_treatment_id} belongs to submitter_donor_id ${previousTreatmentDonorId}, not ${submitter_donor_id}`,
   INVALID_LOST_TO_FOLLOW_UP_ID: ({ info: { lost_to_followup_after_clinical_event_id } }) =>
     `The identifier '${lost_to_followup_after_clinical_event_id}' submitted in the 'lost_to_followup_after_clinical_event_id' field does not exist in your clinical submission."`,
+  INVALID_SUBMISSION_AFTER_LOST_TO_FOLLOW_UP: ({
+    info: { lost_to_followup_after_clinical_event_id, interval_of_followup },
+  }) =>
+    `A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up ${interval_of_followup} days after their primary diagnosis ("lost_to_followup_after_clinical_event_id" = "${lost_to_followup_after_clinical_event_id}"), but a new treatment ("TR-33") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.`,
 };
 
 const BATCH_ERROR_MESSAGES: Record<SubmissionBatchErrorTypes, (errorData: any) => string> = {

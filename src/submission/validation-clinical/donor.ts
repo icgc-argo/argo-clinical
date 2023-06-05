@@ -34,8 +34,9 @@ import {
   SpecimenFieldsEnum,
 } from '../../common-model/entities';
 import { donorDao } from '../../clinical/donor-repo';
-import { ClinicalInfo, Donor, Treatment } from '../../clinical/clinical-entities';
+import { Donor } from '../../clinical/clinical-entities';
 import { ClinicalQuery } from '../../clinical/clinical-api';
+import { notEmpty } from '../../utils';
 
 export const validate = async (
   submittedDonorClinicalRecord: DeepReadonly<SubmittedClinicalRecord>,
@@ -139,6 +140,10 @@ const crossFileValidator = async (
 
   const { donors } = await donorDao.findByPaginatedProgramId(programId, query);
 
+  const storedTreatments = donors.map(donor => donor.treatments).filter(notEmpty);
+  const storedPrimaryDiagnosis = donors.map(donor => donor.primaryDiagnoses).filter(notEmpty);
+  const storedFollowUps = donors.map(donor => donor.followUps).filter(notEmpty);
+
   const currentDonor = storedDonor || mergedDonor;
 
   if (currentDonor !== undefined && lost_to_followup_after_clinical_event_id) {
@@ -177,11 +182,16 @@ const crossFileValidator = async (
       );
     } else {
       const { interval_of_followup } = entityIdMatch;
-      console.log('\ninterval_of_followup', interval_of_followup);
       const invalidTreatments = treatments?.filter(treatment => {
         const {
-          clinicalInfo: { treatment_start_interval },
+          clinicalInfo: { treatment_start_interval, treatment_duration },
         } = treatment;
+
+        const totalTreatmentTime =
+          typeof treatment_start_interval === 'number' && typeof treatment_duration === 'number'
+            ? treatment_start_interval + treatment_duration
+            : treatment_start_interval;
+
         return;
       });
     }
