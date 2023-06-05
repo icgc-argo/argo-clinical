@@ -1532,7 +1532,7 @@ describe('data-validator', () => {
         },
       );
 
-      const therapyConflictErr: SubmissionValidationError = {
+      const donorIdConflictErr: SubmissionValidationError = {
         type: DataValidationErrors['INVALID_LOST_TO_FOLLOW_UP_ID'],
         fieldName: DonorFieldsEnum.lost_to_followup_after_clinical_event_id,
         index: 0,
@@ -1551,7 +1551,7 @@ describe('data-validator', () => {
       chai.expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors.length).to.eq(1);
       chai
         .expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors)
-        .to.deep.include(therapyConflictErr);
+        .to.deep.include(donorIdConflictErr);
     });
 
     it('should detect there are no further clinical events submitted after a Lost to Follow Up After Clinical event', async () => {
@@ -1564,7 +1564,7 @@ describe('data-validator', () => {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'DN190',
           [SampleRegistrationFieldsEnum.program_id]: 'TEST-CA',
           [DonorFieldsEnum.vital_status]: 'alive',
-          lost_to_followup_after_clinical_event_id: 'FL-22',
+          lost_to_followup_after_clinical_event_id: 'FL-23',
           index: 0,
         },
       );
@@ -1573,7 +1573,7 @@ describe('data-validator', () => {
         ClinicalEntitySchemaNames.SPECIMEN,
         submittedAB1Records,
         {
-          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'DN190',
           [SampleRegistrationFieldsEnum.program_id]: 'TEST-CA',
           [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP1',
           [SpecimenFieldsEnum.specimen_acquisition_interval]: 5020,
@@ -1588,20 +1588,37 @@ describe('data-validator', () => {
           [FollowupFieldsEnum.submitter_donor_id]: 'DN190',
           [FollowupFieldsEnum.program_id]: 'TEST-CA',
           [FollowupFieldsEnum.submitter_follow_up_id]: 'FL-23',
+          [FollowupFieldsEnum.interval_of_followup]: 230,
           index: 0,
         },
       );
 
-      const therapyConflictErr: SubmissionValidationError = {
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.TREATMENT,
+        submittedAB1Records,
+        {
+          [TreatmentFieldsEnum.submitter_donor_id]: 'DN190',
+          [TreatmentFieldsEnum.program_id]: 'TEST-CA',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'TR-33',
+          [TreatmentFieldsEnum.treatment_start_interval]: 250,
+          [TreatmentFieldsEnum.treatment_duration]: 50,
+          index: 0,
+        },
+      );
+
+      const submissionConflictErr: SubmissionValidationError = {
         type: DataValidationErrors['INVALID_SUBMISSION_AFTER_LOST_TO_FOLLOW_UP'],
         fieldName: DonorFieldsEnum.lost_to_followup_after_clinical_event_id,
         index: 0,
         info: {
           lost_to_followup_after_clinical_event_id: 'FL-23',
           donorSubmitterId: 'DN190',
+          interval_of_followup: 230,
+          submitter_treatment_id: 'TR-33',
           value: 'FL-23',
         },
-        message: `A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up 230 days after their primary diagnosis ("lost_to_followup_after_clinical_event_id" = "FL23"), but a new treatment ("TR-33") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.`,
+        message:
+          'A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up 230 days after their primary diagnosis ("lost_to_followup_after_clinical_event_id" = "FL-23"), but a new treatment ("TR-33") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.',
       };
 
       const result = await dv
@@ -1611,7 +1628,7 @@ describe('data-validator', () => {
       chai.expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors.length).to.eq(1);
       chai
         .expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors)
-        .to.deep.include(therapyConflictErr);
+        .to.deep.include(submissionConflictErr);
     });
 
     it('should detect not enough info to validate specimen file', async () => {

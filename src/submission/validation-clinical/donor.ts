@@ -218,19 +218,48 @@ const crossFileValidator = async (
         ),
       );
     } else {
-      const { interval_of_followup } = entityIdMatch;
-      const invalidTreatments = treatments?.filter(treatment => {
-        const {
-          clinicalInfo: { treatment_start_interval, treatment_duration },
-        } = treatment;
+      const { interval_of_followup } = entityIdMatch.clinicalInfo;
+      const submittedInterval =
+        interval_of_followup && typeof interval_of_followup === 'number' ? interval_of_followup : 0;
 
-        const totalTreatmentTime =
-          typeof treatment_start_interval === 'number' && typeof treatment_duration === 'number'
-            ? treatment_start_interval + treatment_duration
-            : treatment_start_interval;
+      const invalidTreatments = allTreatments.filter(treatment => {
+        const { treatment_start_interval, treatment_duration } = treatment.clinicalInfo
+          ? treatment.clinicalInfo
+          : treatment;
 
-        return;
+        const treatmentInterval =
+          treatment_start_interval && typeof treatment_start_interval === 'number'
+            ? treatment_start_interval
+            : 0;
+
+        const treatmentDuration =
+          treatment_duration && typeof treatment_duration === 'number' ? treatment_duration : 0;
+
+        const totalTreatmentTime = treatmentInterval + treatmentDuration;
+
+        const treatmentInvalid = totalTreatmentTime > submittedInterval;
+
+        return treatmentInvalid;
       });
+
+      if (invalidTreatments.length) {
+        const firstTreatmentMatch = invalidTreatments[0];
+        const { submitter_treatment_id } = firstTreatmentMatch.clinicalInfo
+          ? firstTreatmentMatch.clinicalInfo
+          : firstTreatmentMatch;
+        errors.push(
+          utils.buildSubmissionError(
+            submittedDonorRecord,
+            DataValidationErrors.INVALID_SUBMISSION_AFTER_LOST_TO_FOLLOW_UP,
+            DonorFieldsEnum.lost_to_followup_after_clinical_event_id,
+            {
+              lost_to_followup_after_clinical_event_id,
+              interval_of_followup,
+              submitter_treatment_id,
+            },
+          ),
+        );
+      }
     }
   }
 

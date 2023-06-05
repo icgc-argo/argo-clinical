@@ -200,6 +200,7 @@ export enum TreatmentFieldsEnum {
   treatment_type = 'treatment_type',
   submitter_primary_diagnosis_id = 'submitter_primary_diagnosis_id',
   treatment_start_interval = 'treatment_start_interval',
+  treatment_duration = 'treatment_duration',
 }
 
 export enum TherapyRxNormFields {
