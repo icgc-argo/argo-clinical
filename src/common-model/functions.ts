@@ -126,9 +126,9 @@ export function getClinicalEntitiesFromDonorBySchemaName(
 ): ClinicalInfo[] {
   const result = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName) as any[];
   const clinicalRecords = result
-    .map((e: any) => {
-      if (e?.clinicalInfo) {
-        return e.clinicalInfo as ClinicalInfo;
+    .map((entityRecord: any) => {
+      if (entityRecord?.clinicalInfo) {
+        return entityRecord.clinicalInfo as ClinicalInfo;
       }
     })
     .filter(notEmpty);
