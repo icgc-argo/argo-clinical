@@ -881,7 +881,7 @@ export namespace operations {
              */
             const { filteredErrors, normalizedRecord } = await checkForProgramAndEntityExceptions({
               programId: command.programId,
-              record,
+              record: schemaResult.processedRecord,
               schemaName,
               schemaValidationErrors: [...schemaResult.validationErrors],
             });
