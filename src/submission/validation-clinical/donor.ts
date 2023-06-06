@@ -57,7 +57,8 @@ export const validate = async (
   }
 
   // ***Submission Validation checks***
-  let errors: SubmissionValidationError[] = []; // all errors for record
+  const errors: SubmissionValidationError[] = []; // all errors for record
+
   // cross entity donor-specimen record validation
   checkTimeConflictWithSpecimens(submittedDonorClinicalRecord, mergedDonor, errors);
 
@@ -68,9 +69,7 @@ export const validate = async (
     mergedDonor,
   );
 
-  errors = [...errors, ...crossFileErrors];
-
-  return { errors };
+  return { errors: [...errors, ...crossFileErrors] };
 };
 
 function checkTimeConflictWithSpecimens(
