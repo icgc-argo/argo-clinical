@@ -18,7 +18,7 @@
  */
 
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
-import { DataRecord } from '@overturebio-stack/lectern-client/lib/schema-entities';
+import { TypedDataRecord } from '@overturebio-stack/lectern-client/lib/schema-entities';
 import _ from 'lodash';
 import {
   ClinicalEntitySchemaNames,
@@ -28,6 +28,7 @@ import {
 import entityExceptionRepository from '../../exception/repo/entity';
 import programExceptionRepository from '../../exception/repo/program';
 import { EntityException, ExceptionRecord, ProgramException } from '../../exception/types';
+import { DeepReadonly } from 'deep-freeze';
 
 /**
  * query db for program or entity exceptions
@@ -57,7 +58,7 @@ const validateFieldValueWithExceptions = ({
   fieldValue,
   validationErrorFieldName,
 }: {
-  record: DataRecord;
+  record: DeepReadonly<TypedDataRecord>;
   programException: ProgramException | null;
   entityException: EntityException | null;
   schemaName: ClinicalEntitySchemaNames;
@@ -114,7 +115,8 @@ const validateFieldValueWithExceptions = ({
  * @param value
  * @returns normalized string
  */
-const normalizeExceptionValue = (value: string) => _.upperFirst(value.trim().toLowerCase());
+const normalizeExceptionValue = (value: Readonly<string>) =>
+  _.upperFirst(value.trim().toLowerCase());
 
 /**
  * Check if a valid exception exists and the record value matches it.
@@ -134,7 +136,7 @@ export const checkForProgramAndEntityExceptions = async ({
   schemaValidationErrors,
 }: {
   programId: string;
-  record: DataRecord;
+  record: DeepReadonly<TypedDataRecord>;
   schemaName: ClinicalEntitySchemaNames;
   schemaValidationErrors: dictionaryEntities.SchemaValidationError[];
 }) => {
@@ -154,17 +156,11 @@ export const checkForProgramAndEntityExceptions = async ({
     const validationErrorFieldName = validationError.fieldName;
     const fieldValue = record[validationErrorFieldName];
 
-    // field value is not matching
-    if (!fieldValue) {
-      filteredErrors.push(validationError);
-      return;
-    }
-
     /**
-     * Zero Array type exceptions exist, but recordValue type is string | string[]
-     * therefore no exception is present for arrays. validation error is valid
+     * Exceptions can only be applied to text values. other field types, including arrays of strings
+     * cannot be handled currently.
      */
-    if (Array.isArray(fieldValue)) {
+    if (typeof fieldValue !== 'string') {
       filteredErrors.push(validationError);
       return;
     }
