@@ -57,31 +57,31 @@ export const validate = async (
   }
 
   // ***Submission Validation checks***
-  const errors: SubmissionValidationError[] = []; // all errors for record
-
   // cross entity donor-specimen record validation
-  checkTimeConflictWithSpecimens(submittedDonorClinicalRecord, mergedDonor, errors);
+  const timeConflictErrors: SubmissionValidationError[] = checkTimeConflictWithSpecimens(
+    submittedDonorClinicalRecord,
+    mergedDonor,
+  );
 
-  // other checks here and add to `errors`
+  // Validation across all submissions and entities
   const crossFileErrors = await crossFileValidator(
     submittedDonorClinicalRecord,
     submittedRecords,
     mergedDonor,
   );
 
-  return { errors: [...errors, ...crossFileErrors] };
+  return { errors: [...timeConflictErrors, ...crossFileErrors] };
 };
 
 function checkTimeConflictWithSpecimens(
   donorRecord: DeepReadonly<SubmittedClinicalRecord>,
   mergedDonor: DeepReadonly<Donor>,
-  errors: SubmissionValidationError[],
 ) {
   if (
     donorRecord[DonorFieldsEnum.vital_status] !== DonorVitalStatusValues.deceased ||
     !donorRecord[DonorFieldsEnum.survival_time]
   ) {
-    return;
+    return [];
   }
   const specimenIdsWithTimeConflicts: string[] = [];
   const donorSurvivalTime: number = Number(donorRecord[DonorFieldsEnum.survival_time]);
@@ -102,18 +102,18 @@ function checkTimeConflictWithSpecimens(
   });
 
   // check if any conflicts found
-  if (specimenIdsWithTimeConflicts.length > 0) {
-    errors.push(
-      utils.buildSubmissionError(
-        donorRecord,
-        DataValidationErrors.CONFLICTING_TIME_INTERVAL,
-        DonorFieldsEnum.survival_time,
-        {
-          conflictingSpecimenSubmitterIds: specimenIdsWithTimeConflicts,
-        },
-      ),
-    );
-  }
+  return specimenIdsWithTimeConflicts.length > 0
+    ? [
+        utils.buildSubmissionError(
+          donorRecord,
+          DataValidationErrors.CONFLICTING_TIME_INTERVAL,
+          DonorFieldsEnum.survival_time,
+          {
+            conflictingSpecimenSubmitterIds: specimenIdsWithTimeConflicts,
+          },
+        ),
+      ]
+    : [];
 }
 
 const crossFileValidator = async (
