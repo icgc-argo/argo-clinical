@@ -5,7 +5,6 @@ services:
     container_name: clinical_rxnormdb
     # mariadb is a direct swap for mysql but it has a docker image that works on Apple Silicon
     image: mariadb:10.7.1
-    restart: always
     environment:
       MYSQL_DATABASE: 'rxnorm'
       # So you don't have to use root, but you can if you like
