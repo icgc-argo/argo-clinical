@@ -255,16 +255,23 @@ class ClinicalController {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
 
-    let validDonorIds: number[] = [];
     const migrationErrors = await service.getClinicalEntityMigrationErrors(programId, query);
 
-    if (migrationErrors) {
-      validDonorIds = await service.getDonorSubmissionErrorUpdates(programId, migrationErrors);
-    }
+    if (!migrationErrors) return res.status(204).json([]);
 
-    const clinicalErrors = migrationErrors.clinicalErrors.filter(
-      error => !validDonorIds.includes(error.donorId),
+    const { validDonorIds, validRecords } = await service.getValidRecordsPostSubmission(
+      programId,
+      migrationErrors,
     );
+
+    // Filter valid Donors + valid records
+    const clinicalErrors = migrationErrors.clinicalErrors
+      .filter(error => !validDonorIds.includes(error.donorId))
+      .filter(error => {
+        // todo: Filter valid records
+        return error;
+      });
+
     res.status(200).json(clinicalErrors);
   }
 

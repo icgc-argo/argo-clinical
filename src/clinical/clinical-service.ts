@@ -290,20 +290,19 @@ export const getClinicalEntityMigrationErrors = async (
 
 /**
  * Given a list of Program Migration Errors, this function finds related Donors,
- * and returns a list of DonorIds which are now Valid post-migration.
+ * and returns a list of DonorIds which are now Valid after submission.
  */
-export const getDonorSubmissionErrorUpdates = async (
+export const getValidRecordsPostSubmission = async (
   programId: string,
   migrationErrors: {
     clinicalErrors: ClinicalErrorsResponseRecord[];
     migrationLastUpdated: string | undefined;
   },
-): Promise<number[]> => {
+): Promise<{ validDonorIds: number[]; validRecords: ClinicalErrorsResponseRecord[] }> => {
   if (!programId) throw new Error('Missing programId!');
-  const start = new Date().getTime() / 1000;
 
-  let validDonors: number[] = [];
-  const { clinicalErrors: clinicalMigrationErrors, migrationLastUpdated } = migrationErrors;
+  const start = new Date().getTime() / 1000;
+  const { clinicalErrors: clinicalMigrationErrors } = migrationErrors;
   const errorDonorIds = clinicalMigrationErrors.map(error => error.donorId);
   let errorEntities: Array<string | EntityAlias> = [];
 
@@ -324,14 +323,16 @@ export const getDonorSubmissionErrorUpdates = async (
     submitterDonorIds: [],
   };
 
-  await donorDao.findByPaginatedProgramId(programId, errorQuery).then(donorData => {
-    validDonors = donorData.donors
-      .filter(donor => donor.schemaMetadata.isValid)
-      .map(({ donorId }) => Number(donorId));
-  });
+  const donorData = await (await donorDao.findByPaginatedProgramId(programId, errorQuery)).donors;
+
+  const validDonorIds = donorData
+    .filter(donor => donor.schemaMetadata.isValid)
+    .map(({ donorId }) => Number(donorId));
+
+  const validRecords: ClinicalErrorsResponseRecord[] = [];
 
   const end = new Date().getTime() / 1000;
   L.debug(`getDonorSubmissionErrorUpdates took ${end - start}s`);
 
-  return validDonors;
+  return { validDonorIds, validRecords };
 };
