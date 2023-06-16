@@ -20,12 +20,19 @@
 import { DeepReadonly } from 'deep-freeze';
 import { filter, find, isEmpty } from 'lodash';
 import {
+  Biomarker,
   ClinicalEntity,
   ClinicalInfo,
+  Comorbidity,
   dnaSampleTypes,
   Donor,
+  Exposure,
+  FamilyHistory,
+  FollowUp,
+  PrimaryDiagnosis,
   Specimen,
   SpecimenCoreCompletion,
+  Therapy,
   Treatment,
 } from '../clinical/clinical-entities';
 import { notEmpty, convertToArray } from '../utils';
@@ -54,10 +61,22 @@ export function findClinicalObjects(
   return filter(entities, constraints);
 }
 
+type ClinicalRecords =
+  | DeepReadonly<Donor>
+  | DeepReadonly<Specimen>
+  | DeepReadonly<PrimaryDiagnosis>
+  | DeepReadonly<FamilyHistory>
+  | DeepReadonly<Treatment>
+  | DeepReadonly<FollowUp>
+  | DeepReadonly<Exposure>
+  | DeepReadonly<Biomarker>
+  | DeepReadonly<Comorbidity>
+  | DeepReadonly<Therapy>;
+
 export function getClinicalObjectsFromDonor(
   donor: DeepReadonly<Donor>,
   clinicalEntitySchemaName: ClinicalEntitySchemaNames,
-) {
+): readonly ClinicalRecords[] {
   if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.DONOR) {
     return [donor];
   }
@@ -124,9 +143,9 @@ export function getClinicalEntitiesFromDonorBySchemaName(
   donor: DeepReadonly<Donor>,
   clinicalEntitySchemaName: ClinicalEntitySchemaNames,
 ): ClinicalInfo[] {
-  const result = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName) as any[];
+  const result = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName);
   const clinicalRecords = result
-    .map((entityRecord: any) => {
+    .map(entityRecord => {
       if (entityRecord?.clinicalInfo) {
         return entityRecord.clinicalInfo as ClinicalInfo;
       }
