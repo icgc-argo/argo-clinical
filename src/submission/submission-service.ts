@@ -572,8 +572,8 @@ export namespace operations {
     // map records to submitterDonorId and build filters
     for (const clinicalType in existingActiveSubmission.clinicalEntities) {
       const clinicalEntity = existingActiveSubmission.clinicalEntities[clinicalType];
-      clinicalEntity.records.forEach((rc, index) => {
-        const donorId = rc[SampleRegistrationFieldsEnum.submitter_donor_id];
+      clinicalEntity.records.forEach((record, index) => {
+        const donorId = record[SampleRegistrationFieldsEnum.submitter_donor_id];
         // Prevents creating a Mongo query w/ multiple of the same filter
         const filterFound = filters.find(
           filter => filter.programId === command.programId && filter.submitterId === donorId,
