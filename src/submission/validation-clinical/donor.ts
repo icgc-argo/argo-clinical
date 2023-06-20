@@ -136,20 +136,13 @@ const crossFileValidator = async (
   let submittedFollowUps: DeepReadonly<ClinicalInfo>[] = [];
 
   for (const donorId in submittedRecords) {
-    const submittedTreatmentRecords = submittedRecords[donorId].treatment;
-    const submittedPrimaryDiagnosisRecords = submittedRecords[donorId].primaryDiagnoses;
-    const submittedFollowUpRecords = submittedRecords[donorId].followUps;
-    if (submittedTreatmentRecords && submittedTreatmentRecords.length)
-      submittedTreatments = [...submittedTreatments, ...submittedTreatmentRecords];
+    const submittedTreatmentRecords = submittedRecords[donorId].treatment || [];
+    const submittedPrimaryDiagnosisRecords = submittedRecords[donorId].primaryDiagnoses || [];
+    const submittedFollowUpRecords = submittedRecords[donorId].followUps || [];
 
-    if (submittedPrimaryDiagnosisRecords && submittedPrimaryDiagnosisRecords.length)
-      submittedPrimaryDiagnoses = [
-        ...submittedPrimaryDiagnoses,
-        ...submittedPrimaryDiagnosisRecords,
-      ];
-
-    if (submittedFollowUpRecords && submittedFollowUpRecords.length)
-      submittedFollowUps = [...submittedFollowUps, ...submittedFollowUpRecords];
+    submittedTreatments = [...submittedTreatments, ...submittedTreatmentRecords];
+    submittedPrimaryDiagnoses = [...submittedPrimaryDiagnoses, ...submittedPrimaryDiagnosisRecords];
+    submittedFollowUps = [...submittedFollowUps, ...submittedFollowUpRecords];
   }
 
   // Compare across all Donors in DB
