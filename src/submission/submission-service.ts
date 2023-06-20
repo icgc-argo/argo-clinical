@@ -593,7 +593,7 @@ export namespace operations {
           clinicalType as ClinicalEntitySchemaNames,
           clinicalSubmissionRecords[donorId],
           {
-            ...rc,
+            ...record,
             submitter_donor_id: donorId,
             index: index,
           },
