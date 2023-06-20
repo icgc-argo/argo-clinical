@@ -56,6 +56,8 @@ export const validate = async (
     throw new Error("Can't call this function without donor & donor record");
   }
 
+  const { programId } = existentDonor || mergedDonor;
+
   // ***Submission Validation checks***
   // cross entity donor-specimen record validation
   const timeConflictErrors: SubmissionValidationError[] = checkTimeConflictWithSpecimens(
@@ -68,6 +70,7 @@ export const validate = async (
     submittedDonorClinicalRecord,
     submittedRecords,
     mergedDonor,
+    programId,
   );
 
   return { errors: [...timeConflictErrors, ...crossFileErrors] };
@@ -118,13 +121,13 @@ function checkTimeConflictWithSpecimens(
 
 const crossFileValidator = async (
   submittedDonorRecord: DeepReadonly<SubmittedClinicalRecord>,
+  // Submitted records needed to validate across records
   submittedRecords: DeepReadonly<ClinicalSubmissionRecordsByDonorIdMap>,
   mergedDonor: DeepReadonly<Donor>,
-  // submitted records needed to validate current submission
+  programShortName: string,
 ) => {
-  const { lost_to_followup_after_clinical_event_id, program_id } = submittedDonorRecord;
+  const { lost_to_followup_after_clinical_event_id } = submittedDonorRecord;
   const { primaryDiagnoses, treatments, followUps } = mergedDonor;
-  const programShortName = program_id as string;
   const errors: SubmissionValidationError[] = [];
 
   // Compare across other Submissions
@@ -150,7 +153,6 @@ const crossFileValidator = async (
   }
 
   // Compare across all Donors in DB
-  const programId = 'TEST-CA';
   const query: ClinicalQuery = {
     programShortName,
     entityTypes: [
@@ -164,21 +166,27 @@ const crossFileValidator = async (
     submitterDonorIds: [],
   };
 
-  const { donors } = await donorDao.findByPaginatedProgramId(programId, query);
+  const { donors } = await donorDao.findByPaginatedProgramId(programShortName, query);
 
-  const storedTreatments = donors.map(donor => donor.treatments).filter(donor => Boolean(donor));
+  const storedTreatments = donors
+    .map(donor => donor.treatments)
+    .filter(treatments => notEmpty(treatments));
+
   const storedPrimaryDiagnoses = donors
     .map(donor => donor.primaryDiagnoses)
-    .filter(donor => Boolean(donor));
-  const storedFollowUps = donors.map(donor => donor.followUps).filter(donor => Boolean(donor));
+    .filter(primaryDiagnoses => notEmpty(primaryDiagnoses));
 
-  const allTreatments = [treatments, submittedTreatments, storedTreatments]
-    .filter(notEmpty)
-    .flat() as Treatment[];
+  const storedFollowUps = donors
+    .map(donor => donor.followUps)
+    .filter(followUps => notEmpty(followUps));
 
-  const allPrimaryDiagnoses = [primaryDiagnoses, submittedPrimaryDiagnoses, storedPrimaryDiagnoses]
-    .filter(notEmpty)
-    .flat() as PrimaryDiagnosis[];
+  const allTreatments = [treatments, submittedTreatments, storedTreatments].flat() as Treatment[];
+
+  const allPrimaryDiagnoses = [
+    primaryDiagnoses,
+    submittedPrimaryDiagnoses,
+    storedPrimaryDiagnoses,
+  ].flat() as PrimaryDiagnosis[];
 
   const allFollowUps = [followUps, submittedFollowUps, storedFollowUps]
     .filter(notEmpty)
@@ -187,7 +195,7 @@ const crossFileValidator = async (
   if (lost_to_followup_after_clinical_event_id) {
     const primaryDiagnosisMatch = allPrimaryDiagnoses?.find(
       primaryDiagnosisRecord =>
-        primaryDiagnosisRecord.clinicalInfo?.submitter_primary_diagnosis_id ===
+        primaryDiagnosisRecord?.clinicalInfo?.submitter_primary_diagnosis_id ===
         lost_to_followup_after_clinical_event_id,
     );
 
@@ -218,8 +226,7 @@ const crossFileValidator = async (
       );
     } else {
       const { interval_of_followup } = entityIdMatch.clinicalInfo;
-      const submittedInterval =
-        interval_of_followup && typeof interval_of_followup === 'number' ? interval_of_followup : 0;
+      const submittedInterval = typeof interval_of_followup === 'number' ? interval_of_followup : 0;
 
       const invalidTreatments = allTreatments.filter(treatment => {
         const { treatment_start_interval, treatment_duration } = treatment.clinicalInfo
@@ -227,12 +234,9 @@ const crossFileValidator = async (
           : treatment;
 
         const treatmentInterval =
-          treatment_start_interval && typeof treatment_start_interval === 'number'
-            ? treatment_start_interval
-            : 0;
+          typeof treatment_start_interval === 'number' ? treatment_start_interval : 0;
 
-        const treatmentDuration =
-          treatment_duration && typeof treatment_duration === 'number' ? treatment_duration : 0;
+        const treatmentDuration = typeof treatment_duration === 'number' ? treatment_duration : 0;
 
         const totalTreatmentTime = treatmentInterval + treatmentDuration;
 
@@ -246,6 +250,7 @@ const crossFileValidator = async (
         const { submitter_treatment_id } = firstTreatmentMatch.clinicalInfo
           ? firstTreatmentMatch.clinicalInfo
           : firstTreatmentMatch;
+
         errors.push(
           utils.buildSubmissionError(
             submittedDonorRecord,
