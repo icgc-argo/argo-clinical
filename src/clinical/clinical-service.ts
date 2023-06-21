@@ -22,10 +22,16 @@ import _ from 'lodash';
 import { Sample, Donor, ClinicalEntityData } from './clinical-entities';
 import { ClinicalQuery, ClinicalSearchQuery } from './clinical-api';
 import { donorDao, DONOR_DOCUMENT_FIELDS } from './donor-repo';
-import { ClinicalErrorsResponseRecord, EntityAlias } from '../common-model/entities';
+import {
+  aliasEntityNames,
+  ClinicalEntitySchemaNames,
+  ClinicalErrorsResponseRecord,
+  EntityAlias,
+} from '../common-model/entities';
 import { Errors } from '../utils';
 import { patchCoreCompletionWithOverride } from '../submission/submission-to-clinical/stat-calculator';
 import { migrationRepo } from '../submission/migration/migration-repo';
+import { MigrationManager } from '../submission/migration/migration-manager';
 import {
   DictionaryMigration,
   DonorMigrationError,
@@ -309,6 +315,7 @@ export const getValidRecordsPostSubmission = async (
   clinicalMigrationErrors.forEach(migrationError => {
     const { errors } = migrationError;
     errors.forEach(error => {
+      console.log(error);
       const { entityName } = error;
       if (!errorEntities.includes(entityName)) errorEntities = [...errorEntities, entityName];
     });
@@ -323,13 +330,38 @@ export const getValidRecordsPostSubmission = async (
     submitterDonorIds: [],
   };
 
-  const donorData = await (await donorDao.findByPaginatedProgramId(programId, errorQuery)).donors;
+  const donorData = (await donorDao.findByPaginatedProgramId(programId, errorQuery)).donors;
 
   const validDonorIds = donorData
     .filter(donor => donor.schemaMetadata.isValid)
     .map(({ donorId }) => Number(donorId));
 
   const validRecords: ClinicalErrorsResponseRecord[] = [];
+
+  errorDonorIds
+    .filter(donorId => !validDonorIds.includes(donorId))
+    .forEach(async donorId => {
+      const currentDonor = donorData.filter(donor => donor.donorId === donorId)[0];
+      const currentDonorErrors = clinicalMigrationErrors
+        .filter(errorRecord => errorRecord.donorId === donorId)
+        .map(migrationError => migrationError.errors)
+        .flat();
+
+      // todo: fix 'as'
+      const currentDonorEntities = currentDonorErrors
+        .map(error => error.entityName as ClinicalEntitySchemaNames)
+        .filter((entity, index, array) => array.indexOf(entity) === index);
+
+      const currentVersion = await dictionaryManager.instance().getCurrent();
+
+      const revalidatedErrors = currentDonorEntities.map(entityName => {
+        return MigrationManager.validateDonorEntityAgainstNewSchema(
+          entityName,
+          currentVersion,
+          currentDonor,
+        );
+      });
+    });
 
   const end = new Date().getTime() / 1000;
   L.debug(`getDonorSubmissionErrorUpdates took ${end - start}s`);
