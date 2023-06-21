@@ -93,6 +93,7 @@ export interface ClinicalEntityErrorRecord extends dictionaryEntities.SchemaVali
 export interface ClinicalErrorsResponseRecord {
   donorId: number;
   submitterDonorId: string;
+  entityName?: ClinicalEntitySchemaNames;
   errors: ClinicalEntityErrorRecord[];
 }
 

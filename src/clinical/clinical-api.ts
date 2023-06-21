@@ -259,10 +259,10 @@ class ClinicalController {
 
     if (!migrationErrors) return res.status(204).json([]);
 
-    const { validDonorIds, validRecords } = await service.getValidRecordsPostSubmission(
-      programId,
-      migrationErrors,
-    );
+    const {
+      validDonorIds,
+      dictionaryValidationRecords,
+    } = await service.getValidRecordsPostSubmission(programId, migrationErrors);
 
     // Filter valid Donors + valid records
     const clinicalErrors = migrationErrors.clinicalErrors

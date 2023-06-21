@@ -308,7 +308,7 @@ export const getValidRecordsPostSubmission = async (
   },
 ): Promise<{
   validDonorIds: number[];
-  validRecords: dictionaryEntities.SchemaValidationError[][];
+  dictionaryValidationRecords: ClinicalErrorsResponseRecord[];
 }> => {
   if (!programId) throw new Error('Missing programId!');
 
@@ -340,12 +340,13 @@ export const getValidRecordsPostSubmission = async (
     .filter(donor => donor.schemaMetadata.isValid)
     .map(({ donorId }) => Number(donorId));
 
-  const validRecords: ClinicalEntityErrorRecord[][] = [];
+  const dictionaryValidationRecords: ClinicalErrorsResponseRecord[] = [];
 
   const invalidDonorIds = errorDonorIds.filter(donorId => !validDonorIds.includes(donorId));
 
   for (const donorId of invalidDonorIds) {
     const currentDonor = donorData.filter(donor => donor.donorId === donorId)[0];
+    const { submitterId: submitterDonorId } = currentDonor;
     const currentDonorErrors = clinicalMigrationErrors
       .filter(errorRecord => errorRecord.donorId === donorId)
       .map(migrationError => migrationError.errors)
@@ -376,12 +377,19 @@ export const getValidRecordsPostSubmission = async (
         }),
       );
 
-      if (entityErrorRecords.length) validRecords.push(entityErrorRecords);
+      const errorResponseRecord: ClinicalErrorsResponseRecord = {
+        donorId,
+        submitterDonorId,
+        entityName,
+        errors: entityErrorRecords,
+      };
+
+      if (entityErrorRecords.length) dictionaryValidationRecords.push(errorResponseRecord);
     });
   }
 
   const end = new Date().getTime() / 1000;
   L.debug(`getDonorSubmissionErrorUpdates took ${end - start}s`);
 
-  return { validDonorIds, validRecords };
+  return { validDonorIds, dictionaryValidationRecords };
 };
