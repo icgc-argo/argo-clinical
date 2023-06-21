@@ -602,10 +602,10 @@ export namespace MigrationManager {
     donor: DeepReadonly<Donor>,
   ) => {
     L.debug(`checking donor ${donor.submitterId} for schema: ${schemaName}`);
-    // todoo replace with clinical info definition
+    // todo replace with clinical info definition
     const clinicalRecords: ClinicalInfo[] = getClinicalEntitiesFromDonorBySchemaName(
-      donor as Donor,
-      schemaName as ClinicalEntitySchemaNames,
+      donor,
+      schemaName,
     );
     if (!clinicalRecords || clinicalRecords.length == 0) {
       return undefined;
