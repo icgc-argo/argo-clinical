@@ -24,6 +24,7 @@ import { ClinicalQuery, ClinicalSearchQuery } from './clinical-api';
 import { donorDao, DONOR_DOCUMENT_FIELDS } from './donor-repo';
 import {
   aliasEntityNames,
+  ClinicalEntityErrorRecord,
   ClinicalEntitySchemaNames,
   ClinicalErrorsResponseRecord,
   EntityAlias,
@@ -40,6 +41,7 @@ import * as dictionaryManager from '../dictionary/manager';
 import { loggerFor } from '../logger';
 import { WorkerTasks } from './service-worker-thread/tasks';
 import { runTaskInWorkerThread } from './service-worker-thread/runner';
+import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
 import { SchemaValidationError } from '@overturebio-stack/lectern-client/lib/schema-entities';
 
 const L = loggerFor(__filename);
@@ -304,7 +306,10 @@ export const getValidRecordsPostSubmission = async (
     clinicalErrors: ClinicalErrorsResponseRecord[];
     migrationLastUpdated: string | undefined;
   },
-): Promise<{ validDonorIds: number[]; validRecords: ClinicalErrorsResponseRecord[] }> => {
+): Promise<{
+  validDonorIds: number[];
+  validRecords: dictionaryEntities.SchemaValidationError[][];
+}> => {
   if (!programId) throw new Error('Missing programId!');
 
   const start = new Date().getTime() / 1000;
@@ -315,7 +320,6 @@ export const getValidRecordsPostSubmission = async (
   clinicalMigrationErrors.forEach(migrationError => {
     const { errors } = migrationError;
     errors.forEach(error => {
-      console.log(error);
       const { entityName } = error;
       if (!errorEntities.includes(entityName)) errorEntities = [...errorEntities, entityName];
     });
@@ -336,32 +340,45 @@ export const getValidRecordsPostSubmission = async (
     .filter(donor => donor.schemaMetadata.isValid)
     .map(({ donorId }) => Number(donorId));
 
-  const validRecords: ClinicalErrorsResponseRecord[] = [];
+  const validRecords: ClinicalEntityErrorRecord[][] = [];
 
-  errorDonorIds
-    .filter(donorId => !validDonorIds.includes(donorId))
-    .forEach(async donorId => {
-      const currentDonor = donorData.filter(donor => donor.donorId === donorId)[0];
-      const currentDonorErrors = clinicalMigrationErrors
-        .filter(errorRecord => errorRecord.donorId === donorId)
-        .map(migrationError => migrationError.errors)
-        .flat();
+  const invalidDonorIds = errorDonorIds.filter(donorId => !validDonorIds.includes(donorId));
 
-      // todo: fix 'as'
-      const currentDonorEntities = currentDonorErrors
-        .map(error => error.entityName as ClinicalEntitySchemaNames)
-        .filter((entity, index, array) => array.indexOf(entity) === index);
+  for (const donorId of invalidDonorIds) {
+    const currentDonor = donorData.filter(donor => donor.donorId === donorId)[0];
+    const currentDonorErrors = clinicalMigrationErrors
+      .filter(errorRecord => errorRecord.donorId === donorId)
+      .map(migrationError => migrationError.errors)
+      .flat();
 
-      const currentVersion = await dictionaryManager.instance().getCurrent();
+    // todo: fix 'as'
+    const currentDonorEntities = currentDonorErrors
+      .map(error => error.entityName as ClinicalEntitySchemaNames)
+      .filter((entity, index, array) => array.indexOf(entity) === index);
 
-      const revalidatedErrors = currentDonorEntities.map(entityName => {
-        return MigrationManager.validateDonorEntityAgainstNewSchema(
+    const currentVersion = await dictionaryManager.instance().getCurrent();
+
+    currentDonorEntities.forEach(entityName => {
+      const entityValidationErrors: readonly DeepReadonly<
+        dictionaryEntities.SchemaValidationError
+      >[] =
+        MigrationManager.validateDonorEntityAgainstNewSchema(
           entityName,
           currentVersion,
           currentDonor,
-        );
-      });
+        ) || [];
+
+      const entityErrorRecords: ClinicalEntityErrorRecord[] = entityValidationErrors.map(
+        (validationRecord): ClinicalEntityErrorRecord => ({
+          donorId,
+          entityName,
+          ...validationRecord,
+        }),
+      );
+
+      if (entityErrorRecords.length) validRecords.push(entityErrorRecords);
     });
+  }
 
   const end = new Date().getTime() / 1000;
   L.debug(`getDonorSubmissionErrorUpdates took ${end - start}s`);
