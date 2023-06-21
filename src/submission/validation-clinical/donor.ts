@@ -216,8 +216,9 @@ const crossFileValidator = async (
     const followUpSubmissionMatch = submittedFollowUps.find(clinicalInfo => {
       clinicalInfo?.submitter_follow_up_id === lost_to_followup_after_clinical_event_id;
     });
-
+    // Previously Submitted Records matching current Lost to Follow Up ID
     const prevEntityIdMatch = primaryDiagnosisMatch || treatmentMatch || followUpMatch;
+    // New Submitted Records matching current Lost to Follow Up ID
     const submittedIdMatch =
       diagnosisSubmissionMatch || treatmentSubmissionMatch || followUpSubmissionMatch;
 
