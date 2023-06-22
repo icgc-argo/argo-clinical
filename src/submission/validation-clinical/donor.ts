@@ -235,12 +235,14 @@ const crossFileValidator = async (
       );
     } else {
       const prevIntervalOfFollowUp =
-        (typeof prevEntityIdMatch?.clinicalInfo !== 'undefined' &&
+        (typeof prevEntityIdMatch?.clinicalInfo?.interval_of_followup === 'number' &&
           prevEntityIdMatch.clinicalInfo.interval_of_followup) ||
         0;
 
       const submittedIntervalOfFollowUp =
-        (typeof submittedIdMatch !== 'undefined' && submittedIdMatch.interval_of_followup) || 0;
+        (typeof submittedIdMatch?.interval_of_followup === 'number' &&
+          submittedIdMatch?.interval_of_followup) ||
+        0;
 
       const submittedInterval = prevIntervalOfFollowUp
         ? prevIntervalOfFollowUp
