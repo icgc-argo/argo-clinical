@@ -119,7 +119,7 @@ export const mergeRecordsMapIntoDonor = (
   const submittedRecordsMap = _.cloneDeep(
     unmutableSubmittedRecordsMap,
   ) as SubmittedClinicalRecordsMap;
-  const mergedDonor: any = _.cloneDeep(existentDonor) || {};
+  const mergedDonor = (_.cloneDeep(existentDonor) || {}) as Donor;
 
   submittedRecordsMap[ClinicalEntitySchemaNames.DONOR]?.forEach(r =>
     updateDonorInfo(mergedDonor, r),
