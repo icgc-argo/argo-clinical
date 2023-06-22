@@ -307,7 +307,6 @@ export const getValidRecordsPostSubmission = async (
     migrationLastUpdated: string | undefined;
   },
 ): Promise<{
-  validDonorIds: number[];
   dictionaryValidationRecords: ClinicalErrorsResponseRecord[];
 }> => {
   if (!programId) throw new Error('Missing programId!');
@@ -342,7 +341,9 @@ export const getValidRecordsPostSubmission = async (
 
   const dictionaryValidationRecords: ClinicalErrorsResponseRecord[] = [];
 
-  const invalidDonorIds = errorDonorIds.filter(donorId => !validDonorIds.includes(donorId));
+  const invalidDonorIds = errorDonorIds
+    .filter(donorId => !validDonorIds.includes(donorId))
+    .filter((entity, index, array) => array.indexOf(entity) === index);
 
   for (const donorId of invalidDonorIds) {
     const currentDonor = donorData.filter(donor => donor.donorId === donorId)[0];
@@ -357,7 +358,17 @@ export const getValidRecordsPostSubmission = async (
       .map(error => error.entityName as ClinicalEntitySchemaNames)
       .filter((entity, index, array) => array.indexOf(entity) === index);
 
-    const currentVersion = await dictionaryManager.instance().getCurrent();
+    const lastMigration: DeepReadonly<
+      DonorMigration | undefined
+    > = await migrationRepo.getLatestSuccessful();
+
+    const migrationVersion =
+      lastMigration?.toVersion || (await dictionaryManager.instance().getCurrentVersion());
+    const schemaName = await dictionaryManager.instance().getCurrentName();
+
+    const migrationDictionary = await dictionaryManager
+      .instance()
+      .loadSchemaByVersion(schemaName, migrationVersion);
 
     currentDonorEntities.forEach(entityName => {
       const entityValidationErrors: readonly DeepReadonly<
@@ -365,7 +376,7 @@ export const getValidRecordsPostSubmission = async (
       >[] =
         MigrationManager.validateDonorEntityAgainstNewSchema(
           entityName,
-          currentVersion,
+          migrationDictionary,
           currentDonor,
         ) || [];
 
@@ -391,5 +402,5 @@ export const getValidRecordsPostSubmission = async (
   const end = new Date().getTime() / 1000;
   L.debug(`getDonorSubmissionErrorUpdates took ${end - start}s`);
 
-  return { validDonorIds, dictionaryValidationRecords };
+  return { dictionaryValidationRecords };
 };
