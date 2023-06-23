@@ -132,6 +132,7 @@ export enum DonorFieldsEnum {
   vital_status = 'vital_status',
   survival_time = 'survival_time',
   cause_of_death = 'cause_of_death',
+  lost_to_followup_after_clinical_event_id = 'lost_to_followup_after_clinical_event_id',
 }
 
 export enum SpecimenFieldsEnum {
@@ -199,6 +200,7 @@ export enum TreatmentFieldsEnum {
   treatment_type = 'treatment_type',
   submitter_primary_diagnosis_id = 'submitter_primary_diagnosis_id',
   treatment_start_interval = 'treatment_start_interval',
+  treatment_duration = 'treatment_duration',
 }
 
 export enum TherapyRxNormFields {

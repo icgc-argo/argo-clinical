@@ -427,6 +427,21 @@
               "meta": {
                 "displayName": "Number of Children"
               }
+            },
+            {
+              "description": "If the donor became lost to follow up, indicate the identifier of the clinical event (eg. submitter_primary_diagnosis_id, submitter_treatment_id or submitter_follow_up_id) after which the donor became lost to follow up.",
+              "name": "lost_to_followup_after_clinical_event_id",
+              "valueType": "string",
+              "restrictions": {
+                "script": [
+                  "(function validate(inputs) {\n       const {$row, $name, $field} = inputs;\n       let result = {valid: true, message: \"Ok\"};\n       const currField = typeof($field) === 'string' ? $field.trim().toLowerCase() : $field;\n       /* checks for a string just consisting of whitespace */\n       const checkforEmpty = (entry) => {return /^s+$/g.test(decodeURI(entry).replace(/^\"(.*)\"$/, '$1'))};\n       if (currField != null && !(checkforEmpty(currField))) {\n       const vitalStatus = $row.vital_status.trim().toLowerCase();\n       if (vitalStatus === \"deceased\") {\n       result = {valid: false, message: `${$name} cannot be submitted if the donor's vital_status is deceased.`}\n       }\n       }\n       return result;\n       });"
+                ]
+              },
+              "meta": {
+                "displayName": "Lost To Follow Up After Clinical Event",
+                "foreignKey": "primary_diagnosis.submitter_primary_diagnosis_id",
+                "validationDependency": true
+              }
             }
           ]
         },

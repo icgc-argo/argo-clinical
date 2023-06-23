@@ -402,7 +402,7 @@ export function treatmentTypeNotMatchTherapyType(
   therapyType: ClinicalTherapyType,
 ): boolean {
   const treatmentTypeFortherapy = TreatmentTypeValuesMappedByTherapy[therapyType];
-  return !treatmentTypes.some(t => t === treatmentTypeFortherapy);
+  return !treatmentTypes?.some(t => t === treatmentTypeFortherapy);
 }
 
 const ClinicalEntitySchemaNameToDonoFieldsMap: { [clinicalType: string]: DONOR_DOCUMENT_FIELDS } = {
