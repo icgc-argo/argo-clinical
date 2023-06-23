@@ -127,12 +127,12 @@ const crossFileValidator = async (
   programShortName: string,
 ) => {
   const { lost_to_followup_after_clinical_event_id } = submittedDonorRecord;
-  const { primaryDiagnoses, treatments, followUps } = mergedDonor;
+  const {
+    primaryDiagnoses: donorPrimaryDiagnoses = [],
+    treatments: donorTreatments = [],
+    followUps: donorFollowUps = [],
+  } = mergedDonor;
   const errors: SubmissionValidationError[] = [];
-
-  const donorTreatments = typeof treatments !== 'undefined' ? treatments : [];
-  const donorPrimaryDiagnoses = typeof primaryDiagnoses !== 'undefined' ? primaryDiagnoses : [];
-  const donorFollowUps = typeof followUps !== 'undefined' ? followUps : [];
 
   // Compare across other Submissions
   let submittedTreatments: DeepReadonly<ClinicalInfo>[] = [];
