@@ -367,9 +367,7 @@ export const getValidRecordsPostSubmission = async (
       .loadSchemaByVersion(schemaName, migrationVersion);
 
     currentDonorEntities.forEach(entityName => {
-      const entityValidationErrors: readonly DeepReadonly<
-        dictionaryEntities.SchemaValidationError
-      >[] =
+      const entityValidationErrors =
         MigrationManager.validateDonorEntityAgainstNewSchema(
           entityName,
           migrationDictionary,
