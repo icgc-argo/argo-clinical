@@ -242,7 +242,8 @@ class ClinicalController {
 
   /**
    * Finds all Program Migration Errors, then finds which invalid Donors are now Valid post-migration.
-   * Filters out any errors related to Valid Donors, and returns the remaining Errors.
+   * Filters out any errors related to Valid Donors, then revalidates remaining Donors,
+   * and returns the revised collection of Dictionary Validation Errors.
    * @param programId string program name
    * @param donorIds array of donor IDs
    * @returns { ClinicalErrorsResponseRecord[] }
@@ -259,12 +260,10 @@ class ClinicalController {
 
     if (!migrationErrors) return res.status(204).json([]);
 
-    const { dictionaryValidationRecords } = await service.getValidRecordsPostSubmission(
+    const { clinicalErrors } = await service.getValidRecordsPostSubmission(
       programId,
       migrationErrors,
     );
-
-    const clinicalErrors = dictionaryValidationRecords;
 
     res.status(200).json(clinicalErrors);
   }

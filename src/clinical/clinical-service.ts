@@ -307,7 +307,7 @@ export const getValidRecordsPostSubmission = async (
     migrationLastUpdated: string | undefined;
   },
 ): Promise<{
-  dictionaryValidationRecords: ClinicalErrorsResponseRecord[];
+  clinicalErrors: ClinicalErrorsResponseRecord[];
 }> => {
   if (!programId) throw new Error('Missing programId!');
 
@@ -339,7 +339,7 @@ export const getValidRecordsPostSubmission = async (
     .filter(donor => donor.schemaMetadata.isValid)
     .map(({ donorId }) => Number(donorId));
 
-  const dictionaryValidationRecords: ClinicalErrorsResponseRecord[] = [];
+  const clinicalErrors: ClinicalErrorsResponseRecord[] = [];
 
   const invalidDonorIds = errorDonorIds
     .filter(donorId => !validDonorIds.includes(donorId))
@@ -395,12 +395,12 @@ export const getValidRecordsPostSubmission = async (
         errors: entityErrorRecords,
       };
 
-      if (entityErrorRecords.length) dictionaryValidationRecords.push(errorResponseRecord);
+      if (entityErrorRecords.length) clinicalErrors.push(errorResponseRecord);
     });
   }
 
   const end = new Date().getTime() / 1000;
   L.debug(`getDonorSubmissionErrorUpdates took ${end - start}s`);
 
-  return { dictionaryValidationRecords };
+  return { clinicalErrors };
 };
