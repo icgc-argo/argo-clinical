@@ -22,8 +22,8 @@ import _ from 'lodash';
 import { Sample, Donor, ClinicalEntityData } from './clinical-entities';
 import { ClinicalQuery, ClinicalSearchQuery } from './clinical-api';
 import { donorDao, DONOR_DOCUMENT_FIELDS } from './donor-repo';
+import { filterDuplicates } from '../common-model/functions';
 import {
-  aliasEntityNames,
   ClinicalEntityErrorRecord,
   ClinicalEntitySchemaNames,
   ClinicalErrorsResponseRecord,
@@ -41,7 +41,6 @@ import * as dictionaryManager from '../dictionary/manager';
 import { loggerFor } from '../logger';
 import { WorkerTasks } from './service-worker-thread/tasks';
 import { runTaskInWorkerThread } from './service-worker-thread/runner';
-import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
 import { SchemaValidationError } from '@overturebio-stack/lectern-client/lib/schema-entities';
 
 const L = loggerFor(__filename);
@@ -342,9 +341,10 @@ export const getValidRecordsPostSubmission = async (
 
   const clinicalErrors: ClinicalErrorsResponseRecord[] = [];
 
-  const invalidDonorIds = errorDonorIds
-    .filter(donorId => !validDonorIds.includes(donorId))
-    .filter((entity, index, array) => array.indexOf(entity) === index);
+  const invalidDonorIds = errorDonorIds.filter(
+    (donorId, index, array) =>
+      !validDonorIds.includes(donorId) && filterDuplicates(donorId, index, array),
+  );
 
   for (const donorId of invalidDonorIds) {
     const currentDonor = donorData.filter(donor => donor.donorId === donorId)[0];
@@ -356,7 +356,7 @@ export const getValidRecordsPostSubmission = async (
 
     const currentDonorEntities = currentDonorErrors
       .map(error => error.entityName)
-      .filter((entity, index, array) => array.indexOf(entity) === index);
+      .filter(filterDuplicates);
 
     const migrationVersion =
       lastMigration?.toVersion || (await dictionaryManager.instance().getCurrentVersion());

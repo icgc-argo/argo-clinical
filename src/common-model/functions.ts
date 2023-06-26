@@ -315,7 +315,7 @@ export const getRequiredDonorFieldsForEntityTypes = (
   }
 
   // Return w/ duplicate fields filtered out
-  const donorFields = requiredFields.filter((field, i) => requiredFields.indexOf(field) === i);
+  const donorFields = requiredFields.filter(filterDuplicates);
 
   return donorFields;
 };
@@ -341,4 +341,8 @@ export function getSingleClinicalEntityFromDonorBySchemaName(
 
 export function getEntitySubmitterIdFieldName(entityName: ClinicalEntitySchemaNames) {
   return `submitter_${entityName}_id` as string;
+}
+
+export function filterDuplicates<DataType>(record: DataType, index: number, array: DataType[]) {
+  return array.indexOf(record) === index;
 }
