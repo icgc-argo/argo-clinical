@@ -338,7 +338,7 @@ export const getValidRecordsPostSubmission = async (
 
   const validDonorIds = donorData
     .filter(donor => donor.schemaMetadata.isValid)
-    .map(({ donorId }) => Number(donorId));
+    .map(({ donorId }) => donorId);
 
   const clinicalErrors: ClinicalErrorsResponseRecord[] = [];
 
