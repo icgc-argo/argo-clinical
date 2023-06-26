@@ -232,15 +232,15 @@ interface DonorMigration extends Omit<DictionaryMigration, 'invalidDonorsErrors'
 }
 
 /**
- * Returns all errors from latest migration, plus date of migration.
+ * Returns all errors from latest migration
  * Records are formatted for use on front end.
  */
 export const getClinicalEntityMigrationErrors = async (
   programId: string,
   query: string[],
 ): Promise<{
-  clinicalErrors: ClinicalErrorsResponseRecord[];
-  migrationLastUpdated: string | undefined;
+  migration: DeepReadonly<DonorMigration | undefined>;
+  clinicalMigrationErrors: ClinicalErrorsResponseRecord[];
 }> => {
   if (!programId) throw new Error('Missing programId!');
   const start = new Date().getTime() / 1000;
@@ -250,7 +250,6 @@ export const getClinicalEntityMigrationErrors = async (
   > = await migrationRepo.getLatestSuccessful();
 
   const clinicalMigrationErrors: ClinicalErrorsResponseRecord[] = [];
-  const migrationLastUpdated = migration?.updatedAt;
 
   if (migration) {
     const { invalidDonorsErrors }: DeepReadonly<DonorMigration> = migration;
@@ -271,7 +270,8 @@ export const getClinicalEntityMigrationErrors = async (
             readonly DeepReadonly<SchemaValidationError>[],
           ] = Object.entries(entityErrorObject)[0];
 
-          const entityName = currentEntityErrorData[0];
+          // todo: fix 'as'
+          const entityName = currentEntityErrorData[0] as ClinicalEntitySchemaNames;
           const entityErrors = currentEntityErrorData[1];
 
           const updatedErrorEntries = entityErrors.map(error => ({
@@ -293,7 +293,7 @@ export const getClinicalEntityMigrationErrors = async (
   const end = new Date().getTime() / 1000;
   L.debug(`getClinicalEntityMigrationErrors took ${end - start}s`);
 
-  return { clinicalErrors: clinicalMigrationErrors, migrationLastUpdated };
+  return { migration, clinicalMigrationErrors };
 };
 
 /**
@@ -302,9 +302,9 @@ export const getClinicalEntityMigrationErrors = async (
  */
 export const getValidRecordsPostSubmission = async (
   programId: string,
-  migrationErrors: {
-    clinicalErrors: ClinicalErrorsResponseRecord[];
-    migrationLastUpdated: string | undefined;
+  migrationData: {
+    migration: DeepReadonly<DonorMigration | undefined>;
+    clinicalMigrationErrors: ClinicalErrorsResponseRecord[];
   },
 ): Promise<{
   clinicalErrors: ClinicalErrorsResponseRecord[];
@@ -312,7 +312,8 @@ export const getValidRecordsPostSubmission = async (
   if (!programId) throw new Error('Missing programId!');
 
   const start = new Date().getTime() / 1000;
-  const { clinicalErrors: clinicalMigrationErrors } = migrationErrors;
+
+  const { migration: lastMigration, clinicalMigrationErrors } = migrationData;
   const errorDonorIds = clinicalMigrationErrors.map(error => error.donorId);
   let errorEntities: Array<string | EntityAlias> = [];
 
@@ -353,14 +354,9 @@ export const getValidRecordsPostSubmission = async (
       .map(migrationError => migrationError.errors)
       .flat();
 
-    // todo: fix 'as'
     const currentDonorEntities = currentDonorErrors
-      .map(error => error.entityName as ClinicalEntitySchemaNames)
+      .map(error => error.entityName)
       .filter((entity, index, array) => array.indexOf(entity) === index);
-
-    const lastMigration: DeepReadonly<
-      DonorMigration | undefined
-    > = await migrationRepo.getLatestSuccessful();
 
     const migrationVersion =
       lastMigration?.toVersion || (await dictionaryManager.instance().getCurrentVersion());

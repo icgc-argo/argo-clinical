@@ -256,13 +256,16 @@ class ClinicalController {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
 
-    const migrationErrors = await service.getClinicalEntityMigrationErrors(programId, query);
+    const clinicalMigrationErrors = await service.getClinicalEntityMigrationErrors(
+      programId,
+      query,
+    );
 
-    if (!migrationErrors) return res.status(204).json([]);
+    if (!clinicalMigrationErrors) return res.status(204).json([]);
 
     const { clinicalErrors } = await service.getValidRecordsPostSubmission(
       programId,
-      migrationErrors,
+      clinicalMigrationErrors,
     );
 
     res.status(200).json(clinicalErrors);
