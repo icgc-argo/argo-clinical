@@ -36,12 +36,12 @@ import { MigrationManager } from '../submission/migration/migration-manager';
 import {
   DictionaryMigration,
   DonorMigrationError,
+  DonorMigrationSchemaError,
 } from '../submission/migration/migration-entities';
 import * as dictionaryManager from '../dictionary/manager';
 import { loggerFor } from '../logger';
 import { WorkerTasks } from './service-worker-thread/tasks';
 import { runTaskInWorkerThread } from './service-worker-thread/runner';
-import { SchemaValidationError } from '@overturebio-stack/lectern-client/lib/schema-entities';
 
 const L = loggerFor(__filename);
 
@@ -263,29 +263,27 @@ export const getClinicalEntityMigrationErrors = async (
         // Input: Donor.Errors = [{ [entityName] : [{error}] }]
         // =>  Output: Donor.Errors = [{ ...error, entityName}]
 
-        errors.forEach(entityErrorObject => {
-          const currentEntityErrorData: [
-            string,
-            readonly DeepReadonly<SchemaValidationError>[],
-          ] = Object.entries(entityErrorObject)[0];
+        let entityName: ClinicalEntitySchemaNames;
+        errors.forEach((errorRecord: DonorMigrationSchemaError) => {
+          for (entityName in errorRecord) {
+          }
+          const entityErrors = errorRecord[entityName];
 
-          // todo: fix 'as'
-          const entityName = currentEntityErrorData[0] as ClinicalEntitySchemaNames;
-          const entityErrors = currentEntityErrorData[1];
+          if (entityErrors && entityErrors.length > 0) {
+            const updatedErrorEntries = entityErrors.map(error => ({
+              ...error,
+              donorId,
+              entityName,
+            }));
 
-          const updatedErrorEntries = entityErrors.map(error => ({
-            ...error,
-            donorId,
-            entityName,
-          }));
+            const updatedDonorErrorData: ClinicalErrorsResponseRecord = {
+              donorId,
+              submitterDonorId,
+              errors: updatedErrorEntries,
+            };
 
-          const updatedDonorErrorData: ClinicalErrorsResponseRecord = {
-            donorId,
-            submitterDonorId,
-            errors: updatedErrorEntries,
-          };
-
-          clinicalMigrationErrors.push(updatedDonorErrorData);
+            clinicalMigrationErrors.push(updatedDonorErrorData);
+          }
         });
       });
   }

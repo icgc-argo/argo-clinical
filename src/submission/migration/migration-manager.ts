@@ -26,7 +26,7 @@ import { migrationRepo } from './migration-repo';
 import {
   DictionaryMigration,
   NewSchemaVerificationResult,
-  DonorMigrationSchemaErrors,
+  DonorMigrationSchemaError,
 } from './migration-entities';
 import { Donor, ClinicalInfo } from '../../clinical/clinical-entities';
 import { DeepReadonly } from 'deep-freeze';
@@ -568,7 +568,7 @@ export namespace MigrationManager {
     newSchema: dictionaryEntities.SchemasDictionary,
     breakingChangesEntitesCache: { [versions: string]: ClinicalEntitySchemaNames[] },
   ) => {
-    const donorSchemaErrors: DonorMigrationSchemaErrors = [];
+    const donorSchemaErrors: DonorMigrationSchemaError[] = [];
     const donorDocSchemaVersion = donor.schemaMetadata.lastValidSchemaVersion;
     const versionsKey = `${donorDocSchemaVersion}->${newSchema.version}`;
 
@@ -577,9 +577,11 @@ export namespace MigrationManager {
       // not fields since we only need to check the whole schema once.
       const errors = validateDonorEntityAgainstNewSchema(schemaName, newSchema, donor);
       if (errors && errors.length > 0) {
-        donorSchemaErrors.push({
+        const donorSchemaErrorRecord = {
           [schemaName]: errors,
-        });
+        } as DonorMigrationSchemaError;
+
+        donorSchemaErrors.push(donorSchemaErrorRecord);
       }
     }
     return donorSchemaErrors;
