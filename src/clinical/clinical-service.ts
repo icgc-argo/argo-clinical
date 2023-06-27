@@ -36,7 +36,6 @@ import { MigrationManager } from '../submission/migration/migration-manager';
 import {
   DictionaryMigration,
   DonorMigrationError,
-  DonorMigrationSchemaError,
 } from '../submission/migration/migration-entities';
 import * as dictionaryManager from '../dictionary/manager';
 import { loggerFor } from '../logger';
@@ -278,6 +277,7 @@ export const getClinicalEntityMigrationErrors = async (
               const updatedDonorErrorData: ClinicalErrorsResponseRecord = {
                 donorId,
                 submitterDonorId,
+                entityName,
                 errors: updatedErrorEntries,
               };
 
