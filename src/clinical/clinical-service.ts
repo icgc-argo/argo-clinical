@@ -264,7 +264,7 @@ export const getClinicalEntityMigrationErrors = async (
         // =>  Output: Donor.Errors = [{ ...error, entityName}]
 
         let entityName: ClinicalEntitySchemaNames;
-        errors.forEach((errorRecord: DonorMigrationSchemaError) => {
+        errors.forEach(errorRecord => {
           for (entityName in errorRecord) {
             const entityErrors = errorRecord[entityName];
 
