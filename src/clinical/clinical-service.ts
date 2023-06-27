@@ -266,23 +266,23 @@ export const getClinicalEntityMigrationErrors = async (
         let entityName: ClinicalEntitySchemaNames;
         errors.forEach((errorRecord: DonorMigrationSchemaError) => {
           for (entityName in errorRecord) {
-          }
-          const entityErrors = errorRecord[entityName];
+            const entityErrors = errorRecord[entityName];
 
-          if (entityErrors && entityErrors.length > 0) {
-            const updatedErrorEntries = entityErrors.map(error => ({
-              ...error,
-              donorId,
-              entityName,
-            }));
+            if (entityErrors && entityErrors.length > 0) {
+              const updatedErrorEntries = entityErrors.map(error => ({
+                ...error,
+                donorId,
+                entityName,
+              }));
 
-            const updatedDonorErrorData: ClinicalErrorsResponseRecord = {
-              donorId,
-              submitterDonorId,
-              errors: updatedErrorEntries,
-            };
+              const updatedDonorErrorData: ClinicalErrorsResponseRecord = {
+                donorId,
+                submitterDonorId,
+                errors: updatedErrorEntries,
+              };
 
-            clinicalMigrationErrors.push(updatedDonorErrorData);
+              clinicalMigrationErrors.push(updatedDonorErrorData);
+            }
           }
         });
       });

@@ -575,12 +575,10 @@ export namespace MigrationManager {
     const schemaNamesWithBreakingChanges = breakingChangesEntitesCache[versionsKey];
     for (const schemaName of schemaNamesWithBreakingChanges) {
       // not fields since we only need to check the whole schema once.
-      const errors = validateDonorEntityAgainstNewSchema(schemaName, newSchema, donor);
-      if (errors && errors.length > 0) {
-        const donorSchemaErrorRecord = {
-          [schemaName]: errors,
-        } as DonorMigrationSchemaError;
-
+      const errors = validateDonorEntityAgainstNewSchema(schemaName, newSchema, donor) || [];
+      if (errors.length > 0) {
+        const donorSchemaErrorRecord: DonorMigrationSchemaError = {} as DonorMigrationSchemaError;
+        donorSchemaErrorRecord[schemaName] = errors;
         donorSchemaErrors.push(donorSchemaErrorRecord);
       }
     }
@@ -609,7 +607,7 @@ export namespace MigrationManager {
       donor,
       schemaName,
     );
-    if (!clinicalRecords || clinicalRecords.length == 0) {
+    if (clinicalRecords?.length == 0) {
       return undefined;
     }
     const stringifyedRecords = clinicalRecords
@@ -618,7 +616,7 @@ export namespace MigrationManager {
       })
       .filter(notEmpty);
     const result = dictionaryService.processRecords(schema, schemaName, stringifyedRecords);
-    if (result.validationErrors.length > 0) {
+    if (result?.validationErrors?.length > 0) {
       return result.validationErrors;
     }
     return undefined;
