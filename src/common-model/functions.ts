@@ -157,18 +157,10 @@ export function getClinicalEntitySubmittedData(
     case ClinicalEntitySchemaNames.TREATMENT:
       clinicalRecords = result.map((treatment: Treatment) => {
         const clinicalInfo = treatment.clinicalInfo || {};
-        const therapy_type =
-          treatment.therapies.length === 1
-            ? { therapy_type: treatment.therapies[0].therapyType }
-            : {};
-        const therapy_info =
-          treatment.therapies.length === 1 && treatment.therapies[0].clinicalInfo;
         return {
           ...baseRecord,
           treatment_id: treatment.treatmentId,
           ...clinicalInfo,
-          ...therapy_type,
-          ...therapy_info,
         };
       });
       break;
