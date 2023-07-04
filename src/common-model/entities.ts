@@ -86,13 +86,14 @@ export const aliasEntityNames: Record<ClinicalEntitySchemaNames, EntityAlias> = 
 export const queryEntityNames = Object.values(aliasEntityNames) as EntityAlias[];
 
 export interface ClinicalEntityErrorRecord extends dictionaryEntities.SchemaValidationError {
-  entityName: string | EntityAlias;
+  entityName: ClinicalEntitySchemaNames;
   donorId: number;
 }
 
 export interface ClinicalErrorsResponseRecord {
   donorId: number;
   submitterDonorId: string;
+  entityName: ClinicalEntitySchemaNames;
   errors: ClinicalEntityErrorRecord[];
 }
 

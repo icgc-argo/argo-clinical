@@ -26,7 +26,7 @@ import { migrationRepo } from './migration-repo';
 import {
   DictionaryMigration,
   NewSchemaVerificationResult,
-  DonorMigrationSchemaErrors,
+  DonorMigrationSchemaError,
 } from './migration-entities';
 import { Donor, ClinicalInfo } from '../../clinical/clinical-entities';
 import { DeepReadonly } from 'deep-freeze';
@@ -568,18 +568,18 @@ export namespace MigrationManager {
     newSchema: dictionaryEntities.SchemasDictionary,
     breakingChangesEntitesCache: { [versions: string]: ClinicalEntitySchemaNames[] },
   ) => {
-    const donorSchemaErrors: DonorMigrationSchemaErrors = [];
+    const donorSchemaErrors: DonorMigrationSchemaError[] = [];
     const donorDocSchemaVersion = donor.schemaMetadata.lastValidSchemaVersion;
     const versionsKey = `${donorDocSchemaVersion}->${newSchema.version}`;
 
     const schemaNamesWithBreakingChanges = breakingChangesEntitesCache[versionsKey];
     for (const schemaName of schemaNamesWithBreakingChanges) {
       // not fields since we only need to check the whole schema once.
-      const errors = validateDonorEntityAgainstNewSchema(schemaName, newSchema, donor);
-      if (errors && errors.length > 0) {
-        donorSchemaErrors.push({
-          [schemaName]: errors,
-        });
+      const errors = validateDonorEntityAgainstNewSchema(schemaName, newSchema, donor) || [];
+      if (errors.length > 0) {
+        const donorSchemaErrorRecord = {} as DonorMigrationSchemaError;
+        donorSchemaErrorRecord[schemaName] = errors;
+        donorSchemaErrors.push(donorSchemaErrorRecord);
       }
     }
     return donorSchemaErrors;
@@ -602,12 +602,12 @@ export namespace MigrationManager {
     donor: DeepReadonly<Donor>,
   ) => {
     L.debug(`checking donor ${donor.submitterId} for schema: ${schemaName}`);
-    // todoo replace with clinical info definition
+    // todo replace with clinical info definition
     const clinicalRecords: ClinicalInfo[] = getClinicalEntitiesFromDonorBySchemaName(
-      donor as Donor,
-      schemaName as ClinicalEntitySchemaNames,
+      donor,
+      schemaName,
     );
-    if (!clinicalRecords || clinicalRecords.length == 0) {
+    if (clinicalRecords?.length == 0) {
       return undefined;
     }
     const stringifyedRecords = clinicalRecords
@@ -616,7 +616,7 @@ export namespace MigrationManager {
       })
       .filter(notEmpty);
     const result = dictionaryService.processRecords(schema, schemaName, stringifyedRecords);
-    if (result.validationErrors.length > 0) {
+    if (result?.validationErrors?.length > 0) {
       return result.validationErrors;
     }
     return undefined;
