@@ -19,7 +19,7 @@ export type ClinicalDataApiBody = zod.infer<typeof ClinicalDataApiBody>;
  * Clinical Error API Body
  */
 export const ClinicalErrorsApiBody = zod.object({
-  donorIds: zod.array(zod.number().positive()).default([]),
+  donorIds: zod.array(zod.number().positive()).optional(),
 });
 export type ClinicalErrorsApiBody = zod.infer<typeof ClinicalErrorsApiBody>;
 
@@ -30,7 +30,7 @@ export type ClinicalErrorsApiBody = zod.infer<typeof ClinicalErrorsApiBody>;
 export const ClinicalSearchApiBody = zod.object({
   completionState: CompletionState.default(CompletionState.Values.all),
   entityTypes: zod.array(EntityAlias).default([]),
-  donorIds: zod.array(zod.string().nonempty()).default([]),
+  donorIds: zod.array(zod.number()).default([]),
   submitterDonorIds: zod.array(zod.string().nonempty()).default([]),
 });
 export type ClinicalSearchApiBody = zod.infer<typeof ClinicalSearchApiBody>;
