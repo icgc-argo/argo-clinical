@@ -36,7 +36,7 @@ import {
 import { getSingleClinicalObjectFromDonor } from '../../common-model/functions';
 import { donorDao } from '../../clinical/donor-repo';
 import { ClinicalInfo, Donor, Treatment } from '../../clinical/clinical-entities';
-import { ClinicalQuery } from '../../clinical/clinical-api';
+import { ClinicalQuery } from '../../clinical/clinical-service';
 import { isValueEqual } from '../../utils';
 
 export const validate = async (
@@ -273,7 +273,7 @@ export function getTreatment(
     ClinicalEntitySchemaNames.TREATMENT,
     { clinicalInfo: { [TreatmentFieldsEnum.submitter_treatment_id]: treatmentId as string } },
   ) as DeepReadonly<Treatment>;
-  if (!treatment || treatment.clinicalInfo === {}) {
+  if (_.isEmpty(treatment)) {
     errors.push(
       utils.buildSubmissionError(
         therapyRecord,

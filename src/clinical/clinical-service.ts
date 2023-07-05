@@ -20,7 +20,6 @@
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 import { Sample, Donor, ClinicalEntityData } from './clinical-entities';
-import { ClinicalQuery, ClinicalSearchQuery } from './clinical-api';
 import { donorDao, DONOR_DOCUMENT_FIELDS } from './donor-repo';
 import { filterDuplicates } from '../common-model/functions';
 import {
@@ -28,6 +27,7 @@ import {
   ClinicalEntitySchemaNames,
   ClinicalErrorsResponseRecord,
   EntityAlias,
+  aliasEntityNames,
 } from '../common-model/entities';
 import { Errors } from '../utils';
 import { patchCoreCompletionWithOverride } from '../submission/submission-to-clinical/stat-calculator';
@@ -43,6 +43,25 @@ import { WorkerTasks } from './service-worker-thread/tasks';
 import { runTaskInWorkerThread } from './service-worker-thread/runner';
 
 const L = loggerFor(__filename);
+
+export type ClinicalQuery = {
+  programShortName: string;
+  page: number;
+  pageSize?: number;
+  entityTypes: Array<EntityAlias>;
+  sort: string;
+  donorIds: number[];
+  submitterDonorIds: string[];
+  completionState?: {};
+};
+
+export type ClinicalSearchQuery = {
+  programShortName: string;
+  donorIds: string[];
+  submitterDonorIds: string[];
+  entityTypes: EntityAlias[];
+  completionState?: {};
+};
 
 export async function updateDonorSchemaMetadata(
   donor: DeepReadonly<Donor>,
@@ -235,7 +254,7 @@ interface DonorMigration extends Omit<DictionaryMigration, 'invalidDonorsErrors'
  */
 export const getClinicalEntityMigrationErrors = async (
   programId: string,
-  query: string[],
+  query: number[],
 ): Promise<{
   migration: DeepReadonly<DonorMigration | undefined>;
   clinicalMigrationErrors: ClinicalErrorsResponseRecord[];
@@ -250,23 +269,19 @@ export const getClinicalEntityMigrationErrors = async (
   const clinicalMigrationErrors: ClinicalErrorsResponseRecord[] = [];
 
   if (migration) {
-    const { invalidDonorsErrors }: DeepReadonly<DonorMigration> = migration;
+    const { invalidDonorsErrors } = migration;
     invalidDonorsErrors
-      .filter(
-        donor =>
-          donor.programId.toString() === programId && query.includes(donor.donorId.toString()),
-      )
+      .filter(donor => donor.programId.toString() === programId && query.includes(donor.donorId))
       .forEach(donor => {
         const { donorId, submitterDonorId, errors } = donor;
         // Overwrite donor.errors + flatten entityName to simplify query
         // Input: Donor.Errors = [{ [entityName] : [{error}] }]
         // =>  Output: Donor.Errors = [{ ...error, entityName}]
 
-        let entityName: ClinicalEntitySchemaNames;
         errors.forEach(errorRecord => {
+          let entityName: ClinicalEntitySchemaNames;
           for (entityName in errorRecord) {
             const entityErrors = errorRecord[entityName];
-
             if (entityErrors && entityErrors.length > 0) {
               const updatedErrorEntries = entityErrors.map(error => ({
                 ...error,
@@ -287,6 +302,7 @@ export const getClinicalEntityMigrationErrors = async (
         });
       });
   }
+
   const end = new Date().getTime() / 1000;
   L.debug(`getClinicalEntityMigrationErrors took ${end - start}s`);
 
@@ -312,7 +328,7 @@ export const getValidRecordsPostSubmission = async (
 
   const { migration: lastMigration, clinicalMigrationErrors } = migrationData;
   const errorDonorIds = clinicalMigrationErrors.map(error => error.donorId);
-  let errorEntities: Array<string | EntityAlias> = [];
+  let errorEntities: Array<ClinicalEntitySchemaNames> = [];
 
   clinicalMigrationErrors.forEach(migrationError => {
     const { errors } = migrationError;
@@ -326,7 +342,7 @@ export const getValidRecordsPostSubmission = async (
     programShortName: programId,
     page: 0,
     sort: 'donorId',
-    entityTypes: ['donor', ...errorEntities],
+    entityTypes: ['donor', ...errorEntities.map(schemaName => aliasEntityNames[schemaName])],
     donorIds: errorDonorIds,
     submitterDonorIds: [],
   };

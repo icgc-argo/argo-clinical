@@ -18,52 +18,33 @@
  */
 
 import { Request, Response } from 'express';
-import * as service from './clinical-service';
+import * as service from '../clinical-service';
+import { ClinicalQuery, ClinicalSearchQuery } from '../clinical-service';
 import {
   HasFullWriteAccess,
   ProtectTestEndpoint,
   HasProgramReadAccess,
   HasFullReadAccess,
-} from '../decorators';
+} from '../../decorators';
 import {
-  EntityAlias,
   ClinicalEntitySchemaNames,
   aliasEntityNames,
   queryEntityNames,
-} from '../common-model/entities';
-import { ControllerUtils, DonorUtils, TsvUtils } from '../utils';
+} from '../../common-model/entities';
+import { ControllerUtils, DonorUtils, TsvUtils } from '../../utils';
 import AdmZip from 'adm-zip';
-import { ClinicalEntityData, Donor } from './clinical-entities';
+import { ClinicalEntityData, Donor } from '../clinical-entities';
 import { omit } from 'lodash';
 import { DeepReadonly } from 'deep-freeze';
+import {
+  ClinicalDataApiBody,
+  ClinicalErrorsApiBody,
+  ClinicalSearchApiBody,
+  CompletionState,
+} from './types';
 
-export type ClinicalQuery = {
-  programShortName: string;
-  page: number;
-  pageSize?: number;
-  entityTypes: Array<string | EntityAlias>;
-  sort: string;
-  donorIds: number[];
-  submitterDonorIds: string[];
-  completionState?: {};
-};
-
-export type ClinicalSearchQuery = {
-  programShortName: string;
-  donorIds: string[];
-  submitterDonorIds: string[];
-  entityTypes: EntityAlias[];
-  completionState?: {};
-};
-
-enum CompletionStates {
-  all = 'all',
-  invalid = 'invalid',
-  complete = 'complete',
-  incomplete = 'incomplete',
-}
-
-const completionFilters = {
+// TODO: Update value type to match mongo schema
+export const completionFilters: Record<CompletionState, any> = {
   invalid: { 'schemaMetadata.isValid': false },
   complete: { 'completionStats.coreCompletionPercentage': 1 },
   incomplete: { 'completionStats.coreCompletionPercentage': { $lt: 1 } },
@@ -113,38 +94,30 @@ class ClinicalController {
 
   @HasProgramReadAccess((req: Request) => req.params.programId)
   async getSpecificClinicalDataAsTsvsInZip(req: Request, res: Response) {
-    const programId: string = req.params.programId;
-    if (!programId) {
+    const programShortName: string = req.params.programId;
+    if (!programShortName) {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
-    } else if (!req.query.entityTypes) {
-      return ControllerUtils.badRequest(res, 'Must request specific EntityTypes');
     }
     const sort: string = 'donorId';
     const page: number = 0;
-    const state: CompletionStates = req.query.completionState || CompletionStates.all;
-    const completionState: {} = completionFilters[state] || {};
 
-    const schemaNames = Object.values(ClinicalEntitySchemaNames);
-    const entityTypes: string[] = req.query.entityTypes
-      .split(',')
-      .map((entityName: EntityAlias & ClinicalEntitySchemaNames) => {
-        if (queryEntityNames.includes(entityName)) {
-          return entityName;
-        } else if (schemaNames.includes(entityName)) {
-          return aliasEntityNames[entityName];
-        } else return undefined;
-      })
-      .filter(Boolean);
-
-    const donorIds: number[] = parseDonorIdList(req.query.donorIds) || [];
-
-    const submitterDonorIds: string[] =
-      req.query.submitterDonorIds && req.query.submitterDonorIds.length > 0
-        ? req.query.submitterDonorIds?.split(',').filter((match: string) => !!match)
-        : [];
+    const bodyParseResult = ClinicalDataApiBody.safeParse(req.body);
+    if (!bodyParseResult.success) {
+      return ControllerUtils.badRequest(
+        res,
+        `Invalid filter in request body: ${JSON.stringify(bodyParseResult.error)}`,
+      );
+    }
+    const {
+      completionState: state,
+      donorIds,
+      entityTypes,
+      submitterDonorIds,
+    } = bodyParseResult.data;
+    const completionState = completionFilters[state];
 
     const query: ClinicalQuery = {
-      ...req.query,
+      programShortName,
       sort,
       entityTypes,
       page,
@@ -154,11 +127,11 @@ class ClinicalController {
     };
 
     const entityData = await service
-      .getPaginatedClinicalData(programId, query)
+      .getPaginatedClinicalData(programShortName, query)
       .then(data => data.clinicalEntities);
 
     const todaysDate = currentDateFormatted();
-    const fileName = `filename=${programId}_Clinical_Data_${todaysDate}.zip`;
+    const fileName = `filename=${programShortName}_Clinical_Data_${todaysDate}.zip`;
     res
       .status(200)
       .contentType('application/zip')
@@ -172,28 +145,30 @@ class ClinicalController {
 
   @HasProgramReadAccess((req: Request) => req.params.programId)
   async getProgramClinicalEntityData(req: Request, res: Response) {
-    const programId: string = req.params.programId;
-    if (!programId) {
+    const programShortName: string = req.params.programId;
+    if (!programShortName) {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
     const sort: string = req.query.sort || 'donorId';
     const page: number = parseInt(req.query.page);
-    const state: CompletionStates = req.query.completionState || CompletionStates.all;
-    const completionState: {} = completionFilters[state] || {};
-    const entityTypes: string[] =
-      req.query.entityTypes && req.query.entityTypes.length > 0
-        ? req.query.entityTypes.split(',')
-        : ['donor'];
 
-    const donorIds: number[] = parseDonorIdList(req.query.donorIds) || [];
-
-    const submitterDonorIds: string[] =
-      req.query.submitterDonorIds && req.query.submitterDonorIds.length > 0
-        ? req.query.submitterDonorIds?.split(',').filter((match: string) => !!match)
-        : [];
+    const bodyParseResult = ClinicalDataApiBody.safeParse(req.body);
+    if (!bodyParseResult.success) {
+      return ControllerUtils.badRequest(
+        res,
+        `Invalid filter in request body: ${JSON.stringify(bodyParseResult.error)}`,
+      );
+    }
+    const {
+      completionState: state,
+      donorIds,
+      entityTypes,
+      submitterDonorIds,
+    } = bodyParseResult.data;
+    const completionState = completionFilters[state];
 
     const query: ClinicalQuery = {
-      ...req.query,
+      programShortName,
       sort,
       entityTypes,
       page,
@@ -202,40 +177,44 @@ class ClinicalController {
       completionState,
     };
 
-    const entityData = await service.getPaginatedClinicalData(programId, query);
+    const entityData = await service.getPaginatedClinicalData(programShortName, query);
 
     res.status(200).json(entityData);
   }
 
   @HasProgramReadAccess((req: Request) => req.params.programId)
   async getProgramClinicalSearchResults(req: Request, res: Response) {
-    const programId: string = req.params.programId;
-    if (!programId) {
+    const programShortName: string = req.params.programId;
+    if (!programShortName) {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
-    const state: CompletionStates = req.query.completionState || CompletionStates.all;
-    const completionState: {} = completionFilters[state] || {};
-    const entityTypes: string[] =
-      req.query.entityTypes && req.query.entityTypes.length > 0
-        ? req.query.entityTypes.split(',')
-        : [''];
+
+    const bodyParseResult = ClinicalSearchApiBody.safeParse(req.body);
+    if (!bodyParseResult.success) {
+      return ControllerUtils.badRequest(
+        res,
+        `Invalid filter in request body: ${JSON.stringify(bodyParseResult.error)}`,
+      );
+    }
+    const {
+      completionState: state,
+      donorIds,
+      entityTypes,
+      submitterDonorIds,
+    } = bodyParseResult.data;
+
+    const completionState = completionFilters[state] || {};
 
     // FE filters digits out of search text for Donor search
-    const donorIds = req.query.donorIds?.match(/\d*/gi)?.filter((match: string) => !!match) || [];
-    const submitterDonorIds =
-      req.query.submitterDonorIds && req.query.submitterDonorIds.length > 0
-        ? req.query.submitterDonorIds.split(',').filter((match: string) => !!match)
-        : [];
-
     const query: ClinicalSearchQuery = {
-      ...req.query,
+      programShortName,
       donorIds,
       submitterDonorIds,
       entityTypes,
       completionState,
     };
 
-    const searchData = await service.getClinicalSearchResults(programId, query);
+    const searchData = await service.getClinicalSearchResults(programShortName, query);
 
     res.status(200).json(searchData);
   }
@@ -251,24 +230,31 @@ class ClinicalController {
   @HasProgramReadAccess((req: Request) => req.params.programId)
   async getProgramClinicalErrors(req: Request, res: Response) {
     const programId = req.params.programId;
-    const query = req.query.donorIds && req.query.donorIds.split(',');
     if (!programId) {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
 
-    const clinicalMigrationErrors = await service.getClinicalEntityMigrationErrors(
+    const bodyParseResult = ClinicalErrorsApiBody.safeParse(req.body);
+    if (!bodyParseResult.success) {
+      return ControllerUtils.badRequest(
+        res,
+        `Invalid filter in request body: ${JSON.stringify(bodyParseResult.error)}`,
+      );
+    }
+
+    // 1. Get the migration errors for every donor requested...
+    const migrationErrors = await service.getClinicalEntityMigrationErrors(
       programId,
-      query,
+      bodyParseResult.data.donorIds,
     );
 
-    if (!clinicalMigrationErrors) return res.status(204).json([]);
-
-    const { clinicalErrors } = await service.getValidRecordsPostSubmission(
+    // 2. ...and now remove from the list all valid donors (fixed with submissions since the migration)
+    const validErrorRecords = await service.getValidRecordsPostSubmission(
       programId,
-      clinicalMigrationErrors,
+      migrationErrors,
     );
 
-    res.status(200).json(clinicalErrors);
+    res.status(200).json(validErrorRecords.clinicalErrors);
   }
 
   /**

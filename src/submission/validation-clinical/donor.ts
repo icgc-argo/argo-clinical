@@ -17,23 +17,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import _ from 'lodash';
 import { DeepReadonly } from 'deep-freeze';
-import * as utils from './utils';
-import {
-  ClinicalSubmissionRecordsByDonorIdMap,
-  DataValidationErrors,
-  DonorVitalStatusValues,
-  SubmittedClinicalRecord,
-  SubmissionValidationError,
-  SubmissionValidationOutput,
-} from '../submission-entities';
-import {
-  DonorFieldsEnum,
-  ClinicalEntitySchemaNames,
-  SpecimenFieldsEnum,
-} from '../../common-model/entities';
-import { donorDao } from '../../clinical/donor-repo';
 import {
   ClinicalInfo,
   Donor,
@@ -41,8 +25,23 @@ import {
   PrimaryDiagnosis,
   Treatment,
 } from '../../clinical/clinical-entities';
-import { ClinicalQuery } from '../../clinical/clinical-api';
-import { notEmpty } from '../../utils';
+import { ClinicalQuery } from '../../clinical/clinical-service';
+import { donorDao } from '../../clinical/donor-repo';
+import {
+  ClinicalEntitySchemaNames,
+  DonorFieldsEnum,
+  SpecimenFieldsEnum,
+  aliasEntityNames,
+} from '../../common-model/entities';
+import {
+  ClinicalSubmissionRecordsByDonorIdMap,
+  DataValidationErrors,
+  DonorVitalStatusValues,
+  SubmissionValidationError,
+  SubmissionValidationOutput,
+  SubmittedClinicalRecord,
+} from '../submission-entities';
+import * as utils from './utils';
 
 export const validate = async (
   submittedDonorClinicalRecord: DeepReadonly<SubmittedClinicalRecord>,
@@ -153,9 +152,9 @@ const crossFileValidator = async (
   const query: ClinicalQuery = {
     programShortName,
     entityTypes: [
-      ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
-      ClinicalEntitySchemaNames.TREATMENT,
-      ClinicalEntitySchemaNames.FOLLOW_UP,
+      aliasEntityNames[ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS],
+      aliasEntityNames[ClinicalEntitySchemaNames.TREATMENT],
+      aliasEntityNames[ClinicalEntitySchemaNames.FOLLOW_UP],
     ],
     page: 0,
     sort: 'donorId',
