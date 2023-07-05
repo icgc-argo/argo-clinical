@@ -254,7 +254,7 @@ class ClinicalController {
       migrationErrors,
     );
 
-    res.status(200).json(validErrorRecords);
+    res.status(200).json(validErrorRecords.clinicalErrors);
   }
 
   /**
