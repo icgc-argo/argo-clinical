@@ -57,7 +57,7 @@ export type ClinicalQuery = {
 
 export type ClinicalSearchQuery = {
   programShortName: string;
-  donorIds: string[];
+  donorIds: number[];
   submitterDonorIds: string[];
   entityTypes: EntityAlias[];
   completionState?: {};
@@ -254,7 +254,7 @@ interface DonorMigration extends Omit<DictionaryMigration, 'invalidDonorsErrors'
  */
 export const getClinicalEntityMigrationErrors = async (
   programId: string,
-  query: number[],
+  queryDonorIds?: number[],
 ): Promise<{
   migration: DeepReadonly<DonorMigration | undefined>;
   clinicalMigrationErrors: ClinicalErrorsResponseRecord[];
@@ -271,7 +271,11 @@ export const getClinicalEntityMigrationErrors = async (
   if (migration) {
     const { invalidDonorsErrors } = migration;
     invalidDonorsErrors
-      .filter(donor => donor.programId.toString() === programId && query.includes(donor.donorId))
+      .filter(donor =>
+        Array.isArray(queryDonorIds)
+          ? donor.programId.toString() === programId && queryDonorIds.includes(donor.donorId)
+          : true,
+      )
       .forEach(donor => {
         const { donorId, submitterDonorId, errors } = donor;
         // Overwrite donor.errors + flatten entityName to simplify query
