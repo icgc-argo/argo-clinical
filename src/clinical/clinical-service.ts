@@ -278,27 +278,31 @@ export const getClinicalEntityMigrationErrors = async (
         // Input: Donor.Errors = [{ [entityName] : [{error}] }]
         // =>  Output: Donor.Errors = [{ ...error, entityName}]
 
-        errors.forEach(entityErrorTuple => {
-          const entityName = entityErrorTuple[0];
-          const entityErrors = entityErrorTuple[1];
+        errors.forEach(errorRecord => {
+          let entityName: ClinicalEntitySchemaNames;
+          for (entityName in errorRecord) {
+            const entityErrors = errorRecord[entityName];
+            if (entityErrors && entityErrors.length > 0) {
+              const updatedErrorEntries = entityErrors.map(error => ({
+                ...error,
+                donorId,
+                entityName,
+              }));
 
-          const updatedErrorEntries = entityErrors.map(error => ({
-            ...error,
-            donorId,
-            entityName,
-          }));
+              const updatedDonorErrorData: ClinicalErrorsResponseRecord = {
+                donorId,
+                submitterDonorId,
+                entityName,
+                errors: updatedErrorEntries,
+              };
 
-          const updatedDonorErrorData: ClinicalErrorsResponseRecord = {
-            donorId,
-            submitterDonorId,
-            entityName,
-            errors: updatedErrorEntries,
-          };
-
-          clinicalMigrationErrors.push(updatedDonorErrorData);
+              clinicalMigrationErrors.push(updatedDonorErrorData);
+            }
+          }
         });
       });
   }
+
   const end = new Date().getTime() / 1000;
   L.debug(`getClinicalEntityMigrationErrors took ${end - start}s`);
 

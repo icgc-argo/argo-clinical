@@ -49,7 +49,7 @@ export type DonorMigrationError = {
   donorId: number;
   submitterDonorId: string;
   programId: string;
-  errors: DonorMigrationSchemaErrors;
+  errors: DonorMigrationSchemaErrors[];
 };
 
 export type NewSchemaVerificationResult = {
@@ -61,6 +61,8 @@ export type NewSchemaVerificationResult = {
   };
 };
 
-export type DonorMigrationSchemaErrors = Array<
-  [ClinicalEntitySchemaNames, ReadonlyArray<dictionaryEntities.SchemaValidationError>]
+export type DonorMigrationSchemaErrors = Partial<
+  {
+    [k in ClinicalEntitySchemaNames]: ReadonlyArray<dictionaryEntities.SchemaValidationError>;
+  }
 >;
