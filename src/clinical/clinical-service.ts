@@ -21,7 +21,9 @@ import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 import { Sample, Donor, ClinicalEntityData } from './clinical-entities';
 import { donorDao, DONOR_DOCUMENT_FIELDS } from './donor-repo';
+import { filterDuplicates } from '../common-model/functions';
 import {
+  ClinicalEntityErrorRecord,
   ClinicalEntitySchemaNames,
   ClinicalErrorsResponseRecord,
   EntityAlias,
@@ -30,6 +32,7 @@ import {
 import { Errors } from '../utils';
 import { patchCoreCompletionWithOverride } from '../submission/submission-to-clinical/stat-calculator';
 import { migrationRepo } from '../submission/migration/migration-repo';
+import { MigrationManager } from '../submission/migration/migration-manager';
 import {
   DictionaryMigration,
   DonorMigrationError,
@@ -246,15 +249,15 @@ interface DonorMigration extends Omit<DictionaryMigration, 'invalidDonorsErrors'
 }
 
 /**
- * Returns all errors from latest migration, plus date of migration.
+ * Returns all errors from latest migration
  * Records are formatted for use on front end.
  */
 export const getClinicalEntityMigrationErrors = async (
   programId: string,
   query: number[],
 ): Promise<{
-  clinicalErrors: ClinicalErrorsResponseRecord[];
-  migrationLastUpdated: string | undefined;
+  migration: DeepReadonly<DonorMigration | undefined>;
+  clinicalMigrationErrors: ClinicalErrorsResponseRecord[];
 }> => {
   if (!programId) throw new Error('Missing programId!');
   const start = new Date().getTime() / 1000;
@@ -264,7 +267,6 @@ export const getClinicalEntityMigrationErrors = async (
   > = await migrationRepo.getLatestSuccessful();
 
   const clinicalMigrationErrors: ClinicalErrorsResponseRecord[] = [];
-  const migrationLastUpdated = migration?.updatedAt;
 
   if (migration) {
     const { invalidDonorsErrors } = migration;
@@ -289,6 +291,7 @@ export const getClinicalEntityMigrationErrors = async (
           const updatedDonorErrorData: ClinicalErrorsResponseRecord = {
             donorId,
             submitterDonorId,
+            entityName,
             errors: updatedErrorEntries,
           };
 
@@ -299,25 +302,27 @@ export const getClinicalEntityMigrationErrors = async (
   const end = new Date().getTime() / 1000;
   L.debug(`getClinicalEntityMigrationErrors took ${end - start}s`);
 
-  return { clinicalErrors: clinicalMigrationErrors, migrationLastUpdated };
+  return { migration, clinicalMigrationErrors };
 };
 
 /**
  * Given a list of Program Migration Errors, this function finds related Donors,
- * and returns a list of DonorIds which are now Valid post-migration.
+ * and returns a list of DonorIds which are now Valid after submission.
  */
-export const getDonorSubmissionErrorUpdates = async (
+export const getValidRecordsPostSubmission = async (
   programId: string,
-  migrationErrors: {
-    clinicalErrors: ClinicalErrorsResponseRecord[];
-    migrationLastUpdated: string | undefined;
+  migrationData: {
+    migration: DeepReadonly<DonorMigration | undefined>;
+    clinicalMigrationErrors: ClinicalErrorsResponseRecord[];
   },
-): Promise<number[]> => {
+): Promise<{
+  clinicalErrors: ClinicalErrorsResponseRecord[];
+}> => {
   if (!programId) throw new Error('Missing programId!');
+
   const start = new Date().getTime() / 1000;
 
-  let validDonors: number[] = [];
-  const { clinicalErrors: clinicalMigrationErrors } = migrationErrors;
+  const { migration: lastMigration, clinicalMigrationErrors } = migrationData;
   const errorDonorIds = clinicalMigrationErrors.map(error => error.donorId);
   let errorEntities: Array<ClinicalEntitySchemaNames> = [];
 
@@ -338,14 +343,68 @@ export const getDonorSubmissionErrorUpdates = async (
     submitterDonorIds: [],
   };
 
-  await donorDao.findByPaginatedProgramId(programId, errorQuery).then(donorData => {
-    validDonors = donorData.donors
-      .filter(donor => donor.schemaMetadata.isValid)
-      .map(({ donorId }) => Number(donorId));
-  });
+  const donorData = (await donorDao.findByPaginatedProgramId(programId, errorQuery)).donors;
+
+  const validDonorIds = donorData
+    .filter(donor => donor.schemaMetadata.isValid)
+    .map(({ donorId }) => donorId);
+
+  const clinicalErrors: ClinicalErrorsResponseRecord[] = [];
+
+  const invalidDonorIds = errorDonorIds.filter(
+    (donorId, index, array) =>
+      !validDonorIds.includes(donorId) && filterDuplicates(donorId, index, array),
+  );
+
+  for (const donorId of invalidDonorIds) {
+    const currentDonor = donorData.filter(donor => donor.donorId === donorId)[0];
+    const { submitterId: submitterDonorId } = currentDonor;
+    const currentDonorErrors = clinicalMigrationErrors
+      .filter(errorRecord => errorRecord.donorId === donorId)
+      .map(migrationError => migrationError.errors)
+      .flat();
+
+    const currentDonorEntities = currentDonorErrors
+      .map(error => error.entityName)
+      .filter(filterDuplicates);
+
+    const migrationVersion =
+      lastMigration?.toVersion || (await dictionaryManager.instance().getCurrentVersion());
+    const schemaName = await dictionaryManager.instance().getCurrentName();
+
+    const migrationDictionary = await dictionaryManager
+      .instance()
+      .loadSchemaByVersion(schemaName, migrationVersion);
+
+    currentDonorEntities.forEach(entityName => {
+      const entityValidationErrors =
+        MigrationManager.validateDonorEntityAgainstNewSchema(
+          entityName,
+          migrationDictionary,
+          currentDonor,
+        ) || [];
+
+      const entityErrorRecords: ClinicalEntityErrorRecord[] = entityValidationErrors.map(
+        (validationRecord): ClinicalEntityErrorRecord => ({
+          donorId,
+          entityName,
+          ...validationRecord,
+        }),
+      );
+
+      const errorResponseRecord: ClinicalErrorsResponseRecord = {
+        donorId,
+        submitterDonorId,
+        entityName,
+        errors: entityErrorRecords,
+      };
+
+      if (entityErrorRecords.length) clinicalErrors.push(errorResponseRecord);
+    });
+  }
 
   const end = new Date().getTime() / 1000;
   L.debug(`getDonorSubmissionErrorUpdates took ${end - start}s`);
 
-  return validDonors;
+  return { clinicalErrors };
 };

@@ -20,12 +20,19 @@
 import { DeepReadonly } from 'deep-freeze';
 import { filter, find, isEmpty } from 'lodash';
 import {
+  Biomarker,
   ClinicalEntity,
   ClinicalInfo,
+  Comorbidity,
   dnaSampleTypes,
   Donor,
+  Exposure,
+  FamilyHistory,
+  FollowUp,
+  PrimaryDiagnosis,
   Specimen,
   SpecimenCoreCompletion,
+  Therapy,
   Treatment,
 } from '../clinical/clinical-entities';
 import { notEmpty, convertToArray } from '../utils';
@@ -54,10 +61,22 @@ export function findClinicalObjects(
   return filter(entities, constraints);
 }
 
+type ClinicalRecords =
+  | DeepReadonly<Donor>
+  | DeepReadonly<Specimen>
+  | DeepReadonly<PrimaryDiagnosis>
+  | DeepReadonly<FamilyHistory>
+  | DeepReadonly<Treatment>
+  | DeepReadonly<FollowUp>
+  | DeepReadonly<Exposure>
+  | DeepReadonly<Biomarker>
+  | DeepReadonly<Comorbidity>
+  | DeepReadonly<Therapy>;
+
 export function getClinicalObjectsFromDonor(
   donor: DeepReadonly<Donor>,
   clinicalEntitySchemaName: ClinicalEntitySchemaNames,
-) {
+): readonly ClinicalRecords[] {
   if (clinicalEntitySchemaName == ClinicalEntitySchemaNames.DONOR) {
     return [donor];
   }
@@ -124,11 +143,11 @@ export function getClinicalEntitiesFromDonorBySchemaName(
   donor: DeepReadonly<Donor>,
   clinicalEntitySchemaName: ClinicalEntitySchemaNames,
 ): ClinicalInfo[] {
-  const result = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName) as any[];
+  const result = getClinicalObjectsFromDonor(donor, clinicalEntitySchemaName);
   const clinicalRecords = result
-    .map((e: any) => {
-      if (e.clinicalInfo) {
-        return e.clinicalInfo as ClinicalInfo;
+    .map(entityRecord => {
+      if (entityRecord?.clinicalInfo) {
+        return entityRecord.clinicalInfo as ClinicalInfo;
       }
     })
     .filter(notEmpty);
@@ -157,18 +176,10 @@ export function getClinicalEntitySubmittedData(
     case ClinicalEntitySchemaNames.TREATMENT:
       clinicalRecords = result.map((treatment: Treatment) => {
         const clinicalInfo = treatment.clinicalInfo || {};
-        const therapy_type =
-          treatment.therapies.length === 1
-            ? { therapy_type: treatment.therapies[0].therapyType }
-            : {};
-        const therapy_info =
-          treatment.therapies.length === 1 && treatment.therapies[0].clinicalInfo;
         return {
           ...baseRecord,
           treatment_id: treatment.treatmentId,
           ...clinicalInfo,
-          ...therapy_type,
-          ...therapy_info,
         };
       });
       break;
@@ -315,7 +326,7 @@ export const getRequiredDonorFieldsForEntityTypes = (
   }
 
   // Return w/ duplicate fields filtered out
-  const donorFields = requiredFields.filter((field, i) => requiredFields.indexOf(field) === i);
+  const donorFields = requiredFields.filter(filterDuplicates);
 
   return donorFields;
 };
@@ -341,4 +352,8 @@ export function getSingleClinicalEntityFromDonorBySchemaName(
 
 export function getEntitySubmitterIdFieldName(entityName: ClinicalEntitySchemaNames) {
   return `submitter_${entityName}_id` as string;
+}
+
+export function filterDuplicates<DataType>(record: DataType, index: number, array: DataType[]) {
+  return array.indexOf(record) === index;
 }

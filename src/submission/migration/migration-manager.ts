@@ -575,7 +575,7 @@ export namespace MigrationManager {
     const schemaNamesWithBreakingChanges = breakingChangesEntitesCache[versionsKey];
     for (const schemaName of schemaNamesWithBreakingChanges) {
       // not fields since we only need to check the whole schema once.
-      const errors = validateDonorEntityAgainstNewSchema(schemaName, newSchema, donor);
+      const errors = validateDonorEntityAgainstNewSchema(schemaName, newSchema, donor) || [];
       if (errors && errors.length > 0) {
         donorSchemaErrors.push([schemaName, errors]);
       }
@@ -600,12 +600,12 @@ export namespace MigrationManager {
     donor: DeepReadonly<Donor>,
   ) => {
     L.debug(`checking donor ${donor.submitterId} for schema: ${schemaName}`);
-    // todoo replace with clinical info definition
+    // todo replace with clinical info definition
     const clinicalRecords: ClinicalInfo[] = getClinicalEntitiesFromDonorBySchemaName(
-      donor as Donor,
-      schemaName as ClinicalEntitySchemaNames,
+      donor,
+      schemaName,
     );
-    if (!clinicalRecords || clinicalRecords.length == 0) {
+    if (clinicalRecords?.length == 0) {
       return undefined;
     }
     const stringifyedRecords = clinicalRecords
@@ -614,7 +614,7 @@ export namespace MigrationManager {
       })
       .filter(notEmpty);
     const result = dictionaryService.processRecords(schema, schemaName, stringifyedRecords);
-    if (result.validationErrors.length > 0) {
+    if (result?.validationErrors?.length > 0) {
       return result.validationErrors;
     }
     return undefined;
