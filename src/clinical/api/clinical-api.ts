@@ -99,7 +99,8 @@ class ClinicalController {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
     const sort: string = 'donorId';
-    const page: number = 0;
+    const page: number = req.query.page;
+    const pageSize: number = req.query.pageSize;
 
     const bodyParseResult = ClinicalDataApiBody.safeParse(req.body);
     if (!bodyParseResult.success) {
@@ -121,6 +122,7 @@ class ClinicalController {
       sort,
       entityTypes,
       page,
+      pageSize,
       donorIds,
       submitterDonorIds,
       completionState,
@@ -150,7 +152,8 @@ class ClinicalController {
       return ControllerUtils.badRequest(res, 'Invalid programId provided');
     }
     const sort: string = req.query.sort || 'donorId';
-    const page: number = parseInt(req.query.page);
+    const page: number = parseInt(req.query.page) || 0;
+    const pageSize: number = parseInt(req.query.pageSize) || 20;
 
     const bodyParseResult = ClinicalDataApiBody.safeParse(req.body);
     if (!bodyParseResult.success) {
@@ -172,6 +175,7 @@ class ClinicalController {
       sort,
       entityTypes,
       page,
+      pageSize,
       donorIds,
       submitterDonorIds,
       completionState,
