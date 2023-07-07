@@ -20,7 +20,7 @@
 import * as express from 'express';
 
 import { wrapAsync } from '../middleware';
-import clinicalApi from '../clinical/clinical-api';
+import clinicalApi from '../clinical/api/clinical-api';
 
 const router = express.Router();
 
@@ -36,16 +36,16 @@ router.get('/samples/id', wrapAsync(clinicalApi.findSampleId));
 // Get Donor Data
 router.get('/program/:programId/donor/:donorId', wrapAsync(clinicalApi.getDonorById));
 router.get('/program/:programId/donors', wrapAsync(clinicalApi.streamProgramDonors));
-router.get(
+router.post(
   '/program/:programId/clinical-data',
   wrapAsync(clinicalApi.getProgramClinicalEntityData),
 );
-router.get(
+router.post(
   '/program/:programId/clinical-search-results',
   wrapAsync(clinicalApi.getProgramClinicalSearchResults),
 );
-router.get('/program/:programId/clinical-errors', wrapAsync(clinicalApi.getProgramClinicalErrors));
-router.get(
+router.post('/program/:programId/clinical-errors', wrapAsync(clinicalApi.getProgramClinicalErrors));
+router.post(
   '/program/:programId/clinical-tsv',
   wrapAsync(clinicalApi.getSpecificClinicalDataAsTsvsInZip),
 );

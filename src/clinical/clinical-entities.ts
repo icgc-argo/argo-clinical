@@ -18,6 +18,7 @@
  */
 
 import { DeepReadonly } from 'deep-freeze';
+import { ClinicalEntitySchemaNames } from '../common-model/entities';
 
 export interface Donor {
   _id?: string;
@@ -116,7 +117,7 @@ export interface ClinicalInfo {
 }
 
 export type ClinicalEntityData = {
-  entityName: string;
+  entityName: ClinicalEntitySchemaNames;
   totalDocs: number;
   records: Array<ClinicalInfo>;
   entityFields: string[];

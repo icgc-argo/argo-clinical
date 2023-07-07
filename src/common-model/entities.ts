@@ -17,6 +17,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import { z as zod } from 'zod';
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
 
 // this is temporary to keep code compiling until surgery is ready in dictionary, to be removed in favor of
@@ -41,29 +42,25 @@ export enum ClinicalEntitySchemaNames {
   BIOMARKER = 'biomarker',
 }
 
-export type EntityAlias =
-  | 'donor'
-  | 'sampleRegistration'
-  | 'specimens'
-  | 'primaryDiagnoses'
-  | 'familyHistory'
-  | 'treatment'
-  | 'treatments'
-  | 'chemotherapy'
-  | 'immunotherapy'
-  | 'surgery'
-  | 'radiation'
-  | 'followUps'
-  | 'hormoneTherapy'
-  | 'exposure'
-  | 'comorbidity'
-  | 'biomarker'
-  | ClinicalEntitySchemaNames.REGISTRATION
-  | ClinicalEntitySchemaNames.CHEMOTHERAPY
-  | ClinicalEntitySchemaNames.RADIATION
-  | ClinicalEntitySchemaNames.HORMONE_THERAPY
-  | ClinicalEntitySchemaNames.IMMUNOTHERAPY
-  | ClinicalEntitySchemaNames.SURGERY;
+export const EntityAlias = zod.enum([
+  'donor',
+  'sampleRegistration',
+  'specimens',
+  'primaryDiagnoses',
+  'familyHistory',
+  'treatment',
+  'treatments',
+  'chemotherapy',
+  'immunotherapy',
+  'surgery',
+  'radiation',
+  'followUps',
+  'hormoneTherapy',
+  'exposure',
+  'comorbidity',
+  'biomarker',
+]);
+export type EntityAlias = zod.infer<typeof EntityAlias>;
 
 export const aliasEntityNames: Record<ClinicalEntitySchemaNames, EntityAlias> = {
   donor: 'donor',
@@ -83,16 +80,17 @@ export const aliasEntityNames: Record<ClinicalEntitySchemaNames, EntityAlias> = 
   biomarker: 'biomarker',
 };
 
-export const queryEntityNames = Object.values(aliasEntityNames) as EntityAlias[];
+export const queryEntityNames = Object.values(aliasEntityNames);
 
 export interface ClinicalEntityErrorRecord extends dictionaryEntities.SchemaValidationError {
-  entityName: string | EntityAlias;
+  entityName: ClinicalEntitySchemaNames;
   donorId: number;
 }
 
 export interface ClinicalErrorsResponseRecord {
   donorId: number;
   submitterDonorId: string;
+  entityName: ClinicalEntitySchemaNames;
   errors: ClinicalEntityErrorRecord[];
 }
 
@@ -132,6 +130,7 @@ export enum DonorFieldsEnum {
   vital_status = 'vital_status',
   survival_time = 'survival_time',
   cause_of_death = 'cause_of_death',
+  lost_to_followup_after_clinical_event_id = 'lost_to_followup_after_clinical_event_id',
 }
 
 export enum SpecimenFieldsEnum {
@@ -199,6 +198,7 @@ export enum TreatmentFieldsEnum {
   treatment_type = 'treatment_type',
   submitter_primary_diagnosis_id = 'submitter_primary_diagnosis_id',
   treatment_start_interval = 'treatment_start_interval',
+  treatment_duration = 'treatment_duration',
 }
 
 export enum TherapyRxNormFields {

@@ -18,7 +18,7 @@
  */
 
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
-import { EntityAlias } from '../../common-model/entities';
+import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 
 export type MigrationStage = 'SUBMITTED' | 'ANALYZED' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
 export type MigrationState = 'OPEN' | 'CLOSED';
@@ -49,7 +49,7 @@ export type DonorMigrationError = {
   donorId: number;
   submitterDonorId: string;
   programId: string;
-  errors: DonorMigrationSchemaErrors;
+  errors: DonorMigrationSchemaErrors[];
 };
 
 export type NewSchemaVerificationResult = {
@@ -61,10 +61,8 @@ export type NewSchemaVerificationResult = {
   };
 };
 
-export type DonorMigrationSchemaErrors = Array<
+export type DonorMigrationSchemaErrors = Partial<
   {
-    [clinicalAlias in EntityAlias | string]: ReadonlyArray<
-      dictionaryEntities.SchemaValidationError
-    >;
+    [k in ClinicalEntitySchemaNames]: ReadonlyArray<dictionaryEntities.SchemaValidationError>;
   }
 >;

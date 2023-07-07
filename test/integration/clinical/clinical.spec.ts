@@ -268,7 +268,7 @@ describe('clinical Api', () => {
       it('/clinical/program/:programId/clinical-data should return clinical data', async function() {
         return chai
           .request(app)
-          .get('/clinical/program/PACA-CA/clinical-data?page=0&limit=20')
+          .post('/clinical/program/PACA-CA/clinical-data?page=0&limit=20')
           .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
           .then((res: any) => {
             res.should.have.status(200);
@@ -279,7 +279,7 @@ describe('clinical Api', () => {
       it('/clinical/program/:programId/clinical-errors should return clinical errors', async function() {
         return chai
           .request(app)
-          .get('/clinical/program/PACA-CA/clinical-errors')
+          .post('/clinical/program/PACA-CA/clinical-errors')
           .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
           .then((res: any) => {
             res.should.have.status(200);

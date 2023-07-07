@@ -34,7 +34,7 @@ import {
   getSampleRegistrationDataFromDonor,
 } from '../../common-model/functions';
 import { notEmpty } from '../../utils';
-import { ClinicalQuery, ClinicalSearchQuery } from '../clinical-api';
+import { ClinicalQuery, ClinicalSearchQuery } from '../clinical-service';
 import {
   ClinicalEntityData,
   ClinicalInfo,
@@ -54,7 +54,6 @@ type EntityClinicalInfo = {
 const DONOR_ID_FIELD = 'donor_id';
 
 const isEntityInQuery = (entityName: ClinicalEntitySchemaNames, entityTypes: string[]) =>
-  queryEntityNames.includes(aliasEntityNames[entityName]) &&
   entityTypes.includes(aliasEntityNames[entityName]);
 
 // Main Sort Function
@@ -173,7 +172,7 @@ function FilterDonorIdDataFromSearch(donors: Donor[], query: ClinicalSearchQuery
         // Enables Search by DonorId using partial terms, i.e. searching '262' returns all Donors where DonorId includes 262
         const { donorId, submitterId } = donor;
         const stringId = `${donorId}`;
-        const donorMatch = donorIds?.some(id => stringId.includes(id));
+        const donorMatch = donorIds?.some(id => stringId.includes(`${id}`));
         const submitterMatch = submitterDonorIds?.some(id => submitterId.includes(id));
         return donorMatch || submitterMatch;
       }
