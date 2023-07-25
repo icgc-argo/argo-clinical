@@ -122,7 +122,7 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
   }) =>
     `The 'reference_radiation_treatment_id' ${reference_radiation_treatment_id} belongs to submitter_donor_id ${previousTreatmentDonorId}, not ${submitter_donor_id}`,
   INVALID_LOST_TO_FOLLOW_UP_ID: ({ info: { lost_to_followup_after_clinical_event_id } }) =>
-    `The identifier '${lost_to_followup_after_clinical_event_id}' submitted in the 'lost_to_followup_after_clinical_event_id' field does not exist in your clinical submission."`,
+    `The identifier '${lost_to_followup_after_clinical_event_id}' submitted in the 'lost_to_followup_after_clinical_event_id' field does not exist in your clinical submission.`,
   INVALID_SUBMISSION_AFTER_LOST_TO_FOLLOW_UP: ({
     info: {
       lost_to_followup_after_clinical_event_id,
