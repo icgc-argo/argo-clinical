@@ -1541,7 +1541,7 @@ describe('data-validator', () => {
           donorSubmitterId: 'DN190',
           value: 'FL-23',
         },
-        message: `The identifier 'FL-23' submitted in the 'lost_to_followup_after_clinical_event_id' field does not exist in your clinical submission."`,
+        message: `The identifier 'FL-23' submitted in the 'lost_to_followup_after_clinical_event_id' field does not exist in your clinical submission.`,
       };
 
       const result = await dv
