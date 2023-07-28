@@ -25,8 +25,6 @@ import {
   PrimaryDiagnosis,
   Treatment,
 } from '../../clinical/clinical-entities';
-import { ClinicalQuery } from '../../clinical/clinical-service';
-import { donorDao } from '../../clinical/donor-repo';
 import {
   ClinicalEntitySchemaNames,
   DonorFieldsEnum,
@@ -55,8 +53,6 @@ export const validate = async (
     throw new Error("Can't call this function without donor & donor record");
   }
 
-  const { programId } = existentDonor || mergedDonor;
-
   // ***Submission Validation checks***
   // cross entity donor-specimen record validation
   const timeConflictErrors: SubmissionValidationError[] = checkTimeConflictWithSpecimens(
@@ -69,7 +65,6 @@ export const validate = async (
     submittedDonorClinicalRecord,
     submittedRecords,
     mergedDonor,
-    programId,
   );
 
   return { errors: [...timeConflictErrors, ...crossFileErrors] };
@@ -120,108 +115,69 @@ function checkTimeConflictWithSpecimens(
 
 const crossFileValidator = async (
   submittedDonorRecord: DeepReadonly<SubmittedClinicalRecord>,
-  // Submitted records needed to validate across records
   submittedRecords: DeepReadonly<ClinicalSubmissionRecordsByDonorIdMap>,
   mergedDonor: DeepReadonly<Donor>,
-  programShortName: string,
 ) => {
   const { lost_to_followup_after_clinical_event_id } = submittedDonorRecord;
   const {
+    submitterId,
     primaryDiagnoses: donorPrimaryDiagnoses = [],
     treatments: donorTreatments = [],
     followUps: donorFollowUps = [],
   } = mergedDonor;
+
   const errors: SubmissionValidationError[] = [];
 
-  // Compare across other Submissions
-  let submittedTreatments: DeepReadonly<ClinicalInfo>[] = [];
-  let submittedPrimaryDiagnoses: DeepReadonly<ClinicalInfo>[] = [];
-  let submittedFollowUps: DeepReadonly<ClinicalInfo>[] = [];
+  const submittedDonor = submittedRecords[submitterId];
 
-  for (const donorId in submittedRecords) {
-    const submittedTreatmentRecords = submittedRecords[donorId].treatment || [];
-    const submittedPrimaryDiagnosisRecords = submittedRecords[donorId].primaryDiagnoses || [];
-    const submittedFollowUpRecords = submittedRecords[donorId].followUps || [];
+  const submittedTreatmentRecords: readonly DeepReadonly<SubmittedClinicalRecord>[] =
+    submittedDonor.treatment || [];
 
-    submittedTreatments = [...submittedTreatments, ...submittedTreatmentRecords];
-    submittedPrimaryDiagnoses = [...submittedPrimaryDiagnoses, ...submittedPrimaryDiagnosisRecords];
-    submittedFollowUps = [...submittedFollowUps, ...submittedFollowUpRecords];
-  }
+  const submittedPrimaryDiagnosisRecords: readonly DeepReadonly<SubmittedClinicalRecord>[] =
+    submittedDonor.primaryDiagnoses || [];
 
-  // Compare across all Donors in DB
-  const query: ClinicalQuery = {
-    programShortName,
-    entityTypes: [
-      aliasEntityNames[ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS],
-      aliasEntityNames[ClinicalEntitySchemaNames.TREATMENT],
-      aliasEntityNames[ClinicalEntitySchemaNames.FOLLOW_UP],
-    ],
-    page: 0,
-    sort: 'donorId',
-    donorIds: [],
-    submitterDonorIds: [],
-  };
-
-  const { donors } = await donorDao.findByPaginatedProgramId(programShortName, query);
-
-  const storedTreatments = donors
-    .map(donor => donor.treatments)
-    .filter((treatments): treatments is Treatment[] => typeof treatments !== 'undefined')
-    .flat();
-
-  const storedPrimaryDiagnoses = donors
-    .map(donor => donor.primaryDiagnoses)
-    .filter((diagnosis): diagnosis is PrimaryDiagnosis[] => typeof diagnosis !== 'undefined')
-    .flat();
-
-  const storedFollowUps = donors
-    .map(donor => donor.followUps)
-    .filter((followUp): followUp is FollowUp[] => typeof followUp !== 'undefined')
-    .flat();
-
-  const prevTreatments = [donorTreatments, storedTreatments].flat();
-
-  const prevPrimaryDiagnoses = [donorPrimaryDiagnoses, storedPrimaryDiagnoses].flat();
-
-  const prevFollowUps = [donorFollowUps, storedFollowUps].flat();
+  const submittedFollowUpRecords: readonly DeepReadonly<SubmittedClinicalRecord>[] =
+    submittedDonor.followUps || [];
 
   if (lost_to_followup_after_clinical_event_id) {
-    const treatmentMatch = prevTreatments?.find(
+    const treatmentMatch = donorTreatments?.find(
       treatmentRecord =>
         treatmentRecord.clinicalInfo?.submitter_treatment_id ===
         lost_to_followup_after_clinical_event_id,
     );
 
-    const treatmentSubmissionMatch = submittedTreatments.find(clinicalInfo => {
-      clinicalInfo?.submitter_treatment_id === lost_to_followup_after_clinical_event_id;
-    });
-
-    const primaryDiagnosisMatch = prevPrimaryDiagnoses?.find(
+    const primaryDiagnosisMatch = donorPrimaryDiagnoses?.find(
       primaryDiagnosisRecord =>
         primaryDiagnosisRecord?.clinicalInfo?.submitter_primary_diagnosis_id ===
         lost_to_followup_after_clinical_event_id,
     );
 
-    const diagnosisSubmissionMatch = submittedPrimaryDiagnoses.find(clinicalInfo => {
-      clinicalInfo?.submitter_primary_diagnosis_id === lost_to_followup_after_clinical_event_id;
-    });
-
-    const followUpMatch = prevFollowUps?.find(
+    const followUpMatch = donorFollowUps?.find(
       followUpRecord =>
         followUpRecord.clinicalInfo?.submitter_follow_up_id ===
         lost_to_followup_after_clinical_event_id,
     );
 
-    const followUpSubmissionMatch = submittedFollowUps.find(clinicalInfo => {
+    // Find if Lost to Follow Up ID matches a previous Treatment ID
+    const donorClinicalEventIdMatch = treatmentMatch || primaryDiagnosisMatch || followUpMatch;
+
+    const treatmentSubmissionMatch = submittedTreatmentRecords.find(clinicalInfo => {
+      clinicalInfo?.submitter_treatment_id === lost_to_followup_after_clinical_event_id;
+    });
+
+    const diagnosisSubmissionMatch = submittedPrimaryDiagnosisRecords.find(clinicalInfo => {
+      clinicalInfo?.submitter_primary_diagnosis_id === lost_to_followup_after_clinical_event_id;
+    });
+
+    const followUpSubmissionMatch = submittedFollowUpRecords.find(clinicalInfo => {
       clinicalInfo?.submitter_follow_up_id === lost_to_followup_after_clinical_event_id;
     });
-    // Previously Submitted Records matching current Lost to Follow Up ID
-    const prevEntityIdMatch = primaryDiagnosisMatch || treatmentMatch || followUpMatch;
-    // New Submitted Records matching current Lost to Follow Up ID
-    const submittedIdMatch =
+
+    // Find New Submitted Records matching submitted Lost to Follow Up ID
+    const submittedClinicalEventIdMatch =
       diagnosisSubmissionMatch || treatmentSubmissionMatch || followUpSubmissionMatch;
 
-    if (!prevEntityIdMatch && !submittedIdMatch) {
+    if (!donorClinicalEventIdMatch && !submittedClinicalEventIdMatch) {
       errors.push(
         utils.buildSubmissionError(
           submittedDonorRecord,
@@ -233,21 +189,17 @@ const crossFileValidator = async (
         ),
       );
     } else {
-      const prevIntervalOfFollowUp =
-        (typeof prevEntityIdMatch?.clinicalInfo?.interval_of_followup === 'number' &&
-          prevEntityIdMatch.clinicalInfo.interval_of_followup) ||
+      const donorIntervalOfFollowUp =
+        (typeof donorClinicalEventIdMatch?.clinicalInfo?.interval_of_followup === 'number' &&
+          donorClinicalEventIdMatch.clinicalInfo.interval_of_followup) ||
         0;
 
       const submittedIntervalOfFollowUp =
-        (typeof submittedIdMatch?.interval_of_followup === 'number' &&
-          submittedIdMatch?.interval_of_followup) ||
+        (typeof submittedClinicalEventIdMatch?.interval_of_followup === 'number' &&
+          submittedClinicalEventIdMatch?.interval_of_followup) ||
         0;
 
-      const submittedInterval = prevIntervalOfFollowUp
-        ? prevIntervalOfFollowUp
-        : submittedIntervalOfFollowUp;
-
-      const prevInvalidTreatments = prevTreatments.filter(treatment => {
+      const invalidTreatments = donorTreatments.filter(treatment => {
         const { treatment_start_interval, treatment_duration } = treatment.clinicalInfo
           ? treatment.clinicalInfo
           : treatment;
@@ -259,13 +211,13 @@ const crossFileValidator = async (
 
         const totalTreatmentTime = treatmentInterval + treatmentDuration;
 
-        const treatmentInvalid = totalTreatmentTime > submittedInterval;
+        const treatmentInvalid = totalTreatmentTime > submittedIntervalOfFollowUp;
 
         return treatmentInvalid;
       });
 
-      if (prevInvalidTreatments.length) {
-        const firstTreatmentMatch = prevInvalidTreatments[0];
+      if (invalidTreatments.length) {
+        const firstTreatmentMatch = invalidTreatments[0];
         const { submitter_treatment_id } = firstTreatmentMatch.clinicalInfo
           ? firstTreatmentMatch.clinicalInfo
           : firstTreatmentMatch;
@@ -277,7 +229,7 @@ const crossFileValidator = async (
             DonorFieldsEnum.lost_to_followup_after_clinical_event_id,
             {
               lost_to_followup_after_clinical_event_id,
-              interval_of_followup: submittedInterval,
+              interval_of_followup: submittedIntervalOfFollowUp,
               submitter_treatment_id,
             },
           ),
