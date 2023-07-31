@@ -200,11 +200,16 @@ const crossFileValidator = async (
         0;
 
       const isTreatmentValid = (
-        treatmentInterval = 0,
-        treatmentDuration = 0,
+        treatmentInterval: DeepReadonly<ClinicalInfo[string]>,
+        treatmentLength: DeepReadonly<ClinicalInfo[string]>,
         intervalOfFollowUp = 0,
       ) => {
-        const totalTreatmentTime = treatmentInterval + treatmentDuration;
+        const treatmentStartInterval =
+          typeof treatmentInterval === 'number' ? treatmentInterval : 0;
+
+        const treatmentDuration = typeof treatmentLength === 'number' ? treatmentLength : 0;
+
+        const totalTreatmentTime = treatmentStartInterval + treatmentDuration;
 
         const treatmentIsInvalid = totalTreatmentTime > intervalOfFollowUp;
 
@@ -216,23 +221,21 @@ const crossFileValidator = async (
 
         const { treatment_start_interval, treatment_duration } = treatmentRecord;
 
-        const treatmentInterval =
-          typeof treatment_start_interval === 'number' ? treatment_start_interval : 0;
-
-        const treatmentDuration = typeof treatment_duration === 'number' ? treatment_duration : 0;
-
-        return isTreatmentValid(treatmentInterval, treatmentDuration, donorIntervalOfFollowUp);
+        return isTreatmentValid(
+          treatment_start_interval,
+          treatment_duration,
+          donorIntervalOfFollowUp,
+        );
       });
 
       const invalidSubmittedTreatments = submittedTreatmentRecords.filter(treatment => {
         const { treatment_start_interval, treatment_duration } = treatment;
 
-        const treatmentInterval =
-          typeof treatment_start_interval === 'number' ? treatment_start_interval : 0;
-
-        const treatmentDuration = typeof treatment_duration === 'number' ? treatment_duration : 0;
-
-        return isTreatmentValid(treatmentInterval, treatmentDuration, submittedIntervalOfFollowUp);
+        return isTreatmentValid(
+          treatment_start_interval,
+          treatment_duration,
+          submittedIntervalOfFollowUp,
+        );
       });
 
       if (invalidDonorTreatments.length || invalidSubmittedTreatments.length) {
