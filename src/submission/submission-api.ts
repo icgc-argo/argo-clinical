@@ -129,7 +129,7 @@ class SubmissionController {
     const newClinicalData: NewClinicalEntity[] = [];
     const tsvParseErrors: SubmissionBatchError[] = [];
     const clinicalFiles = req.files as Express.Multer.File[];
-
+    console.log('clinicalFiles', clinicalFiles);
     for (const file of clinicalFiles) {
       try {
         // check if has .tsv extension to prevent irregular file names from reaching service level
@@ -162,7 +162,7 @@ class SubmissionController {
       programId: req.params.programId,
       updater: user,
     };
-
+    console.log('newClinicalData', newClinicalData);
     const result = await submission.operations.submitMultiClinicalBatches(command);
     let status = 200;
 
