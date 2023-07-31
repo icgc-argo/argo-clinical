@@ -199,28 +199,48 @@ const crossFileValidator = async (
           submittedClinicalEventIdMatch?.interval_of_followup) ||
         0;
 
-      const invalidTreatments = donorTreatments.filter(treatment => {
-        const { treatment_start_interval, treatment_duration } = treatment.clinicalInfo
-          ? treatment.clinicalInfo
-          : treatment;
+      const isTreatmentValid = (
+        treatmentInterval = 0,
+        treatmentDuration = 0,
+        intervalOfFollowUp = 0,
+      ) => {
+        const totalTreatmentTime = treatmentInterval + treatmentDuration;
+
+        const treatmentIsInvalid = totalTreatmentTime > intervalOfFollowUp;
+
+        return treatmentIsInvalid;
+      };
+
+      const invalidDonorTreatments = donorTreatments.filter(treatment => {
+        const treatmentRecord = treatment.clinicalInfo;
+
+        const { treatment_start_interval, treatment_duration } = treatmentRecord;
 
         const treatmentInterval =
           typeof treatment_start_interval === 'number' ? treatment_start_interval : 0;
 
         const treatmentDuration = typeof treatment_duration === 'number' ? treatment_duration : 0;
 
-        const totalTreatmentTime = treatmentInterval + treatmentDuration;
-
-        const treatmentInvalid = totalTreatmentTime > submittedIntervalOfFollowUp;
-
-        return treatmentInvalid;
+        return isTreatmentValid(treatmentInterval, treatmentDuration, donorIntervalOfFollowUp);
       });
 
-      if (invalidTreatments.length) {
-        const firstTreatmentMatch = invalidTreatments[0];
-        const { submitter_treatment_id } = firstTreatmentMatch.clinicalInfo
-          ? firstTreatmentMatch.clinicalInfo
-          : firstTreatmentMatch;
+      const invalidSubmittedTreatments = submittedTreatmentRecords.filter(treatment => {
+        const { treatment_start_interval, treatment_duration } = treatment;
+
+        const treatmentInterval =
+          typeof treatment_start_interval === 'number' ? treatment_start_interval : 0;
+
+        const treatmentDuration = typeof treatment_duration === 'number' ? treatment_duration : 0;
+
+        return isTreatmentValid(treatmentInterval, treatmentDuration, submittedIntervalOfFollowUp);
+      });
+
+      if (invalidDonorTreatments.length || invalidSubmittedTreatments.length) {
+        const firstTreatmentMatch = invalidSubmittedTreatments.length
+          ? invalidSubmittedTreatments[0]
+          : invalidDonorTreatments[0].clinicalInfo;
+
+        const { submitter_treatment_id } = firstTreatmentMatch;
 
         errors.push(
           utils.buildSubmissionError(
@@ -229,7 +249,7 @@ const crossFileValidator = async (
             DonorFieldsEnum.lost_to_followup_after_clinical_event_id,
             {
               lost_to_followup_after_clinical_event_id,
-              interval_of_followup: submittedIntervalOfFollowUp,
+              interval_of_followup: donorIntervalOfFollowUp,
               submitter_treatment_id,
             },
           ),
