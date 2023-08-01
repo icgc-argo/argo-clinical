@@ -113,6 +113,22 @@ function checkTimeConflictWithSpecimens(
     : [];
 }
 
+const isTreatmentValid = (
+  treatmentInterval: DeepReadonly<ClinicalInfo[string]>,
+  treatmentLength: DeepReadonly<ClinicalInfo[string]>,
+  intervalOfFollowUp = 0,
+) => {
+  const treatmentStartInterval = typeof treatmentInterval === 'number' ? treatmentInterval : 0;
+
+  const treatmentDuration = typeof treatmentLength === 'number' ? treatmentLength : 0;
+
+  const totalTreatmentTime = treatmentStartInterval + treatmentDuration;
+
+  const treatmentIsInvalid = totalTreatmentTime > intervalOfFollowUp;
+
+  return treatmentIsInvalid;
+};
+
 const crossFileValidator = async (
   submittedDonorRecord: DeepReadonly<SubmittedClinicalRecord>,
   submittedRecords: DeepReadonly<ClinicalSubmissionRecordsByDonorIdMap>,
@@ -198,23 +214,6 @@ const crossFileValidator = async (
         (typeof submittedClinicalEventIdMatch?.interval_of_followup === 'number' &&
           submittedClinicalEventIdMatch?.interval_of_followup) ||
         0;
-
-      const isTreatmentValid = (
-        treatmentInterval: DeepReadonly<ClinicalInfo[string]>,
-        treatmentLength: DeepReadonly<ClinicalInfo[string]>,
-        intervalOfFollowUp = 0,
-      ) => {
-        const treatmentStartInterval =
-          typeof treatmentInterval === 'number' ? treatmentInterval : 0;
-
-        const treatmentDuration = typeof treatmentLength === 'number' ? treatmentLength : 0;
-
-        const totalTreatmentTime = treatmentStartInterval + treatmentDuration;
-
-        const treatmentIsInvalid = totalTreatmentTime > intervalOfFollowUp;
-
-        return treatmentIsInvalid;
-      };
 
       const invalidDonorTreatments = donorTreatments.filter(treatment => {
         const treatmentRecord = treatment.clinicalInfo;
