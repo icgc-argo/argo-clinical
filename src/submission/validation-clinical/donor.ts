@@ -96,22 +96,6 @@ function checkTimeConflictWithSpecimens(
     : [];
 }
 
-const isTreatmentValid = (
-  treatmentInterval: DeepReadonly<ClinicalInfo[string]>,
-  treatmentLength: DeepReadonly<ClinicalInfo[string]>,
-  intervalOfFollowUp = 0,
-) => {
-  const treatmentStartInterval = typeof treatmentInterval === 'number' ? treatmentInterval : 0;
-
-  const treatmentDuration = typeof treatmentLength === 'number' ? treatmentLength : 0;
-
-  const totalTreatmentTime = treatmentStartInterval + treatmentDuration;
-
-  const treatmentIsInvalid = totalTreatmentTime > intervalOfFollowUp;
-
-  return treatmentIsInvalid;
-};
-
 const crossFileValidator = async (
   submittedDonorRecord: DeepReadonly<SubmittedClinicalRecord>,
   mergedDonor: DeepReadonly<Donor>,
@@ -154,25 +138,40 @@ const crossFileValidator = async (
         ),
       );
     } else {
-      const donorIntervalOfFollowUp =
+      const lostToFollowUpInterval =
         (typeof donorClinicalEventIdMatch?.clinicalInfo?.interval_of_followup === 'number' &&
           donorClinicalEventIdMatch.clinicalInfo.interval_of_followup) ||
         0;
 
-      const invalidDonorTreatments = treatments.filter(treatment => {
+      const invalidTreatmentIntervals = treatments.filter(treatment => {
         const treatmentRecord = treatment.clinicalInfo;
 
         const { treatment_start_interval, treatment_duration } = treatmentRecord;
 
-        return isTreatmentValid(
-          treatment_start_interval,
-          treatment_duration,
-          donorIntervalOfFollowUp,
-        );
+        const treatmentStartInterval =
+          typeof treatment_start_interval === 'number' ? treatment_start_interval : 0;
+
+        const treatmentDuration = typeof treatment_duration === 'number' ? treatment_duration : 0;
+
+        const totalTreatmentTime = treatmentStartInterval + treatmentDuration;
+
+        return totalTreatmentTime > lostToFollowUpInterval;
       });
 
-      if (invalidDonorTreatments.length) {
-        const firstTreatmentMatch = invalidDonorTreatments[0].clinicalInfo;
+      const invalidFollowUpIntervals = followUps.filter(followUp => {
+        const followUpRecord = followUp.clinicalInfo;
+
+        const { interval_of_followup } = followUpRecord;
+
+        const intervalOfFollowUp =
+          typeof interval_of_followup === 'number' ? interval_of_followup : 0;
+
+        return intervalOfFollowUp > lostToFollowUpInterval;
+      });
+
+      if (invalidTreatmentIntervals.length || invalidFollowUpIntervals.length) {
+        const invalidRecords = [...invalidTreatmentIntervals, ...invalidFollowUpIntervals];
+        const firstTreatmentMatch = invalidRecords[0].clinicalInfo;
 
         const { submitter_treatment_id } = firstTreatmentMatch;
 
@@ -183,7 +182,7 @@ const crossFileValidator = async (
             DonorFieldsEnum.lost_to_followup_after_clinical_event_id,
             {
               lost_to_followup_after_clinical_event_id,
-              interval_of_followup: donorIntervalOfFollowUp,
+              interval_of_followup: lostToFollowUpInterval,
               submitter_treatment_id,
             },
           ),
