@@ -138,6 +138,9 @@ const crossFileValidator = async (
         ),
       );
     } else {
+      const lostToFollowUpDiagnosisId =
+        donorClinicalEventIdMatch?.clinicalInfo?.submitter_primary_diagnosis_id;
+
       const lostToFollowUpInterval =
         (typeof donorClinicalEventIdMatch?.clinicalInfo?.interval_of_followup === 'number' &&
           donorClinicalEventIdMatch.clinicalInfo.interval_of_followup) ||
@@ -169,11 +172,31 @@ const crossFileValidator = async (
         return intervalOfFollowUp > lostToFollowUpInterval;
       });
 
-      if (invalidTreatmentIntervals.length || invalidFollowUpIntervals.length) {
-        const invalidRecords = [...invalidTreatmentIntervals, ...invalidFollowUpIntervals];
-        const firstTreatmentMatch = invalidRecords[0].clinicalInfo;
+      const invalidRecords = [...invalidTreatmentIntervals, ...invalidFollowUpIntervals];
+      const firstInvalidTreatmentMatch = invalidRecords[0].clinicalInfo;
+      const invalidTreatmentDiagnosisId =
+        firstInvalidTreatmentMatch?.submitter_primary_diagnosis_id;
 
-        const { submitter_treatment_id } = firstTreatmentMatch;
+      const lostToFollowUpPrimaryDiagnosisMatch = primaryDiagnoses?.find(
+        primaryDiagnosisRecord =>
+          primaryDiagnosisRecord?.clinicalInfo?.submitter_primary_diagnosis_id ===
+          lostToFollowUpDiagnosisId,
+      )?.clinicalInfo;
+
+      const invalidPrimaryDiagnosisMatch = primaryDiagnoses?.find(
+        primaryDiagnosisRecord =>
+          primaryDiagnosisRecord?.clinicalInfo?.submitter_primary_diagnosis_id ===
+          invalidTreatmentDiagnosisId,
+      )?.clinicalInfo;
+
+      const lostToFollowUpAge = Number(lostToFollowUpPrimaryDiagnosisMatch?.age_at_diagnosis);
+
+      const invalidRecordAge = Number(invalidPrimaryDiagnosisMatch?.age_at_diagnosis);
+
+      const isPreviousPrimaryDiagnosis = lostToFollowUpAge >= invalidRecordAge;
+
+      if (firstInvalidTreatmentMatch && isPreviousPrimaryDiagnosis) {
+        const { submitter_treatment_id } = firstInvalidTreatmentMatch;
 
         errors.push(
           utils.buildSubmissionError(
