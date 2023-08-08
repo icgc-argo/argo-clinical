@@ -21,7 +21,7 @@ import * as express from 'express';
 import multer from 'multer';
 import exceptionApi, { requestContainsFile } from '../exception/exception-api';
 import { wrapAsync } from '../middleware';
-import { FEATURE_SUBMISSION_EXCEPTIONS_ENABLED } from '../feature-flags';
+import featureFlags from '../feature-flags';
 import { Request, Response } from 'express';
 import { ExceptionErrorHandler } from '../exception/error-handling';
 
@@ -43,6 +43,6 @@ router.delete('/entity/:entity', wrapAsync(exceptionApi.deleteEntityException));
 
 router.use(ExceptionErrorHandler);
 
-export default FEATURE_SUBMISSION_EXCEPTIONS_ENABLED
+export default featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED
   ? router
   : (req: Request, res: Response) => res.status(404).send();

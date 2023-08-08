@@ -40,7 +40,7 @@ import {
   TherapyRxNormFields,
 } from '../common-model/entities';
 import * as dictionaryManager from '../dictionary/manager';
-import { FEATURE_SUBMISSION_EXCEPTIONS_ENABLED } from '../feature-flags';
+import featureFlags from '../feature-flags';
 import { loggerFor } from '../logger';
 import { RxNormConcept } from '../rxnorm/api';
 import dbRxNormService from '../rxnorm/service';
@@ -878,7 +878,7 @@ export namespace operations {
         if (schemaResult.validationErrors.length > 0) {
           let validationErrors = [...schemaResult.validationErrors];
 
-          if (FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
+          if (featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
             /***
              * Checking if a valid exception exists and the record value matches it
              * If there's a match, we allow the value to pass schema validation
