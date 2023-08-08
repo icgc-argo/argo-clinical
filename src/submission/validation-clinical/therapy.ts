@@ -37,6 +37,7 @@ import { getSingleClinicalObjectFromDonor } from '../../common-model/functions';
 import { donorDao } from '../../clinical/donor-repo';
 import { ClinicalInfo, Donor, Treatment } from '../../clinical/clinical-entities';
 import { ClinicalQuery } from '../../clinical/clinical-service';
+import featureFlags from '../../feature-flags';
 import { isValueEqual } from '../../utils';
 
 export const validate = async (
@@ -56,14 +57,17 @@ export const validate = async (
 
   checkTreatmentHasCorrectTypeForTherapy(therapyRecord, treatment, errors);
 
-  const crossFileErrors = await crossFileValidator(
-    mergedDonor,
-    treatment,
-    therapyRecord,
-    submittedRecords,
-  );
+  if (featureFlags.FEATURE_REFERENCE_RADIATION_ENABLED) {
+    const crossFileErrors = await crossFileValidator(
+      mergedDonor,
+      treatment,
+      therapyRecord,
+      submittedRecords,
+    );
 
-  errors = [...errors, ...crossFileErrors];
+    errors = [...errors, ...crossFileErrors];
+  }
+
   return { errors };
 };
 

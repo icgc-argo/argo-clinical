@@ -46,6 +46,7 @@ import {
   SurgeryFieldsEnum,
   RadiationFieldsEnum,
 } from '../../../src/common-model/entities';
+import featureFlags from '../../../src/feature-flags';
 
 const genderMutatedErr: SubmissionValidationError = {
   fieldName: 'gender',
@@ -176,6 +177,7 @@ describe('data-validator', () => {
   let donorDaoFindBySampleSubmitterIdAndProgramIdStub: sinon.SinonStub<[any], any>;
   let donorDaoFindByClinicalEntitySubmitterIdAndProgramIdStub: sinon.SinonStub<[any, any], any>;
   let donorDaoFindByPaginatedProgramId: sinon.SinonStub<[any, any], any>;
+  let radiationFeatureFlagStub: sinon.SinonStub<any, any>;
 
   beforeEach(done => {
     donorDaoCountByStub = sinon.stub(donorDao, 'countBy');
@@ -197,6 +199,10 @@ describe('data-validator', () => {
       .stub(donorDao, 'findByPaginatedProgramId')
       .resolves({ donors: [], totalDonors: 0 });
 
+    radiationFeatureFlagStub = sinon
+      .stub(featureFlags, 'FEATURE_REFERENCE_RADIATION_ENABLED')
+      .value(true);
+
     done();
   });
 
@@ -206,6 +212,7 @@ describe('data-validator', () => {
     donorDaoFindBySampleSubmitterIdAndProgramIdStub.restore();
     donorDaoFindByClinicalEntitySubmitterIdAndProgramIdStub.restore();
     donorDaoFindByPaginatedProgramId.restore();
+    radiationFeatureFlagStub.restore();
     done();
   });
 
