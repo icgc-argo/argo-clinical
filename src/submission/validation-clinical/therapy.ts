@@ -101,11 +101,7 @@ const validateRadiationRecords = async (
   const { programId } = donor;
 
   const {
-    clinicalInfo: {
-      submitter_donor_id: relatedTreatmentDonorId,
-      submitter_treatment_id,
-      treatment_type,
-    },
+    clinicalInfo: { submitter_treatment_id, treatment_type },
   } = treatment;
 
   const {
@@ -141,7 +137,10 @@ const validateRadiationRecords = async (
 
   if (typeof radiation_boost === 'string' && radiation_boost.toLowerCase() === 'yes') {
     // Reference Radiation ID Matches a Submitted/Previous Submitter Treatment ID
-    const submittedTreatmentIdMatch = submitter_treatment_id === reference_radiation_treatment_id;
+    const donorTreatmentIdMatch =
+      submitter_treatment_id === reference_radiation_treatment_id
+        ? treatment.clinicalInfo
+        : undefined;
 
     const submissionTreatmentIdMatch = submittedTreatments.find(
       treatmentRecord =>
@@ -151,10 +150,11 @@ const validateRadiationRecords = async (
     const storedTreatmentIdMatch = storedTreatments.find(treatmentRecord => {
       const clinicalInfo = treatmentRecord?.clinicalInfo;
       return clinicalInfo?.submitter_treatment_id === reference_radiation_treatment_id;
-    });
+    })?.clinicalInfo;
 
+    // Submitted Treatment Id matches Reference Radiation Id
     const treatmentIdMatch =
-      submittedTreatmentIdMatch || submissionTreatmentIdMatch || storedTreatmentIdMatch;
+      donorTreatmentIdMatch || submissionTreatmentIdMatch || storedTreatmentIdMatch;
 
     if (!treatmentIdMatch) {
       errors = [
@@ -170,71 +170,49 @@ const validateRadiationRecords = async (
           },
         ),
       ];
-    }
+    } else {
+      // Therapy + Treatment are associated with Radiation
+      const matchedTreatmentIsRadiation =
+        Array.isArray(treatmentIdMatch.treatment_type) &&
+        treatmentIdMatch.treatment_type.includes('Radiation therapy');
 
-    // Therapy + Treatment are associated with Radiation
-    const currentTreatmentIsRadiation =
-      Array.isArray(treatment_type) && treatment_type.includes('Radiation therapy');
+      if (!matchedTreatmentIsRadiation) {
+        errors = [
+          ...errors,
+          utils.buildSubmissionError(
+            therapyRecord,
+            DataValidationErrors.RADIATION_THERAPY_TREATMENT_CONFLICT,
+            TreatmentFieldsEnum.submitter_treatment_id,
+            {
+              [TreatmentFieldsEnum.treatment_type]: treatment_type,
+              therapyType: ClinicalEntitySchemaNames.RADIATION,
+            },
+          ),
+        ];
+      }
 
-    const submittedTreatmentType = submissionTreatmentIdMatch?.treatment_type;
-    const submittedTreatmentIsRadiation =
-      Array.isArray(submittedTreatmentType) && submittedTreatmentType.includes('Radiation therapy');
+      // Submitted Submitter-Donor-ID matches existing Treatment Submitter-Donor-Id
+      const treatmentDonorIdMatch = treatmentIdMatch.submitter_donor_id === submittedTherapyDonorId;
 
-    const storedTreatmentType = storedTreatmentIdMatch?.clinicalInfo?.treatment_type;
-    const storedTreatmentIsRadiation =
-      Array.isArray(storedTreatmentType) && storedTreatmentType.includes('Radiation therapy');
+      if (treatmentIdMatch && !treatmentDonorIdMatch) {
+        const previousTreatmentDonorId = treatmentIdMatch.submitter_donor_id;
 
-    const isRadiation =
-      currentTreatmentIsRadiation || submittedTreatmentIsRadiation || storedTreatmentIsRadiation;
-
-    if (!isRadiation) {
-      errors = [
-        ...errors,
-        utils.buildSubmissionError(
-          therapyRecord,
-          DataValidationErrors.RADIATION_THERAPY_TREATMENT_CONFLICT,
-          TreatmentFieldsEnum.submitter_treatment_id,
-          {
-            [TreatmentFieldsEnum.treatment_type]: treatment_type,
-            therapyType: ClinicalEntitySchemaNames.RADIATION,
-          },
-        ),
-      ];
-    }
-
-    // Submitted Donor ID matches existing Treatment Donor Id
-    const treatmentDonorIdMatch = submittedTherapyDonorId === relatedTreatmentDonorId;
-
-    const submittedTreatmentDonorIdMatch =
-      submissionTreatmentIdMatch?.submitter_donor_id === submittedTherapyDonorId;
-
-    const storedTreatmentDonorIdMatch =
-      storedTreatmentIdMatch?.clinicalInfo?.submittedTherapyDonorId === submittedTherapyDonorId;
-
-    const previousTreatmentDonorIdMatch =
-      treatmentDonorIdMatch || submittedTreatmentDonorIdMatch || storedTreatmentDonorIdMatch;
-
-    if (treatmentIdMatch && !previousTreatmentDonorIdMatch) {
-      const previousTreatmentDonorId =
-        relatedTreatmentDonorId ||
-        submissionTreatmentIdMatch?.submitter_donor_id ||
-        storedTreatmentIdMatch?.clinicalInfo?.submittedTherapyDonorId;
-
-      errors = [
-        ...errors,
-        utils.buildSubmissionError(
-          therapyRecord,
-          DataValidationErrors.REFERENCE_RADIATION_ID_CONFLICT,
-          TreatmentFieldsEnum.submitter_donor_id,
-          {
-            value: submittedTherapyDonorId,
-            [TreatmentFieldsEnum.submitter_donor_id]: submittedTherapyDonorId,
-            previousTreatmentDonorId,
-            reference_radiation_treatment_id,
-            therapyType: ClinicalEntitySchemaNames.RADIATION,
-          },
-        ),
-      ];
+        errors = [
+          ...errors,
+          utils.buildSubmissionError(
+            therapyRecord,
+            DataValidationErrors.REFERENCE_RADIATION_ID_CONFLICT,
+            TreatmentFieldsEnum.submitter_donor_id,
+            {
+              value: submittedTherapyDonorId,
+              [TreatmentFieldsEnum.submitter_donor_id]: submittedTherapyDonorId,
+              previousTreatmentDonorId,
+              reference_radiation_treatment_id,
+              therapyType: ClinicalEntitySchemaNames.RADIATION,
+            },
+          ),
+        ];
+      }
     }
   }
 
