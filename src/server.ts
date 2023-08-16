@@ -152,12 +152,13 @@ let server: Server;
   await bootstrap.run(defaultAppConfigImpl);
 
   const httpServer = http.createServer(app);
+  app.set('graphqlPort', process.env.GRAPHQLPORT || 3001);
 
   const apolloServer = new ApolloServer({
     schema: buildSubgraphSchema({ typeDefs, resolvers }),
   });
   const { url } = await startStandaloneServer(apolloServer, {
-    listen: { port: 3001 },
+    listen: { port: app.get('graphqlPort') },
   });
 
   /**
@@ -170,6 +171,9 @@ let server: Server;
       app.get('env'),
     );
     console.debug(`Swagger Docs available at http://localhost:${app.get('port')}/api-docs`);
+    console.debug(
+      `Graphql Server  available at http://localhost:${app.get('graphqlPort')}/graphql`,
+    );
     console.log('  Press CTRL-C to stop\n');
     console.timeEnd('boot time');
   });
