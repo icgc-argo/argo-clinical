@@ -17,14 +17,14 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-export class InternalError {
-  // extends Error { //UK commented
-  constructor(message: string, private cause: Error) {
-    // super(message);
-    // this.name = 'InternalError';
+export class InternalError extends Error {
+  // changed to 'errorCause' due to Typescript version upgrad
+  constructor(message: string, private errorCause: Error) {
+    super(message);
+    this.name = 'InternalError';
   }
-  public getCause() {
-    return this.cause;
+  public getErrorCause() {
+    return this.errorCause;
   }
 }
 
