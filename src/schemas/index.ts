@@ -17,19 +17,11 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-export class InternalError {
-  // extends Error { //UK commented
-  constructor(message: string, private cause: Error) {
-    // super(message);
-    // this.name = 'InternalError';
-  }
-  public getCause() {
-    return this.cause;
-  }
-}
+// import gql from 'graphql-tag';
+import { buildSubgraphSchema } from '@apollo/subgraph';
 
-export class BadRequestError extends Error {
-  constructor(message: string) {
-    super(message);
-  }
-}
+import typeDefs from './gqlTypeDefs';
+import resolvers from './resolvers';
+
+export { typeDefs, resolvers };
+export default buildSubgraphSchema({ typeDefs, resolvers });

@@ -200,7 +200,8 @@ class SchemaManager {
       return newSchema;
     } catch (err) {
       L.error('Failed to fetch schema: ', err);
-      throw new Error('Failed to fetch schema: ' + err.message);
+      // throw new Error('Failed to fetch schema: ' + err.message); //UK commented
+      throw new Error('Failed to fetch schema: ');
     }
   };
 

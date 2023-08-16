@@ -17,19 +17,26 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-export class InternalError {
-  // extends Error { //UK commented
-  constructor(message: string, private cause: Error) {
-    // super(message);
-    // this.name = 'InternalError';
-  }
-  public getCause() {
-    return this.cause;
-  }
-}
+import gql from 'graphql-tag';
 
-export class BadRequestError extends Error {
-  constructor(message: string) {
-    super(message);
+/*const typeDefs = gql`
+  schema {
+    query: Query
   }
-}
+  type Query {
+    hello: String
+    name: String
+  }
+`;*/
+
+const typeDefs = gql`
+  schema {
+    query: Query
+  }
+  type Query {
+    hello: String
+    name: String
+  }
+`;
+
+export default typeDefs;
