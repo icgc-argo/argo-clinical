@@ -36,6 +36,87 @@ const typeDefs = gql`
   type Query {
     hello: String
     name: String
+
+    """
+    Retrieve current stored Clinical Registration data for a program
+    """
+    clinicalRegistration(shortName: String!): ClinicalRegistrationData!
+  }
+
+  scalar DateTime
+
+  """
+  It is possible for there to be no available ClinicalRegistrationData for a program,
+    in this case the object will return with id and creator equal to null, and an empty records list.
+  """
+  type ClinicalRegistrationData {
+    id: ID
+    programShortName: ID
+    creator: String
+    fileName: String
+    createdAt: DateTime
+    records: [ClinicalRecord]!
+    errors: [ClinicalRegistrationError]!
+    fileErrors: [ClinicalFileError]
+
+    newDonors: ClinicalRegistrationStats!
+    newSpecimens: ClinicalRegistrationStats!
+    newSamples: ClinicalRegistrationStats!
+    alreadyRegistered: ClinicalRegistrationStats!
+  }
+
+  type ClinicalRegistrationStats {
+    count: Int!
+    rows: [Int]!
+    names: [String]!
+    values: [ClinicalRegistrationStatValue]!
+  }
+
+  """
+  Generic schema of clinical tsv records
+  """
+  type ClinicalRecord {
+    row: Int!
+    fields: [ClinicalRecordField!]!
+  }
+
+  type ClinicalRecordField {
+    name: String!
+    value: String
+  }
+
+  """
+  All schemas below describe clinical errors
+  """
+  type ClinicalFileError {
+    message: String!
+    fileNames: [String]!
+    code: String!
+  }
+
+  type ClinicalRegistrationError implements ClinicalEntityError {
+    type: String!
+    message: String!
+    row: Int!
+    field: String!
+    value: String!
+    sampleId: String
+    donorId: String!
+    specimenId: String
+  }
+
+  interface ClinicalEntityError {
+    type: String!
+    message: String!
+    row: Int!
+    field: String!
+    value: String!
+    donorId: String!
+  }
+
+  type ClinicalRegistrationStatValue {
+    name: String!
+    rows: [Int]!
   }
 `;
 
