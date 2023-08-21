@@ -1,19 +1,13 @@
-/*const resolvers = {
+const clinicalRegistrationResolver = {
   Query: {
-    clinicalRegistration: () => 'Test',
-  },
-};
-*/
-
-const nameResolver = {
-  Query: {
-    hello: () => 'World',
-    name: () => 'UK',
+    clinicalRegistration: () => {
+      console.log('clinicalRegistration resolver');
+    },
   },
 };
 
 const resolvers = {
-  ...nameResolver,
+  ...clinicalRegistrationResolver,
 };
 
 export default resolvers;

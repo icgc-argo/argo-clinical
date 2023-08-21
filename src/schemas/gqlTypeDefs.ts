@@ -19,28 +19,12 @@
 
 import gql from 'graphql-tag';
 
-/*const typeDefs = gql`
-  schema {
-    query: Query
-  }
-  type Query {
-    hello: String
-    name: String
-  }
-`;*/
-
 const typeDefs = gql`
-  schema {
-    query: Query
-  }
   type Query {
-    hello: String
-    name: String
-
     """
     Retrieve current stored Clinical Registration data for a program
     """
-    clinicalRegistration(shortName: String!): ClinicalRegistrationData!
+    clinicalRegistration(shortName: String!): ClinicalRegistrationData
   }
 
   scalar DateTime

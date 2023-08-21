@@ -17,7 +17,6 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// import gql from 'graphql-tag';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 
 import typeDefs from './gqlTypeDefs';
