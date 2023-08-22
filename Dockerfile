@@ -1,4 +1,4 @@
-FROM node:12.5.0-alpine as builder
+FROM node:lts-hydrogen as builder
 # Create app directory
 WORKDIR /app
 RUN chown -R node:node /app
@@ -11,7 +11,7 @@ COPY . ./
 RUN npm run build
 
 # Runtime image
-FROM node:12.5.0-alpine
+FROM node:lts-hydrogen
 ENV APP_UID=9999
 ENV APP_GID=9999
 RUN apk --no-cache add shadow
