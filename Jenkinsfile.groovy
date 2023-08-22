@@ -33,7 +33,7 @@ kind: Pod
 spec:
   containers:
   - name: node
-    image: node:12.6.0
+    image: node:lts-hydrogen
     tty: true
     env:
     - name: DOCKER_HOST
