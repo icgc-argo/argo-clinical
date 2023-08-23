@@ -150,13 +150,13 @@ let server: Server;
     return;
   }
   await bootstrap.run(defaultAppConfigImpl);
-  const apolloServer = new ApolloServer({
-    schema: buildSubgraphSchema({ typeDefs, resolvers }),
-  });
 
   /**
    * Start Graphql server.
    */
+  const apolloServer = new ApolloServer({
+    schema: buildSubgraphSchema({ typeDefs, resolvers }),
+  });
   const { url } = await startStandaloneServer(apolloServer, {
     listen: { port: app.get('graphqlPort') },
   });
