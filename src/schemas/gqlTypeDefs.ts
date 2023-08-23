@@ -22,12 +22,134 @@ import gql from 'graphql-tag';
 const typeDefs = gql`
   type Query {
     """
+    Retrieve DonorIds + Submitter Donor Ids for given Clinical Entity and Program
+    """
+    clinicalSearchResults(programShortName: String!, filters: ClinicalInput!): ClinicalSearchData!
+
+    """
     Retrieve current stored Clinical Registration data for a program
     """
     clinicalRegistration(shortName: String!): ClinicalRegistrationData
   }
 
   scalar DateTime
+
+  """
+  Query Variables for Pagination & Filtering
+  """
+  input ClinicalInput {
+    page: Int!
+    pageSize: Int!
+    sort: String
+    entityTypes: [String]
+    donorIds: [Int]
+    submitterDonorIds: [String]
+    completionState: String
+  }
+
+  """
+  Collated Clinical Data Query Response
+  """
+  type ClinicalData {
+    programShortName: String!
+    clinicalEntities: [ClinicalDataEntities]!
+    completionStats: [CompletionStats]
+    clinicalErrors: [ClinicalErrors]
+  }
+
+  """
+  Clinical Data DonorId Search Query Response
+  """
+  type ClinicalSearchData {
+    programShortName: String!
+    searchResults: [ClinicalSearchResults]!
+    totalResults: Int!
+  }
+
+  """
+  Clinical Data DonorId Search Result Record
+  """
+  type ClinicalSearchResults {
+    donorId: Int!
+    submitterDonorId: String
+  }
+
+  """
+  Submitted Program Clinical Data arranged by Entity type
+  """
+  type ClinicalDataEntities {
+    entityName: String!
+    totalDocs: Int!
+    records: [[ClinicalRecordField]]!
+    entityFields: [String]
+    completionStats: [CompletionStats]
+  }
+
+  """
+  Data Submission / Schema Errors for a given Donor
+  """
+  type ClinicalErrors {
+    donorId: Int
+    submitterDonorId: String
+    errors: [ClinicalErrorRecord]
+  }
+
+  """
+  Specific Error Field + Values
+  """
+  type ClinicalErrorRecord {
+    errorType: String
+    fieldName: String
+    index: Int
+    info: ClinicalErrorInfo
+    message: String
+    entityName: String
+  }
+
+  type ClinicalErrorInfo {
+    value: [String]
+    message: String
+  }
+
+  """
+  Completion Data for a given Donor
+  """
+  type CompletionStats {
+    coreCompletion: CoreCompletionFields
+    coreCompletionDate: String
+    coreCompletionPercentage: Float
+    overriddenCoreCompletion: [String]
+    donorId: Int
+    entityData: CompletionEntityData
+  }
+
+  """
+  Specific Entity Completion Values
+  """
+  type CoreCompletionFields {
+    donor: Float!
+    specimens: Float!
+    primaryDiagnosis: Float!
+    followUps: Float!
+    treatments: Float!
+  }
+
+  """
+  Display Data For Core Completion Entities
+  """
+  type CompletionEntityData {
+    specimens: SpecimenCoreCompletion
+  }
+
+  type SpecimenCoreCompletion {
+    coreCompletionPercentage: Float!
+    normalSpecimensPercentage: Float!
+    tumourSpecimensPercentage: Float!
+    normalRegistrations: Float!
+    normalSubmissions: Float!
+    tumourRegistrations: Float!
+    tumourSubmissions: Float!
+  }
 
   """
   It is possible for there to be no available ClinicalRegistrationData for a program,
