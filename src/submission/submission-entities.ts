@@ -48,6 +48,7 @@ export interface ActiveRegistration {
   readonly stats: RegistrationStats;
   readonly records: Array<SubmittedRegistrationRecord>;
   readonly schemaVersion: string;
+  readonly createdAt?: string | number;
 }
 
 export interface LegacyICGCImportRecord {

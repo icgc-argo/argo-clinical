@@ -24,11 +24,17 @@ if (process.env.NODE_ENV !== 'PRODUCTION') {
   console.debug('dotenv: ', dotenv.config());
 }
 import * as vault from './vault-k8s';
+import http from 'http';
 import { Server } from 'http';
 // we import here to allow configs to fully load
 import * as bootstrap from './bootstrap';
 import app from './app';
 import { database, up } from 'migrate-mongo';
+
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import { buildSubgraphSchema } from '@apollo/subgraph';
+import { typeDefs, resolvers } from './schemas/index';
 
 let secrets: any = {};
 let server: Server;
@@ -144,6 +150,17 @@ let server: Server;
     return;
   }
   await bootstrap.run(defaultAppConfigImpl);
+
+  /**
+   * Start Graphql server.
+   */
+  const apolloServer = new ApolloServer({
+    schema: buildSubgraphSchema({ typeDefs, resolvers }),
+  });
+  const { url } = await startStandaloneServer(apolloServer, {
+    listen: { port: app.get('graphqlPort') },
+  });
+
   /**
    * Start Express server.
    */
@@ -154,6 +171,9 @@ let server: Server;
       app.get('env'),
     );
     console.debug(`Swagger Docs available at http://localhost:${app.get('port')}/api-docs`);
+    console.debug(
+      `Graphql Server  available at http://localhost:${app.get('graphqlPort')}/graphql`,
+    );
     console.log('  Press CTRL-C to stop\n');
     console.timeEnd('boot time');
   });

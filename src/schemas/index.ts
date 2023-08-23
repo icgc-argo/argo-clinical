@@ -17,19 +17,10 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-export class InternalError extends Error {
-  // changed to 'errorCause' due to Typescript version upgrad
-  constructor(message: string, private errorCause: Error) {
-    super(message);
-    this.name = 'InternalError';
-  }
-  public getErrorCause() {
-    return this.errorCause;
-  }
-}
+import { buildSubgraphSchema } from '@apollo/subgraph';
 
-export class BadRequestError extends Error {
-  constructor(message: string) {
-    super(message);
-  }
-}
+import typeDefs from './gqlTypeDefs';
+import resolvers from './resolvers';
+
+export { typeDefs, resolvers };
+export default buildSubgraphSchema({ typeDefs, resolvers });
