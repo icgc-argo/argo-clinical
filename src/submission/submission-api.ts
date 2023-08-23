@@ -50,6 +50,12 @@ class SubmissionController {
     return res.status(200).send(registration);
   }
 
+  async getRegistrationDataByProgramId(programId: string) {
+    L.debug('in getRegistrationByProgramId');
+    const registration = await submission.operations.findByProgramId(programId);
+    return registration;
+  }
+
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async createRegistrationWithTsv(req: Request, res: Response) {
     if ((await submissionSystemIsDisabled(res)) || !isValidCreateBody(req, res)) {

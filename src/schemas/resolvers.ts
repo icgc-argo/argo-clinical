@@ -1,3 +1,4 @@
+import clinicalRegistrationResolver from './clinicalRegistrationDataResolver';
 import { getClinicalSearchResults, ClinicalSearchQuery } from '../clinical/clinical-service';
 
 // Query Arguments
@@ -8,9 +9,7 @@ type ClinicalVariables = {
 
 const clinicalResolvers = {
   Query: {
-    clinicalRegistration: () => {
-      console.log('clinicalRegistration resolver');
-    },
+    ...clinicalRegistrationResolver,
     clinicalSearchResults: async (obj: unknown, args: ClinicalVariables) => {
       const { programShortName, filters } = args;
 

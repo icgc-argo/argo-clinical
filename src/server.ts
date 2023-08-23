@@ -33,8 +33,7 @@ import { database, up } from 'migrate-mongo';
 
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
-import { buildSubgraphSchema } from '@apollo/subgraph';
-import { typeDefs, resolvers } from './schemas/index';
+import schema from './schemas/index';
 
 let secrets: any = {};
 let server: Server;
@@ -150,13 +149,13 @@ let server: Server;
     return;
   }
   await bootstrap.run(defaultAppConfigImpl);
-  const apolloServer = new ApolloServer({
-    schema: buildSubgraphSchema({ typeDefs, resolvers }),
-  });
 
   /**
    * Start Graphql server.
    */
+  const apolloServer = new ApolloServer({
+    schema,
+  });
   const { url } = await startStandaloneServer(apolloServer, {
     listen: { port: app.get('graphqlPort') },
   });
