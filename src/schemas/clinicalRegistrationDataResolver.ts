@@ -30,11 +30,7 @@ import get from 'lodash/get';
 
 const clinicalRegistrationResolver = {
   Query: {
-    clinicalRegistration: async (
-      obj: unknown,
-      args: { shortName: string },
-      // context: GlobalGqlContext,
-    ) => {
+    clinicalRegistration: async (obj: unknown, args: { shortName: string }) => {
       const registration = await submissionAPI.getRegistrationDataByProgramId(args.shortName);
       return convertRegistrationDataToGql(args.shortName, {
         registration: registration,
@@ -48,7 +44,6 @@ const convertRegistrationDataToGql = (
   data: {
     registration: DeepReadonly<ActiveRegistration> | undefined;
     errors?: RegistrationErrorData[];
-    // batchErrors?: unknown[]; // UK changed
     batchErrors?: { message: string; batchNames: string[]; code: string }[];
   },
 ) => {
@@ -62,10 +57,7 @@ const convertRegistrationDataToGql = (
     fileName: registration?.batchName || undefined,
     createdAt: registration?.createdAt || undefined,
     records: () =>
-      get(
-        registration,
-        'records', // , [] as Required<typeof registration>['records']
-      )?.map((record, i) => convertClinicalRecordToGql(i, record)),
+      get(registration, 'records')?.map((record, i) => convertClinicalRecordToGql(i, record)),
     errors: schemaAndValidationErrors?.map(convertRegistrationErrorToGql),
     fileErrors: fileErrors?.map(convertClinicalFileErrorToGql),
     newDonors: () => convertRegistrationStatsToGql(get(registration, 'stats.newDonorIds', [])),

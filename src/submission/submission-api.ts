@@ -52,12 +52,8 @@ class SubmissionController {
 
   async getRegistrationDataByProgramId(programId: string) {
     L.debug('in getRegistrationByProgramId');
-    // const programId = programId;  // req.params.programId;
     const registration = await submission.operations.findByProgramId(programId);
-    /*if (registration == undefined) {
-      return res.status(200).send({});
-    }*/
-    return registration; // res.status(200).send(registration);
+    return registration;
   }
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
