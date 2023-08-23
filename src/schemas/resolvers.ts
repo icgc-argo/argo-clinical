@@ -1,10 +1,4 @@
-const clinicalRegistrationResolver = {
-  Query: {
-    clinicalRegistration: () => {
-      console.log('clinicalRegistration resolver');
-    },
-  },
-};
+import clinicalRegistrationResolver from './clinicalRegistrationDataResolver';
 
 const resolvers = {
   ...clinicalRegistrationResolver,

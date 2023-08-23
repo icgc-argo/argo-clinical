@@ -24,7 +24,7 @@ const typeDefs = gql`
     """
     Retrieve current stored Clinical Registration data for a program
     """
-    clinicalRegistration(shortName: String!): ClinicalRegistrationData
+    clinicalRegistration(shortName: String!): ClinicalRegistrationData!
   }
 
   scalar DateTime
