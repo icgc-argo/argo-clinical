@@ -112,10 +112,98 @@ type ErrorData = {
   fieldName: string;
 };
 
+// Clinical Submission
+
+type SubmissionEntity = {
+  batchName: string;
+  creator: string;
+  records: EntityDataRecord[];
+  stats: unknown;
+  dataUpdates: UpdateData[];
+  schemaErrors: ErrorData[];
+  dataErrors: ErrorData[];
+  dataWarnings: ErrorData[];
+  createdAt: string | number;
+};
+
+const convertClinicalSubmissionEntityToGql = (clinicalType: string, entity: SubmissionEntity) => {
+  return {
+    clinicalType,
+    batchName: entity.batchName || undefined,
+    creator: entity.creator || undefined,
+    records: () =>
+      get(entity, 'records', [] as typeof entity.records).map((record, index) =>
+        convertClinicalRecordToGql(index, record),
+      ),
+    stats: entity.stats || undefined,
+    schemaErrors: () => {
+      const entityErrors = entity.schemaErrors || [];
+      return entityErrors.map(error =>
+        convertClinicalSubmissionSchemaErrorToGql(clinicalType, error),
+      );
+    },
+    dataErrors: () =>
+      get(entity, 'dataErrors', [] as typeof entity.dataErrors).map((error: ErrorData) =>
+        convertClinicalSubmissionDataErrorToGql(error),
+      ),
+    dataWarnings: () =>
+      get(entity, 'dataWarnings', [] as typeof entity.dataWarnings).map((warning: ErrorData) =>
+        convertClinicalSubmissionDataErrorToGql(warning),
+      ),
+    dataUpdates: () =>
+      get(entity, 'dataUpdates', [] as typeof entity.dataUpdates).map(update =>
+        convertClinicalSubmissionUpdateToGql(update),
+      ),
+    createdAt: entity.createdAt ? new Date(entity.createdAt) : undefined,
+  };
+};
+
+const convertClinicalSubmissionSchemaErrorToGql = (
+  clinicalType: unknown,
+  errorData: ErrorData,
+) => ({
+  ...convertClinicalSubmissionDataErrorToGql(errorData),
+  clinicalType,
+});
+
+const convertClinicalSubmissionDataErrorToGql = (errorData: ErrorData) => {
+  // errorData.info.value may come back as null if not provided in uploaded file
+  const errorValue = get(errorData, 'info.value', '') || '';
+  return {
+    type: errorData.type,
+    message: errorData.message,
+    row: errorData.index,
+    field: errorData.fieldName,
+    donorId: get(errorData, 'info.donorSubmitterId', '') || '',
+    value: normalizeValue(errorValue),
+  };
+};
+
+type UpdateData = {
+  index: string | number;
+  fieldName: string;
+  info: {
+    newValue: unknown;
+    oldValue: unknown;
+    donorSubmitterId: string;
+  };
+};
+
+const convertClinicalSubmissionUpdateToGql = (updateData: UpdateData) => {
+  return {
+    row: updateData.index,
+    field: updateData.fieldName,
+    newValue: normalizeValue(updateData.info.newValue),
+    oldValue: normalizeValue(updateData.info.oldValue),
+    donorId: updateData.info.donorSubmitterId,
+  };
+};
+
 export {
   convertClinicalRecordToGql,
   convertRegistrationErrorToGql,
   convertClinicalFileErrorToGql,
   convertRegistrationStatsToGql,
   RegistrationErrorData,
+  convertClinicalSubmissionEntityToGql,
 };

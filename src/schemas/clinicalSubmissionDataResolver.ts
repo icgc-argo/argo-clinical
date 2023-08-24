@@ -17,19 +17,108 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import submissionAPI from '../submission/submission-api';
+import get from 'lodash/get';
+import { ActiveClinicalSubmission } from '../submission/submission-entities';
+import { DeepReadonly } from 'deep-freeze';
+import { convertClinicalFileErrorToGql, convertClinicalSubmissionEntityToGql } from './utils';
+import clinicalRegistrationResolver from './clinicalRegistrationDataResolver';
+
 const clinicalSubmissionResolver = {
   Query: {
     clinicalSubmissions: async (obj: unknown, args: { programShortName: string }) => {
-      const { Authorization } = context;
+      // const { Authorization } = context;
       const { programShortName } = args;
 
-      const response = await clinicalService.getClinicalSubmissionData(
+      const submissionData = await submissionAPI.getActiveSubmissionDataByProgramId(
         programShortName,
-        Authorization,
       );
       return convertClinicalSubmissionDataToGql(programShortName, {
-        submission: response,
+        submission: submissionData,
       });
     },
   },
 };
+
+/*const convertClinicalSubmissionDataToGql = (
+  programShortName: string,
+  data: {
+    /!*submission: {
+      _id: string;
+      state: string;
+      version: string;
+      updatedBy: string;
+      updatedAt: string;
+      clinicalEntities: { [k: string]: SubmissionEntity };
+    };*!/
+     submission: DeepReadonly<ActiveClinicalSubmission>| undefined;
+     batchErrors?: { message: string; batchNames: string[]; code: string }[];
+  },
+) => {
+  const submission = get(data, 'submission', {} as Partial<typeof data.submission>);
+  // const fileErrors = get(data, 'batchErrors', [] as typeof data.batchErrors);
+  const fileErrors = get(data, 'batchErrors', [] as typeof data.batchErrors);
+  /!*const clinicalEntities = get(
+    submission,
+    'clinicalEntities',
+    {} as typeof data.submission.clinicalEntities,
+  );*!/
+  const clinicalEntities = get(
+    submission,
+    'clinicalEntities'
+  );
+  return {
+    id: submission?._id || undefined,
+    programShortName,
+    state: submission?.state || undefined,
+    version: submission?.version || undefined,
+    updatedBy: submission?.updatedBy || undefined,
+    // updatedAt: submission?.updatedAt ? new Date(submission.updatedAt) : undefined,
+    /!*clinicalEntities: async () => {
+      // const clinicalSubmissionTypeList = await clinicalService.getClinicalSubmissionTypesList();
+      const clinicalSubmissionTypeList = await getClinicalEntities;
+      const filledClinicalEntities = clinicalSubmissionTypeList.map((clinicalType) => ({
+        clinicalType,
+        ...(clinicalEntities[clinicalType] || {}),
+      }));
+      return filledClinicalEntities.map((clinicalEntity) =>
+        convertClinicalSubmissionEntityToGql(clinicalEntity.clinicalType, clinicalEntity),
+      );
+    },*!/
+    fileErrors: fileErrors?.map(convertClinicalFileErrorToGql),
+  };
+};*/
+
+const convertClinicalSubmissionDataToGql = (
+  programShortName: string,
+  data: {
+    /*submission: {
+      _id: string;
+      state: string;
+      version: string;
+      updatedBy: string;
+      updatedAt: string;
+      clinicalEntities: { [k: string]: SubmissionEntity };
+    };*/
+    submission: DeepReadonly<ActiveClinicalSubmission> | undefined;
+    batchErrors?: { message: string; batchNames: string[]; code: string }[];
+  },
+) => {
+  const submission = get(data, 'submission', {} as Partial<typeof data.submission>);
+  // const fileErrors = get(data, 'batchErrors', [] as typeof data.batchErrors);
+  const fileErrors = get(data, 'batchErrors', [] as typeof data.batchErrors);
+  /*const clinicalEntities = get(
+    submission,
+    'clinicalEntities',
+    {} as typeof data.submission.clinicalEntities,
+  );*/
+  const clinicalEntities = get(submission, 'clinicalEntities');
+  return {
+    id: 'x',
+    programShortName: 'c',
+    state: 'INVALID_BY_MIGRATION',
+    version: 's',
+  };
+};
+
+export default clinicalSubmissionResolver;
