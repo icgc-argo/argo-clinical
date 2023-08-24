@@ -26,11 +26,6 @@ import {
   HasProgramReadAccess,
   HasFullReadAccess,
 } from '../../decorators';
-import {
-  ClinicalEntitySchemaNames,
-  aliasEntityNames,
-  queryEntityNames,
-} from '../../common-model/entities';
 import { ControllerUtils, DonorUtils, TsvUtils } from '../../utils';
 import AdmZip from 'adm-zip';
 import { ClinicalEntityData, Donor } from '../clinical-entities';
@@ -246,19 +241,12 @@ class ClinicalController {
       );
     }
 
-    // 1. Get the migration errors for every donor requested...
-    const migrationErrors = await service.getClinicalEntityMigrationErrors(
+    const clinicalErrors = await service.getClinicalErrors(
       programId,
-      bodyParseResult.data.donorIds,
+      bodyParseResult.data.donorIds || [],
     );
 
-    // 2. ...and now remove from the list all valid donors (fixed with submissions since the migration)
-    const validErrorRecords = await service.getValidRecordsPostSubmission(
-      programId,
-      migrationErrors,
-    );
-
-    res.status(200).json(validErrorRecords.clinicalErrors);
+    res.status(200).json(clinicalErrors);
   }
 
   /**

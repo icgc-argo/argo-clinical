@@ -44,6 +44,7 @@ import { runTaskInWorkerThread } from './service-worker-thread/runner';
 
 const L = loggerFor(__filename);
 
+// Submission Data ( Donor + Entity Data )
 export type ClinicalQuery = {
   programShortName: string;
   page: number;
@@ -55,12 +56,19 @@ export type ClinicalQuery = {
   completionState?: {};
 };
 
+// Search Bar Queries ( DonorIds / Submitter Ids )
 export type ClinicalSearchQuery = {
   programShortName: string;
   donorIds: number[];
   submitterDonorIds: string[];
   entityTypes: EntityAlias[];
   completionState?: {};
+};
+
+// GQL Query Arguments
+export type ClinicalSearchVariables = {
+  programShortName: string;
+  filters: ClinicalSearchQuery;
 };
 
 export async function updateDonorSchemaMetadata(
@@ -242,6 +250,16 @@ export const getClinicalSearchResults = async (programId: string, query: Clinica
   L.debug(`getPaginatedClinicalData took ${end - start}s`);
 
   return data;
+};
+
+export const getClinicalErrors = async (programId: string, donorIds: number[]) => {
+  // 1. Get the migration errors for every donor requested...
+  const migrationErrors = await getClinicalEntityMigrationErrors(programId, donorIds);
+
+  // 2. ...and now remove from the list all valid donors (fixed with submissions since the migration)
+  const validErrorRecords = await getValidRecordsPostSubmission(programId, migrationErrors);
+
+  return validErrorRecords;
 };
 
 interface DonorMigration extends Omit<DictionaryMigration, 'invalidDonorsErrors'> {

@@ -1,13 +1,7 @@
-import { getClinicalSearchResults, ClinicalSearchQuery } from '../../clinical/clinical-service';
-
-// Query Arguments
-type ClinicalVariables = {
-  programShortName: string;
-  filters: ClinicalSearchQuery;
-};
+import { getClinicalSearchResults, ClinicalSearchVariables } from '../../clinical/clinical-service';
 
 const clinicalSearchResultResolver = {
-  clinicalSearchResults: async (obj: unknown, args: ClinicalVariables) => {
+  clinicalSearchResults: async (obj: unknown, args: ClinicalSearchVariables) => {
     const { programShortName, filters } = args;
 
     const searchResults = (await getClinicalSearchResults(programShortName, filters)) || {
