@@ -22,14 +22,24 @@ import gql from 'graphql-tag';
 const typeDefs = gql`
   type Query {
     """
-    Retrieve DonorIds + Submitter Donor Ids for given Clinical Entity and Program
+    Retrieve all stored Clinical Entity and Donor Completion data for a program
     """
-    clinicalSearchResults(programShortName: String!, filters: ClinicalInput!): ClinicalSearchData!
+    clinicalData(programShortName: String!, filters: ClinicalInput!): ClinicalData!
+
+    """
+    Retrieve all stored Clinical Migration Errors for a program
+    """
+    clinicalErrors(programShortName: String!, donorIds: [Int]): [ClinicalErrors!]!
 
     """
     Retrieve current stored Clinical Registration data for a program
     """
     clinicalRegistration(shortName: String!): ClinicalRegistrationData!
+
+    """
+    Retrieve DonorIds + Submitter Donor Ids for given Clinical Entity and Program
+    """
+    clinicalSearchResults(programShortName: String!, filters: ClinicalInput!): ClinicalSearchData!
   }
 
   scalar DateTime
