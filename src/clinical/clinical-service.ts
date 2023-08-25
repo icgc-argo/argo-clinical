@@ -382,62 +382,67 @@ export const getValidRecordsPostSubmission = async (
 
   const donorData = (await donorDao.findByPaginatedProgramId(programId, errorQuery)).donors;
 
-  const validDonorIds = donorData
-    .filter(donor => donor.schemaMetadata.isValid)
-    .map(({ donorId }) => donorId);
-
   const clinicalErrors: ClinicalErrorsResponseRecord[] = [];
 
-  const invalidDonorIds = errorDonorIds.filter(
-    (donorId, index, array) =>
-      !validDonorIds.includes(donorId) && filterDuplicates(donorId, index, array),
-  );
+  if (errorDonorIds.length) {
+    const validDonorIds = donorData
+      .filter(donor => donor.schemaMetadata.isValid)
+      .map(({ donorId }) => donorId)
+      .filter(id => typeof id === 'number');
 
-  for (const donorId of invalidDonorIds) {
-    const currentDonor = donorData.filter(donor => donor.donorId === donorId)[0];
-    const { submitterId: submitterDonorId } = currentDonor;
-    const currentDonorErrors = clinicalMigrationErrors
-      .filter(errorRecord => errorRecord.donorId === donorId)
-      .map(migrationError => migrationError.errors)
-      .flat();
+    const invalidDonorIds = errorDonorIds.filter(
+      (donorId, index, array) =>
+        !validDonorIds.includes(donorId) && filterDuplicates(donorId, index, array),
+    );
 
-    const currentDonorEntities = currentDonorErrors
-      .map(error => error.entityName)
-      .filter(filterDuplicates);
+    for (const donorId of invalidDonorIds) {
+      const currentDonor = donorData.filter(donor => donor.donorId === donorId)[0];
+      if (currentDonor) {
+        const submitterDonorId = currentDonor.submitterId ? currentDonor.submitterId : '';
+        const currentDonorErrors = clinicalMigrationErrors
+          .filter(errorRecord => errorRecord.donorId === donorId)
+          .map(migrationError => migrationError.errors)
+          .flat();
 
-    const migrationVersion =
-      lastMigration?.toVersion || (await dictionaryManager.instance().getCurrentVersion());
-    const schemaName = await dictionaryManager.instance().getCurrentName();
+        const currentDonorEntities = currentDonorErrors
+          .map(error => error.entityName)
+          .filter(filterDuplicates);
 
-    const migrationDictionary = await dictionaryManager
-      .instance()
-      .loadSchemaByVersion(schemaName, migrationVersion);
+        const migrationVersion =
+          lastMigration?.toVersion || (await dictionaryManager.instance().getCurrentVersion());
+        const schemaName = await dictionaryManager.instance().getCurrentName();
 
-    currentDonorEntities.forEach(entityName => {
-      const entityValidationErrors =
-        MigrationManager.validateDonorEntityAgainstNewSchema(
-          entityName,
-          migrationDictionary,
-          currentDonor,
-        ) || [];
+        const migrationDictionary = await dictionaryManager
+          .instance()
+          .loadSchemaByVersion(schemaName, migrationVersion);
 
-      const entityErrorRecords: ClinicalEntityErrorRecord[] = entityValidationErrors.map(
-        (validationRecord): ClinicalEntityErrorRecord => ({
-          donorId,
-          entityName,
-          ...validationRecord,
-        }),
-      );
+        currentDonorEntities.forEach(entityName => {
+          const entityValidationErrors =
+            MigrationManager.validateDonorEntityAgainstNewSchema(
+              entityName,
+              migrationDictionary,
+              currentDonor,
+            ) || [];
 
-      const errorResponseRecord: ClinicalErrorsResponseRecord = {
-        donorId,
-        submitterDonorId,
-        entityName,
-        errors: entityErrorRecords,
-      };
+          const entityErrorRecords: ClinicalEntityErrorRecord[] = entityValidationErrors.map(
+            (validationRecord): ClinicalEntityErrorRecord => ({
+              donorId,
+              entityName,
+              ...validationRecord,
+            }),
+          );
 
-      if (entityErrorRecords.length) clinicalErrors.push(errorResponseRecord);
-    });
+          const errorResponseRecord: ClinicalErrorsResponseRecord = {
+            donorId,
+            submitterDonorId,
+            entityName,
+            errors: entityErrorRecords,
+          };
+
+          if (entityErrorRecords.length) clinicalErrors.push(errorResponseRecord);
+        });
+      }
+    }
   }
 
   const end = new Date().getTime() / 1000;
