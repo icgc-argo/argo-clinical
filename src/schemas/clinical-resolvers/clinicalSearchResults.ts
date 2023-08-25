@@ -4,11 +4,9 @@ const clinicalSearchResultResolver = {
   clinicalSearchResults: async (obj: unknown, args: ClinicalSearchVariables) => {
     const { programShortName, filters } = args;
 
-    const searchResults = (await getClinicalSearchResults(programShortName, filters)) || {
-      searchResults: [],
-    };
+    const searchResults = await getClinicalSearchResults(programShortName, filters);
 
-    return { ...searchResults, programShortName };
+    return { searchResults, programShortName };
   },
 };
 

@@ -4,9 +4,7 @@ const clinicalDataResolver = {
   clinicalData: async (obj: unknown, args: ClinicalDataVariables) => {
     const { programShortName, filters } = args;
 
-    const clinicalEntities = (await getPaginatedClinicalData(programShortName, filters)) || {
-      clinicalEntities: [],
-    };
+    const { clinicalEntities } = await getPaginatedClinicalData(programShortName, filters);
 
     const formattedEntityData = {
       programShortName,
