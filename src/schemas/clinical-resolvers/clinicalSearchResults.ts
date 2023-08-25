@@ -6,7 +6,7 @@ const clinicalSearchResultResolver = {
 
     const searchResults = await getClinicalSearchResults(programShortName, filters);
 
-    return { searchResults, programShortName };
+    return { ...searchResults, programShortName };
   },
 };
 

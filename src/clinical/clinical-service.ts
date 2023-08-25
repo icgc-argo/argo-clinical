@@ -252,7 +252,10 @@ export const getClinicalSearchResults = async (
 
   const taskToRun = WorkerTasks.FilterDonorIdDataFromSearch;
   const taskArgs = [donors as Donor[], query];
-  const data = await runTaskInWorkerThread<number[]>(taskToRun, taskArgs);
+  const data = await runTaskInWorkerThread<{ searchResults: number[]; totalResults: number }>(
+    taskToRun,
+    taskArgs,
+  );
 
   const end = new Date().getTime() / 1000;
   L.debug(`getPaginatedClinicalData took ${end - start}s`);
