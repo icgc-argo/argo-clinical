@@ -19,7 +19,7 @@
 
 import { Request, Response } from 'express';
 import * as service from '../clinical-service';
-import { ClinicalQuery, ClinicalSearchQuery } from '../clinical-service';
+import { PaginatedClinicalQuery, ClinicalDonorEntityQuery } from '../clinical-service';
 import {
   HasFullWriteAccess,
   ProtectTestEndpoint,
@@ -112,7 +112,7 @@ class ClinicalController {
     } = bodyParseResult.data;
     const completionState = completionFilters[state];
 
-    const query: ClinicalQuery = {
+    const query: PaginatedClinicalQuery = {
       programShortName,
       sort,
       entityTypes,
@@ -165,7 +165,7 @@ class ClinicalController {
     } = bodyParseResult.data;
     const completionState = completionFilters[state];
 
-    const query: ClinicalQuery = {
+    const query: PaginatedClinicalQuery = {
       programShortName,
       sort,
       entityTypes,
@@ -205,7 +205,7 @@ class ClinicalController {
     const completionState = completionFilters[state] || {};
 
     // FE filters digits out of search text for Donor search
-    const query: ClinicalSearchQuery = {
+    const query: ClinicalDonorEntityQuery = {
       programShortName,
       donorIds,
       submitterDonorIds,

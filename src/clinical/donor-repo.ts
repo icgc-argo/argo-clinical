@@ -18,7 +18,7 @@
  */
 
 import { Donor } from './clinical-entities';
-import { ClinicalQuery, ClinicalSearchQuery } from './clinical-service';
+import { PaginatedClinicalQuery, ClinicalDonorEntityQuery } from './clinical-service';
 import { getRequiredDonorFieldsForEntityTypes } from '../common-model/functions';
 import mongoose, { PaginateModel } from 'mongoose';
 import mongoosePaginate from 'mongoose-paginate-v2';
@@ -85,11 +85,11 @@ export interface DonorRepository {
   ): Promise<DeepReadonly<Donor[]>>;
   findByPaginatedProgramId(
     programId: string,
-    query: ClinicalQuery,
+    query: PaginatedClinicalQuery,
   ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number }>>;
   findByProgramDonorSearch(
     programId: string,
-    query: ClinicalSearchQuery,
+    query: ClinicalDonorEntityQuery,
   ): Promise<DeepReadonly<{ donors: Donor[] }>>;
   deleteByProgramId(programId: string): Promise<void>;
   deleteByProgramIdAndDonorIds(programId: string, donorIds: number[]): Promise<void>;
@@ -191,7 +191,7 @@ export const donorDao: DonorRepository = {
 
   async findByPaginatedProgramId(
     programId: string,
-    query: ClinicalQuery,
+    query: PaginatedClinicalQuery,
   ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number }>> {
     const {
       donorIds,
@@ -278,7 +278,7 @@ export const donorDao: DonorRepository = {
 
   async findByProgramDonorSearch(
     programId: string,
-    query: ClinicalSearchQuery,
+    query: ClinicalDonorEntityQuery,
   ): Promise<DeepReadonly<{ donors: Donor[] }>> {
     const { entityTypes, completionState } = query;
 

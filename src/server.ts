@@ -24,7 +24,6 @@ if (process.env.NODE_ENV !== 'PRODUCTION') {
   console.debug('dotenv: ', dotenv.config());
 }
 import * as vault from './vault-k8s';
-import http from 'http';
 import { Server } from 'http';
 // we import here to allow configs to fully load
 import * as bootstrap from './bootstrap';

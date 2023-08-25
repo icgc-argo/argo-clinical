@@ -44,20 +44,8 @@ import { runTaskInWorkerThread } from './service-worker-thread/runner';
 
 const L = loggerFor(__filename);
 
-// Submission Data ( Donor + Entity Data )
-export type ClinicalQuery = {
-  programShortName: string;
-  page: number;
-  pageSize?: number;
-  entityTypes: Array<EntityAlias>;
-  sort: string;
-  donorIds: number[];
-  submitterDonorIds: string[];
-  completionState?: {};
-};
-
-// Search Bar Queries ( DonorIds / Submitter Ids )
-export type ClinicalSearchQuery = {
+// Base type for Clinical Data Queries
+export type ClinicalDonorEntityQuery = {
   programShortName: string;
   donorIds: number[];
   submitterDonorIds: string[];
@@ -65,10 +53,24 @@ export type ClinicalSearchQuery = {
   completionState?: {};
 };
 
+// Returns paginated Donor + Entity Submission Data
+export interface PaginatedClinicalQuery extends ClinicalDonorEntityQuery {
+  page: number;
+  pageSize?: number;
+  sort: string;
+}
+
 // GQL Query Arguments
+// Submitted Data Search Bar
 export type ClinicalSearchVariables = {
   programShortName: string;
-  filters: ClinicalSearchQuery;
+  filters: ClinicalDonorEntityQuery;
+};
+
+// Submitted Data Table, Sidebar, etc.
+export type ClinicalDataVariables = {
+  programShortName: string;
+  filters: PaginatedClinicalQuery;
 };
 
 export async function updateDonorSchemaMetadata(
@@ -212,7 +214,10 @@ export const getClinicalData = async (programId: string) => {
   return data;
 };
 
-export const getPaginatedClinicalData = async (programId: string, query: ClinicalQuery) => {
+export const getPaginatedClinicalData = async (
+  programId: string,
+  query: PaginatedClinicalQuery,
+) => {
   if (!programId) throw new Error('Missing programId!');
   const start = new Date().getTime() / 1000;
 
@@ -235,7 +240,10 @@ export const getPaginatedClinicalData = async (programId: string, query: Clinica
   return data;
 };
 
-export const getClinicalSearchResults = async (programId: string, query: ClinicalSearchQuery) => {
+export const getClinicalSearchResults = async (
+  programId: string,
+  query: ClinicalDonorEntityQuery,
+) => {
   if (!programId) throw new Error('Missing programId!');
   const start = new Date().getTime() / 1000;
 
@@ -360,7 +368,7 @@ export const getValidRecordsPostSubmission = async (
     });
   });
 
-  const errorQuery: ClinicalQuery = {
+  const errorQuery: PaginatedClinicalQuery = {
     programShortName: programId,
     page: 0,
     sort: 'donorId',

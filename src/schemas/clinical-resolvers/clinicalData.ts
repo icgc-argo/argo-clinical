@@ -1,9 +1,12 @@
-import { getClinicalData, ClinicalSearchVariables } from '../../clinical/clinical-service';
+import { getPaginatedClinicalData, ClinicalDataVariables } from '../../clinical/clinical-service';
 
 const clinicalDataResolver = {
-  clinicalData: async (obj: unknown, args: ClinicalSearchVariables) => {
-    const { programShortName } = args;
-    const clinicalEntities = await getClinicalData(programShortName);
+  clinicalData: async (obj: unknown, args: ClinicalDataVariables) => {
+    const { programShortName, filters } = args;
+
+    const clinicalEntities = (await getPaginatedClinicalData(programShortName, filters)) || {
+      clinicalEntities: [],
+    };
 
     const formattedEntityData = {
       programShortName,
