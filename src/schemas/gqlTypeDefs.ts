@@ -109,7 +109,7 @@ const typeDefs = gql`
   }
 
   """
-  Clinical Submission Data //UK add exclamation ahead of clinicalEntities
+  Clinical Submission Data
   """
   type ClinicalSubmissionData {
     id: ID
@@ -118,7 +118,7 @@ const typeDefs = gql`
     version: String
     updatedBy: String
     updatedAt: DateTime
-    clinicalEntities: [ClinicalSubmissionEntity]
+    clinicalEntities: [ClinicalSubmissionEntity]!
     fileErrors: [ClinicalFileError]
   }
 
