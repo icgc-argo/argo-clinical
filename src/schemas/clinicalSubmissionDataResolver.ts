@@ -22,12 +22,11 @@ import get from 'lodash/get';
 import { ActiveClinicalSubmission } from '../submission/submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { convertClinicalFileErrorToGql, convertClinicalSubmissionEntityToGql } from './utils';
-import clinicalRegistrationResolver from './clinicalRegistrationDataResolver';
+import { getClinicalEntitiesData } from '../dictionary/api';
 
 const clinicalSubmissionResolver = {
   Query: {
     clinicalSubmissions: async (obj: unknown, args: { programShortName: string }) => {
-      // const { Authorization } = context;
       const { programShortName } = args;
 
       const submissionData = await submissionAPI.getActiveSubmissionDataByProgramId(
@@ -40,84 +39,34 @@ const clinicalSubmissionResolver = {
   },
 };
 
-/*const convertClinicalSubmissionDataToGql = (
+const convertClinicalSubmissionDataToGql = (
   programShortName: string,
   data: {
-    /!*submission: {
-      _id: string;
-      state: string;
-      version: string;
-      updatedBy: string;
-      updatedAt: string;
-      clinicalEntities: { [k: string]: SubmissionEntity };
-    };*!/
-     submission: DeepReadonly<ActiveClinicalSubmission>| undefined;
-     batchErrors?: { message: string; batchNames: string[]; code: string }[];
+    submission: DeepReadonly<ActiveClinicalSubmission> | undefined;
+    batchErrors?: { message: string; batchNames: string[]; code: string }[];
   },
 ) => {
   const submission = get(data, 'submission', {} as Partial<typeof data.submission>);
-  // const fileErrors = get(data, 'batchErrors', [] as typeof data.batchErrors);
   const fileErrors = get(data, 'batchErrors', [] as typeof data.batchErrors);
-  /!*const clinicalEntities = get(
-    submission,
-    'clinicalEntities',
-    {} as typeof data.submission.clinicalEntities,
-  );*!/
-  const clinicalEntities = get(
-    submission,
-    'clinicalEntities'
-  );
+  const clinicalEntities = get(submission, 'clinicalEntities');
   return {
     id: submission?._id || undefined,
     programShortName,
     state: submission?.state || undefined,
     version: submission?.version || undefined,
     updatedBy: submission?.updatedBy || undefined,
-    // updatedAt: submission?.updatedAt ? new Date(submission.updatedAt) : undefined,
-    /!*clinicalEntities: async () => {
-      // const clinicalSubmissionTypeList = await clinicalService.getClinicalSubmissionTypesList();
-      const clinicalSubmissionTypeList = await getClinicalEntities;
-      const filledClinicalEntities = clinicalSubmissionTypeList.map((clinicalType) => ({
+    updatedAt: submission?.updatedAt ? submission.updatedAt : undefined,
+    clinicalEntities: async () => {
+      const clinicalSubmissionTypeList = await getClinicalEntitiesData('false'); // to confirm for true or false
+      const filledClinicalEntities = clinicalSubmissionTypeList.map(clinicalType => ({
         clinicalType,
-        ...(clinicalEntities[clinicalType] || {}),
+        ...(clinicalEntities ? clinicalEntities[clinicalType.name] : {}),
       }));
-      return filledClinicalEntities.map((clinicalEntity) =>
-        convertClinicalSubmissionEntityToGql(clinicalEntity.clinicalType, clinicalEntity),
+      return filledClinicalEntities.map(clinicalEntity =>
+        convertClinicalSubmissionEntityToGql(clinicalEntity?.clinicalType.name, clinicalEntity),
       );
-    },*!/
+    },
     fileErrors: fileErrors?.map(convertClinicalFileErrorToGql),
-  };
-};*/
-
-const convertClinicalSubmissionDataToGql = (
-  programShortName: string,
-  data: {
-    /*submission: {
-      _id: string;
-      state: string;
-      version: string;
-      updatedBy: string;
-      updatedAt: string;
-      clinicalEntities: { [k: string]: SubmissionEntity };
-    };*/
-    submission: DeepReadonly<ActiveClinicalSubmission> | undefined;
-    batchErrors?: { message: string; batchNames: string[]; code: string }[];
-  },
-) => {
-  const submission = get(data, 'submission', {} as Partial<typeof data.submission>);
-  // const fileErrors = get(data, 'batchErrors', [] as typeof data.batchErrors);
-  const fileErrors = get(data, 'batchErrors', [] as typeof data.batchErrors);
-  /*const clinicalEntities = get(
-    submission,
-    'clinicalEntities',
-    {} as typeof data.submission.clinicalEntities,
-  );*/
-  const clinicalEntities = get(submission, 'clinicalEntities');
-  return {
-    id: 'x',
-    programShortName: 'c',
-    state: 'INVALID_BY_MIGRATION',
-    version: 's',
   };
 };
 

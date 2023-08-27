@@ -18,7 +18,10 @@
  */
 
 import get from 'lodash/get';
-import { ActiveRegistration } from '../submission/submission-entities';
+import {
+  SubmissionValidationError,
+  SubmissionValidationUpdate,
+} from '../submission/submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 
 const ARRAY_DELIMITER_CHAR = '|';
@@ -114,17 +117,24 @@ type ErrorData = {
 
 // Clinical Submission
 
-type SubmissionEntity = {
-  batchName: string;
-  creator: string;
-  records: EntityDataRecord[];
-  stats: unknown;
-  dataUpdates: UpdateData[];
-  schemaErrors: ErrorData[];
-  dataErrors: ErrorData[];
-  dataWarnings: ErrorData[];
-  createdAt: string | number;
-};
+export interface SubmissionEntity {
+  batchName?: string | undefined;
+  creator?: string | undefined;
+  records?: ReadonlyArray<Readonly<{ [key: string]: string }>> | undefined;
+  createdAt?: DeepReadonly<Date> | undefined;
+  schemaErrors?: DeepReadonly<SubmissionValidationError[]> | undefined;
+  dataErrors?: DeepReadonly<SubmissionValidationError[]> | undefined;
+  dataWarnings?: DeepReadonly<SubmissionValidationError[]> | undefined;
+  dataUpdates?: DeepReadonly<SubmissionValidationUpdate[]> | undefined;
+  stats?:
+    | DeepReadonly<{
+        new: number[];
+        noUpdate: number[];
+        updated: number[];
+        errorsFound: number[];
+      }>
+    | undefined;
+}
 
 const convertClinicalSubmissionEntityToGql = (clinicalType: string, entity: SubmissionEntity) => {
   return {
@@ -132,7 +142,7 @@ const convertClinicalSubmissionEntityToGql = (clinicalType: string, entity: Subm
     batchName: entity.batchName || undefined,
     creator: entity.creator || undefined,
     records: () =>
-      get(entity, 'records', [] as typeof entity.records).map((record, index) =>
+      get(entity, 'records', [] as typeof entity.records)?.map((record, index) =>
         convertClinicalRecordToGql(index, record),
       ),
     stats: entity.stats || undefined,
@@ -143,18 +153,18 @@ const convertClinicalSubmissionEntityToGql = (clinicalType: string, entity: Subm
       );
     },
     dataErrors: () =>
-      get(entity, 'dataErrors', [] as typeof entity.dataErrors).map((error: ErrorData) =>
+      get(entity, 'dataErrors', [] as typeof entity.dataErrors)?.map((error: ErrorData) =>
         convertClinicalSubmissionDataErrorToGql(error),
       ),
     dataWarnings: () =>
-      get(entity, 'dataWarnings', [] as typeof entity.dataWarnings).map((warning: ErrorData) =>
+      get(entity, 'dataWarnings', [] as typeof entity.dataWarnings)?.map((warning: ErrorData) =>
         convertClinicalSubmissionDataErrorToGql(warning),
       ),
     dataUpdates: () =>
-      get(entity, 'dataUpdates', [] as typeof entity.dataUpdates).map(update =>
+      get(entity, 'dataUpdates', [] as typeof entity.dataUpdates)?.map(update =>
         convertClinicalSubmissionUpdateToGql(update),
       ),
-    createdAt: entity.createdAt ? new Date(entity.createdAt) : undefined,
+    createdAt: entity.createdAt ? entity.createdAt : undefined,
   };
 };
 
