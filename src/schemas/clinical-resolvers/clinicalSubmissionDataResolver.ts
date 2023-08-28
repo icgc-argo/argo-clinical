@@ -17,25 +17,21 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import submissionAPI from '../submission/submission-api';
+import submissionAPI from '../../submission/submission-api';
 import get from 'lodash/get';
-import { ActiveClinicalSubmission } from '../submission/submission-entities';
+import { ActiveClinicalSubmission } from '../../submission/submission-entities';
 import { DeepReadonly } from 'deep-freeze';
-import { convertClinicalFileErrorToGql, convertClinicalSubmissionEntityToGql } from './utils';
-import { getClinicalEntitiesData } from '../dictionary/api';
+import { convertClinicalFileErrorToGql, convertClinicalSubmissionEntityToGql } from '../utils';
+import { getClinicalEntitiesData } from '../../dictionary/api';
 
 const clinicalSubmissionResolver = {
-  Query: {
-    clinicalSubmissions: async (obj: unknown, args: { programShortName: string }) => {
-      const { programShortName } = args;
+  clinicalSubmissions: async (obj: unknown, args: { programShortName: string }) => {
+    const { programShortName } = args;
 
-      const submissionData = await submissionAPI.getActiveSubmissionDataByProgramId(
-        programShortName,
-      );
-      return convertClinicalSubmissionDataToGql(programShortName, {
-        submission: submissionData,
-      });
-    },
+    const submissionData = await submissionAPI.getActiveSubmissionDataByProgramId(programShortName);
+    return convertClinicalSubmissionDataToGql(programShortName, {
+      submission: submissionData,
+    });
   },
 };
 

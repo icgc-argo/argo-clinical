@@ -1,9 +1,13 @@
-import clinicalRegistrationResolver from './clinicalRegistrationDataResolver';
-import clinicalSubmissionResolver from './clinicalSubmissionDataResolver';
+import clinicalRegistrationResolver from './clinical-resolvers/clinicalRegistrationData';
+import clinicalSearchResultResolver from './clinical-resolvers/clinicalSearchResults';
+import clinicalSubmissionResolver from './clinical-resolvers/clinicalSubmissionDataResolver';
 
 const resolvers = {
-  ...clinicalRegistrationResolver,
-  ...clinicalSubmissionResolver,
+  Query: {
+    ...clinicalRegistrationResolver,
+    ...clinicalSearchResultResolver,
+    ...clinicalSubmissionResolver,
+  },
 };
 
 export default resolvers;
