@@ -16,26 +16,24 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-import submissionAPI from '../submission/submission-api';
+import submissionAPI from '../../submission/submission-api';
 import {
   convertClinicalRecordToGql,
   convertRegistrationErrorToGql,
   convertClinicalFileErrorToGql,
   convertRegistrationStatsToGql,
   RegistrationErrorData,
-} from './utils';
+} from '../utils';
 import { DeepReadonly } from 'deep-freeze';
-import { ActiveRegistration } from '../submission/submission-entities';
+import { ActiveRegistration } from '../../submission/submission-entities';
 import get from 'lodash/get';
 
 const clinicalRegistrationResolver = {
-  Query: {
-    clinicalRegistration: async (obj: unknown, args: { shortName: string }) => {
-      const registration = await submissionAPI.getRegistrationDataByProgramId(args.shortName);
-      return convertRegistrationDataToGql(args.shortName, {
-        registration: registration,
-      });
-    },
+  clinicalRegistration: async (obj: unknown, args: { shortName: string }) => {
+    const registration = await submissionAPI.getRegistrationDataByProgramId(args.shortName);
+    return convertRegistrationDataToGql(args.shortName, {
+      registration: registration,
+    });
   },
 };
 

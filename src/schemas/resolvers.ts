@@ -1,7 +1,11 @@
-import clinicalRegistrationResolver from './clinicalRegistrationDataResolver';
+import clinicalRegistrationResolver from './clinical-resolvers/clinicalRegistrationData';
+import clinicalSearchResultResolver from './clinical-resolvers/clinicalSearchResults';
 
 const resolvers = {
-  ...clinicalRegistrationResolver,
+  Query: {
+    ...clinicalRegistrationResolver,
+    ...clinicalSearchResultResolver,
+  },
 };
 
 export default resolvers;
