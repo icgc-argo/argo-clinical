@@ -14,7 +14,7 @@ export const errorResolver = async (
       const donor = displayRecord.find(({ name }) => name === 'donor_id');
       if (donor && donor.value) {
         const donorId = parseInt(donor.value);
-        if (donorId !== NaN) parentDonorIds.push(donorId);
+        parentDonorIds.push(donorId);
       }
     }),
   );
