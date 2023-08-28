@@ -10,8 +10,12 @@ export const errorResolver = async (
 
   parent.clinicalEntities.forEach(entity =>
     entity.records.forEach(displayRecord => {
-      const { donor_id } = displayRecord;
-      if (typeof donor_id === 'number') parentDonorIds.push(donor_id);
+      console.log(displayRecord);
+      const donor = displayRecord.find(({ name }) => name === 'donor_id');
+      if (donor && donor.value) {
+        const donorId = parseInt(donor.value);
+        if (donorId !== NaN) parentDonorIds.push(donorId);
+      }
     }),
   );
 
