@@ -170,9 +170,7 @@ let server: Server;
       app.get('env'),
     );
     console.debug(`Swagger Docs available at http://localhost:${app.get('port')}/api-docs`);
-    console.debug(
-      `Graphql Server  available at http://localhost:${app.get('graphqlPort')}/graphql`,
-    );
+    console.debug(`Graphql Server available at http://localhost:${app.get('graphqlPort')}/graphql`);
     console.log('  Press CTRL-C to stop\n');
     console.timeEnd('boot time');
   });

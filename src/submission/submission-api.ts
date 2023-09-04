@@ -125,6 +125,11 @@ class SubmissionController {
     return res.status(200).send(activeSubmission);
   }
 
+  async getActiveSubmissionDataByProgramId(programId: string) {
+    const activeSubmission = await submission.operations.findSubmissionByProgramId(programId);
+    return activeSubmission;
+  }
+
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async uploadClinicalTsvFiles(req: Request, res: Response) {
     if ((await submissionSystemIsDisabled(res)) || !isValidCreateBody(req, res)) {
