@@ -40,6 +40,9 @@ const typeDefs = gql`
     Retrieve DonorIds + Submitter Donor Ids for given Clinical Entity and Program
     """
     clinicalSearchResults(programShortName: String!, filters: ClinicalInput!): ClinicalSearchData!
+    Retrieve current stored Clinical Submission data for a program
+    """
+    clinicalSubmissions(programShortName: String!): ClinicalSubmissionData!
   }
 
   scalar DateTime
@@ -233,6 +236,78 @@ const typeDefs = gql`
   type ClinicalRegistrationStatValue {
     name: String!
     rows: [Int]!
+  }
+
+  """
+  Clinical Submission Data
+  """
+  type ClinicalSubmissionData {
+    id: ID
+    programShortName: ID
+    state: SubmissionState
+    version: String
+    updatedBy: String
+    updatedAt: DateTime
+    clinicalEntities: [ClinicalSubmissionEntity]!
+    fileErrors: [ClinicalFileError]
+  }
+
+  enum SubmissionState {
+    OPEN
+    VALID
+    INVALID
+    PENDING_APPROVAL
+    INVALID_BY_MIGRATION
+  }
+
+  type ClinicalSubmissionEntity {
+    clinicalType: String!
+    batchName: String
+    creator: String
+    records: [ClinicalRecord]!
+    stats: ClinicalSubmissionStats
+    dataErrors: [ClinicalSubmissionDataError]!
+    schemaErrors: [ClinicalSubmissionSchemaError]!
+    dataUpdates: [ClinicalSubmissionUpdate]!
+    dataWarnings: [ClinicalSubmissionSchemaError]!
+    createdAt: DateTime
+  }
+
+  """
+  Each field is an array of row index referenced in ClinicalSubmissionRecord
+  """
+  type ClinicalSubmissionStats {
+    noUpdate: [Int]!
+    new: [Int]!
+    updated: [Int]!
+    errorsFound: [Int]!
+  }
+
+  type ClinicalSubmissionDataError implements ClinicalEntityError {
+    type: String!
+    message: String!
+    row: Int!
+    field: String!
+    value: String!
+    donorId: String!
+  }
+
+  type ClinicalSubmissionSchemaError implements ClinicalEntityError {
+    type: String!
+    message: String!
+    row: Int!
+    field: String!
+    value: String!
+    donorId: String!
+    clinicalType: String!
+  }
+
+  type ClinicalSubmissionUpdate {
+    row: Int!
+    field: String!
+    newValue: String!
+    oldValue: String!
+    donorId: String!
   }
 `;
 

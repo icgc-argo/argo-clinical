@@ -100,6 +100,18 @@ class SchemaManager {
     return currentDictionary.schemas.map(s => s.name);
   };
 
+  getSchemaNamesAndFields = async (): Promise<SchemaWithFields[]> => {
+    const currentDictionary = await this.getCurrent();
+    return currentDictionary.schemas.map(s => {
+      return {
+        name: s.name,
+        fields: _(s.fields)
+          .map(f => f.name)
+          .value(),
+      };
+    });
+  };
+
   getSchemaFieldNamesWithPriority = async (
     schemaName: string,
     schemasDictionary?: dictionaryEntities.SchemasDictionary,

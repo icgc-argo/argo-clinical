@@ -6,6 +6,7 @@ import clinicalDataResolver, {
 import clinicalErrorsResolver from './clinical-resolvers/clinicalErrors';
 import clinicalRegistrationResolver from './clinical-resolvers/clinicalRegistrationData';
 import clinicalSearchResultResolver from './clinical-resolvers/clinicalSearchResults';
+import clinicalSubmissionResolver from './clinical-resolvers/clinicalSubmissionDataResolver';
 
 const resolvers: GraphQLResolverMap<unknown> = {
   Query: {
@@ -13,6 +14,7 @@ const resolvers: GraphQLResolverMap<unknown> = {
     ...clinicalErrorsResolver,
     ...clinicalRegistrationResolver,
     ...clinicalSearchResultResolver,
+    ...clinicalSubmissionResolver,
   },
   ...nestedClinicalErrorResolver,
 };
