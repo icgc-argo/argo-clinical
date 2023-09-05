@@ -10,7 +10,6 @@ export const errorResolver = async (
 
   parent.clinicalEntities.forEach(entity =>
     entity.records.forEach(displayRecord => {
-      console.log(displayRecord);
       const donor = displayRecord.find(({ name }) => name === 'donor_id');
       if (donor && donor.value) {
         const donorId = parseInt(donor.value);
@@ -21,7 +20,7 @@ export const errorResolver = async (
 
   const donorIds = args?.donorIds?.length ? args.donorIds : parentDonorIds;
 
-  const { clinicalErrors } = await getClinicalErrors(programId, donorIds);
+  const clinicalErrors = await getClinicalErrors(programId, donorIds);
 
   return clinicalErrors;
 };

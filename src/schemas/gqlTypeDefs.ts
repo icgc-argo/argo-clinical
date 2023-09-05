@@ -69,7 +69,7 @@ const typeDefs = gql`
     programShortName: String!
     clinicalEntities: [ClinicalDataEntities]!
     completionStats: [CompletionStats]
-    clinicalErrors: [ClinicalErrors]
+    clinicalErrors: [ClinicalErrors]!
   }
 
   """

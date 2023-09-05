@@ -241,10 +241,9 @@ class ClinicalController {
       );
     }
 
-    const clinicalErrors = await service.getClinicalErrors(
-      programId,
-      bodyParseResult.data.donorIds || [],
-    );
+    const queryIds = bodyParseResult.data.donorIds || [];
+
+    const clinicalErrors = await service.getClinicalErrors(programId, queryIds);
 
     res.status(200).json(clinicalErrors);
   }
