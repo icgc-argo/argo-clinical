@@ -40,6 +40,8 @@ const typeDefs = gql`
     Retrieve DonorIds + Submitter Donor Ids for given Clinical Entity and Program
     """
     clinicalSearchResults(programShortName: String!, filters: ClinicalInput!): ClinicalSearchData!
+
+    """
     Retrieve current stored Clinical Submission data for a program
     """
     clinicalSubmissions(programShortName: String!): ClinicalSubmissionData!
