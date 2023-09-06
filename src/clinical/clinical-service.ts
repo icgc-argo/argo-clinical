@@ -394,12 +394,9 @@ export const getValidRecordsPostSubmission = async (
       !validDonorIds.includes(donorId) && filterDuplicates(donorId, index, array),
   );
 
-  if (!invalidDonorIds.length) {
-    const end = new Date().getTime() / 1000;
-    L.debug(`getDonorSubmissionErrorUpdates took ${end - start}s`);
+  let clinicalErrors: ClinicalErrorsResponseRecord[] = [];
 
-    return { clinicalErrors: [] };
-  } else {
+  if (invalidDonorIds.length > 0) {
     const migrationVersion =
       lastMigration?.toVersion || (await dictionaryManager.instance().getCurrentVersion());
 
@@ -413,7 +410,7 @@ export const getValidRecordsPostSubmission = async (
       donor => !!donor.donorId && invalidDonorIds.includes(donor.donorId),
     ) as DeepReadonly<DonorWithId>[];
 
-    const clinicalErrors = await Promise.all(
+    const clinicalErrorRecords = await Promise.all(
       invalidDonorRecords.map(async currentDonor => {
         const { donorId, submitterId: submitterDonorId } = currentDonor;
 
@@ -458,9 +455,11 @@ export const getValidRecordsPostSubmission = async (
       }),
     ).then(results => results[0]);
 
-    const end = new Date().getTime() / 1000;
-    L.debug(`getDonorSubmissionErrorUpdates took ${end - start}s`);
-
-    return { clinicalErrors };
+    clinicalErrors = clinicalErrorRecords;
   }
+
+  const end = new Date().getTime() / 1000;
+  L.debug(`getDonorSubmissionErrorUpdates took ${end - start}s`);
+
+  return { clinicalErrors };
 };
