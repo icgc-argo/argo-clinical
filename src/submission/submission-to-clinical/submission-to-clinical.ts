@@ -143,10 +143,10 @@ const performCommitSubmission = async (
   const verifiedDonorDTOs: Donor[] = [];
   // check donor if was invalid against current dictionary
   const currentDictionary = await dictionaryManager.instance().getCurrent();
-  updatedDonorDTOs.forEach(ud => {
+  updatedDonorDTOs.forEach(async ud => {
     if (ud.schemaMetadata.isValid === false) {
       L.debug('Donor is invalid, revalidating if valid now');
-      const isValid = dictionaryManager.revalidateAllDonorClinicalEntitiesAgainstSchema(
+      const isValid = await dictionaryManager.revalidateAllDonorClinicalEntitiesAgainstSchema(
         ud,
         currentDictionary,
       );

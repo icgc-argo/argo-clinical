@@ -294,17 +294,21 @@ class SchemaManager {
   };
 }
 
-export const revalidateAllDonorClinicalEntitiesAgainstSchema = (
+export const revalidateAllDonorClinicalEntitiesAgainstSchema = async (
   donor: DeepReadonly<Donor>,
   schema: dictionaryEntities.SchemasDictionary,
 ) => {
   const clinicalSchemaNames = getSchemaNamesForDonorClinicalEntities(donor);
   let isValid = true;
-  clinicalSchemaNames.forEach((schemaName: ClinicalEntitySchemaNames) => {
+  clinicalSchemaNames.forEach(async (schemaName: ClinicalEntitySchemaNames) => {
     if (!isValid) {
       return;
     }
-    const errs = MigrationManager.validateDonorEntityAgainstNewSchema(schemaName, schema, donor);
+    const errs = await MigrationManager.validateDonorEntityAgainstNewSchema(
+      schemaName,
+      schema,
+      donor,
+    );
     isValid = !errs || errs.length == 0;
   });
   return isValid;

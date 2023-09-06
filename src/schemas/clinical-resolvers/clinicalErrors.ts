@@ -1,8 +1,8 @@
 import { getClinicalErrors } from '../../clinical/clinical-service';
-import { ClinicalEntityDataResponse } from './clinicalData';
+import { ClinicalEntityGQLData } from './clinicalData';
 
 export const errorResolver = async (
-  parent: ClinicalEntityDataResponse,
+  parent: ClinicalEntityGQLData,
   args: { programShortName: string; donorIds: number[] },
 ) => {
   const programId = args.programShortName || parent.programShortName;

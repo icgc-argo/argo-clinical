@@ -3,10 +3,13 @@ import { ClinicalEntityData, ClinicalInfo } from '../../clinical/clinical-entiti
 import { ClinicalErrorsResponseRecord } from '../../common-model/entities';
 import { errorResolver } from './clinicalErrors';
 
-// FE Query Response Payload
-export type ClinicalEntityDataResponse = {
+export type ClinicalEntityGQLData = {
   programShortName: string;
   clinicalEntities: ClinicalEntityDisplayData[];
+};
+
+// FE Clinical Data Query Response Payload
+export type ClinicalEntityDataResponse = ClinicalEntityGQLData & {
   clinicalErrors?: ClinicalErrorsResponseRecord[];
 };
 
@@ -58,15 +61,19 @@ const clinicalDataResolver = {
 
     const { clinicalEntities } = await getPaginatedClinicalData(programShortName, filters);
 
-    const formattedEntityData = convertClinicalDataToGql(programShortName, clinicalEntities);
+    const clinicalEntityData = convertClinicalDataToGql(programShortName, clinicalEntities);
 
-    return formattedEntityData;
-  },
-};
+    const { clinicalErrors } = await errorResolver(clinicalEntityData, {
+      programShortName,
+      donorIds: [],
+    });
 
-export const nestedClinicalErrorResolver = {
-  ClinicalData: {
-    clinicalErrors: errorResolver,
+    const clinicalData: ClinicalEntityDataResponse = {
+      ...clinicalEntityData,
+      clinicalErrors,
+    };
+
+    return clinicalData;
   },
 };
 
