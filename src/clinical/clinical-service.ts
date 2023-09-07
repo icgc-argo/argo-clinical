@@ -342,7 +342,7 @@ export const getClinicalEntityMigrationErrors = async (
   return { migration, clinicalMigrationErrors };
 };
 
-type DonorWithId = Donor & Required<Pick<DeepReadonly<Donor>, 'donorId'>>;
+type DonorWithId = Donor & { donorId: number };
 
 /**
  * Given a list of Program Migration Errors, this function finds related Donors,
