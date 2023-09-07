@@ -300,7 +300,7 @@ export const revalidateAllDonorClinicalEntitiesAgainstSchema = async (
 ) => {
   const clinicalSchemaNames = getSchemaNamesForDonorClinicalEntities(donor);
   let isValid = true;
-  clinicalSchemaNames.forEach(async (schemaName: ClinicalEntitySchemaNames) => {
+  for (const schemaName of clinicalSchemaNames) {
     if (!isValid) {
       return;
     }
@@ -309,8 +309,8 @@ export const revalidateAllDonorClinicalEntitiesAgainstSchema = async (
       schema,
       donor,
     );
-    isValid = !errs || errs.length == 0;
-  });
+    isValid = isValid && (!errs || errs.length == 0);
+  }
   return isValid;
 };
 
