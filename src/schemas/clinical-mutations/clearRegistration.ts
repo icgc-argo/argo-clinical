@@ -28,7 +28,7 @@ const clearClinicalRegistrationMutation = {
     },
   ) => {
     const { shortName, registrationId } = args;
-    const response = await operations.deleteRegistration(shortName, registrationId);
+    const response = await operations.deleteRegistration(registrationId, shortName);
     return true;
   },
 };
