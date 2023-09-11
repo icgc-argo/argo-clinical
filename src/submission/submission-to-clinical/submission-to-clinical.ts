@@ -179,7 +179,7 @@ const performCommitSubmission = async (
  *
  * @param command CommitRegistrationCommand the id of the registration to close.
  */
-export const commitRegisteration = async (command: Readonly<CommitRegistrationCommand>) => {
+export const commitRegistration = async (command: Readonly<CommitRegistrationCommand>) => {
   const registration = await registrationRepository.findById(command.registrationId);
 
   if (registration === undefined || registration.programId !== command.programId) {

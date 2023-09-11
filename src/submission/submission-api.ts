@@ -97,7 +97,7 @@ class SubmissionController {
   async commitRegistration(req: Request, res: Response) {
     if (await submissionSystemIsDisabled(res)) return;
     const programId = req.params.programId;
-    const newSamples: string[] = await submission2Clinical.commitRegisteration({
+    const newSamples: string[] = await submission2Clinical.commitRegistration({
       registrationId: req.params.id,
       programId,
     });

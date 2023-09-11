@@ -191,7 +191,7 @@ describe('submission-to-clinical', () => {
 
       registrationRepoFindByIdStub.withArgs(id1).returns(Promise.resolve(reg1));
       findByProgramAndSubmitterIdStub.withArgs(sinon.match([filter])).returns(Promise.resolve([]));
-      const result = await s2c.commitRegisteration({
+      const result = await s2c.commitRegistration({
         programId: reg1.programId,
         registrationId: reg1._id as string,
       });
@@ -282,7 +282,7 @@ describe('submission-to-clinical', () => {
       findByProgramAndSubmitterIdStub
         .withArgs(sinon.match([filter]))
         .returns(Promise.resolve([existingDonor]));
-      const result = await s2c.commitRegisteration({
+      const result = await s2c.commitRegistration({
         programId: reg2.programId,
         registrationId: reg2._id as string,
       });
