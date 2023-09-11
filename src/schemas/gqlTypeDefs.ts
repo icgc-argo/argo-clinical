@@ -22,19 +22,32 @@ import gql from 'graphql-tag';
 const typeDefs = gql`
   type Query {
     """
-    Retrieve DonorIds + Submitter Donor Ids for given Clinical Entity and Program
-    """
-    clinicalSearchResults(programShortName: String!, filters: ClinicalInput!): ClinicalSearchData!
-
-    """
     Retrieve current stored Clinical Registration data for a program
     """
     clinicalRegistration(shortName: String!): ClinicalRegistrationData!
 
     """
+    Retrieve DonorIds + Submitter Donor Ids for given Clinical Entity and Program
+    """
+    clinicalSearchResults(programShortName: String!, filters: ClinicalInput!): ClinicalSearchData!
+
+    """
     Retrieve current stored Clinical Submission data for a program
     """
     clinicalSubmissions(programShortName: String!): ClinicalSubmissionData!
+  }
+
+  type Mutation {
+    """
+    Remove the Clinical Registration data currently uploaded and not committed
+    """
+    clearClinicalRegistration(shortName: String!, registrationId: String!): Boolean!
+
+    """
+    Complete registration of the currently uploaded Clinical Registration data
+    On Success, returns a list of the new sample IDs that were committed
+    """
+    commitClinicalRegistration(shortName: String!, registrationId: String!): [String]!
   }
 
   scalar DateTime

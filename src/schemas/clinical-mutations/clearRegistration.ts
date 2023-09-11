@@ -19,16 +19,18 @@
 
 import { operations } from '../../submission/submission-service';
 
-const clearClinicalRegistration = async (
-  obj: unknown,
-  args: {
-    shortName: string;
-    registrationId: string;
+const clearClinicalRegistrationMutation = {
+  clearClinicalRegistration: async (
+    obj: unknown,
+    args: {
+      shortName: string;
+      registrationId: string;
+    },
+  ) => {
+    const { shortName, registrationId } = args;
+    const response = await operations.deleteRegistration(shortName, registrationId);
+    return true;
   },
-) => {
-  const { shortName, registrationId } = args;
-  const response = await operations.deleteRegistration(shortName, registrationId);
-  return true;
 };
 
-export default clearClinicalRegistration;
+export default clearClinicalRegistrationMutation;

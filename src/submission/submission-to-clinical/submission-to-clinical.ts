@@ -214,8 +214,7 @@ export const commitRegistration = async (command: Readonly<CommitRegistrationCom
   registrationRepository.delete(command.registrationId);
   sendMessageOnUpdatesFromRegistration(registration);
   return (
-    (registration.stats &&
-      registration.stats.newSampleIds &&
+    (registration?.stats?.newSampleIds &&
       registration.stats.newSampleIds.map(s => s.submitterId)) ||
     []
   );

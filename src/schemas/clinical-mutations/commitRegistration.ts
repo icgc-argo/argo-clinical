@@ -18,20 +18,21 @@
  */
 
 import { commitRegistration } from '../../submission/submission-to-clinical/submission-to-clinical';
-import { get } from 'lodash';
 
-const commitClinicalRegistration = async (
-  obj: unknown,
-  args: { shortName: string; registrationId: string },
-) => {
-  const { shortName: programId, registrationId } = args;
+const commitClinicalRegistrationMutation = {
+  commitClinicalRegistration: async (
+    obj: unknown,
+    args: { shortName: string; registrationId: string },
+  ) => {
+    const { shortName: programId, registrationId } = args;
 
-  const response = await commitRegistration({
-    registrationId,
-    programId,
-  });
+    const newSampleIds = await commitRegistration({
+      registrationId,
+      programId,
+    });
 
-  return get(response, 'newSamples', []);
+    return newSampleIds;
+  },
 };
 
-export default commitClinicalRegistration;
+export default commitClinicalRegistrationMutation;
