@@ -227,8 +227,10 @@ class SubmissionController {
     versionId: string,
     token: string,
   ) {
+    // res: Response = undefined;
+    // if (await submissionSystemIsDisabled(res)) return;
     const updater = ControllerUtils.getUserFromToken(token);
-    L.debug(`Entering clearFileFromActiveSubmission: ${{ programId, versionId, fileType }}`);
+    L.debug(`Entering clearFileDataFromActiveSubmission: ${{ programId, versionId, fileType }}`);
     const updatedSubmission = await submission.operations.clearSubmissionData({
       programId,
       versionId,
