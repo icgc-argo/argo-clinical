@@ -21,7 +21,7 @@ import submissionAPI from '../../submission/submission-api';
 import get from 'lodash/get';
 import { ActiveClinicalSubmission } from '../../submission/submission-entities';
 import { DeepReadonly } from 'deep-freeze';
-import { convertClinicalFileErrorToGql, convertClinicalSubmissionEntityToGql } from '../utils';
+import { convertClinicalSubmissionDataToGql } from '../utils';
 import { getClinicalEntitiesData } from '../../dictionary/api';
 
 const clinicalSubmissionResolver = {
@@ -35,7 +35,7 @@ const clinicalSubmissionResolver = {
   },
 };
 
-const convertClinicalSubmissionDataToGql = (
+/*const convertClinicalSubmissionDataToGql = (
   programShortName: string,
   data: {
     submission: DeepReadonly<ActiveClinicalSubmission> | undefined;
@@ -64,6 +64,6 @@ const convertClinicalSubmissionDataToGql = (
     },
     fileErrors: fileErrors?.map(convertClinicalFileErrorToGql),
   };
-};
+};*/
 
 export default clinicalSubmissionResolver;

@@ -35,6 +35,7 @@ import { HasFullWriteAccess, HasProgramWriteAccess } from '../decorators';
 import _ from 'lodash';
 import { batchErrorMessage } from './submission-error-messages';
 import * as fs from 'fs';
+import { GlobalGqlContext } from '../app';
 
 const L = loggerFor(__filename);
 const fsPromises = fs.promises;
@@ -62,7 +63,7 @@ class SubmissionController {
       return;
     }
     const programId = req.params.programId;
-    const creator = ControllerUtils.getUserFromToken(req);
+    const creator = ControllerUtils.getUserFromRequest(req);
     const file = req.file;
     let records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj>;
     try {
@@ -136,7 +137,7 @@ class SubmissionController {
       return;
     }
 
-    const user = ControllerUtils.getUserFromToken(req);
+    const user = ControllerUtils.getUserFromRequest(req);
     const newClinicalData: NewClinicalEntity[] = [];
     const tsvParseErrors: SubmissionBatchError[] = [];
     const clinicalFiles = req.files as Express.Multer.File[];
@@ -191,7 +192,7 @@ class SubmissionController {
   async validateActiveSubmission(req: Request, res: Response) {
     if (await submissionSystemIsDisabled(res)) return;
     const { versionId, programId } = req.params;
-    const updater = ControllerUtils.getUserFromToken(req);
+    const updater = ControllerUtils.getUserFromRequest(req);
     const result = await submission.operations.validateMultipleClinical({
       versionId,
       programId,
@@ -207,7 +208,7 @@ class SubmissionController {
   async clearFileFromActiveSubmission(req: Request, res: Response) {
     if (await submissionSystemIsDisabled(res)) return;
     const { programId, versionId, fileType } = req.params;
-    const updater = ControllerUtils.getUserFromToken(req);
+    const updater = ControllerUtils.getUserFromRequest(req);
     L.debug(`Entering clearFileFromActiveSubmission: ${{ programId, versionId, fileType }}`);
     const updatedSubmission = await submission.operations.clearSubmissionData({
       programId,
@@ -219,11 +220,30 @@ class SubmissionController {
     return res.status(200).send(updatedSubmission || {});
   }
 
+  // @HasProgramWriteAccess((programId: string) => programId)
+  async clearFileDataFromActiveSubmission(
+    programId: string,
+    fileType: string,
+    versionId: string,
+    token: string,
+  ) {
+    const updater = ControllerUtils.getUserFromToken(token);
+    L.debug(`Entering clearFileFromActiveSubmission: ${{ programId, versionId, fileType }}`);
+    const updatedSubmission = await submission.operations.clearSubmissionData({
+      programId,
+      versionId,
+      fileType,
+      updater,
+    });
+    // Handle case where submission was cleared and is now undefined
+    return updatedSubmission;
+  }
+
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async commitActiveSubmission(req: Request, res: Response) {
     if (await submissionSystemIsDisabled(res)) return;
     const { versionId, programId } = req.params;
-    const updater = ControllerUtils.getUserFromToken(req);
+    const updater = ControllerUtils.getUserFromRequest(req);
     const activeSubmission = await submission2Clinical.commitClinicalSubmission({
       versionId,
       programId,
@@ -247,7 +267,7 @@ class SubmissionController {
   async reopenActiveSubmission(req: Request, res: Response) {
     if (await submissionSystemIsDisabled(res)) return;
     const { versionId, programId } = req.params;
-    const updater = ControllerUtils.getUserFromToken(req);
+    const updater = ControllerUtils.getUserFromRequest(req);
     const activeSubmission = await submission.operations.reopenClinicalSubmission({
       versionId,
       programId,
@@ -299,7 +319,7 @@ class SubmissionController {
     const samplesSubmitterIds =
       req.query.sampleSubmitterIds && req.query.sampleSubmitterIds.split(',');
     const dryRun = req.query.dryRun === 'false' ? false : true;
-    const updater = ControllerUtils.getUserFromToken(req);
+    const updater = ControllerUtils.getUserFromRequest(req);
     L.info(
       `Delete registered samples called, caller ${updater}, ids: ${samplesSubmitterIds}, programId: ${programId}`,
     );

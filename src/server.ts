@@ -34,8 +34,6 @@ import { database, up } from 'migrate-mongo';
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
 import schema from './schemas/index';
-import { EgoJwtData } from '@icgc-argo/ego-token-utils/dist/common';
-import jwt from 'jsonwebtoken';
 
 let secrets: any = {};
 let server: Server;
@@ -155,70 +153,10 @@ let server: Server;
   /**
    * Start Graphql server.
    */
-
-  type GlobalGqlContext = {
-    isUserRequest: boolean;
-    egoToken: string;
-    Authorization: string;
-    userJwtData: EgoJwtData | undefined;
-    dataLoaders: {};
-  };
-
-  /*  const decodeToken = (egoPublicKey: string) => (egoJwt: string): EgoJwtData => {
-    const decoded = jwt.verify(egoJwt, egoPublicKey, { algorithms: ['RS256'] });
-    if (typeof decoded == 'string' || decoded === null) {
-      throw Error('Unexpected JWT Format');
-    } else {
-      return <EgoJwtData>decoded;
-    }
-  };*/
-
-  const decodeToken = (egoJwt: string, egoPublicKey: string): EgoJwtData => {
-    const decoded = jwt.verify(egoJwt, egoPublicKey, { algorithms: ['RS256'] });
-    if (typeof decoded == 'string' || decoded === null) {
-      throw Error('Unexpected JWT Format');
-    } else {
-      return <EgoJwtData>decoded;
-    }
-  };
-
-  /*  const apolloServer = new ApolloServer({
-    schema,
-  });*/
-  /*  const { url } = await startStandaloneServer(apolloServer, {
-    listen: { port: app.get('graphqlPort') },
-  });*/
-
   const apolloServer = new ApolloServer({
     schema,
   });
-
   const { url } = await startStandaloneServer(apolloServer, {
-    context: async ({ req, res }) => {
-      // Get the user token from the headers.
-      const authHeader = req.headers.authorization;
-      let userJwtData: EgoJwtData | undefined = undefined;
-      try {
-        if (authHeader) {
-          const jwt = authHeader.replace('Bearer ', '');
-          userJwtData = decodeToken(
-            jwt,
-            'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0lOqMuPLCVusc6szklNXQL1FHhSkEgR7An+8BllBqTsRHM4bRYosseGFCbYPn8r8FsWuMDtxp0CwTyMQR2PCbJ740DdpbE1KC6jAfZxqcBete7gP0tooJtbvnA6X4vNpG4ukhtUoN9DzNOO0eqMU0Rgyy5HjERdYEWkwTNB30i9I+nHFOSj4MGLBSxNlnuo3keeomCRgtimCx+L/K3HNo0QHTG1J7RzLVAchfQT0lu3pUJ8kB+UM6/6NG+fVyysJyRZ9gadsr4gvHHckw8oUBp2tHvqBEkEdY+rt1Mf5jppt7JUV7HAPLB/qR5jhALY2FX/8MN+lPLmb/nLQQichVQIDAQAB',
-          );
-        }
-      } catch (err) {
-        userJwtData = undefined;
-      }
-
-      // Add the user to the context
-      return {
-        isUserRequest: true,
-        egoToken: (authHeader || '').split('Bearer ').join(''),
-        Authorization: `Bearer ${(authHeader || '').replace(/^Bearer[\s]*/, '')}` || '',
-        userJwtData,
-        dataLoaders: {},
-      };
-    },
     listen: { port: app.get('graphqlPort') },
   });
 

@@ -27,6 +27,7 @@ import * as swaggerUi from 'swagger-ui-express';
 import { getHealth, Status } from './app-health';
 import { loggerFor } from './logger';
 import * as middleware from './middleware';
+import { EgoJwtData } from '@icgc-argo/ego-token-utils/dist/common';
 
 import dataRouter from './routes/data';
 import registrationRouter from './routes/registration';
@@ -44,6 +45,15 @@ process.title = 'clinical';
 
 // Create Express server
 const app = express();
+
+export type GlobalGqlContext = {
+  isUserRequest: boolean;
+  egoToken: string;
+  Authorization: string;
+  userJwtData: EgoJwtData | undefined;
+  dataLoaders: {};
+};
+
 app.set('port', process.env.PORT || 3000);
 app.set('graphqlPort', process.env.GRAPHQLPORT || 3001);
 app.use(bodyParser.json());
