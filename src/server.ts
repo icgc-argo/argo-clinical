@@ -41,7 +41,6 @@ import {
 } from '@apollo/server/standalone';
 import schema from './schemas/index';
 import { EgoJwtData } from '@icgc-argo/ego-token-utils/dist/common';
-import jwt from 'jsonwebtoken';
 
 let secrets: any = {};
 let server: Server;
