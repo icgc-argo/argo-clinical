@@ -27,7 +27,6 @@ import * as swaggerUi from 'swagger-ui-express';
 import { getHealth, Status } from './app-health';
 import { loggerFor } from './logger';
 import * as middleware from './middleware';
-import { EgoJwtData } from '@icgc-argo/ego-token-utils/dist/common';
 
 import dataRouter from './routes/data';
 import registrationRouter from './routes/registration';
@@ -50,7 +49,6 @@ export type GlobalGqlContext = {
   isUserRequest: boolean;
   egoToken: string;
   Authorization: string;
-  userJwtData: EgoJwtData | undefined;
   dataLoaders: {};
 };
 

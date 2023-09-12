@@ -40,7 +40,7 @@ import {
   startStandaloneServer,
 } from '@apollo/server/standalone';
 import schema from './schemas/index';
-import { EgoJwtData } from '@icgc-argo/ego-token-utils/dist/common';
+// import { EgoJwtData } from '@icgc-argo/ego-token-utils/dist/common';
 
 let secrets: any = {};
 let server: Server;
@@ -167,7 +167,7 @@ let server: Server;
   > = async ({ req, res }) => {
     // Get the user token from the headers.
     const authHeader = req.headers.authorization;
-    let userJwtData: EgoJwtData | undefined = undefined;
+    let userJwtData = undefined;
     try {
       if (authHeader) {
         const jwt = authHeader.replace('Bearer ', '');
@@ -180,7 +180,6 @@ let server: Server;
       isUserRequest: true,
       egoToken: (authHeader || '').split('Bearer ').join(''),
       Authorization: `Bearer ${(authHeader || '').replace(/^Bearer[\s]*!/, '')}` || '',
-      userJwtData,
       dataLoaders: {},
     };
   };
