@@ -23,8 +23,8 @@ import clinicalSearchResultResolver from './clinical-resolvers/clinicalSearchRes
 import clinicalSubmissionResolver from './clinical-resolvers/clinicalSubmissionDataResolver';
 
 // Mutation
-import commitClinicalRegistration from './clinical-mutations/commitRegistration';
-import clearClinicalRegistration from './clinical-mutations/clearRegistration';
+import clearClinicalRegistrationMutation from './clinical-mutations/commitRegistration';
+import commitClinicalRegistrationMutation from './clinical-mutations/clearRegistration';
 
 const resolvers = {
   Query: {
@@ -33,8 +33,8 @@ const resolvers = {
     ...clinicalSubmissionResolver,
   },
   Mutation: {
-    ...commitClinicalRegistration,
-    ...clearClinicalRegistration,
+    ...clearClinicalRegistrationMutation,
+    ...commitClinicalRegistrationMutation,
   },
 };
 
