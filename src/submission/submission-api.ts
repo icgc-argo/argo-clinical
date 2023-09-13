@@ -267,6 +267,19 @@ class SubmissionController {
     return res.status(200).send(activeSubmission);
   }
 
+  // @HasProgramWriteAccess((req: Request) => req.params.programId)
+  async commitActiveSubmissionData(programId: string, versionId: string, token: string) {
+    const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
+    if (submissionSystemDisabled) return;
+    const updater = ControllerUtils.getUserFromToken(token);
+    const activeSubmission = await submission2Clinical.commitClinicalSubmission({
+      versionId,
+      programId,
+      updater,
+    });
+    return activeSubmission;
+  }
+
   @HasFullWriteAccess()
   async approveActiveSubmission(req: Request, res: Response) {
     if (await submissionSystemIsDisabled(res)) return;

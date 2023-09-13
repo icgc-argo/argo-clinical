@@ -55,6 +55,13 @@ const typeDefs = gql`
       programShortName: String!
       version: String!
     ): ClinicalSubmissionData!
+
+    """
+    - If there is update: makes a clinical submission ready for approval by a DCC member,
+    returning submission data with updated state
+    - If there is NO update: merges clinical data to system, returning an empty submission
+    """
+    commitClinicalSubmission(programShortName: String!, version: String!): ClinicalSubmissionData!
   }
 
   scalar DateTime

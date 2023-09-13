@@ -3,6 +3,7 @@ import clinicalSearchResultResolver from './clinical-resolvers/clinicalSearchRes
 import clinicalSubmissionResolver from './clinical-resolvers/clinicalSubmissionDataResolver';
 import clearClinicalSubmissionResolver from './clinical-resolvers/clearClinicalSubmissionResolver';
 import validateClinicalSubmissionResolver from './clinical-resolvers/validateClinicalSubmissionResolver';
+import commitClinicalSubmissionResolver from './clinical-resolvers/commitClinicalSubmission';
 
 const resolvers = {
   Query: {
@@ -13,6 +14,7 @@ const resolvers = {
   Mutation: {
     ...clearClinicalSubmissionResolver,
     ...validateClinicalSubmissionResolver,
+    ...commitClinicalSubmissionResolver,
   },
 };
 
