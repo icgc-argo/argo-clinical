@@ -204,6 +204,19 @@ class SubmissionController {
     return res.status(422).send(result);
   }
 
+  // @HasProgramWriteAccess((req: Request) => req.params.programId)
+  async validateActiveSubmissionData(programId: string, versionId: string, token: string) {
+    const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
+    if (submissionSystemDisabled) return;
+    const updater = ControllerUtils.getUserFromToken(token);
+    const validatedSubmission = await submission.operations.validateMultipleClinical({
+      versionId,
+      programId,
+      updater,
+    });
+    return validatedSubmission;
+  }
+
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async clearFileFromActiveSubmission(req: Request, res: Response) {
     if (await submissionSystemIsDisabled(res)) return;

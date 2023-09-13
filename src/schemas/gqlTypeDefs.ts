@@ -47,6 +47,14 @@ const typeDefs = gql`
       version: String!
       fileType: String
     ): ClinicalSubmissionData!
+
+    """
+    Validate the uploaded clinical files
+    """
+    validateClinicalSubmissions(
+      programShortName: String!
+      version: String!
+    ): ClinicalSubmissionData!
   }
 
   scalar DateTime
