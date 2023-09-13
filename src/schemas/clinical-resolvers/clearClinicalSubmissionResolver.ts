@@ -17,22 +17,27 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import { GlobalGqlContext } from '../../app';
 import submissionAPI from '../../submission/submission-api';
-import get from 'lodash/get';
-import { ActiveClinicalSubmission } from '../../submission/submission-entities';
-import { DeepReadonly } from 'deep-freeze';
 import { convertClinicalSubmissionDataToGql } from '../utils';
-import { getClinicalEntitiesData } from '../../dictionary/api';
 
-const clinicalSubmissionResolver = {
-  clinicalSubmissions: async (obj: unknown, args: { programShortName: string }) => {
-    const { programShortName } = args;
-
-    const submissionData = await submissionAPI.getActiveSubmissionDataByProgramId(programShortName);
+const clearClinicalSubmissionResolver = {
+  clearClinicalSubmission: async (
+    obj: unknown,
+    args: { programShortName: string; fileType: string; version: string },
+    contextValue: any,
+  ) => {
+    const { programShortName, fileType, version } = args;
+    const response = await submissionAPI.clearFileDataFromActiveSubmission(
+      programShortName,
+      fileType,
+      version,
+      (<GlobalGqlContext>contextValue).egoToken,
+    );
     return convertClinicalSubmissionDataToGql(programShortName, {
-      submission: submissionData,
+      submission: response,
     });
   },
 };
 
-export default clinicalSubmissionResolver;
+export default clearClinicalSubmissionResolver;

@@ -136,12 +136,21 @@ export namespace ControllerUtils {
   };
 
   // checks authHeader + decoded jwt and returns the user name
-  export const getUserFromToken = (req: Request): string => {
+  export const getUserFromRequest = (req: Request): string => {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
       throw new Error("can't get here without auth header");
     }
     const decoded = jwt.decode(authHeader.split(' ')[1]) as any;
+    if (!decoded || !decoded.context || !decoded.context.user) {
+      throw new Error('invalid token structure');
+    }
+    return decoded.context.user.firstName + ' ' + decoded.context.user.lastName;
+  };
+
+  // checks authHeader + decoded jwt and returns the user name
+  export const getUserFromToken = (token: string) => {
+    const decoded = jwt.decode(token) as any;
     if (!decoded || !decoded.context || !decoded.context.user) {
       throw new Error('invalid token structure');
     }

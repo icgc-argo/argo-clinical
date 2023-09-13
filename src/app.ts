@@ -44,6 +44,14 @@ process.title = 'clinical';
 
 // Create Express server
 const app = express();
+
+export type GlobalGqlContext = {
+  isUserRequest: boolean;
+  egoToken: string;
+  Authorization: string;
+  dataLoaders: {};
+};
+
 app.set('port', process.env.PORT || 3000);
 app.set('graphqlPort', process.env.GRAPHQLPORT || 3001);
 app.use(bodyParser.json());

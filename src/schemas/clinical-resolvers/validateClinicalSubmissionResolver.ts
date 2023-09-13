@@ -18,21 +18,25 @@
  */
 
 import submissionAPI from '../../submission/submission-api';
-import get from 'lodash/get';
-import { ActiveClinicalSubmission } from '../../submission/submission-entities';
-import { DeepReadonly } from 'deep-freeze';
+import { GlobalGqlContext } from '../../app';
 import { convertClinicalSubmissionDataToGql } from '../utils';
-import { getClinicalEntitiesData } from '../../dictionary/api';
 
-const clinicalSubmissionResolver = {
-  clinicalSubmissions: async (obj: unknown, args: { programShortName: string }) => {
-    const { programShortName } = args;
-
-    const submissionData = await submissionAPI.getActiveSubmissionDataByProgramId(programShortName);
+const validateClinicalSubmissionResolver = {
+  validateClinicalSubmissions: async (
+    obj: unknown,
+    args: { programShortName: string; version: string },
+    contextValue: any,
+  ) => {
+    const { programShortName, version } = args;
+    const response = await submissionAPI.validateActiveSubmissionData(
+      programShortName,
+      version,
+      (<GlobalGqlContext>contextValue).egoToken,
+    );
     return convertClinicalSubmissionDataToGql(programShortName, {
-      submission: submissionData,
+      submission: response?.submission,
     });
   },
 };
 
-export default clinicalSubmissionResolver;
+export default validateClinicalSubmissionResolver;
