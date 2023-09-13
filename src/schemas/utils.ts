@@ -17,18 +17,27 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import { DeepReadonly } from 'deep-freeze';
 import get from 'lodash/get';
 import {
   ActiveRegistration,
   SubmissionValidationError,
   SubmissionValidationUpdate,
 } from '../submission/submission-entities';
-import { DeepReadonly } from 'deep-freeze';
+import { EgoJwtData } from '@icgc-argo/ego-token-utils/dist/common';
 
 const ARRAY_DELIMITER_CHAR = '|';
 
 // Generic Record
 type EntityDataRecord = { [k: string]: any; donor_id?: number };
+
+export type GlobalGqlContext = {
+  isUserRequest: boolean;
+  egoToken: string;
+  Authorization: string;
+  userJwtData: EgoJwtData | null;
+  dataLoaders: {};
+};
 
 const convertClinicalRecordToGql = (index: number | string, record: EntityDataRecord) => {
   const fields = [];

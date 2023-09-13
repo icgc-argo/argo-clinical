@@ -17,53 +17,48 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// import { FileUpload } from 'graphql-upload';
-// import { convertRegistrationDataToGql } from '../utils';
+import { FileUpload } from 'graphql-upload';
+import { convertRegistrationDataToGql, GlobalGqlContext } from '../utils';
+import submissionAPI from '../../submission/submission-api';
 
-// const uploadRegistrationData = async (programShortName: string, filename: string, fileStream) => {
-//   const formData = new FormData();
+const uploadClinicalRegistration = {
+  uploadClinicalRegistration: async (
+    obj: unknown,
+    args: {
+      shortName: string;
+      registrationFile: FileUpload;
+    },
+    context: GlobalGqlContext,
+  ) => {
+    const { Authorization, egoToken } = context;
+    const { shortName, registrationFile } = args;
 
-//   // Need to buffer whole file from stream to ensure it all gets added to form data.
-//   const fileBuffer = await new Response(fileStream).buffer();
+    const permissions = egoTokenUtils.getPermissionsFromToken(egoToken);
+    // Here we are confirming that the user has at least some ability to write Program Data
+    // This is to reduce the opportunity for spamming the gateway with file uploads
+    if (!egoTokenUtils.canWriteSomeProgramData(permissions)) {
+      throw new AuthenticationError('User is not authorized to write data');
+    }
 
-//   // For FormData to send a buffer as a file, it requires a filename in the options.
-//   formData.append('registrationFile', fileBuffer, {
-//     filename,
-//   });
+    const { filename, createReadStream } = await registrationFile;
+    const fileStream = createReadStream();
 
-//   const url = `${CLINICAL_SERVICE_ROOT}/submission/program/${programShortName}/registration`;
-//   const response = await fetch(url, {
-//     method: 'post',
-//     headers: { Authorization },
-//     body: formData,
-//   })
-//     .then(restErrorResponseHandler)
-//     .then(response => response.json());
-//   return response;
-// };
+    const formData = new FormData();
 
-// const uploadClinicalRegistration = async (
-//   obj: unknown,
-//   args: {
-//     shortName: string;
-//     registrationFile: FileUpload;
-//   },
-//   context: GlobalGqlContext,
-// ) => {
-//   const { Authorization, egoToken } = context;
-//   const { shortName, registrationFile } = args;
-//   const permissions = egoTokenUtils.getPermissionsFromToken(egoToken);
-//   // Here we are confirming that the user has at least some ability to write Program Data
-//   // This is to reduce the opportunity for spamming the gateway with file uploads
-//   if (!egoTokenUtils.canWriteSomeProgramData(permissions)) {
-//     throw new AuthenticationError('User is not authorized to write data');
-//   }
+    // Need to buffer whole file from stream to ensure it all gets added to form data.
+    const fileBuffer = fileStream;
 
-//   const { filename, createReadStream } = await registrationFile;
-//   const fileStream = createReadStream();
+    // For FormData to send a buffer as a file, it requires a filename in the options.
+    formData.append('registrationFile', fileBuffer, filename);
 
-//   // try {
-//   const response = await uploadClinicalTsvFiles(shortName, filename, fileStream, Authorization);
+    // req: Request, res: Response
+    const response = await submissionAPI.uploadClinicalTsvFiles(
+      shortName,
+      filename,
+      fileStream,
+      Authorization,
+    );
 
-//   return convertRegistrationDataToGql(shortName, response);
-// };
+    // return convertRegistrationDataToGql(shortName, response);
+  },
+};
