@@ -100,6 +100,18 @@ class SchemaManager {
     return currentDictionary.schemas.map(s => s.name);
   };
 
+  getSchemaNamesAndFields = async (): Promise<SchemaWithFields[]> => {
+    const currentDictionary = await this.getCurrent();
+    return currentDictionary.schemas.map(s => {
+      return {
+        name: s.name,
+        fields: _(s.fields)
+          .map(f => f.name)
+          .value(),
+      };
+    });
+  };
+
   getSchemaFieldNamesWithPriority = async (
     schemaName: string,
     schemasDictionary?: dictionaryEntities.SchemasDictionary,
@@ -200,7 +212,7 @@ class SchemaManager {
       return newSchema;
     } catch (err) {
       L.error('Failed to fetch schema: ', err);
-      throw new Error('Failed to fetch schema: ' + err.message);
+      throw new Error('Failed to fetch schema: ' + (err as Error).message); // added 'as Error' due to Typescript version upgrade
     }
   };
 

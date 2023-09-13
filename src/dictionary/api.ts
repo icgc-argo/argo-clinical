@@ -88,9 +88,13 @@ export const getClinicalEntities = async (req: Request, res: Response) => {
       .status(200)
       .send(schemasWithFields.filter(s => s.name !== ClinicalEntitySchemaNames.REGISTRATION));
   }
-
   const schemas = await manager.instance().getSchemaNames();
   return res.status(200).send(schemas.filter(s => s !== ClinicalEntitySchemaNames.REGISTRATION));
+};
+
+export const getClinicalEntitiesData = async (includeFields: string) => {
+  const schemasWithFields = await manager.instance().getSchemasWithFields();
+  return schemasWithFields.filter(s => s.name !== ClinicalEntitySchemaNames.REGISTRATION);
 };
 
 export const getTemplate = async (req: Request, res: Response) => {

@@ -45,6 +45,7 @@ process.title = 'clinical';
 // Create Express server
 const app = express();
 app.set('port', process.env.PORT || 3000);
+app.set('graphqlPort', process.env.GRAPHQLPORT || 3001);
 app.use(bodyParser.json());
 app.use(
   morgan('dev', {
