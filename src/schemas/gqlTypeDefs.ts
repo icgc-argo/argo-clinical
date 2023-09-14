@@ -37,6 +37,18 @@ const typeDefs = gql`
     clinicalSubmissions(programShortName: String!): ClinicalSubmissionData!
   }
 
+  type Mutation {
+    """
+    Clear Clinical Submission
+    fileType is optional, if it is not provided all fileTypes will be cleared. The values for fileType are the same as the file names from each template (ex. donor, specimen)
+    """
+    clearClinicalSubmission(
+      programShortName: String!
+      version: String!
+      fileType: String
+    ): ClinicalSubmissionData!
+  }
+
   scalar DateTime
 
   """

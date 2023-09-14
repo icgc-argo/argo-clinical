@@ -16,6 +16,8 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+import { token } from 'morgan';
+
 console.time('boot time');
 // Has to import config before any other import uses the configurations
 import { AppConfig, RxNormDbConfig, KafkaConfigurations } from './config';
@@ -29,11 +31,16 @@ import { Server } from 'http';
 // we import here to allow configs to fully load
 import * as bootstrap from './bootstrap';
 import app from './app';
+import { GlobalGqlContext } from './app';
 import { database, up } from 'migrate-mongo';
 
-import { ApolloServer } from '@apollo/server';
-import { startStandaloneServer } from '@apollo/server/standalone';
+import { ApolloServer, ContextFunction } from '@apollo/server';
+import {
+  StandaloneServerContextFunctionArgument,
+  startStandaloneServer,
+} from '@apollo/server/standalone';
 import schema from './schemas/index';
+import { EgoJwtData } from '@icgc-argo/ego-token-utils/dist/common';
 
 let secrets: any = {};
 let server: Server;
@@ -153,10 +160,37 @@ let server: Server;
   /**
    * Start Graphql server.
    */
-  const apolloServer = new ApolloServer({
+
+  const context: ContextFunction<
+    [StandaloneServerContextFunctionArgument],
+    GlobalGqlContext
+  > = async ({ req, res }) => {
+    // Get the user token from the headers.
+    const authHeader = req.headers.authorization;
+    let userJwtData: EgoJwtData | undefined = undefined;
+    try {
+      if (authHeader) {
+        const jwt = authHeader.replace('Bearer ', '');
+      }
+    } catch (err) {
+      userJwtData = undefined;
+    }
+    // Add the user to the context
+    return {
+      isUserRequest: true,
+      egoToken: (authHeader || '').split('Bearer ').join(''),
+      Authorization: `Bearer ${(authHeader || '').replace(/^Bearer[\s]*!/, '')}` || '',
+      userJwtData,
+      dataLoaders: {},
+    };
+  };
+
+  const apolloServer = new ApolloServer<GlobalGqlContext>({
     schema,
   });
+
   const { url } = await startStandaloneServer(apolloServer, {
+    context,
     listen: { port: app.get('graphqlPort') },
   });
 
