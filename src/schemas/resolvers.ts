@@ -24,8 +24,8 @@ import clinicalSubmissionResolver from './clinical-resolvers/clinicalSubmissionD
 import clearClinicalSubmissionResolver from './clinical-resolvers/clearClinicalSubmissionResolver';
 
 // Mutation
-import clearClinicalRegistrationMutation from './clinical-mutations/commitRegistration';
-import commitClinicalRegistrationMutation from './clinical-mutations/clearRegistration';
+import commitClinicalRegistrationMutation from './clinical-mutations/commitRegistration';
+import clearClinicalRegistrationMutation from './clinical-mutations/clearRegistration';
 
 const resolvers = {
   Query: {
