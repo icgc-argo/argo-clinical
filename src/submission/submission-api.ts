@@ -304,6 +304,19 @@ class SubmissionController {
     return res.status(200).send(activeSubmission);
   }
 
+  // @HasProgramWriteAccess((req: Request) => req.params.programId)
+  async reopenActiveDataSubmission(programId: string, versionId: string, token: string) {
+    const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
+    if (submissionSystemDisabled) return;
+    const updater = ControllerUtils.getUserFromToken(token);
+    const activeSubmission = await submission.operations.reopenClinicalSubmission({
+      versionId,
+      programId,
+      updater,
+    });
+    return activeSubmission;
+  }
+
   @HasFullWriteAccess()
   async processLegacyIcgcData(req: Request, res: Response) {
     const samplesFile = req.file;

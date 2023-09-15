@@ -62,6 +62,11 @@ const typeDefs = gql`
     - If there is NO update: merges clinical data to system, returning an empty submission
     """
     commitClinicalSubmission(programShortName: String!, version: String!): ClinicalSubmissionData!
+
+    """
+    Available for DCC members to reopen a clinical submission
+    """
+    reopenClinicalSubmission(programShortName: String!, version: String!): ClinicalSubmissionData!
   }
 
   scalar DateTime
