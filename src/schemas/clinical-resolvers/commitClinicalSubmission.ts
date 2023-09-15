@@ -37,7 +37,6 @@ const commitClinicalSubmissionResolver = {
         (<GlobalGqlContext>contextValue).egoToken,
       )
     );
-    // const submissionData = await submissionAPI.getActiveSubmissionDataByProgramId(programShortName);
     return convertClinicalSubmissionDataToGql(programShortName, {
       submission: submissionData,
     });
