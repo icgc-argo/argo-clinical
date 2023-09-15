@@ -17,27 +17,26 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { GlobalGqlContext } from '../../app';
 import submissionAPI from '../../submission/submission-api';
+import { GlobalGqlContext } from '../../app';
 import { convertClinicalSubmissionDataToGql } from '../utils';
 
-const clearClinicalSubmissionResolver = {
-  clearClinicalSubmission: async (
+const validateClinicalSubmissionResolver = {
+  validateClinicalSubmissions: async (
     obj: unknown,
-    args: { programShortName: string; fileType: string; version: string },
+    args: { programShortName: string; version: string },
     contextValue: any,
   ) => {
-    const { programShortName, fileType, version } = args;
-    const response = await submissionAPI.clearFileDataFromActiveSubmission(
+    const { programShortName, version } = args;
+    const response = await submissionAPI.validateActiveSubmissionData(
       programShortName,
-      fileType || 'all',
       version,
       (<GlobalGqlContext>contextValue).egoToken,
     );
     return convertClinicalSubmissionDataToGql(programShortName, {
-      submission: response,
+      submission: response?.submission,
     });
   },
 };
 
-export default clearClinicalSubmissionResolver;
+export default validateClinicalSubmissionResolver;

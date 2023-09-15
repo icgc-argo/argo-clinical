@@ -2,6 +2,8 @@ import clinicalRegistrationResolver from './clinical-resolvers/clinicalRegistrat
 import clinicalSearchResultResolver from './clinical-resolvers/clinicalSearchResults';
 import clinicalSubmissionResolver from './clinical-resolvers/clinicalSubmissionDataResolver';
 import clearClinicalSubmissionResolver from './clinical-resolvers/clearClinicalSubmissionResolver';
+import validateClinicalSubmissionResolver from './clinical-resolvers/validateClinicalSubmissionResolver';
+import commitClinicalSubmissionResolver from './clinical-resolvers/commitClinicalSubmission';
 
 const resolvers = {
   Query: {
@@ -11,6 +13,8 @@ const resolvers = {
   },
   Mutation: {
     ...clearClinicalSubmissionResolver,
+    ...validateClinicalSubmissionResolver,
+    ...commitClinicalSubmissionResolver,
   },
 };
 
