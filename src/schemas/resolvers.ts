@@ -21,6 +21,7 @@
 import clinicalRegistrationResolver from './clinical-resolvers/clinicalRegistrationData';
 import clinicalSearchResultResolver from './clinical-resolvers/clinicalSearchResults';
 import clinicalSubmissionResolver from './clinical-resolvers/clinicalSubmissionDataResolver';
+import clearClinicalSubmissionResolver from './clinical-resolvers/clearClinicalSubmissionResolver';
 
 // Mutation
 import commitClinicalRegistration from './clinical-mutations/commitRegistration';
@@ -35,6 +36,7 @@ const resolvers = {
   Mutation: {
     ...commitClinicalRegistration,
     ...clearClinicalRegistration,
+    ...clearClinicalSubmissionResolver,
   },
 };
 

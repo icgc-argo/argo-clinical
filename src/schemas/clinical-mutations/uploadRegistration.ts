@@ -18,8 +18,9 @@
  */
 
 import { FileUpload } from 'graphql-upload';
-import { convertRegistrationDataToGql, GlobalGqlContext } from '../utils';
+import { GlobalGqlContext } from '../../app';
 import submissionAPI from '../../submission/submission-api';
+import { convertRegistrationDataToGql } from '../utils';
 
 const uploadClinicalRegistration = {
   uploadClinicalRegistration: async (

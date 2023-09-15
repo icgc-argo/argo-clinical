@@ -103,6 +103,7 @@
     "@overturebio-stack/lectern-client": "1.4.0",
     "@types/graphql-upload": "^8.0.12",
     "@types/mongoose-paginate-v2": "^1.3.11",
+    "@icgc-argo/ego-token-utils": "^8.2.0",
     "adm-zip": "^0.4.16",
     "apollo-server-core": "^3.12.0",
     "async": "^3.0.1",

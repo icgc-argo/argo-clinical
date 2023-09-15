@@ -21,23 +21,16 @@ import { DeepReadonly } from 'deep-freeze';
 import get from 'lodash/get';
 import {
   ActiveRegistration,
+  ActiveClinicalSubmission,
   SubmissionValidationError,
   SubmissionValidationUpdate,
 } from '../submission/submission-entities';
-import { EgoJwtData } from '@icgc-argo/ego-token-utils/dist/common';
+import { getClinicalEntitiesData } from '../dictionary/api';
 
 const ARRAY_DELIMITER_CHAR = '|';
 
 // Generic Record
 type EntityDataRecord = { [k: string]: any; donor_id?: number };
-
-export type GlobalGqlContext = {
-  isUserRequest: boolean;
-  egoToken: string;
-  Authorization: string;
-  userJwtData: EgoJwtData | null;
-  dataLoaders: {};
-};
 
 const convertClinicalRecordToGql = (index: number | string, record: EntityDataRecord) => {
   const fields = [];
@@ -249,6 +242,37 @@ const convertClinicalSubmissionUpdateToGql = (updateData: UpdateData) => {
   };
 };
 
+const convertClinicalSubmissionDataToGql = (
+  programShortName: string,
+  data: {
+    submission: DeepReadonly<ActiveClinicalSubmission> | undefined;
+    batchErrors?: { message: string; batchNames: string[]; code: string }[];
+  },
+) => {
+  const submission = get(data, 'submission', {} as Partial<typeof data.submission>);
+  const fileErrors = get(data, 'batchErrors', [] as typeof data.batchErrors);
+  const clinicalEntities = get(submission, 'clinicalEntities');
+  return {
+    id: submission?._id || undefined,
+    programShortName,
+    state: submission?.state || undefined,
+    version: submission?.version || undefined,
+    updatedBy: submission?.updatedBy || undefined,
+    updatedAt: submission?.updatedAt ? submission.updatedAt : undefined,
+    clinicalEntities: async () => {
+      const clinicalSubmissionTypeList = await getClinicalEntitiesData('false'); // to confirm for true or false
+      const filledClinicalEntities = clinicalSubmissionTypeList.map(clinicalType => ({
+        clinicalType,
+        ...(clinicalEntities ? clinicalEntities[clinicalType.name] : {}),
+      }));
+      return filledClinicalEntities.map(clinicalEntity =>
+        convertClinicalSubmissionEntityToGql(clinicalEntity?.clinicalType.name, clinicalEntity),
+      );
+    },
+    fileErrors: fileErrors?.map(convertClinicalFileErrorToGql),
+  };
+};
+
 export {
   convertClinicalRecordToGql,
   convertRegistrationDataToGql,
@@ -257,4 +281,5 @@ export {
   convertRegistrationStatsToGql,
   RegistrationErrorData,
   convertClinicalSubmissionEntityToGql,
+  convertClinicalSubmissionDataToGql,
 };

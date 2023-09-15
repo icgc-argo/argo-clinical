@@ -33,7 +33,7 @@ class SchemaController {
   async update(req: Request, res: Response) {
     const version: string = req.body.version;
     const sync: boolean = req.query.sync;
-    const initiator = ControllerUtils.getUserFromToken(req);
+    const initiator = ControllerUtils.getUserFromRequest(req);
     const migration = await manager.instance().updateSchemaVersion(version, initiator, sync);
     return res.status(200).send(migration);
   }
@@ -49,7 +49,7 @@ class SchemaController {
   @HasFullWriteAccess()
   async dryRunUpdate(req: Request, res: Response) {
     const version: string = req.body.version;
-    const initiator = ControllerUtils.getUserFromToken(req);
+    const initiator = ControllerUtils.getUserFromRequest(req);
     const migration = await manager.instance().dryRunSchemaUpgrade(version, initiator);
     return res.status(200).send(migration);
   }
