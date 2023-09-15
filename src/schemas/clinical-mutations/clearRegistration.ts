@@ -18,6 +18,9 @@
  */
 
 import { operations } from '../../submission/submission-service';
+import { loggerFor } from '../../logger';
+
+const L = loggerFor(__filename);
 
 const clearClinicalRegistrationMutation = {
   clearClinicalRegistration: async (
@@ -28,8 +31,16 @@ const clearClinicalRegistrationMutation = {
     },
   ) => {
     const { shortName, registrationId } = args;
-    const response = await operations.deleteRegistration(registrationId, shortName);
-    return true;
+    return await operations
+      .deleteRegistration(registrationId, shortName)
+      .then(() => {
+        L.info(`Deleted registrationId ${registrationId}`);
+        return true;
+      })
+      .catch(err => {
+        L.error(`Failed to delete registration`, err);
+        return false;
+      });
   },
 };
 
