@@ -18,11 +18,7 @@
  */
 
 import submissionAPI from '../../submission/submission-api';
-import get from 'lodash/get';
-import { ActiveClinicalSubmission } from '../../submission/submission-entities';
-import { DeepReadonly } from 'deep-freeze';
 import { convertClinicalSubmissionDataToGql } from '../utils';
-import { getClinicalEntitiesData } from '../../dictionary/api';
 
 const clinicalSubmissionResolver = {
   clinicalSubmissions: async (obj: unknown, args: { programShortName: string }) => {
