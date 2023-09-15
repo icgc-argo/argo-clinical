@@ -17,31 +17,30 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// Query
-import clinicalRegistrationResolver from './clinical-resolvers/clinicalRegistrationData';
-import clinicalSearchResultResolver from './clinical-resolvers/clinicalSearchResults';
-import clinicalSubmissionResolver from './clinical-resolvers/clinicalSubmissionDataResolver';
-import clearClinicalSubmissionResolver from './clinical-resolvers/clearClinicalSubmissionResolver';
-import validateClinicalSubmissionResolver from './clinical-resolvers/validateClinicalSubmissionResolver';
-import commitClinicalSubmissionResolver from './clinical-resolvers/commitClinicalSubmission';
+import submissionAPI from '../../submission/submission-api';
+import { GlobalGqlContext } from '../../app';
+import { convertClinicalSubmissionDataToGql } from '../utils';
+import { DeepReadonly } from 'deep-freeze';
+import { ActiveClinicalSubmission } from '../../submission/submission-entities';
 
-// Mutation
-import commitClinicalRegistrationMutation from './clinical-mutations/commitRegistration';
-import clearClinicalRegistrationMutation from './clinical-mutations/clearRegistration';
-
-const resolvers = {
-  Query: {
-    ...clinicalRegistrationResolver,
-    ...clinicalSearchResultResolver,
-    ...clinicalSubmissionResolver,
-  },
-  Mutation: {
-    ...clearClinicalRegistrationMutation,
-    ...commitClinicalRegistrationMutation,
-    ...clearClinicalSubmissionResolver,
-    ...validateClinicalSubmissionResolver,
-    ...commitClinicalSubmissionResolver,
+const commitClinicalSubmissionResolver = {
+  commitClinicalSubmission: async (
+    obj: unknown,
+    args: { programShortName: string; version: string },
+    contextValue: any,
+  ) => {
+    const { programShortName, version } = args;
+    const submissionData = <DeepReadonly<ActiveClinicalSubmission>>(
+      await submissionAPI.commitActiveSubmissionData(
+        programShortName,
+        version,
+        (<GlobalGqlContext>contextValue).egoToken,
+      )
+    );
+    return convertClinicalSubmissionDataToGql(programShortName, {
+      submission: submissionData,
+    });
   },
 };
 
-export default resolvers;
+export default commitClinicalSubmissionResolver;

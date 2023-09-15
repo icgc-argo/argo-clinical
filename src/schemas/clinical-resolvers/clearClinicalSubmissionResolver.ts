@@ -30,7 +30,7 @@ const clearClinicalSubmissionResolver = {
     const { programShortName, fileType, version } = args;
     const response = await submissionAPI.clearFileDataFromActiveSubmission(
       programShortName,
-      fileType,
+      fileType || 'all',
       version,
       (<GlobalGqlContext>contextValue).egoToken,
     );
