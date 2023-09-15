@@ -18,6 +18,7 @@
  */
 
 import { FileUpload } from 'graphql-upload';
+import egoTokenUtils from '@icgc-argo/ego-token-utils/';
 import { GlobalGqlContext } from '../../app';
 import submissionAPI from '../../submission/submission-api';
 import { convertRegistrationDataToGql } from '../utils';
@@ -33,11 +34,12 @@ const uploadClinicalRegistration = {
   ) => {
     const { Authorization, egoToken } = context;
     const { shortName, registrationFile } = args;
+    const tokenUtils = egoTokenUtils(egoToken);
 
-    const permissions = egoTokenUtils.getPermissionsFromToken(egoToken);
+    const permissions = tokenUtils.getPermissionsFromToken(egoToken);
     // Here we are confirming that the user has at least some ability to write Program Data
     // This is to reduce the opportunity for spamming the gateway with file uploads
-    if (!egoTokenUtils.canWriteSomeProgramData(permissions)) {
+    if (!tokenUtils.canWriteSomeProgramData(permissions)) {
       throw new AuthenticationError('User is not authorized to write data');
     }
 
@@ -60,6 +62,6 @@ const uploadClinicalRegistration = {
       Authorization,
     );
 
-    // return convertRegistrationDataToGql(shortName, response);
+    return convertRegistrationDataToGql(shortName, response);
   },
 };
