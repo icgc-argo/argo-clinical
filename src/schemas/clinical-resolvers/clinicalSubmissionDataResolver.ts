@@ -18,11 +18,9 @@
  */
 
 import submissionAPI from '../../submission/submission-api';
-import get from 'lodash/get';
-import { ActiveClinicalSubmission } from '../../submission/submission-entities';
-import { DeepReadonly } from 'deep-freeze';
+import configAPI from '../../submission/persisted-config/api';
+import * as schemaApi from '../../dictionary/api';
 import { convertClinicalSubmissionDataToGql } from '../utils';
-import { getClinicalEntitiesData } from '../../dictionary/api';
 
 const clinicalSubmissionResolver = {
   clinicalSubmissions: async (obj: unknown, args: { programShortName: string }) => {
@@ -33,6 +31,18 @@ const clinicalSubmissionResolver = {
       submission: submissionData,
     });
   },
+};
+
+export const clinicalSubmissionTypesList = async (obj: unknown, args: {}) => {
+  return await schemaApi.getClinicalEntities();
+};
+
+export const clinicalSubmissionSchemaVersion = async (obj: unknown, args: {}) => {
+  return await schemaApi.get();
+};
+
+export const clinicalSubmissionSystemDisabled = async (obj: unknown, args: {}) => {
+  return await configAPI.getSubmissionDisabledState();
 };
 
 export default clinicalSubmissionResolver;
