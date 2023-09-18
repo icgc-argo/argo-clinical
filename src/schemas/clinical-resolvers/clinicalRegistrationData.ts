@@ -28,13 +28,11 @@ import { DeepReadonly } from 'deep-freeze';
 import { ActiveRegistration } from '../../submission/submission-entities';
 import get from 'lodash/get';
 
-const clinicalRegistrationResolver = {
-  clinicalRegistration: async (obj: unknown, args: { shortName: string }) => {
-    const registration = await submissionAPI.getRegistrationDataByProgramId(args.shortName);
-    return convertRegistrationDataToGql(args.shortName, {
-      registration: registration,
-    });
-  },
+const clinicalRegistration = async (obj: unknown, args: { shortName: string }) => {
+  const registration = await submissionAPI.getRegistrationDataByProgramId(args.shortName);
+  return convertRegistrationDataToGql(args.shortName, {
+    registration: registration,
+  });
 };
 
 const convertRegistrationDataToGql = (
@@ -67,4 +65,4 @@ const convertRegistrationDataToGql = (
   };
 };
 
-export default clinicalRegistrationResolver;
+export default clinicalRegistration;

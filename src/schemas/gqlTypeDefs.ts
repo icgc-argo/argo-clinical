@@ -22,19 +22,34 @@ import gql from 'graphql-tag';
 const typeDefs = gql`
   type Query {
     """
-    Retrieve DonorIds + Submitter Donor Ids for given Clinical Entity and Program
-    """
-    clinicalSearchResults(programShortName: String!, filters: ClinicalInput!): ClinicalSearchData!
-
-    """
     Retrieve current stored Clinical Registration data for a program
     """
     clinicalRegistration(shortName: String!): ClinicalRegistrationData!
 
     """
+    Retrieve DonorIds + Submitter Donor Ids for given Clinical Entity and Program
+    """
+    clinicalSearchResults(programShortName: String!, filters: ClinicalInput!): ClinicalSearchData!
+
+    """
     Retrieve current stored Clinical Submission data for a program
     """
     clinicalSubmissions(programShortName: String!): ClinicalSubmissionData!
+
+    """
+    Retrieve current stored Clinical Submission Data Dictionary Schema version
+    """
+    clinicalSubmissionSchemaVersion: String!
+
+    """
+    Retrieve current Clinical Submission disabled state for both sample_registration and clinical entity files
+    """
+    clinicalSubmissionSystemDisabled: Boolean!
+
+    """
+    Retrieve current stored Clinical Submission Types list
+    """
+    clinicalSubmissionTypesList: [String!]
   }
 
   type Mutation {

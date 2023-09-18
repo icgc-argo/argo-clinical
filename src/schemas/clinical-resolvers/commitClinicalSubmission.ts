@@ -23,24 +23,22 @@ import { convertClinicalSubmissionDataToGql } from '../utils';
 import { DeepReadonly } from 'deep-freeze';
 import { ActiveClinicalSubmission } from '../../submission/submission-entities';
 
-const commitClinicalSubmissionResolver = {
-  commitClinicalSubmission: async (
-    obj: unknown,
-    args: { programShortName: string; version: string },
-    contextValue: any,
-  ) => {
-    const { programShortName, version } = args;
-    const submissionData = <DeepReadonly<ActiveClinicalSubmission>>(
-      await submissionAPI.commitActiveSubmissionData(
-        programShortName,
-        version,
-        (<GlobalGqlContext>contextValue).egoToken,
-      )
-    );
-    return convertClinicalSubmissionDataToGql(programShortName, {
-      submission: submissionData,
-    });
-  },
+const commitClinicalSubmission = async (
+  obj: unknown,
+  args: { programShortName: string; version: string },
+  contextValue: any,
+) => {
+  const { programShortName, version } = args;
+  const submissionData = <DeepReadonly<ActiveClinicalSubmission>>(
+    await submissionAPI.commitActiveSubmissionData(
+      programShortName,
+      version,
+      (<GlobalGqlContext>contextValue).egoToken,
+    )
+  );
+  return convertClinicalSubmissionDataToGql(programShortName, {
+    submission: submissionData,
+  });
 };
 
-export default commitClinicalSubmissionResolver;
+export default commitClinicalSubmission;
