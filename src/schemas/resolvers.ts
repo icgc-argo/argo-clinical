@@ -5,6 +5,8 @@ import clearClinicalSubmissionResolver from './clinical-resolvers/clearClinicalS
 import validateClinicalSubmissionResolver from './clinical-resolvers/validateClinicalSubmission';
 import commitClinicalSubmissionResolver from './clinical-resolvers/commitClinicalSubmission';
 import reopenClinicalSubmissionResolver from './clinical-resolvers/reopenClinicalSubmission';
+import approveClinicalSubmission from './clinical-resolvers/approveClinicalSubmission';
+import approveClinicalSubmissionResolver from './clinical-resolvers/approveClinicalSubmission';
 
 const resolvers = {
   Query: {
@@ -17,6 +19,7 @@ const resolvers = {
     ...validateClinicalSubmissionResolver,
     ...commitClinicalSubmissionResolver,
     ...reopenClinicalSubmissionResolver,
+    ...approveClinicalSubmissionResolver,
   },
 };
 

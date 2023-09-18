@@ -67,6 +67,11 @@ const typeDefs = gql`
     Available for DCC members to reopen a clinical submission
     """
     reopenClinicalSubmission(programShortName: String!, version: String!): ClinicalSubmissionData!
+
+    """
+    Available for DCC members to approve a clinical submission
+    """
+    approveClinicalSubmission(programShortName: String!, version: String!): Boolean!
   }
 
   scalar DateTime
