@@ -575,8 +575,7 @@ export namespace MigrationManager {
     const schemaNamesWithBreakingChanges = breakingChangesEntitesCache[versionsKey];
     for await (const schemaName of schemaNamesWithBreakingChanges) {
       // not fields since we only need to check the whole schema once.
-      const errors =
-        (await validateDonorEntityAgainstNewSchema(schemaName, newSchema, donor)) || [];
+      const errors = validateDonorEntityAgainstNewSchema(schemaName, newSchema, donor) || [];
       if (errors && errors.length > 0) {
         const donorSchemaErrorRecord: DonorMigrationSchemaErrors = {};
         donorSchemaErrorRecord[schemaName] = errors;
@@ -597,7 +596,7 @@ export namespace MigrationManager {
     return donorBeforeSetValid;
   };
 
-  export const validateDonorEntityAgainstNewSchema = async (
+  export const validateDonorEntityAgainstNewSchema = (
     schemaName: ClinicalEntitySchemaNames,
     schema: dictionaryEntities.SchemasDictionary,
     donor: DeepReadonly<Donor>,
@@ -616,7 +615,7 @@ export namespace MigrationManager {
         return prepareForSchemaReProcessing(cr);
       })
       .filter(notEmpty);
-    const result = await dictionaryService.processRecords(schema, schemaName, stringifyedRecords);
+    const result = dictionaryService.processRecords(schema, schemaName, stringifyedRecords);
     if (result?.validationErrors?.length > 0) {
       return result.validationErrors;
     }

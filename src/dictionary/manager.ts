@@ -294,7 +294,7 @@ class SchemaManager {
   };
 }
 
-export const revalidateAllDonorClinicalEntitiesAgainstSchema = async (
+export const revalidateAllDonorClinicalEntitiesAgainstSchema = (
   donor: DeepReadonly<Donor>,
   schema: dictionaryEntities.SchemasDictionary,
 ) => {
@@ -304,11 +304,7 @@ export const revalidateAllDonorClinicalEntitiesAgainstSchema = async (
     if (!isValid) {
       return;
     }
-    const errs = await MigrationManager.validateDonorEntityAgainstNewSchema(
-      schemaName,
-      schema,
-      donor,
-    );
+    const errs = MigrationManager.validateDonorEntityAgainstNewSchema(schemaName, schema, donor);
     isValid = !errs || errs.length == 0;
   }
   return isValid;

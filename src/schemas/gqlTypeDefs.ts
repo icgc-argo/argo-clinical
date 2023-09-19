@@ -106,6 +106,7 @@ const typeDefs = gql`
   type ClinicalErrors {
     donorId: Int
     submitterDonorId: String
+    entityName: String
     errors: [ClinicalErrorRecord]
   }
 
