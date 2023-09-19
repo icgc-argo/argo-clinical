@@ -107,7 +107,7 @@ export interface DonorRepository {
     filter: FindByProgramAndSubmitterFilter,
   ): Promise<DeepReadonly<Donor> | undefined>;
   iterateAllByProgramId(programId: string): AsyncIterable<DeepReadonly<Donor>>;
-  create(donor: DeepReadonly<Donor>): Promise<DeepReadonly<Donor>>;
+  create(donor: DeepReadonly<Partial<Donor>>): Promise<DeepReadonly<Donor>>;
   update(donor: DeepReadonly<Donor>): Promise<DeepReadonly<Donor>>;
   updateAll(donors: DeepReadonly<Donor>[]): Promise<DeepReadonly<Donor>[]>;
   countBy(filter: any): Promise<number>;
