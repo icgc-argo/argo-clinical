@@ -36,6 +36,7 @@ import _ from 'lodash';
 import { batchErrorMessage } from './submission-error-messages';
 import * as fs from 'fs';
 import { GlobalGqlContext } from '../app';
+import { FileUpload } from 'graphql-upload';
 
 const L = loggerFor(__filename);
 const fsPromises = fs.promises;
@@ -186,6 +187,67 @@ class SubmissionController {
     return res
       .status(status)
       .send({ ...result, batchErrors: [...result.batchErrors, ...tsvParseErrors] });
+  }
+
+  // @HasProgramWriteAccess((req: Request) => req.params.programId)
+  async uploadClinicalDataFromTsvFiles(programId: string, uploadedFiles: {}, token: string) {
+    /*if ((await submissionSystemIsDisabled(res)) || !isValidCreateBody(req, res)) {
+      return;
+    }*/
+
+    const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
+    if (submissionSystemDisabled) return; // UK: to add isValidCreateBody
+
+    const user = ControllerUtils.getUserFromToken(token);
+    const newClinicalData: NewClinicalEntity[] = [];
+    const tsvParseErrors: SubmissionBatchError[] = [];
+    const clinicalFiles = uploadedFiles as Express.Multer.File[]; // req.files as Express.Multer.File[];
+
+    for (const file of clinicalFiles) {
+      try {
+        // check if it has .tsv extension to prevent irregular file names from reaching service level
+        if (!file.originalname.match(/.*\.tsv$/)) {
+          throw new Error('invalid extension');
+        }
+        let records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj> = [];
+        records = await TsvUtils.tsvToJson(file.path);
+        if (records.length === 0) {
+          throw new Error('TSV has no records!');
+        }
+        newClinicalData.push({
+          batchName: file.originalname,
+          creator: user,
+          records: records,
+          fieldNames: Object.keys(records[0]), // every record in a tsv should have same fieldNames
+        });
+      } catch (err) {
+        L.error(`Clinical Submission TSV_PARSING_FAILED`, err);
+        tsvParseErrors.push({
+          message: batchErrorMessage(SubmissionBatchErrorTypes.TSV_PARSING_FAILED),
+          batchNames: [file.originalname],
+          code: SubmissionBatchErrorTypes.TSV_PARSING_FAILED,
+        });
+      }
+    }
+
+    const command: MultiClinicalSubmissionCommand = {
+      newClinicalData: newClinicalData,
+      programId, // req.params.programId,
+      updater: user,
+    };
+
+    const result = await submission.operations.submitMultiClinicalBatches(command);
+    let status = 200;
+
+    // no submission created, i.e. all uploads failed.
+    if (!result.successful || tsvParseErrors.length > 0) {
+      status = 207;
+    }
+
+    /*return res
+      .status(status)
+      .send({ ...result, batchErrors: [...result.batchErrors, ...tsvParseErrors] });*/
+    return { ...result, batchErrors: [...result.batchErrors, ...tsvParseErrors] };
   }
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)

@@ -72,8 +72,17 @@ const typeDefs = gql`
     Available for DCC members to approve a clinical submission
     """
     approveClinicalSubmission(programShortName: String!, version: String!): Boolean!
+
+    """
+    Upload Clinical Submission files
+    """
+    uploadClinicalSubmissions(
+      programShortName: String!
+      clinicalFiles: [Upload!]
+    ): ClinicalSubmissionData!
   }
 
+  scalar Upload
   scalar DateTime
 
   """

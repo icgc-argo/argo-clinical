@@ -216,6 +216,7 @@ const convertClinicalSubmissionDataToGql = (
   data: {
     submission: DeepReadonly<ActiveClinicalSubmission> | undefined;
     batchErrors?: { message: string; batchNames: string[]; code: string }[];
+    successful?: boolean | undefined;
   },
 ) => {
   const submission = get(data, 'submission', {} as Partial<typeof data.submission>);
