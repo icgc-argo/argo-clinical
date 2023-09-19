@@ -16,7 +16,6 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 import submissionAPI from '../../submission/submission-api';
 import get from 'lodash/get';
 import { ActiveClinicalSubmission } from '../../submission/submission-entities';
