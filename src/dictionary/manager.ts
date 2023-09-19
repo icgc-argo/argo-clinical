@@ -309,7 +309,7 @@ export const revalidateAllDonorClinicalEntitiesAgainstSchema = async (
       schema,
       donor,
     );
-    isValid = isValid && (!errs || errs.length == 0);
+    isValid = !errs || errs.length == 0;
   }
   return isValid;
 };
