@@ -242,7 +242,7 @@ const updateOrCreateDonorsBatch = (
 };
 
 const fromCreateDonorDtoToDonor = (createDonorDto: DeepReadonly<CreateDonorSampleDto>) => {
-  const donor: Donor = {
+  const donor: Partial<Donor> = {
     schemaMetadata: createDonorDto.schemaMetadata,
     gender: createDonorDto.gender,
     submitterId: createDonorDto.submitterId,

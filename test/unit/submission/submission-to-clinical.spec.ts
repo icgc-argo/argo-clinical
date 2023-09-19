@@ -129,7 +129,7 @@ describe('submission-to-clinical', () => {
     >;
     let deleteRegStub: sinon.SinonStub<[string], Promise<void>>;
     let createDonorStub: sinon.SinonStub<
-      [deepFreeze.DeepReadonly<Donor>],
+      [deepFreeze.DeepReadonly<Partial<Donor>>],
       Promise<deepFreeze.DeepReadonly<Donor>>
     >;
     let updateDonorStub: sinon.SinonStub<
@@ -159,7 +159,7 @@ describe('submission-to-clinical', () => {
         programId: 'ABCD-EF',
       };
 
-      const expectedDonorDto: Donor = {
+      const expectedDonorDto: Partial<Donor> = {
         schemaMetadata: {
           isValid: true,
           lastValidSchemaVersion: '1.0',

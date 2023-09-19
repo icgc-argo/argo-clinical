@@ -342,8 +342,6 @@ export const getClinicalEntityMigrationErrors = async (
   return { migration, clinicalMigrationErrors };
 };
 
-type DonorWithId = Donor & { donorId: number };
-
 /**
  * Given a list of Program Migration Errors, this function finds related Donors,
  * and returns a list of DonorIds which are now Valid after submission.
@@ -386,8 +384,7 @@ export const getValidRecordsPostSubmission = async (
 
   const validDonorIds = donorData
     .filter(donor => donor.schemaMetadata.isValid)
-    .map(({ donorId }) => donorId)
-    .filter(id => typeof id === 'number');
+    .map(({ donorId }) => donorId);
 
   const invalidDonorIds = errorDonorIds.filter(
     (donorId, index, array) =>
@@ -406,10 +403,12 @@ export const getValidRecordsPostSubmission = async (
       .instance()
       .loadSchemaByVersion(schemaName, migrationVersion);
 
-    const invalidDonorRecords = donorData.filter(
-      donor => !!donor.donorId && invalidDonorIds.includes(donor.donorId),
-    ) as DeepReadonly<DonorWithId>[];
+    const invalidDonorRecords = donorData.filter(donor =>
+      invalidDonorIds.includes(donor.donorId),
+    ) as DeepReadonly<Donor>[];
 
+    // Returns a single array of Error Records, but all Error Records must be revalidated first
+    // clinicalErrorRecords = [ Promise< RevalidatedErrorRecord > ]
     const clinicalErrorRecords = await Promise.all(
       invalidDonorRecords.map(async currentDonor => {
         const { donorId, submitterId: submitterDonorId } = currentDonor;
