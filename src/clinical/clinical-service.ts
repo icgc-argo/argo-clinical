@@ -54,11 +54,11 @@ export type ClinicalDonorEntityQuery = {
 };
 
 // Returns paginated Donor + Entity Submission Data
-export interface PaginatedClinicalQuery extends ClinicalDonorEntityQuery {
+export type PaginatedClinicalQuery = ClinicalDonorEntityQuery & {
   page: number;
   pageSize?: number;
   sort: string;
-}
+};
 
 // GQL Query Arguments
 // Submitted Data Search Bar
