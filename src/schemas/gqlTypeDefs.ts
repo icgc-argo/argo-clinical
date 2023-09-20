@@ -54,6 +54,17 @@ const typeDefs = gql`
 
   type Mutation {
     """
+    Remove the Clinical Registration data currently uploaded and not committed
+    """
+    clearClinicalRegistration(shortName: String!, registrationId: String!): Boolean!
+
+    """
+    Complete registration of the currently uploaded Clinical Registration data
+    On Success, returns a list of the new sample IDs that were committed
+    """
+    commitClinicalRegistration(shortName: String!, registrationId: String!): [String]!
+
+    """
     Clear Clinical Submission
     fileType is optional, if it is not provided all fileTypes will be cleared. The values for fileType are the same as the file names from each template (ex. donor, specimen)
     """
