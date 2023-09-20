@@ -17,31 +17,22 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// Query
-import clinicalRegistrationResolver from './clinical-resolvers/clinicalRegistrationData';
-import clinicalSearchResultResolver from './clinical-resolvers/clinicalSearchResults';
-import clinicalSubmissionResolver from './clinical-resolvers/clinicalSubmissionDataResolver';
-import clearClinicalSubmissionResolver from './clinical-resolvers/clearClinicalSubmissionResolver';
-import validateClinicalSubmissionResolver from './clinical-resolvers/validateClinicalSubmissionResolver';
-import commitClinicalSubmissionResolver from './clinical-resolvers/commitClinicalSubmission';
+import { commitRegistration } from '../../submission/submission-to-clinical/submission-to-clinical';
 
-// Mutation
-import commitClinicalRegistrationMutation from './clinical-mutations/commitRegistration';
-import clearClinicalRegistrationMutation from './clinical-mutations/clearRegistration';
+const commitClinicalRegistrationMutation = {
+  commitClinicalRegistration: async (
+    obj: unknown,
+    args: { shortName: string; registrationId: string },
+  ) => {
+    const { shortName: programId, registrationId } = args;
 
-const resolvers = {
-  Query: {
-    ...clinicalRegistrationResolver,
-    ...clinicalSearchResultResolver,
-    ...clinicalSubmissionResolver,
-  },
-  Mutation: {
-    ...clearClinicalRegistrationMutation,
-    ...commitClinicalRegistrationMutation,
-    ...clearClinicalSubmissionResolver,
-    ...validateClinicalSubmissionResolver,
-    ...commitClinicalSubmissionResolver,
+    const newSampleIds = await commitRegistration({
+      registrationId,
+      programId,
+    });
+
+    return newSampleIds;
   },
 };
 
-export default resolvers;
+export default commitClinicalRegistrationMutation;

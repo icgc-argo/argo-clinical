@@ -17,16 +17,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 import submissionAPI from '../../submission/submission-api';
-import {
-  convertClinicalRecordToGql,
-  convertRegistrationErrorToGql,
-  convertClinicalFileErrorToGql,
-  convertRegistrationStatsToGql,
-  RegistrationErrorData,
-} from '../utils';
-import { DeepReadonly } from 'deep-freeze';
-import { ActiveRegistration } from '../../submission/submission-entities';
-import get from 'lodash/get';
+import { convertRegistrationDataToGql } from '../utils';
 
 const clinicalRegistrationResolver = {
   clinicalRegistration: async (obj: unknown, args: { shortName: string }) => {
@@ -35,36 +26,6 @@ const clinicalRegistrationResolver = {
       registration: registration,
     });
   },
-};
-
-const convertRegistrationDataToGql = (
-  programShortName: string,
-  data: {
-    registration: DeepReadonly<ActiveRegistration> | undefined;
-    errors?: RegistrationErrorData[];
-    batchErrors?: { message: string; batchNames: string[]; code: string }[];
-  },
-) => {
-  const registration = get(data, 'registration', {} as Partial<typeof data.registration>);
-  const schemaAndValidationErrors = get(data, 'errors', [] as typeof data.errors);
-  const fileErrors = get(data, 'batchErrors', [] as typeof data.batchErrors);
-  return {
-    id: registration?._id || undefined,
-    programShortName,
-    creator: registration?.creator || undefined,
-    fileName: registration?.batchName || undefined,
-    createdAt: registration?.createdAt || undefined,
-    records: () =>
-      get(registration, 'records')?.map((record, i) => convertClinicalRecordToGql(i, record)),
-    errors: schemaAndValidationErrors?.map(convertRegistrationErrorToGql),
-    fileErrors: fileErrors?.map(convertClinicalFileErrorToGql),
-    newDonors: () => convertRegistrationStatsToGql(get(registration, 'stats.newDonorIds', [])),
-    newSpecimens: () =>
-      convertRegistrationStatsToGql(get(registration, 'stats.newSpecimenIds', [])),
-    newSamples: () => convertRegistrationStatsToGql(get(registration, 'stats.newSampleIds', [])),
-    alreadyRegistered: () =>
-      convertRegistrationStatsToGql(get(registration, 'stats.alreadyRegistered', [])),
-  };
 };
 
 export default clinicalRegistrationResolver;
