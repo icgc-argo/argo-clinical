@@ -30,8 +30,8 @@ import validateClinicalSubmission from './clinical-resolvers/validateClinicalSub
 import commitClinicalSubmission from './clinical-resolvers/commitClinicalSubmission';
 
 // Mutation
-import commitClinicalRegistrationMutation from './clinical-mutations/commitRegistration';
-import clearClinicalRegistrationMutation from './clinical-mutations/clearRegistration';
+import commitClinicalRegistration from './clinical-mutations/commitRegistration';
+import clearClinicalRegistration from './clinical-mutations/clearRegistration';
 
 const resolvers = {
   Query: {
@@ -46,10 +46,8 @@ const resolvers = {
     clearClinicalSubmission,
     validateClinicalSubmission,
     commitClinicalSubmission,
-    ...clearClinicalRegistrationMutation,
-    ...commitClinicalRegistrationMutation,
-    ...validateClinicalSubmission,
-    ...commitClinicalSubmission,
+    clearClinicalRegistration,
+    commitClinicalRegistration,
   },
 };
 
