@@ -75,6 +75,36 @@ const convertClinicalFileErrorToGql = (fileError: {
   };
 };
 
+const convertRegistrationDataToGql = (
+  programShortName: string,
+  data: {
+    registration: DeepReadonly<ActiveRegistration> | undefined;
+    errors?: RegistrationErrorData[];
+    batchErrors?: { message: string; batchNames: string[]; code: string }[];
+  },
+) => {
+  const registration: Partial<typeof data.registration> = get(data, 'registration', {});
+  const schemaAndValidationErrors: typeof data.errors = get(data, 'errors', []);
+  const fileErrors: typeof data.batchErrors = get(data, 'batchErrors', []);
+  return {
+    id: registration?._id,
+    programShortName,
+    creator: registration?.creator,
+    fileName: registration?.batchName,
+    createdAt: registration?.createdAt,
+    records: () =>
+      get(registration, 'records')?.map((record, i) => convertClinicalRecordToGql(i, record)),
+    errors: schemaAndValidationErrors?.map(convertRegistrationErrorToGql),
+    fileErrors: fileErrors?.map(convertClinicalFileErrorToGql),
+    newDonors: () => convertRegistrationStatsToGql(get(registration, 'stats.newDonorIds', [])),
+    newSpecimens: () =>
+      convertRegistrationStatsToGql(get(registration, 'stats.newSpecimenIds', [])),
+    newSamples: () => convertRegistrationStatsToGql(get(registration, 'stats.newSampleIds', [])),
+    alreadyRegistered: () =>
+      convertRegistrationStatsToGql(get(registration, 'stats.alreadyRegistered', [])),
+  };
+};
+
 const convertRegistrationStatsToGql = (
   statsEntry: {
     submitterId: string;
