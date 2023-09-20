@@ -17,9 +17,10 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import submissionAPI from '../../submission/submission-api';
-import configAPI from '../../submission/persisted-config/api';
+import * as manager from '../../dictionary/manager';
 import * as schemaApi from '../../dictionary/api';
+import configAPI from '../../submission/persisted-config/api';
+import submissionAPI from '../../submission/submission-api';
 import { convertClinicalSubmissionDataToGql } from '../utils';
 
 const clinicalSubmissions = async (obj: unknown, args: { programShortName: string }) => {
@@ -41,9 +42,13 @@ export const clinicalSubmissionTypesList = async (
   return schemas;
 };
 
-// export const clinicalSubmissionSchemaVersion = async (obj: unknown, args: {}) => {
-//   return await schemaApi.get();
-// };
+export const clinicalSubmissionSchemaVersion = async () => {
+  const schemaVersion = await manager
+    .instance()
+    .getCurrent()
+    .then(result => result.version);
+  return schemaVersion;
+};
 
 // export const clinicalSubmissionSystemDisabled = async (obj: unknown, args: {}) => {
 //   return await configAPI.getSubmissionDisabledState();

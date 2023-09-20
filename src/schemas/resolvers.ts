@@ -22,7 +22,7 @@ import clinicalRegistration from './clinical-resolvers/clinicalRegistrationData'
 import clinicalSearchResult from './clinical-resolvers/clinicalSearchResults';
 import clinicalSubmissions, {
   clinicalSubmissionTypesList,
-  // clinicalSubmissionSchemaVersion,
+  clinicalSubmissionSchemaVersion,
   // clinicalSubmissionSystemDisabled,
 } from './clinical-resolvers/clinicalSubmissionDataResolver';
 import clearClinicalSubmission from './clinical-resolvers/clearClinicalSubmissionResolver';
@@ -39,7 +39,7 @@ const resolvers = {
     clinicalSearchResult,
     clinicalSubmissions,
     clinicalSubmissionTypesList,
-    // clinicalSubmissionSchemaVersion,
+    clinicalSubmissionSchemaVersion,
     // clinicalSubmissionSystemDisabled,
   },
   Mutation: {
