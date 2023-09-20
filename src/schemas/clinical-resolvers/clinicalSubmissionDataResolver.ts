@@ -19,7 +19,7 @@
 
 import * as manager from '../../dictionary/manager';
 import * as schemaApi from '../../dictionary/api';
-import configAPI from '../../submission/persisted-config/api';
+import * as configService from '../../submission/persisted-config/service';
 import submissionAPI from '../../submission/submission-api';
 import { convertClinicalSubmissionDataToGql } from '../utils';
 
@@ -50,8 +50,8 @@ export const clinicalSubmissionSchemaVersion = async () => {
   return schemaVersion;
 };
 
-// export const clinicalSubmissionSystemDisabled = async (obj: unknown, args: {}) => {
-//   return await configAPI.getSubmissionDisabledState();
-// };
+export const clinicalSubmissionSystemDisabled = async (obj: unknown, args: {}) => {
+  return await configService.getSubmissionDisabledState();
+};
 
 export default clinicalSubmissions;
