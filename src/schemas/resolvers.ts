@@ -16,11 +16,20 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+// Query
 import clinicalDataResolver from './clinical-resolvers/clinicalData';
 import clinicalErrorsResolver from './clinical-resolvers/clinicalErrors';
 import clinicalRegistrationResolver from './clinical-resolvers/clinicalRegistrationData';
 import clinicalSearchResultResolver from './clinical-resolvers/clinicalSearchResults';
 import clinicalSubmissionResolver from './clinical-resolvers/clinicalSubmissionDataResolver';
+import clearClinicalSubmissionResolver from './clinical-resolvers/clearClinicalSubmissionResolver';
+import validateClinicalSubmissionResolver from './clinical-resolvers/validateClinicalSubmissionResolver';
+import commitClinicalSubmissionResolver from './clinical-resolvers/commitClinicalSubmission';
+
+// Mutation
+import commitClinicalRegistrationMutation from './clinical-mutations/commitRegistration';
+import clearClinicalRegistrationMutation from './clinical-mutations/clearRegistration';
 
 const resolvers = {
   Query: {
@@ -29,6 +38,13 @@ const resolvers = {
     ...clinicalRegistrationResolver,
     ...clinicalSearchResultResolver,
     ...clinicalSubmissionResolver,
+  },
+  Mutation: {
+    ...clearClinicalRegistrationMutation,
+    ...commitClinicalRegistrationMutation,
+    ...clearClinicalSubmissionResolver,
+    ...validateClinicalSubmissionResolver,
+    ...commitClinicalSubmissionResolver,
   },
 };
 

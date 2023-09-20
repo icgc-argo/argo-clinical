@@ -16,16 +16,31 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-import submissionAPI from '../../submission/submission-api';
-import { convertRegistrationDataToGql } from '../utils';
 
-const clinicalRegistrationResolver = {
-  clinicalRegistration: async (obj: unknown, args: { shortName: string }) => {
-    const registration = await submissionAPI.getRegistrationDataByProgramId(args.shortName);
-    return convertRegistrationDataToGql(args.shortName, {
-      registration: registration,
+import submissionAPI from '../../submission/submission-api';
+import { GlobalGqlContext } from '../../app';
+import { convertClinicalSubmissionDataToGql } from '../utils';
+import { DeepReadonly } from 'deep-freeze';
+import { ActiveClinicalSubmission } from '../../submission/submission-entities';
+
+const commitClinicalSubmissionResolver = {
+  commitClinicalSubmission: async (
+    obj: unknown,
+    args: { programShortName: string; version: string },
+    contextValue: any,
+  ) => {
+    const { programShortName, version } = args;
+    const submissionData = <DeepReadonly<ActiveClinicalSubmission>>(
+      await submissionAPI.commitActiveSubmissionData(
+        programShortName,
+        version,
+        (<GlobalGqlContext>contextValue).egoToken,
+      )
+    );
+    return convertClinicalSubmissionDataToGql(programShortName, {
+      submission: submissionData,
     });
   },
 };
 
-export default clinicalRegistrationResolver;
+export default commitClinicalSubmissionResolver;

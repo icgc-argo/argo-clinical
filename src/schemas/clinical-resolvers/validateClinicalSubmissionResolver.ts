@@ -16,16 +16,27 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-import submissionAPI from '../../submission/submission-api';
-import { convertRegistrationDataToGql } from '../utils';
 
-const clinicalRegistrationResolver = {
-  clinicalRegistration: async (obj: unknown, args: { shortName: string }) => {
-    const registration = await submissionAPI.getRegistrationDataByProgramId(args.shortName);
-    return convertRegistrationDataToGql(args.shortName, {
-      registration: registration,
+import submissionAPI from '../../submission/submission-api';
+import { GlobalGqlContext } from '../../app';
+import { convertClinicalSubmissionDataToGql } from '../utils';
+
+const validateClinicalSubmissionResolver = {
+  validateClinicalSubmissions: async (
+    obj: unknown,
+    args: { programShortName: string; version: string },
+    contextValue: any,
+  ) => {
+    const { programShortName, version } = args;
+    const response = await submissionAPI.validateActiveSubmissionData(
+      programShortName,
+      version,
+      (<GlobalGqlContext>contextValue).egoToken,
+    );
+    return convertClinicalSubmissionDataToGql(programShortName, {
+      submission: response?.submission,
     });
   },
 };
 
-export default clinicalRegistrationResolver;
+export default validateClinicalSubmissionResolver;
