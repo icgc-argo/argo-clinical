@@ -573,7 +573,7 @@ export namespace MigrationManager {
     const versionsKey = `${donorDocSchemaVersion}->${newSchema.version}`;
 
     const schemaNamesWithBreakingChanges = breakingChangesEntitesCache[versionsKey];
-    for await (const schemaName of schemaNamesWithBreakingChanges) {
+    for (const schemaName of schemaNamesWithBreakingChanges) {
       // not fields since we only need to check the whole schema once.
       const errors = validateDonorEntityAgainstNewSchema(schemaName, newSchema, donor) || [];
       if (errors && errors.length > 0) {
