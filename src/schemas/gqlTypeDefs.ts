@@ -49,7 +49,7 @@ const typeDefs = gql`
     """
     Retrieve current stored Clinical Submission Types list
     """
-    clinicalSubmissionTypesList: [String!]
+    clinicalSubmissionTypesList(includeFields: String): [SchemaList]!
   }
 
   type Mutation {
@@ -354,6 +354,8 @@ const typeDefs = gql`
     oldValue: String!
     donorId: String!
   }
+
+  scalar SchemaList
 `;
 
 export default typeDefs;

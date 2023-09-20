@@ -31,16 +31,22 @@ const clinicalSubmissions = async (obj: unknown, args: { programShortName: strin
   });
 };
 
-export const clinicalSubmissionTypesList = async (obj: unknown, args: {}) => {
-  return await schemaApi.getClinicalEntities();
+export const clinicalSubmissionTypesList = async (
+  obj: unknown,
+  args: { includeFields: string },
+) => {
+  const withFields = args?.includeFields?.toLowerCase() === 'true';
+  const schemas = await schemaApi.getClinicalSchemas(withFields);
+
+  return schemas;
 };
 
-export const clinicalSubmissionSchemaVersion = async (obj: unknown, args: {}) => {
-  return await schemaApi.get();
-};
+// export const clinicalSubmissionSchemaVersion = async (obj: unknown, args: {}) => {
+//   return await schemaApi.get();
+// };
 
-export const clinicalSubmissionSystemDisabled = async (obj: unknown, args: {}) => {
-  return await configAPI.getSubmissionDisabledState();
-};
+// export const clinicalSubmissionSystemDisabled = async (obj: unknown, args: {}) => {
+//   return await configAPI.getSubmissionDisabledState();
+// };
 
 export default clinicalSubmissions;
