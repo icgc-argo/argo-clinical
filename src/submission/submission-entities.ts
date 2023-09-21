@@ -259,6 +259,7 @@ export interface CreateSubmissionResult {
   readonly submission: DeepReadonly<ActiveClinicalSubmission> | undefined;
   readonly successful: boolean;
   batchErrors: DeepReadonly<SubmissionBatchError[]>;
+  // batchErrors: DeepReadonly<{ message: string; batchNames: string[]; code: string }[]>;
 }
 
 export interface ValidateSubmissionResult {

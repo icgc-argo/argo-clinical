@@ -65,11 +65,13 @@ function convertToString(val: unknown) {
   return val === undefined || val === null ? '' : `${val}`;
 }
 
-const convertClinicalFileErrorToGql = (fileError: {
-  message: string;
-  batchNames: string[];
-  code: string;
-}) => {
+const convertClinicalFileErrorToGql = (
+  fileError: DeepReadonly<{
+    message: string;
+    batchNames: string[];
+    code: string;
+  }>,
+) => {
   return {
     message: fileError.message,
     fileNames: fileError.batchNames,
@@ -215,8 +217,8 @@ const convertClinicalSubmissionDataToGql = (
   programShortName: string,
   data: {
     submission: DeepReadonly<ActiveClinicalSubmission> | undefined;
-    batchErrors?: { message: string; batchNames: string[]; code: string }[];
-    successful?: boolean | undefined;
+    batchErrors?: DeepReadonly<{ message: string; batchNames: string[]; code: string }[]>;
+    successful?: boolean; // | undefined;
   },
 ) => {
   const submission = get(data, 'submission', {} as Partial<typeof data.submission>);

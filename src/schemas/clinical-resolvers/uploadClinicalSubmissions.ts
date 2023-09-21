@@ -23,6 +23,7 @@ import { FileUpload } from 'graphql-upload';
 import { GlobalGqlContext } from '../../app';
 import { convertClinicalSubmissionDataToGql } from '../utils';
 import submissionApi from '../../submission/submission-api';
+import { AuthenticationError } from 'apollo-server-errors';
 
 const uploadClinicalSubmissionsResolver = {
   uploadClinicalSubmissions: async (
@@ -32,7 +33,7 @@ const uploadClinicalSubmissionsResolver = {
   ) => {
     const { programShortName, clinicalFiles } = args;
     const permissionsFromToken = getPermissionsFromToken((<GlobalGqlContext>contextValue).egoToken);
-
+    console.log('permissions from token: ' + permissionsFromToken);
     // see reason in uploadRegistration
     /* if (!canWriteSomeProgramData(permissionsFromToken)) {
     throw new AuthenticationError('User is not authorized to write data');
@@ -50,7 +51,11 @@ const uploadClinicalSubmissionsResolver = {
       filesMap,
       (<GlobalGqlContext>contextValue).egoToken,
     );
-    return convertClinicalSubmissionDataToGql(programShortName, response);
+    return convertClinicalSubmissionDataToGql(programShortName, {
+      submission: response?.submission,
+      batchErrors: response?.batchErrors,
+      successful: response?.successful,
+    });
   },
 };
 

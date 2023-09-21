@@ -196,7 +196,7 @@ class SubmissionController {
     }*/
 
     const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
-    if (submissionSystemDisabled) return; // UK: to add isValidCreateBody
+    if (submissionSystemDisabled || isValidRequestArgs(programId, uploadedFiles)) return; // UK: to add isValidCreateBody
 
     const user = ControllerUtils.getUserFromToken(token);
     const newClinicalData: NewClinicalEntity[] = [];
@@ -467,6 +467,20 @@ const isValidCreateBody = (req: Request, res: Response): boolean => {
   if (req.file === undefined && (req.files === undefined || req.files.length === 0)) {
     L.debug(`File(s) missing`);
     ControllerUtils.badRequest(res, `Clinical file(s) upload required`);
+    return false;
+  }
+  return true;
+};
+
+const isValidRequestArgs = (programId: string, uploadedFiles: {}): boolean => {
+  if (programId === undefined) {
+    L.debug('programId missing');
+    // ControllerUtils.badRequest(res, `programId is required`);
+    return false;
+  }
+  if (/*uploadedFiles === undefined &&*/ Object.keys(uploadedFiles).length === 0) {
+    L.debug(`File(s) missing`);
+    // ControllerUtils.badRequest(res, `Clinical file(s) upload required`);
     return false;
   }
   return true;
