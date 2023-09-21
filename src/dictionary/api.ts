@@ -80,20 +80,22 @@ export const get = async (req: Request, res: Response) => {
   return res.status(200).send(schema);
 };
 
-export const getClinicalSchemas = async (withFields: boolean) =>
-  withFields
-    ? await manager
-        .instance()
+export const getClinicalSchemas = async (withFields: boolean) => {
+  const dictionaryManager = await manager.instance();
+  const schemaNameFilter = (schemaName: string) =>
+    schemaName !== ClinicalEntitySchemaNames.REGISTRATION;
+  const schemas = withFields
+    ? dictionaryManager
         .getSchemasWithFields()
-        .then(result =>
-          result.filter(
-            (s: manager.SchemaWithFields) => s.name !== ClinicalEntitySchemaNames.REGISTRATION,
-          ),
+        .then(schemaRecords =>
+          schemaRecords.filter(schemaRecord => schemaNameFilter(schemaRecord.name)),
         )
-    : await manager
-        .instance()
+    : dictionaryManager
         .getSchemaNames()
-        .then(result => result.filter(s => s !== ClinicalEntitySchemaNames.REGISTRATION));
+        .then(schemaRecords => schemaRecords.filter(schemaNameFilter));
+
+  return schemas;
+};
 
 export const getClinicalEntities = async (req: Request, res: Response) => {
   const withFields = req?.query?.includeFields?.toLowerCase() === 'true';
