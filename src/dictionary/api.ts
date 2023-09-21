@@ -99,7 +99,7 @@ export const getClinicalSchemas = async (withFields: boolean) => {
 
 export const getClinicalEntities = async (req: Request, res: Response) => {
   const withFields = req?.query?.includeFields?.toLowerCase() === 'true';
-  const schemas = await getClinicalSchemas(withFields).then(result => result);
+  const schemas = await getClinicalSchemas(withFields);
 
   return res.status(200).send(schemas);
 };
