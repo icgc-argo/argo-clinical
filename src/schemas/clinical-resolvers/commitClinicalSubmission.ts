@@ -20,8 +20,6 @@
 import submissionAPI from '../../submission/submission-api';
 import { GlobalGqlContext } from '../../app';
 import { convertClinicalSubmissionDataToGql } from '../utils';
-import { DeepReadonly } from 'deep-freeze';
-import { ActiveClinicalSubmission } from '../../submission/submission-entities';
 
 const commitClinicalSubmission = async (
   obj: unknown,
@@ -29,12 +27,10 @@ const commitClinicalSubmission = async (
   contextValue: any,
 ) => {
   const { programShortName, version } = args;
-  const submissionData = <DeepReadonly<ActiveClinicalSubmission>>(
-    await submissionAPI.commitActiveSubmissionData(
-      programShortName,
-      version,
-      (<GlobalGqlContext>contextValue).egoToken,
-    )
+  const submissionData = await submissionAPI.commitActiveSubmissionData(
+    programShortName,
+    version,
+    (<GlobalGqlContext>contextValue).egoToken,
   );
   return convertClinicalSubmissionDataToGql(programShortName, {
     submission: submissionData,
