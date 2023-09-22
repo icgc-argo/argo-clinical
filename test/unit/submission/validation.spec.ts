@@ -1589,6 +1589,18 @@ describe('data-validator', () => {
       );
 
       ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+        submittedAB1Records,
+        {
+          [PrimaryDiagnosisFieldsEnum.submitter_donor_id]: 'DN190',
+          [PrimaryDiagnosisFieldsEnum.program_id]: 'TEST-CA',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
+          [PrimaryDiagnosisFieldsEnum.age_at_diagnosis]: 50,
+          index: 0,
+        },
+      );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
         ClinicalEntitySchemaNames.SPECIMEN,
         submittedAB1Records,
         {
@@ -1620,7 +1632,7 @@ describe('data-validator', () => {
           [TreatmentFieldsEnum.submitter_donor_id]: 'DN190',
           [TreatmentFieldsEnum.program_id]: 'TEST-CA',
           [TreatmentFieldsEnum.submitter_treatment_id]: 'TR-33',
-          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-1',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
           [TreatmentFieldsEnum.treatment_start_interval]: 250,
           [TreatmentFieldsEnum.treatment_duration]: 50,
           index: 0,
@@ -1704,24 +1716,10 @@ describe('data-validator', () => {
         },
       );
 
-      ClinicalSubmissionRecordsOperations.addRecord(
-        ClinicalEntitySchemaNames.TREATMENT,
-        submittedAB1Records,
-        {
-          [TreatmentFieldsEnum.submitter_donor_id]: 'DN190',
-          [TreatmentFieldsEnum.program_id]: 'TEST-CA',
-          [TreatmentFieldsEnum.submitter_treatment_id]: 'TR-33',
-          [TreatmentFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
-          [TreatmentFieldsEnum.treatment_start_interval]: 250,
-          [TreatmentFieldsEnum.treatment_duration]: 50,
-          index: 0,
-        },
-      );
-
       const result = await dv
         .validateSubmissionData({ AB1: submittedAB1Records }, { AB1: existingDonorAB1Mock })
         .catch(err => fail(err));
-
+      console.log('\n result', result[ClinicalEntitySchemaNames.DONOR].dataErrors);
       chai.expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors.length).to.eq(0);
     });
 
