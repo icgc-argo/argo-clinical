@@ -101,7 +101,7 @@ const crossFileValidator = async (
   mergedDonor: DeepReadonly<Donor>,
 ) => {
   const { lost_to_followup_after_clinical_event_id } = submittedDonorRecord;
-  const { treatments = [], followUps = [] } = mergedDonor;
+  const { treatments = [], followUps = [], specimens, primaryDiagnoses = [] } = mergedDonor;
   const errors: SubmissionValidationError[] = [];
 
   if (lost_to_followup_after_clinical_event_id) {
@@ -117,8 +117,21 @@ const crossFileValidator = async (
         lost_to_followup_after_clinical_event_id,
     );
 
+    const specimenMatch = specimens?.find(
+      treatmentRecord =>
+        treatmentRecord.clinicalInfo?.submitter_specimen_id ===
+        lost_to_followup_after_clinical_event_id,
+    );
+
+    const primaryDiagnosesMatch = primaryDiagnoses?.find(
+      diagnosisRecord =>
+        diagnosisRecord.clinicalInfo?.submitter_primary_diagnosis_id ===
+        lost_to_followup_after_clinical_event_id,
+    );
+
     // Find if Lost to Follow Up ID matches a previous Treatment ID
-    const donorClinicalEventIdMatch = treatmentMatch || followUpMatch;
+    const donorClinicalEventIdMatch =
+      treatmentMatch || followUpMatch || specimenMatch || primaryDiagnosesMatch;
 
     if (!donorClinicalEventIdMatch) {
       errors.push(
@@ -139,31 +152,46 @@ const crossFileValidator = async (
 
       const invalidTreatmentIntervals = treatments.filter(treatment => {
         const treatmentRecord = treatment.clinicalInfo;
-
         const { treatment_start_interval, treatment_duration } = treatmentRecord;
-
         const treatmentStartInterval =
           typeof treatment_start_interval === 'number' ? treatment_start_interval : 0;
-
         const treatmentDuration = typeof treatment_duration === 'number' ? treatment_duration : 0;
-
         const totalTreatmentTime = treatmentStartInterval + treatmentDuration;
-
         return totalTreatmentTime > lostToFollowUpInterval;
       });
 
       const invalidFollowUpIntervals = followUps.filter(followUp => {
         const followUpRecord = followUp.clinicalInfo;
-
         const { interval_of_followup } = followUpRecord;
-
         const intervalOfFollowUp =
           typeof interval_of_followup === 'number' ? interval_of_followup : 0;
-
         return intervalOfFollowUp > lostToFollowUpInterval;
       });
 
-      const invalidRecords = [...invalidTreatmentIntervals, ...invalidFollowUpIntervals];
+      const invalidSpecimenIntervals = specimens.filter(specimen => {
+        const specimenRecord = specimen.clinicalInfo;
+        const { specimen_acquisition_interval, specimen_duration } = specimenRecord;
+        const specimenStartInterval =
+          typeof specimen_acquisition_interval === 'number' ? specimen_acquisition_interval : 0;
+        const specimenDuration = typeof specimen_duration === 'number' ? specimen_duration : 0;
+        const totalTreatmentTime = specimenStartInterval + specimenDuration;
+        return totalTreatmentTime > lostToFollowUpInterval;
+      });
+
+      const invalidPrimaryDiagnosisIntervals = primaryDiagnoses.filter(diagnosis => {
+        const diagnosisRecord = diagnosis.clinicalInfo;
+        const { interval_of_followup } = diagnosisRecord;
+        const intervalOfFollowUp =
+          typeof interval_of_followup === 'number' ? interval_of_followup : 0;
+        return intervalOfFollowUp > lostToFollowUpInterval;
+      });
+
+      const invalidRecords = [
+        ...invalidTreatmentIntervals,
+        ...invalidFollowUpIntervals,
+        ...invalidSpecimenIntervals,
+        ...invalidPrimaryDiagnosisIntervals,
+      ];
 
       if (invalidRecords.length) {
         const firstInvalidTreatmentMatch = invalidRecords[0].clinicalInfo;
