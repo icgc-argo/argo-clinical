@@ -145,10 +145,20 @@ const crossFileValidator = async (
         ),
       );
     } else {
-      const lostToFollowUpInterval =
-        (typeof donorClinicalEventIdMatch?.clinicalInfo?.interval_of_followup === 'number' &&
-          donorClinicalEventIdMatch.clinicalInfo.interval_of_followup) ||
+      const lostToFollowUpClinicalInfo = donorClinicalEventIdMatch.clinicalInfo;
+
+      const lostToFollowUpStartInterval =
+        Number(lostToFollowUpClinicalInfo.interval_of_followup) ||
+        Number(lostToFollowUpClinicalInfo.treatment_start_interval) ||
+        Number(lostToFollowUpClinicalInfo.specimen_acquisition_interval) ||
         0;
+
+      const lostToFollowUpDuration =
+        Number(lostToFollowUpClinicalInfo.treatment_duration) ||
+        Number(lostToFollowUpClinicalInfo.specimen_duration) ||
+        0;
+
+      const lostToFollowUpInterval = lostToFollowUpStartInterval + lostToFollowUpDuration;
 
       const invalidTreatmentIntervals = treatments.filter(treatment => {
         const treatmentRecord = treatment.clinicalInfo;
