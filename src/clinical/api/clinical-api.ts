@@ -19,18 +19,13 @@
 
 import { Request, Response } from 'express';
 import * as service from '../clinical-service';
-import { ClinicalQuery, ClinicalSearchQuery } from '../clinical-service';
+import { PaginatedClinicalQuery, ClinicalDonorEntityQuery } from '../clinical-service';
 import {
   HasFullWriteAccess,
   ProtectTestEndpoint,
   HasProgramReadAccess,
   HasFullReadAccess,
 } from '../../decorators';
-import {
-  ClinicalEntitySchemaNames,
-  aliasEntityNames,
-  queryEntityNames,
-} from '../../common-model/entities';
 import { ControllerUtils, DonorUtils, TsvUtils } from '../../utils';
 import AdmZip from 'adm-zip';
 import { ClinicalEntityData, Donor } from '../clinical-entities';
@@ -117,7 +112,7 @@ class ClinicalController {
     } = bodyParseResult.data;
     const completionState = completionFilters[state];
 
-    const query: ClinicalQuery = {
+    const query: PaginatedClinicalQuery = {
       programShortName,
       sort,
       entityTypes,
@@ -170,7 +165,7 @@ class ClinicalController {
     } = bodyParseResult.data;
     const completionState = completionFilters[state];
 
-    const query: ClinicalQuery = {
+    const query: PaginatedClinicalQuery = {
       programShortName,
       sort,
       entityTypes,
@@ -210,7 +205,7 @@ class ClinicalController {
     const completionState = completionFilters[state] || {};
 
     // FE filters digits out of search text for Donor search
-    const query: ClinicalSearchQuery = {
+    const query: ClinicalDonorEntityQuery = {
       programShortName,
       donorIds,
       submitterDonorIds,
@@ -246,19 +241,11 @@ class ClinicalController {
       );
     }
 
-    // 1. Get the migration errors for every donor requested...
-    const migrationErrors = await service.getClinicalEntityMigrationErrors(
-      programId,
-      bodyParseResult.data.donorIds,
-    );
+    const queryIds = bodyParseResult.data.donorIds || [];
 
-    // 2. ...and now remove from the list all valid donors (fixed with submissions since the migration)
-    const validErrorRecords = await service.getValidRecordsPostSubmission(
-      programId,
-      migrationErrors,
-    );
+    const clinicalErrors = await service.getClinicalErrors(programId, queryIds);
 
-    res.status(200).json(validErrorRecords.clinicalErrors);
+    res.status(200).json(clinicalErrors);
   }
 
   /**

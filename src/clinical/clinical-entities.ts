@@ -25,7 +25,7 @@ export interface Donor {
   __v?: number; // mongodb property not being filtered out
   createBy?: string;
   schemaMetadata: SchemaMetadata;
-  donorId?: number;
+  donorId: number;
   gender: string;
   submitterId: string;
   programId: string;

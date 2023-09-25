@@ -29,7 +29,7 @@ import {
   getSampleRegistrationDataFromDonor,
 } from '../../common-model/functions';
 import { notEmpty } from '../../utils';
-import { ClinicalQuery, ClinicalSearchQuery } from '../clinical-service';
+import { PaginatedClinicalQuery, ClinicalDonorEntityQuery } from '../clinical-service';
 import {
   ClinicalEntityData,
   ClinicalInfo,
@@ -117,7 +117,7 @@ const mapEntityDocuments = (
   entity: EntityClinicalInfo,
   donorCount: number,
   schemas: any,
-  query: ClinicalQuery,
+  query: PaginatedClinicalQuery,
   completionStats: CompletionDisplayRecord[],
 ) => {
   const { entityName, results } = entity;
@@ -154,7 +154,7 @@ const mapEntityDocuments = (
 };
 
 // Submitted Data Search Results
-function FilterDonorIdDataFromSearch(donors: Donor[], query: ClinicalSearchQuery) {
+function FilterDonorIdDataFromSearch(donors: Donor[], query: ClinicalDonorEntityQuery) {
   const { donorIds, submitterDonorIds } = query;
   const useQueriedDonors = !isEmpty(donorIds) || !isEmpty(submitterDonorIds);
   const queriedEntities = Object.values(ClinicalEntitySchemaNames).filter(entity =>
@@ -239,7 +239,7 @@ function extractEntityDataFromDonors(
   donors: Donor[],
   totalDonors: number,
   schemasWithFields: any,
-  query: ClinicalQuery,
+  query: PaginatedClinicalQuery,
 ) {
   let clinicalEntityData: EntityClinicalInfo[] = [];
 

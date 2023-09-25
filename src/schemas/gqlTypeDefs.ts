@@ -22,6 +22,16 @@ import gql from 'graphql-tag';
 const typeDefs = gql`
   type Query {
     """
+    Retrieve all stored Clinical Entity and Donor Completion data for a program
+    """
+    clinicalData(programShortName: String!, filters: ClinicalInput!): ClinicalData!
+
+    """
+    Retrieve all stored Clinical Migration Errors for a program
+    """
+    clinicalErrors(programShortName: String!, donorIds: [Int]): [ClinicalErrors!]!
+
+    """
     Retrieve current stored Clinical Registration data for a program
     """
     clinicalRegistration(shortName: String!): ClinicalRegistrationData!
@@ -112,7 +122,7 @@ const typeDefs = gql`
     programShortName: String!
     clinicalEntities: [ClinicalDataEntities]!
     completionStats: [CompletionStats]
-    clinicalErrors: [ClinicalErrors]
+    clinicalErrors: [ClinicalErrors]!
   }
 
   """
@@ -149,6 +159,7 @@ const typeDefs = gql`
   type ClinicalErrors {
     donorId: Int
     submitterDonorId: String
+    entityName: String
     errors: [ClinicalErrorRecord]
   }
 
