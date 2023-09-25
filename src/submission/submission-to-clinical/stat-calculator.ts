@@ -21,6 +21,9 @@ import {
   CompletionStats,
   CoreClinicalEntities,
   CoreCompletionFields,
+  CoreClinicalSchemaName,
+  coreClinicalSchemaNamesSet,
+  schemaNameToCoreCompletenessStat,
   Donor,
 } from '../../clinical/clinical-entities';
 import { ClinicalEntitySchemaNames } from '../../common-model/entities';
@@ -39,13 +42,6 @@ type ForceRecaculateFlags = {
   recalcEvenIfOverridden?: boolean; // used to force recalculate if previously overriden
 };
 
-type CoreClinicalSchemaName =
-  | ClinicalEntitySchemaNames.DONOR
-  | ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS
-  | ClinicalEntitySchemaNames.TREATMENT
-  | ClinicalEntitySchemaNames.FOLLOW_UP
-  | ClinicalEntitySchemaNames.SPECIMEN;
-
 const getCoreCompletionPercentage = (fields: CoreCompletionFields) =>
   mean(Object.values(fields || {})) || 0;
 
@@ -53,21 +49,6 @@ const getCoreCompletionDate = (donor: Donor, percentage: number) =>
   percentage === 1
     ? donor.completionStats?.coreCompletionDate || donor.updatedAt || new Date().toDateString()
     : undefined;
-
-const schemaNameToCoreCompletenessStat: Record<
-  CoreClinicalSchemaName,
-  keyof CoreCompletionFields
-> = {
-  [ClinicalEntitySchemaNames.DONOR]: 'donor',
-  [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: 'primaryDiagnosis',
-  [ClinicalEntitySchemaNames.TREATMENT]: 'treatments',
-  [ClinicalEntitySchemaNames.FOLLOW_UP]: 'followUps',
-  [ClinicalEntitySchemaNames.SPECIMEN]: 'specimens',
-};
-
-const coreClinicalSchemaNamesSet = new Set<CoreClinicalSchemaName>(
-  Object.keys(schemaNameToCoreCompletenessStat) as CoreClinicalSchemaName[],
-);
 
 const getEmptyCoreStats = (): CompletionStats => ({
   coreCompletion: {
