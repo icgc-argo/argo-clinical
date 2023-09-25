@@ -86,15 +86,15 @@ const convertRegistrationDataToGql = (
     batchErrors?: { message: string; batchNames: string[]; code: string }[];
   },
 ) => {
-  const registration = get(data, 'registration', {} as Partial<typeof data.registration>);
-  const schemaAndValidationErrors = get(data, 'errors', [] as typeof data.errors);
-  const fileErrors = get(data, 'batchErrors', [] as typeof data.batchErrors);
+  const registration: Partial<typeof data.registration> = get(data, 'registration', {});
+  const schemaAndValidationErrors: typeof data.errors = get(data, 'errors', []);
+  const fileErrors: typeof data.batchErrors = get(data, 'batchErrors', []);
   return {
-    id: registration?._id || undefined,
+    id: registration?._id,
     programShortName,
-    creator: registration?.creator || undefined,
-    fileName: registration?.batchName || undefined,
-    createdAt: registration?.createdAt || undefined,
+    creator: registration?.creator,
+    fileName: registration?.batchName,
+    createdAt: registration?.createdAt,
     records: () =>
       get(registration, 'records')?.map((record, i) => convertClinicalRecordToGql(i, record)),
     errors: schemaAndValidationErrors?.map(convertRegistrationErrorToGql),
