@@ -17,22 +17,41 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import * as manager from '../../dictionary/manager';
+import * as schemaApi from '../../dictionary/api';
+import * as configService from '../../submission/persisted-config/service';
 import submissionAPI from '../../submission/submission-api';
-import get from 'lodash/get';
-import { ActiveClinicalSubmission } from '../../submission/submission-entities';
-import { DeepReadonly } from 'deep-freeze';
 import { convertClinicalSubmissionDataToGql } from '../utils';
-import { getClinicalEntitiesData } from '../../dictionary/api';
 
-const clinicalSubmissionResolver = {
-  clinicalSubmissions: async (obj: unknown, args: { programShortName: string }) => {
-    const { programShortName } = args;
+const clinicalSubmissions = async (obj: unknown, args: { programShortName: string }) => {
+  const { programShortName } = args;
 
-    const submissionData = await submissionAPI.getActiveSubmissionDataByProgramId(programShortName);
-    return convertClinicalSubmissionDataToGql(programShortName, {
-      submission: submissionData,
-    });
-  },
+  const submissionData = await submissionAPI.getActiveSubmissionDataByProgramId(programShortName);
+  return convertClinicalSubmissionDataToGql(programShortName, {
+    submission: submissionData,
+  });
 };
 
-export default clinicalSubmissionResolver;
+export const clinicalSubmissionTypesList = async (
+  obj: unknown,
+  args: { includeFields: string },
+) => {
+  const withFields = args?.includeFields?.toLowerCase() === 'true';
+  const schemas = await schemaApi.getClinicalSchemas(withFields);
+
+  return schemas;
+};
+
+export const clinicalSubmissionSchemaVersion = async () => {
+  const schemaVersion = await manager
+    .instance()
+    .getCurrent()
+    .then(result => result.version);
+  return schemaVersion;
+};
+
+export const clinicalSubmissionSystemDisabled = async (obj: unknown, args: {}) => {
+  return await configService.getSubmissionDisabledState();
+};
+
+export default clinicalSubmissions;
