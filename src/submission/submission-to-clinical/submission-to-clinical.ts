@@ -91,7 +91,7 @@ export const commitClinicalSubmission = async (
       return updated;
     } else {
       await performCommitSubmission(activeSubmission);
-      return {};
+      return {} as DeepReadonly<ActiveClinicalSubmission>;
     }
   }
 };

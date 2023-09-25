@@ -18,33 +18,36 @@
  */
 
 // Query
-import clinicalDataResolver from './clinical-resolvers/clinicalData';
-import clinicalErrorsResolver from './clinical-resolvers/clinicalErrors';
-import clinicalRegistrationResolver from './clinical-resolvers/clinicalRegistrationData';
-import clinicalSearchResultResolver from './clinical-resolvers/clinicalSearchResults';
-import clinicalSubmissionResolver from './clinical-resolvers/clinicalSubmissionDataResolver';
-import clearClinicalSubmissionResolver from './clinical-resolvers/clearClinicalSubmissionResolver';
-import validateClinicalSubmissionResolver from './clinical-resolvers/validateClinicalSubmissionResolver';
-import commitClinicalSubmissionResolver from './clinical-resolvers/commitClinicalSubmission';
+import clinicalRegistration from './clinical-resolvers/clinicalRegistrationData';
+import clinicalSearchResult from './clinical-resolvers/clinicalSearchResults';
+import clinicalSubmissions, {
+  clinicalSubmissionTypesList,
+  clinicalSubmissionSchemaVersion,
+  clinicalSubmissionSystemDisabled,
+} from './clinical-resolvers/clinicalSubmissionDataResolver';
+import clearClinicalSubmission from './clinical-resolvers/clearClinicalSubmissionResolver';
+import validateClinicalSubmission from './clinical-resolvers/validateClinicalSubmissionResolver';
+import commitClinicalSubmission from './clinical-resolvers/commitClinicalSubmission';
 
 // Mutation
-import commitClinicalRegistrationMutation from './clinical-mutations/commitRegistration';
-import clearClinicalRegistrationMutation from './clinical-mutations/clearRegistration';
+import commitClinicalRegistration from './clinical-mutations/commitRegistration';
+import clearClinicalRegistration from './clinical-mutations/clearRegistration';
 
 const resolvers = {
   Query: {
-    ...clinicalDataResolver,
-    ...clinicalErrorsResolver,
-    ...clinicalRegistrationResolver,
-    ...clinicalSearchResultResolver,
-    ...clinicalSubmissionResolver,
+    clinicalRegistration,
+    clinicalSearchResult,
+    clinicalSubmissions,
+    clinicalSubmissionTypesList,
+    clinicalSubmissionSchemaVersion,
+    clinicalSubmissionSystemDisabled,
   },
   Mutation: {
-    ...clearClinicalRegistrationMutation,
-    ...commitClinicalRegistrationMutation,
-    ...clearClinicalSubmissionResolver,
-    ...validateClinicalSubmissionResolver,
-    ...commitClinicalSubmissionResolver,
+    clearClinicalSubmission,
+    validateClinicalSubmission,
+    commitClinicalSubmission,
+    clearClinicalRegistration,
+    commitClinicalRegistration,
   },
 };
 
