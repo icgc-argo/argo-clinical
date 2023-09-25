@@ -101,7 +101,7 @@ const crossFileValidator = async (
   mergedDonor: DeepReadonly<Donor>,
 ) => {
   const { lost_to_followup_after_clinical_event_id } = submittedDonorRecord;
-  const { treatments = [], followUps = [], specimens, primaryDiagnoses = [] } = mergedDonor;
+  const { primaryDiagnoses = [], treatments = [], followUps = [], specimens = [] } = mergedDonor;
   const errors: SubmissionValidationError[] = [];
 
   if (lost_to_followup_after_clinical_event_id) {
@@ -148,15 +148,17 @@ const crossFileValidator = async (
       const lostToFollowUpClinicalInfo = donorClinicalEventIdMatch.clinicalInfo;
 
       const lostToFollowUpStartInterval =
-        Number(lostToFollowUpClinicalInfo.interval_of_followup) ||
-        Number(lostToFollowUpClinicalInfo.treatment_start_interval) ||
-        Number(lostToFollowUpClinicalInfo.specimen_acquisition_interval) ||
-        0;
+        Number(
+          lostToFollowUpClinicalInfo.interval_of_followup ||
+            lostToFollowUpClinicalInfo.treatment_start_interval ||
+            lostToFollowUpClinicalInfo.specimen_acquisition_interval,
+        ) || 0;
 
       const lostToFollowUpDuration =
-        Number(lostToFollowUpClinicalInfo.treatment_duration) ||
-        Number(lostToFollowUpClinicalInfo.specimen_duration) ||
-        0;
+        Number(
+          lostToFollowUpClinicalInfo.treatment_duration ||
+            lostToFollowUpClinicalInfo.specimen_duration,
+        ) || 0;
 
       const lostToFollowUpInterval = lostToFollowUpStartInterval + lostToFollowUpDuration;
 
@@ -168,14 +170,6 @@ const crossFileValidator = async (
         const treatmentDuration = typeof treatment_duration === 'number' ? treatment_duration : 0;
         const totalTreatmentTime = treatmentStartInterval + treatmentDuration;
         return totalTreatmentTime > lostToFollowUpInterval;
-      });
-
-      const invalidFollowUpIntervals = followUps.filter(followUp => {
-        const followUpRecord = followUp.clinicalInfo;
-        const { interval_of_followup } = followUpRecord;
-        const intervalOfFollowUp =
-          typeof interval_of_followup === 'number' ? interval_of_followup : 0;
-        return intervalOfFollowUp > lostToFollowUpInterval;
       });
 
       const invalidSpecimenIntervals = specimens.filter(specimen => {
@@ -191,6 +185,14 @@ const crossFileValidator = async (
       const invalidPrimaryDiagnosisIntervals = primaryDiagnoses.filter(diagnosis => {
         const diagnosisRecord = diagnosis.clinicalInfo;
         const { interval_of_followup } = diagnosisRecord;
+        const intervalOfFollowUp =
+          typeof interval_of_followup === 'number' ? interval_of_followup : 0;
+        return intervalOfFollowUp > lostToFollowUpInterval;
+      });
+
+      const invalidFollowUpIntervals = followUps.filter(followUp => {
+        const followUpRecord = followUp.clinicalInfo;
+        const { interval_of_followup } = followUpRecord;
         const intervalOfFollowUp =
           typeof interval_of_followup === 'number' ? interval_of_followup : 0;
         return intervalOfFollowUp > lostToFollowUpInterval;
