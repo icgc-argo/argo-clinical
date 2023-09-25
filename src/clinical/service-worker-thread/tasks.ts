@@ -19,15 +19,10 @@
 
 import { DeepReadonly } from 'deep-freeze';
 import _, { isEmpty } from 'lodash';
-import {
-  ClinicalEntitySchemaNames,
-  aliasEntityNames,
-  queryEntityNames,
-} from '../../common-model/entities';
+import { ClinicalEntitySchemaNames, aliasEntityNames } from '../../common-model/entities';
 import {
   calculateSpecimenCompletionStats,
   dnaSampleFilter,
-  filterTumourNormalRecords,
   getRequiredDonorFieldsForEntityTypes,
   getClinicalEntitiesFromDonorBySchemaName,
   getClinicalEntitySubmittedData,

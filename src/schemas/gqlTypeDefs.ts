@@ -35,6 +35,21 @@ const typeDefs = gql`
     Retrieve current stored Clinical Submission data for a program
     """
     clinicalSubmissions(programShortName: String!): ClinicalSubmissionData!
+
+    """
+    Retrieve current stored Clinical Submission Data Dictionary Schema version
+    """
+    clinicalSubmissionSchemaVersion: String!
+
+    """
+    Retrieve current Clinical Submission disabled state for both sample_registration and clinical entity files
+    """
+    clinicalSubmissionSystemDisabled: Boolean!
+
+    """
+    Retrieve current stored Clinical Submission Types list
+    """
+    clinicalSubmissionTypesList(includeFields: String): [SchemaList]!
   }
 
   type Mutation {
@@ -339,6 +354,8 @@ const typeDefs = gql`
     oldValue: String!
     donorId: String!
   }
+
+  scalar SchemaList
 `;
 
 export default typeDefs;

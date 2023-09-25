@@ -22,26 +22,24 @@ import { loggerFor } from '../../logger';
 
 const L = loggerFor(__filename);
 
-const clearClinicalRegistrationMutation = {
-  clearClinicalRegistration: async (
-    obj: unknown,
-    args: {
-      shortName: string;
-      registrationId: string;
-    },
-  ) => {
-    const { shortName, registrationId } = args;
-    return await operations
-      .deleteRegistration(registrationId, shortName)
-      .then(() => {
-        L.info(`Deleted registrationId ${registrationId}`);
-        return true;
-      })
-      .catch(err => {
-        L.error(`Failed to delete registration`, err);
-        return false;
-      });
+const clearClinicalRegistration = async (
+  obj: unknown,
+  args: {
+    shortName: string;
+    registrationId: string;
   },
+) => {
+  const { shortName, registrationId } = args;
+  return await operations
+    .deleteRegistration(registrationId, shortName)
+    .then(() => {
+      L.info(`Deleted registrationId ${registrationId}`);
+      return true;
+    })
+    .catch(err => {
+      L.error(`Failed to delete registration`, err);
+      return false;
+    });
 };
 
-export default clearClinicalRegistrationMutation;
+export default clearClinicalRegistration;
