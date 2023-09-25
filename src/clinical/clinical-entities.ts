@@ -152,25 +152,3 @@ export interface CompletionDisplayRecord extends CompletionStats {
 }
 
 export type CoreClinicalEntities = keyof CoreCompletionFields;
-
-export type CoreClinicalSchemaName =
-  | ClinicalEntitySchemaNames.DONOR
-  | ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS
-  | ClinicalEntitySchemaNames.TREATMENT
-  | ClinicalEntitySchemaNames.FOLLOW_UP
-  | ClinicalEntitySchemaNames.SPECIMEN;
-
-export const schemaNameToCoreCompletenessStat: Record<
-  CoreClinicalSchemaName,
-  keyof CoreCompletionFields
-> = {
-  [ClinicalEntitySchemaNames.DONOR]: 'donor',
-  [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: 'primaryDiagnosis',
-  [ClinicalEntitySchemaNames.TREATMENT]: 'treatments',
-  [ClinicalEntitySchemaNames.FOLLOW_UP]: 'followUps',
-  [ClinicalEntitySchemaNames.SPECIMEN]: 'specimens',
-};
-
-export const coreClinicalSchemaNamesSet = new Set<CoreClinicalSchemaName>(
-  Object.keys(schemaNameToCoreCompletenessStat) as CoreClinicalSchemaName[],
-);
