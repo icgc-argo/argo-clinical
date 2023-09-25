@@ -1663,7 +1663,6 @@ describe('data-validator', () => {
         .expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors)
         .to.deep.include(submissionConflictErr);
     });
-
     it('should allow submission of a new Primary Diagnosis after a Lost to Follow Up After clinical event', async () => {
       const existingDonorAB1Mock: Donor = stubs.validation.existingDonor01();
       const submittedAB1Records = {};
@@ -1719,7 +1718,7 @@ describe('data-validator', () => {
       const result = await dv
         .validateSubmissionData({ AB1: submittedAB1Records }, { AB1: existingDonorAB1Mock })
         .catch(err => fail(err));
-      console.log('\n result', result[ClinicalEntitySchemaNames.DONOR].dataErrors);
+
       chai.expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors.length).to.eq(0);
     });
 

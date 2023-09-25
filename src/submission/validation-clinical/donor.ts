@@ -162,48 +162,39 @@ const crossFileValidator = async (
 
       const lostToFollowUpInterval = lostToFollowUpStartInterval + lostToFollowUpDuration;
 
-      const invalidTreatmentIntervals = treatments.filter(treatment => {
-        const treatmentRecord = treatment.clinicalInfo;
-        const { treatment_start_interval, treatment_duration } = treatmentRecord;
-        const treatmentStartInterval =
-          typeof treatment_start_interval === 'number' ? treatment_start_interval : 0;
-        const treatmentDuration = typeof treatment_duration === 'number' ? treatment_duration : 0;
-        const totalTreatmentTime = treatmentStartInterval + treatmentDuration;
-        return totalTreatmentTime > lostToFollowUpInterval;
+      // Collects all Entity Records w/ Treatment Intervals after Lost to Follow Up
+      const invalidClinicalIntervalRecords = [...treatments, ...specimens].filter(entityRecord => {
+        const { clinicalInfo } = entityRecord;
+        const { treatment_start_interval, treatment_duration } = clinicalInfo;
+        const { specimen_acquisition_interval, specimen_duration } = clinicalInfo;
+
+        const treatmentInterval =
+          typeof treatment_start_interval === 'number'
+            ? treatment_start_interval + (Number(treatment_duration) || 0)
+            : 0;
+
+        const specimenInterval =
+          typeof specimen_acquisition_interval === 'number'
+            ? specimen_acquisition_interval + (Number(specimen_duration) || 0)
+            : 0;
+
+        return (
+          treatmentInterval > lostToFollowUpInterval || specimenInterval > lostToFollowUpInterval
+        );
       });
 
-      const invalidSpecimenIntervals = specimens.filter(specimen => {
-        const specimenRecord = specimen.clinicalInfo;
-        const { specimen_acquisition_interval, specimen_duration } = specimenRecord;
-        const specimenStartInterval =
-          typeof specimen_acquisition_interval === 'number' ? specimen_acquisition_interval : 0;
-        const specimenDuration = typeof specimen_duration === 'number' ? specimen_duration : 0;
-        const totalTreatmentTime = specimenStartInterval + specimenDuration;
-        return totalTreatmentTime > lostToFollowUpInterval;
-      });
+      // Collects all Records w/ Follow Up Intervals after Lost to Follow Up
+      const invalidFollowUpIntervalRecords = [...primaryDiagnoses, ...followUps].filter(
+        entityRecord => {
+          const clinicalInfo = entityRecord.clinicalInfo;
+          const { interval_of_followup } = clinicalInfo;
+          const intervalOfFollowUp =
+            typeof interval_of_followup === 'number' ? interval_of_followup : 0;
+          return intervalOfFollowUp > lostToFollowUpInterval;
+        },
+      );
 
-      const invalidPrimaryDiagnosisIntervals = primaryDiagnoses.filter(diagnosis => {
-        const diagnosisRecord = diagnosis.clinicalInfo;
-        const { interval_of_followup } = diagnosisRecord;
-        const intervalOfFollowUp =
-          typeof interval_of_followup === 'number' ? interval_of_followup : 0;
-        return intervalOfFollowUp > lostToFollowUpInterval;
-      });
-
-      const invalidFollowUpIntervals = followUps.filter(followUp => {
-        const followUpRecord = followUp.clinicalInfo;
-        const { interval_of_followup } = followUpRecord;
-        const intervalOfFollowUp =
-          typeof interval_of_followup === 'number' ? interval_of_followup : 0;
-        return intervalOfFollowUp > lostToFollowUpInterval;
-      });
-
-      const invalidRecords = [
-        ...invalidTreatmentIntervals,
-        ...invalidFollowUpIntervals,
-        ...invalidSpecimenIntervals,
-        ...invalidPrimaryDiagnosisIntervals,
-      ];
+      const invalidRecords = [...invalidClinicalIntervalRecords, ...invalidFollowUpIntervalRecords];
 
       if (invalidRecords.length) {
         const firstInvalidTreatmentMatch = invalidRecords[0].clinicalInfo;
