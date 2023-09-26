@@ -18,10 +18,16 @@
  */
 
 // Query
-import clinicalRegistrationResolver from './clinical-resolvers/clinicalRegistrationData';
-import clinicalSearchResultResolver from './clinical-resolvers/clinicalSearchResults';
-import clinicalSubmissionResolver from './clinical-resolvers/clinicalSubmissionDataResolver';
-import clearClinicalSubmissionResolver from './clinical-resolvers/clearClinicalSubmissionResolver';
+import clinicalRegistration from './clinical-resolvers/clinicalRegistrationData';
+import clinicalSearchResult from './clinical-resolvers/clinicalSearchResults';
+import clearClinicalSubmission from './clinical-resolvers/clearClinicalSubmissionResolver';
+import commitClinicalSubmission from './clinical-resolvers/commitClinicalSubmission';
+import validateClinicalSubmission from './clinical-resolvers/validateClinicalSubmissionResolver';
+import clinicalSubmissions, {
+  clinicalSubmissionTypesList,
+  clinicalSubmissionSchemaVersion,
+  clinicalSubmissionSystemDisabled,
+} from './clinical-resolvers/clinicalSubmissionDataResolver';
 
 // Mutation
 import commitClinicalRegistration from './clinical-mutations/commitRegistration';
@@ -29,14 +35,19 @@ import clearClinicalRegistration from './clinical-mutations/clearRegistration';
 
 const resolvers = {
   Query: {
-    ...clinicalRegistrationResolver,
-    ...clinicalSearchResultResolver,
-    ...clinicalSubmissionResolver,
+    clinicalRegistration,
+    clinicalSearchResult,
+    clinicalSubmissions,
+    clinicalSubmissionTypesList,
+    clinicalSubmissionSchemaVersion,
+    clinicalSubmissionSystemDisabled,
   },
   Mutation: {
-    ...commitClinicalRegistration,
-    ...clearClinicalRegistration,
-    ...clearClinicalSubmissionResolver,
+    clearClinicalSubmission,
+    validateClinicalSubmission,
+    commitClinicalSubmission,
+    clearClinicalRegistration,
+    commitClinicalRegistration,
   },
 };
 

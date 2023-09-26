@@ -19,20 +19,18 @@
 
 import { commitRegistration } from '../../submission/submission-to-clinical/submission-to-clinical';
 
-const commitClinicalRegistrationMutation = {
-  commitClinicalRegistration: async (
-    obj: unknown,
-    args: { shortName: string; registrationId: string },
-  ) => {
-    const { shortName: programId, registrationId } = args;
+const commitClinicalRegistration = async (
+  obj: unknown,
+  args: { shortName: string; registrationId: string },
+) => {
+  const { shortName: programId, registrationId } = args;
 
-    const newSampleIds = await commitRegistration({
-      registrationId,
-      programId,
-    });
+  const newSampleIds = await commitRegistration({
+    registrationId,
+    programId,
+  });
 
-    return newSampleIds;
-  },
+  return newSampleIds;
 };
 
-export default commitClinicalRegistrationMutation;
+export default commitClinicalRegistration;

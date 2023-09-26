@@ -22,6 +22,16 @@ import gql from 'graphql-tag';
 const typeDefs = gql`
   type Query {
     """
+    Retrieve all stored Clinical Entity and Donor Completion data for a program
+    """
+    clinicalData(programShortName: String!, filters: ClinicalInput!): ClinicalData!
+
+    """
+    Retrieve all stored Clinical Migration Errors for a program
+    """
+    clinicalErrors(programShortName: String!, donorIds: [Int]): [ClinicalErrors!]!
+
+    """
     Retrieve current stored Clinical Registration data for a program
     """
     clinicalRegistration(shortName: String!): ClinicalRegistrationData!
@@ -35,6 +45,21 @@ const typeDefs = gql`
     Retrieve current stored Clinical Submission data for a program
     """
     clinicalSubmissions(programShortName: String!): ClinicalSubmissionData!
+
+    """
+    Retrieve current stored Clinical Submission Data Dictionary Schema version
+    """
+    clinicalSubmissionSchemaVersion: String!
+
+    """
+    Retrieve current Clinical Submission disabled state for both sample_registration and clinical entity files
+    """
+    clinicalSubmissionSystemDisabled: Boolean!
+
+    """
+    Retrieve current stored Clinical Submission Types list
+    """
+    clinicalSubmissionTypesList(includeFields: String): [SchemaList]!
   }
 
   type Mutation {
@@ -58,6 +83,21 @@ const typeDefs = gql`
       version: String!
       fileType: String
     ): ClinicalSubmissionData!
+
+    """
+    Validate the uploaded clinical files
+    """
+    validateClinicalSubmissions(
+      programShortName: String!
+      version: String!
+    ): ClinicalSubmissionData!
+
+    """
+    - If there is update: makes a clinical submission ready for approval by a DCC member,
+    returning submission data with updated state
+    - If there is NO update: merges clinical data to system, returning an empty submission
+    """
+    commitClinicalSubmission(programShortName: String!, version: String!): ClinicalSubmissionData!
   }
 
   scalar DateTime
@@ -82,7 +122,7 @@ const typeDefs = gql`
     programShortName: String!
     clinicalEntities: [ClinicalDataEntities]!
     completionStats: [CompletionStats]
-    clinicalErrors: [ClinicalErrors]
+    clinicalErrors: [ClinicalErrors]!
   }
 
   """
@@ -119,6 +159,7 @@ const typeDefs = gql`
   type ClinicalErrors {
     donorId: Int
     submitterDonorId: String
+    entityName: String
     errors: [ClinicalErrorRecord]
   }
 
@@ -324,6 +365,8 @@ const typeDefs = gql`
     oldValue: String!
     donorId: String!
   }
+
+  scalar SchemaList
 `;
 
 export default typeDefs;

@@ -21,23 +21,21 @@ import { GlobalGqlContext } from '../../app';
 import submissionAPI from '../../submission/submission-api';
 import { convertClinicalSubmissionDataToGql } from '../utils';
 
-const clearClinicalSubmissionResolver = {
-  clearClinicalSubmission: async (
-    obj: unknown,
-    args: { programShortName: string; fileType: string; version: string },
-    contextValue: any,
-  ) => {
-    const { programShortName, fileType, version } = args;
-    const response = await submissionAPI.clearFileDataFromActiveSubmission(
-      programShortName,
-      fileType,
-      version,
-      (<GlobalGqlContext>contextValue).egoToken,
-    );
-    return convertClinicalSubmissionDataToGql(programShortName, {
-      submission: response,
-    });
-  },
+const clearClinicalSubmission = async (
+  obj: unknown,
+  args: { programShortName: string; fileType: string; version: string },
+  contextValue: any,
+) => {
+  const { programShortName, fileType, version } = args;
+  const response = await submissionAPI.clearFileDataFromActiveSubmission(
+    programShortName,
+    fileType || 'all',
+    version,
+    (<GlobalGqlContext>contextValue).egoToken,
+  );
+  return convertClinicalSubmissionDataToGql(programShortName, {
+    submission: response,
+  });
 };
 
-export default clearClinicalSubmissionResolver;
+export default clearClinicalSubmission;

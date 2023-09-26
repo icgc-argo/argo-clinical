@@ -18,19 +18,28 @@
  */
 
 import { operations } from '../../submission/submission-service';
+import { loggerFor } from '../../logger';
 
-const clearClinicalRegistrationMutation = {
-  clearClinicalRegistration: async (
-    obj: unknown,
-    args: {
-      shortName: string;
-      registrationId: string;
-    },
-  ) => {
-    const { shortName, registrationId } = args;
-    const response = await operations.deleteRegistration(registrationId, shortName);
-    return true;
+const L = loggerFor(__filename);
+
+const clearClinicalRegistration = async (
+  obj: unknown,
+  args: {
+    shortName: string;
+    registrationId: string;
   },
+) => {
+  const { shortName, registrationId } = args;
+  return await operations
+    .deleteRegistration(registrationId, shortName)
+    .then(() => {
+      L.info(`Deleted registrationId ${registrationId}`);
+      return true;
+    })
+    .catch(err => {
+      L.error(`Failed to delete registration`, err);
+      return false;
+    });
 };
 
-export default clearClinicalRegistrationMutation;
+export default clearClinicalRegistration;
