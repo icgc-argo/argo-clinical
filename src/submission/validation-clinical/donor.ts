@@ -131,7 +131,7 @@ const crossFileValidator = async (
 
     // Find if Lost to Follow Up ID matches a previous Treatment ID
     const donorClinicalEventIdMatch =
-      treatmentMatch || followUpMatch || specimenMatch || primaryDiagnosisMatch;
+      treatmentMatch || primaryDiagnosisMatch || followUpMatch || specimenMatch;
 
     if (!donorClinicalEventIdMatch) {
       errors.push(
