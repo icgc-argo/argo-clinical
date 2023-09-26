@@ -111,6 +111,12 @@ const crossFileValidator = async (
         lost_to_followup_after_clinical_event_id,
     );
 
+    const primaryDiagnosisMatch = primaryDiagnoses?.find(
+      diagnosisRecord =>
+        diagnosisRecord.clinicalInfo?.submitter_primary_diagnosis_id ===
+        lost_to_followup_after_clinical_event_id,
+    );
+
     const followUpMatch = followUps?.find(
       followUpRecord =>
         followUpRecord.clinicalInfo?.submitter_follow_up_id ===
@@ -123,15 +129,9 @@ const crossFileValidator = async (
         lost_to_followup_after_clinical_event_id,
     );
 
-    const primaryDiagnosesMatch = primaryDiagnoses?.find(
-      diagnosisRecord =>
-        diagnosisRecord.clinicalInfo?.submitter_primary_diagnosis_id ===
-        lost_to_followup_after_clinical_event_id,
-    );
-
     // Find if Lost to Follow Up ID matches a previous Treatment ID
     const donorClinicalEventIdMatch =
-      treatmentMatch || followUpMatch || specimenMatch || primaryDiagnosesMatch;
+      treatmentMatch || followUpMatch || specimenMatch || primaryDiagnosisMatch;
 
     if (!donorClinicalEventIdMatch) {
       errors.push(
