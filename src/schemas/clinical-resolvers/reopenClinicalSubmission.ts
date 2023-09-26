@@ -21,22 +21,20 @@ import submissionAPI from '../../submission/submission-api';
 import { GlobalGqlContext } from '../../app';
 import { convertClinicalSubmissionDataToGql } from '../utils';
 
-const reopenClinicalSubmissionResolver = {
-  reopenClinicalSubmission: async (
-    obj: unknown,
-    args: { programShortName: string; version: string },
-    contextValue: any,
-  ) => {
-    const { programShortName, version } = args;
-    const submissionData = await submissionAPI.reopenActiveDataSubmission(
-      programShortName,
-      version,
-      (<GlobalGqlContext>contextValue).egoToken,
-    );
-    return convertClinicalSubmissionDataToGql(programShortName, {
-      submission: submissionData,
-    });
-  },
+const reopenClinicalSubmission = async (
+  obj: unknown,
+  args: { programShortName: string; version: string },
+  contextValue: any,
+) => {
+  const { programShortName, version } = args;
+  const submissionData = await submissionAPI.reopenActiveDataSubmission(
+    programShortName,
+    version,
+    (<GlobalGqlContext>contextValue).egoToken,
+  );
+  return convertClinicalSubmissionDataToGql(programShortName, {
+    submission: submissionData,
+  });
 };
 
-export default reopenClinicalSubmissionResolver;
+export default reopenClinicalSubmission;
