@@ -18,7 +18,7 @@
  */
 
 import { DeepReadonly } from 'deep-freeze';
-import { Donor } from '../../clinical/clinical-entities';
+import { ClinicalInfo, Donor } from '../../clinical/clinical-entities';
 import { DonorFieldsEnum, SpecimenFieldsEnum } from '../../common-model/entities';
 import {
   DataValidationErrors,
@@ -96,6 +96,24 @@ function checkTimeConflictWithSpecimens(
     : [];
 }
 
+const getTreatmentInterval = (clinicalInfo: DeepReadonly<ClinicalInfo>) => {
+  const { treatment_start_interval, treatment_duration } = clinicalInfo;
+  const treatmentInterval =
+    typeof treatment_start_interval === 'number'
+      ? treatment_start_interval + (Number(treatment_duration) || 0)
+      : 0;
+  return treatmentInterval;
+};
+
+const getSpecimenInterval = (clinicalInfo: DeepReadonly<ClinicalInfo>) => {
+  const { specimen_acquisition_interval, specimen_duration } = clinicalInfo;
+  const specimenInterval =
+    typeof specimen_acquisition_interval === 'number'
+      ? specimen_acquisition_interval + (Number(specimen_duration) || 0)
+      : 0;
+  return specimenInterval;
+};
+
 const crossFileValidator = async (
   submittedDonorRecord: DeepReadonly<SubmittedClinicalRecord>,
   mergedDonor: DeepReadonly<Donor>,
@@ -163,27 +181,14 @@ const crossFileValidator = async (
       const lostToFollowUpInterval = lostToFollowUpStartInterval + lostToFollowUpDuration;
 
       // Collects all Entity Records w/ Treatment Intervals after Lost to Follow Up
-      const invalidClinicalIntervalRecords = [...treatments, ...specimens]
-        .filter(entityRecord => {
-          const { clinicalInfo } = entityRecord;
-          const { treatment_start_interval, treatment_duration } = clinicalInfo;
-          const { specimen_acquisition_interval, specimen_duration } = clinicalInfo;
-
-          const treatmentInterval =
-            typeof treatment_start_interval === 'number'
-              ? treatment_start_interval + (Number(treatment_duration) || 0)
-              : 0;
-
-          const specimenInterval =
-            typeof specimen_acquisition_interval === 'number'
-              ? specimen_acquisition_interval + (Number(specimen_duration) || 0)
-              : 0;
-
-          return (
-            treatmentInterval > lostToFollowUpInterval || specimenInterval > lostToFollowUpInterval
-          );
-        })
-        .map(record => record.clinicalInfo);
+      const invalidClinicalIntervalRecords = [
+        ...treatments
+          .map(treatmentRecord => treatmentRecord.clinicalInfo)
+          .filter(clinicalInfo => getTreatmentInterval(clinicalInfo) > lostToFollowUpInterval),
+        ...specimens
+          .map(specimenRecord => specimenRecord.clinicalInfo)
+          .filter(clinicalInfo => getSpecimenInterval(clinicalInfo) > lostToFollowUpInterval),
+      ];
 
       // Collects all Records w/ Follow Up Intervals greater than Lost to Follow Up
       const invalidFollowUpIntervalRecords = followUps
