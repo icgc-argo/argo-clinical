@@ -24,15 +24,13 @@ import { DeepReadonly } from 'deep-freeze';
 import { convertClinicalSubmissionDataToGql } from '../utils';
 import { getClinicalEntitiesData } from '../../dictionary/api';
 
-const clinicalSubmissionResolver = {
-  clinicalSubmissions: async (obj: unknown, args: { programShortName: string }) => {
-    const { programShortName } = args;
+const clinicalSubmissions = async (obj: unknown, args: { programShortName: string }) => {
+  const { programShortName } = args;
 
-    const submissionData = await submissionAPI.getActiveSubmissionDataByProgramId(programShortName);
-    return convertClinicalSubmissionDataToGql(programShortName, {
-      submission: submissionData,
-    });
-  },
+  const submissionData = await submissionAPI.getActiveSubmissionDataByProgramId(programShortName);
+  return convertClinicalSubmissionDataToGql(programShortName, {
+    submission: submissionData,
+  });
 };
 
-export default clinicalSubmissionResolver;
+export default clinicalSubmissions;

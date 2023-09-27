@@ -20,20 +20,18 @@
 import submissionAPI from '../../submission/submission-api';
 import { GlobalGqlContext } from '../../app';
 
-const approveClinicalSubmissionResolver = {
-  approveClinicalSubmission: async (
-    obj: unknown,
-    args: { programShortName: string; version: string },
-    contextValue: any,
-  ) => {
-    const { programShortName, version } = args;
-    const submissionData = await submissionAPI.approveActiveDataSubmission(
-      programShortName,
-      version,
-      (<GlobalGqlContext>contextValue).egoToken,
-    );
-    return submissionData ? true : false;
-  },
+const approveClinicalSubmission = async (
+  obj: unknown,
+  args: { programShortName: string; version: string },
+  contextValue: any,
+) => {
+  const { programShortName, version } = args;
+  const submissionData = await submissionAPI.approveActiveDataSubmission(
+    programShortName,
+    version,
+    (<GlobalGqlContext>contextValue).egoToken,
+  );
+  return submissionData ? true : false;
 };
 
-export default approveClinicalSubmissionResolver;
+export default approveClinicalSubmission;
