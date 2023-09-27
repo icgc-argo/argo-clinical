@@ -18,7 +18,7 @@
  */
 
 import { DeepReadonly } from 'deep-freeze';
-import { ClinicalInfo, Donor } from '../../clinical/clinical-entities';
+import { Donor, Specimen, Treatment } from '../../clinical/clinical-entities';
 import { DonorFieldsEnum, SpecimenFieldsEnum } from '../../common-model/entities';
 import {
   DataValidationErrors,
@@ -96,7 +96,8 @@ function checkTimeConflictWithSpecimens(
     : [];
 }
 
-const getTreatmentInterval = (clinicalInfo: DeepReadonly<ClinicalInfo>) => {
+const getTreatmentInterval = (treatment: DeepReadonly<Treatment>) => {
+  const { clinicalInfo } = treatment;
   const { treatment_start_interval, treatment_duration } = clinicalInfo;
   const treatmentInterval =
     typeof treatment_start_interval === 'number'
@@ -105,7 +106,8 @@ const getTreatmentInterval = (clinicalInfo: DeepReadonly<ClinicalInfo>) => {
   return treatmentInterval;
 };
 
-const getSpecimenInterval = (clinicalInfo: DeepReadonly<ClinicalInfo>) => {
+const getSpecimenInterval = (specimen: DeepReadonly<Specimen>) => {
+  const { clinicalInfo } = specimen;
   const { specimen_acquisition_interval, specimen_duration } = clinicalInfo;
   const specimenInterval =
     typeof specimen_acquisition_interval === 'number'
@@ -183,11 +185,11 @@ const crossFileValidator = async (
       // Collects all Entity Records w/ Treatment Intervals after Lost to Follow Up
       const invalidClinicalIntervalRecords = [
         ...treatments
-          .map(treatmentRecord => treatmentRecord.clinicalInfo)
-          .filter(clinicalInfo => getTreatmentInterval(clinicalInfo) > lostToFollowUpInterval),
+          .filter(treatmentRecord => getTreatmentInterval(treatmentRecord) > lostToFollowUpInterval)
+          .map(treatmentRecord => treatmentRecord.clinicalInfo),
         ...specimens
-          .map(specimenRecord => specimenRecord.clinicalInfo)
-          .filter(clinicalInfo => getSpecimenInterval(clinicalInfo) > lostToFollowUpInterval),
+          .filter(specimenRecord => getSpecimenInterval(specimenRecord) > lostToFollowUpInterval)
+          .map(specimenRecord => specimenRecord.clinicalInfo),
       ];
 
       // Collects all Records w/ Follow Up Intervals greater than Lost to Follow Up
