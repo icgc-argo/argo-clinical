@@ -1620,7 +1620,7 @@ describe('data-validator', () => {
           [TreatmentFieldsEnum.submitter_donor_id]: 'DN190',
           [TreatmentFieldsEnum.program_id]: 'TEST-CA',
           [TreatmentFieldsEnum.submitter_treatment_id]: 'TR-33',
-          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-1',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
           [TreatmentFieldsEnum.treatment_start_interval]: 250,
           [TreatmentFieldsEnum.treatment_duration]: 50,
           index: 0,
@@ -1635,7 +1635,7 @@ describe('data-validator', () => {
           lost_to_followup_after_clinical_event_id: 'FL-23',
           donorSubmitterId: 'DN190',
           interval_of_followup: 230,
-          submitter_treatment_id: 'TR-33',
+          treatment_id: 'TR-33',
           value: 'FL-23',
         },
         message:
@@ -1646,13 +1646,13 @@ describe('data-validator', () => {
         .validateSubmissionData({ AB1: submittedAB1Records }, { AB1: existingDonorAB1Mock })
         .catch(err => fail(err));
 
-      chai.expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors.length).to.eq(1);
+      chai.expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors.length).to.eq(2);
       chai
         .expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors)
         .to.deep.include(submissionConflictErr);
     });
 
-    it('should allow submission of a new Primary Diagnosis after a Lost to Follow Up After clinical event', async () => {
+    it('should not allow submission of a new Primary Diagnosis after a Lost to Follow Up After clinical event', async () => {
       const existingDonorAB1Mock: Donor = stubs.validation.existingDonor01();
       const submittedAB1Records = {};
       ClinicalSubmissionRecordsOperations.addRecord(
@@ -1704,25 +1704,30 @@ describe('data-validator', () => {
         },
       );
 
-      ClinicalSubmissionRecordsOperations.addRecord(
-        ClinicalEntitySchemaNames.TREATMENT,
-        submittedAB1Records,
-        {
-          [TreatmentFieldsEnum.submitter_donor_id]: 'DN190',
-          [TreatmentFieldsEnum.program_id]: 'TEST-CA',
-          [TreatmentFieldsEnum.submitter_treatment_id]: 'TR-33',
-          [TreatmentFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
-          [TreatmentFieldsEnum.treatment_start_interval]: 250,
-          [TreatmentFieldsEnum.treatment_duration]: 50,
-          index: 0,
+      const diagnosisConflictErr: SubmissionValidationError = {
+        type: DataValidationErrors['INVALID_DIAGNOSIS_AFTER_LOST_TO_FOLLOW_UP'],
+        fieldName: DonorFieldsEnum.lost_to_followup_after_clinical_event_id,
+        index: 0,
+        info: {
+          lost_to_follow_up_diagnosis_id: 'PP-1',
+          lost_to_follow_up_age: 30,
+          submitter_primary_diagnosis_id: 'PP-2',
+          donorSubmitterId: 'DN190',
+          value: 'FL-23',
         },
-      );
+        message:
+          'A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up at age PP-1 after their primary diagnosis ("submitter_primary_diagnosis_id" = "30"), but a new primary diagnosis ("PP-2") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.',
+      };
 
       const result = await dv
         .validateSubmissionData({ AB1: submittedAB1Records }, { AB1: existingDonorAB1Mock })
         .catch(err => fail(err));
 
-      chai.expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors.length).to.eq(0);
+      chai.expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors.length).to.eq(1);
+
+      chai
+        .expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors)
+        .to.deep.include(diagnosisConflictErr);
     });
 
     it('should detect not enough info to validate specimen file', async () => {
