@@ -64,6 +64,22 @@ class SubmissionController {
     const programId = req.params.programId;
     const creator = ControllerUtils.getUserFromRequest(req);
     const file = req.file;
+
+    const command = await this.getRegistrationCommand(programId, creator, file);
+
+    const result = await submission.operations.createRegistration(command);
+
+    if (!result.successful) {
+      return res.status(422).send(result);
+    }
+    return res.status(201).send(result);
+  }
+
+  getRegistrationCommand = async (
+    programId: string,
+    creator: string,
+    file: Express.Multer.File,
+  ) => {
     let records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj>;
     try {
       records = await TsvUtils.tsvToJson(file.path);
@@ -85,13 +101,9 @@ class SubmissionController {
       batchName: file.originalname,
       fieldNames: Object.keys(records[0]), // every records' mapping of fieldName<->value from a tsv should have same fieldNames/keys
     };
-    const result = await submission.operations.createRegistration(command);
 
-    if (!result.successful) {
-      return res.status(422).send(result);
-    }
-    return res.status(201).send(result);
-  }
+    return command;
+  };
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async commitRegistration(req: Request, res: Response) {

@@ -21,8 +21,9 @@ import { FileUpload } from 'graphql-upload';
 import egoTokenUtils from '@icgc-argo/ego-token-utils/';
 import { GlobalGqlContext } from '../../app';
 import { config } from '../../config';
-// import submissionAPI from '../../submission/submission-api';
-// import { convertRegistrationDataToGql } from '../utils';
+import * as submissionService from '../../submission/submission-service';
+import submissionAPI from '../../submission/submission-api';
+import { convertRegistrationDataToGql } from '../utils';
 
 const uploadClinicalRegistration = async (
   obj: unknown,
@@ -45,16 +46,20 @@ const uploadClinicalRegistration = async (
     throw new Error('User is not authorized to write data');
   }
 
-  // const { filename, createReadStream } = await registrationFile;
-  // const fileStream = createReadStream();
+  const { filename, createReadStream } = await registrationFile;
+  const fileStream = createReadStream();
 
-  // const formData = new FormData();
+  const formData = new FormData();
 
   // Need to buffer whole file from stream to ensure it all gets added to form data.
   // For FormData to send a buffer as a file, it requires a filename in the options.
   // formData.append('registrationFile', fileBuffer, filename);
 
-  // req: Request, res: Response
+  const clinicalFiles = [] as Express.Multer.File[];
+  const command = await submissionAPI.getRegistrationCommand(shortName, egoToken, clinicalFiles);
+
+  const result = await submissionService.operations.createRegistration(command);
+
   // const response = await submissionAPI.uploadClinicalTsvFiles(
   //   shortName,
   //   filename,
@@ -62,24 +67,7 @@ const uploadClinicalRegistration = async (
   //   Authorization,
   // );
 
-  // return convertRegistrationDataToGql(shortName, response);
-
-  const testData = {
-    id: 'test123',
-    programShortName: 'TEST-CA',
-    creator: 'Stevie Wonder',
-    fileName: 'donor1.tsv',
-    createdAt: new Date(),
-    records: [],
-    errors: [],
-    fileErrors: [],
-    newDonors: {},
-    newSpecimens: {},
-    newSamples: {},
-    alreadyRegistered: {},
-  };
-
-  return testData;
+  return convertRegistrationDataToGql(shortName, result);
 };
 
 export default uploadClinicalRegistration;
