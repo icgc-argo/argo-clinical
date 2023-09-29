@@ -29,26 +29,26 @@ const uploadClinicalRegistration = (
     shortName: string;
     registrationFile: FileUpload;
   },
-  context: GlobalGqlContext,
+  context: any,
 ) => {
-  const { Authorization, egoToken } = context;
+  const { Authorization, egoToken } = <GlobalGqlContext>context;
   const { shortName, registrationFile } = args;
   const tokenUtils = egoTokenUtils(egoToken);
-
   const permissions = tokenUtils.getPermissionsFromToken(egoToken);
+
   // Here we are confirming that the user has at least some ability to write Program Data
   // This is to reduce the opportunity for spamming the gateway with file uploads
   if (!tokenUtils.canWriteSomeProgramData(permissions)) {
-    throw new Error('User is not authorized to write data');
+    // throw new Error('User is not authorized to write data');
   }
 
-  const { filename, createReadStream } = await registrationFile;
-  const fileStream = createReadStream();
+  // const { filename, createReadStream } = await registrationFile;
+  // const fileStream = createReadStream();
 
-  const formData = new FormData();
+  //  const formData = new FormData();
 
   // Need to buffer whole file from stream to ensure it all gets added to form data.
-  const fileBuffer = fileStream;
+  // const fileBuffer = fileStream;
 
   // For FormData to send a buffer as a file, it requires a filename in the options.
   // formData.append('registrationFile', fileBuffer, filename);
@@ -62,4 +62,23 @@ const uploadClinicalRegistration = (
   // );
 
   // return convertRegistrationDataToGql(shortName, response);
+
+  const testData = {
+    id: 'test123',
+    programShortName: 'TEST-CA',
+    creator: 'Stevie Wonder',
+    fileName: 'donor1.tsv',
+    createdAt: new Date(),
+    records: [],
+    errors: [],
+    fileErrors: [],
+    newDonors: {},
+    newSpecimens: {},
+    newSamples: {},
+    alreadyRegistered: {},
+  };
+
+  return testData;
 };
+
+export default uploadClinicalRegistration;

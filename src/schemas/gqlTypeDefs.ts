@@ -64,6 +64,14 @@ const typeDefs = gql`
 
   type Mutation {
     """
+    Upload a Registration file
+    """
+    uploadClinicalRegistration(
+      shortName: String!
+      registrationFile: Upload!
+    ): ClinicalRegistrationData!
+
+    """
     Remove the Clinical Registration data currently uploaded and not committed
     """
     clearClinicalRegistration(shortName: String!, registrationId: String!): Boolean!
@@ -366,6 +374,7 @@ const typeDefs = gql`
     donorId: String!
   }
 
+  scalar Upload
   scalar SchemaList
 `;
 

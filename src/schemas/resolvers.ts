@@ -32,6 +32,7 @@ import clinicalSubmissions, {
 // Mutation
 import commitClinicalRegistration from './clinical-mutations/commitRegistration';
 import clearClinicalRegistration from './clinical-mutations/clearRegistration';
+import uploadClinicalRegistration from './clinical-mutations/uploadRegistration';
 
 const resolvers = {
   Query: {
@@ -48,6 +49,7 @@ const resolvers = {
     commitClinicalSubmission,
     clearClinicalRegistration,
     commitClinicalRegistration,
+    uploadClinicalRegistration,
   },
 };
 
