@@ -20,10 +20,11 @@
 import { FileUpload } from 'graphql-upload';
 import egoTokenUtils from '@icgc-argo/ego-token-utils/';
 import { GlobalGqlContext } from '../../app';
-import submissionAPI from '../../submission/submission-api';
-import { convertRegistrationDataToGql } from '../utils';
+import { config } from '../../config';
+// import submissionAPI from '../../submission/submission-api';
+// import { convertRegistrationDataToGql } from '../utils';
 
-const uploadClinicalRegistration = (
+const uploadClinicalRegistration = async (
   obj: unknown,
   args: {
     shortName: string;
@@ -31,25 +32,25 @@ const uploadClinicalRegistration = (
   },
   context: any,
 ) => {
-  const { Authorization, egoToken } = <GlobalGqlContext>context;
+  const egoPublicKey = config.getConfig().jwtPubKey();
+
+  const { egoToken } = <GlobalGqlContext>context;
   const { shortName, registrationFile } = args;
-  const tokenUtils = egoTokenUtils(egoToken);
+  const tokenUtils = egoTokenUtils(egoPublicKey);
   const permissions = tokenUtils.getPermissionsFromToken(egoToken);
 
   // Here we are confirming that the user has at least some ability to write Program Data
   // This is to reduce the opportunity for spamming the gateway with file uploads
   if (!tokenUtils.canWriteSomeProgramData(permissions)) {
-    // throw new Error('User is not authorized to write data');
+    throw new Error('User is not authorized to write data');
   }
 
   // const { filename, createReadStream } = await registrationFile;
   // const fileStream = createReadStream();
 
-  //  const formData = new FormData();
+  // const formData = new FormData();
 
   // Need to buffer whole file from stream to ensure it all gets added to form data.
-  // const fileBuffer = fileStream;
-
   // For FormData to send a buffer as a file, it requires a filename in the options.
   // formData.append('registrationFile', fileBuffer, filename);
 
