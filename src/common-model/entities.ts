@@ -80,7 +80,7 @@ export const aliasEntityNames: Record<ClinicalEntitySchemaNames, EntityAlias> = 
   biomarker: 'biomarker',
 };
 
-export const queryEntityNames = Object.values(aliasEntityNames);
+export const allEntityNames = Object.values(aliasEntityNames);
 
 export interface ClinicalEntityErrorRecord extends dictionaryEntities.SchemaValidationError {
   entityName: ClinicalEntitySchemaNames;

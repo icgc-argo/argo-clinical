@@ -28,6 +28,7 @@ import {
   ClinicalErrorsResponseRecord,
   EntityAlias,
   aliasEntityNames,
+  allEntityNames,
 } from '../common-model/entities';
 import { Errors } from '../utils';
 import { patchCoreCompletionWithOverride } from '../submission/submission-to-clinical/stat-calculator';
@@ -53,12 +54,13 @@ export type ClinicalDonorEntityQuery = {
   completionState?: {};
 };
 
-// Returns paginated Donor + Entity Submission Data
-export type PaginatedClinicalQuery = ClinicalDonorEntityQuery & {
+export type PaginationQuery = {
   page: number;
   pageSize?: number;
   sort: string;
 };
+
+export type PaginatedClinicalQuery = ClinicalDonorEntityQuery & PaginationQuery;
 
 // GQL Query Arguments
 // Submitted Data Search Bar
@@ -120,6 +122,10 @@ export async function getDonors(programId: string) {
     return await donorDao.findByProgramId(programId);
   }
   return await donorDao.findBy({}, 999);
+}
+
+export async function getDonorsByIds(donorIds: number[]) {
+  return await donorDao.findByDonorIds(donorIds);
 }
 
 export async function findDonorId(submitterId: string, programId: string) {
@@ -219,14 +225,13 @@ export const getPaginatedClinicalData = async (
   query: PaginatedClinicalQuery,
 ) => {
   if (!programId) throw new Error('Missing programId!');
-  const start = new Date().getTime() / 1000;
 
   const allSchemasWithFields = await dictionaryManager.instance().getSchemasWithFields();
   // Get all donors + records for given entity
   const { donors, totalDonors } = await donorDao.findByPaginatedProgramId(programId, query);
 
   const taskToRun = WorkerTasks.ExtractEntityDataFromDonors;
-  const taskArgs = [donors as Donor[], totalDonors, allSchemasWithFields, query];
+  const taskArgs = [donors as Donor[], totalDonors, allSchemasWithFields, query.entityTypes, query];
 
   // Return paginated data
   const data = await runTaskInWorkerThread<{ clinicalEntities: ClinicalEntityData[] }>(
@@ -234,10 +239,30 @@ export const getPaginatedClinicalData = async (
     taskArgs,
   );
 
-  const end = new Date().getTime() / 1000;
-  L.debug(`getPaginatedClinicalData took ${end - start}s`);
-
   return data;
+};
+
+export const getDonorEntityData = async (donorIds: number[]) => {
+  const allSchemasWithFields = await dictionaryManager.instance().getSchemasWithFields();
+  // Get all donors + records for given entity
+  const donors = await getDonorsByIds(donorIds);
+  const totalDonors = donors.length;
+
+  const paginationQuery: PaginationQuery = {
+    page: 0,
+    sort: 'donorId',
+    pageSize: totalDonors,
+  };
+
+  const taskToRun = WorkerTasks.ExtractEntityDataFromDonors;
+  const taskArgs = [donors, donors.length, allSchemasWithFields, allEntityNames, paginationQuery];
+
+  // Return paginated data
+  const data = await runTaskInWorkerThread<{ clinicalEntities: ClinicalEntityData[] }>(
+    taskToRun,
+    taskArgs,
+  );
+  return data.clinicalEntities;
 };
 
 export const getClinicalSearchResults = async (
