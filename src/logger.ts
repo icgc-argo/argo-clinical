@@ -40,13 +40,10 @@ export interface Logger {
 }
 
 const winstonLogger = winston.createLogger(logConfiguration);
-if (process.env.LOG_LEVEL == 'debug') {
+if (process.env.LOG_LEVEL === 'debug') {
   console.log('logger configured: ', winstonLogger);
 }
 export const loggerFor = (fileName: string): Logger => {
-  if (process.env.LOG_LEVEL == 'debug') {
-    console.debug('creating logger for', fileName);
-  }
   const source = fileName.substring(fileName.indexOf('argo-clinical'));
   return {
     error: (msg: string, err: Error): void => {
