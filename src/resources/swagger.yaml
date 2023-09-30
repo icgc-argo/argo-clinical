@@ -842,44 +842,43 @@ paths:
         '200':
           description: 'returns new entity exception after deletion'
 
-  /clinical/donors:
-    get:
-      deprecated: true
+  /clinical/donors/tsv:
+    post:
       tags:
-        - Deprecated
-      summary: Get all program donors from db
-      parameters:
-        - $ref: '#/components/parameters/QueryProgramId'
+        - Clinical Data
+      summary: Download TSVs for donors by ID.
+      description: This request downloads all clinical data for donors rquested by ID. The response is a zip containing all clinical data as TSVs. Requires full system read permission to access.
+      requestBody:
+        description: JSON object with list of donor IDs
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                donorIds:
+                  description: List of donor IDs, as numbers, to be included in request. At least one Donor ID minimum is required.
+                  type: array
+                  items:
+                    type: numbers
+                  default: []
       responses:
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '403':
           $ref: '#/components/responses/ForbiddenError'
+        '400':
+          description: 'User input error. Either the request body was invalid, or some of the requested Donor IDs were not found.'
         '500':
           $ref: '#/components/responses/ServerError'
         '200':
-          description: 'List of donors for the given program'
+          description: 'Zip file with clinical data for requested donors.'
           content:
-            application/json:
+            application/zip:
               schema:
-                type: array
-                items:
-                  type: object
-    delete:
-      tags:
-        - Test
-      summary: Test endpoint to delete program donors in db (disabled in prod)
-      parameters:
-        - $ref: '#/components/parameters/QueryProgramId'
-      responses:
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/ForbiddenError'
-        '500':
-          $ref: '#/components/responses/ServerError'
-        '200':
-          description: 'all donors deleted'
+                type: string
+                format: binary
+
   /clinical/program/{programId}/donor/{donorId}:
     get:
       tags:
@@ -1068,6 +1067,16 @@ paths:
       description: Returns a zip file with commited clinical entity data in tsvs, filtered by request query. Exported data may not be valid with current dictionary.
       parameters:
         - $ref: '#/components/parameters/PathProgramId'
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Paginated Results page number to return
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+          description: Number of paginated results per page
       requestBody:
         description: JSON object containing search filters
         required: true
@@ -1359,8 +1368,6 @@ tags:
     description: APIs to do the icgc import
   - name: Admin
     description: Admin operations collected for convenience
-  - name: Test
-    description: Protected endpoints that run in dev only, not in prod.
   - name: Deprecated
     description: Deprecated enpoints
 components:

@@ -36,7 +36,10 @@ import {
   ClinicalErrorsApiBody,
   ClinicalSearchApiBody,
   CompletionState,
+  DonorDataApiBody,
 } from './types';
+import { loggerFor } from '../../logger';
+const L = loggerFor(__filename);
 
 // TODO: Update value type to match mongo schema
 export const completionFilters: Record<CompletionState, any> = {
@@ -136,6 +139,40 @@ class ClinicalController {
       .setHeader('content-disposition', fileName);
 
     const zip = createClinicalZipFile(entityData);
+
+    res.send(zip.toBuffer());
+  }
+
+  /**
+   * Download Clinical Data selected by Donor ID.
+   * Requires Full Read Access.
+   * Used by API for a user to download clinical data for specific donors and/or files.
+   * @param req
+   * @param res
+   * @returns
+   */
+  @HasFullReadAccess()
+  async getDonorDataByIdAsTsvsInZip(req: Request, res: Response) {
+    const bodyParseResult = DonorDataApiBody.safeParse(req.body);
+    if (!bodyParseResult.success) {
+      return ControllerUtils.badRequest(
+        res,
+        `Invalid data in request body: ${JSON.stringify(bodyParseResult.error)}`,
+      );
+    }
+    const { donorIds } = bodyParseResult.data;
+
+    const donorEntityData = await service.getDonorEntityData(donorIds);
+
+    const date = currentDateFormatted();
+    const fileName = `filename=Donor_Clinical_Data_${date}.zip`;
+    res
+      .status(200)
+      .contentType('application/zip')
+      .attachment(fileName)
+      .setHeader('content-disposition', fileName);
+
+    const zip = createClinicalZipFile(donorEntityData);
 
     res.send(zip.toBuffer());
   }
