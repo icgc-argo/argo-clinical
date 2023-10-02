@@ -64,8 +64,14 @@ class SubmissionController {
     const programId = req.params.programId;
     const creator = ControllerUtils.getUserFromRequest(req);
     const file = req.file;
+    let command: CreateRegistrationCommand;
 
-    const command = await this.getRegistrationCommand(programId, creator, file);
+    try {
+      command = await this.getRegistrationCommand(programId, creator, file);
+    } catch (err) {
+      const error = err as SubmissionBatchError;
+      return ControllerUtils.invalidBatch(res, error);
+    }
 
     const result = await submission.operations.createRegistration(command);
 
@@ -75,24 +81,21 @@ class SubmissionController {
     return res.status(201).send(result);
   }
 
-  getRegistrationCommand = async (
-    programId: string,
-    creator: string,
-    file: Express.Multer.File,
-  ) => {
+  async getRegistrationCommand(programId: string, creator: string, file: Express.Multer.File) {
     let records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj>;
     try {
       records = await TsvUtils.tsvToJson(file.path);
       if (records.length === 0) {
         throw new Error('TSV has no records!');
       }
-    } catch (err) {
-      L.error(`Clinical Submission TSV_PARSING_FAILED`, err);
-      return ControllerUtils.invalidBatch(res, {
+    } catch (error) {
+      L.error(`Clinical Submission TSV_PARSING_FAILED`, error);
+      const submissionBatchError: SubmissionBatchError = {
         message: batchErrorMessage(SubmissionBatchErrorTypes.TSV_PARSING_FAILED),
         batchNames: [file.originalname],
         code: SubmissionBatchErrorTypes.TSV_PARSING_FAILED,
-      });
+      };
+      throw submissionBatchError;
     }
     const command: CreateRegistrationCommand = {
       programId: programId,
@@ -103,7 +106,7 @@ class SubmissionController {
     };
 
     return command;
-  };
+  }
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async commitRegistration(req: Request, res: Response) {

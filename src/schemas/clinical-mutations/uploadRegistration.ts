@@ -56,9 +56,9 @@ const uploadClinicalRegistration = async (
   // formData.append('registrationFile', fileBuffer, filename);
 
   const clinicalFiles = [] as Express.Multer.File[];
-  const command = await submissionAPI.getRegistrationCommand(shortName, egoToken, clinicalFiles);
+  // const command = await submissionAPI.getRegistrationCommand(shortName, egoToken, clinicalFiles);
 
-  const result = await submissionService.operations.createRegistration(command);
+  // const result = await submissionService.operations.createRegistration(command);
 
   // const response = await submissionAPI.uploadClinicalTsvFiles(
   //   shortName,
@@ -67,7 +67,7 @@ const uploadClinicalRegistration = async (
   //   Authorization,
   // );
 
-  return convertRegistrationDataToGql(shortName, result);
+  // return convertRegistrationDataToGql(shortName, result);
 };
 
 export default uploadClinicalRegistration;
