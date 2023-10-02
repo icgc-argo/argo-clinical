@@ -183,7 +183,7 @@ export const commitRegistration = async (command: Readonly<CommitRegistrationCom
   const registration = await registrationRepository.findById(command.registrationId);
 
   if (registration === undefined || registration.programId !== command.programId) {
-    throw new Errors.NotFound(`no registration with id :${command.registrationId} found`);
+    throw new Errors.NotFound(`no registration with id: ${command.registrationId} found`);
   }
 
   const donorSampleDtos: DeepReadonly<CreateDonorSampleDto[]> = mapToCreateDonorSampleDto(

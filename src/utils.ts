@@ -22,11 +22,18 @@ import { Response, Request } from 'express';
 import deepFreeze from 'deep-freeze';
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
-import { SubmissionBatchError } from './submission/submission-entities';
+import {
+  CreateRegistrationCommand,
+  SubmissionBatchError,
+  SubmissionBatchErrorTypes,
+} from './submission/submission-entities';
 import _ from 'lodash';
 import { isArray } from 'util';
+import { loggerFor } from './logger';
+import { batchErrorMessage } from './submission/submission-error-messages';
 
 const fsPromises = fs.promises;
+const L = loggerFor(__filename);
 
 export namespace TsvUtils {
   export type TsvRecordAsJsonObj = { [header: string]: string | string[] };
@@ -155,6 +162,37 @@ export namespace ControllerUtils {
       throw new Error('invalid token structure');
     }
     return decoded.context.user.firstName + ' ' + decoded.context.user.lastName;
+  };
+
+  export const getRegistrationCommand = async (
+    programId: string,
+    creator: string,
+    file: Express.Multer.File,
+  ) => {
+    let records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj>;
+    try {
+      records = await TsvUtils.tsvToJson(file.path);
+      if (records.length === 0) {
+        throw new Error('TSV has no records!');
+      }
+    } catch (error) {
+      L.error(`Clinical Submission TSV_PARSING_FAILED`, error);
+      const submissionBatchError: SubmissionBatchError = {
+        message: batchErrorMessage(SubmissionBatchErrorTypes.TSV_PARSING_FAILED),
+        batchNames: [file.originalname],
+        code: SubmissionBatchErrorTypes.TSV_PARSING_FAILED,
+      };
+      throw submissionBatchError;
+    }
+    const command: CreateRegistrationCommand = {
+      programId: programId,
+      creator: creator,
+      records: records,
+      batchName: file.originalname,
+      fieldNames: Object.keys(records[0]), // every records' mapping of fieldName<->value from a tsv should have same fieldNames/keys
+    };
+
+    return command;
   };
 }
 

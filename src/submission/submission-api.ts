@@ -21,7 +21,7 @@ import * as submission from './submission-service';
 import * as persistedConfig from './persisted-config/service';
 import * as submission2Clinical from './submission-to-clinical/submission-to-clinical';
 import { Request, Response } from 'express';
-import { TsvUtils, ControllerUtils, Errors } from '../utils';
+import { TsvUtils, ControllerUtils } from '../utils';
 import { loggerFor } from '../logger';
 import {
   CreateRegistrationCommand,
@@ -64,14 +64,14 @@ class SubmissionController {
     const programId = req.params.programId;
     const creator = ControllerUtils.getUserFromRequest(req);
     const file = req.file;
-    let command: CreateRegistrationCommand;
-
-    try {
-      command = await this.getRegistrationCommand(programId, creator, file);
-    } catch (err) {
+    const command: CreateRegistrationCommand = await ControllerUtils.getRegistrationCommand(
+      programId,
+      creator,
+      file,
+    ).catch(err => {
       const error = err as SubmissionBatchError;
       return ControllerUtils.invalidBatch(res, error);
-    }
+    });
 
     const result = await submission.operations.createRegistration(command);
 
@@ -79,33 +79,6 @@ class SubmissionController {
       return res.status(422).send(result);
     }
     return res.status(201).send(result);
-  }
-
-  async getRegistrationCommand(programId: string, creator: string, file: Express.Multer.File) {
-    let records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj>;
-    try {
-      records = await TsvUtils.tsvToJson(file.path);
-      if (records.length === 0) {
-        throw new Error('TSV has no records!');
-      }
-    } catch (error) {
-      L.error(`Clinical Submission TSV_PARSING_FAILED`, error);
-      const submissionBatchError: SubmissionBatchError = {
-        message: batchErrorMessage(SubmissionBatchErrorTypes.TSV_PARSING_FAILED),
-        batchNames: [file.originalname],
-        code: SubmissionBatchErrorTypes.TSV_PARSING_FAILED,
-      };
-      throw submissionBatchError;
-    }
-    const command: CreateRegistrationCommand = {
-      programId: programId,
-      creator: creator,
-      records: records,
-      batchName: file.originalname,
-      fieldNames: Object.keys(records[0]), // every records' mapping of fieldName<->value from a tsv should have same fieldNames/keys
-    };
-
-    return command;
   }
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)

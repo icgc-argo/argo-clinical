@@ -22,7 +22,7 @@ import egoTokenUtils from '@icgc-argo/ego-token-utils/';
 import { GlobalGqlContext } from '../../app';
 import { config } from '../../config';
 import * as submissionService from '../../submission/submission-service';
-import submissionAPI from '../../submission/submission-api';
+import { ControllerUtils } from '../../utils';
 import { convertRegistrationDataToGql } from '../utils';
 
 const uploadClinicalRegistration = async (
@@ -46,17 +46,28 @@ const uploadClinicalRegistration = async (
     throw new Error('User is not authorized to write data');
   }
 
-  const { filename, createReadStream } = await registrationFile;
-  const fileStream = createReadStream();
+  // const { filename, createReadStream } = await registrationFile;
+  // const fileStream = createReadStream();
 
-  const formData = new FormData();
+  // const formData = new FormData();
 
   // Need to buffer whole file from stream to ensure it all gets added to form data.
   // For FormData to send a buffer as a file, it requires a filename in the options.
   // formData.append('registrationFile', fileBuffer, filename);
 
-  const clinicalFiles = [] as Express.Multer.File[];
-  // const command = await submissionAPI.getRegistrationCommand(shortName, egoToken, clinicalFiles);
+  // const clinicalFiles = [] as Express.Multer.File;
+  const testFile: Express.Multer.File = {
+    fieldname: '',
+    originalname: 'test',
+    encoding: '',
+    mimetype: '',
+    size: 16,
+    destination: '.',
+    filename: 'test.tsv',
+    path: './',
+    buffer: new Buffer(''),
+  };
+  const command = await ControllerUtils.getRegistrationCommand(shortName, egoToken, testFile);
 
   // const result = await submissionService.operations.createRegistration(command);
 

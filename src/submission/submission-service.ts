@@ -271,7 +271,7 @@ export namespace operations {
   export const deleteRegistration = async (registrationId: string, programId: string) => {
     const registration = await registrationRepository.findById(registrationId);
     if (registration === undefined || registration.programId !== programId) {
-      throw new Errors.NotFound(`no registration with id :${registrationId} found`);
+      throw new Errors.NotFound(`no registration with id: ${registrationId} found`);
     }
     await registrationRepository.delete(registrationId);
   };
