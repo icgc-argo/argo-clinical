@@ -262,6 +262,7 @@ export const getDonorEntityData = async (donorIds: number[]) => {
     taskToRun,
     taskArgs,
   );
+
   return data.clinicalEntities;
 };
 
