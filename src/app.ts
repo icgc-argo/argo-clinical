@@ -23,6 +23,7 @@ import bodyParser from 'body-parser';
 import path from 'path';
 import yaml from 'yamljs';
 import * as swaggerUi from 'swagger-ui-express';
+import graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.mjs';
 
 import { getHealth, Status } from './app-health';
 import { loggerFor } from './logger';
@@ -92,6 +93,8 @@ app.use(
   swaggerUi.serve,
   swaggerUi.setup(yaml.load(path.join(__dirname, './resources/swagger.yaml'))),
 );
+// Required for Uploads
+app.use(graphqlUploadExpress());
 
 /** Attach Routers */
 app.use('/submission/configs', configRouter);

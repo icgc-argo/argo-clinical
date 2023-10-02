@@ -17,7 +17,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { FileUpload } from 'graphql-upload';
+import Upload from 'graphql-upload/Upload.mjs';
 import egoTokenUtils from '@icgc-argo/ego-token-utils/';
 import { GlobalGqlContext } from '../../app';
 import { config } from '../../config';
@@ -29,7 +29,7 @@ const uploadClinicalRegistration = async (
   obj: unknown,
   args: {
     shortName: string;
-    registrationFile: FileUpload;
+    registrationFile: Upload;
   },
   context: any,
 ) => {
@@ -46,13 +46,12 @@ const uploadClinicalRegistration = async (
     throw new Error('User is not authorized to write data');
   }
 
-  // const { filename, createReadStream } = await registrationFile;
-  // const fileStream = createReadStream();
-
-  // const formData = new FormData();
-
   // Need to buffer whole file from stream to ensure it all gets added to form data.
   // For FormData to send a buffer as a file, it requires a filename in the options.
+  const { filename, createReadStream } = await registrationFile.promise;
+  const fileStream = createReadStream();
+  // const fileBuffer = await new Response(fileStream).buffer();
+  // const formData = new FormData();
   // formData.append('registrationFile', fileBuffer, filename);
 
   // const clinicalFiles = [] as Express.Multer.File;
@@ -69,7 +68,7 @@ const uploadClinicalRegistration = async (
   };
   const command = await ControllerUtils.getRegistrationCommand(shortName, egoToken, testFile);
 
-  // const result = await submissionService.operations.createRegistration(command);
+  const result = await submissionService.operations.createRegistration(command);
 
   // const response = await submissionAPI.uploadClinicalTsvFiles(
   //   shortName,
