@@ -17,8 +17,9 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import getPermissionsFromToken from '@icgc-argo/ego-token-utils/dist/index';
-import canWriteSomeProgramData from '@icgc-argo/ego-token-utils/dist/index';
+// import getPermissionsFromToken from '@icgc-argo/ego-token-utils/dist/index';
+// import canWriteSomeProgramData from '@icgc-argo/ego-token-utils/dist/index';
+import _default from '@icgc-argo/ego-token-utils/dist/index';
 import { FileUpload } from 'graphql-upload';
 import { GlobalGqlContext } from '../../app';
 import { convertClinicalSubmissionDataToGql } from '../utils';
@@ -32,12 +33,15 @@ const uploadClinicalSubmissionsResolver = {
     contextValue: any,
   ) => {
     const { programShortName, clinicalFiles } = args;
-    const permissionsFromToken = getPermissionsFromToken((<GlobalGqlContext>contextValue).egoToken);
+    const key = process.env.JWT_TOKEN_PUBLIC_KEY || '';
+    const permissionsFromToken = _default(key).getPermissionsFromToken(
+      (<GlobalGqlContext>contextValue).egoToken,
+    );
     console.log('permissions from token: ' + permissionsFromToken);
     // see reason in uploadRegistration
-    /* if (!canWriteSomeProgramData(permissionsFromToken)) {
-    throw new AuthenticationError('User is not authorized to write data');
-  }*/
+    if (!_default(key).canWriteSomeProgramData(permissionsFromToken)) {
+      throw new AuthenticationError('User is not authorized to write data');
+    }
 
     const filesMap: {
       [k: string]: ReturnType<FileUpload['createReadStream']>;

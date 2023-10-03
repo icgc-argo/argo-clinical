@@ -35,8 +35,6 @@ import { HasFullWriteAccess, HasProgramWriteAccess } from '../decorators';
 import _ from 'lodash';
 import { batchErrorMessage } from './submission-error-messages';
 import * as fs from 'fs';
-import { GlobalGqlContext } from '../app';
-import { FileUpload } from 'graphql-upload';
 
 const L = loggerFor(__filename);
 const fsPromises = fs.promises;
