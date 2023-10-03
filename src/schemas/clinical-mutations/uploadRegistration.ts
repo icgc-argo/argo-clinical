@@ -33,6 +33,7 @@ const uploadClinicalRegistration = async (
   },
   context: any,
 ) => {
+  console.log('\n registrationFile', args.registrationFile);
   const egoPublicKey = config.getConfig().jwtPubKey();
 
   const { egoToken } = <GlobalGqlContext>context;

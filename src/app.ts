@@ -23,7 +23,7 @@ import bodyParser from 'body-parser';
 import path from 'path';
 import yaml from 'yamljs';
 import * as swaggerUi from 'swagger-ui-express';
-import graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.mjs';
+import { graphqlUploadExpress } from 'graphql-upload-minimal';
 
 import { getHealth, Status } from './app-health';
 import { loggerFor } from './logger';
