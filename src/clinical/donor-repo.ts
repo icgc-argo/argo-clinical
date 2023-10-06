@@ -91,6 +91,7 @@ export interface DonorRepository {
     programId: string,
     query: ClinicalDonorEntityQuery,
   ): Promise<DeepReadonly<{ donors: Donor[] }>>;
+  findByDonorIds(donorIds: number[]): Promise<DeepReadonly<Donor[]>>;
   deleteByProgramId(programId: string): Promise<void>;
   deleteByProgramIdAndDonorIds(programId: string, donorIds: number[]): Promise<void>;
   findByProgramAndSubmitterId(
@@ -392,7 +393,17 @@ export const donorDao: DonorRepository = {
       submitterId: { $in: submitterIds },
       programId: programId,
     });
-    const mapped = result.map((d: DonorDocument) => {
+    const mapped = result.map(d => {
+      return MongooseUtils.toPojo(d) as Donor;
+    });
+    return F(mapped);
+  },
+
+  async findByDonorIds(donorIds: number[]): Promise<DeepReadonly<Donor[]>> {
+    const result = await DonorModel.find({
+      donorId: { $in: donorIds },
+    });
+    const mapped = result.map(d => {
       return MongooseUtils.toPojo(d) as Donor;
     });
     return F(mapped);
