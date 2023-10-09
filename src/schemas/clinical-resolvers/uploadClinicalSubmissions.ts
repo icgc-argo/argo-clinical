@@ -17,50 +17,42 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// import getPermissionsFromToken from '@icgc-argo/ego-token-utils/dist/index';
-// import canWriteSomeProgramData from '@icgc-argo/ego-token-utils/dist/index';
-import _default from '@icgc-argo/ego-token-utils/dist/index';
-import { FileUpload } from 'graphql-upload';
-import { GlobalGqlContext } from '../../app';
 import { convertClinicalSubmissionDataToGql } from '../utils';
 import submissionApi from '../../submission/submission-api';
 import { AuthenticationError } from 'apollo-server-errors';
+import { Request, Response } from 'express';
+import egoTokenUtils from '../../egoTokenUtils';
 
-const uploadClinicalSubmissionsResolver = {
-  uploadClinicalSubmissions: async (
-    obj: unknown,
-    args: { programShortName: string; clinicalFiles: Array<FileUpload> },
-    contextValue: any,
-  ) => {
-    const { programShortName, clinicalFiles } = args;
-    const key = process.env.JWT_TOKEN_PUBLIC_KEY || '';
-    const permissionsFromToken = _default(key).getPermissionsFromToken(
-      (<GlobalGqlContext>contextValue).egoToken,
-    );
-    console.log('permissions from token: ' + permissionsFromToken);
-    // see reason in uploadRegistration
-    if (!_default(key).canWriteSomeProgramData(permissionsFromToken)) {
-      throw new AuthenticationError('User is not authorized to write data');
-    }
+async function uploadClinicalSubmissions(req: Request, res: Response) {
+  const programShortName = req.params.programId;
+  const clinicalFiles = req.files as Express.Multer.File[];
 
-    const filesMap: {
-      [k: string]: ReturnType<FileUpload['createReadStream']>;
-    } = {};
+  const egoToken = (req.headers.authorization || '').split('Bearer ').join('');
+  const permissionsFromToken = egoTokenUtils.getPermissionsFromToken(egoToken); // _default(key).getPermissionsFromToken(egoToken);
 
-    await Promise.all(clinicalFiles).then(val =>
-      val.forEach(file => (filesMap[file.filename] = file.createReadStream())),
-    );
-    const response = await submissionApi.uploadClinicalDataFromTsvFiles(
-      programShortName,
-      filesMap,
-      (<GlobalGqlContext>contextValue).egoToken,
-    );
-    return convertClinicalSubmissionDataToGql(programShortName, {
-      submission: response?.submission,
-      batchErrors: response?.batchErrors,
-      successful: response?.successful,
-    });
-  },
-};
+  // see reason in uploadRegistration
+  /*   if (!egoTokenUtils.canWriteSomeProgramData(permissionsFromToken)) {
+     throw new AuthenticationError('User is not authorized to write data');
+  }*/
 
-export default uploadClinicalSubmissionsResolver;
+  const uploadResult = await submissionApi.uploadClinicalDataFromTsvFiles(
+    programShortName,
+    clinicalFiles,
+    egoToken,
+  );
+
+  let status = 200;
+  if (!uploadResult?.successful || uploadResult.batchErrors.length > 0) {
+    status = 207;
+  }
+
+  const response = convertClinicalSubmissionDataToGql(programShortName, {
+    submission: uploadResult?.submission,
+    batchErrors: uploadResult?.batchErrors,
+    successful: uploadResult?.successful,
+  });
+
+  return res.status(status).send(response);
+}
+
+export default uploadClinicalSubmissions;

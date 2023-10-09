@@ -189,17 +189,13 @@ class SubmissionController {
 
   // @HasProgramWriteAccess((req: Request) => req.params.programId)
   async uploadClinicalDataFromTsvFiles(programId: string, uploadedFiles: {}, token: string) {
-    /*if ((await submissionSystemIsDisabled(res)) || !isValidCreateBody(req, res)) {
-      return;
-    }*/
-
     const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
-    if (submissionSystemDisabled || isValidRequestArgs(programId, uploadedFiles)) return; // UK: to add isValidCreateBody
+    if (submissionSystemDisabled || !isValidRequestArgs(programId, uploadedFiles)) return;
 
     const user = ControllerUtils.getUserFromToken(token);
     const newClinicalData: NewClinicalEntity[] = [];
     const tsvParseErrors: SubmissionBatchError[] = [];
-    const clinicalFiles = uploadedFiles as Express.Multer.File[]; // req.files as Express.Multer.File[];
+    const clinicalFiles = uploadedFiles as Express.Multer.File[];
 
     for (const file of clinicalFiles) {
       try {
@@ -235,16 +231,6 @@ class SubmissionController {
     };
 
     const result = await submission.operations.submitMultiClinicalBatches(command);
-    let status = 200;
-
-    // no submission created, i.e. all uploads failed.
-    if (!result.successful || tsvParseErrors.length > 0) {
-      status = 207;
-    }
-
-    /*return res
-      .status(status)
-      .send({ ...result, batchErrors: [...result.batchErrors, ...tsvParseErrors] });*/
     return { ...result, batchErrors: [...result.batchErrors, ...tsvParseErrors] };
   }
 
