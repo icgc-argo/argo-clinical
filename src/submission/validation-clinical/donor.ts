@@ -173,15 +173,18 @@ const crossFileValidator = async (
             lostToFollowUpClinicalInfo.treatment_start_interval ||
             lostToFollowUpClinicalInfo.specimen_acquisition_interval,
         ) || 0;
-      console.log('\n lostToFollowUpStartInterval', lostToFollowUpStartInterval);
+
       const lostToFollowUpDuration =
         Number(
           lostToFollowUpClinicalInfo.treatment_duration ||
             lostToFollowUpClinicalInfo.specimen_duration,
         ) || 0;
-      console.log('\n lostToFollowUpDuration', lostToFollowUpDuration);
+
       const lostToFollowUpInterval = lostToFollowUpStartInterval + lostToFollowUpDuration;
-      console.log('\n lostToFollowUpInterval', lostToFollowUpInterval);
+
+      const lost_to_follow_up_diagnosis_id =
+        lostToFollowUpClinicalInfo['submitter_primary_diagnosis_id'];
+
       // Collects all Entity Records w/ Treatment Intervals after Lost to Follow Up
       const invalidClinicalIntervalRecords = [
         ...treatments
@@ -190,8 +193,11 @@ const crossFileValidator = async (
         ...specimens
           .filter(specimenRecord => getSpecimenInterval(specimenRecord) > lostToFollowUpInterval)
           .map(specimenRecord => specimenRecord.clinicalInfo),
-      ];
-      console.log('\ninvalidClinicalIntervalRecords', invalidClinicalIntervalRecords);
+      ].filter(clinicalRecord => {
+        const { submitter_primary_diagnosis_id } = clinicalRecord;
+        return submitter_primary_diagnosis_id === lost_to_follow_up_diagnosis_id;
+      });
+
       // Collects all Records w/ Follow Up Intervals greater than Lost to Follow Up
       const invalidFollowUpIntervalRecords = followUps
         .filter(entityRecord => {
@@ -201,19 +207,13 @@ const crossFileValidator = async (
             typeof interval_of_followup === 'number' ? interval_of_followup : 0;
           return intervalOfFollowUp > lostToFollowUpInterval;
         })
-        .map(record => record.clinicalInfo);
-      console.log('\n invalidFollowUpIntervalRecords', invalidFollowUpIntervalRecords);
-      const lost_to_follow_up_diagnosis_id =
-        lostToFollowUpClinicalInfo['submitter_primary_diagnosis_id'];
+        .map(record => record.clinicalInfo)
+        .filter(clinicalRecord => {
+          const { submitter_follow_up_id } = clinicalRecord;
+          return submitter_follow_up_id === lost_to_follow_up_diagnosis_id;
+        });
 
-      const invalidRecords = [
-        ...invalidClinicalIntervalRecords,
-        ...invalidFollowUpIntervalRecords,
-      ].filter(clinicalRecord => {
-        const { submitter_primary_diagnosis_id } = clinicalRecord;
-
-        return submitter_primary_diagnosis_id === lost_to_follow_up_diagnosis_id;
-      });
+      const invalidRecords = [...invalidClinicalIntervalRecords, ...invalidFollowUpIntervalRecords];
 
       for (const invalidClinicalInfo of invalidRecords) {
         const {
