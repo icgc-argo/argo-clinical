@@ -1620,7 +1620,7 @@ describe('data-validator', () => {
           [TreatmentFieldsEnum.submitter_donor_id]: 'DN190',
           [TreatmentFieldsEnum.program_id]: 'TEST-CA',
           [TreatmentFieldsEnum.submitter_treatment_id]: 'TR-33',
-          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-1',
           [TreatmentFieldsEnum.treatment_start_interval]: 250,
           [TreatmentFieldsEnum.treatment_duration]: 50,
           index: 0,
@@ -1646,7 +1646,7 @@ describe('data-validator', () => {
         .validateSubmissionData({ AB1: submittedAB1Records }, { AB1: existingDonorAB1Mock })
         .catch(err => fail(err));
 
-      chai.expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors.length).to.eq(2);
+      chai.expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors.length).to.eq(1);
       chai
         .expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors)
         .to.deep.include(submissionConflictErr);
