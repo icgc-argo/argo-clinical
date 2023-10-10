@@ -46,7 +46,7 @@ async function uploadClinicalSubmissions(req: Request, res: Response) {
     status = 207;
   }
 
-  const response = convertClinicalSubmissionDataToGql(programShortName, {
+  const response = await convertClinicalSubmissionDataToGql(programShortName, {
     submission: uploadResult?.submission,
     batchErrors: uploadResult?.batchErrors,
     successful: uploadResult?.successful,
