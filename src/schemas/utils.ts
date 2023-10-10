@@ -241,16 +241,6 @@ const convertClinicalSubmissionDataToGql = async (
     version: submission?.version || undefined,
     updatedBy: submission?.updatedBy || undefined,
     updatedAt: submission?.updatedAt ? submission.updatedAt : undefined,
-    /*clinicalEntities: async () => {
-      const clinicalSubmissionTypeList = await getClinicalEntitiesData('false'); // to confirm for true or false
-      const filledClinicalEntities = clinicalSubmissionTypeList.map(clinicalType => ({
-        clinicalType,
-        ...(clinicalEntities ? clinicalEntities[clinicalType.name] : {}),
-      }));
-      return filledClinicalEntities.map(clinicalEntity =>
-        convertClinicalSubmissionEntityToGql(clinicalEntity?.clinicalType.name, clinicalEntity),
-      );
-    },*/
     clinicalEntities: clinicalEntityMap,
     fileErrors: fileErrors?.map(convertClinicalFileErrorToGql),
   };
