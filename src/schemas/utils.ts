@@ -66,11 +66,13 @@ function convertToString(val: unknown) {
   return val === undefined || val === null ? '' : `${val}`;
 }
 
-const convertClinicalFileErrorToGql = (fileError: {
-  message: string;
-  batchNames: string[];
-  code: string;
-}) => {
+const convertClinicalFileErrorToGql = (
+  fileError: DeepReadonly<{
+    message: string;
+    batchNames: string[];
+    code: string;
+  }>,
+) => {
   return {
     message: fileError.message,
     fileNames: fileError.batchNames,
