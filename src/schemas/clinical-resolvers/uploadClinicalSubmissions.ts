@@ -17,25 +17,41 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { GlobalGqlContext } from '../../app';
-import submissionAPI from '../../submission/submission-api';
 import { convertClinicalSubmissionDataToGql } from '../utils';
+import submissionApi from '../../submission/submission-api';
+import { AuthenticationError } from 'apollo-server-errors';
+import { Request, Response } from 'express';
+import egoTokenUtils from '../../egoTokenUtils';
 
-const clearClinicalSubmission = async (
-  obj: unknown,
-  args: { programShortName: string; fileType: string; version: string },
-  contextValue: any,
-) => {
-  const { programShortName, fileType, version } = args;
-  const response = await submissionAPI.clearFileDataFromActiveSubmission(
+async function uploadClinicalSubmissions(req: Request, res: Response) {
+  const programShortName = req.params.programId;
+  const clinicalFiles = req.files as Express.Multer.File[];
+
+  const egoToken = (req.headers.authorization || '').split('Bearer ').join('');
+  const permissionsFromToken = egoTokenUtils.getPermissionsFromToken(egoToken);
+
+  if (!egoTokenUtils.canWriteSomeProgramData(permissionsFromToken)) {
+    throw new AuthenticationError('User is not authorized to write data');
+  }
+
+  const uploadResult = await submissionApi.uploadClinicalDataFromTsvFiles(
     programShortName,
-    fileType || 'all',
-    version,
-    (<GlobalGqlContext>contextValue).egoToken,
+    clinicalFiles,
+    egoToken,
   );
-  return convertClinicalSubmissionDataToGql(programShortName, {
-    submission: response,
-  });
-};
 
-export default clearClinicalSubmission;
+  let status = 200;
+  if (!uploadResult?.successful || uploadResult.batchErrors.length > 0) {
+    status = 207;
+  }
+
+  const response = await convertClinicalSubmissionDataToGql(programShortName, {
+    submission: uploadResult?.submission,
+    batchErrors: uploadResult?.batchErrors,
+    successful: uploadResult?.successful,
+  });
+
+  return res.status(status).send(response);
+}
+
+export default uploadClinicalSubmissions;

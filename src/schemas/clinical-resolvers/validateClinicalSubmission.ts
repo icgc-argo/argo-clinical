@@ -32,7 +32,7 @@ const validateClinicalSubmission = async (
     version,
     (<GlobalGqlContext>contextValue).egoToken,
   );
-  return convertClinicalSubmissionDataToGql(programShortName, {
+  return await convertClinicalSubmissionDataToGql(programShortName, {
     submission: response?.submission,
   });
 };

@@ -242,16 +242,27 @@ const convertClinicalSubmissionUpdateToGql = (updateData: UpdateData) => {
   };
 };
 
-const convertClinicalSubmissionDataToGql = (
+const convertClinicalSubmissionDataToGql = async (
   programShortName: string,
   data: {
     submission: DeepReadonly<ActiveClinicalSubmission> | undefined;
-    batchErrors?: { message: string; batchNames: string[]; code: string }[];
+    batchErrors?: DeepReadonly<{ message: string; batchNames: string[]; code: string }[]>;
+    successful?: boolean; // | undefined;
   },
 ) => {
   const submission = get(data, 'submission', {} as Partial<typeof data.submission>);
   const fileErrors = get(data, 'batchErrors', [] as typeof data.batchErrors);
   const clinicalEntities = get(submission, 'clinicalEntities');
+
+  const clinicalSubmissionTypeList = await getClinicalEntitiesData('false'); // to confirm for true or false
+  const filledClinicalEntities = clinicalSubmissionTypeList.map(clinicalType => ({
+    clinicalType,
+    ...(clinicalEntities ? clinicalEntities[clinicalType.name] : {}),
+  }));
+  const clinicalEntityMap = filledClinicalEntities.map(clinicalEntity =>
+    convertClinicalSubmissionEntityToGql(clinicalEntity?.clinicalType.name, clinicalEntity),
+  );
+
   return {
     id: submission?._id || undefined,
     programShortName,
@@ -259,16 +270,7 @@ const convertClinicalSubmissionDataToGql = (
     version: submission?.version || undefined,
     updatedBy: submission?.updatedBy || undefined,
     updatedAt: submission?.updatedAt ? submission.updatedAt : undefined,
-    clinicalEntities: async () => {
-      const clinicalSubmissionTypeList = await getClinicalEntitiesData('false'); // to confirm for true or false
-      const filledClinicalEntities = clinicalSubmissionTypeList.map(clinicalType => ({
-        clinicalType,
-        ...(clinicalEntities ? clinicalEntities[clinicalType.name] : {}),
-      }));
-      return filledClinicalEntities.map(clinicalEntity =>
-        convertClinicalSubmissionEntityToGql(clinicalEntity?.clinicalType.name, clinicalEntity),
-      );
-    },
+    clinicalEntities: clinicalEntityMap,
     fileErrors: fileErrors?.map(convertClinicalFileErrorToGql),
   };
 };
