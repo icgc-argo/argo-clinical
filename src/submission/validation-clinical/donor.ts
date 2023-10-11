@@ -104,11 +104,14 @@ const getTreatmentInterval = (clinicalInfo: DeepReadonly<ClinicalInfo>) => {
     treatment_duration,
   } = clinicalInfo;
 
-  const treatmentInterval =
-    (Number(interval_of_followup) || 0) +
-    (Number(specimen_acquisition_interval) || 0) +
-    (Number(treatment_start_interval) || 0) +
-    (Number(treatment_duration) || 0);
+  const treatmentInterval = [
+    interval_of_followup,
+    specimen_acquisition_interval,
+    treatment_start_interval,
+    treatment_duration,
+  ]
+    .map(val => Number(val) || 0)
+    .reduce((sum, val) => sum + val, 0);
 
   return treatmentInterval;
 };
