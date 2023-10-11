@@ -1635,6 +1635,7 @@ describe('data-validator', () => {
           lost_to_followup_after_clinical_event_id: 'FL-23',
           donorSubmitterId: 'DN190',
           interval_of_followup: 230,
+          submission_type: 'treatment',
           treatment_id: 'TR-33',
           value: 'FL-23',
         },
@@ -1728,6 +1729,127 @@ describe('data-validator', () => {
       chai
         .expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors)
         .to.deep.include(diagnosisConflictErr);
+    });
+
+    it('should not validate previous records submitted before a Lost to Follow Up After clinical event, and displays accurate copy for Specimen', async () => {
+      const existingDonorAB1Mock: Donor = stubs.validation.existingDonor01();
+      const submittedAB1Records = {};
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.DONOR,
+        submittedAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'DN190',
+          [SampleRegistrationFieldsEnum.program_id]: 'TEST-CA',
+          [DonorFieldsEnum.vital_status]: 'alive',
+          lost_to_followup_after_clinical_event_id: 'FL-24',
+          index: 0,
+        },
+      );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+        submittedAB1Records,
+        {
+          [PrimaryDiagnosisFieldsEnum.submitter_donor_id]: 'DN190',
+          [PrimaryDiagnosisFieldsEnum.program_id]: 'TEST-CA',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-1',
+          [PrimaryDiagnosisFieldsEnum.age_at_diagnosis]: 30,
+          index: 0,
+        },
+      );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.FOLLOW_UP,
+        submittedAB1Records,
+        {
+          [FollowupFieldsEnum.submitter_donor_id]: 'DN190',
+          [FollowupFieldsEnum.program_id]: 'TEST-CA',
+          [FollowupFieldsEnum.submitter_follow_up_id]: 'FL-23',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-1',
+          [FollowupFieldsEnum.interval_of_followup]: 30,
+          index: 0,
+        },
+      );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.TREATMENT,
+        submittedAB1Records,
+        {
+          [TreatmentFieldsEnum.submitter_donor_id]: 'DN190',
+          [TreatmentFieldsEnum.program_id]: 'TEST-CA',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'TR-33',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-1',
+          [TreatmentFieldsEnum.treatment_start_interval]: 250,
+          [TreatmentFieldsEnum.treatment_duration]: 50,
+          index: 0,
+        },
+      );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+        submittedAB1Records,
+        {
+          [PrimaryDiagnosisFieldsEnum.submitter_donor_id]: 'DN190',
+          [PrimaryDiagnosisFieldsEnum.program_id]: 'TEST-CA',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
+          [PrimaryDiagnosisFieldsEnum.age_at_diagnosis]: 50,
+          index: 0,
+        },
+      );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.FOLLOW_UP,
+        submittedAB1Records,
+        {
+          [FollowupFieldsEnum.submitter_donor_id]: 'DN190',
+          [FollowupFieldsEnum.program_id]: 'TEST-CA',
+          [FollowupFieldsEnum.submitter_follow_up_id]: 'FL-24',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
+          [FollowupFieldsEnum.interval_of_followup]: 230,
+          index: 0,
+        },
+      );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.TREATMENT,
+        submittedAB1Records,
+        {
+          [TreatmentFieldsEnum.submitter_donor_id]: 'DN190',
+          [TreatmentFieldsEnum.program_id]: 'TEST-CA',
+          [TreatmentFieldsEnum.submitter_treatment_id]: 'TR-34',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
+          [TreatmentFieldsEnum.treatment_start_interval]: 250,
+          [TreatmentFieldsEnum.treatment_duration]: 50,
+          index: 0,
+        },
+      );
+
+      const invalidSubmissionErr: SubmissionValidationError = {
+        type: DataValidationErrors['INVALID_SUBMISSION_AFTER_LOST_TO_FOLLOW_UP'],
+        fieldName: DonorFieldsEnum.lost_to_followup_after_clinical_event_id,
+        index: 0,
+        info: {
+          lost_to_followup_after_clinical_event_id: 'FL-24',
+          interval_of_followup: 230,
+          treatment_id: 'TR-34',
+          submission_type: 'treatment',
+          donorSubmitterId: 'DN190',
+          value: 'FL-24',
+        },
+        message:
+          'A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up 230 days after their primary diagnosis ("lost_to_followup_after_clinical_event_id" = "FL-24"), but a new treatment ("TR-34") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.',
+      };
+
+      const result = await dv
+        .validateSubmissionData({ AB1: submittedAB1Records }, { AB1: existingDonorAB1Mock })
+        .catch(err => fail(err));
+      console.log('\nresult', result[ClinicalEntitySchemaNames.DONOR].dataErrors);
+
+      chai.expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors.length).to.eq(1);
+
+      chai
+        .expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors)
+        .to.deep.include(invalidSubmissionErr);
     });
 
     it('should detect not enough info to validate specimen file', async () => {
