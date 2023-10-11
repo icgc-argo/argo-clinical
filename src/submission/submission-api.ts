@@ -436,12 +436,10 @@ const isValidCreateBody = (req: Request, res: Response): boolean => {
 const isValidRequestArgs = (programId: string, uploadedFiles: {}): boolean => {
   if (programId === undefined) {
     L.debug('programId missing');
-    // ControllerUtils.badRequest(res, `programId is required`);
     return false;
   }
-  if (/*uploadedFiles === undefined &&*/ Object.keys(uploadedFiles).length === 0) {
+  if (Object.keys(uploadedFiles).length === 0) {
     L.debug(`File(s) missing`);
-    // ControllerUtils.badRequest(res, `Clinical file(s) upload required`);
     return false;
   }
   return true;
