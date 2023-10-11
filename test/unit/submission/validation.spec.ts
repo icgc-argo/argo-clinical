@@ -1731,7 +1731,7 @@ describe('data-validator', () => {
         .to.deep.include(diagnosisConflictErr);
     });
 
-    it('should not validate previous records submitted before a Lost to Follow Up After clinical event, and displays accurate copy for Specimen', async () => {
+    it('should only compare records with the same Primary Diagnosis as a Lost to Follow Up clinical event', async () => {
       const existingDonorAB1Mock: Donor = stubs.validation.existingDonor01();
       const submittedAB1Records = {};
       ClinicalSubmissionRecordsOperations.addRecord(
@@ -1850,6 +1850,121 @@ describe('data-validator', () => {
       chai
         .expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors)
         .to.deep.include(invalidSubmissionErr);
+    });
+
+    it('should display correct errors for invalid Follow Up and Specimen submitted after a Lost to Follow Up clinical event', async () => {
+      const existingDonorAB1Mock: Donor = stubs.validation.existingDonor01();
+      const submittedAB1Records = {};
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.DONOR,
+        submittedAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'DN190',
+          [SampleRegistrationFieldsEnum.program_id]: 'TEST-CA',
+          [DonorFieldsEnum.vital_status]: 'alive',
+          lost_to_followup_after_clinical_event_id: 'FL-23',
+          index: 0,
+        },
+      );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+        submittedAB1Records,
+        {
+          [PrimaryDiagnosisFieldsEnum.submitter_donor_id]: 'DN190',
+          [PrimaryDiagnosisFieldsEnum.program_id]: 'TEST-CA',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-1',
+          [PrimaryDiagnosisFieldsEnum.age_at_diagnosis]: 30,
+          index: 0,
+        },
+      );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.FOLLOW_UP,
+        submittedAB1Records,
+        {
+          [FollowupFieldsEnum.submitter_donor_id]: 'DN190',
+          [FollowupFieldsEnum.program_id]: 'TEST-CA',
+          [FollowupFieldsEnum.submitter_follow_up_id]: 'FL-23',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-1',
+          [FollowupFieldsEnum.interval_of_followup]: 30,
+          index: 0,
+        },
+      );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.FOLLOW_UP,
+        submittedAB1Records,
+        {
+          [FollowupFieldsEnum.submitter_donor_id]: 'DN190',
+          [FollowupFieldsEnum.program_id]: 'TEST-CA',
+          [FollowupFieldsEnum.submitter_follow_up_id]: 'FL-24',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-1',
+          [FollowupFieldsEnum.interval_of_followup]: 80,
+          index: 0,
+        },
+      );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.SPECIMEN,
+        submittedAB1Records,
+        {
+          [SpecimenFieldsEnum.submitter_donor_id]: 'DN190',
+          [SpecimenFieldsEnum.program_id]: 'TEST-CA',
+          [SpecimenFieldsEnum.submitter_specimen_id]: 'SP1',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-1',
+          [SpecimenFieldsEnum.specimen_acquisition_interval]: 100,
+          [SpecimenFieldsEnum.tumour_grading_system]: 'Gleason grade group system',
+          [SpecimenFieldsEnum.tumour_grade]: 'Low grade',
+          index: 0,
+        },
+      );
+
+      const invalidFollowUpErr: SubmissionValidationError = {
+        type: DataValidationErrors['INVALID_SUBMISSION_AFTER_LOST_TO_FOLLOW_UP'],
+        fieldName: DonorFieldsEnum.lost_to_followup_after_clinical_event_id,
+        index: 0,
+        info: {
+          lost_to_followup_after_clinical_event_id: 'FL-23',
+          interval_of_followup: 30,
+          treatment_id: 'FL-24',
+          submission_type: 'follow up',
+          donorSubmitterId: 'DN190',
+          value: 'FL-23',
+        },
+        message:
+          'A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up 30 days after their primary diagnosis ("lost_to_followup_after_clinical_event_id" = "FL-23"), but a new follow up ("FL-24") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.',
+      };
+
+      const invalidSpecimenErr: SubmissionValidationError = {
+        type: DataValidationErrors['INVALID_SUBMISSION_AFTER_LOST_TO_FOLLOW_UP'],
+        fieldName: DonorFieldsEnum.lost_to_followup_after_clinical_event_id,
+        index: 0,
+        info: {
+          lost_to_followup_after_clinical_event_id: 'FL-23',
+          interval_of_followup: 30,
+          treatment_id: 'SP1',
+          submission_type: 'specimen',
+          donorSubmitterId: 'DN190',
+          value: 'FL-23',
+        },
+        message:
+          'A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up 30 days after their primary diagnosis ("lost_to_followup_after_clinical_event_id" = "FL-23"), but a new specimen ("SP1") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.',
+      };
+
+      const result = await dv
+        .validateSubmissionData({ AB1: submittedAB1Records }, { AB1: existingDonorAB1Mock })
+        .catch(err => fail(err));
+
+      chai.expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors.length).to.eq(2);
+
+      chai
+        .expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors)
+        .to.deep.include(invalidFollowUpErr);
+
+      chai
+        .expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors)
+        .to.deep.include(invalidSpecimenErr);
     });
 
     it('should detect not enough info to validate specimen file', async () => {

@@ -18,7 +18,7 @@
  */
 
 import { DeepReadonly } from 'deep-freeze';
-import { ClinicalInfo, Donor, Specimen, Treatment } from '../../clinical/clinical-entities';
+import { ClinicalInfo, Donor } from '../../clinical/clinical-entities';
 import { DonorFieldsEnum, SpecimenFieldsEnum } from '../../common-model/entities';
 import {
   DataValidationErrors,
@@ -97,11 +97,19 @@ function checkTimeConflictWithSpecimens(
 }
 
 const getTreatmentInterval = (clinicalInfo: DeepReadonly<ClinicalInfo>) => {
-  const { treatment_start_interval, treatment_duration } = clinicalInfo;
+  const {
+    interval_of_followup,
+    specimen_acquisition_interval,
+    treatment_start_interval,
+    treatment_duration,
+  } = clinicalInfo;
+
   const treatmentInterval =
-    typeof treatment_start_interval === 'number'
-      ? treatment_start_interval + (Number(treatment_duration) || 0)
-      : 0;
+    (Number(interval_of_followup) || 0) +
+    (Number(specimen_acquisition_interval) || 0) +
+    (Number(treatment_start_interval) || 0) +
+    (Number(treatment_duration) || 0);
+
   return treatmentInterval;
 };
 
@@ -162,27 +170,28 @@ const crossFileValidator = async (
 
       const lost_to_follow_up_diagnosis_id =
         lostToFollowUpClinicalInfo['submitter_primary_diagnosis_id'];
-      // Collects all Treatment Records w/ Intervals greater than Lost to Follow Up
+
+      const clinicalIntervalFilter = (clinicalInfo: DeepReadonly<ClinicalInfo>) =>
+        clinicalInfo.submitter_primary_diagnosis_id === lost_to_follow_up_diagnosis_id &&
+        getTreatmentInterval(clinicalInfo) > lostToFollowUpInterval;
+
+      // Collect all Treatment, FollowUp + Specimen Records w/ Intervals greater than Lost to Follow Up
       const invalidTreatmentIntervalRecords = treatments
         .map(treatmentRecord => treatmentRecord.clinicalInfo)
-        .filter(
-          treatmentRecord =>
-            treatmentRecord.submitter_primary_diagnosis_id === lost_to_follow_up_diagnosis_id &&
-            getTreatmentInterval(treatmentRecord) > lostToFollowUpInterval,
-        );
+        .filter(clinicalIntervalFilter);
 
-      // Collects all Records w/ Follow Up Intervals greater than Lost to Follow Up
       const invalidFollowUpIntervalRecords = followUps
-        .map(record => record.clinicalInfo)
-        .filter(
-          clinicalInfo =>
-            clinicalInfo.submitter_primary_diagnosis_id == lost_to_follow_up_diagnosis_id &&
-            Number(clinicalInfo['interval_of_followup']) > lostToFollowUpInterval,
-        );
+        .map(followUpRecord => followUpRecord.clinicalInfo)
+        .filter(clinicalIntervalFilter);
+
+      const invalidSpecimenIntervalRecords = specimens
+        .map(specimenRecord => specimenRecord.clinicalInfo)
+        .filter(clinicalIntervalFilter);
 
       const invalidRecords = [
         ...invalidTreatmentIntervalRecords,
         ...invalidFollowUpIntervalRecords,
+        ...invalidSpecimenIntervalRecords,
       ];
 
       for (const invalidClinicalInfo of invalidRecords) {
