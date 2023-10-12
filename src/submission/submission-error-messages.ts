@@ -131,7 +131,9 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
       submission_type,
     },
   }) =>
-    `A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up ${lost_to_followup_interval} after their primary diagnosis ("lost_to_followup_after_clinical_event_id" = "${lost_to_followup_after_clinical_event_id}"), but a new ${submission_type} ("${treatment_id}") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.`,
+    `A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up ${
+      lost_to_followup_interval === 0 ? '' : lost_to_followup_interval + ' days '
+    }after their primary diagnosis ("lost_to_followup_after_clinical_event_id" = "${lost_to_followup_after_clinical_event_id}"), but a new ${submission_type} ("${treatment_id}") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.`,
   INVALID_DIAGNOSIS_AFTER_LOST_TO_FOLLOW_UP: ({
     info: { lost_to_followup_diagnosis_id, lost_to_followup_age, submitter_primary_diagnosis_id },
   }) =>

@@ -1640,7 +1640,7 @@ describe('data-validator', () => {
           value: 'FL-23',
         },
         message:
-          'A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up 230 after their primary diagnosis ("lost_to_followup_after_clinical_event_id" = "FL-23"), but a new treatment ("TR-33") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.',
+          'A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up 230 days after their primary diagnosis ("lost_to_followup_after_clinical_event_id" = "FL-23"), but a new treatment ("TR-33") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.',
       };
 
       const result = await dv
@@ -1837,7 +1837,7 @@ describe('data-validator', () => {
           value: 'FL-23',
         },
         message:
-          'A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up 350 after their primary diagnosis ("lost_to_followup_after_clinical_event_id" = "FL-23"), but a new follow up ("FL-24") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.',
+          'A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up 350 days after their primary diagnosis ("lost_to_followup_after_clinical_event_id" = "FL-23"), but a new follow up ("FL-24") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.',
       };
 
       const invalidTreatmenErr: SubmissionValidationError = {
@@ -1853,7 +1853,7 @@ describe('data-validator', () => {
           value: 'FL-23',
         },
         message:
-          'A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up 350 after their primary diagnosis ("lost_to_followup_after_clinical_event_id" = "FL-23"), but a new treatment ("TR-34") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.',
+          'A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up 350 days after their primary diagnosis ("lost_to_followup_after_clinical_event_id" = "FL-23"), but a new treatment ("TR-34") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.',
       };
 
       const invalidDiagnosisErr: SubmissionValidationError = {
@@ -1971,7 +1971,7 @@ describe('data-validator', () => {
           value: 'FL-23',
         },
         message:
-          'A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up 30 after their primary diagnosis ("lost_to_followup_after_clinical_event_id" = "FL-23"), but a new follow up ("FL-24") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.',
+          'A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up 30 days after their primary diagnosis ("lost_to_followup_after_clinical_event_id" = "FL-23"), but a new follow up ("FL-24") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.',
       };
 
       const invalidSpecimenErr: SubmissionValidationError = {
@@ -1987,7 +1987,7 @@ describe('data-validator', () => {
           value: 'FL-23',
         },
         message:
-          'A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up 30 after their primary diagnosis ("lost_to_followup_after_clinical_event_id" = "FL-23"), but a new specimen ("SP1") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.',
+          'A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up 30 days after their primary diagnosis ("lost_to_followup_after_clinical_event_id" = "FL-23"), but a new specimen ("SP1") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.',
       };
 
       const result = await dv
