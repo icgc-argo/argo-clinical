@@ -87,10 +87,7 @@ const typeDefs = gql`
     """
     Validate the uploaded clinical files
     """
-    validateClinicalSubmissions(
-      programShortName: String!
-      version: String!
-    ): ClinicalSubmissionData!
+    validateClinicalSubmission(programShortName: String!, version: String!): ClinicalSubmissionData!
 
     """
     - If there is update: makes a clinical submission ready for approval by a DCC member,
