@@ -1633,8 +1633,8 @@ describe('data-validator', () => {
         index: 0,
         info: {
           lost_to_followup_after_clinical_event_id: 'FL-23',
+          lost_to_followup_interval: 230,
           donorSubmitterId: 'DN190',
-          interval_of_followup: 230,
           submission_type: 'treatment',
           treatment_id: 'TR-33',
           value: 'FL-23',
@@ -1646,7 +1646,7 @@ describe('data-validator', () => {
       const result = await dv
         .validateSubmissionData({ AB1: submittedAB1Records }, { AB1: existingDonorAB1Mock })
         .catch(err => fail(err));
-
+      console.log('\nresult', result[ClinicalEntitySchemaNames.DONOR].dataErrors);
       chai.expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors.length).to.eq(1);
       chai
         .expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors)
@@ -1723,7 +1723,7 @@ describe('data-validator', () => {
       const result = await dv
         .validateSubmissionData({ AB1: submittedAB1Records }, { AB1: existingDonorAB1Mock })
         .catch(err => fail(err));
-
+      console.log('\nresult', result[ClinicalEntitySchemaNames.DONOR].dataErrors);
       chai.expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors.length).to.eq(1);
 
       chai
@@ -1830,7 +1830,7 @@ describe('data-validator', () => {
         index: 0,
         info: {
           lost_to_followup_after_clinical_event_id: 'FL-24',
-          interval_of_followup: 230,
+          lost_to_followup_interval: 230,
           treatment_id: 'TR-34',
           submission_type: 'treatment',
           donorSubmitterId: 'DN190',
@@ -1926,7 +1926,7 @@ describe('data-validator', () => {
         index: 0,
         info: {
           lost_to_followup_after_clinical_event_id: 'FL-23',
-          interval_of_followup: 30,
+          lost_to_followup_interval: 30,
           treatment_id: 'FL-24',
           submission_type: 'follow up',
           donorSubmitterId: 'DN190',
@@ -1942,7 +1942,7 @@ describe('data-validator', () => {
         index: 0,
         info: {
           lost_to_followup_after_clinical_event_id: 'FL-23',
-          interval_of_followup: 30,
+          lost_to_followup_interval: 30,
           treatment_id: 'SP1',
           submission_type: 'specimen',
           donorSubmitterId: 'DN190',
@@ -1955,7 +1955,7 @@ describe('data-validator', () => {
       const result = await dv
         .validateSubmissionData({ AB1: submittedAB1Records }, { AB1: existingDonorAB1Mock })
         .catch(err => fail(err));
-
+      console.log('\nresult', result[ClinicalEntitySchemaNames.DONOR].dataErrors);
       chai.expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors.length).to.eq(2);
 
       chai
