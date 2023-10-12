@@ -1633,10 +1633,10 @@ describe('data-validator', () => {
         index: 0,
         info: {
           lost_to_followup_after_clinical_event_id: 'FL-23',
-          donorSubmitterId: 'DN190',
-          interval_of_followup: 230,
-          submission_type: 'treatment',
+          lost_to_followup_interval: 230,
           treatment_id: 'TR-33',
+          submission_type: 'treatment',
+          donorSubmitterId: 'DN190',
           value: 'FL-23',
         },
         message:
@@ -1710,8 +1710,8 @@ describe('data-validator', () => {
         fieldName: DonorFieldsEnum.lost_to_followup_after_clinical_event_id,
         index: 0,
         info: {
-          lost_to_follow_up_diagnosis_id: 'PP-1',
-          lost_to_follow_up_age: 30,
+          lost_to_followup_diagnosis_id: 'PP-1',
+          lost_to_followup_age: 30,
           submitter_primary_diagnosis_id: 'PP-2',
           donorSubmitterId: 'DN190',
           value: 'FL-23',
@@ -1731,7 +1731,7 @@ describe('data-validator', () => {
         .to.deep.include(diagnosisConflictErr);
     });
 
-    it('should only compare records with the same Primary Diagnosis as a Lost to Follow Up clinical event', async () => {
+    it('should accurately validate records across multiple Primary Diagnoses when a Lost to Follow Up clinical event is submitted', async () => {
       const existingDonorAB1Mock: Donor = stubs.validation.existingDonor01();
       const submittedAB1Records = {};
       ClinicalSubmissionRecordsOperations.addRecord(
@@ -1741,7 +1741,7 @@ describe('data-validator', () => {
           [SampleRegistrationFieldsEnum.submitter_donor_id]: 'DN190',
           [SampleRegistrationFieldsEnum.program_id]: 'TEST-CA',
           [DonorFieldsEnum.vital_status]: 'alive',
-          lost_to_followup_after_clinical_event_id: 'FL-24',
+          lost_to_followup_after_clinical_event_id: 'FL-23',
           index: 0,
         },
       );
@@ -1766,7 +1766,7 @@ describe('data-validator', () => {
           [FollowupFieldsEnum.program_id]: 'TEST-CA',
           [FollowupFieldsEnum.submitter_follow_up_id]: 'FL-23',
           [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-1',
-          [FollowupFieldsEnum.interval_of_followup]: 30,
+          [FollowupFieldsEnum.interval_of_followup]: 350,
           index: 0,
         },
       );
@@ -1824,32 +1824,70 @@ describe('data-validator', () => {
         },
       );
 
-      const invalidSubmissionErr: SubmissionValidationError = {
+      const invalidFollowUpErr: SubmissionValidationError = {
         type: DataValidationErrors['INVALID_SUBMISSION_AFTER_LOST_TO_FOLLOW_UP'],
         fieldName: DonorFieldsEnum.lost_to_followup_after_clinical_event_id,
         index: 0,
         info: {
-          lost_to_followup_after_clinical_event_id: 'FL-24',
-          interval_of_followup: 230,
+          lost_to_followup_after_clinical_event_id: 'FL-23',
+          lost_to_followup_interval: 350,
+          treatment_id: 'FL-24',
+          submission_type: 'follow up',
+          donorSubmitterId: 'DN190',
+          value: 'FL-23',
+        },
+        message:
+          'A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up 350 days after their primary diagnosis ("lost_to_followup_after_clinical_event_id" = "FL-23"), but a new follow up ("FL-24") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.',
+      };
+
+      const invalidTreatmenErr: SubmissionValidationError = {
+        type: DataValidationErrors['INVALID_SUBMISSION_AFTER_LOST_TO_FOLLOW_UP'],
+        fieldName: DonorFieldsEnum.lost_to_followup_after_clinical_event_id,
+        index: 0,
+        info: {
+          lost_to_followup_after_clinical_event_id: 'FL-23',
+          lost_to_followup_interval: 350,
           treatment_id: 'TR-34',
           submission_type: 'treatment',
           donorSubmitterId: 'DN190',
-          value: 'FL-24',
+          value: 'FL-23',
         },
         message:
-          'A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up 230 days after their primary diagnosis ("lost_to_followup_after_clinical_event_id" = "FL-24"), but a new treatment ("TR-34") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.',
+          'A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up 350 days after their primary diagnosis ("lost_to_followup_after_clinical_event_id" = "FL-23"), but a new treatment ("TR-34") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.',
+      };
+
+      const invalidDiagnosisErr: SubmissionValidationError = {
+        type: DataValidationErrors['INVALID_DIAGNOSIS_AFTER_LOST_TO_FOLLOW_UP'],
+        fieldName: DonorFieldsEnum.lost_to_followup_after_clinical_event_id,
+        index: 0,
+        info: {
+          lost_to_followup_diagnosis_id: 'PP-1',
+          lost_to_followup_age: 30,
+          submitter_primary_diagnosis_id: 'PP-2',
+          donorSubmitterId: 'DN190',
+          value: 'FL-23',
+        },
+        message:
+          'A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up at age PP-1 after their primary diagnosis ("submitter_primary_diagnosis_id" = "30"), but a new primary diagnosis ("PP-2") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.',
       };
 
       const result = await dv
         .validateSubmissionData({ AB1: submittedAB1Records }, { AB1: existingDonorAB1Mock })
         .catch(err => fail(err));
-      console.log('\nresult', result[ClinicalEntitySchemaNames.DONOR].dataErrors);
 
-      chai.expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors.length).to.eq(1);
+      chai.expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors.length).to.eq(3);
 
       chai
         .expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors)
-        .to.deep.include(invalidSubmissionErr);
+        .to.deep.include(invalidFollowUpErr);
+
+      chai
+        .expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors)
+        .to.deep.include(invalidTreatmenErr);
+
+      chai
+        .expect(result[ClinicalEntitySchemaNames.DONOR].dataErrors)
+        .to.deep.include(invalidDiagnosisErr);
     });
 
     it('should display correct errors for invalid Follow Up and Specimen submitted after a Lost to Follow Up clinical event', async () => {
@@ -1926,7 +1964,7 @@ describe('data-validator', () => {
         index: 0,
         info: {
           lost_to_followup_after_clinical_event_id: 'FL-23',
-          interval_of_followup: 30,
+          lost_to_followup_interval: 30,
           treatment_id: 'FL-24',
           submission_type: 'follow up',
           donorSubmitterId: 'DN190',
@@ -1942,7 +1980,7 @@ describe('data-validator', () => {
         index: 0,
         info: {
           lost_to_followup_after_clinical_event_id: 'FL-23',
-          interval_of_followup: 30,
+          lost_to_followup_interval: 30,
           treatment_id: 'SP1',
           submission_type: 'specimen',
           donorSubmitterId: 'DN190',
