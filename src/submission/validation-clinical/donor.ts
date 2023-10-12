@@ -210,9 +210,6 @@ const crossFileValidator = async (
         ...invalidSpecimenIntervalRecords,
       ];
 
-      console.log('\ninvalidRecords tr', invalidTreatmentIntervalRecords);
-      console.log('\ninvalidRecords fu', invalidFollowUpIntervalRecords);
-      console.log('\ninvalidRecords', invalidRecords);
       for (const invalidClinicalInfo of invalidRecords) {
         const {
           submitter_treatment_id,
