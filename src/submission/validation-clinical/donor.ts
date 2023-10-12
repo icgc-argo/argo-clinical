@@ -128,12 +128,12 @@ const getDiagnosisAge = (
       submitter_primary_diagnosis_id,
   )?.clinicalInfo;
 
-  const diagnosisAgeInterval =
+  const diagnosisAge =
     typeof matchedDiagnosisRecord?.age_at_diagnosis === 'number'
       ? matchedDiagnosisRecord?.age_at_diagnosis
       : 0;
 
-  return diagnosisAgeInterval;
+  return diagnosisAge;
 };
 
 const crossFileValidator = async (
