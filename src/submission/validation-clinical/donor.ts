@@ -116,7 +116,7 @@ const getTreatmentInterval = (clinicalInfo: DeepReadonly<ClinicalInfo>) => {
   return treatmentInterval;
 };
 
-const getDiagnosisAgeAsInterval = (
+const getDiagnosisAge = (
   clinicalInfo: DeepReadonly<ClinicalInfo>,
   diagnoses: readonly DeepReadonly<PrimaryDiagnosis>[],
 ) => {
@@ -130,7 +130,7 @@ const getDiagnosisAgeAsInterval = (
 
   const diagnosisAgeInterval =
     typeof matchedDiagnosisRecord?.age_at_diagnosis === 'number'
-      ? matchedDiagnosisRecord?.age_at_diagnosis * 365
+      ? matchedDiagnosisRecord?.age_at_diagnosis
       : 0;
 
   return diagnosisAgeInterval;
@@ -181,15 +181,18 @@ const crossFileValidator = async (
       const lostToFollowUpClinicalInfo = donorClinicalEventIdMatch.clinicalInfo;
 
       const lostToFollowUpInterval = getTreatmentInterval(lostToFollowUpClinicalInfo);
-      const lost_to_follow_up_age = getDiagnosisAgeAsInterval(
-        lostToFollowUpClinicalInfo,
-        primaryDiagnoses,
-      );
+      const lost_to_follow_up_age = getDiagnosisAge(lostToFollowUpClinicalInfo, primaryDiagnoses);
+      const lostToFollowUpAgeInterval = lost_to_follow_up_age * 365;
 
-      const clinicalIntervalFilter = (clinicalInfo: DeepReadonly<ClinicalInfo>) =>
-        getTreatmentInterval(clinicalInfo) +
-          getDiagnosisAgeAsInterval(clinicalInfo, primaryDiagnoses) >
-        lost_to_follow_up_age + lostToFollowUpInterval;
+      const clinicalIntervalFilter = (clinicalInfo: DeepReadonly<ClinicalInfo>) => {
+        const treatmentInterval = getTreatmentInterval(clinicalInfo);
+        const diagnosisAgeInterval = getDiagnosisAge(clinicalInfo, primaryDiagnoses) * 365;
+
+        const submissionTotalInterval = treatmentInterval + diagnosisAgeInterval;
+        const lostToFollowUpTotalInterval = lostToFollowUpAgeInterval + lostToFollowUpInterval;
+
+        return submissionTotalInterval > lostToFollowUpTotalInterval;
+      };
 
       // Collect all Treatment, FollowUp + Specimen Records w/ Intervals greater than Lost to Follow Up
       const invalidTreatmentIntervalRecords = treatments
@@ -260,11 +263,13 @@ const crossFileValidator = async (
         .map(record => record.clinicalInfo)
         .filter(clinicalInfo => {
           const { submitter_primary_diagnosis_id, age_at_diagnosis } = clinicalInfo;
-          const ageAtDiagnosis = typeof age_at_diagnosis === 'number' ? age_at_diagnosis : 0;
+          const ageAtDiagnosisInterval =
+            typeof age_at_diagnosis === 'number' ? age_at_diagnosis * 365 : 0;
+
           return (
             lost_to_follow_up_age &&
             submitter_primary_diagnosis_id !== lost_to_follow_up_diagnosis_id &&
-            ageAtDiagnosis > lost_to_follow_up_age
+            ageAtDiagnosisInterval > lostToFollowUpAgeInterval
           );
         });
 
