@@ -22,9 +22,14 @@ import gql from 'graphql-tag';
 const typeDefs = gql`
   type Query {
     """
-    Retrieve DonorIds + Submitter Donor Ids for given Clinical Entity and Program
+    Retrieve all stored Clinical Entity and Donor Completion data for a program
     """
-    clinicalSearchResults(programShortName: String!, filters: ClinicalInput!): ClinicalSearchData!
+    clinicalData(programShortName: String!, filters: ClinicalInput!): ClinicalData!
+
+    """
+    Retrieve all stored Clinical Migration Errors for a program
+    """
+    clinicalErrors(programShortName: String!, donorIds: [Int]): [ClinicalErrors!]!
 
     """
     Retrieve current stored Clinical Registration data for a program
@@ -32,9 +37,67 @@ const typeDefs = gql`
     clinicalRegistration(shortName: String!): ClinicalRegistrationData!
 
     """
+    Retrieve DonorIds + Submitter Donor Ids for given Clinical Entity and Program
+    """
+    clinicalSearchResults(programShortName: String!, filters: ClinicalInput!): ClinicalSearchData!
+
+    """
     Retrieve current stored Clinical Submission data for a program
     """
     clinicalSubmissions(programShortName: String!): ClinicalSubmissionData!
+
+    """
+    Retrieve current stored Clinical Submission Data Dictionary Schema version
+    """
+    clinicalSubmissionSchemaVersion: String!
+
+    """
+    Retrieve current Clinical Submission disabled state for both sample_registration and clinical entity files
+    """
+    clinicalSubmissionSystemDisabled: Boolean!
+
+    """
+    Retrieve current stored Clinical Submission Types list
+    """
+    clinicalSubmissionTypesList(includeFields: String): [SchemaList]!
+  }
+
+  type Mutation {
+    """
+    Remove the Clinical Registration data currently uploaded and not committed
+    """
+    clearClinicalRegistration(shortName: String!, registrationId: String!): Boolean!
+
+    """
+    Complete registration of the currently uploaded Clinical Registration data
+    On Success, returns a list of the new sample IDs that were committed
+    """
+    commitClinicalRegistration(shortName: String!, registrationId: String!): [String]!
+
+    """
+    Clear Clinical Submission
+    fileType is optional, if it is not provided all fileTypes will be cleared. The values for fileType are the same as the file names from each template (ex. donor, specimen)
+    """
+    clearClinicalSubmission(
+      programShortName: String!
+      version: String!
+      fileType: String
+    ): ClinicalSubmissionData!
+
+    """
+    Validate the uploaded clinical files
+    """
+    validateClinicalSubmissions(
+      programShortName: String!
+      version: String!
+    ): ClinicalSubmissionData!
+
+    """
+    - If there is update: makes a clinical submission ready for approval by a DCC member,
+    returning submission data with updated state
+    - If there is NO update: merges clinical data to system, returning an empty submission
+    """
+    commitClinicalSubmission(programShortName: String!, version: String!): ClinicalSubmissionData!
   }
 
   scalar DateTime
@@ -59,7 +122,7 @@ const typeDefs = gql`
     programShortName: String!
     clinicalEntities: [ClinicalDataEntities]!
     completionStats: [CompletionStats]
-    clinicalErrors: [ClinicalErrors]
+    clinicalErrors: [ClinicalErrors]!
   }
 
   """
@@ -96,6 +159,7 @@ const typeDefs = gql`
   type ClinicalErrors {
     donorId: Int
     submitterDonorId: String
+    entityName: String
     errors: [ClinicalErrorRecord]
   }
 
@@ -301,6 +365,8 @@ const typeDefs = gql`
     oldValue: String!
     donorId: String!
   }
+
+  scalar SchemaList
 `;
 
 export default typeDefs;

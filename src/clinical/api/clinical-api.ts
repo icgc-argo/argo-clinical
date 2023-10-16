@@ -19,18 +19,13 @@
 
 import { Request, Response } from 'express';
 import * as service from '../clinical-service';
-import { ClinicalQuery, ClinicalSearchQuery } from '../clinical-service';
+import { PaginatedClinicalQuery, ClinicalDonorEntityQuery } from '../clinical-service';
 import {
   HasFullWriteAccess,
   ProtectTestEndpoint,
   HasProgramReadAccess,
   HasFullReadAccess,
 } from '../../decorators';
-import {
-  ClinicalEntitySchemaNames,
-  aliasEntityNames,
-  queryEntityNames,
-} from '../../common-model/entities';
 import { ControllerUtils, DonorUtils, TsvUtils } from '../../utils';
 import AdmZip from 'adm-zip';
 import { ClinicalEntityData, Donor } from '../clinical-entities';
@@ -41,7 +36,10 @@ import {
   ClinicalErrorsApiBody,
   ClinicalSearchApiBody,
   CompletionState,
+  DonorDataApiBody,
 } from './types';
+import { loggerFor } from '../../logger';
+const L = loggerFor(__filename);
 
 // TODO: Update value type to match mongo schema
 export const completionFilters: Record<CompletionState, any> = {
@@ -117,7 +115,7 @@ class ClinicalController {
     } = bodyParseResult.data;
     const completionState = completionFilters[state];
 
-    const query: ClinicalQuery = {
+    const query: PaginatedClinicalQuery = {
       programShortName,
       sort,
       entityTypes,
@@ -141,6 +139,40 @@ class ClinicalController {
       .setHeader('content-disposition', fileName);
 
     const zip = createClinicalZipFile(entityData);
+
+    res.send(zip.toBuffer());
+  }
+
+  /**
+   * Download Clinical Data selected by Donor ID.
+   * Requires Full Read Access.
+   * Used by API for a user to download clinical data for specific donors and/or files.
+   * @param req
+   * @param res
+   * @returns
+   */
+  @HasFullReadAccess()
+  async getDonorDataByIdAsTsvsInZip(req: Request, res: Response) {
+    const bodyParseResult = DonorDataApiBody.safeParse(req.body);
+    if (!bodyParseResult.success) {
+      return ControllerUtils.badRequest(
+        res,
+        `Invalid data in request body: ${JSON.stringify(bodyParseResult.error)}`,
+      );
+    }
+    const { donorIds } = bodyParseResult.data;
+
+    const donorEntityData = await service.getDonorEntityData(donorIds);
+
+    const date = currentDateFormatted();
+    const fileName = `filename=Donor_Clinical_Data_${date}.zip`;
+    res
+      .status(200)
+      .contentType('application/zip')
+      .attachment(fileName)
+      .setHeader('content-disposition', fileName);
+
+    const zip = createClinicalZipFile(donorEntityData);
 
     res.send(zip.toBuffer());
   }
@@ -170,7 +202,7 @@ class ClinicalController {
     } = bodyParseResult.data;
     const completionState = completionFilters[state];
 
-    const query: ClinicalQuery = {
+    const query: PaginatedClinicalQuery = {
       programShortName,
       sort,
       entityTypes,
@@ -210,7 +242,7 @@ class ClinicalController {
     const completionState = completionFilters[state] || {};
 
     // FE filters digits out of search text for Donor search
-    const query: ClinicalSearchQuery = {
+    const query: ClinicalDonorEntityQuery = {
       programShortName,
       donorIds,
       submitterDonorIds,
@@ -246,19 +278,11 @@ class ClinicalController {
       );
     }
 
-    // 1. Get the migration errors for every donor requested...
-    const migrationErrors = await service.getClinicalEntityMigrationErrors(
-      programId,
-      bodyParseResult.data.donorIds,
-    );
+    const queryIds = bodyParseResult.data.donorIds || [];
 
-    // 2. ...and now remove from the list all valid donors (fixed with submissions since the migration)
-    const validErrorRecords = await service.getValidRecordsPostSubmission(
-      programId,
-      migrationErrors,
-    );
+    const clinicalErrors = await service.getClinicalErrors(programId, queryIds);
 
-    res.status(200).json(validErrorRecords.clinicalErrors);
+    res.status(200).json(clinicalErrors);
   }
 
   /**

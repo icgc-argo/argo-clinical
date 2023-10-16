@@ -21,20 +21,19 @@ import { DeepReadonly } from 'deep-freeze';
 import _, { isEmpty } from 'lodash';
 import {
   ClinicalEntitySchemaNames,
+  EntityAlias,
   aliasEntityNames,
-  queryEntityNames,
 } from '../../common-model/entities';
 import {
   calculateSpecimenCompletionStats,
   dnaSampleFilter,
-  filterTumourNormalRecords,
   getRequiredDonorFieldsForEntityTypes,
   getClinicalEntitiesFromDonorBySchemaName,
   getClinicalEntitySubmittedData,
   getSampleRegistrationDataFromDonor,
 } from '../../common-model/functions';
 import { notEmpty } from '../../utils';
-import { ClinicalQuery, ClinicalSearchQuery } from '../clinical-service';
+import { ClinicalDonorEntityQuery, PaginationQuery } from '../clinical-service';
 import {
   ClinicalEntityData,
   ClinicalInfo,
@@ -122,13 +121,14 @@ const mapEntityDocuments = (
   entity: EntityClinicalInfo,
   donorCount: number,
   schemas: any,
-  query: ClinicalQuery,
+  entityTypes: EntityAlias[],
+  paginationQuery: PaginationQuery,
   completionStats: CompletionDisplayRecord[],
 ) => {
   const { entityName, results } = entity;
 
   // Filter, Paginate + Sort
-  const { page, pageSize = results.length, sort, entityTypes } = query;
+  const { page, pageSize = results.length, sort } = paginationQuery;
   const relevantSchemaWithFields = schemas.find((s: any) => s.name === entityName);
   const entityInQuery = isEntityInQuery(entityName, entityTypes);
 
@@ -159,7 +159,7 @@ const mapEntityDocuments = (
 };
 
 // Submitted Data Search Results
-function FilterDonorIdDataFromSearch(donors: Donor[], query: ClinicalSearchQuery) {
+function FilterDonorIdDataFromSearch(donors: Donor[], query: ClinicalDonorEntityQuery) {
   const { donorIds, submitterDonorIds } = query;
   const useQueriedDonors = !isEmpty(donorIds) || !isEmpty(submitterDonorIds);
   const queriedEntities = Object.values(ClinicalEntitySchemaNames).filter(entity =>
@@ -244,21 +244,20 @@ function extractEntityDataFromDonors(
   donors: Donor[],
   totalDonors: number,
   schemasWithFields: any,
-  query: ClinicalQuery,
+  entityTypes: EntityAlias[],
+  paginationQuery: PaginationQuery,
 ) {
   let clinicalEntityData: EntityClinicalInfo[] = [];
 
   donors.forEach(d => {
     Object.values(ClinicalEntitySchemaNames).forEach(entity => {
-      const isQueriedEntity = isEntityInQuery(entity, query.entityTypes);
-      const isRelatedEntity = getRequiredDonorFieldsForEntityTypes(query.entityTypes).includes(
-        entity,
-      );
+      const isQueriedEntity = isEntityInQuery(entity, entityTypes);
+      const isRelatedEntity = getRequiredDonorFieldsForEntityTypes(entityTypes).includes(entity);
       const requiresSampleRegistration =
         entity === ClinicalEntitySchemaNames.REGISTRATION &&
-        (query.entityTypes.includes('donor') || query.entityTypes.includes('sampleRegistration'));
+        (entityTypes.includes('donor') || entityTypes.includes('sampleRegistration'));
       const requiresSpecimens =
-        entity === ClinicalEntitySchemaNames.SPECIMEN && query.entityTypes.includes('donor');
+        entity === ClinicalEntitySchemaNames.SPECIMEN && entityTypes.includes('donor');
 
       const isRequiredEntity =
         isQueriedEntity || isRelatedEntity || requiresSampleRegistration || requiresSpecimens;
@@ -292,7 +291,14 @@ function extractEntityDataFromDonors(
 
   const clinicalEntities: ClinicalEntityData[] = clinicalEntityData
     .map((entity: EntityClinicalInfo) =>
-      mapEntityDocuments(entity, totalDonors, schemasWithFields, query, completionStats),
+      mapEntityDocuments(
+        entity,
+        totalDonors,
+        schemasWithFields,
+        entityTypes,
+        paginationQuery,
+        completionStats,
+      ),
     )
     .filter(notEmpty);
 

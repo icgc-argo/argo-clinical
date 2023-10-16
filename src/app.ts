@@ -37,6 +37,7 @@ import icgcImport from './routes/icgc-import';
 import exceptionRouter from './routes/exception';
 import responseTime from 'response-time';
 import morgan from 'morgan';
+import { EgoJwtData } from '@icgc-argo/ego-token-utils/dist/common';
 
 const L = loggerFor(__filename);
 
@@ -44,6 +45,15 @@ process.title = 'clinical';
 
 // Create Express server
 const app = express();
+
+export type GlobalGqlContext = {
+  isUserRequest: boolean;
+  egoToken: string;
+  Authorization: string;
+  userJwtData: EgoJwtData | undefined;
+  dataLoaders: {};
+};
+
 app.set('port', process.env.PORT || 3000);
 app.set('graphqlPort', process.env.GRAPHQLPORT || 3001);
 app.use(bodyParser.json());

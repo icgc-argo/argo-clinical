@@ -33,7 +33,7 @@ class SchemaController {
   async update(req: Request, res: Response) {
     const version: string = req.body.version;
     const sync: boolean = req.query.sync;
-    const initiator = ControllerUtils.getUserFromToken(req);
+    const initiator = ControllerUtils.getUserFromRequest(req);
     const migration = await manager.instance().updateSchemaVersion(version, initiator, sync);
     return res.status(200).send(migration);
   }
@@ -49,7 +49,7 @@ class SchemaController {
   @HasFullWriteAccess()
   async dryRunUpdate(req: Request, res: Response) {
     const version: string = req.body.version;
-    const initiator = ControllerUtils.getUserFromToken(req);
+    const initiator = ControllerUtils.getUserFromRequest(req);
     const migration = await manager.instance().dryRunSchemaUpgrade(version, initiator);
     return res.status(200).send(migration);
   }
@@ -80,16 +80,28 @@ export const get = async (req: Request, res: Response) => {
   return res.status(200).send(schema);
 };
 
+export const getClinicalSchemas = async (withFields: boolean) => {
+  const dictionaryManager = await manager.instance();
+  const schemaNameFilter = (schemaName: string) =>
+    schemaName !== ClinicalEntitySchemaNames.REGISTRATION;
+  const schemas = withFields
+    ? dictionaryManager
+        .getSchemasWithFields()
+        .then(schemaRecords =>
+          schemaRecords.filter(schemaRecord => schemaNameFilter(schemaRecord.name)),
+        )
+    : dictionaryManager
+        .getSchemaNames()
+        .then(schemaRecords => schemaRecords.filter(schemaNameFilter));
+
+  return schemas;
+};
+
 export const getClinicalEntities = async (req: Request, res: Response) => {
-  const includeFields = req.query.includeFields as string;
-  if (includeFields && includeFields.toLowerCase() === 'true') {
-    const schemasWithFields = await manager.instance().getSchemasWithFields();
-    return res
-      .status(200)
-      .send(schemasWithFields.filter(s => s.name !== ClinicalEntitySchemaNames.REGISTRATION));
-  }
-  const schemas = await manager.instance().getSchemaNames();
-  return res.status(200).send(schemas.filter(s => s !== ClinicalEntitySchemaNames.REGISTRATION));
+  const withFields = req?.query?.includeFields?.toLowerCase() === 'true';
+  const schemas = await getClinicalSchemas(withFields);
+
+  return res.status(200).send(schemas);
 };
 
 export const getClinicalEntitiesData = async (includeFields: string) => {

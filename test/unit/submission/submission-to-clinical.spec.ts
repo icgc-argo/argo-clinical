@@ -129,7 +129,7 @@ describe('submission-to-clinical', () => {
     >;
     let deleteRegStub: sinon.SinonStub<[string], Promise<void>>;
     let createDonorStub: sinon.SinonStub<
-      [deepFreeze.DeepReadonly<Donor>],
+      [deepFreeze.DeepReadonly<Partial<Donor>>],
       Promise<deepFreeze.DeepReadonly<Donor>>
     >;
     let updateDonorStub: sinon.SinonStub<
@@ -159,7 +159,7 @@ describe('submission-to-clinical', () => {
         programId: 'ABCD-EF',
       };
 
-      const expectedDonorDto: Donor = {
+      const expectedDonorDto: Partial<Donor> = {
         schemaMetadata: {
           isValid: true,
           lastValidSchemaVersion: '1.0',
@@ -191,7 +191,7 @@ describe('submission-to-clinical', () => {
 
       registrationRepoFindByIdStub.withArgs(id1).returns(Promise.resolve(reg1));
       findByProgramAndSubmitterIdStub.withArgs(sinon.match([filter])).returns(Promise.resolve([]));
-      const result = await s2c.commitRegisteration({
+      const result = await s2c.commitRegistration({
         programId: reg1.programId,
         registrationId: reg1._id as string,
       });
@@ -282,7 +282,7 @@ describe('submission-to-clinical', () => {
       findByProgramAndSubmitterIdStub
         .withArgs(sinon.match([filter]))
         .returns(Promise.resolve([existingDonor]));
-      const result = await s2c.commitRegisteration({
+      const result = await s2c.commitRegistration({
         programId: reg2.programId,
         registrationId: reg2._id as string,
       });

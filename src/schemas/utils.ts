@@ -19,10 +19,13 @@
 
 import get from 'lodash/get';
 import {
+  ActiveRegistration,
+  ActiveClinicalSubmission,
   SubmissionValidationError,
   SubmissionValidationUpdate,
 } from '../submission/submission-entities';
 import { DeepReadonly } from 'deep-freeze';
+import { getClinicalEntitiesData } from '../dictionary/api';
 
 const ARRAY_DELIMITER_CHAR = '|';
 
@@ -72,6 +75,36 @@ const convertClinicalFileErrorToGql = (fileError: {
     message: fileError.message,
     fileNames: fileError.batchNames,
     code: fileError.code,
+  };
+};
+
+const convertRegistrationDataToGql = (
+  programShortName: string,
+  data: {
+    registration: DeepReadonly<ActiveRegistration> | undefined;
+    errors?: RegistrationErrorData[];
+    batchErrors?: { message: string; batchNames: string[]; code: string }[];
+  },
+) => {
+  const registration: Partial<typeof data.registration> = get(data, 'registration', {});
+  const schemaAndValidationErrors: typeof data.errors = get(data, 'errors', []);
+  const fileErrors: typeof data.batchErrors = get(data, 'batchErrors', []);
+  return {
+    id: registration?._id,
+    programShortName,
+    creator: registration?.creator,
+    fileName: registration?.batchName,
+    createdAt: registration?.createdAt,
+    records: () =>
+      get(registration, 'records')?.map((record, i) => convertClinicalRecordToGql(i, record)),
+    errors: schemaAndValidationErrors?.map(convertRegistrationErrorToGql),
+    fileErrors: fileErrors?.map(convertClinicalFileErrorToGql),
+    newDonors: () => convertRegistrationStatsToGql(get(registration, 'stats.newDonorIds', [])),
+    newSpecimens: () =>
+      convertRegistrationStatsToGql(get(registration, 'stats.newSpecimenIds', [])),
+    newSamples: () => convertRegistrationStatsToGql(get(registration, 'stats.newSampleIds', [])),
+    alreadyRegistered: () =>
+      convertRegistrationStatsToGql(get(registration, 'stats.alreadyRegistered', [])),
   };
 };
 
@@ -209,11 +242,44 @@ const convertClinicalSubmissionUpdateToGql = (updateData: UpdateData) => {
   };
 };
 
+const convertClinicalSubmissionDataToGql = (
+  programShortName: string,
+  data: {
+    submission: DeepReadonly<ActiveClinicalSubmission> | undefined;
+    batchErrors?: { message: string; batchNames: string[]; code: string }[];
+  },
+) => {
+  const submission = get(data, 'submission', {} as Partial<typeof data.submission>);
+  const fileErrors = get(data, 'batchErrors', [] as typeof data.batchErrors);
+  const clinicalEntities = get(submission, 'clinicalEntities');
+  return {
+    id: submission?._id || undefined,
+    programShortName,
+    state: submission?.state || undefined,
+    version: submission?.version || undefined,
+    updatedBy: submission?.updatedBy || undefined,
+    updatedAt: submission?.updatedAt ? submission.updatedAt : undefined,
+    clinicalEntities: async () => {
+      const clinicalSubmissionTypeList = await getClinicalEntitiesData('false'); // to confirm for true or false
+      const filledClinicalEntities = clinicalSubmissionTypeList.map(clinicalType => ({
+        clinicalType,
+        ...(clinicalEntities ? clinicalEntities[clinicalType.name] : {}),
+      }));
+      return filledClinicalEntities.map(clinicalEntity =>
+        convertClinicalSubmissionEntityToGql(clinicalEntity?.clinicalType.name, clinicalEntity),
+      );
+    },
+    fileErrors: fileErrors?.map(convertClinicalFileErrorToGql),
+  };
+};
+
 export {
   convertClinicalRecordToGql,
+  convertRegistrationDataToGql,
   convertRegistrationErrorToGql,
   convertClinicalFileErrorToGql,
   convertRegistrationStatsToGql,
   RegistrationErrorData,
   convertClinicalSubmissionEntityToGql,
+  convertClinicalSubmissionDataToGql,
 };

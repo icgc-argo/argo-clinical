@@ -283,7 +283,7 @@ describe('clinical Api', () => {
           .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
           .then((res: any) => {
             res.should.have.status(200);
-            res.body.should.be.an('array');
+            res.body.clinicalErrors.should.be.an('array');
           });
       });
     }); // end of id endpoints

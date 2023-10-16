@@ -34,3 +34,11 @@ export const ClinicalSearchApiBody = zod.object({
   submitterDonorIds: zod.array(zod.string().nonempty()).default([]),
 });
 export type ClinicalSearchApiBody = zod.infer<typeof ClinicalSearchApiBody>;
+
+/**
+ * Download Donor Data by ID
+ */
+export const DonorDataApiBody = zod.object({
+  donorIds: zod.array(zod.number().positive()).min(1),
+});
+export type DonorDataApiBody = zod.infer<typeof ClinicalDataApiBody>;

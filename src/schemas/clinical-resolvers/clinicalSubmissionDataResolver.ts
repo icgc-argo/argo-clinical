@@ -17,53 +17,41 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import * as manager from '../../dictionary/manager';
+import * as schemaApi from '../../dictionary/api';
+import * as configService from '../../submission/persisted-config/service';
 import submissionAPI from '../../submission/submission-api';
-import get from 'lodash/get';
-import { ActiveClinicalSubmission } from '../../submission/submission-entities';
-import { DeepReadonly } from 'deep-freeze';
-import { convertClinicalFileErrorToGql, convertClinicalSubmissionEntityToGql } from '../utils';
-import { getClinicalEntitiesData } from '../../dictionary/api';
+import { convertClinicalSubmissionDataToGql } from '../utils';
 
-const clinicalSubmissionResolver = {
-  clinicalSubmissions: async (obj: unknown, args: { programShortName: string }) => {
-    const { programShortName } = args;
+const clinicalSubmissions = async (obj: unknown, args: { programShortName: string }) => {
+  const { programShortName } = args;
 
-    const submissionData = await submissionAPI.getActiveSubmissionDataByProgramId(programShortName);
-    return convertClinicalSubmissionDataToGql(programShortName, {
-      submission: submissionData,
-    });
-  },
+  const submissionData = await submissionAPI.getActiveSubmissionDataByProgramId(programShortName);
+  return convertClinicalSubmissionDataToGql(programShortName, {
+    submission: submissionData,
+  });
 };
 
-const convertClinicalSubmissionDataToGql = (
-  programShortName: string,
-  data: {
-    submission: DeepReadonly<ActiveClinicalSubmission> | undefined;
-    batchErrors?: { message: string; batchNames: string[]; code: string }[];
-  },
+export const clinicalSubmissionTypesList = async (
+  obj: unknown,
+  args: { includeFields: string },
 ) => {
-  const submission = get(data, 'submission', {} as Partial<typeof data.submission>);
-  const fileErrors = get(data, 'batchErrors', [] as typeof data.batchErrors);
-  const clinicalEntities = get(submission, 'clinicalEntities');
-  return {
-    id: submission?._id || undefined,
-    programShortName,
-    state: submission?.state || undefined,
-    version: submission?.version || undefined,
-    updatedBy: submission?.updatedBy || undefined,
-    updatedAt: submission?.updatedAt ? submission.updatedAt : undefined,
-    clinicalEntities: async () => {
-      const clinicalSubmissionTypeList = await getClinicalEntitiesData('false'); // to confirm for true or false
-      const filledClinicalEntities = clinicalSubmissionTypeList.map(clinicalType => ({
-        clinicalType,
-        ...(clinicalEntities ? clinicalEntities[clinicalType.name] : {}),
-      }));
-      return filledClinicalEntities.map(clinicalEntity =>
-        convertClinicalSubmissionEntityToGql(clinicalEntity?.clinicalType.name, clinicalEntity),
-      );
-    },
-    fileErrors: fileErrors?.map(convertClinicalFileErrorToGql),
-  };
+  const withFields = args?.includeFields?.toLowerCase() === 'true';
+  const schemas = await schemaApi.getClinicalSchemas(withFields);
+
+  return schemas;
 };
 
-export default clinicalSubmissionResolver;
+export const clinicalSubmissionSchemaVersion = async () => {
+  const schemaVersion = await manager
+    .instance()
+    .getCurrent()
+    .then(result => result.version);
+  return schemaVersion;
+};
+
+export const clinicalSubmissionSystemDisabled = async (obj: unknown, args: {}) => {
+  return await configService.getSubmissionDisabledState();
+};
+
+export default clinicalSubmissions;

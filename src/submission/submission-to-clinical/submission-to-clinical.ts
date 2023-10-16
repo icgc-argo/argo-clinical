@@ -91,7 +91,7 @@ export const commitClinicalSubmission = async (
       return updated;
     } else {
       await performCommitSubmission(activeSubmission);
-      return {};
+      return {} as DeepReadonly<ActiveClinicalSubmission>;
     }
   }
 };
@@ -143,7 +143,7 @@ const performCommitSubmission = async (
   const verifiedDonorDTOs: Donor[] = [];
   // check donor if was invalid against current dictionary
   const currentDictionary = await dictionaryManager.instance().getCurrent();
-  updatedDonorDTOs.forEach(ud => {
+  for (const ud of updatedDonorDTOs) {
     if (ud.schemaMetadata.isValid === false) {
       L.debug('Donor is invalid, revalidating if valid now');
       const isValid = dictionaryManager.revalidateAllDonorClinicalEntitiesAgainstSchema(
@@ -158,7 +158,7 @@ const performCommitSubmission = async (
     }
     // recalculate the donors stats
     verifiedDonorDTOs.push(recalculateDonorStatsHoldOverridden(ud));
-  });
+  }
 
   try {
     // write each updated donor to the db
@@ -179,7 +179,7 @@ const performCommitSubmission = async (
  *
  * @param command CommitRegistrationCommand the id of the registration to close.
  */
-export const commitRegisteration = async (command: Readonly<CommitRegistrationCommand>) => {
+export const commitRegistration = async (command: Readonly<CommitRegistrationCommand>) => {
   const registration = await registrationRepository.findById(command.registrationId);
 
   if (registration === undefined || registration.programId !== command.programId) {
@@ -214,8 +214,7 @@ export const commitRegisteration = async (command: Readonly<CommitRegistrationCo
   registrationRepository.delete(command.registrationId);
   sendMessageOnUpdatesFromRegistration(registration);
   return (
-    (registration.stats &&
-      registration.stats.newSampleIds &&
+    (registration?.stats?.newSampleIds &&
       registration.stats.newSampleIds.map(s => s.submitterId)) ||
     []
   );
@@ -242,7 +241,7 @@ const updateOrCreateDonorsBatch = (
 };
 
 const fromCreateDonorDtoToDonor = (createDonorDto: DeepReadonly<CreateDonorSampleDto>) => {
-  const donor: Donor = {
+  const donor: Partial<Donor> = {
     schemaMetadata: createDonorDto.schemaMetadata,
     gender: createDonorDto.gender,
     submitterId: createDonorDto.submitterId,

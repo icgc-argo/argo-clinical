@@ -18,7 +18,7 @@
  */
 
 import { Donor } from './clinical-entities';
-import { ClinicalQuery, ClinicalSearchQuery } from './clinical-service';
+import { PaginatedClinicalQuery, ClinicalDonorEntityQuery } from './clinical-service';
 import { getRequiredDonorFieldsForEntityTypes } from '../common-model/functions';
 import mongoose, { PaginateModel } from 'mongoose';
 import mongoosePaginate from 'mongoose-paginate-v2';
@@ -85,12 +85,13 @@ export interface DonorRepository {
   ): Promise<DeepReadonly<Donor[]>>;
   findByPaginatedProgramId(
     programId: string,
-    query: ClinicalQuery,
+    query: PaginatedClinicalQuery,
   ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number }>>;
   findByProgramDonorSearch(
     programId: string,
-    query: ClinicalSearchQuery,
+    query: ClinicalDonorEntityQuery,
   ): Promise<DeepReadonly<{ donors: Donor[] }>>;
+  findByDonorIds(donorIds: number[]): Promise<DeepReadonly<Donor[]>>;
   deleteByProgramId(programId: string): Promise<void>;
   deleteByProgramIdAndDonorIds(programId: string, donorIds: number[]): Promise<void>;
   findByProgramAndSubmitterId(
@@ -107,7 +108,7 @@ export interface DonorRepository {
     filter: FindByProgramAndSubmitterFilter,
   ): Promise<DeepReadonly<Donor> | undefined>;
   iterateAllByProgramId(programId: string): AsyncIterable<DeepReadonly<Donor>>;
-  create(donor: DeepReadonly<Donor>): Promise<DeepReadonly<Donor>>;
+  create(donor: DeepReadonly<Partial<Donor>>): Promise<DeepReadonly<Donor>>;
   update(donor: DeepReadonly<Donor>): Promise<DeepReadonly<Donor>>;
   updateAll(donors: DeepReadonly<Donor>[]): Promise<DeepReadonly<Donor>[]>;
   countBy(filter: any): Promise<number>;
@@ -191,7 +192,7 @@ export const donorDao: DonorRepository = {
 
   async findByPaginatedProgramId(
     programId: string,
-    query: ClinicalQuery,
+    query: PaginatedClinicalQuery,
   ): Promise<DeepReadonly<{ donors: Donor[]; totalDonors: number }>> {
     const {
       donorIds,
@@ -278,7 +279,7 @@ export const donorDao: DonorRepository = {
 
   async findByProgramDonorSearch(
     programId: string,
-    query: ClinicalSearchQuery,
+    query: ClinicalDonorEntityQuery,
   ): Promise<DeepReadonly<{ donors: Donor[] }>> {
     const { entityTypes, completionState } = query;
 
@@ -392,7 +393,17 @@ export const donorDao: DonorRepository = {
       submitterId: { $in: submitterIds },
       programId: programId,
     });
-    const mapped = result.map((d: DonorDocument) => {
+    const mapped = result.map(d => {
+      return MongooseUtils.toPojo(d) as Donor;
+    });
+    return F(mapped);
+  },
+
+  async findByDonorIds(donorIds: number[]): Promise<DeepReadonly<Donor[]>> {
+    const result = await DonorModel.find({
+      donorId: { $in: donorIds },
+    });
+    const mapped = result.map(d => {
       return MongooseUtils.toPojo(d) as Donor;
     });
     return F(mapped);

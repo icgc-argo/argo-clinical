@@ -300,13 +300,13 @@ export const revalidateAllDonorClinicalEntitiesAgainstSchema = (
 ) => {
   const clinicalSchemaNames = getSchemaNamesForDonorClinicalEntities(donor);
   let isValid = true;
-  clinicalSchemaNames.forEach((schemaName: ClinicalEntitySchemaNames) => {
+  for (const schemaName of clinicalSchemaNames) {
     if (!isValid) {
       return;
     }
     const errs = MigrationManager.validateDonorEntityAgainstNewSchema(schemaName, schema, donor);
     isValid = !errs || errs.length == 0;
-  });
+  }
   return isValid;
 };
 
