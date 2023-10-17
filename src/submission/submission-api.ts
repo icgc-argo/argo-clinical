@@ -175,7 +175,16 @@ class SubmissionController {
     };
 
     const result = await submission.operations.submitMultiClinicalBatches(command);
-    return { ...result, batchErrors: [...result.batchErrors, ...tsvParseErrors] };
+    // return { ...result, batchErrors: [...result.batchErrors, ...tsvParseErrors] };
+
+    let status = 200;
+    if (!uploadResult?.successful || uploadResult.batchErrors.length > 0) {
+      status = 207;
+    }
+
+    return res
+      .status(status)
+      .send({ ...result, batchErrors: [...result.batchErrors, ...tsvParseErrors] });
   }
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)

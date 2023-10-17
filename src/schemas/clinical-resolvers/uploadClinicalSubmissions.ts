@@ -31,7 +31,9 @@ async function uploadClinicalSubmissions(req: Request, res: Response) {
   const permissionsFromToken = egoTokenUtils.getPermissionsFromToken(egoToken);
 
   if (!egoTokenUtils.canWriteSomeProgramData(permissionsFromToken)) {
-    throw new AuthenticationError('User is not authorized to write data');
+    throw new AuthenticationError(
+      'User is not authorized to write data' + egoTokenUtils.decodeToken(egoToken),
+    );
   }
 
   const uploadResult = await submissionApi.uploadClinicalDataFromTsvFiles(
