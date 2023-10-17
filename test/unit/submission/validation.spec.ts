@@ -1717,7 +1717,7 @@ describe('data-validator', () => {
           value: 'FL-23',
         },
         message:
-          'A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up at age PP-1 after their primary diagnosis ("submitter_primary_diagnosis_id" = "30"), but a new primary diagnosis ("PP-2") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.',
+          'A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up at age 30 after their primary diagnosis ("submitter_primary_diagnosis_id" = "PP-1"), but a new primary diagnosis ("PP-2") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.',
       };
 
       const result = await dv
@@ -1868,7 +1868,7 @@ describe('data-validator', () => {
           value: 'FL-23',
         },
         message:
-          'A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up at age PP-1 after their primary diagnosis ("submitter_primary_diagnosis_id" = "30"), but a new primary diagnosis ("PP-2") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.',
+          'A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up at age 30 after their primary diagnosis ("submitter_primary_diagnosis_id" = "PP-1"), but a new primary diagnosis ("PP-2") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.',
       };
 
       const result = await dv
