@@ -45,7 +45,10 @@ router.post(
   wrapAsync(clinicalApi.getProgramClinicalSearchResults),
 );
 router.post('/program/:programId/clinical-errors', wrapAsync(clinicalApi.getProgramClinicalErrors));
-router.post('/program/:programId/clinical-tsv', wrapAsync(clinicalApi.getDonorDataByIdAsTsvsInZip));
+router.post(
+  '/program/:programId/clinical-tsv',
+  wrapAsync(clinicalApi.getSpecificClinicalDataAsTsvsInZip),
+);
 
 // Download TSVs for Donors by Donor ID
 router.post('/donors/tsv', wrapAsync(clinicalApi.getDonorDataByIdAsTsvsInZip));
