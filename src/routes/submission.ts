@@ -22,14 +22,17 @@ import multer from 'multer';
 
 import { wrapAsync } from '../middleware';
 import submissionAPI from '../submission/submission-api';
-import uploadClinicalSubmissionsData from '../schemas/clinical-resolvers/uploadClinicalSubmissions';
 
 const router = express.Router({ mergeParams: true });
 
 const upload = multer({ dest: '/tmp' });
 
 router.get('/', wrapAsync(submissionAPI.getActiveSubmissionByProgramId));
-router.post('/upload', upload.array('clinicalFiles'), wrapAsync(uploadClinicalSubmissionsData));
+router.post(
+  '/upload',
+  upload.array('clinicalFiles'),
+  wrapAsync(submissionAPI.uploadClinicalTsvFiles),
+);
 
 router.post('/validate/:versionId', wrapAsync(submissionAPI.validateActiveSubmission));
 router.post('/commit/:versionId', wrapAsync(submissionAPI.commitActiveSubmission));
