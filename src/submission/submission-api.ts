@@ -189,8 +189,7 @@ class SubmissionController {
   }
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
-  async validateActiveSubmission(req: Request, res: Response) {
-    if (await submissionSystemIsDisabled(res)) return;
+  async validateActiveSubmissionRequest(req: Request, res: Response) {
     const { versionId, programId } = req.params;
     const updater = ControllerUtils.getUserFromRequest(req);
     const result = await submission.operations.validateMultipleClinical({
@@ -204,7 +203,6 @@ class SubmissionController {
     return res.status(422).send(result);
   }
 
-  // @HasProgramWriteAccess((req: Request) => req.params.programId)
   async validateActiveSubmissionData(programId: string, versionId: string, token: string) {
     const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
     if (submissionSystemDisabled) return;
