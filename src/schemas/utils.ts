@@ -172,34 +172,42 @@ export interface SubmissionEntity {
 }
 
 const convertClinicalSubmissionEntityToGql = (clinicalType: string, entity: SubmissionEntity) => {
+  const batchName = entity.batchName || undefined;
+  const creator = entity.creator || undefined;
+  const records = get(entity, 'records', [] as typeof entity.records)?.map((record, index) =>
+    convertClinicalRecordToGql(index, record),
+  );
+  const stats = entity.stats || undefined;
+  const entityErrors = entity.schemaErrors || [];
+  const schemaErrors = entityErrors.map(error =>
+    convertClinicalSubmissionSchemaErrorToGql(clinicalType, error),
+  );
+  const dataErrors = get(
+    entity,
+    'dataErrors',
+    [] as typeof entity.dataErrors,
+  )?.map((error: ErrorData) => convertClinicalSubmissionDataErrorToGql(error));
+  const dataWarnings = get(
+    entity,
+    'dataWarnings',
+    [] as typeof entity.dataWarnings,
+  )?.map((warning: ErrorData) => convertClinicalSubmissionDataErrorToGql(warning));
+  const dataUpdates = get(entity, 'dataUpdates', [] as typeof entity.dataUpdates)?.map(update =>
+    convertClinicalSubmissionUpdateToGql(update),
+  );
+  const createdAt = entity.createdAt ? entity.createdAt : undefined;
+
   return {
     clinicalType,
-    batchName: entity.batchName || undefined,
-    creator: entity.creator || undefined,
-    records: () =>
-      get(entity, 'records', [] as typeof entity.records)?.map((record, index) =>
-        convertClinicalRecordToGql(index, record),
-      ),
-    stats: entity.stats || undefined,
-    schemaErrors: () => {
-      const entityErrors = entity.schemaErrors || [];
-      return entityErrors.map(error =>
-        convertClinicalSubmissionSchemaErrorToGql(clinicalType, error),
-      );
-    },
-    dataErrors: () =>
-      get(entity, 'dataErrors', [] as typeof entity.dataErrors)?.map((error: ErrorData) =>
-        convertClinicalSubmissionDataErrorToGql(error),
-      ),
-    dataWarnings: () =>
-      get(entity, 'dataWarnings', [] as typeof entity.dataWarnings)?.map((warning: ErrorData) =>
-        convertClinicalSubmissionDataErrorToGql(warning),
-      ),
-    dataUpdates: () =>
-      get(entity, 'dataUpdates', [] as typeof entity.dataUpdates)?.map(update =>
-        convertClinicalSubmissionUpdateToGql(update),
-      ),
-    createdAt: entity.createdAt ? entity.createdAt : undefined,
+    batchName,
+    creator,
+    records,
+    stats,
+    schemaErrors,
+    dataErrors,
+    dataWarnings,
+    dataUpdates,
+    createdAt,
   };
 };
 
