@@ -89,7 +89,7 @@ const verifyEgoApiKey = async (keyString: string): Promise<TokenValidationResult
  * @param providedScopes scopes provided in auth header
  * @returns {boolean} true if provided scopes contains at least one of the requiredScopes
  */
-const hasScope = (requiredScopes: string[], providedScopes: string[]): boolean =>
+export const hasScope = (requiredScopes: string[], providedScopes: string[]): boolean =>
   requiredScopes.some(scope => providedScopes.includes(scope));
 
 const checkAuthorization = async (scopes: string[], request: Request, response: Response) => {
@@ -155,6 +155,14 @@ export const ProtectTestEndpoint = () => {
 };
 
 export function HasProgramWriteAccess(programIdExtractor: Function) {
+  return scopeCheckGenerator(
+    'HasProgramWriteAccess',
+    programId => [`PROGRAMDATA-${programId}.WRITE`, 'CLINICALSERVICE.WRITE'],
+    programIdExtractor,
+  );
+}
+
+export function GQLQueryHasProgramWriteAccess(programIdExtractor: Function) {
   return scopeCheckGenerator(
     'HasProgramWriteAccess',
     programId => [`PROGRAMDATA-${programId}.WRITE`, 'CLINICALSERVICE.WRITE'],
