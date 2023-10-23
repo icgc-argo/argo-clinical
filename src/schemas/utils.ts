@@ -276,7 +276,7 @@ const convertClinicalSubmissionDataToGql = async (
   return {
     id: submission?._id || undefined,
     programShortName,
-    state: submission?.state || 'undefined',
+    state: submission?.state || undefined,
     version: submission?.version || undefined,
     updatedBy: submission?.updatedBy || undefined,
     updatedAt: submission?.updatedAt ? submission.updatedAt : undefined,

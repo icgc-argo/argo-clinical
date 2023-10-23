@@ -880,15 +880,14 @@ describe('Submission Api', () => {
         .attach('clinicalFiles', file, 'donor.tsv')
         .end((err: any, res: any) => {
           try {
-            console.log('state:::::' + res.body.submission.state);
-            res.body.submission.state.should.eq(SUBMISSION_STATE.OPEN);
+            res.body.submission.state?.should.eq(SUBMISSION_STATE.OPEN);
             chai
               .request(app)
               .post('/submission/program/ABCD-EF/clinical/validate/' + res.body.submission.version)
               .auth(JWT_ABCDEF, { type: 'bearer' })
               .end((err: any, res: any) => {
                 try {
-                  res.body.submission.state.should.eq(SUBMISSION_STATE.INVALID);
+                  res.body.submission.state?.should.eq(SUBMISSION_STATE.INVALID);
                   res.body.submission.clinicalEntities.donor.stats.errorsFound.should.deep.eq([0]);
                   res.body.submission.clinicalEntities.donor.dataErrors.should.deep.eq([
                     {
