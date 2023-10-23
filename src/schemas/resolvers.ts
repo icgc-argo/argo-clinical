@@ -24,9 +24,9 @@ import clinicalSubmissions, {
   clinicalSubmissionTypesList,
   clinicalSubmissionSchemaVersion,
   clinicalSubmissionSystemDisabled,
-} from './clinical-resolvers/clinicalSubmissionDataResolver';
-import clearClinicalSubmission from './clinical-resolvers/clearClinicalSubmissionResolver';
-import validateClinicalSubmission from './clinical-resolvers/validateClinicalSubmissionResolver';
+} from './clinical-resolvers/clinicalSubmissions';
+import clearClinicalSubmission from './clinical-resolvers/clearClinicalSubmission';
+import validateClinicalSubmission from './clinical-resolvers/validateClinicalSubmission';
 import commitClinicalSubmission from './clinical-resolvers/commitClinicalSubmission';
 
 // Mutation

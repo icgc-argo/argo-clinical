@@ -27,7 +27,7 @@ const clinicalSubmissions = async (obj: unknown, args: { programShortName: strin
   const { programShortName } = args;
 
   const submissionData = await submissionAPI.getActiveSubmissionDataByProgramId(programShortName);
-  return convertClinicalSubmissionDataToGql(programShortName, {
+  return await convertClinicalSubmissionDataToGql(programShortName, {
     submission: submissionData,
   });
 };
