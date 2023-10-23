@@ -35,13 +35,10 @@ router.post(
 );
 
 router.post('/validate/:versionId', wrapAsync(submissionAPI.validateActiveSubmissionRequest));
-router.post('/commit/:versionId', wrapAsync(submissionAPI.commitActiveSubmissionRequest));
+router.post('/commit/:versionId', wrapAsync(submissionAPI.commitActiveSubmission));
 router.post('/approve/:versionId', wrapAsync(submissionAPI.approveActiveSubmission));
 router.post('/reopen/:versionId', wrapAsync(submissionAPI.reopenActiveSubmission));
 
-router.delete(
-  '/:versionId/:fileType',
-  wrapAsync(submissionAPI.clearFileFromActiveSubmissionRequest),
-);
+router.delete('/:versionId/:fileType', wrapAsync(submissionAPI.clearFileFromActiveSubmission));
 
 export default router;
