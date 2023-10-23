@@ -805,7 +805,8 @@ describe('Submission Api', () => {
         .attach('clinicalFiles', files[4], 'sample_registration.tsv')
         .end((err: any, res: any) => {
           res.should.have.status(207);
-          res.body.batchErrors.should.deep.equalInAnyOrder([
+          // res.body.batchErrors.should.deep.equalInAnyOrder([
+          res.body.fileErrors.should.deep.equalInAnyOrder([
             {
               message: 'Found multiple files of donor type',
               batchNames: ['donor.tsv', 'donor.invalid.tsv'],
