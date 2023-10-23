@@ -208,7 +208,7 @@ class SubmissionController {
   }
 
   async validateActiveSubmissionData(programId: string, egoToken: string, versionId: string) {
-    const hasAccess = queryHasProgramWriteAccess(programId, egoToken);
+    queryHasProgramWriteAccess(programId, egoToken);
 
     const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
     if (submissionSystemDisabled) return;
@@ -238,16 +238,18 @@ class SubmissionController {
     return res.status(200).send(updatedSubmission || {});
   }
 
-  // @HasProgramWriteAccess((programId: string) => programId)
   async clearFileDataFromActiveSubmission(
     programId: string,
+    egoToken: string,
     fileType: string,
     versionId: string,
-    token: string,
   ) {
+    queryHasProgramWriteAccess(programId, egoToken);
+
     const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
     if (submissionSystemDisabled) return;
-    const updater = ControllerUtils.getUserFromToken(token);
+
+    const updater = ControllerUtils.getUserFromToken(egoToken);
     L.debug(`Entering clearFileDataFromActiveSubmission: ${{ programId, versionId, fileType }}`);
     const updatedSubmission = await submission.operations.clearSubmissionData({
       programId,
@@ -272,11 +274,12 @@ class SubmissionController {
     return res.status(200).send(activeSubmission);
   }
 
-  // @HasProgramWriteAccess((req: Request) => req.params.programId)
-  async commitActiveSubmissionData(programId: string, versionId: string, token: string) {
+  async commitActiveSubmissionData(programId: string, egoToken: string, versionId: string) {
+    queryHasProgramWriteAccess(programId, egoToken);
+
     const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
     if (submissionSystemDisabled) return;
-    const updater = ControllerUtils.getUserFromToken(token);
+    const updater = ControllerUtils.getUserFromToken(egoToken);
     const activeSubmission = await submission2Clinical.commitClinicalSubmission({
       versionId,
       programId,

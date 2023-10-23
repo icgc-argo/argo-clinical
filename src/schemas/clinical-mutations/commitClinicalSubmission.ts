@@ -27,10 +27,12 @@ const commitClinicalSubmission = async (
   contextValue: any,
 ) => {
   const { programShortName, version } = args;
+  const egoToken = (<GlobalGqlContext>contextValue).egoToken;
+
   const submissionData = await submissionAPI.commitActiveSubmissionData(
     programShortName,
+    egoToken,
     version,
-    (<GlobalGqlContext>contextValue).egoToken,
   );
   return convertClinicalSubmissionDataToGql(programShortName, {
     submission: submissionData,
