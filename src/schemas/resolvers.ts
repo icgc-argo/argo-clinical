@@ -25,13 +25,13 @@ import clinicalSubmissions, {
   clinicalSubmissionSchemaVersion,
   clinicalSubmissionSystemDisabled,
 } from './clinical-resolvers/clinicalSubmissions';
-import clearClinicalSubmission from './clinical-resolvers/clearClinicalSubmission';
-import validateClinicalSubmission from './clinical-resolvers/validateClinicalSubmission';
-import commitClinicalSubmission from './clinical-resolvers/commitClinicalSubmission';
 
 // Mutation
 import commitClinicalRegistration from './clinical-mutations/commitRegistration';
 import clearClinicalRegistration from './clinical-mutations/clearRegistration';
+import clearClinicalSubmission from './clinical-mutations/clearClinicalSubmission';
+import validateClinicalSubmission from './clinical-mutations/validateClinicalSubmission';
+import commitClinicalSubmission from './clinical-mutations/commitClinicalSubmission';
 
 const resolvers = {
   Query: {
