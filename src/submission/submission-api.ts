@@ -31,7 +31,11 @@ import {
   SubmissionBatchErrorTypes,
   LegacyICGCImportRecord,
 } from './submission-entities';
-import { HasFullWriteAccess, HasProgramWriteAccess } from '../decorators';
+import {
+  GQLQueryHasProgramWriteAccess,
+  HasFullWriteAccess,
+  HasProgramWriteAccess,
+} from '../decorators';
 import _ from 'lodash';
 import { batchErrorMessage } from './submission-error-messages';
 import * as fs from 'fs';
@@ -203,6 +207,7 @@ class SubmissionController {
     return res.status(422).send(result);
   }
 
+  @GQLQueryHasProgramWriteAccess((programId: string) => programId)
   async validateActiveSubmissionData(programId: string, versionId: string, token: string) {
     const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
     if (submissionSystemDisabled) return;
