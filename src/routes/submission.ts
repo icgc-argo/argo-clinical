@@ -34,7 +34,7 @@ router.post(
   wrapAsync(submissionAPI.uploadClinicalTsvFiles),
 );
 
-router.post('/validate/:versionId', wrapAsync(submissionAPI.validateActiveSubmissionRequest));
+router.post('/validate/:versionId', wrapAsync(submissionAPI.validateActiveSubmission));
 router.post('/commit/:versionId', wrapAsync(submissionAPI.commitActiveSubmission));
 router.post('/approve/:versionId', wrapAsync(submissionAPI.approveActiveSubmission));
 router.post('/reopen/:versionId', wrapAsync(submissionAPI.reopenActiveSubmission));
