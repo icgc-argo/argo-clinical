@@ -162,12 +162,20 @@ export function HasProgramWriteAccess(programIdExtractor: Function) {
   );
 }
 
-export function GQLQueryHasProgramWriteAccess(programIdExtractor: Function) {
-  return scopeCheckGenerator(
-    'HasProgramWriteAccess',
-    programId => [`PROGRAMDATA-${programId}.WRITE`, 'CLINICALSERVICE.WRITE'],
-    programIdExtractor,
-  );
+export function queryHasProgramWriteAccess(programId: string, egoToken: string) {
+  const decodedToken = verifyJwt(egoToken).data;
+
+  if (!decodedToken) {
+    throw new Error('This endpoint needs a valid authentication token');
+  }
+
+  const scopes = decodedToken.scopes;
+  const requiredScopes = [`PROGRAMDATA-${programId}.WRITE`, 'CLINICALSERVICE.WRITE'];
+  const hasWriteAccess = hasScope(requiredScopes, scopes);
+
+  if (!hasWriteAccess) throw new Error('Query does not have the required permissions');
+
+  return hasWriteAccess;
 }
 
 export function HasProgramReadAccess(programIdExtractor: Function) {

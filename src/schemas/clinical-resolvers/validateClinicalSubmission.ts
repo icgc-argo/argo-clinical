@@ -17,8 +17,6 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import jwt from 'jsonwebtoken';
-import { EgoJwtData } from '@icgc-argo/ego-token-utils/dist/common';
 import submissionAPI from '../../submission/submission-api';
 import { GlobalGqlContext } from '../../app';
 import { convertClinicalSubmissionDataToGql } from '../utils';
@@ -30,13 +28,11 @@ const validateClinicalSubmission = async (
 ) => {
   const { programShortName, version } = args;
   const egoToken = (<GlobalGqlContext>contextValue).egoToken;
-  const decodedToken = jwt.decode(egoToken) as EgoJwtData;
-  const scopes = decodedToken.context.scope;
-  console.log(scopes);
+
   const response = await submissionAPI.validateActiveSubmissionData(
     programShortName,
-    version,
     egoToken,
+    version,
   );
   return await convertClinicalSubmissionDataToGql(programShortName, {
     submission: response?.submission,
