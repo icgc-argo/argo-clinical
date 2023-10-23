@@ -192,7 +192,7 @@ class SubmissionController {
   }
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
-  async validateActiveSubmissionRequest(req: Request, res: Response) {
+  async validateActiveSubmission(req: Request, res: Response) {
     const { versionId, programId } = req.params;
     const updater = ControllerUtils.getUserFromRequest(req);
     const result = await submission.operations.validateMultipleClinical({
@@ -312,7 +312,7 @@ class SubmissionController {
   }
 
   // GQL Query Methods
-  async commitActiveSubmissionData(programId: string, egoToken: string, versionId: string) {
+  async commitActiveSubmissionQuery(programId: string, egoToken: string, versionId: string) {
     queryHasProgramWriteAccess(programId, egoToken);
 
     const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
@@ -326,7 +326,7 @@ class SubmissionController {
     return activeSubmission;
   }
 
-  async clearFileDataFromActiveSubmission(
+  async clearFileDataFromActiveSubmissionQuery(
     programId: string,
     egoToken: string,
     fileType: string,
@@ -338,7 +338,9 @@ class SubmissionController {
     if (submissionSystemDisabled) return;
 
     const updater = ControllerUtils.getUserFromToken(egoToken);
-    L.debug(`Entering clearFileDataFromActiveSubmission: ${{ programId, versionId, fileType }}`);
+    L.debug(
+      `Entering clearFileDataFromActiveSubmissionQuery: ${{ programId, versionId, fileType }}`,
+    );
     const updatedSubmission = await submission.operations.clearSubmissionData({
       programId,
       versionId,
@@ -349,7 +351,7 @@ class SubmissionController {
     return updatedSubmission;
   }
 
-  async validateActiveSubmissionData(programId: string, egoToken: string, versionId: string) {
+  async validateActiveSubmissionQuery(programId: string, egoToken: string, versionId: string) {
     queryHasProgramWriteAccess(programId, egoToken);
 
     const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();

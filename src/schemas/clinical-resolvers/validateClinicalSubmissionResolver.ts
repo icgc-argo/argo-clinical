@@ -29,7 +29,7 @@ const validateClinicalSubmission = async (
   const { programShortName, version } = args;
   const egoToken = (<GlobalGqlContext>contextValue).egoToken;
 
-  const response = await submissionAPI.validateActiveSubmissionData(
+  const response = await submissionAPI.validateActiveSubmissionQuery(
     programShortName,
     egoToken,
     version,
