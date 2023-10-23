@@ -39,7 +39,6 @@ import {
 import _ from 'lodash';
 import { batchErrorMessage } from './submission-error-messages';
 import * as fs from 'fs';
-import { GlobalGqlContext } from '../app';
 
 const L = loggerFor(__filename);
 const fsPromises = fs.promises;
