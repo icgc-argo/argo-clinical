@@ -880,7 +880,7 @@ describe('Submission Api', () => {
         .attach('clinicalFiles', file, 'donor.tsv')
         .end((err: any, res: any) => {
           try {
-            console.log('state:::::' + res.body().submission.state);
+            console.log('state:::::' + res.body.submission.state);
             res.body.submission.state.should.eq(SUBMISSION_STATE.OPEN);
             chai
               .request(app)
