@@ -280,7 +280,7 @@ const convertClinicalSubmissionDataToGql = async (
     version: submission?.version || undefined,
     updatedBy: submission?.updatedBy || undefined,
     updatedAt: submission?.updatedAt ? submission.updatedAt : undefined,
-    clinicalEntities: clinicalEntityMap,
+    clinicalEntities: clinicalEntityMap || {},
     fileErrors: fileErrors?.map(convertClinicalFileErrorToGql),
   };
 };
