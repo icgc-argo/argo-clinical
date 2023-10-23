@@ -89,7 +89,7 @@ const verifyEgoApiKey = async (keyString: string): Promise<TokenValidationResult
  * @param providedScopes scopes provided in auth header
  * @returns {boolean} true if provided scopes contains at least one of the requiredScopes
  */
-export const hasScope = (requiredScopes: string[], providedScopes: string[]): boolean =>
+const hasScope = (requiredScopes: string[], providedScopes: string[]): boolean =>
   requiredScopes.some(scope => providedScopes.includes(scope));
 
 const checkAuthorization = async (scopes: string[], request: Request, response: Response) => {
