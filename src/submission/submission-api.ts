@@ -32,7 +32,7 @@ import {
   LegacyICGCImportRecord,
 } from './submission-entities';
 import {
-  GQLQueryHasProgramWriteAccess,
+  queryHasProgramWriteAccess,
   HasFullWriteAccess,
   HasProgramWriteAccess,
 } from '../decorators';
@@ -207,11 +207,13 @@ class SubmissionController {
     return res.status(422).send(result);
   }
 
-  @GQLQueryHasProgramWriteAccess((programId: string) => programId)
-  async validateActiveSubmissionData(programId: string, versionId: string, token: string) {
+  async validateActiveSubmissionData(programId: string, egoToken: string, versionId: string) {
+    const hasAccess = queryHasProgramWriteAccess(programId, egoToken);
+
     const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
     if (submissionSystemDisabled) return;
-    const updater = ControllerUtils.getUserFromToken(token);
+
+    const updater = ControllerUtils.getUserFromToken(egoToken);
     const validatedSubmission = await submission.operations.validateMultipleClinical({
       versionId,
       programId,
