@@ -206,21 +206,6 @@ class SubmissionController {
     return res.status(422).send(result);
   }
 
-  async validateActiveSubmissionData(programId: string, egoToken: string, versionId: string) {
-    queryHasProgramWriteAccess(programId, egoToken);
-
-    const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
-    if (submissionSystemDisabled) return;
-
-    const updater = ControllerUtils.getUserFromToken(egoToken);
-    const validatedSubmission = await submission.operations.validateMultipleClinical({
-      versionId,
-      programId,
-      updater,
-    });
-    return validatedSubmission;
-  }
-
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async clearFileFromActiveSubmission(req: Request, res: Response) {
     if (await submissionSystemIsDisabled(res)) return;
@@ -237,29 +222,6 @@ class SubmissionController {
     return res.status(200).send(updatedSubmission || {});
   }
 
-  async clearFileDataFromActiveSubmission(
-    programId: string,
-    egoToken: string,
-    fileType: string,
-    versionId: string,
-  ) {
-    queryHasProgramWriteAccess(programId, egoToken);
-
-    const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
-    if (submissionSystemDisabled) return;
-
-    const updater = ControllerUtils.getUserFromToken(egoToken);
-    L.debug(`Entering clearFileDataFromActiveSubmission: ${{ programId, versionId, fileType }}`);
-    const updatedSubmission = await submission.operations.clearSubmissionData({
-      programId,
-      versionId,
-      fileType,
-      updater,
-    });
-    // Handle case where submission was cleared and is now undefined
-    return updatedSubmission;
-  }
-
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async commitActiveSubmission(req: Request, res: Response) {
     if (await submissionSystemIsDisabled(res)) return;
@@ -271,20 +233,6 @@ class SubmissionController {
       updater,
     });
     return res.status(200).send(activeSubmission);
-  }
-
-  async commitActiveSubmissionData(programId: string, egoToken: string, versionId: string) {
-    queryHasProgramWriteAccess(programId, egoToken);
-
-    const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
-    if (submissionSystemDisabled) return;
-    const updater = ControllerUtils.getUserFromToken(egoToken);
-    const activeSubmission = await submission2Clinical.commitClinicalSubmission({
-      versionId,
-      programId,
-      updater,
-    });
-    return activeSubmission;
   }
 
   @HasFullWriteAccess()
@@ -361,6 +309,59 @@ class SubmissionController {
     return res
       .status(200)
       .send(await submission.operations.adminDeleteSamples(programId, samplesSubmitterIds, dryRun));
+  }
+
+  // GQL Query Methods
+  async commitActiveSubmissionData(programId: string, egoToken: string, versionId: string) {
+    queryHasProgramWriteAccess(programId, egoToken);
+
+    const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
+    if (submissionSystemDisabled) return;
+    const updater = ControllerUtils.getUserFromToken(egoToken);
+    const activeSubmission = await submission2Clinical.commitClinicalSubmission({
+      versionId,
+      programId,
+      updater,
+    });
+    return activeSubmission;
+  }
+
+  async clearFileDataFromActiveSubmission(
+    programId: string,
+    egoToken: string,
+    fileType: string,
+    versionId: string,
+  ) {
+    queryHasProgramWriteAccess(programId, egoToken);
+
+    const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
+    if (submissionSystemDisabled) return;
+
+    const updater = ControllerUtils.getUserFromToken(egoToken);
+    L.debug(`Entering clearFileDataFromActiveSubmission: ${{ programId, versionId, fileType }}`);
+    const updatedSubmission = await submission.operations.clearSubmissionData({
+      programId,
+      versionId,
+      fileType,
+      updater,
+    });
+    // Handle case where submission was cleared and is now undefined
+    return updatedSubmission;
+  }
+
+  async validateActiveSubmissionData(programId: string, egoToken: string, versionId: string) {
+    queryHasProgramWriteAccess(programId, egoToken);
+
+    const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
+    if (submissionSystemDisabled) return;
+
+    const updater = ControllerUtils.getUserFromToken(egoToken);
+    const validatedSubmission = await submission.operations.validateMultipleClinical({
+      versionId,
+      programId,
+      updater,
+    });
+    return validatedSubmission;
   }
 }
 
