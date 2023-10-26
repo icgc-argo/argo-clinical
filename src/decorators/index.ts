@@ -163,6 +163,7 @@ export function HasProgramWriteAccess(programIdExtractor: Function) {
 }
 
 export function queryHasProgramWriteAccess(programId: string, egoToken: string) {
+  L.debug(`queryHasProgramWriteAccess was called with: ${programId}`);
   const decodedToken = verifyJwt(egoToken).data;
 
   if (!decodedToken) {
