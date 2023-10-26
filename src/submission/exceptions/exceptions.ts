@@ -119,6 +119,19 @@ const normalizeExceptionValue = (value: Readonly<string>) =>
   _.upperFirst(value.trim().toLowerCase());
 
 /**
+ * Check if value is exactly matching an array with a single string value.
+ */
+const isSingleString = (value: DeepReadonly<dictionaryEntities.SchemaTypes>): value is [string] =>
+  Array.isArray(value) && value.length === 1 && typeof value[0] === 'string';
+
+/**
+ * Exceptions can only be applied to text values. Arrays of strings are allowed if they have a single string value.
+ */
+const isAllowedTypeForException = (
+  value: DeepReadonly<dictionaryEntities.SchemaTypes>,
+): value is string | [string] => typeof value === 'string' || isSingleString(value);
+
+/**
  * Check if a valid exception exists and the record value matches it.
  * If there's a match, we allow the value to pass schema validation.
  * Filtered schema validation errors and the normalized record value are returned.
@@ -156,17 +169,11 @@ export const checkForProgramAndEntityExceptions = async ({
     const validationErrorFieldName = validationError.fieldName;
     const fieldValue = record[validationErrorFieldName];
 
-    /**
-     * Exceptions can only be applied to text values. other field types, including arrays of strings
-     * cannot be handled currently.
-     */
-    if (typeof fieldValue !== 'string') {
+    // Field value is a type we cannot allow exceptions for, validate as normal
+    if (!isAllowedTypeForException(fieldValue)) {
       filteredErrors.push(validationError);
       return;
     }
-
-    // normalize submitted record field value to match submitted exceptions
-    const normalizedFieldValue = normalizeExceptionValue(fieldValue);
 
     // missing required field, validate as normal, exceptions still require a submitted value
     const isMissingRequiredField =
@@ -178,12 +185,18 @@ export const checkForProgramAndEntityExceptions = async ({
       return;
     }
 
+    // get normalized value for record, from either the string value or from the single string inside of the array.
+    // we should know from `isAllowedTypeForException` that the fieldValue is one of those two types.
+    const stringFieldValue = isSingleString(fieldValue) ? fieldValue[0] : fieldValue;
+    const normalizedString = normalizeExceptionValue(stringFieldValue);
+    const normalizedValue = isSingleString(fieldValue) ? [normalizedString] : normalizedString;
+
     const valueHasException = validateFieldValueWithExceptions({
       record,
       programException,
       entityException,
       schemaName,
-      fieldValue: normalizedFieldValue,
+      fieldValue: normalizedString,
       validationErrorFieldName: validationError.fieldName,
     });
 
@@ -191,7 +204,7 @@ export const checkForProgramAndEntityExceptions = async ({
       // ensure value is normalized exception value
       const normalizedExceptionRecord = {
         ...record,
-        [validationErrorFieldName]: normalizedFieldValue,
+        [validationErrorFieldName]: normalizedValue, // normalized value keeps this as array for array fields, or string for string fields
       };
       normalizedRecord = normalizedExceptionRecord;
     } else {
