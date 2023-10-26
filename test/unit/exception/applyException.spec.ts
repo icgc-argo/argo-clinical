@@ -86,6 +86,40 @@ describe('submission service apply exceptions', () => {
       chai.expect(result.filteredErrors).to.be.an('array').that.is.empty;
     });
 
+    it('array field, single value - should return zero validation errors if valid program exception exists', async () => {
+      const record = {
+        program_id: TEST_PROGRAM_ID,
+        submitter_donor_id: 'DO-1',
+        specimen_acquisition_interval: ['unknown'],
+      };
+
+      const result = await checkForProgramAndEntityExceptions({
+        programId: TEST_PROGRAM_ID,
+        schemaValidationErrors,
+        record,
+        schemaName: ClinicalEntitySchemaNames.SPECIMEN,
+      });
+
+      chai.expect(result.filteredErrors).to.be.an('array').that.is.empty;
+    });
+
+    it('array field, multiple values - should return validation errors, even if one value matches an exception', async () => {
+      const record = {
+        program_id: TEST_PROGRAM_ID,
+        submitter_donor_id: 'DO-1',
+        specimen_acquisition_interval: ['unknown', 'another value'],
+      };
+
+      const result = await checkForProgramAndEntityExceptions({
+        programId: TEST_PROGRAM_ID,
+        schemaValidationErrors,
+        record,
+        schemaName: ClinicalEntitySchemaNames.SPECIMEN,
+      });
+
+      chai.expect(result.filteredErrors).deep.equal(schemaValidationErrors);
+    });
+
     it('should return validation errors if there are no valid program exceptions ', async () => {
       const record = {
         program_id: TEST_PROGRAM_ID,
