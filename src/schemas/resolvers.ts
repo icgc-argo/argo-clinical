@@ -24,14 +24,14 @@ import clinicalSubmissions, {
   clinicalSubmissionTypesList,
   clinicalSubmissionSchemaVersion,
   clinicalSubmissionSystemDisabled,
-} from './clinical-resolvers/clinicalSubmissionDataResolver';
-import clearClinicalSubmission from './clinical-resolvers/clearClinicalSubmissionResolver';
-import validateClinicalSubmission from './clinical-resolvers/validateClinicalSubmissionResolver';
-import commitClinicalSubmission from './clinical-resolvers/commitClinicalSubmission';
+} from './clinical-resolvers/clinicalSubmissions';
 
 // Mutation
 import commitClinicalRegistration from './clinical-mutations/commitRegistration';
 import clearClinicalRegistration from './clinical-mutations/clearRegistration';
+import clearClinicalSubmission from './clinical-mutations/clearClinicalSubmission';
+import validateClinicalSubmissions from './clinical-mutations/validateClinicalSubmission';
+import commitClinicalSubmission from './clinical-mutations/commitClinicalSubmission';
 
 const resolvers = {
   Query: {
@@ -44,7 +44,7 @@ const resolvers = {
   },
   Mutation: {
     clearClinicalSubmission,
-    validateClinicalSubmission,
+    validateClinicalSubmissions,
     commitClinicalSubmission,
     clearClinicalRegistration,
     commitClinicalRegistration,
