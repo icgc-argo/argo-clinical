@@ -731,7 +731,8 @@ describe('Submission Api', () => {
       chai
         .request(app)
         // database is empty so ID shouldn't exist
-        .post('/submission/program/ABCD-EF/clinical/upload')
+        // .post('/submission/program/ABCD-EF/clinical/upload')
+        .post('/submission/program/ABCD-EF/clinical/submissionUpload')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .attach('clinicalFiles', files[0], 'donor.invalid.tsv')
         .attach('clinicalFiles', files[1], 'radiation.invalid.tsv')
@@ -766,7 +767,8 @@ describe('Submission Api', () => {
       chai
         .request(app)
         // database is empty so ID shouldn't exist
-        .post('/submission/program/ABCD-EF/clinical/upload')
+        // .post('/submission/program/ABCD-EF/clinical/upload')
+        .post('/submission/program/ABCD-EF/clinical/submissionUpload')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .attach('clinicalFiles', file, 'donor.tsv')
         .end(async (err: any, res: any) => {
@@ -797,7 +799,8 @@ describe('Submission Api', () => {
       chai
         .request(app)
         // database is empty so ID shouldn't exist
-        .post('/submission/program/ABCD-EF/clinical/upload')
+        // .post('/submission/program/ABCD-EF/clinical/upload')
+        .post('/submission/program/ABCD-EF/clinical/submissionUpload')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .attach('clinicalFiles', files[0], 'donor.tsv')
         .attach('clinicalFiles', files[1], 'thisissample.tsv')
@@ -852,7 +855,8 @@ describe('Submission Api', () => {
       await chai
         .request(app)
         // database is empty so ID shouldn't exist
-        .post('/submission/program/ABCD-EF/clinical/upload')
+        // .post('/submission/program/ABCD-EF/clinical/upload')
+        .post('/submission/program/ABCD-EF/clinical/submissionUpload')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .attach('clinicalFiles', files[0], 'donor.invalid.tsv');
 
@@ -875,7 +879,8 @@ describe('Submission Api', () => {
       }
       chai
         .request(app)
-        .post('/submission/program/ABCD-EF/clinical/upload')
+        // .post('/submission/program/ABCD-EF/clinical/upload')
+        .post('/submission/program/ABCD-EF/clinical/submissionUpload')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .attach('clinicalFiles', file, 'donor.tsv')
         .end((err: any, res: any) => {
@@ -948,34 +953,37 @@ describe('Submission Api', () => {
         }),
       );
 
-      return chai
-        .request(app)
-        .post('/submission/program/ABCD-EF/clinical/upload')
-        .auth(JWT_ABCDEF, { type: 'bearer' })
-        .attach('clinicalFiles', file, 'donor.tsv')
-        .then(async (res: any) => {
-          try {
-            res.should.have.status(200);
-            res.body.state.should.eq(SUBMISSION_STATE.OPEN);
-            const versionId = res.body.version;
-            return chai
-              .request(app)
-              .post('/submission/program/ABCD-EF/clinical/validate/' + versionId)
-              .auth(JWT_ABCDEF, { type: 'bearer' })
-              .then((res: any) => {
-                try {
-                  res.should.have.status(200);
-                  res.body.submission.state.should.eq(SUBMISSION_STATE.VALID);
-                  res.body.submission.clinicalEntities.donor.records.length.should.eq(1);
-                  res.body.submission.clinicalEntities.donor.dataErrors.length.should.eq(0);
-                } catch (err) {
-                  throw err;
-                }
-              });
-          } catch (err) {
-            throw err;
-          }
-        });
+      return (
+        chai
+          .request(app)
+          // .post('/submission/program/ABCD-EF/clinical/upload')
+          .post('/submission/program/ABCD-EF/clinical/submissionUpload')
+          .auth(JWT_ABCDEF, { type: 'bearer' })
+          .attach('clinicalFiles', file, 'donor.tsv')
+          .then(async (res: any) => {
+            try {
+              res.should.have.status(200);
+              res.body.state.should.eq(SUBMISSION_STATE.OPEN);
+              const versionId = res.body.version;
+              return chai
+                .request(app)
+                .post('/submission/program/ABCD-EF/clinical/validate/' + versionId)
+                .auth(JWT_ABCDEF, { type: 'bearer' })
+                .then((res: any) => {
+                  try {
+                    res.should.have.status(200);
+                    res.body.submission.state.should.eq(SUBMISSION_STATE.VALID);
+                    res.body.submission.clinicalEntities.donor.records.length.should.eq(1);
+                    res.body.submission.clinicalEntities.donor.dataErrors.length.should.eq(0);
+                  } catch (err) {
+                    throw err;
+                  }
+                });
+            } catch (err) {
+              throw err;
+            }
+          })
+      );
     });
     it('should return with appropriate stats', async () => {
       const files: Buffer[] = [];
@@ -1076,50 +1084,53 @@ describe('Submission Api', () => {
         ],
         donorId: 1,
       } as Donor);
-      return chai
-        .request(app)
-        .post('/submission/program/ABCD-EF/clinical/upload')
-        .auth(JWT_ABCDEF, { type: 'bearer' })
-        .attach('clinicalFiles', files[0], 'donor.tsv')
-        .attach('clinicalFiles', files[1], 'specimen.tsv')
-        .attach('clinicalFiles', files[2], 'primary_diagnosis.tsv')
-        .then(async (res: any) => {
-          try {
-            res.should.have.status(200);
-            res.body.state.should.eq(SUBMISSION_STATE.OPEN);
-            const versionId = res.body.version;
-            return chai
-              .request(app)
-              .post('/submission/program/ABCD-EF/clinical/validate/' + versionId)
-              .auth(JWT_ABCDEF, { type: 'bearer' })
-              .then((res: any) => {
-                try {
-                  res.should.have.status(200);
-                  res.body.submission.state.should.eq(SUBMISSION_STATE.VALID);
-                  const clinicalEntities: ClinicalEntities = res.body.submission.clinicalEntities;
-                  clinicalEntities.donor.stats.new.should.deep.eq([0]);
-                  clinicalEntities.specimen.stats.updated.should.deep.eq([0]);
-                  clinicalEntities.specimen.stats.noUpdate.should.deep.eq([1]);
-                  clinicalEntities.specimen.dataUpdates.should.deep.eq([
-                    {
-                      fieldName: 'percent_tumour_cells',
-                      index: 0,
-                      info: {
-                        donorSubmitterId: 'ICGC_0001',
-                        newValue: '0.35',
-                        oldValue: '0.5',
+      return (
+        chai
+          .request(app)
+          // .post('/submission/program/ABCD-EF/clinical/upload')
+          .post('/submission/program/ABCD-EF/clinical/submissionUpload')
+          .auth(JWT_ABCDEF, { type: 'bearer' })
+          .attach('clinicalFiles', files[0], 'donor.tsv')
+          .attach('clinicalFiles', files[1], 'specimen.tsv')
+          .attach('clinicalFiles', files[2], 'primary_diagnosis.tsv')
+          .then(async (res: any) => {
+            try {
+              res.should.have.status(200);
+              res.body.state.should.eq(SUBMISSION_STATE.OPEN);
+              const versionId = res.body.version;
+              return chai
+                .request(app)
+                .post('/submission/program/ABCD-EF/clinical/validate/' + versionId)
+                .auth(JWT_ABCDEF, { type: 'bearer' })
+                .then((res: any) => {
+                  try {
+                    res.should.have.status(200);
+                    res.body.submission.state.should.eq(SUBMISSION_STATE.VALID);
+                    const clinicalEntities: ClinicalEntities = res.body.submission.clinicalEntities;
+                    clinicalEntities.donor.stats.new.should.deep.eq([0]);
+                    clinicalEntities.specimen.stats.updated.should.deep.eq([0]);
+                    clinicalEntities.specimen.stats.noUpdate.should.deep.eq([1]);
+                    clinicalEntities.specimen.dataUpdates.should.deep.eq([
+                      {
+                        fieldName: 'percent_tumour_cells',
+                        index: 0,
+                        info: {
+                          donorSubmitterId: 'ICGC_0001',
+                          newValue: '0.35',
+                          oldValue: '0.5',
+                        },
                       },
-                    },
-                  ]);
-                  clinicalEntities.primary_diagnosis.stats.noUpdate.should.deep.eq([0]);
-                } catch (err) {
-                  throw err;
-                }
-              });
-          } catch (err) {
-            throw err;
-          }
-        });
+                    ]);
+                    clinicalEntities.primary_diagnosis.stats.noUpdate.should.deep.eq([0]);
+                  } catch (err) {
+                    throw err;
+                  }
+                });
+            } catch (err) {
+              throw err;
+            }
+          })
+      );
     });
   });
 
@@ -1140,7 +1151,8 @@ describe('Submission Api', () => {
 
       await chai
         .request(app)
-        .post(`/submission/program/${programId}/clinical/upload`)
+        // .post(`/submission/program/${programId}/clinical/upload`)
+        .post('/submission/program/ABCD-EF/clinical/submissionUpload')
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
         .attach('clinicalFiles', donorFile, 'donor.tsv')
         .attach('clinicalFiles', specimenFile, 'specimen.tsv')
@@ -1290,15 +1302,18 @@ describe('Submission Api', () => {
         return err;
       }
 
-      return chai
-        .request(app)
-        .post(`/submission/program/${programId}/clinical/upload`)
-        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-        .attach('clinicalFiles', file, 'donor.tsv')
-        .then((res: any) => {
-          submissionVersion = res.body.version;
-        })
-        .catch(err => chai.assert.fail(err));
+      return (
+        chai
+          .request(app)
+          // .post(`/submission/program/${programId}/clinical/upload`)
+          .post('/submission/program/ABCD-EF/clinical/submissionUpload')
+          .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+          .attach('clinicalFiles', file, 'donor.tsv')
+          .then((res: any) => {
+            submissionVersion = res.body.version;
+          })
+          .catch(err => chai.assert.fail(err))
+      );
     };
     const validateSubmission = async () => {
       return chai
@@ -1402,7 +1417,8 @@ describe('Submission Api', () => {
       const files: Buffer[] = [];
       let req = chai
         .request(app)
-        .post(`/submission/program/${programId}/clinical/upload`)
+        // .post(`/submission/program/${programId}/clinical/upload`)
+        .post('/submission/program/ABCD-EF/clinical/submissionUpload')
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' });
 
       fileNames.forEach(fn => {

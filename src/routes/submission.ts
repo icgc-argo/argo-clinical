@@ -30,6 +30,11 @@ const upload = multer({ dest: '/tmp' });
 
 router.get('/', wrapAsync(submissionAPI.getActiveSubmissionByProgramId));
 router.post('/upload', upload.array('clinicalFiles'), wrapAsync(uploadClinicalSubmissionsData));
+router.post(
+  '/submissionUpload',
+  upload.array('clinicalFiles'),
+  wrapAsync(uploadClinicalSubmissionsData),
+);
 
 router.post('/validate/:versionId', wrapAsync(submissionAPI.validateActiveSubmission));
 router.post('/commit/:versionId', wrapAsync(submissionAPI.commitActiveSubmission));
