@@ -21,7 +21,7 @@ import submissionAPI from '../../submission/submission-api';
 import { GlobalGqlContext } from '../../app';
 import { convertClinicalSubmissionDataToGql } from '../utils';
 
-const validateClinicalSubmissions = async (
+const validateClinicalSubmission = async (
   obj: unknown,
   args: { programShortName: string; version: string },
   contextValue: any,
@@ -34,9 +34,9 @@ const validateClinicalSubmissions = async (
     egoToken,
     version,
   );
-  return await convertClinicalSubmissionDataToGql(programShortName, {
+  return convertClinicalSubmissionDataToGql(programShortName, {
     submission: response?.submission,
   });
 };
 
-export default validateClinicalSubmissions;
+export default validateClinicalSubmission;
