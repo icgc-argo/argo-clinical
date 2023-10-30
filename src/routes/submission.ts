@@ -29,7 +29,11 @@ const router = express.Router({ mergeParams: true });
 const upload = multer({ dest: '/tmp' });
 
 router.get('/', wrapAsync(submissionAPI.getActiveSubmissionByProgramId));
-router.post('/upload', upload.array('clinicalFiles'), wrapAsync(uploadClinicalSubmissionsData));
+router.post(
+  '/upload',
+  upload.array('clinicalFiles'),
+  wrapAsync(submissionAPI.uploadClinicalTsvFiles),
+);
 router.post(
   '/submissionUpload',
   upload.array('clinicalFiles'),
