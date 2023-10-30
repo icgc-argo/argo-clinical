@@ -191,53 +191,6 @@ class SubmissionController {
       .send({ ...result, batchErrors: [...result.batchErrors, ...tsvParseErrors] });
   }
 
-  // @HasProgramWriteAccess((req: Request) => req.params.programId)
-  async uploadClinicalDataFromTsvFiles(programId: string, uploadedFiles: {}, token: string) {
-    const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
-    if (submissionSystemDisabled || !isValidRequestArgs(programId, uploadedFiles)) return;
-
-    const user = ControllerUtils.getUserFromToken(token);
-    const newClinicalData: NewClinicalEntity[] = [];
-    const tsvParseErrors: SubmissionBatchError[] = [];
-    const clinicalFiles = uploadedFiles as Express.Multer.File[];
-
-    for (const file of clinicalFiles) {
-      try {
-        // check if it has .tsv extension to prevent irregular file names from reaching service level
-        if (!file.originalname.match(/.*\.tsv$/)) {
-          throw new Error('invalid extension');
-        }
-        let records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj> = [];
-        records = await TsvUtils.tsvToJson(file.path);
-        if (records.length === 0) {
-          throw new Error('TSV has no records!');
-        }
-        newClinicalData.push({
-          batchName: file.originalname,
-          creator: user,
-          records: records,
-          fieldNames: Object.keys(records[0]), // every record in a tsv should have same fieldNames
-        });
-      } catch (err) {
-        L.error(`Clinical Submission TSV_PARSING_FAILED`, err);
-        tsvParseErrors.push({
-          message: batchErrorMessage(SubmissionBatchErrorTypes.TSV_PARSING_FAILED),
-          batchNames: [file.originalname],
-          code: SubmissionBatchErrorTypes.TSV_PARSING_FAILED,
-        });
-      }
-    }
-
-    const command: MultiClinicalSubmissionCommand = {
-      newClinicalData: newClinicalData,
-      programId, // req.params.programId,
-      updater: user,
-    };
-
-    const result = await submission.operations.submitMultiClinicalBatches(command);
-    return { ...result, batchErrors: [...result.batchErrors, ...tsvParseErrors] };
-  }
-
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async validateActiveSubmission(req: Request, res: Response) {
     const { versionId, programId } = req.params;
@@ -359,7 +312,7 @@ class SubmissionController {
   }
 
   // GQL Query Methods
-  async commitActiveSubmissionQuery(programId: string, egoToken: string, versionId: string) {
+  async commitActiveSubmissionData(programId: string, egoToken: string, versionId: string) {
     queryHasProgramWriteAccess(programId, egoToken);
 
     const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
@@ -373,7 +326,7 @@ class SubmissionController {
     return activeSubmission;
   }
 
-  async clearFileDataFromActiveSubmissionQuery(
+  async clearFileDataFromActiveSubmission(
     programId: string,
     egoToken: string,
     fileType: string,
@@ -398,7 +351,7 @@ class SubmissionController {
     return updatedSubmission;
   }
 
-  async validateActiveSubmissionQuery(programId: string, egoToken: string, versionId: string) {
+  async validateActiveSubmissionData(programId: string, egoToken: string, versionId: string) {
     queryHasProgramWriteAccess(programId, egoToken);
 
     const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
@@ -411,6 +364,54 @@ class SubmissionController {
       updater,
     });
     return validatedSubmission;
+  }
+
+  async uploadClinicalDataFromTsvFiles(programId: string, uploadedFiles: {}, egoToken: string) {
+    queryHasProgramWriteAccess(programId, egoToken);
+
+    const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
+    if (submissionSystemDisabled || !isValidRequestArgs(programId, uploadedFiles)) return;
+
+    const user = ControllerUtils.getUserFromToken(egoToken);
+    const newClinicalData: NewClinicalEntity[] = [];
+    const tsvParseErrors: SubmissionBatchError[] = [];
+    const clinicalFiles = uploadedFiles as Express.Multer.File[];
+
+    for (const file of clinicalFiles) {
+      try {
+        // check if it has .tsv extension to prevent irregular file names from reaching service level
+        if (!file.originalname.match(/.*\.tsv$/)) {
+          throw new Error('invalid extension');
+        }
+        let records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj> = [];
+        records = await TsvUtils.tsvToJson(file.path);
+        if (records.length === 0) {
+          throw new Error('TSV has no records!');
+        }
+        newClinicalData.push({
+          batchName: file.originalname,
+          creator: user,
+          records: records,
+          fieldNames: Object.keys(records[0]), // every record in a tsv should have same fieldNames
+        });
+      } catch (err) {
+        L.error(`Clinical Submission TSV_PARSING_FAILED`, err);
+        tsvParseErrors.push({
+          message: batchErrorMessage(SubmissionBatchErrorTypes.TSV_PARSING_FAILED),
+          batchNames: [file.originalname],
+          code: SubmissionBatchErrorTypes.TSV_PARSING_FAILED,
+        });
+      }
+    }
+
+    const command: MultiClinicalSubmissionCommand = {
+      newClinicalData: newClinicalData,
+      programId, // req.params.programId,
+      updater: user,
+    };
+
+    const result = await submission.operations.submitMultiClinicalBatches(command);
+    return { ...result, batchErrors: [...result.batchErrors, ...tsvParseErrors] };
   }
 }
 

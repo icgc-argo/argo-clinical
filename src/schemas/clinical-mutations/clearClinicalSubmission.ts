@@ -29,7 +29,7 @@ const clearClinicalSubmission = async (
   const { programShortName, fileType, version } = args;
   const egoToken = (<GlobalGqlContext>contextValue).egoToken;
 
-  const response = await submissionAPI.clearFileDataFromActiveSubmissionQuery(
+  const response = await submissionAPI.clearFileDataFromActiveSubmission(
     programShortName,
     egoToken,
     fileType || 'all',
