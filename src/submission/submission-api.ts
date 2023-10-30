@@ -366,6 +366,28 @@ class SubmissionController {
     return validatedSubmission;
   }
 
+  async reopenActiveDataSubmission(programId: string, versionId: string, token: string) {
+    const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
+    if (submissionSystemDisabled) return;
+    const updater = ControllerUtils.getUserFromToken(token);
+    const activeSubmission = await submission.operations.reopenClinicalSubmission({
+      versionId,
+      programId,
+      updater,
+    });
+    return activeSubmission;
+  }
+
+  async approveActiveDataSubmission(programId: string, versionId: string, token: string) {
+    const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
+    if (submissionSystemDisabled) return;
+    await submission2Clinical.approveClinicalSubmission({
+      versionId,
+      programId,
+    });
+    return submission2Clinical;
+  }
+
   async uploadClinicalDataFromTsvFiles(programId: string, uploadedFiles: {}, egoToken: string) {
     queryHasProgramWriteAccess(programId, egoToken);
 
