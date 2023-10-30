@@ -22,7 +22,7 @@ import multer from 'multer';
 
 import { wrapAsync } from '../middleware';
 import submissionAPI from '../submission/submission-api';
-import uploadClinicalSubmissionsData from '../schemas/clinical-resolvers/uploadClinicalSubmissions';
+import uploadClinicalSubmissionsData from '../schemas/clinical-mutations/uploadClinicalSubmissions';
 
 const router = express.Router({ mergeParams: true });
 
