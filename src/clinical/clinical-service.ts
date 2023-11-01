@@ -21,6 +21,7 @@ import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 import { Sample, Donor, ClinicalEntityData } from './clinical-entities';
 import { donorDao, DONOR_DOCUMENT_FIELDS } from './donor-repo';
+import featureFlags from '../feature-flags';
 import { filterDuplicates } from '../common-model/functions';
 import {
   ClinicalEntityErrorRecord,
@@ -38,6 +39,7 @@ import {
   DictionaryMigration,
   DonorMigrationError,
 } from '../submission/migration/migration-entities';
+import { checkForProgramAndEntityExceptions } from '../submission/exceptions/exceptions';
 import * as dictionaryManager from '../dictionary/manager';
 import { loggerFor } from '../logger';
 import { WorkerTasks } from './service-worker-thread/tasks';
@@ -290,13 +292,24 @@ export const getClinicalSearchResults = async (
 };
 
 export const getClinicalErrors = async (programId: string, donorIds: number[]) => {
-  // 1. Get the migration errors for every donor requested...
+  // 1. Get the migration errors for every donor requested
   const migrationErrors = await getClinicalEntityMigrationErrors(programId, donorIds);
 
-  // 2. ...and now remove from the list all valid donors (fixed with submissions since the migration)
-  const validErrorRecords = await getValidRecordsPostSubmission(programId, migrationErrors);
+  // 2. Remove from the list all valid donors (fixed with submissions since the migration)
+  const validPostSubmissionErrors = await getValidRecordsPostSubmission(programId, migrationErrors);
 
-  return validErrorRecords;
+  if (!featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
+    return validPostSubmissionErrors;
+  } else {
+    // 3. Remove from the list all errors which match Program Exceptions
+    const validPostExceptionErrors = validPostSubmissionErrors.clinicalErrors.map(
+      async (record, index) => {
+        return await checkForProgramAndEntityExceptions({ programId });
+      },
+    );
+
+    return validPostExceptionErrors;
+  }
 };
 
 interface DonorMigration extends Omit<DictionaryMigration, 'invalidDonorsErrors'> {
