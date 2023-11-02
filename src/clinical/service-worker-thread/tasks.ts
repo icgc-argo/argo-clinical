@@ -124,7 +124,7 @@ const mapEntityDocuments = (
   entityTypes: EntityAlias[],
   paginationQuery: PaginationQuery,
   completionStats: CompletionDisplayRecord[],
-) => {
+): ClinicalEntityData | undefined => {
   const { entityName, results } = entity;
 
   // Filter, Paginate + Sort
@@ -149,7 +149,7 @@ const mapEntityDocuments = (
   const completionDisplayRecords =
     entityName === ClinicalEntitySchemaNames.DONOR ? { completionStats: [...completionStats] } : {};
 
-  return <ClinicalEntityData>{
+  return {
     entityName,
     totalDocs,
     records,
@@ -239,7 +239,15 @@ function extractDataFromDonors(donors: DeepReadonly<Donor>[], schemasWithFields:
   return data;
 }
 
-// Main Clinical Entity Submitted Data Function
+/**
+ * Main Clinical Entity Submitted Data Function
+ * @param donors
+ * @param totalDonors
+ * @param schemasWithFields
+ * @param entityTypes
+ * @param paginationQuery
+ * @returns
+ */
 function extractEntityDataFromDonors(
   donors: Donor[],
   totalDonors: number,
@@ -250,25 +258,31 @@ function extractEntityDataFromDonors(
   let clinicalEntityData: EntityClinicalInfo[] = [];
 
   donors.forEach(d => {
-    Object.values(ClinicalEntitySchemaNames).forEach(entity => {
-      const isQueriedEntity = isEntityInQuery(entity, entityTypes);
-      const isRelatedEntity = getRequiredDonorFieldsForEntityTypes(entityTypes).includes(entity);
+    Object.values(ClinicalEntitySchemaNames).forEach(entityName => {
+      const isQueriedEntity = isEntityInQuery(entityName, entityTypes);
+      const isRelatedEntity = getRequiredDonorFieldsForEntityTypes(entityTypes).includes(
+        entityName,
+      );
       const requiresSampleRegistration =
-        entity === ClinicalEntitySchemaNames.REGISTRATION &&
+        entityName === ClinicalEntitySchemaNames.REGISTRATION &&
         (entityTypes.includes('donor') || entityTypes.includes('sampleRegistration'));
       const requiresSpecimens =
-        entity === ClinicalEntitySchemaNames.SPECIMEN && entityTypes.includes('donor');
+        entityName === ClinicalEntitySchemaNames.SPECIMEN && entityTypes.includes('donor');
 
       const isRequiredEntity =
         isQueriedEntity || isRelatedEntity || requiresSampleRegistration || requiresSpecimens;
 
-      const clinicalInfoRecords = isRequiredEntity ? getClinicalEntitySubmittedData(d, entity) : [];
+      const clinicalInfoRecords = isRequiredEntity
+        ? getClinicalEntitySubmittedData(d, entityName)
+        : [];
 
-      const relatedEntity = clinicalEntityData.find(entityData => entityData.entityName === entity);
+      const relatedEntity = clinicalEntityData.find(
+        entityData => entityData.entityName === entityName,
+      );
       if (relatedEntity) {
         relatedEntity.results = _.concat(relatedEntity.results, clinicalInfoRecords);
       } else {
-        const clinicalEntity = { entityName: entity, results: clinicalInfoRecords };
+        const clinicalEntity: EntityClinicalInfo = { entityName, results: clinicalInfoRecords };
         clinicalEntityData = _.concat(clinicalEntityData, clinicalEntity);
       }
     });
