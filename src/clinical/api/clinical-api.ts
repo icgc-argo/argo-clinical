@@ -57,9 +57,9 @@ export const parseDonorIdList = (donorIds: string) =>
 
 export const createClinicalZipFile = (data: ClinicalEntityData[]) => {
   const zip = new AdmZip();
-  data.forEach((d: any) => {
-    const tsvData = TsvUtils.convertJsonRecordsToTsv(d.records, d.entityFields);
-    zip.addFile(`${d.entityName}.tsv`, Buffer.alloc(tsvData.length, tsvData));
+  data.forEach(entityData => {
+    const tsvData = TsvUtils.convertJsonRecordsToTsv(entityData.records, entityData.entityFields);
+    zip.addFile(`${entityData.entityName}.tsv`, Buffer.alloc(tsvData.length, tsvData));
   });
   return zip;
 };
