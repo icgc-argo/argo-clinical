@@ -313,11 +313,28 @@ export const getClinicalErrors = async (programId: string, donorIds: number[]) =
       .map(entityName =>
         validPostSubmissionErrors.clinicalErrors.filter(error => error.entityName === entityName),
       )
-      .filter(notEmpty);
+      .filter(notEmpty)
+      .flat();
 
     const relatedExceptions = schemaNames
       .map(entityName => {
         return exceptionRecords.filter(exception => exception.schema === entityName);
+      })
+      .filter(notEmpty)
+      .flat();
+
+    const filteredErrors = relatedExceptions
+      .map(exception => {
+        const { schema, requested_core_field } = exception;
+        const relevantDonors = relatedErrors.filter(donor => donor.entityName === schema);
+
+        const exceptionErrors = relevantDonors.filter(donor =>
+          donor.errors.some(error => {
+            error.fieldName === requested_core_field;
+          }),
+        );
+
+        return exceptionErrors;
       })
       .filter(notEmpty);
 
