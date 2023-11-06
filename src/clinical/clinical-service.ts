@@ -31,7 +31,7 @@ import {
   aliasEntityNames,
   allEntityNames,
 } from '../common-model/entities';
-import { Errors } from '../utils';
+import { Errors, notEmpty } from '../utils';
 import { patchCoreCompletionWithOverride } from '../submission/submission-to-clinical/stat-calculator';
 import { migrationRepo } from '../submission/migration/migration-repo';
 import { MigrationManager } from '../submission/migration/migration-manager';
@@ -39,7 +39,8 @@ import {
   DictionaryMigration,
   DonorMigrationError,
 } from '../submission/migration/migration-entities';
-import { checkForProgramAndEntityExceptions } from '../submission/exceptions/exceptions';
+import * as exceptionService from '../exception/exception-service';
+import { failure, Result, success, ValidationError } from '../exception/error-handling';
 import * as dictionaryManager from '../dictionary/manager';
 import { loggerFor } from '../logger';
 import { WorkerTasks } from './service-worker-thread/tasks';
@@ -298,17 +299,29 @@ export const getClinicalErrors = async (programId: string, donorIds: number[]) =
   // 2. Remove from the list all valid donors (fixed with submissions since the migration)
   const validPostSubmissionErrors = await getValidRecordsPostSubmission(programId, migrationErrors);
 
-  if (!featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
+  const programExceptions = await exceptionService.operations.getProgramException({ programId });
+  const hasProgramExceptions = 'exception' in programExceptions;
+
+  if (!featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED || !hasProgramExceptions) {
     return validPostSubmissionErrors;
   } else {
     // 3. Remove from the list all errors which match Program Exceptions
-    const validPostExceptionErrors = validPostSubmissionErrors.clinicalErrors.map(
-      async (record, index) => {
-        return await checkForProgramAndEntityExceptions({ programId });
-      },
-    );
+    const exceptionRecords = programExceptions.exception.exceptions;
 
-    return validPostExceptionErrors;
+    const schemaNames = Object.values(ClinicalEntitySchemaNames);
+    const relatedErrors = schemaNames
+      .map(entityName =>
+        validPostSubmissionErrors.clinicalErrors.filter(error => error.entityName === entityName),
+      )
+      .filter(notEmpty);
+
+    const relatedExceptions = schemaNames
+      .map(entityName => {
+        return exceptionRecords.filter(exception => exception.schema === entityName);
+      })
+      .filter(notEmpty);
+
+    return validPostSubmissionErrors;
   }
 };
 
