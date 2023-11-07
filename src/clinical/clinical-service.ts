@@ -299,18 +299,16 @@ export const getClinicalErrors = async (programId: string, donorIds: number[]) =
   // 2. Remove from the list all valid donors (fixed with submissions since the migration)
   const validPostSubmissionErrors = await getValidRecordsPostSubmission(programId, migrationErrors);
 
+  // 3. Remove from the list all errors which match Program Exceptions
   const programExceptions = await exceptionService.operations.getProgramException({ programId });
   const entityExceptions = await exceptionService.operations.getEntityException({ programId });
   const hasProgramExceptions = 'exception' in programExceptions;
   const hasEntityExceptions = 'exception' in entityExceptions;
-  console.log('\n hasEntityExceptions', hasEntityExceptions);
-  console.log('\n hasProgramExceptions', hasProgramExceptions);
 
   if (
     featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED &&
     (hasProgramExceptions || hasEntityExceptions)
   ) {
-    // 3. Remove from the list all errors which match Program Exceptions
     const programRecords = hasProgramExceptions ? programExceptions.exception.exceptions : [];
     const entityRecords = hasEntityExceptions
       ? [...entityExceptions.exception.specimen, ...entityExceptions.exception.follow_up]
@@ -324,14 +322,28 @@ export const getClinicalErrors = async (programId: string, donorIds: number[]) =
           exception.schema === errorRecord.entityName &&
           errorRecord.errors.some(error => error.fieldName === exception.requested_core_field),
       );
+      // If no matching exceptions related to error, error is included in the result
       const hasExceptions = matchedExceptions.length;
       if (!hasExceptions) return errorRecord;
 
-      // Only return error records that do not have an exception with the same schema + field
-      const errors = errorRecord.errors.filter(
-        error =>
-          !matchedExceptions.some(exception => error.fieldName === exception.requested_core_field),
-      );
+      // Remove Error records where both field and value match the exception
+      const errors = errorRecord.errors.filter(error => {
+        const hasErrorValue = 'value' in error.info;
+
+        // Lectern client is not returning specific error values for every entry
+        // If error does not include a value, it will not match any exception, which always has a value
+        // So Error must be included in result
+        if (!hasErrorValue) return errorRecord;
+
+        const matchedErrorRecords = matchedExceptions.filter(
+          exception =>
+            exception.requested_core_field === error.fieldName &&
+            exception.requested_exception_value === error.info.value[0],
+        );
+
+        // If errors match exception field and value they are removed from result
+        return !matchedErrorRecords.length;
+      });
 
       return { ...errorRecord, errors };
     });
