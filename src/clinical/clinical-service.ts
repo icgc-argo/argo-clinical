@@ -300,40 +300,36 @@ export const getClinicalErrors = async (programId: string, donorIds: number[]) =
   const validPostSubmissionErrors = await getValidRecordsPostSubmission(programId, migrationErrors);
 
   const programExceptions = await exceptionService.operations.getProgramException({ programId });
+  const entityExceptions = await exceptionService.operations.getEntityException({ programId });
   const hasProgramExceptions = 'exception' in programExceptions;
+  const hasEntityExceptions = 'exception' in entityExceptions;
+  console.log('\n hasEntityExceptions', hasEntityExceptions);
+  console.log('\n hasProgramExceptions', hasProgramExceptions);
 
-  if (!featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED || !hasProgramExceptions) {
-    return validPostSubmissionErrors;
-  } else {
+  if (
+    featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED &&
+    (hasProgramExceptions || hasEntityExceptions)
+  ) {
     // 3. Remove from the list all errors which match Program Exceptions
-    const exceptionRecords = programExceptions.exception.exceptions;
+    const programRecords = hasProgramExceptions ? programExceptions.exception.exceptions : [];
+    const entityRecords = hasEntityExceptions
+      ? [...entityExceptions.exception.specimen, ...entityExceptions.exception.follow_up]
+      : [];
 
-    const schemaNames = Object.values(ClinicalEntitySchemaNames);
-    const relatedErrors = schemaNames
-      .map(entityName =>
-        validPostSubmissionErrors.clinicalErrors.filter(error => error.entityName === entityName),
-      )
-      .filter(notEmpty)
-      .flat();
+    const exceptionRecords = [...programRecords, ...entityRecords];
 
-    const relatedExceptions = schemaNames
-      .map(entityName => {
-        return exceptionRecords.filter(exception => exception.schema === entityName);
-      })
-      .filter(notEmpty)
-      .flat();
-
-    const filteredErrors = relatedExceptions
-      .map(exception => {
-        const { schema, requested_core_field } = exception;
-        const exceptionErrors = relatedErrors
-          .filter(donor => donor.entityName === schema)
-          .filter(donor => donor.errors.some(error => error.fieldName === requested_core_field));
-
-        return exceptionErrors;
-      })
-      .filter(notEmpty);
-
+    const clinicalErrors = validPostSubmissionErrors.clinicalErrors.filter(
+      errorRecord =>
+        // Only return error records that do not have an exception with the same schema + field
+        !exceptionRecords.some(
+          exception =>
+            exception.schema === errorRecord.entityName &&
+            errorRecord.errors.some(error => error.fieldName === exception.requested_core_field),
+        ),
+    );
+    console.log('\nclinicalErrors', clinicalErrors);
+    return { clinicalErrors };
+  } else {
     return validPostSubmissionErrors;
   }
 };
