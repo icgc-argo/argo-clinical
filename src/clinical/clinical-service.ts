@@ -318,16 +318,24 @@ export const getClinicalErrors = async (programId: string, donorIds: number[]) =
 
     const exceptionRecords = [...programRecords, ...entityRecords];
 
-    const clinicalErrors = validPostSubmissionErrors.clinicalErrors.filter(
-      errorRecord =>
-        // Only return error records that do not have an exception with the same schema + field
-        !exceptionRecords.some(
-          exception =>
-            exception.schema === errorRecord.entityName &&
-            errorRecord.errors.some(error => error.fieldName === exception.requested_core_field),
-        ),
-    );
-    console.log('\nclinicalErrors', clinicalErrors);
+    const clinicalErrors = validPostSubmissionErrors.clinicalErrors.map(errorRecord => {
+      const matchedExceptions = exceptionRecords.filter(
+        exception =>
+          exception.schema === errorRecord.entityName &&
+          errorRecord.errors.some(error => error.fieldName === exception.requested_core_field),
+      );
+      const hasExceptions = matchedExceptions.length;
+      if (!hasExceptions) return errorRecord;
+
+      // Only return error records that do not have an exception with the same schema + field
+      const errors = errorRecord.errors.filter(
+        error =>
+          !matchedExceptions.some(exception => error.fieldName === exception.requested_core_field),
+      );
+
+      return { ...errorRecord, errors };
+    });
+
     return { clinicalErrors };
   } else {
     return validPostSubmissionErrors;
