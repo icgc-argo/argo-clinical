@@ -254,11 +254,10 @@ export const getDonorEntityData = async (donorIds: number[]) => {
   const paginationQuery: PaginationQuery = {
     page: 0,
     sort: 'donorId',
-    pageSize: totalDonors,
   };
 
   const taskToRun = WorkerTasks.ExtractEntityDataFromDonors;
-  const taskArgs = [donors, donors.length, allSchemasWithFields, allEntityNames, paginationQuery];
+  const taskArgs = [donors, totalDonors, allSchemasWithFields, allEntityNames, paginationQuery];
 
   // Return paginated data
   const data = await runTaskInWorkerThread<{ clinicalEntities: ClinicalEntityData[] }>(
