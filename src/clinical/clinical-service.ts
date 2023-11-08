@@ -298,18 +298,13 @@ export const getClinicalErrors = async (programId: string, donorIds: number[]) =
   // 2. Remove from the list all valid donors (fixed with submissions since the migration)
   const validPostSubmissionErrors = await getValidRecordsPostSubmission(programId, migrationErrors);
 
-  // 3. Remove from the list all errors which match Program Exceptions
-  const programExceptions = await exceptionService.operations.getProgramException({ programId });
-  const entityExceptions = await exceptionService.operations.getEntityException({ programId });
-  const hasProgramExceptions = 'exception' in programExceptions;
-  const hasEntityExceptions = 'exception' in entityExceptions;
+  if (featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
+    // 3. Remove from the list all errors which match Program Exceptions
+    const programExceptions = await exceptionService.operations.getProgramException({ programId });
+    const entityExceptions = await exceptionService.operations.getEntityException({ programId });
 
-  if (
-    featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED &&
-    (hasProgramExceptions || hasEntityExceptions)
-  ) {
-    const programRecords = hasProgramExceptions ? programExceptions.exception.exceptions : [];
-    const entityRecords = hasEntityExceptions
+    const programRecords = programExceptions.success ? programExceptions.exception.exceptions : [];
+    const entityRecords = entityExceptions.success
       ? [...entityExceptions.exception.specimen, ...entityExceptions.exception.follow_up]
       : [];
 
@@ -331,7 +326,6 @@ export const getClinicalErrors = async (programId: string, donorIds: number[]) =
 
         // Lectern client is not returning specific error values for every entry
         // If error does not include a value, it will not match any exception, which always has a value
-        // So Error must be included in result
         if (!hasErrorValue) return errorRecord;
 
         const matchedErrorRecords = matchedExceptions.filter(
