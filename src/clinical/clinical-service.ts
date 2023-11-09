@@ -498,7 +498,7 @@ export const getValidRecordsPostSubmission = async (
 
 /**
  * Remove from the list all errors which match Program Exceptions
- **/
+ */
 export const matchErrorsWithExceptions = async (
   programId: string,
   validPostSubmissionErrors: ClinicalErrorsResponseRecord[],
