@@ -1558,7 +1558,7 @@ function validateRequiredColumns(index: number, obj: any, cols: string[]) {
   }
 }
 
-function prepareForSchemaReProcessing(record: object) {
+export function prepareForSchemaReProcessing(record: object) {
   // we copy to avoid frozen attributes
   const copy = _.cloneDeep(record);
   return toString(copy);

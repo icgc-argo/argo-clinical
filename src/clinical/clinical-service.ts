@@ -19,10 +19,14 @@
 
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
-import { Sample, Donor, ClinicalEntityData } from './clinical-entities';
-import { donorDao, DONOR_DOCUMENT_FIELDS } from './donor-repo';
-import featureFlags from '../feature-flags';
-import { filterDuplicates } from '../common-model/functions';
+import {
+  entities as dictionaryEntities,
+  functions as dictionaryService,
+} from '@overturebio-stack/lectern-client';
+import {
+  filterDuplicates,
+  getClinicalEntitiesFromDonorBySchemaName,
+} from '../common-model/functions';
 import {
   ClinicalEntityErrorRecord,
   ClinicalEntitySchemaNames,
@@ -31,18 +35,22 @@ import {
   aliasEntityNames,
   allEntityNames,
 } from '../common-model/entities';
-import { Errors, notEmpty } from '../utils';
+import { checkForProgramAndEntityExceptions } from '../submission/exceptions/exceptions';
 import { patchCoreCompletionWithOverride } from '../submission/submission-to-clinical/stat-calculator';
 import { migrationRepo } from '../submission/migration/migration-repo';
 import { MigrationManager } from '../submission/migration/migration-manager';
+import { prepareForSchemaReProcessing } from '../submission/submission-service';
 import {
   DictionaryMigration,
   DonorMigrationError,
 } from '../submission/migration/migration-entities';
 import * as exceptionService from '../exception/exception-service';
-import { failure, Result, success, ValidationError } from '../exception/error-handling';
 import * as dictionaryManager from '../dictionary/manager';
+import featureFlags from '../feature-flags';
 import { loggerFor } from '../logger';
+import { Errors, notEmpty } from '../utils';
+import { Sample, Donor, ClinicalEntityData, ClinicalInfo } from './clinical-entities';
+import { donorDao, DONOR_DOCUMENT_FIELDS } from './donor-repo';
 import { WorkerTasks } from './service-worker-thread/tasks';
 import { runTaskInWorkerThread } from './service-worker-thread/runner';
 
@@ -432,17 +440,15 @@ export const getValidRecordsPostSubmission = async (
       .instance()
       .loadSchemaByVersion(schemaName, migrationVersion);
 
+    // [ invalidDonors ]
     const invalidDonorRecords = donorData.filter(donor =>
       invalidDonorIds.includes(donor.donorId),
     ) as DeepReadonly<Donor>[];
 
-    // Returns an array of Error Records organized by Donor
-    // clinicalErrorRecords = [ { donorId, errors: []}, { donorId, errors: []}]
-    clinicalErrors = invalidDonorRecords
-      .map(currentDonor => {
+    // [ [ ScemaValidationErrors ] ]
+    const validationErrors = await Promise.all(
+      invalidDonorRecords.map(async currentDonor => {
         const { donorId, submitterId: submitterDonorId } = currentDonor;
-
-        let donorErrorRecords = [];
 
         const currentDonorErrors = clinicalMigrationErrors
           .filter(errorRecord => errorRecord.donorId === donorId)
@@ -453,41 +459,49 @@ export const getValidRecordsPostSubmission = async (
           .map(error => error.entityName)
           .filter(filterDuplicates);
 
-        donorErrorRecords = currentDonorEntities.map(entityName => {
-          const entityValidationErrors =
-            MigrationManager.validateDonorEntityAgainstNewSchema(
-              entityName,
-              migrationDictionary,
-              currentDonor,
-            ) || [];
+        const donorErrorRecords = await Promise.all(
+          currentDonorEntities.map(async entityName => {
+            const entityValidationErrors =
+              MigrationManager.validateDonorEntityAgainstNewSchema(
+                entityName,
+                migrationDictionary,
+                currentDonor,
+              ) || [];
 
-          const entityErrorRecords: ClinicalEntityErrorRecord[] = entityValidationErrors.map(
-            (validationRecord): ClinicalEntityErrorRecord => ({
+            if (featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
+              const filteredErrors = await matchDonorErrorsWithExceptions(
+                programId,
+                currentDonor,
+                migrationDictionary,
+                entityName,
+                [...entityValidationErrors],
+              );
+            }
+
+            const entityErrorRecords: ClinicalEntityErrorRecord[] = entityValidationErrors.map(
+              (validationRecord): ClinicalEntityErrorRecord => ({
+                donorId,
+                entityName,
+                ...validationRecord,
+              }),
+            );
+
+            const errorResponseRecord: ClinicalErrorsResponseRecord = {
               donorId,
+              submitterDonorId,
               entityName,
-              ...validationRecord,
-            }),
-          );
-          if (donorId == 250433) {
-            // Exception Code Here
-          }
-          const errorResponseRecord: ClinicalErrorsResponseRecord = {
-            donorId,
-            submitterDonorId,
-            entityName,
-            errors: entityErrorRecords,
-          };
+              errors: entityErrorRecords,
+            };
 
-          return errorResponseRecord;
-        });
+            return errorResponseRecord;
+          }),
+        );
 
         return donorErrorRecords;
-      })
-      .flat();
-  }
-
-  if (featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
-    clinicalErrors = await matchErrorsWithExceptions(programId, clinicalErrors);
+      }),
+    );
+    console.log('\n validationErrors', validationErrors);
+    clinicalErrors = validationErrors.flat();
   }
 
   const end = new Date().getTime() / 1000;
@@ -499,50 +513,65 @@ export const getValidRecordsPostSubmission = async (
 /**
  * Remove from the list all errors which match Program Exceptions
  */
-export const matchErrorsWithExceptions = async (
+export const matchDonorErrorsWithExceptions = async (
   programId: string,
-  validPostSubmissionErrors: ClinicalErrorsResponseRecord[],
+  currentDonor: DeepReadonly<Donor>,
+  schemaName: dictionaryEntities.SchemasDictionary,
+  entityName: ClinicalEntitySchemaNames,
+  validationErrors: dictionaryEntities.SchemaValidationError[],
 ) => {
-  const programExceptions = await exceptionService.operations.getProgramException({ programId });
-  const entityExceptions = await exceptionService.operations.getEntityException({ programId });
+  const clinicalErrors = validationErrors;
 
-  const programRecords = programExceptions.success ? programExceptions.exception.exceptions : [];
-  const entityRecords = entityExceptions.success
-    ? [...entityExceptions.exception.specimen, ...entityExceptions.exception.follow_up]
-    : [];
+  const clinicalRecords: ClinicalInfo[] = getClinicalEntitiesFromDonorBySchemaName(
+    currentDonor,
+    entityName,
+  );
 
-  const exceptionRecords = [...programRecords, ...entityRecords];
+  if (clinicalRecords?.length == 0) {
+    return undefined;
+  }
 
-  const clinicalErrors = validPostSubmissionErrors.map(errorRecord => {
-    const matchedExceptions = exceptionRecords.filter(
-      exception =>
-        exception.schema === errorRecord.entityName &&
-        errorRecord.errors.some(error => error.fieldName === exception.requested_core_field),
-    );
-    // If no matching exceptions related to error, error is included in the result
-    const hasExceptions = matchedExceptions.length;
-    if (!hasExceptions) return errorRecord;
+  const stringifiedRecords = clinicalRecords
+    .map(cr => {
+      return prepareForSchemaReProcessing(cr);
+    })
+    .filter(notEmpty);
 
-    // Remove Error records where both field and value match the exception
-    const errors = errorRecord.errors.filter(error => {
-      const hasErrorValue = 'value' in error.info;
+  console.log('\nvalidationErrors', validationErrors);
 
-      // Lectern client is not returning specific error values for every entry
-      // If error does not include a value, it will not match any exception, which always has a value
-      if (!hasErrorValue) return errorRecord;
+  const result = dictionaryService.processRecords(schemaName, entityName, stringifiedRecords);
+  console.log('\nresult', result);
+  // const clinicalErrors = validationErrors.map(errorRecord => {
+  //   const matchedExceptions = exceptionRecords.filter(
+  //     exception =>
+  //       exception.schema === errorRecord.entityName &&
+  //       errorRecord.errors.some(error => error.fieldName === exception.requested_core_field),
+  //   );
 
-      const matchedErrorRecords = matchedExceptions.filter(
-        exception =>
-          exception.requested_core_field === error.fieldName &&
-          exception.requested_exception_value === error.info.value[0],
-      );
+  // If no matching exceptions related to error, error is included in the result
+  // const hasExceptions = matchedExceptions.length;
+  // if (!hasExceptions) return errorRecord;
 
-      // If errors match exception field and value they are removed from result
-      return !matchedErrorRecords.length;
-    });
+  // Remove Error records where both field and value match the exception
+  // const errors = errorRecord.errors.filter(error => {
+  //   const hasErrorValue = 'value' in error.info;
 
-    return { ...errorRecord, errors };
-  });
+  // Lectern client is not returning specific error values for every entry
+  // If error does not include a value, it will not match any exception, which always has a value
+  // if (!hasErrorValue) return errorRecord;
+
+  // const matchedErrorRecords = matchedExceptions.filter(
+  //   exception =>
+  //     exception.requested_core_field === error.fieldName &&
+  //     exception.requested_exception_value === error.info.value[0],
+  // );
+
+  // If errors match exception field and value they are removed from result
+  //   return !matchedErrorRecords.length;
+  // });
+
+  // return { ...errorRecord, errors };
+  // });
 
   return clinicalErrors;
 };
