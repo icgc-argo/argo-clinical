@@ -17,16 +17,12 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { DeepReadonly } from 'deep-freeze';
-import _ from 'lodash';
 import {
   entities as dictionaryEntities,
   functions as dictionaryService,
 } from '@overturebio-stack/lectern-client';
-import {
-  filterDuplicates,
-  getClinicalEntitiesFromDonorBySchemaName,
-} from '../common-model/functions';
+import { DeepReadonly } from 'deep-freeze';
+import _ from 'lodash';
 import {
   ClinicalEntityErrorRecord,
   ClinicalEntitySchemaNames,
@@ -35,22 +31,26 @@ import {
   aliasEntityNames,
   allEntityNames,
 } from '../common-model/entities';
+import {
+  filterDuplicates,
+  getClinicalEntitiesFromDonorBySchemaName,
+} from '../common-model/functions';
+import * as dictionaryManager from '../dictionary/manager';
+import featureFlags from '../feature-flags';
+import { loggerFor } from '../logger';
 import { checkForProgramAndEntityExceptions } from '../submission/exceptions/exceptions';
-import { patchCoreCompletionWithOverride } from '../submission/submission-to-clinical/stat-calculator';
-import { migrationRepo } from '../submission/migration/migration-repo';
-import { prepareForSchemaReProcessing } from '../submission/submission-service';
 import {
   DictionaryMigration,
   DonorMigrationError,
 } from '../submission/migration/migration-entities';
-import * as dictionaryManager from '../dictionary/manager';
-import featureFlags from '../feature-flags';
-import { loggerFor } from '../logger';
+import { migrationRepo } from '../submission/migration/migration-repo';
+import { prepareForSchemaReProcessing } from '../submission/submission-service';
+import { patchCoreCompletionWithOverride } from '../submission/submission-to-clinical/stat-calculator';
 import { Errors, notEmpty } from '../utils';
-import { Sample, Donor, ClinicalEntityData, ClinicalInfo } from './clinical-entities';
-import { donorDao, DONOR_DOCUMENT_FIELDS } from './donor-repo';
-import { WorkerTasks } from './service-worker-thread/tasks';
+import { ClinicalEntityData, ClinicalInfo, Donor, Sample } from './clinical-entities';
+import { DONOR_DOCUMENT_FIELDS, donorDao } from './donor-repo';
 import { runTaskInWorkerThread } from './service-worker-thread/runner';
+import { WorkerTasks } from './service-worker-thread/tasks';
 
 const L = loggerFor(__filename);
 
