@@ -35,7 +35,7 @@ import { DeepReadonly } from 'deep-freeze';
  * @param programId
  * @returns program and donor level exceptions for this programId
  */
-export const queryForExceptions = async (programId: string) => {
+const queryForExceptions = async (programId: string) => {
   const programException = await programExceptionRepository.find(programId);
   const entityException = await entityExceptionRepository.find(programId);
 
