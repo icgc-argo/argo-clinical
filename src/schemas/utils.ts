@@ -172,12 +172,12 @@ export interface SubmissionEntity {
 }
 
 const convertClinicalSubmissionEntityToGql = (clinicalType: string, entity: SubmissionEntity) => {
-  const batchName = entity.batchName || undefined;
-  const creator = entity.creator || undefined;
+  const batchName = entity?.batchName;
+  const creator = entity?.creator || undefined;
   const records = get(entity, 'records', [] as typeof entity.records)?.map((record, index) =>
     convertClinicalRecordToGql(index, record),
   );
-  const stats = entity.stats || undefined;
+  const stats = entity?.stats || undefined;
   const entityErrors = entity.schemaErrors || [];
   const schemaErrors = entityErrors.map(error =>
     convertClinicalSubmissionSchemaErrorToGql(clinicalType, error),
