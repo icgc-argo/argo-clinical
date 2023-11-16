@@ -719,7 +719,6 @@ describe('Submission Api', () => {
           done();
         });
     });
-
     it('should return 422 if try to upload invalid tsv files', done => {
       const files: Buffer[] = [];
       try {
@@ -731,26 +730,30 @@ describe('Submission Api', () => {
       }
       chai
         .request(app)
-        // data base is empty so ID shouldn't exist
-        .post('/submission/program/ABCD-EF/clinical/upload')
+        // database is empty so ID shouldn't exist
+        // .post('/submission/program/ABCD-EF/clinical/upload')
+        .post('/submission/program/ABCD-EF/clinical/submissionUpload')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .attach('clinicalFiles', files[0], 'donor.invalid.tsv')
         .attach('clinicalFiles', files[1], 'radiation.invalid.tsv')
         .attach('clinicalFiles', files[2], 'follow_up.invalid.tsv')
         .end((err: any, res: any) => {
           res.should.have.status(207);
-          res.body.submission.clinicalEntities.follow_up.schemaErrors.should.deep.eq(
-            expectedFollowUpBatchSubmissionSchemaErrors,
-          );
-
-          res.body.submission.clinicalEntities.donor.schemaErrors.should.deep.eq(
-            expectedDonorBatchSubmissionSchemaErrors,
-          );
-
-          res.body.submission.clinicalEntities.radiation.schemaErrors.should.deep.eq(
-            expectedRadiationBatchSubmissionSchemaErrors,
-          );
-          res.body.successful.should.deep.eq(false);
+          for (const entity of res.body.clinicalEntities) {
+            if (entity.clinicalType === 'donor') {
+              entity.schemaErrors.should.deep.eq(expectedDonorBatchSubmissionSchemaErrors);
+            }
+          }
+          for (const entity of res.body.clinicalEntities) {
+            if (entity.clinicalType === 'follow_up') {
+              entity.schemaErrors.should.deep.eq(expectedFollowUpBatchSubmissionSchemaErrors);
+            }
+          }
+          for (const entity of res.body.clinicalEntities) {
+            if (entity.clinicalType === 'radiation') {
+              entity.schemaErrors.should.deep.eq(expectedRadiationBatchSubmissionSchemaErrors);
+            }
+          }
           done();
         });
     });
@@ -763,13 +766,13 @@ describe('Submission Api', () => {
       }
       chai
         .request(app)
-        // data base is empty so ID shouldn't exist
-        .post('/submission/program/ABCD-EF/clinical/upload')
+        // database is empty so ID shouldn't exist
+        // .post('/submission/program/ABCD-EF/clinical/upload')
+        .post('/submission/program/ABCD-EF/clinical/submissionUpload')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .attach('clinicalFiles', file, 'donor.tsv')
         .end(async (err: any, res: any) => {
           res.should.have.status(200);
-          res.body.successful.should.deep.eq(true);
           const conn = await mongo.connect(dburl);
           const savedSubmission: ActiveClinicalSubmission | null = await conn
             .db('clinical')
@@ -795,8 +798,9 @@ describe('Submission Api', () => {
       }
       chai
         .request(app)
-        // data base is empty so ID shouldn't exist
-        .post('/submission/program/ABCD-EF/clinical/upload')
+        // database is empty so ID shouldn't exist
+        // .post('/submission/program/ABCD-EF/clinical/upload')
+        .post('/submission/program/ABCD-EF/clinical/submissionUpload')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .attach('clinicalFiles', files[0], 'donor.tsv')
         .attach('clinicalFiles', files[1], 'thisissample.tsv')
@@ -805,30 +809,30 @@ describe('Submission Api', () => {
         .attach('clinicalFiles', files[4], 'sample_registration.tsv')
         .end((err: any, res: any) => {
           res.should.have.status(207);
-          res.body.batchErrors.should.deep.equalInAnyOrder([
+          res.body.fileErrors.should.deep.equalInAnyOrder([
             {
               message: 'Found multiple files of donor type',
-              batchNames: ['donor.tsv', 'donor.invalid.tsv'],
+              fileNames: ['donor.invalid.tsv', 'donor.tsv'],
               code: 'MULTIPLE_TYPED_FILES',
             },
             {
               message: INVALID_FILENAME_ERROR,
-              batchNames: ['thisissample.tsv'],
+              fileNames: ['thisissample.tsv'],
               code: 'INVALID_FILE_NAME',
             },
             {
               message: `Missing required headers: [${SampleRegistrationFieldsEnum.submitter_donor_id}], [${SampleRegistrationFieldsEnum.submitter_specimen_id}], [${PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id}]`,
-              batchNames: ['specimen-invalid-headers.tsv'],
+              fileNames: ['specimen-invalid-headers.tsv'],
               code: SubmissionBatchErrorTypes.MISSING_REQUIRED_HEADER,
             },
             {
               message: 'Found unknown headers: [submitter_id], [submitter_specmen_id]',
-              batchNames: ['specimen-invalid-headers.tsv'],
+              fileNames: ['specimen-invalid-headers.tsv'],
               code: SubmissionBatchErrorTypes.UNRECOGNIZED_HEADER,
             },
             {
               message: 'Please upload this file in the Register Samples section.',
-              batchNames: ['sample_registration.tsv'],
+              fileNames: ['sample_registration.tsv'],
               code: SubmissionBatchErrorTypes.INCORRECT_SECTION,
             },
           ]);
@@ -850,8 +854,9 @@ describe('Submission Api', () => {
       } catch (err) {}
       await chai
         .request(app)
-        // data base is empty so ID shouldn't exist
-        .post('/submission/program/ABCD-EF/clinical/upload')
+        // database is empty so ID shouldn't exist
+        // .post('/submission/program/ABCD-EF/clinical/upload')
+        .post('/submission/program/ABCD-EF/clinical/submissionUpload')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .attach('clinicalFiles', files[0], 'donor.invalid.tsv');
 
@@ -874,15 +879,16 @@ describe('Submission Api', () => {
       }
       chai
         .request(app)
-        .post('/submission/program/ABCD-EF/clinical/upload')
+        // .post('/submission/program/ABCD-EF/clinical/upload')
+        .post('/submission/program/ABCD-EF/clinical/submissionUpload')
         .auth(JWT_ABCDEF, { type: 'bearer' })
         .attach('clinicalFiles', file, 'donor.tsv')
         .end((err: any, res: any) => {
           try {
-            res.body.submission.state.should.eq(SUBMISSION_STATE.OPEN);
+            res.body.state.should.eq(SUBMISSION_STATE.OPEN);
             chai
               .request(app)
-              .post('/submission/program/ABCD-EF/clinical/validate/' + res.body.submission.version)
+              .post('/submission/program/ABCD-EF/clinical/validate/' + res.body.version)
               .auth(JWT_ABCDEF, { type: 'bearer' })
               .end((err: any, res: any) => {
                 try {
@@ -947,34 +953,37 @@ describe('Submission Api', () => {
         }),
       );
 
-      return chai
-        .request(app)
-        .post('/submission/program/ABCD-EF/clinical/upload')
-        .auth(JWT_ABCDEF, { type: 'bearer' })
-        .attach('clinicalFiles', file, 'donor.tsv')
-        .then(async (res: any) => {
-          try {
-            res.should.have.status(200);
-            res.body.submission.state.should.eq(SUBMISSION_STATE.OPEN);
-            const versionId = res.body.submission.version;
-            return chai
-              .request(app)
-              .post('/submission/program/ABCD-EF/clinical/validate/' + versionId)
-              .auth(JWT_ABCDEF, { type: 'bearer' })
-              .then((res: any) => {
-                try {
-                  res.should.have.status(200);
-                  res.body.submission.state.should.eq(SUBMISSION_STATE.VALID);
-                  res.body.submission.clinicalEntities.donor.records.length.should.eq(1);
-                  res.body.submission.clinicalEntities.donor.dataErrors.length.should.eq(0);
-                } catch (err) {
-                  throw err;
-                }
-              });
-          } catch (err) {
-            throw err;
-          }
-        });
+      return (
+        chai
+          .request(app)
+          // .post('/submission/program/ABCD-EF/clinical/upload')
+          .post('/submission/program/ABCD-EF/clinical/submissionUpload')
+          .auth(JWT_ABCDEF, { type: 'bearer' })
+          .attach('clinicalFiles', file, 'donor.tsv')
+          .then(async (res: any) => {
+            try {
+              res.should.have.status(200);
+              res.body.state.should.eq(SUBMISSION_STATE.OPEN);
+              const versionId = res.body.version;
+              return chai
+                .request(app)
+                .post('/submission/program/ABCD-EF/clinical/validate/' + versionId)
+                .auth(JWT_ABCDEF, { type: 'bearer' })
+                .then((res: any) => {
+                  try {
+                    res.should.have.status(200);
+                    res.body.submission.state.should.eq(SUBMISSION_STATE.VALID);
+                    res.body.submission.clinicalEntities.donor.records.length.should.eq(1);
+                    res.body.submission.clinicalEntities.donor.dataErrors.length.should.eq(0);
+                  } catch (err) {
+                    throw err;
+                  }
+                });
+            } catch (err) {
+              throw err;
+            }
+          })
+      );
     });
     it('should return with appropriate stats', async () => {
       const files: Buffer[] = [];
@@ -1075,50 +1084,53 @@ describe('Submission Api', () => {
         ],
         donorId: 1,
       } as Donor);
-      return chai
-        .request(app)
-        .post('/submission/program/ABCD-EF/clinical/upload')
-        .auth(JWT_ABCDEF, { type: 'bearer' })
-        .attach('clinicalFiles', files[0], 'donor.tsv')
-        .attach('clinicalFiles', files[1], 'specimen.tsv')
-        .attach('clinicalFiles', files[2], 'primary_diagnosis.tsv')
-        .then(async (res: any) => {
-          try {
-            res.should.have.status(200);
-            res.body.submission.state.should.eq(SUBMISSION_STATE.OPEN);
-            const versionId = res.body.submission.version;
-            return chai
-              .request(app)
-              .post('/submission/program/ABCD-EF/clinical/validate/' + versionId)
-              .auth(JWT_ABCDEF, { type: 'bearer' })
-              .then((res: any) => {
-                try {
-                  res.should.have.status(200);
-                  res.body.submission.state.should.eq(SUBMISSION_STATE.VALID);
-                  const clinicalEntities: ClinicalEntities = res.body.submission.clinicalEntities;
-                  clinicalEntities.donor.stats.new.should.deep.eq([0]);
-                  clinicalEntities.specimen.stats.updated.should.deep.eq([0]);
-                  clinicalEntities.specimen.stats.noUpdate.should.deep.eq([1]);
-                  clinicalEntities.specimen.dataUpdates.should.deep.eq([
-                    {
-                      fieldName: 'percent_tumour_cells',
-                      index: 0,
-                      info: {
-                        donorSubmitterId: 'ICGC_0001',
-                        newValue: '0.35',
-                        oldValue: '0.5',
+      return (
+        chai
+          .request(app)
+          // .post('/submission/program/ABCD-EF/clinical/upload')
+          .post('/submission/program/ABCD-EF/clinical/submissionUpload')
+          .auth(JWT_ABCDEF, { type: 'bearer' })
+          .attach('clinicalFiles', files[0], 'donor.tsv')
+          .attach('clinicalFiles', files[1], 'specimen.tsv')
+          .attach('clinicalFiles', files[2], 'primary_diagnosis.tsv')
+          .then(async (res: any) => {
+            try {
+              res.should.have.status(200);
+              res.body.state.should.eq(SUBMISSION_STATE.OPEN);
+              const versionId = res.body.version;
+              return chai
+                .request(app)
+                .post('/submission/program/ABCD-EF/clinical/validate/' + versionId)
+                .auth(JWT_ABCDEF, { type: 'bearer' })
+                .then((res: any) => {
+                  try {
+                    res.should.have.status(200);
+                    res.body.submission.state.should.eq(SUBMISSION_STATE.VALID);
+                    const clinicalEntities: ClinicalEntities = res.body.submission.clinicalEntities;
+                    clinicalEntities.donor.stats.new.should.deep.eq([0]);
+                    clinicalEntities.specimen.stats.updated.should.deep.eq([0]);
+                    clinicalEntities.specimen.stats.noUpdate.should.deep.eq([1]);
+                    clinicalEntities.specimen.dataUpdates.should.deep.eq([
+                      {
+                        fieldName: 'percent_tumour_cells',
+                        index: 0,
+                        info: {
+                          donorSubmitterId: 'ICGC_0001',
+                          newValue: '0.35',
+                          oldValue: '0.5',
+                        },
                       },
-                    },
-                  ]);
-                  clinicalEntities.primary_diagnosis.stats.noUpdate.should.deep.eq([0]);
-                } catch (err) {
-                  throw err;
-                }
-              });
-          } catch (err) {
-            throw err;
-          }
-        });
+                    ]);
+                    clinicalEntities.primary_diagnosis.stats.noUpdate.should.deep.eq([0]);
+                  } catch (err) {
+                    throw err;
+                  }
+                });
+            } catch (err) {
+              throw err;
+            }
+          })
+      );
     });
   });
 
@@ -1139,12 +1151,13 @@ describe('Submission Api', () => {
 
       await chai
         .request(app)
-        .post(`/submission/program/${programId}/clinical/upload`)
+        // .post(`/submission/program/${programId}/clinical/upload`)
+        .post('/submission/program/ABCD-EF/clinical/submissionUpload')
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
         .attach('clinicalFiles', donorFile, 'donor.tsv')
         .attach('clinicalFiles', specimenFile, 'specimen.tsv')
         .then((res: any) => {
-          submissionVersion = res.body.submission.version;
+          submissionVersion = res.body.version;
         })
         .catch(err => chai.assert.fail(err));
     };
@@ -1182,16 +1195,6 @@ describe('Submission Api', () => {
           done();
         });
     });
-    it('should return 400 if an active submission is available with a different version ID', async () => {
-      await uploadSubmission();
-      return chai
-        .request(app)
-        .delete(`/submission/program/${programId}/clinical/wrong-version-id/asdf`)
-        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-        .then((res: any) => {
-          res.should.have.status(400);
-        });
-    });
     it('should return 409 if an active submission is available but in PENDING_APPROVAL state', async () => {
       const SUBMISSION_PENDING_APPROVAL = {
         state: SUBMISSION_STATE.PENDING_APPROVAL,
@@ -1207,44 +1210,6 @@ describe('Submission Api', () => {
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
         .then((res: any) => {
           res.should.have.status(409);
-        });
-    });
-    it('should return 200 when clear all is completed, and have no active submission for this program in the DB', async () => {
-      await uploadSubmission();
-      return chai
-        .request(app)
-        .delete(`/submission/program/${programId}/clinical/${submissionVersion}/all`)
-        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-        .then(async (res: any) => {
-          res.should.have.status(200);
-          chai.expect(res.text, 'Response should be empty object').to.equal('{}');
-          chai.expect(res.type, 'Response should be json type').to.equal('application/json');
-
-          const dbRead = await findInDb(dburl, 'activesubmissions', {
-            programId: 'ABCD-EF',
-          });
-          chai
-            .expect(dbRead.length, 'There should be no active submission for this program')
-            .to.equal(0);
-        });
-    });
-
-    it('should return 200 when clear donor is completed, have specimen in clinicalEntities but no donor', async () => {
-      await uploadSubmission();
-      return chai
-        .request(app)
-        .delete(`/submission/program/${programId}/clinical/${submissionVersion}/donor`)
-        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-        .then(async (res: any) => {
-          res.should.have.status(200);
-          chai.expect(res.body.clinicalEntities.donor).to.be.undefined;
-          chai.expect(res.body.clinicalEntities.specimen).to.exist;
-
-          const dbRead = await findInDb(dburl, 'activesubmissions', {
-            programId: 'ABCD-EF',
-          });
-          chai.expect(dbRead[0].clinicalEntities.donor).to.be.undefined;
-          chai.expect(dbRead[0].clinicalEntities.specimen).to.exist;
         });
     });
     it('should clear active submission record if all data is cleared', async () => {
@@ -1271,6 +1236,53 @@ describe('Submission Api', () => {
           chai.expect(dbRead.length).to.equal(0);
         });
     });
+    it('should return 400 if an active submission is available with a different version ID', async () => {
+      await uploadSubmission();
+      return chai
+        .request(app)
+        .delete(`/submission/program/${programId}/clinical/wrong-version-id/asdf`)
+        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+        .then((res: any) => {
+          res.should.have.status(400);
+        });
+    });
+    it('should return 200 when clear all is completed, and have no active submission for this program in the DB', async () => {
+      await uploadSubmission();
+      return chai
+        .request(app)
+        .delete(`/submission/program/${programId}/clinical/${submissionVersion}/all`)
+        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+        .then(async (res: any) => {
+          res.should.have.status(200);
+          chai.expect(res.text, 'Response should be empty object').to.equal('{}');
+          chai.expect(res.type, 'Response should be json type').to.equal('application/json');
+
+          const dbRead = await findInDb(dburl, 'activesubmissions', {
+            programId: 'ABCD-EF',
+          });
+          chai
+            .expect(dbRead.length, 'There should be no active submission for this program')
+            .to.equal(0);
+        });
+    });
+    it('should return 200 when clear donor is completed, have specimen in clinicalEntities but no donor', async () => {
+      await uploadSubmission();
+      return chai
+        .request(app)
+        .delete(`/submission/program/${programId}/clinical/${submissionVersion}/donor`)
+        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+        .then(async (res: any) => {
+          res.should.have.status(200);
+          chai.expect(res.body.clinicalEntities.donor).to.be.undefined;
+          chai.expect(res.body.clinicalEntities.specimen).to.exist;
+
+          const dbRead = await findInDb(dburl, 'activesubmissions', {
+            programId: 'ABCD-EF',
+          });
+          chai.expect(dbRead[0].clinicalEntities.donor).to.be.undefined;
+          chai.expect(dbRead[0].clinicalEntities.specimen).to.exist;
+        });
+    });
   });
 
   describe('clinical-submission: commit', function() {
@@ -1290,15 +1302,18 @@ describe('Submission Api', () => {
         return err;
       }
 
-      return chai
-        .request(app)
-        .post(`/submission/program/${programId}/clinical/upload`)
-        .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
-        .attach('clinicalFiles', file, 'donor.tsv')
-        .then((res: any) => {
-          submissionVersion = res.body.submission.version;
-        })
-        .catch(err => chai.assert.fail(err));
+      return (
+        chai
+          .request(app)
+          // .post(`/submission/program/${programId}/clinical/upload`)
+          .post('/submission/program/ABCD-EF/clinical/submissionUpload')
+          .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
+          .attach('clinicalFiles', file, 'donor.tsv')
+          .then((res: any) => {
+            submissionVersion = res.body.version;
+          })
+          .catch(err => chai.assert.fail(err))
+      );
     };
     const validateSubmission = async () => {
       return chai
@@ -1402,7 +1417,8 @@ describe('Submission Api', () => {
       const files: Buffer[] = [];
       let req = chai
         .request(app)
-        .post(`/submission/program/${programId}/clinical/upload`)
+        // .post(`/submission/program/${programId}/clinical/upload`)
+        .post('/submission/program/ABCD-EF/clinical/submissionUpload')
         .auth(JWT_CLINICALSVCADMIN, { type: 'bearer' });
 
       fileNames.forEach(fn => {
@@ -1415,8 +1431,8 @@ describe('Submission Api', () => {
       });
 
       return req.then((res: any) => {
-        res.body.successful.should.be.true;
-        submissionVersion = res.body.submission.version;
+        res.status.should.be.eq(200);
+        submissionVersion = res.body.version;
       });
     };
 
@@ -1522,7 +1538,6 @@ describe('Submission Api', () => {
           res.body.updatedBy.should.eq('Test User'); // the user who signed off into pending_approval
         });
     });
-
     it('should return 200 when commit is completed', async () => {
       // To get submission into correct state (pending approval) we need to already have a completed submission...
       await uploadSubmission([
@@ -1732,7 +1747,6 @@ describe('Submission Api', () => {
           //   .to.equal('Biopsy');
         });
     });
-
     it('should return 200 when commit is completed - clinical stats', async () => {
       const donorFilter = { programId: programId, submitterId: 'ICGC_0001' };
       // To get submission into correct state (pending approval) we need to already have a completed submission...
@@ -1806,7 +1820,6 @@ describe('Submission Api', () => {
           });
         });
     });
-
     it('TC-SMUIDAV should mark updated invalid donors as valid when they are approved', async () => {
       await createDonorDoc(
         dburl,
@@ -2547,103 +2560,78 @@ const ABCD_REGISTRATION_DOC: ActiveRegistration = {
 };
 const expectedFollowUpBatchSubmissionSchemaErrors = [
   {
-    index: 0,
     type: 'FOUND_IDENTICAL_IDS',
-    info: {
-      value: 'FLL1234',
-      donorSubmitterId: 'ICGC_0001',
-      useAllRecordValues: false,
-      conflictingRows: [1],
-      uniqueIdNames: [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.FOLLOW_UP]],
-    },
     message:
       'You are trying to submit the same [submitter_follow_up_id] in multiple rows. The combination of [submitter_follow_up_id] can only be submitted once per file. The same submitter_specimen_id cannot be resected more than once. Please correct your data submission.',
-    fieldName: FollowupFieldsEnum.submitter_follow_up_id,
+    row: 0,
+    field: FollowupFieldsEnum.submitter_follow_up_id,
+    donorId: 'ICGC_0001',
+    value: 'FLL1234',
+    clinicalType: 'follow_up',
   },
   {
-    index: 1,
     type: 'FOUND_IDENTICAL_IDS',
-    info: {
-      value: 'FLL1234',
-      donorSubmitterId: 'ICGC_0002',
-      useAllRecordValues: false,
-      conflictingRows: [0],
-      uniqueIdNames: [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.FOLLOW_UP]],
-    },
     message:
       'You are trying to submit the same [submitter_follow_up_id] in multiple rows. The combination of [submitter_follow_up_id] can only be submitted once per file. The same submitter_specimen_id cannot be resected more than once. Please correct your data submission.',
-    fieldName: FollowupFieldsEnum.submitter_follow_up_id,
+    row: 1,
+    field: FollowupFieldsEnum.submitter_follow_up_id,
+    donorId: 'ICGC_0002',
+    value: 'FLL1234',
+    clinicalType: 'follow_up',
   },
 ];
 
 const expectedDonorBatchSubmissionSchemaErrors = [
   {
-    index: 1,
     type: 'FOUND_IDENTICAL_IDS',
-    info: {
-      value: 'ICGC_0001',
-      donorSubmitterId: 'ICGC_0001',
-      useAllRecordValues: false,
-      conflictingRows: [2],
-      uniqueIdNames: [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.DONOR]],
-    },
     message:
       'You are trying to submit the same [submitter_donor_id] in multiple rows. The combination of [submitter_donor_id] can only be submitted once per file. The same submitter_specimen_id cannot be resected more than once. Please correct your data submission.',
-    fieldName: DonorFieldsEnum.submitter_donor_id,
+    row: 1,
+    field: DonorFieldsEnum.submitter_donor_id,
+    donorId: 'ICGC_0001',
+    value: 'ICGC_0001',
+    clinicalType: 'donor',
   },
   {
-    index: 2,
     type: 'FOUND_IDENTICAL_IDS',
-    info: {
-      value: 'ICGC_0001',
-      donorSubmitterId: 'ICGC_0001',
-      useAllRecordValues: false,
-      conflictingRows: [1],
-      uniqueIdNames: [ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.DONOR]],
-    },
     message:
       'You are trying to submit the same [submitter_donor_id] in multiple rows. The combination of [submitter_donor_id] can only be submitted once per file. The same submitter_specimen_id cannot be resected more than once. Please correct your data submission.',
-    fieldName: DonorFieldsEnum.submitter_donor_id,
+    row: 2,
+    field: DonorFieldsEnum.submitter_donor_id,
+    donorId: 'ICGC_0001',
+    value: 'ICGC_0001',
+    clinicalType: 'donor',
   },
   {
-    index: 0,
     type: 'INVALID_ENUM_VALUE',
-    info: {
-      value: 'undecided',
-      donorSubmitterId: 'ICGC_0002',
-    },
     message: 'The value is not permissible for this field.',
-    fieldName: DonorFieldsEnum.vital_status,
+    row: 0,
+    field: DonorFieldsEnum.vital_status,
+    donorId: 'ICGC_0002',
+    value: 'undecided',
+    clinicalType: 'donor',
   },
 ];
 const expectedRadiationBatchSubmissionSchemaErrors = [
   {
-    index: 0,
     type: 'FOUND_IDENTICAL_IDS',
-    info: {
-      value: 'ICGC_0001',
-      donorSubmitterId: 'ICGC_0001',
-      useAllRecordValues: false,
-      conflictingRows: [1],
-      uniqueIdNames: ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.RADIATION],
-    },
     message:
       'You are trying to submit the same [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] in multiple rows. The combination of [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] can only be submitted once per file. The same submitter_specimen_id cannot be resected more than once. Please correct your data submission.',
-    fieldName: DonorFieldsEnum.submitter_donor_id,
+    row: 0,
+    field: DonorFieldsEnum.submitter_donor_id,
+    donorId: 'ICGC_0001',
+    value: 'ICGC_0001',
+    clinicalType: 'radiation',
   },
   {
-    index: 1,
     type: 'FOUND_IDENTICAL_IDS',
-    info: {
-      value: 'ICGC_0001',
-      donorSubmitterId: 'ICGC_0001',
-      useAllRecordValues: false,
-      conflictingRows: [0],
-      uniqueIdNames: ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.RADIATION],
-    },
     message:
       'You are trying to submit the same [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] in multiple rows. The combination of [submitter_donor_id, submitter_treatment_id, radiation_therapy_modality] can only be submitted once per file. The same submitter_specimen_id cannot be resected more than once. Please correct your data submission.',
-    fieldName: DonorFieldsEnum.submitter_donor_id,
+    row: 1,
+    field: DonorFieldsEnum.submitter_donor_id,
+    donorId: 'ICGC_0001',
+    value: 'ICGC_0001',
+    clinicalType: 'radiation',
   },
 ];
 

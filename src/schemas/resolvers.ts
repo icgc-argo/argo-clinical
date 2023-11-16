@@ -32,6 +32,8 @@ import clearClinicalRegistration from './clinical-mutations/clearRegistration';
 import clearClinicalSubmission from './clinical-mutations/clearClinicalSubmission';
 import validateClinicalSubmissions from './clinical-mutations/validateClinicalSubmission';
 import commitClinicalSubmission from './clinical-mutations/commitClinicalSubmission';
+import reopenClinicalSubmission from './clinical-mutations/reopenClinicalSubmission';
+import approveClinicalSubmission from './clinical-mutations/approveClinicalSubmission';
 
 const resolvers = {
   Query: {
@@ -48,6 +50,8 @@ const resolvers = {
     commitClinicalSubmission,
     clearClinicalRegistration,
     commitClinicalRegistration,
+    reopenClinicalSubmission,
+    approveClinicalSubmission,
   },
 };
 

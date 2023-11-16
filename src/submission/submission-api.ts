@@ -312,7 +312,7 @@ class SubmissionController {
   }
 
   // GQL Query Methods
-  async commitActiveSubmissionQuery(programId: string, egoToken: string, versionId: string) {
+  async commitActiveSubmissionData(programId: string, egoToken: string, versionId: string) {
     queryHasProgramWriteAccess(programId, egoToken);
 
     const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
@@ -326,7 +326,7 @@ class SubmissionController {
     return activeSubmission;
   }
 
-  async clearFileDataFromActiveSubmissionQuery(
+  async clearFileDataFromActiveSubmission(
     programId: string,
     egoToken: string,
     fileType: string,
@@ -351,7 +351,7 @@ class SubmissionController {
     return updatedSubmission;
   }
 
-  async validateActiveSubmissionQuery(programId: string, egoToken: string, versionId: string) {
+  async validateActiveSubmissionData(programId: string, egoToken: string, versionId: string) {
     queryHasProgramWriteAccess(programId, egoToken);
 
     const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
@@ -364,6 +364,76 @@ class SubmissionController {
       updater,
     });
     return validatedSubmission;
+  }
+
+  async reopenActiveDataSubmission(programId: string, versionId: string, token: string) {
+    const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
+    if (submissionSystemDisabled) return;
+    const updater = ControllerUtils.getUserFromToken(token);
+    const activeSubmission = await submission.operations.reopenClinicalSubmission({
+      versionId,
+      programId,
+      updater,
+    });
+    return activeSubmission;
+  }
+
+  async approveActiveDataSubmission(programId: string, versionId: string, token: string) {
+    const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
+    if (submissionSystemDisabled) return;
+    await submission2Clinical.approveClinicalSubmission({
+      versionId,
+      programId,
+    });
+    return submission2Clinical;
+  }
+
+  async uploadClinicalDataFromTsvFiles(programId: string, uploadedFiles: {}, egoToken: string) {
+    queryHasProgramWriteAccess(programId, egoToken);
+
+    const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
+    if (submissionSystemDisabled || !isValidRequestArgs(programId, uploadedFiles)) return;
+
+    const user = ControllerUtils.getUserFromToken(egoToken);
+    const newClinicalData: NewClinicalEntity[] = [];
+    const tsvParseErrors: SubmissionBatchError[] = [];
+    const clinicalFiles = uploadedFiles as Express.Multer.File[];
+
+    for (const file of clinicalFiles) {
+      try {
+        // check if it has .tsv extension to prevent irregular file names from reaching service level
+        if (!file.originalname.match(/.*\.tsv$/)) {
+          throw new Error('invalid extension');
+        }
+        let records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj> = [];
+        records = await TsvUtils.tsvToJson(file.path);
+        if (records.length === 0) {
+          throw new Error('TSV has no records!');
+        }
+        newClinicalData.push({
+          batchName: file.originalname,
+          creator: user,
+          records: records,
+          fieldNames: Object.keys(records[0]), // every record in a tsv should have same fieldNames
+        });
+      } catch (err) {
+        L.error(`Clinical Submission TSV_PARSING_FAILED`, err);
+        tsvParseErrors.push({
+          message: batchErrorMessage(SubmissionBatchErrorTypes.TSV_PARSING_FAILED),
+          batchNames: [file.originalname],
+          code: SubmissionBatchErrorTypes.TSV_PARSING_FAILED,
+        });
+      }
+    }
+
+    const command: MultiClinicalSubmissionCommand = {
+      newClinicalData: newClinicalData,
+      programId, // req.params.programId,
+      updater: user,
+    };
+
+    const result = await submission.operations.submitMultiClinicalBatches(command);
+    return { ...result, batchErrors: [...result.batchErrors, ...tsvParseErrors] };
   }
 }
 
@@ -391,6 +461,18 @@ const isValidCreateBody = (req: Request, res: Response): boolean => {
   if (req.file === undefined && (req.files === undefined || req.files.length === 0)) {
     L.debug(`File(s) missing`);
     ControllerUtils.badRequest(res, `Clinical file(s) upload required`);
+    return false;
+  }
+  return true;
+};
+
+const isValidRequestArgs = (programId: string, uploadedFiles: {}): boolean => {
+  if (programId === undefined) {
+    L.debug('programId missing');
+    return false;
+  }
+  if (Object.keys(uploadedFiles).length === 0) {
+    L.debug(`File(s) missing`);
     return false;
   }
   return true;

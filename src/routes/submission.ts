@@ -22,6 +22,7 @@ import multer from 'multer';
 
 import { wrapAsync } from '../middleware';
 import submissionAPI from '../submission/submission-api';
+import uploadClinicalSubmissionsData from '../schemas/clinical-mutations/uploadClinicalSubmissions';
 
 const router = express.Router({ mergeParams: true });
 
@@ -32,6 +33,11 @@ router.post(
   '/upload',
   upload.array('clinicalFiles'),
   wrapAsync(submissionAPI.uploadClinicalTsvFiles),
+);
+router.post(
+  '/submissionUpload',
+  upload.array('clinicalFiles'),
+  wrapAsync(uploadClinicalSubmissionsData),
 );
 
 router.post('/validate/:versionId', wrapAsync(submissionAPI.validateActiveSubmission));
