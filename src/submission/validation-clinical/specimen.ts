@@ -81,7 +81,35 @@ export const validate = async (
     checkTimeConflictWithDonor(donorDataToValidateWith, specimenRecord, errors);
   }
 
+  validatePercentTumour(specimenRecord, errors);
+
   return { errors };
+};
+
+const validatePercentTumour = (
+  submittedClinicalRecord: DeepReadonly<SubmittedClinicalRecord>,
+  errors: SubmissionValidationError[],
+) => {
+  const {
+    percent_tumour_cells_measurement_method: submittedMethod,
+    percent_tumour_cells: submittedPercentage,
+  } = submittedClinicalRecord;
+
+  const submissionError =
+    typeof submittedMethod === 'string' &&
+    submittedMethod.trim().toLowerCase() === 'not applicable' &&
+    submittedPercentage;
+
+  if (submissionError) {
+    errors.push(
+      utils.buildSubmissionError(
+        submittedClinicalRecord,
+        DataValidationErrors.SPECIMEN_PERCENTAGE_NOT_APPLICABLE,
+        SpecimenFieldsEnum.percent_tumour_cells,
+        {},
+      ),
+    );
+  }
 };
 
 function checkTimeConflictWithDonor(
