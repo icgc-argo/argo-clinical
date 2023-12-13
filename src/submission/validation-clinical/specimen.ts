@@ -98,7 +98,7 @@ const validatePercentTumour = (
   const submissionError =
     typeof submittedMethod === 'string' &&
     submittedMethod.trim().toLowerCase() === 'not applicable' &&
-    submittedPercentage;
+    notEmpty(submittedPercentage);
 
   if (submissionError) {
     errors.push(
@@ -106,7 +106,6 @@ const validatePercentTumour = (
         submittedClinicalRecord,
         DataValidationErrors.SPECIMEN_PERCENTAGE_NOT_APPLICABLE,
         SpecimenFieldsEnum.percent_tumour_cells,
-        {},
       ),
     );
   }
