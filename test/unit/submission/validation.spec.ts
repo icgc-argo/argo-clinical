@@ -1500,6 +1500,67 @@ describe('data-validator', () => {
       chai.expect(result[ClinicalEntitySchemaNames.SPECIMEN].dataErrors.length).to.eq(0);
     });
 
+    it('should validate Specimen Percent Tumour is blank when Tumour Measurement Method is `Not Applicable`', async () => {
+      const existingDonorAB1Mock: Donor = stubs.validation.existingDonor01();
+      const submittedAB1Records = {};
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.DONOR,
+        submittedAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
+          [SampleRegistrationFieldsEnum.program_id]: 'PEME-CA',
+          [DonorFieldsEnum.vital_status]: 'Alive',
+          index: 0,
+        },
+      );
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.SPECIMEN,
+        submittedAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
+          [SampleRegistrationFieldsEnum.program_id]: 'PEME-CA',
+          [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP1',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
+          [SpecimenFieldsEnum.percent_tumour_cells_measurement_method]: 'Not applicable',
+          [SpecimenFieldsEnum.percent_tumour_cells]: 'Unknown',
+          index: 0,
+        },
+      );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+        submittedAB1Records,
+        {
+          [PrimaryDiagnosisFieldsEnum.submitter_donor_id]: 'AB2',
+          [PrimaryDiagnosisFieldsEnum.program_id]: 'PEME-CA',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
+          index: 0,
+        },
+      );
+
+      const specimenMeasurementErr: SubmissionValidationError = {
+        type: DataValidationErrors['SPECIMEN_PERCENTAGE_NOT_APPLICABLE'],
+        fieldName: SpecimenFieldsEnum.percent_tumour_cells,
+        index: 0,
+        info: {
+          donorSubmitterId: 'AB2',
+          value: 'Unknown',
+        },
+        message:
+          "The 'percent_tumour_cells' field cannot be submitted when 'percent_tumour_cells_measurement_method' = 'Not applicable'",
+      };
+
+      const result = await dv
+        .validateSubmissionData({ AB1: submittedAB1Records }, { AB1: existingDonorAB1Mock })
+        .catch(err => fail(err));
+
+      chai.expect(result[ClinicalEntitySchemaNames.SPECIMEN].dataErrors.length).to.eq(3);
+      // donor is alive so should have no time interval validation errors
+      chai
+        .expect(result[ClinicalEntitySchemaNames.SPECIMEN].dataErrors)
+        .to.deep.include(specimenMeasurementErr);
+    });
+
     it('should detect submitted Lost to Follow Up After Clinical Event ID exists', async () => {
       const existingDonorAB1Mock: Donor = stubs.validation.existingDonor01();
       const submittedAB1Records = {};
