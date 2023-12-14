@@ -38,54 +38,6 @@ import { getEntitySubmitterIdFieldName } from '../../common-model/functions';
 import { checkRelatedEntityExists, getSpecimenFromDonor } from './utils';
 import _ from 'lodash';
 
-export const validate = async (
-  specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
-  existentDonor: DeepReadonly<Donor>,
-  mergedDonor: Donor,
-): Promise<SubmissionValidationOutput> => {
-  // ***Basic pre-check (to prevent execution if missing required variables)***
-
-  if (!specimenRecord || !existentDonor || !mergedDonor) {
-    throw new Error("Can't call this function without donor & donor record");
-  }
-
-  const errors: SubmissionValidationError[] = []; // all errors for record
-
-  const specimen = getSpecimenFromDonor(existentDonor, specimenRecord, errors);
-  if (!specimen) {
-    return { errors };
-  }
-
-  // Primary diagnosis must exist beccause a specimen needs to be associated with a primary diagnosis
-  checkRelatedEntityExists(
-    ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
-    specimenRecord,
-    ClinicalEntitySchemaNames.SPECIMEN,
-    mergedDonor,
-    errors,
-    true,
-  );
-
-  // validate allowed/unallowed fields
-  checkRequiredFields(specimen, specimenRecord, mergedDonor, errors);
-
-  // validate time conflict if needed
-  const donorDataToValidateWith = utils.getDataFromDonorRecordOrDonor(
-    specimenRecord,
-    mergedDonor,
-    errors,
-    SpecimenFieldsEnum.specimen_acquisition_interval,
-  );
-
-  if (donorDataToValidateWith) {
-    checkTimeConflictWithDonor(donorDataToValidateWith, specimenRecord, errors);
-  }
-
-  validatePercentTumour(specimenRecord, errors);
-
-  return { errors };
-};
-
 const validatePercentTumour = (
   submittedClinicalRecord: DeepReadonly<SubmittedClinicalRecord>,
   errors: SubmissionValidationError[],
@@ -228,4 +180,52 @@ const checkRequiredFields = (
       );
     });
   }
+};
+
+export const validate = async (
+  specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
+  existentDonor: DeepReadonly<Donor>,
+  mergedDonor: Donor,
+): Promise<SubmissionValidationOutput> => {
+  // ***Basic pre-check (to prevent execution if missing required variables)***
+
+  if (!specimenRecord || !existentDonor || !mergedDonor) {
+    throw new Error("Can't call this function without donor & donor record");
+  }
+
+  const errors: SubmissionValidationError[] = []; // all errors for record
+
+  const specimen = getSpecimenFromDonor(existentDonor, specimenRecord, errors);
+  if (!specimen) {
+    return { errors };
+  }
+
+  // Primary diagnosis must exist beccause a specimen needs to be associated with a primary diagnosis
+  checkRelatedEntityExists(
+    ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+    specimenRecord,
+    ClinicalEntitySchemaNames.SPECIMEN,
+    mergedDonor,
+    errors,
+    true,
+  );
+
+  // validate allowed/unallowed fields
+  checkRequiredFields(specimen, specimenRecord, mergedDonor, errors);
+
+  // validate time conflict if needed
+  const donorDataToValidateWith = utils.getDataFromDonorRecordOrDonor(
+    specimenRecord,
+    mergedDonor,
+    errors,
+    SpecimenFieldsEnum.specimen_acquisition_interval,
+  );
+
+  if (donorDataToValidateWith) {
+    checkTimeConflictWithDonor(donorDataToValidateWith, specimenRecord, errors);
+  }
+
+  validatePercentTumour(specimenRecord, errors);
+
+  return { errors };
 };
