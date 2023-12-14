@@ -1503,6 +1503,7 @@ describe('data-validator', () => {
     it('should validate Specimen Percent Tumour is blank when Tumour Measurement Method is `Not Applicable`', async () => {
       const existingDonorAB2Mock: Donor = stubs.validation.existingDonor11();
       const submittedAB1Records = {};
+
       ClinicalSubmissionRecordsOperations.addRecord(
         ClinicalEntitySchemaNames.DONOR,
         submittedAB1Records,
@@ -1603,6 +1604,7 @@ describe('data-validator', () => {
     it('should allow blank Specimen Percent Tumour Cells field when Tumour Measurement Method is `Not Applicable`', async () => {
       const existingDonorAB1Mock: Donor = stubs.validation.existingDonor11();
       const submittedAB1Records = {};
+
       ClinicalSubmissionRecordsOperations.addRecord(
         ClinicalEntitySchemaNames.DONOR,
         submittedAB1Records,
@@ -1613,6 +1615,7 @@ describe('data-validator', () => {
           index: 0,
         },
       );
+
       ClinicalSubmissionRecordsOperations.addRecord(
         ClinicalEntitySchemaNames.SPECIMEN,
         submittedAB1Records,
