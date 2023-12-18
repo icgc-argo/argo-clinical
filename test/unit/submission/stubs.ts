@@ -624,5 +624,42 @@ export const stubs = {
         },
       ],
     }),
+
+    existingDonor11: (): Donor => ({
+      schemaMetadata: {
+        isValid: true,
+        lastValidSchemaVersion: '1.0',
+        originalSchemaVersion: '1.0',
+      },
+      _id: 'i8321321',
+      submitterId: 'AB1',
+      programId: 'PEME-CA',
+      donorId: 10,
+      clinicalInfo: {},
+      gender: 'Female',
+      specimens: [
+        {
+          submitterId: 'SP1',
+          specimenTissueSource: 'XYZ',
+          clinicalInfo: {},
+          tumourNormalDesignation: 'Tumour',
+          specimenType: 'Tumour',
+          samples: [
+            {
+              sampleType: 'ST1',
+              submitterId: 'AM1',
+            },
+          ],
+        },
+        {
+          submitterId: 'SP14',
+          specimenTissueSource: 'XYZ',
+          clinicalInfo: {},
+          tumourNormalDesignation: 'Tumour',
+          specimenType: 'Tumour',
+          samples: [],
+        },
+      ],
+    }),
   },
 };
