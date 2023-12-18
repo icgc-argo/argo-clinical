@@ -130,7 +130,7 @@ class ClinicalController {
       .getPaginatedClinicalData(programShortName, query)
       .then(data => data.clinicalEntities);
 
-    const fileEntityName = entityTypes.length === 1 ? `${entityTypes[0]}_` : '';
+    const fileEntityName = entityData.length === 1 ? `${entityData[0].entityName}_` : '';
     const todaysDate = currentDateFormatted();
     const fileName = `filename=${programShortName}_Clinical_Data_${fileEntityName}${todaysDate}.zip`;
     res
