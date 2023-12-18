@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 The Ontario Institute for Cancer Research. All rights reserved
+ * Copyright (c) 2020 The Ontario Institute for Cancer Research. All rights reserved
  *
  * This program and the accompanying materials are made available under the terms of
  * the GNU Affero General Public License v3.0. You should have received a copy of the
@@ -17,25 +17,9 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { GlobalGqlContext } from '../../app';
-import submissionAPI from '../../submission/submission-api';
-import { convertClinicalSubmissionDataToGql } from '../utils';
+import createEgoUtils from '@icgc-argo/ego-token-utils';
 
-const clearClinicalSubmission = async (
-  obj: unknown,
-  args: { programShortName: string; fileType: string; version: string },
-  contextValue: any,
-) => {
-  const { programShortName, fileType, version } = args;
-  const response = await submissionAPI.clearFileDataFromActiveSubmission(
-    programShortName,
-    fileType || 'all',
-    version,
-    (<GlobalGqlContext>contextValue).egoToken,
-  );
-  return convertClinicalSubmissionDataToGql(programShortName, {
-    submission: response,
-  });
-};
+const key = process.env.JWT_TOKEN_PUBLIC_KEY || '';
+const TokenUtils = createEgoUtils(key);
 
-export default clearClinicalSubmission;
+export default TokenUtils;

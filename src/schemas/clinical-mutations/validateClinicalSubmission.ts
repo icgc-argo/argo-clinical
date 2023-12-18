@@ -17,34 +17,26 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import * as express from 'express';
-import multer from 'multer';
+import submissionAPI from '../../submission/submission-api';
+import { GlobalGqlContext } from '../../app';
+import { convertClinicalSubmissionDataToGql } from '../utils';
 
-import { wrapAsync } from '../middleware';
-import submissionAPI from '../submission/submission-api';
-import uploadClinicalSubmissionsData from '../schemas/clinical-mutations/uploadClinicalSubmissions';
+const validateClinicalSubmission = async (
+  obj: unknown,
+  args: { programShortName: string; version: string },
+  contextValue: any,
+) => {
+  const { programShortName, version } = args;
+  const egoToken = (<GlobalGqlContext>contextValue).egoToken;
 
-const router = express.Router({ mergeParams: true });
+  const response = await submissionAPI.validateActiveSubmissionData(
+    programShortName,
+    egoToken,
+    version,
+  );
+  return convertClinicalSubmissionDataToGql(programShortName, {
+    submission: response?.submission,
+  });
+};
 
-const upload = multer({ dest: '/tmp' });
-
-router.get('/', wrapAsync(submissionAPI.getActiveSubmissionByProgramId));
-router.post(
-  '/upload',
-  upload.array('clinicalFiles'),
-  wrapAsync(submissionAPI.uploadClinicalTsvFiles),
-);
-router.post(
-  '/submissionUpload',
-  upload.array('clinicalFiles'),
-  wrapAsync(uploadClinicalSubmissionsData),
-);
-
-router.post('/validate/:versionId', wrapAsync(submissionAPI.validateActiveSubmission));
-router.post('/commit/:versionId', wrapAsync(submissionAPI.commitActiveSubmission));
-router.post('/approve/:versionId', wrapAsync(submissionAPI.approveActiveSubmission));
-router.post('/reopen/:versionId', wrapAsync(submissionAPI.reopenActiveSubmission));
-
-router.delete('/:versionId/:fileType', wrapAsync(submissionAPI.clearFileFromActiveSubmission));
-
-export default router;
+export default validateClinicalSubmission;

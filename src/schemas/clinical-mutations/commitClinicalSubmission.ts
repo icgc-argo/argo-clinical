@@ -17,41 +17,26 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import * as manager from '../../dictionary/manager';
-import * as schemaApi from '../../dictionary/api';
-import * as configService from '../../submission/persisted-config/service';
 import submissionAPI from '../../submission/submission-api';
+import { GlobalGqlContext } from '../../app';
 import { convertClinicalSubmissionDataToGql } from '../utils';
 
-const clinicalSubmissions = async (obj: unknown, args: { programShortName: string }) => {
-  const { programShortName } = args;
+const commitClinicalSubmission = async (
+  obj: unknown,
+  args: { programShortName: string; version: string },
+  contextValue: any,
+) => {
+  const { programShortName, version } = args;
+  const egoToken = (<GlobalGqlContext>contextValue).egoToken;
 
-  const submissionData = await submissionAPI.getActiveSubmissionDataByProgramId(programShortName);
-  return convertClinicalSubmissionDataToGql(programShortName, {
+  const submissionData = await submissionAPI.commitActiveSubmissionData(
+    programShortName,
+    egoToken,
+    version,
+  );
+  return await convertClinicalSubmissionDataToGql(programShortName, {
     submission: submissionData,
   });
 };
 
-export const clinicalSubmissionTypesList = async (
-  obj: unknown,
-  args: { includeFields: string },
-) => {
-  const withFields = args?.includeFields?.toLowerCase() === 'true';
-  const schemas = await schemaApi.getClinicalSchemas(withFields);
-
-  return schemas;
-};
-
-export const clinicalSubmissionSchemaVersion = async () => {
-  const schemaVersion = await manager
-    .instance()
-    .getCurrent()
-    .then(result => result.version);
-  return schemaVersion;
-};
-
-export const clinicalSubmissionSystemDisabled = async (obj: unknown, args: {}) => {
-  return await configService.getSubmissionDisabledState();
-};
-
-export default clinicalSubmissions;
+export default commitClinicalSubmission;

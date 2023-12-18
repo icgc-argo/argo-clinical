@@ -17,11 +17,12 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import {
+  entities as dictionaryEntities,
+  functions as dictionaryService,
+} from '@overturebio-stack/lectern-client';
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
-import { Sample, Donor, ClinicalEntityData } from './clinical-entities';
-import { donorDao, DONOR_DOCUMENT_FIELDS } from './donor-repo';
-import { filterDuplicates } from '../common-model/functions';
 import {
   ClinicalEntityErrorRecord,
   ClinicalEntitySchemaNames,
@@ -30,18 +31,26 @@ import {
   aliasEntityNames,
   allEntityNames,
 } from '../common-model/entities';
-import { Errors } from '../utils';
-import { patchCoreCompletionWithOverride } from '../submission/submission-to-clinical/stat-calculator';
-import { migrationRepo } from '../submission/migration/migration-repo';
-import { MigrationManager } from '../submission/migration/migration-manager';
+import {
+  filterDuplicates,
+  getClinicalEntitiesFromDonorBySchemaName,
+} from '../common-model/functions';
+import * as dictionaryManager from '../dictionary/manager';
+import featureFlags from '../feature-flags';
+import { loggerFor } from '../logger';
+import { checkForProgramAndEntityExceptions } from '../submission/exceptions/exceptions';
 import {
   DictionaryMigration,
   DonorMigrationError,
 } from '../submission/migration/migration-entities';
-import * as dictionaryManager from '../dictionary/manager';
-import { loggerFor } from '../logger';
-import { WorkerTasks } from './service-worker-thread/tasks';
+import { migrationRepo } from '../submission/migration/migration-repo';
+import { prepareForSchemaReProcessing } from '../submission/submission-service';
+import { patchCoreCompletionWithOverride } from '../submission/submission-to-clinical/stat-calculator';
+import { Errors, notEmpty } from '../utils';
+import { ClinicalEntityData, ClinicalInfo, Donor, Sample } from './clinical-entities';
+import { DONOR_DOCUMENT_FIELDS, donorDao } from './donor-repo';
 import { runTaskInWorkerThread } from './service-worker-thread/runner';
+import { WorkerTasks } from './service-worker-thread/tasks';
 
 const L = loggerFor(__filename);
 
@@ -251,11 +260,10 @@ export const getDonorEntityData = async (donorIds: number[]) => {
   const paginationQuery: PaginationQuery = {
     page: 0,
     sort: 'donorId',
-    pageSize: totalDonors,
   };
 
   const taskToRun = WorkerTasks.ExtractEntityDataFromDonors;
-  const taskArgs = [donors, donors.length, allSchemasWithFields, allEntityNames, paginationQuery];
+  const taskArgs = [donors, totalDonors, allSchemasWithFields, allEntityNames, paginationQuery];
 
   // Return paginated data
   const data = await runTaskInWorkerThread<{ clinicalEntities: ClinicalEntityData[] }>(
@@ -290,13 +298,14 @@ export const getClinicalSearchResults = async (
 };
 
 export const getClinicalErrors = async (programId: string, donorIds: number[]) => {
-  // 1. Get the migration errors for every donor requested...
+  // 1. Get the migration errors for every donor requested
   const migrationErrors = await getClinicalEntityMigrationErrors(programId, donorIds);
 
-  // 2. ...and now remove from the list all valid donors (fixed with submissions since the migration)
-  const validErrorRecords = await getValidRecordsPostSubmission(programId, migrationErrors);
+  // 2. Remove from the list all valid donors
+  // (Records fixed with Submissions since last Migration, or which match program Exceptions)
+  const validPostSubmissionErrors = await getValidRecordsPostSubmission(programId, migrationErrors);
 
-  return validErrorRecords;
+  return validPostSubmissionErrors;
 };
 
 interface DonorMigration extends Omit<DictionaryMigration, 'invalidDonorsErrors'> {
@@ -433,10 +442,10 @@ export const getValidRecordsPostSubmission = async (
       invalidDonorIds.includes(donor.donorId),
     ) as DeepReadonly<Donor>[];
 
-    // Returns an array of Error Records organized by Donor
-    // clinicalErrorRecords = [ { donorId, errors: []}, { donorId, errors: []}]
-    clinicalErrors = invalidDonorRecords
-      .map(currentDonor => {
+    // Filters out any Errors for Donors that are now valid post-submission
+    // or which are related to Records which match Program Exceptions
+    const validationErrors = await Promise.all(
+      invalidDonorRecords.map(async currentDonor => {
         const { donorId, submitterId: submitterDonorId } = currentDonor;
 
         const currentDonorErrors = clinicalMigrationErrors
@@ -448,39 +457,94 @@ export const getValidRecordsPostSubmission = async (
           .map(error => error.entityName)
           .filter(filterDuplicates);
 
-        const donorErrorRecords = currentDonorEntities.map(entityName => {
-          const entityValidationErrors =
-            MigrationManager.validateDonorEntityAgainstNewSchema(
-              entityName,
-              migrationDictionary,
+        const donorErrorRecords = await Promise.all(
+          currentDonorEntities.map(async entityName => {
+            const clinicalRecords: ClinicalInfo[] = getClinicalEntitiesFromDonorBySchemaName(
               currentDonor,
-            ) || [];
-
-          const entityErrorRecords: ClinicalEntityErrorRecord[] = entityValidationErrors.map(
-            (validationRecord): ClinicalEntityErrorRecord => ({
-              donorId,
               entityName,
-              ...validationRecord,
-            }),
-          );
+            );
 
-          const errorResponseRecord: ClinicalErrorsResponseRecord = {
-            donorId,
-            submitterDonorId,
-            entityName,
-            errors: entityErrorRecords,
-          };
+            const stringifiedRecords = clinicalRecords
+              .map(record => {
+                return prepareForSchemaReProcessing(record);
+              })
+              .filter(notEmpty);
 
-          return errorResponseRecord;
-        });
+            // Revalidate Donors
+            const { validationErrors, processedRecords } = dictionaryService.processRecords(
+              migrationDictionary,
+              entityName,
+              stringifiedRecords,
+            );
+
+            let filteredErrors = [...validationErrors];
+
+            // Check if any Errors match Exceptions
+            if (featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
+              const exceptionErrors = await matchDonorErrorsWithExceptions(
+                programId,
+                entityName,
+                [...processedRecords],
+                filteredErrors,
+              );
+
+              filteredErrors = exceptionErrors.flat();
+            }
+
+            // Format Error Objects for UI
+            const entityErrorRecords: ClinicalEntityErrorRecord[] = filteredErrors.map(
+              (validationRecord): ClinicalEntityErrorRecord => ({
+                donorId,
+                entityName,
+                ...validationRecord,
+              }),
+            );
+
+            const errorResponseRecord: ClinicalErrorsResponseRecord = {
+              donorId,
+              submitterDonorId,
+              entityName,
+              errors: entityErrorRecords,
+            };
+
+            return errorResponseRecord;
+          }),
+        );
 
         return donorErrorRecords;
-      })
-      .flat();
+      }),
+    );
+    clinicalErrors = validationErrors.flat();
   }
 
   const end = new Date().getTime() / 1000;
   L.debug(`getDonorSubmissionErrorUpdates took ${end - start}s`);
 
   return { clinicalErrors };
+};
+
+/**
+ * Remove from the list all errors which match Program Exceptions
+ */
+export const matchDonorErrorsWithExceptions = async (
+  programId: string,
+  schemaName: ClinicalEntitySchemaNames,
+  processedRecords: DeepReadonly<dictionaryEntities.TypedDataRecord>[],
+  schemaValidationErrors: dictionaryEntities.SchemaValidationError[],
+) => {
+  const exceptionResults = await Promise.all(
+    processedRecords.map(
+      async record =>
+        (
+          await checkForProgramAndEntityExceptions({
+            programId,
+            record,
+            schemaName,
+            schemaValidationErrors,
+          })
+        ).filteredErrors,
+    ),
+  );
+
+  return exceptionResults;
 };
