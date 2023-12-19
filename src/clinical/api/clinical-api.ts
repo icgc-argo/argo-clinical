@@ -130,8 +130,9 @@ class ClinicalController {
       .getPaginatedClinicalData(programShortName, query)
       .then(data => data.clinicalEntities);
 
+    const fileEntityName = entityData.length === 1 ? `${entityData[0].entityName}_` : '';
     const todaysDate = currentDateFormatted();
-    const fileName = `filename=${programShortName}_Clinical_Data_${todaysDate}.zip`;
+    const fileName = `filename=${programShortName}_Clinical_Data_${fileEntityName}${todaysDate}.zip`;
     res
       .status(200)
       .contentType('application/zip')
@@ -412,7 +413,7 @@ class ClinicalController {
 
 function currentDateFormatted() {
   const now = new Date();
-  return `${now.getFullYear()}${now.getMonth()}${now.getDate()}`;
+  return `${now.getFullYear()}${now.getMonth() + 1}${now.getDate()}`;
 }
 
 /**
