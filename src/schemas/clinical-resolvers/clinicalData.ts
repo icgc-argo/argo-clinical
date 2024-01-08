@@ -73,26 +73,24 @@ const convertClinicalDataToGql = (
   return clinicalData;
 };
 
-const clinicalDataResolver = {
-  clinicalData: async (obj: unknown, args: ClinicalDataVariables) => {
-    const { programShortName, filters } = args;
+const clinicalDataResolver = async (obj: unknown, args: ClinicalDataVariables) => {
+  const { programShortName, filters } = args;
 
-    const { clinicalEntities } = await getPaginatedClinicalData(programShortName, filters);
+  const { clinicalEntities } = await getPaginatedClinicalData(programShortName, filters);
 
-    const clinicalEntityData = convertClinicalDataToGql(programShortName, clinicalEntities);
+  const clinicalEntityData = convertClinicalDataToGql(programShortName, clinicalEntities);
 
-    const { clinicalErrors } = await errorResolver(clinicalEntityData, {
-      programShortName,
-      donorIds: [],
-    });
+  const { clinicalErrors } = await errorResolver(clinicalEntityData, {
+    programShortName,
+    donorIds: [],
+  });
 
-    const clinicalData: ClinicalEntityDataResponse = {
-      ...clinicalEntityData,
-      clinicalErrors,
-    };
+  const clinicalData: ClinicalEntityDataResponse = {
+    ...clinicalEntityData,
+    clinicalErrors,
+  };
 
-    return clinicalData;
-  },
+  return clinicalData;
 };
 
 export default clinicalDataResolver;
