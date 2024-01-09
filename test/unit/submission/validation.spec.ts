@@ -1500,6 +1500,158 @@ describe('data-validator', () => {
       chai.expect(result[ClinicalEntitySchemaNames.SPECIMEN].dataErrors.length).to.eq(0);
     });
 
+    it('should validate Specimen Percent Tumour is blank when Tumour Measurement Method is `Not Applicable`', async () => {
+      const existingDonorAB2Mock: Donor = stubs.validation.existingDonor11();
+      const submittedAB1Records = {};
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.DONOR,
+        submittedAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
+          [SampleRegistrationFieldsEnum.program_id]: 'PEME-CA',
+          [DonorFieldsEnum.vital_status]: 'Alive',
+          index: 0,
+        },
+      );
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.SPECIMEN,
+        submittedAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
+          [SampleRegistrationFieldsEnum.program_id]: 'PEME-CA',
+          [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP1',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
+          [SpecimenFieldsEnum.tumour_grading_system]: 'Gleason grade group system',
+          [SpecimenFieldsEnum.tumour_grade]: 'Low grade',
+          [SpecimenFieldsEnum.reference_pathology_confirmed]: 'Yes',
+          [SpecimenFieldsEnum.tumour_histological_type]: '8410/3',
+          [SpecimenFieldsEnum.percent_tumour_cells_measurement_method]: 'Not applicable',
+          [SpecimenFieldsEnum.percent_tumour_cells]: 'Unknown',
+          index: 0,
+        },
+      );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.SPECIMEN,
+        submittedAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
+          [SampleRegistrationFieldsEnum.program_id]: 'PEME-CA',
+          [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP14',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
+          [SpecimenFieldsEnum.tumour_grading_system]: 'Gleason grade group system',
+          [SpecimenFieldsEnum.tumour_grade]: 'Low grade',
+          [SpecimenFieldsEnum.reference_pathology_confirmed]: 'Yes',
+          [SpecimenFieldsEnum.tumour_histological_type]: '8410/3',
+          [SpecimenFieldsEnum.percent_tumour_cells_measurement_method]: 'Not applicable',
+          [SpecimenFieldsEnum.percent_tumour_cells]: 0.5,
+          index: 0,
+        },
+      );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+        submittedAB1Records,
+        {
+          [PrimaryDiagnosisFieldsEnum.submitter_donor_id]: 'AB2',
+          [PrimaryDiagnosisFieldsEnum.program_id]: 'PEME-CA',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
+          [PrimaryDiagnosisFieldsEnum.clinical_tumour_staging_system]: 'Ann Arbor staging system',
+          index: 0,
+        },
+      );
+
+      const specimenMeasurementErr: SubmissionValidationError = {
+        type: DataValidationErrors['SPECIMEN_PERCENTAGE_NOT_APPLICABLE'],
+        fieldName: SpecimenFieldsEnum.percent_tumour_cells,
+        index: 0,
+        info: {
+          donorSubmitterId: 'AB2',
+          value: 'Unknown',
+        },
+        message:
+          "The 'percent_tumour_cells' field cannot be submitted when 'percent_tumour_cells_measurement_method' = 'Not applicable'",
+      };
+
+      const specimenMeasurementErr2: SubmissionValidationError = {
+        type: DataValidationErrors['SPECIMEN_PERCENTAGE_NOT_APPLICABLE'],
+        fieldName: SpecimenFieldsEnum.percent_tumour_cells,
+        index: 0,
+        info: {
+          donorSubmitterId: 'AB2',
+          value: 0.5,
+        },
+        message:
+          "The 'percent_tumour_cells' field cannot be submitted when 'percent_tumour_cells_measurement_method' = 'Not applicable'",
+      };
+
+      const result = await dv
+        .validateSubmissionData({ AB2: submittedAB1Records }, { AB2: existingDonorAB2Mock })
+        .catch(err => fail(err));
+
+      chai.expect(result[ClinicalEntitySchemaNames.SPECIMEN].dataErrors.length).to.eq(2);
+
+      chai
+        .expect(result[ClinicalEntitySchemaNames.SPECIMEN].dataErrors)
+        .to.deep.include(specimenMeasurementErr);
+
+      chai
+        .expect(result[ClinicalEntitySchemaNames.SPECIMEN].dataErrors)
+        .to.deep.include(specimenMeasurementErr2);
+    });
+
+    it('should allow blank Specimen Percent Tumour Cells field when Tumour Measurement Method is `Not Applicable`', async () => {
+      const existingDonorAB1Mock: Donor = stubs.validation.existingDonor11();
+      const submittedAB1Records = {};
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.DONOR,
+        submittedAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
+          [SampleRegistrationFieldsEnum.program_id]: 'PEME-CA',
+          [DonorFieldsEnum.vital_status]: 'Alive',
+          index: 0,
+        },
+      );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.SPECIMEN,
+        submittedAB1Records,
+        {
+          [SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB2',
+          [SampleRegistrationFieldsEnum.program_id]: 'PEME-CA',
+          [SampleRegistrationFieldsEnum.submitter_specimen_id]: 'SP1',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
+          [SpecimenFieldsEnum.tumour_grading_system]: 'Gleason grade group system',
+          [SpecimenFieldsEnum.tumour_grade]: 'Low grade',
+          [SpecimenFieldsEnum.reference_pathology_confirmed]: 'Yes',
+          [SpecimenFieldsEnum.tumour_histological_type]: '8410/3',
+          [SpecimenFieldsEnum.percent_tumour_cells_measurement_method]: 'Not applicable',
+          index: 0,
+        },
+      );
+
+      ClinicalSubmissionRecordsOperations.addRecord(
+        ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+        submittedAB1Records,
+        {
+          [PrimaryDiagnosisFieldsEnum.submitter_donor_id]: 'AB2',
+          [PrimaryDiagnosisFieldsEnum.program_id]: 'PEME-CA',
+          [PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
+          [PrimaryDiagnosisFieldsEnum.clinical_tumour_staging_system]: 'Ann Arbor staging system',
+          index: 0,
+        },
+      );
+
+      const result = await dv
+        .validateSubmissionData({ AB1: submittedAB1Records }, { AB1: existingDonorAB1Mock })
+        .catch(err => fail(err));
+
+      chai.expect(result[ClinicalEntitySchemaNames.SPECIMEN].dataErrors.length).to.eq(0);
+    });
+
     it('should detect submitted Lost to Follow Up After Clinical Event ID exists', async () => {
       const existingDonorAB1Mock: Donor = stubs.validation.existingDonor01();
       const submittedAB1Records = {};
@@ -2134,7 +2286,6 @@ describe('data-validator', () => {
         SpecimenFieldsEnum.pathological_tumour_staging_system,
         SpecimenFieldsEnum.pathological_stage_group,
         SpecimenFieldsEnum.percent_stromal_cells,
-        SpecimenFieldsEnum.percent_tumour_cells,
         SpecimenFieldsEnum.percent_proliferating_cells,
         SpecimenFieldsEnum.percent_inflammatory_tissue,
         SpecimenFieldsEnum.percent_necrosis,
@@ -2193,7 +2344,6 @@ describe('data-validator', () => {
       const requiredFields = [
         SpecimenFieldsEnum.tumour_grading_system,
         SpecimenFieldsEnum.tumour_grade,
-        SpecimenFieldsEnum.percent_tumour_cells,
         SpecimenFieldsEnum.percent_tumour_cells_measurement_method,
         SpecimenFieldsEnum.tumour_histological_type,
         SpecimenFieldsEnum.reference_pathology_confirmed,

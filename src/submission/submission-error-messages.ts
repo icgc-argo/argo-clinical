@@ -30,6 +30,8 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
     `Samples can only be registered to a single specimen. This sample has already been registered to specimen ${errorData.info.otherSpecimenSubmitterId}. Please correct your file or contact DCC to update the registered data.`,
   SPECIMEN_BELONGS_TO_OTHER_DONOR: errorData =>
     `Specimens can only be registered to a single donor. This specimen has already been registered to donor ${errorData.info.otherDonorSubmitterId}. Please correct your file or contact DCC to update the registered data.`,
+  SPECIMEN_PERCENTAGE_NOT_APPLICABLE: errorData =>
+    `The '${errorData.fieldName}' field cannot be submitted when 'percent_tumour_cells_measurement_method' = 'Not applicable'`,
   INVALID_PROGRAM_ID: () => 'Program ID does not match. Please include the correct Program ID.',
   MUTATING_EXISTING_DATA: errorData =>
     `The value does not match the previously registered value of ${errorData.info.originalValue}. Please correct your file or contact DCC to update the registered data.`,

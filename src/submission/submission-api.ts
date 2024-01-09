@@ -31,11 +31,14 @@ import {
   SubmissionBatchErrorTypes,
   LegacyICGCImportRecord,
 } from './submission-entities';
-import { HasFullWriteAccess, HasProgramWriteAccess } from '../decorators';
+import {
+  queryHasProgramWriteAccess,
+  HasFullWriteAccess,
+  HasProgramWriteAccess,
+} from '../decorators';
 import _ from 'lodash';
 import { batchErrorMessage } from './submission-error-messages';
 import * as fs from 'fs';
-import { GlobalGqlContext } from '../app';
 
 const L = loggerFor(__filename);
 const fsPromises = fs.promises;
@@ -190,7 +193,6 @@ class SubmissionController {
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async validateActiveSubmission(req: Request, res: Response) {
-    if (await submissionSystemIsDisabled(res)) return;
     const { versionId, programId } = req.params;
     const updater = ControllerUtils.getUserFromRequest(req);
     const result = await submission.operations.validateMultipleClinical({
@@ -202,19 +204,6 @@ class SubmissionController {
       return res.status(200).send(result);
     }
     return res.status(422).send(result);
-  }
-
-  // @HasProgramWriteAccess((req: Request) => req.params.programId)
-  async validateActiveSubmissionData(programId: string, versionId: string, token: string) {
-    const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
-    if (submissionSystemDisabled) return;
-    const updater = ControllerUtils.getUserFromToken(token);
-    const validatedSubmission = await submission.operations.validateMultipleClinical({
-      versionId,
-      programId,
-      updater,
-    });
-    return validatedSubmission;
   }
 
   @HasProgramWriteAccess((req: Request) => req.params.programId)
@@ -233,27 +222,6 @@ class SubmissionController {
     return res.status(200).send(updatedSubmission || {});
   }
 
-  // @HasProgramWriteAccess((programId: string) => programId)
-  async clearFileDataFromActiveSubmission(
-    programId: string,
-    fileType: string,
-    versionId: string,
-    token: string,
-  ) {
-    const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
-    if (submissionSystemDisabled) return;
-    const updater = ControllerUtils.getUserFromToken(token);
-    L.debug(`Entering clearFileDataFromActiveSubmission: ${{ programId, versionId, fileType }}`);
-    const updatedSubmission = await submission.operations.clearSubmissionData({
-      programId,
-      versionId,
-      fileType,
-      updater,
-    });
-    // Handle case where submission was cleared and is now undefined
-    return updatedSubmission;
-  }
-
   @HasProgramWriteAccess((req: Request) => req.params.programId)
   async commitActiveSubmission(req: Request, res: Response) {
     if (await submissionSystemIsDisabled(res)) return;
@@ -265,19 +233,6 @@ class SubmissionController {
       updater,
     });
     return res.status(200).send(activeSubmission);
-  }
-
-  // @HasProgramWriteAccess((req: Request) => req.params.programId)
-  async commitActiveSubmissionData(programId: string, versionId: string, token: string) {
-    const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
-    if (submissionSystemDisabled) return;
-    const updater = ControllerUtils.getUserFromToken(token);
-    const activeSubmission = await submission2Clinical.commitClinicalSubmission({
-      versionId,
-      programId,
-      updater,
-    });
-    return activeSubmission;
   }
 
   @HasFullWriteAccess()
@@ -355,6 +310,131 @@ class SubmissionController {
       .status(200)
       .send(await submission.operations.adminDeleteSamples(programId, samplesSubmitterIds, dryRun));
   }
+
+  // GQL Query Methods
+  async commitActiveSubmissionData(programId: string, egoToken: string, versionId: string) {
+    queryHasProgramWriteAccess(programId, egoToken);
+
+    const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
+    if (submissionSystemDisabled) return;
+    const updater = ControllerUtils.getUserFromToken(egoToken);
+    const activeSubmission = await submission2Clinical.commitClinicalSubmission({
+      versionId,
+      programId,
+      updater,
+    });
+    return activeSubmission;
+  }
+
+  async clearFileDataFromActiveSubmission(
+    programId: string,
+    egoToken: string,
+    fileType: string,
+    versionId: string,
+  ) {
+    queryHasProgramWriteAccess(programId, egoToken);
+
+    const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
+    if (submissionSystemDisabled) return;
+
+    const updater = ControllerUtils.getUserFromToken(egoToken);
+    L.debug(
+      `Entering clearFileDataFromActiveSubmissionQuery: ${{ programId, versionId, fileType }}`,
+    );
+    const updatedSubmission = await submission.operations.clearSubmissionData({
+      programId,
+      versionId,
+      fileType,
+      updater,
+    });
+    // Handle case where submission was cleared and is now undefined
+    return updatedSubmission;
+  }
+
+  async validateActiveSubmissionData(programId: string, egoToken: string, versionId: string) {
+    queryHasProgramWriteAccess(programId, egoToken);
+
+    const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
+    if (submissionSystemDisabled) return;
+
+    const updater = ControllerUtils.getUserFromToken(egoToken);
+    const validatedSubmission = await submission.operations.validateMultipleClinical({
+      versionId,
+      programId,
+      updater,
+    });
+    return validatedSubmission;
+  }
+
+  async reopenActiveDataSubmission(programId: string, versionId: string, token: string) {
+    const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
+    if (submissionSystemDisabled) return;
+    const updater = ControllerUtils.getUserFromToken(token);
+    const activeSubmission = await submission.operations.reopenClinicalSubmission({
+      versionId,
+      programId,
+      updater,
+    });
+    return activeSubmission;
+  }
+
+  async approveActiveDataSubmission(programId: string, versionId: string, token: string) {
+    const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
+    if (submissionSystemDisabled) return;
+    await submission2Clinical.approveClinicalSubmission({
+      versionId,
+      programId,
+    });
+    return submission2Clinical;
+  }
+
+  async uploadClinicalDataFromTsvFiles(programId: string, uploadedFiles: {}, egoToken: string) {
+    queryHasProgramWriteAccess(programId, egoToken);
+
+    const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
+    if (submissionSystemDisabled || !isValidRequestArgs(programId, uploadedFiles)) return;
+
+    const user = ControllerUtils.getUserFromToken(egoToken);
+    const newClinicalData: NewClinicalEntity[] = [];
+    const tsvParseErrors: SubmissionBatchError[] = [];
+    const clinicalFiles = uploadedFiles as Express.Multer.File[];
+
+    for (const file of clinicalFiles) {
+      try {
+        // check if it has .tsv extension to prevent irregular file names from reaching service level
+        if (!file.originalname.match(/.*\.tsv$/)) {
+          throw new Error('invalid extension');
+        }
+        let records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj> = [];
+        records = await TsvUtils.tsvToJson(file.path);
+        if (records.length === 0) {
+          throw new Error('TSV has no records!');
+        }
+        newClinicalData.push({
+          batchName: file.originalname,
+          creator: user,
+          records: records,
+          fieldNames: Object.keys(records[0]), // every record in a tsv should have same fieldNames
+        });
+      } catch (err) {
+        L.error(`Clinical Submission TSV_PARSING_FAILED`, err);
+        tsvParseErrors.push({
+          message: batchErrorMessage(SubmissionBatchErrorTypes.TSV_PARSING_FAILED),
+          batchNames: [file.originalname],
+          code: SubmissionBatchErrorTypes.TSV_PARSING_FAILED,
+        });
+      }
+    }
+
+    const command: MultiClinicalSubmissionCommand = {
+      newClinicalData: newClinicalData,
+      programId, // req.params.programId,
+      updater: user,
+    };
+
+    const result = await submission.operations.submitMultiClinicalBatches(command);
+    return { ...result, batchErrors: [...result.batchErrors, ...tsvParseErrors] };
+  }
 }
 
 const submissionSystemIsDisabled = async (res: Response) => {
@@ -381,6 +461,18 @@ const isValidCreateBody = (req: Request, res: Response): boolean => {
   if (req.file === undefined && (req.files === undefined || req.files.length === 0)) {
     L.debug(`File(s) missing`);
     ControllerUtils.badRequest(res, `Clinical file(s) upload required`);
+    return false;
+  }
+  return true;
+};
+
+const isValidRequestArgs = (programId: string, uploadedFiles: {}): boolean => {
+  if (programId === undefined) {
+    L.debug('programId missing');
+    return false;
+  }
+  if (Object.keys(uploadedFiles).length === 0) {
+    L.debug(`File(s) missing`);
     return false;
   }
   return true;
