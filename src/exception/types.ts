@@ -27,7 +27,7 @@ export type ExceptionRecord = {
   program_name: string;
   schema: string;
   requested_core_field: string;
-  requested_exception_value: string;
+  requested_exception_value: string | undefined;
 };
 
 // program exception
@@ -113,8 +113,7 @@ const isExceptionRecordCheck = (input: any) => {
     'requested_core_field' in input &&
     typeof input.requested_core_field === 'string' &&
     // requested_exception_value must exist and be string and be in enum list
-    'requested_exception_value' in input &&
-    typeof input.requested_exception_value === 'string'
+    'requested_exception_value' in input
   );
 };
 

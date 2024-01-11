@@ -65,7 +65,7 @@ const validateFieldValueWithExceptions = ({
   fieldValue: string;
   validationErrorFieldName: string;
 }): boolean => {
-  const allowedValues: Set<string> = new Set();
+  const allowedValues: Set<string | undefined> = new Set();
 
   // program level is applicable to ALL donors
   if (programException) {
