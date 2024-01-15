@@ -62,7 +62,7 @@ const validateFieldValueWithExceptions = ({
   programException: ProgramException | null;
   entityException: EntityException | null;
   schemaName: ClinicalEntitySchemaNames;
-  fieldValue: string;
+  fieldValue: string | undefined;
   validationErrorFieldName: string;
 }): boolean => {
   const allowedValues: Set<string | undefined> = new Set();
@@ -95,7 +95,7 @@ const validateFieldValueWithExceptions = ({
           .forEach(exception => exceptions.push(exception));
         break;
       default:
-        // schema is neither speicmen nor followup, do not filter for entity exceptions
+        // schema is neither specimen nor followup, do not filter for entity exceptions
         break;
     }
 
@@ -129,7 +129,8 @@ const isSingleString = (value: DeepReadonly<dictionaryEntities.SchemaTypes>): va
  */
 const isAllowedTypeForException = (
   value: DeepReadonly<dictionaryEntities.SchemaTypes>,
-): value is string | [string] => typeof value === 'string' || isSingleString(value);
+): value is string | [string] | undefined =>
+  typeof value === 'string' || isSingleString(value) || typeof value === 'undefined';
 
 /**
  * Check if a valid exception exists and the record value matches it.
@@ -188,8 +189,9 @@ export const checkForProgramAndEntityExceptions = async ({
     // get normalized value for record, from either the string value or from the single string inside of the array.
     // we should know from `isAllowedTypeForException` that the fieldValue is one of those two types.
     const stringFieldValue = isSingleString(fieldValue) ? fieldValue[0] : fieldValue;
-    const normalizedString = normalizeExceptionValue(stringFieldValue);
-    const normalizedValue = isSingleString(fieldValue) ? [normalizedString] : normalizedString;
+    const normalizedString = stringFieldValue
+      ? normalizeExceptionValue(stringFieldValue)
+      : stringFieldValue;
 
     const valueHasException = validateFieldValueWithExceptions({
       record,
@@ -202,9 +204,17 @@ export const checkForProgramAndEntityExceptions = async ({
 
     if (valueHasException) {
       // ensure value is normalized exception value
+      // normalized value keeps this as array for array fields, string for string fields, or undefined
+      const normalizedValue =
+        typeof normalizedString === 'undefined'
+          ? normalizedString
+          : isSingleString(fieldValue)
+          ? [normalizedString]
+          : normalizedString;
+
       const normalizedExceptionRecord = {
         ...record,
-        [validationErrorFieldName]: normalizedValue, // normalized value keeps this as array for array fields, or string for string fields
+        [validationErrorFieldName]: normalizedValue,
       };
       normalizedRecord = normalizedExceptionRecord;
     } else {
