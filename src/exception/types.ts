@@ -85,6 +85,7 @@ export type EntityExceptionSchemaNames = Extract<
 export const ExceptionValue = {
   Unknown: 'Unknown',
   NotApplicable: 'Not applicable',
+  Empty: '',
 } as const;
 
 export type ExceptionValueType = ObjectValues<typeof ExceptionValue>;
@@ -112,7 +113,7 @@ const isExceptionRecordCheck = (input: any) => {
     // requested_core_field must exist and be string
     'requested_core_field' in input &&
     typeof input.requested_core_field === 'string' &&
-    // requested_exception_value must exist and be string and be in enum list
+    // requested_exception_value must exist
     'requested_exception_value' in input
   );
 };

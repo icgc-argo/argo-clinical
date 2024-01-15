@@ -140,17 +140,7 @@ export const checkRequestedValue: Validator<ExceptionRecord> = ({ record, fieldN
   const validRequests: string[] = Object.values(ExceptionValue);
   const requestedExceptionValue = record.requested_exception_value;
 
-  if (requestedExceptionValue === undefined) {
-    return {
-      result: ValidationResultType.UNDEFINED,
-      message: `${fieldName} value is not defined`,
-    };
-  } else if (typeof requestedExceptionValue !== 'string') {
-    return {
-      result: ValidationResultType.TYPE_ERROR,
-      message: `${fieldName} value is not a string`,
-    };
-  } else if (!validRequests.includes(requestedExceptionValue)) {
+  if (requestedExceptionValue !== undefined && !validRequests.includes(requestedExceptionValue)) {
     return {
       result: ValidationResultType.INVALID,
       message: `'${fieldName}' value is not valid. Must be one of [${validRequests.join(', ')}]`,
