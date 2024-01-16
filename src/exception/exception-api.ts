@@ -40,7 +40,6 @@ const L = loggerFor(__filename);
 type ValidateRecords<T> = (records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj>) => ReadonlyArray<T>;
 
 const validateProgramExceptionRecords: ValidateRecords<ProgramExceptionRecord> = records => {
-  // temporary
   const normalizedRecords = records.map(exceptionRecord => ({
     ...exceptionRecord,
     requested_exception_value:
