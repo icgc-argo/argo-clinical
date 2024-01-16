@@ -206,9 +206,7 @@ export const checkForProgramAndEntityExceptions = async ({
       // ensure value is normalized exception value
       // normalized value keeps this as array for array fields, string for string fields, or undefined
       const normalizedValue =
-        typeof normalizedString === 'undefined'
-          ? normalizedString
-          : isSingleString(fieldValue)
+        typeof normalizedString !== 'undefined' && isSingleString(fieldValue)
           ? [normalizedString]
           : normalizedString;
 
