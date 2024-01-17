@@ -166,7 +166,7 @@ export const checkRequestedValue: Validator<ExceptionRecord> = async ({ record, 
   } else {
     return {
       result: ValidationResultType.INVALID,
-      message: `The requested_core_field '${record.requested_core_field}' does not match schema '${record.schema}'. Please update your exception request form.`,
+      message: `The requested core field '${record.requested_core_field}' does not match schema '${record.schema}'. Please update your exception request form.`,
     };
   }
 

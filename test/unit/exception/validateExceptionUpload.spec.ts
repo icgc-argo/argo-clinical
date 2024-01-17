@@ -157,13 +157,23 @@ describe('program exception service', () => {
       expectZeroValidationErrors(result);
     });
 
-    it('[positive] should return successfully if exception value is undefined', async () => {
+    it('[positive] should return successfully if exception value is blank for numeric field', async () => {
       const record = createRecord({
         requested_core_field: 'treatment_duration',
         requested_exception_value: '',
       });
       const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
       expectZeroValidationErrors(result);
+    });
+
+    it('[negative] should return errors if exception value is string for numeric field', async () => {
+      const record = createRecord({
+        requested_core_field: 'treatment_duration',
+      });
+      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
+      expectToHaveNumberOfErrors(result);
+      console.log('\nresult', result);
+      expectValidationError(result[0], 1, ValidationResultType.INVALID);
     });
 
     it('[negative] should return errors if exception value is invalid', async () => {
