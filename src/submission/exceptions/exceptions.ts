@@ -204,7 +204,7 @@ export const checkForProgramAndEntityExceptions = async ({
       // ensure value is normalized exception value
       const normalizedExceptionRecord = {
         ...record,
-        [validationErrorFieldName]: normalizedValue, // normalized value keeps this as array for array fields, or string for string fields,
+        [validationErrorFieldName]: normalizedValue, // normalized value keeps this as array for array fields, or string for string fields
       };
       normalizedRecord = normalizedExceptionRecord;
     } else {
