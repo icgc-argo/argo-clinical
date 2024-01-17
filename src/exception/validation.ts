@@ -97,19 +97,17 @@ export const checkCoreField: Validator<ExceptionRecord> = async ({ record, field
     };
   }
 
-  const fieldFilter = (field: dictionaryEntities.FieldDefinition): boolean => {
-    return field.name === requestedCoreField && !!field.meta?.core;
-  };
+  const coreFieldFilter = (field: dictionaryEntities.FieldDefinition): boolean =>
+    field.name === requestedCoreField && !!field.meta?.core;
+  const schemaFilter = (schema: dictionaryEntities.SchemaDefinition): boolean =>
+    schema.name === record.schema;
 
-  const schemaFilter = (schema: dictionaryEntities.SchemaDefinition): boolean => {
-    return schema.name === record.schema;
-  };
+  const existingDictionarySchema = await currentDictionary.getSchemasWithFields(
+    schemaFilter,
+    coreFieldFilter,
+  );
 
-  const existingDictionary = (await currentDictionary.getCurrent()).schemas
-    .filter(schemaFilter)
-    .map(schema => ({ ...schema, fields: schema.fields.filter(fieldFilter) }));
-
-  const isValid = existingDictionary[0] && existingDictionary[0].fields.length > 0;
+  const isValid = existingDictionarySchema[0] && existingDictionarySchema[0].fields.length > 0;
   return {
     result: isValid ? ValidationResultType.VALID : ValidationResultType.INVALID,
     message: isValid
@@ -135,23 +133,44 @@ export const checkProgramId: Validator<ProgramExceptionRecord> = ({
   return { result, message };
 };
 
-export const checkRequestedValue: Validator<ExceptionRecord> = ({ record, fieldName }) => {
-  const validRequests: string[] = Object.values(ExceptionValue);
-  const requestedExceptionValue = record.requested_exception_value;
+export const checkRequestedValue: Validator<ExceptionRecord> = async ({ record, fieldName }) => {
+  const currentDictionary = await dictionaryManager.instance();
 
-  // if number {}
-  // else
-  if (
-    typeof requestedExceptionValue === 'string' &&
-    !validRequests.includes(requestedExceptionValue)
-  ) {
+  const validRequests: string[] = Object.values(ExceptionValue);
+  const { requested_core_field, requested_exception_value, schema: schemaName } = record;
+
+  const fieldFilter = (field: dictionaryEntities.FieldDefinition): boolean =>
+    field.name === requested_core_field;
+
+  const schemaFilter = (schemaDefintion: dictionaryEntities.SchemaDefinition): boolean =>
+    schemaDefintion.name === schemaName;
+
+  const schemaDefinition = (await currentDictionary.getCurrent()).schemas.find(schemaFilter);
+
+  const exceptionFieldDefinition = schemaDefinition?.fields.find(fieldFilter);
+
+  if (exceptionFieldDefinition) {
+    const { valueType } = exceptionFieldDefinition;
+
+    if ((valueType === 'number' || valueType === 'integer') && requested_exception_value !== '') {
+      return {
+        result: ValidationResultType.INVALID,
+        message: `Requested value '${requested_exception_value}' is not valid. Only blank values are allowed for numeric fields.`,
+      };
+    } else if (valueType === 'string' && !validRequests.includes(requested_exception_value)) {
+      return {
+        result: ValidationResultType.INVALID,
+        message: `'${fieldName}' value is not valid. Must be one of [${validRequests.join(', ')}]`,
+      };
+    }
+  } else {
     return {
       result: ValidationResultType.INVALID,
-      message: `'${fieldName}' value is not valid. Must be one of [${validRequests.join(', ')}]`,
+      message: `The requested_core_field '${record.requested_core_field}' does not match schema '${record.schema}'. Please update your exception request form.`,
     };
-  } else {
-    return { result: ValidationResultType.VALID, message: '' };
   }
+
+  return { result: ValidationResultType.VALID, message: '' };
 };
 
 export const checkForEmptyField: Validator<ExceptionRecord> = ({
@@ -182,9 +201,8 @@ export const checkIsValidDictionarySchema: Validator<ExceptionRecord> = async ({
 
   const currentDictionary = await dictionaryManager.instance();
 
-  const schemaFilter = (schema: dictionaryEntities.SchemaDefinition): boolean => {
-    return schema.name === fieldValue;
-  };
+  const schemaFilter = (schema: dictionaryEntities.SchemaDefinition): boolean =>
+    schema.name === fieldValue;
 
   const existingDictionarySchema = await currentDictionary.getSchemasWithFields(schemaFilter);
 

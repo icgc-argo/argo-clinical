@@ -60,7 +60,10 @@ function createRecord(
 const mockSchema = [
   {
     name: 'treatment',
-    fields: [{ name: 'is_primary_treatment', meta: { core: true } }],
+    fields: [
+      { name: 'is_primary_treatment', valueType: 'string', meta: { core: true } },
+      { name: 'treatment_duration', valueType: 'number', meta: { core: true } },
+    ],
   },
 ];
 
@@ -103,10 +106,9 @@ describe('program exception service', () => {
 
   describe('check for empty fields', () => {
     it('[positive] should succeed if no empty fields', async () => {
-      const record = createRecord({ schema: '' });
+      const record = createRecord();
       const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
-      expectToHaveNumberOfErrors(result, 2);
-      expectValidationError(result[0], 1, ValidationResultType.EMPTY_FIELD);
+      expectZeroValidationErrors(result);
     });
 
     it('[negative] should error if there are empty fields', async () => {
@@ -114,6 +116,7 @@ describe('program exception service', () => {
       const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
       expectToHaveNumberOfErrors(result, 2);
       expectValidationError(result[0], 1, ValidationResultType.EMPTY_FIELD);
+      expectValidationError(result[1], 1, ValidationResultType.INVALID);
     });
   });
 
@@ -155,7 +158,10 @@ describe('program exception service', () => {
     });
 
     it('[positive] should return successfully if exception value is undefined', async () => {
-      const record = createRecord({ requested_exception_value: undefined });
+      const record = createRecord({
+        requested_core_field: 'treatment_duration',
+        requested_exception_value: '',
+      });
       const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
       expectZeroValidationErrors(result);
     });
