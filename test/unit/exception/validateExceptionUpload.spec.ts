@@ -172,7 +172,6 @@ describe('program exception service', () => {
       });
       const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
       expectToHaveNumberOfErrors(result);
-      console.log('\nresult', result);
       expectValidationError(result[0], 1, ValidationResultType.INVALID);
     });
 
