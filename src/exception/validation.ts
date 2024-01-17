@@ -19,7 +19,7 @@
 
 import { isEqual } from 'lodash';
 import * as dictionaryManager from '../dictionary/manager';
-import { SchemaWithFields } from '../dictionary/manager';
+import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
 import { loggerFor } from '../logger';
 import { ExceptionRecord, ExceptionValue, ObjectValues, ProgramExceptionRecord } from './types';
 
@@ -97,20 +97,19 @@ export const checkCoreField: Validator<ExceptionRecord> = async ({ record, field
     };
   }
 
-  const fieldFilter = (field: { name: string; meta?: { core: boolean } }): boolean => {
+  const fieldFilter = (field: dictionaryEntities.FieldDefinition): boolean => {
     return field.name === requestedCoreField && !!field.meta?.core;
   };
 
-  const schemaFilter = (schema: SchemaWithFields): boolean => {
+  const schemaFilter = (schema: dictionaryEntities.SchemaDefinition): boolean => {
     return schema.name === record.schema;
   };
 
-  const existingDictionarySchema = await currentDictionary.getSchemasWithFields(
-    schemaFilter,
-    fieldFilter,
-  );
+  const existingDictionary = (await currentDictionary.getCurrent()).schemas
+    .filter(schemaFilter)
+    .map(schema => ({ ...schema, fields: schema.fields.filter(fieldFilter) }));
 
-  const isValid = existingDictionarySchema[0] && existingDictionarySchema[0].fields.length > 0;
+  const isValid = existingDictionary[0] && existingDictionary[0].fields.length > 0;
   return {
     result: isValid ? ValidationResultType.VALID : ValidationResultType.INVALID,
     message: isValid
@@ -140,7 +139,12 @@ export const checkRequestedValue: Validator<ExceptionRecord> = ({ record, fieldN
   const validRequests: string[] = Object.values(ExceptionValue);
   const requestedExceptionValue = record.requested_exception_value;
 
-  if (requestedExceptionValue !== undefined && !validRequests.includes(requestedExceptionValue)) {
+  // if number {}
+  // else
+  if (
+    typeof requestedExceptionValue === 'string' &&
+    !validRequests.includes(requestedExceptionValue)
+  ) {
     return {
       result: ValidationResultType.INVALID,
       message: `'${fieldName}' value is not valid. Must be one of [${validRequests.join(', ')}]`,
@@ -178,7 +182,7 @@ export const checkIsValidDictionarySchema: Validator<ExceptionRecord> = async ({
 
   const currentDictionary = await dictionaryManager.instance();
 
-  const schemaFilter = (schema: SchemaWithFields): boolean => {
+  const schemaFilter = (schema: dictionaryEntities.SchemaDefinition): boolean => {
     return schema.name === fieldValue;
   };
 

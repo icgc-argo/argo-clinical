@@ -40,19 +40,11 @@ const L = loggerFor(__filename);
 type ValidateRecords<T> = (records: ReadonlyArray<TsvUtils.TsvRecordAsJsonObj>) => ReadonlyArray<T>;
 
 const validateProgramExceptionRecords: ValidateRecords<ProgramExceptionRecord> = records => {
-  const normalizedRecords = records.map(exceptionRecord => ({
-    ...exceptionRecord,
-    requested_exception_value:
-      exceptionRecord.requested_exception_value === ''
-        ? undefined
-        : exceptionRecord.requested_exception_value,
-  }));
-
-  if (!isReadonlyArrayOf(normalizedRecords, isProgramExceptionRecord)) {
+  if (!isReadonlyArrayOf(records, isProgramExceptionRecord)) {
     L.debug(`Program Exception TSV_PARSING_FAILED`);
     throw new ExceptionTSVError('Invalid program exception tsv file');
   }
-  return normalizedRecords;
+  return records;
 };
 
 type ValidateEntityRecords<T> = (

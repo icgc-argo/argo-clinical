@@ -85,7 +85,6 @@ export type EntityExceptionSchemaNames = Extract<
 export const ExceptionValue = {
   Unknown: 'Unknown',
   NotApplicable: 'Not applicable',
-  Empty: '',
 } as const;
 
 export type ExceptionValueType = ObjectValues<typeof ExceptionValue>;
