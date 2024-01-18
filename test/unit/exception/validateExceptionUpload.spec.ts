@@ -173,10 +173,10 @@ describe('program exception service', () => {
       expectValidationError(result[0], 1, ValidationResultType.INVALID);
     });
 
-    it('[negative] should return errors if exception field is numeric and value is an invalid string', async () => {
+    it('[negative] should return errors if exception field is numeric and value is an empty string', async () => {
       const record = createRecord({
         requested_core_field: 'treatment_duration',
-        requested_exception_value: 'invalid!',
+        requested_exception_value: '',
       });
       const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
       expectToHaveNumberOfErrors(result);
