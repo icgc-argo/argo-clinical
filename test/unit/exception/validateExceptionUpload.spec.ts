@@ -157,26 +157,27 @@ describe('program exception service', () => {
       expectZeroValidationErrors(result);
     });
 
-    it('[positive] should return successfully if exception value is blank for numeric field', async () => {
+    it('[positive] should return successfully if exception value is valid and a numeric field', async () => {
       const record = createRecord({
         requested_core_field: 'treatment_duration',
-        requested_exception_value: '',
+        requested_exception_value: ExceptionValue.Unknown,
       });
       const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
       expectZeroValidationErrors(result);
     });
 
-    it('[negative] should return errors if exception value is string for numeric field', async () => {
-      const record = createRecord({
-        requested_core_field: 'treatment_duration',
-      });
+    it('[negative] should return errors if exception value is invalid', async () => {
+      const record = createRecord({ requested_exception_value: 'invalid!' });
       const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
       expectToHaveNumberOfErrors(result);
       expectValidationError(result[0], 1, ValidationResultType.INVALID);
     });
 
-    it('[negative] should return errors if exception value is invalid', async () => {
-      const record = createRecord({ requested_exception_value: 'invalid!' });
+    it('[negative] should return errors if exception field is numeric and value is an invalid string', async () => {
+      const record = createRecord({
+        requested_core_field: 'treatment_duration',
+        requested_exception_value: 'invalid!',
+      });
       const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
       expectToHaveNumberOfErrors(result);
       expectValidationError(result[0], 1, ValidationResultType.INVALID);
