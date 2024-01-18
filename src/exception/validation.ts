@@ -152,16 +152,16 @@ export const checkRequestedValue: Validator<ExceptionRecord> = async ({ record, 
   if (!exceptionFieldDefinition) {
     return {
       result: ValidationResultType.INVALID,
-      message: `The requested core field '${record.requested_core_field}' does not match schema '${record.schema}'. Please update your exception request form.`,
+      message: `The requested core field '${requested_core_field}' does not match schema '${schemaName}'. Please update your exception request form.`,
     };
   }
 
   const { valueType } = exceptionFieldDefinition;
 
-  if (valueType === 'number' || valueType === 'integer' || valueType === 'string') {
+  if (!(valueType === 'number' || valueType === 'integer' || valueType === 'string')) {
     return {
       result: ValidationResultType.TYPE_ERROR,
-      message: `The requested core field '${record.requested_core_field}' is invalid. Exceptions must be a text or number field.`,
+      message: `The requested core field '${requested_core_field}' is invalid. Exceptions must be a text or number field.`,
     };
   } else if (!validRequests.includes(requested_exception_value)) {
     return {
