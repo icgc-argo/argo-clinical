@@ -862,6 +862,13 @@ export namespace operations {
   ) => {
     const schemaName = command.clinicalType as ClinicalEntitySchemaNames;
 
+    // Todo: make reusable
+    const schemaFilter = (schemaDefintion: dictionaryEntities.SchemaDefinition): boolean =>
+      schemaDefintion.name === schemaName;
+
+    const { schemas } = schema;
+    const entitySchema = schemas.find(schemaFilter);
+
     // check records are unique
     const errors: SubmissionValidationError[] = checkUniqueRecords(schemaName, command.records);
 
@@ -890,6 +897,7 @@ export namespace operations {
               programId: command.programId,
               record: schemaResult.processedRecord,
               schemaName,
+              entitySchema,
               schemaValidationErrors: [...schemaResult.validationErrors],
             });
             validationErrors = filteredErrors;

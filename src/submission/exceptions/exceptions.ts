@@ -127,9 +127,16 @@ const isSingleString = (value: DeepReadonly<dictionaryEntities.SchemaTypes>): va
 /**
  * Exceptions can only be applied to text values. Arrays of strings are allowed if they have a single string value.
  */
-const isAllowedTypeForException = (
+const isValidStringExceptionType = (
   value: DeepReadonly<dictionaryEntities.SchemaTypes>,
 ): value is string | [string] => typeof value === 'string' || isSingleString(value);
+
+/**
+ * Exceptions can only be applied to text values. Arrays of strings are allowed if they have a single string value.
+ */
+const isValidNumericExceptionType = (
+  value: DeepReadonly<dictionaryEntities.SchemaTypes>,
+): value is undefined | '' => typeof value === 'undefined' || value === '';
 
 /**
  * Check if a valid exception exists and the record value matches it.
@@ -146,11 +153,13 @@ export const checkForProgramAndEntityExceptions = async ({
   programId,
   record,
   schemaName,
+  entitySchema,
   schemaValidationErrors,
 }: {
   programId: string;
   record: DeepReadonly<TypedDataRecord>;
   schemaName: ClinicalEntitySchemaNames;
+  entitySchema: dictionaryEntities.SchemaDefinition | undefined;
   schemaValidationErrors: dictionaryEntities.SchemaValidationError[];
 }) => {
   const filteredErrors: dictionaryEntities.SchemaValidationError[] = [];
@@ -169,8 +178,21 @@ export const checkForProgramAndEntityExceptions = async ({
     const validationErrorFieldName = validationError.fieldName;
     const fieldValue = record[validationErrorFieldName];
 
+    // Todo: Make Reusable
+    const fieldFilter = (field: dictionaryEntities.FieldDefinition): boolean =>
+      field.name === validationErrorFieldName;
+    const fieldSchema = entitySchema?.fields.find(fieldFilter);
+    const valueType = fieldSchema?.valueType;
+
+    const validStringExceptionValue =
+      valueType === 'string' && isValidStringExceptionType(fieldValue);
+
+    const validNumericExceptionValue =
+      (valueType === 'number' || valueType === 'integer') &&
+      isValidNumericExceptionType(fieldValue);
+
     // Field value is a type we cannot allow exceptions for, validate as normal
-    if (!isAllowedTypeForException(fieldValue)) {
+    if (!(validStringExceptionValue || validNumericExceptionValue)) {
       filteredErrors.push(validationError);
       return;
     }
