@@ -149,24 +149,24 @@ export const checkRequestedValue: Validator<ExceptionRecord> = async ({ record, 
 
   const exceptionFieldDefinition = schemaDefinition?.fields.find(fieldFilter);
 
-  if (exceptionFieldDefinition) {
-    const { valueType } = exceptionFieldDefinition;
-
-    if ((valueType === 'number' || valueType === 'integer') && requested_exception_value !== '') {
-      return {
-        result: ValidationResultType.INVALID,
-        message: `Requested value '${requested_exception_value}' is not valid. Only blank values are allowed for numeric fields.`,
-      };
-    } else if (valueType === 'string' && !validRequests.includes(requested_exception_value)) {
-      return {
-        result: ValidationResultType.INVALID,
-        message: `'${fieldName}' value is not valid. Must be one of [${validRequests.join(', ')}]`,
-      };
-    }
-  } else {
+  if (!exceptionFieldDefinition) {
     return {
       result: ValidationResultType.INVALID,
       message: `The requested core field '${record.requested_core_field}' does not match schema '${record.schema}'. Please update your exception request form.`,
+    };
+  }
+
+  const { valueType } = exceptionFieldDefinition;
+
+  if (valueType === 'number' || valueType === 'integer' || valueType === 'string') {
+    return {
+      result: ValidationResultType.TYPE_ERROR,
+      message: `The requested core field '${record.requested_core_field}' is invalid. Exceptions must be a text or number field.`,
+    };
+  } else if (!validRequests.includes(requested_exception_value)) {
+    return {
+      result: ValidationResultType.INVALID,
+      message: `'${fieldName}' value is not valid. Must be one of [${validRequests.join(', ')}]`,
     };
   }
 
