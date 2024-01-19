@@ -57,6 +57,7 @@ const validateFieldValueWithExceptions = ({
   schemaName,
   fieldValue,
   validationErrorFieldName,
+  valueType,
 }: {
   record: DeepReadonly<TypedDataRecord>;
   programException: ProgramException | null;
@@ -64,8 +65,13 @@ const validateFieldValueWithExceptions = ({
   schemaName: ClinicalEntitySchemaNames;
   fieldValue: string;
   validationErrorFieldName: string;
+  valueType?: dictionaryEntities.ValueType;
 }): boolean => {
   const allowedValues: Set<string> = new Set();
+
+  const isNumericField =
+    valueType === dictionaryEntities.ValueType.INTEGER ||
+    valueType === dictionaryEntities.ValueType.NUMBER;
 
   // program level is applicable to ALL donors
   if (programException) {
@@ -75,7 +81,13 @@ const validateFieldValueWithExceptions = ({
           exception.requested_core_field === validationErrorFieldName &&
           exception.schema === schemaName,
       )
-      .forEach(matchingException => allowedValues.add(matchingException.requested_exception_value));
+      .forEach(matchingException => {
+        if (isNumericField) {
+          allowedValues.add('');
+        } else {
+          allowedValues.add(matchingException.requested_exception_value);
+        }
+      });
   }
 
   if (entityException) {
@@ -101,7 +113,13 @@ const validateFieldValueWithExceptions = ({
 
     exceptions
       .filter(exception => exception.requested_core_field === validationErrorFieldName)
-      .forEach(matchingException => allowedValues.add(matchingException.requested_exception_value));
+      .forEach(matchingException => {
+        if (isNumericField) {
+          allowedValues.add('');
+        } else {
+          allowedValues.add(matchingException.requested_exception_value);
+        }
+      });
   }
 
   // check submitted exception value matches record validation error field value
@@ -222,6 +240,7 @@ export const checkForProgramAndEntityExceptions = async ({
       schemaName,
       validationErrorFieldName: validationError.fieldName,
       fieldValue: normalizedFieldValue,
+      valueType,
     });
 
     if (valueHasException) {
