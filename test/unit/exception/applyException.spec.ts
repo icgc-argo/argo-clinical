@@ -42,6 +42,19 @@ const schemaValidationErrors: dictionaryEntities.SchemaValidationError[] = [
   },
 ];
 
+const mockEntitySchema: dictionaryEntities.SchemaDefinition = {
+  name: 'specimen',
+  description: 'Mock specimen schema',
+  fields: [
+    {
+      name: 'specimen_acquisition_interval',
+      valueType: dictionaryEntities.ValueType.STRING,
+      description: 'Mock specimen field',
+      meta: { core: true },
+    },
+  ],
+};
+
 describe('submission service apply exceptions', () => {
   afterEach(() => {
     // Restore the default sandbox here
@@ -81,6 +94,7 @@ describe('submission service apply exceptions', () => {
         schemaValidationErrors,
         record,
         schemaName: ClinicalEntitySchemaNames.SPECIMEN,
+        entitySchema: mockEntitySchema,
       });
 
       chai.expect(result.filteredErrors).to.be.an('array').that.is.empty;
@@ -98,6 +112,7 @@ describe('submission service apply exceptions', () => {
         schemaValidationErrors,
         record,
         schemaName: ClinicalEntitySchemaNames.SPECIMEN,
+        entitySchema: mockEntitySchema,
       });
 
       chai.expect(result.filteredErrors).to.be.an('array').that.is.empty;
@@ -115,6 +130,7 @@ describe('submission service apply exceptions', () => {
         schemaValidationErrors,
         record,
         schemaName: ClinicalEntitySchemaNames.SPECIMEN,
+        entitySchema: mockEntitySchema,
       });
 
       chai.expect(result.filteredErrors).deep.equal(schemaValidationErrors);
@@ -132,6 +148,7 @@ describe('submission service apply exceptions', () => {
         schemaValidationErrors,
         record,
         schemaName: ClinicalEntitySchemaNames.SPECIMEN,
+        entitySchema: mockEntitySchema,
       });
       chai.expect(result.filteredErrors).deep.equal(schemaValidationErrors);
     });
@@ -173,6 +190,7 @@ describe('submission service apply exceptions', () => {
         schemaValidationErrors,
         record,
         schemaName: ClinicalEntitySchemaNames.SPECIMEN,
+        entitySchema: mockEntitySchema,
       });
 
       chai.expect(result.filteredErrors).to.be.an('array').that.is.empty;
@@ -191,6 +209,7 @@ describe('submission service apply exceptions', () => {
         schemaValidationErrors,
         record,
         schemaName: ClinicalEntitySchemaNames.SPECIMEN,
+        entitySchema: mockEntitySchema,
       });
       chai.expect(result.filteredErrors).deep.equal(schemaValidationErrors);
     });
