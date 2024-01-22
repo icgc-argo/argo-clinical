@@ -37,17 +37,17 @@ router.get('/samples/id', wrapAsync(clinicalApi.findSampleId));
 router.get('/program/:programId/donor/:donorId', wrapAsync(clinicalApi.getDonorById));
 router.get('/program/:programId/donors', wrapAsync(clinicalApi.streamProgramDonors));
 router.post(
-  '/program/:programId/clinical-data',
-  wrapAsync(clinicalApi.getProgramClinicalEntityData),
+	'/program/:programId/clinical-data',
+	wrapAsync(clinicalApi.getProgramClinicalEntityData),
 );
 router.post(
-  '/program/:programId/clinical-search-results',
-  wrapAsync(clinicalApi.getProgramClinicalSearchResults),
+	'/program/:programId/clinical-search-results',
+	wrapAsync(clinicalApi.getProgramClinicalSearchResults),
 );
 router.post('/program/:programId/clinical-errors', wrapAsync(clinicalApi.getProgramClinicalErrors));
 router.post(
-  '/program/:programId/clinical-tsv',
-  wrapAsync(clinicalApi.getSpecificClinicalDataAsTsvsInZip),
+	'/program/:programId/clinical-tsv',
+	wrapAsync(clinicalApi.getSpecificClinicalDataAsTsvsInZip),
 );
 
 // Download TSVs for Donors by Donor ID
@@ -55,15 +55,13 @@ router.post('/donors/tsv', wrapAsync(clinicalApi.getDonorDataByIdAsTsvsInZip));
 
 // Get TSV Data
 router.get(
-  '/program/:programId/tsv-export',
-  wrapAsync(clinicalApi.getProgramClinicalDataAsTsvsInZip),
+	'/program/:programId/tsv-export',
+	wrapAsync(clinicalApi.getProgramClinicalDataAsTsvsInZip),
 ); // DEPRECATED
 router.get('/program/:programId/tsv/all', wrapAsync(clinicalApi.getProgramClinicalDataAsTsvsInZip));
 router.get(
-  '/program/:programId/tsv/:entityType',
-  wrapAsync(clinicalApi.getProgramClinicalDataAsTsv),
+	'/program/:programId/tsv/:entityType',
+	wrapAsync(clinicalApi.getProgramClinicalDataAsTsv),
 );
-
-router.patch('/donor/:donorId/completion-stats', wrapAsync(clinicalApi.patchDonorCompletionStats));
 
 export default router;
