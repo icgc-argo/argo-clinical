@@ -27,24 +27,47 @@ import featureFlags from '../feature-flags';
 import { Request, Response } from 'express';
 import { ExceptionErrorHandler } from '../exception/property-exceptions/error-handling';
 
-// config
-const router = express.Router({ mergeParams: true });
+/**
+ * Property exceptions
+ */
+const propertyExceptionRouter = express.Router({ mergeParams: true });
 const upload = multer({ dest: '/tmp' });
 
-// routes
-router.post('*', upload.single('exceptionFile'), requestContainsFile);
-router.post('/', wrapAsync(exceptionApi.createProgramException));
-router.post('/entity', wrapAsync(exceptionApi.createEntityException));
+// Middleware
+propertyExceptionRouter.use(ExceptionErrorHandler);
 
-router.get('/', wrapAsync(exceptionApi.getProgramException));
-router.get('/entity', wrapAsync(exceptionApi.getEntityException));
+// GET
+propertyExceptionRouter.get('/', wrapAsync(exceptionApi.getProgramException));
+propertyExceptionRouter.get('/entity', wrapAsync(exceptionApi.getEntityException));
 
-router.delete('/', wrapAsync(exceptionApi.clearProgramException));
+// POST
+propertyExceptionRouter.post('*', upload.single('exceptionFile'), requestContainsFile);
+propertyExceptionRouter.post('/', wrapAsync(exceptionApi.createProgramException));
+propertyExceptionRouter.post('/entity', wrapAsync(exceptionApi.createEntityException));
 
-router.delete('/entity/:entity', wrapAsync(exceptionApi.deleteEntityException));
+// DELETE
+propertyExceptionRouter.delete('/', wrapAsync(exceptionApi.clearProgramException));
+propertyExceptionRouter.delete('/entity/:entity', wrapAsync(exceptionApi.deleteEntityException));
 
-router.use(ExceptionErrorHandler);
+/**
+ * Missing entity exceptions
+ */
+const missingEntityExceptionRouter = express.Router({ mergeParams: true });
 
-export default featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED
-	? router
-	: (req: Request, res: Response) => res.status(404).send();
+// GET
+missingEntityExceptionRouter.get('/', (req, resp) => resp.send({ msg: 'not implemented yet...' }));
+
+// POST
+missingEntityExceptionRouter.post('/');
+
+const notFound = (req: Request, res: Response) => res.status(404).send();
+
+// Parent
+const exceptionRouter = express.Router({ mergeParams: true });
+exceptionRouter.use(
+	'/property-exception',
+	featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED ? propertyExceptionRouter : notFound,
+);
+exceptionRouter.use('/missing-entity-exception', missingEntityExceptionRouter);
+
+export default exceptionRouter;
