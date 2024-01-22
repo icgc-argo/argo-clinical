@@ -68,10 +68,7 @@ const notFound = (req: Request, res: Response) => res.status(404).send();
 
 // Parent
 const exceptionRouter = express.Router({ mergeParams: true });
-exceptionRouter.use(
-	'/property-exception',
-	featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED ? propertyExceptionRouter : notFound,
-);
+exceptionRouter.use('/property-exception', propertyExceptionRouter);
 exceptionRouter.use('/missing-entity-exception', missingEntityExceptionRouter);
 
 export default exceptionRouter;
