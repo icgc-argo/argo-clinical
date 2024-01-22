@@ -17,27 +17,10 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { HasFullWriteAccess } from '../../decorators';
-import { Request, Response } from 'express';
-import { createOrUpdate } from './repo';
-import { parseBoolString } from '../../utils/request';
-
-class MissingEntityExceptionController {
-	@HasFullWriteAccess()
-	async createEntityException(req: Request, res: Response) {
-		const programId = req.params.programId;
-		const donorSubmitterIds = req.body.donorSubmitterIds;
-		const isDryRun = parseBoolString(req.query['dry-run']);
-
-		const result = await createOrUpdate({
-			programId,
-			donorSubmitterIds,
-			isDryRun,
-		});
-
-		const status = result.success ? 201 : 422;
-		return res.status(status).send({ programId, donorSubmitterIds, isDryRun });
+export const parseBoolString = (queryString: string) => {
+	if (queryString) {
+		return queryString.toLowerCase() === 'true' || false;
+	} else {
+		return false;
 	}
-}
-
-export default new MissingEntityExceptionController();
+};
