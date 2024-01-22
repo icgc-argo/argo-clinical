@@ -18,34 +18,33 @@
  */
 
 import {
-  entities as dictionaryEntities,
-  functions as dictionaryService,
+	entities as dictionaryEntities,
+	functions as dictionaryService,
 } from '@overturebio-stack/lectern-client';
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 import {
-  ClinicalEntityErrorRecord,
-  ClinicalEntitySchemaNames,
-  ClinicalErrorsResponseRecord,
-  EntityAlias,
-  aliasEntityNames,
-  allEntityNames,
+	ClinicalEntityErrorRecord,
+	ClinicalEntitySchemaNames,
+	ClinicalErrorsResponseRecord,
+	EntityAlias,
+	aliasEntityNames,
+	allEntityNames,
 } from '../common-model/entities';
 import {
-  filterDuplicates,
-  getClinicalEntitiesFromDonorBySchemaName,
+	filterDuplicates,
+	getClinicalEntitiesFromDonorBySchemaName,
 } from '../common-model/functions';
 import * as dictionaryManager from '../dictionary/manager';
 import featureFlags from '../feature-flags';
 import { loggerFor } from '../logger';
 import { checkForProgramAndEntityExceptions } from '../submission/exceptions/exceptions';
 import {
-  DictionaryMigration,
-  DonorMigrationError,
+	DictionaryMigration,
+	DonorMigrationError,
 } from '../submission/migration/migration-entities';
 import { migrationRepo } from '../submission/migration/migration-repo';
 import { prepareForSchemaReProcessing } from '../submission/submission-service';
-import { patchCoreCompletionWithOverride } from '../submission/submission-to-clinical/stat-calculator';
 import { Errors, notEmpty } from '../utils';
 import { ClinicalEntityData, ClinicalInfo, Donor, Sample } from './clinical-entities';
 import { DONOR_DOCUMENT_FIELDS, donorDao } from './donor-repo';
@@ -56,17 +55,17 @@ const L = loggerFor(__filename);
 
 // Base type for Clinical Data Queries
 export type ClinicalDonorEntityQuery = {
-  programShortName: string;
-  donorIds: number[];
-  submitterDonorIds: string[];
-  entityTypes: EntityAlias[];
-  completionState?: {};
+	programShortName: string;
+	donorIds: number[];
+	submitterDonorIds: string[];
+	entityTypes: EntityAlias[];
+	completionState?: {};
 };
 
 export type PaginationQuery = {
-  page: number;
-  pageSize?: number;
-  sort: string;
+	page: number;
+	pageSize?: number;
+	sort: string;
 };
 
 export type PaginatedClinicalQuery = ClinicalDonorEntityQuery & PaginationQuery;
@@ -74,242 +73,242 @@ export type PaginatedClinicalQuery = ClinicalDonorEntityQuery & PaginationQuery;
 // GQL Query Arguments
 // Submitted Data Search Bar
 export type ClinicalSearchVariables = {
-  programShortName: string;
-  filters: ClinicalDonorEntityQuery;
+	programShortName: string;
+	filters: ClinicalDonorEntityQuery;
 };
 
 // Submitted Data Table, Sidebar, etc.
 export type ClinicalDataVariables = {
-  programShortName: string;
-  filters: PaginatedClinicalQuery;
+	programShortName: string;
+	filters: PaginatedClinicalQuery;
 };
 
 export async function updateDonorSchemaMetadata(
-  donor: DeepReadonly<Donor>,
-  migrationId: string,
-  isValid: boolean,
-  newSchemaVersion?: string,
+	donor: DeepReadonly<Donor>,
+	migrationId: string,
+	isValid: boolean,
+	newSchemaVersion?: string,
 ) {
-  const donorCopy = _.cloneDeep(donor) as Donor;
-  if (!donorCopy.schemaMetadata) {
-    throw new Error('donor document without metadata.. fix it');
-  }
+	const donorCopy = _.cloneDeep(donor) as Donor;
+	if (!donorCopy.schemaMetadata) {
+		throw new Error('donor document without metadata.. fix it');
+	}
 
-  donorCopy.schemaMetadata.isValid = isValid;
-  donorCopy.schemaMetadata.lastMigrationId = migrationId;
-  if (isValid && newSchemaVersion) {
-    donorCopy.schemaMetadata.lastValidSchemaVersion = newSchemaVersion;
-  }
-  return await donorDao.update(donorCopy);
+	donorCopy.schemaMetadata.isValid = isValid;
+	donorCopy.schemaMetadata.lastMigrationId = migrationId;
+	if (isValid && newSchemaVersion) {
+		donorCopy.schemaMetadata.lastValidSchemaVersion = newSchemaVersion;
+	}
+	return await donorDao.update(donorCopy);
 }
 
 export async function updateMigrationId(donor: DeepReadonly<Donor>, migrationId: string) {
-  const donorCopy = _.cloneDeep(donor) as Donor;
-  if (!donorCopy.schemaMetadata) {
-    throw new Error('donor document without metadata.. fix it');
-  }
+	const donorCopy = _.cloneDeep(donor) as Donor;
+	if (!donorCopy.schemaMetadata) {
+		throw new Error('donor document without metadata.. fix it');
+	}
 
-  donorCopy.schemaMetadata.lastMigrationId = migrationId;
-  return await donorDao.update(donorCopy);
+	donorCopy.schemaMetadata.lastMigrationId = migrationId;
+	return await donorDao.update(donorCopy);
 }
 
 export async function getDonorsByMigrationId(migrationId: string, limit: number) {
-  return await donorDao.findBy(
-    {
-      $or: [
-        { [DONOR_DOCUMENT_FIELDS.LAST_MIGRATION_ID]: { $ne: migrationId } },
-        { [DONOR_DOCUMENT_FIELDS.LAST_MIGRATION_ID]: undefined },
-        { [DONOR_DOCUMENT_FIELDS.LAST_MIGRATION_ID]: { $exists: false } },
-      ],
-    },
-    limit,
-  );
+	return await donorDao.findBy(
+		{
+			$or: [
+				{ [DONOR_DOCUMENT_FIELDS.LAST_MIGRATION_ID]: { $ne: migrationId } },
+				{ [DONOR_DOCUMENT_FIELDS.LAST_MIGRATION_ID]: undefined },
+				{ [DONOR_DOCUMENT_FIELDS.LAST_MIGRATION_ID]: { $exists: false } },
+			],
+		},
+		limit,
+	);
 }
 
 export async function getDonors(programId: string) {
-  if (programId) {
-    return await donorDao.findByProgramId(programId);
-  }
-  return await donorDao.findBy({}, 999);
+	if (programId) {
+		return await donorDao.findByProgramId(programId);
+	}
+	return await donorDao.findBy({}, 999);
 }
 
 export async function getDonorsByIds(donorIds: number[]) {
-  return donorDao.findByDonorIds(donorIds);
+	return donorDao.findByDonorIds(donorIds);
 }
 
 export async function findDonorId(submitterId: string, programId: string) {
-  const donor = await findDonorBySubmitterId(submitterId, programId);
-  if (!donor) {
-    throw new Errors.NotFound('Donor not found');
-  }
-  return `DO${donor.donorId}`;
+	const donor = await findDonorBySubmitterId(submitterId, programId);
+	if (!donor) {
+		throw new Errors.NotFound('Donor not found');
+	}
+	return `DO${donor.donorId}`;
 }
 
 export async function findSpecimenId(submitterId: string, programId: string) {
-  const donor = await donorDao.findBySpecimenSubmitterIdAndProgramId({ submitterId, programId });
-  if (!donor) {
-    throw new Errors.NotFound('Specimen not found');
-  }
-  const specimen = donor.specimens.find(sp => sp.submitterId == submitterId);
-  if (!specimen) {
-    throw new Error('not possible, check your query');
-  }
-  return `SP${specimen.specimenId}`;
+	const donor = await donorDao.findBySpecimenSubmitterIdAndProgramId({ submitterId, programId });
+	if (!donor) {
+		throw new Errors.NotFound('Specimen not found');
+	}
+	const specimen = donor.specimens.find((sp) => sp.submitterId == submitterId);
+	if (!specimen) {
+		throw new Error('not possible, check your query');
+	}
+	return `SP${specimen.specimenId}`;
 }
 
 export async function findSampleId(submitterId: string, programId: string) {
-  const donor = await donorDao.findBySampleSubmitterIdAndProgramId({ submitterId, programId });
-  if (!donor) {
-    throw new Errors.NotFound('Sample not found');
-  }
+	const donor = await donorDao.findBySampleSubmitterIdAndProgramId({ submitterId, programId });
+	if (!donor) {
+		throw new Errors.NotFound('Sample not found');
+	}
 
-  let sample: Sample | undefined = undefined;
-  for (const sp of donor.specimens) {
-    for (const sa of sp.samples) {
-      if (sa.submitterId == submitterId) {
-        sample = sa;
-        break;
-      }
-    }
-    if (sample) {
-      break;
-    }
-  }
+	let sample: Sample | undefined = undefined;
+	for (const sp of donor.specimens) {
+		for (const sa of sp.samples) {
+			if (sa.submitterId == submitterId) {
+				sample = sa;
+				break;
+			}
+		}
+		if (sample) {
+			break;
+		}
+	}
 
-  if (!sample) {
-    throw new Error('not possible, check your query');
-  }
-  return `SA${sample.sampleId}`;
+	if (!sample) {
+		throw new Error('not possible, check your query');
+	}
+	return `SA${sample.sampleId}`;
 }
 
 export async function findDonorBySubmitterId(submitterId: string, programId: string) {
-  return await donorDao.findOneBy({ programId, submitterId });
+	return await donorDao.findOneBy({ programId, submitterId });
 }
 
 export async function findDonorByDonorId(donorId: number, programId: string) {
-  return await donorDao.findOneBy({ programId, donorId });
+	return await donorDao.findOneBy({ programId, donorId });
 }
 
 export function iterateAllDonorsByProgramId(programId: string) {
-  return donorDao.iterateAllByProgramId(programId);
+	return donorDao.iterateAllByProgramId(programId);
 }
 
 export async function deleteDonors(programId: string) {
-  return await donorDao.deleteByProgramId(programId);
+	return await donorDao.deleteByProgramId(programId);
 }
 
 export const updateDonorStats = async (donorId: number, coreCompletionOverride: any) => {
-  const [donor] = await donorDao.findBy({ donorId: donorId }, 1);
+	const [donor] = await donorDao.findBy({ donorId: donorId }, 1);
 
-  if (!donor) return undefined;
+	if (!donor) return undefined;
 
-  // Update core
-  const updatedDonor = patchCoreCompletionWithOverride(donor, coreCompletionOverride);
+	// Update core
+	const updatedDonor = patchCoreCompletionWithOverride(donor, coreCompletionOverride);
 
-  return await donorDao.update(updatedDonor);
+	return await donorDao.update(updatedDonor);
 };
 
 export const getClinicalData = async (programId: string) => {
-  if (!programId) throw new Error('Missing programId!');
-  const start = new Date().getTime() / 1000;
+	if (!programId) throw new Error('Missing programId!');
+	const start = new Date().getTime() / 1000;
 
-  // worker-threads can't get dictionary instance so deal with it here and pass it to worker task
-  const allSchemasWithFields = await dictionaryManager.instance().getSchemasWithFields();
+	// worker-threads can't get dictionary instance so deal with it here and pass it to worker task
+	const allSchemasWithFields = await dictionaryManager.instance().getSchemasWithFields();
 
-  // async/await functions just hang in current library worker-thread setup, root cause is unknown
-  const donors = await donorDao.findByProgramId(programId, {}, true);
+	// async/await functions just hang in current library worker-thread setup, root cause is unknown
+	const donors = await donorDao.findByProgramId(programId, {}, true);
 
-  const taskToRun = WorkerTasks.ExtractDataFromDonors;
-  const taskArgs = [donors, allSchemasWithFields];
-  const data = await runTaskInWorkerThread<ClinicalEntityData[]>(taskToRun, taskArgs);
+	const taskToRun = WorkerTasks.ExtractDataFromDonors;
+	const taskArgs = [donors, allSchemasWithFields];
+	const data = await runTaskInWorkerThread<ClinicalEntityData[]>(taskToRun, taskArgs);
 
-  const end = new Date().getTime() / 1000;
-  L.debug(`getClinicalData took ${end - start}s`);
+	const end = new Date().getTime() / 1000;
+	L.debug(`getClinicalData took ${end - start}s`);
 
-  return data;
+	return data;
 };
 
 export const getPaginatedClinicalData = async (
-  programId: string,
-  query: PaginatedClinicalQuery,
+	programId: string,
+	query: PaginatedClinicalQuery,
 ) => {
-  if (!programId) throw new Error('Missing programId!');
+	if (!programId) throw new Error('Missing programId!');
 
-  const allSchemasWithFields = await dictionaryManager.instance().getSchemasWithFields();
-  // Get all donors + records for given entity
-  const { donors, totalDonors } = await donorDao.findByPaginatedProgramId(programId, query);
+	const allSchemasWithFields = await dictionaryManager.instance().getSchemasWithFields();
+	// Get all donors + records for given entity
+	const { donors, totalDonors } = await donorDao.findByPaginatedProgramId(programId, query);
 
-  const taskToRun = WorkerTasks.ExtractEntityDataFromDonors;
-  const taskArgs = [donors as Donor[], totalDonors, allSchemasWithFields, query.entityTypes, query];
+	const taskToRun = WorkerTasks.ExtractEntityDataFromDonors;
+	const taskArgs = [donors as Donor[], totalDonors, allSchemasWithFields, query.entityTypes, query];
 
-  // Return paginated data
-  const data = await runTaskInWorkerThread<{ clinicalEntities: ClinicalEntityData[] }>(
-    taskToRun,
-    taskArgs,
-  );
+	// Return paginated data
+	const data = await runTaskInWorkerThread<{ clinicalEntities: ClinicalEntityData[] }>(
+		taskToRun,
+		taskArgs,
+	);
 
-  return data;
+	return data;
 };
 
 export const getDonorEntityData = async (donorIds: number[]) => {
-  const allSchemasWithFields = await dictionaryManager.instance().getSchemasWithFields();
-  // Get all donors + records for given entity
-  const donors = await getDonorsByIds(donorIds);
-  const totalDonors = donors.length;
+	const allSchemasWithFields = await dictionaryManager.instance().getSchemasWithFields();
+	// Get all donors + records for given entity
+	const donors = await getDonorsByIds(donorIds);
+	const totalDonors = donors.length;
 
-  const paginationQuery: PaginationQuery = {
-    page: 0,
-    sort: 'donorId',
-  };
+	const paginationQuery: PaginationQuery = {
+		page: 0,
+		sort: 'donorId',
+	};
 
-  const taskToRun = WorkerTasks.ExtractEntityDataFromDonors;
-  const taskArgs = [donors, totalDonors, allSchemasWithFields, allEntityNames, paginationQuery];
+	const taskToRun = WorkerTasks.ExtractEntityDataFromDonors;
+	const taskArgs = [donors, totalDonors, allSchemasWithFields, allEntityNames, paginationQuery];
 
-  // Return paginated data
-  const data = await runTaskInWorkerThread<{ clinicalEntities: ClinicalEntityData[] }>(
-    taskToRun,
-    taskArgs,
-  );
+	// Return paginated data
+	const data = await runTaskInWorkerThread<{ clinicalEntities: ClinicalEntityData[] }>(
+		taskToRun,
+		taskArgs,
+	);
 
-  return data.clinicalEntities;
+	return data.clinicalEntities;
 };
 
 export const getClinicalSearchResults = async (
-  programId: string,
-  query: ClinicalDonorEntityQuery,
+	programId: string,
+	query: ClinicalDonorEntityQuery,
 ) => {
-  if (!programId) throw new Error('Missing programId!');
-  const start = new Date().getTime() / 1000;
+	if (!programId) throw new Error('Missing programId!');
+	const start = new Date().getTime() / 1000;
 
-  // Get list of donorIds + submitterDonorIds matching search results
-  const { donors } = await donorDao.findByProgramDonorSearch(programId, query);
+	// Get list of donorIds + submitterDonorIds matching search results
+	const { donors } = await donorDao.findByProgramDonorSearch(programId, query);
 
-  const taskToRun = WorkerTasks.FilterDonorIdDataFromSearch;
-  const taskArgs = [donors as Donor[], query];
-  const data = await runTaskInWorkerThread<{ searchResults: number[]; totalResults: number }>(
-    taskToRun,
-    taskArgs,
-  );
+	const taskToRun = WorkerTasks.FilterDonorIdDataFromSearch;
+	const taskArgs = [donors as Donor[], query];
+	const data = await runTaskInWorkerThread<{ searchResults: number[]; totalResults: number }>(
+		taskToRun,
+		taskArgs,
+	);
 
-  const end = new Date().getTime() / 1000;
-  L.debug(`getPaginatedClinicalData took ${end - start}s`);
+	const end = new Date().getTime() / 1000;
+	L.debug(`getPaginatedClinicalData took ${end - start}s`);
 
-  return data;
+	return data;
 };
 
 export const getClinicalErrors = async (programId: string, donorIds: number[]) => {
-  // 1. Get the migration errors for every donor requested
-  const migrationErrors = await getClinicalEntityMigrationErrors(programId, donorIds);
+	// 1. Get the migration errors for every donor requested
+	const migrationErrors = await getClinicalEntityMigrationErrors(programId, donorIds);
 
-  // 2. Remove from the list all valid donors
-  // (Records fixed with Submissions since last Migration, or which match program Exceptions)
-  const validPostSubmissionErrors = await getValidRecordsPostSubmission(programId, migrationErrors);
+	// 2. Remove from the list all valid donors
+	// (Records fixed with Submissions since last Migration, or which match program Exceptions)
+	const validPostSubmissionErrors = await getValidRecordsPostSubmission(programId, migrationErrors);
 
-  return validPostSubmissionErrors;
+	return validPostSubmissionErrors;
 };
 
 interface DonorMigration extends Omit<DictionaryMigration, 'invalidDonorsErrors'> {
-  invalidDonorsErrors: Array<DonorMigrationError>;
+	invalidDonorsErrors: Array<DonorMigrationError>;
 }
 
 /**
@@ -317,64 +316,64 @@ interface DonorMigration extends Omit<DictionaryMigration, 'invalidDonorsErrors'
  * Records are formatted for use on front end.
  */
 export const getClinicalEntityMigrationErrors = async (
-  programId: string,
-  queryDonorIds?: number[],
+	programId: string,
+	queryDonorIds?: number[],
 ): Promise<{
-  migration: DeepReadonly<DonorMigration | undefined>;
-  clinicalMigrationErrors: ClinicalErrorsResponseRecord[];
+	migration: DeepReadonly<DonorMigration | undefined>;
+	clinicalMigrationErrors: ClinicalErrorsResponseRecord[];
 }> => {
-  if (!programId) throw new Error('Missing programId!');
-  const start = new Date().getTime() / 1000;
+	if (!programId) throw new Error('Missing programId!');
+	const start = new Date().getTime() / 1000;
 
-  const migration: DeepReadonly<
-    DonorMigration | undefined
-  > = await migrationRepo.getLatestSuccessful();
+	const migration: DeepReadonly<
+		DonorMigration | undefined
+	> = await migrationRepo.getLatestSuccessful();
 
-  const clinicalMigrationErrors: ClinicalErrorsResponseRecord[] = [];
+	const clinicalMigrationErrors: ClinicalErrorsResponseRecord[] = [];
 
-  if (migration) {
-    const { invalidDonorsErrors } = migration;
-    invalidDonorsErrors
-      .filter(donor =>
-        Array.isArray(queryDonorIds)
-          ? donor.programId.toString() === programId && queryDonorIds.includes(donor.donorId)
-          : true,
-      )
-      .forEach(donor => {
-        const { donorId, submitterDonorId, errors } = donor;
-        // Overwrite donor.errors + flatten entityName to simplify query
-        // Input: Donor.Errors = [{ [entityName] : [{error}] }]
-        // =>  Output: Donor.Errors = [{ ...error, entityName}]
+	if (migration) {
+		const { invalidDonorsErrors } = migration;
+		invalidDonorsErrors
+			.filter((donor) =>
+				Array.isArray(queryDonorIds)
+					? donor.programId.toString() === programId && queryDonorIds.includes(donor.donorId)
+					: true,
+			)
+			.forEach((donor) => {
+				const { donorId, submitterDonorId, errors } = donor;
+				// Overwrite donor.errors + flatten entityName to simplify query
+				// Input: Donor.Errors = [{ [entityName] : [{error}] }]
+				// =>  Output: Donor.Errors = [{ ...error, entityName}]
 
-        errors.forEach(errorRecord => {
-          let entityName: ClinicalEntitySchemaNames;
-          for (entityName in errorRecord) {
-            const entityErrors = errorRecord[entityName];
-            if (entityErrors && entityErrors.length > 0) {
-              const updatedErrorEntries = entityErrors.map(error => ({
-                ...error,
-                donorId,
-                entityName,
-              }));
+				errors.forEach((errorRecord) => {
+					let entityName: ClinicalEntitySchemaNames;
+					for (entityName in errorRecord) {
+						const entityErrors = errorRecord[entityName];
+						if (entityErrors && entityErrors.length > 0) {
+							const updatedErrorEntries = entityErrors.map((error) => ({
+								...error,
+								donorId,
+								entityName,
+							}));
 
-              const updatedDonorErrorData: ClinicalErrorsResponseRecord = {
-                donorId,
-                submitterDonorId,
-                entityName,
-                errors: updatedErrorEntries,
-              };
+							const updatedDonorErrorData: ClinicalErrorsResponseRecord = {
+								donorId,
+								submitterDonorId,
+								entityName,
+								errors: updatedErrorEntries,
+							};
 
-              clinicalMigrationErrors.push(updatedDonorErrorData);
-            }
-          }
-        });
-      });
-  }
+							clinicalMigrationErrors.push(updatedDonorErrorData);
+						}
+					}
+				});
+			});
+	}
 
-  const end = new Date().getTime() / 1000;
-  L.debug(`getClinicalEntityMigrationErrors took ${end - start}s`);
+	const end = new Date().getTime() / 1000;
+	L.debug(`getClinicalEntityMigrationErrors took ${end - start}s`);
 
-  return { migration, clinicalMigrationErrors };
+	return { migration, clinicalMigrationErrors };
 };
 
 /**
@@ -382,169 +381,169 @@ export const getClinicalEntityMigrationErrors = async (
  * and returns a list of DonorIds which are now Valid after submission.
  */
 export const getValidRecordsPostSubmission = async (
-  programId: string,
-  migrationData: {
-    migration: DeepReadonly<DonorMigration | undefined>;
-    clinicalMigrationErrors: ClinicalErrorsResponseRecord[];
-  },
+	programId: string,
+	migrationData: {
+		migration: DeepReadonly<DonorMigration | undefined>;
+		clinicalMigrationErrors: ClinicalErrorsResponseRecord[];
+	},
 ): Promise<{
-  clinicalErrors: ClinicalErrorsResponseRecord[];
+	clinicalErrors: ClinicalErrorsResponseRecord[];
 }> => {
-  if (!programId) throw new Error('Missing programId!');
+	if (!programId) throw new Error('Missing programId!');
 
-  const start = new Date().getTime() / 1000;
+	const start = new Date().getTime() / 1000;
 
-  const { migration: lastMigration, clinicalMigrationErrors } = migrationData;
-  const errorDonorIds = clinicalMigrationErrors.map(error => error.donorId);
-  let errorEntities: ClinicalEntitySchemaNames[] = [];
+	const { migration: lastMigration, clinicalMigrationErrors } = migrationData;
+	const errorDonorIds = clinicalMigrationErrors.map((error) => error.donorId);
+	let errorEntities: ClinicalEntitySchemaNames[] = [];
 
-  clinicalMigrationErrors.forEach(migrationError => {
-    const { errors } = migrationError;
-    errors.forEach(error => {
-      const { entityName } = error;
-      if (!errorEntities.includes(entityName)) errorEntities = [...errorEntities, entityName];
-    });
-  });
+	clinicalMigrationErrors.forEach((migrationError) => {
+		const { errors } = migrationError;
+		errors.forEach((error) => {
+			const { entityName } = error;
+			if (!errorEntities.includes(entityName)) errorEntities = [...errorEntities, entityName];
+		});
+	});
 
-  const errorQuery: PaginatedClinicalQuery = {
-    programShortName: programId,
-    page: 0,
-    sort: 'donorId',
-    entityTypes: ['donor', ...errorEntities.map(schemaName => aliasEntityNames[schemaName])],
-    donorIds: errorDonorIds,
-    submitterDonorIds: [],
-  };
+	const errorQuery: PaginatedClinicalQuery = {
+		programShortName: programId,
+		page: 0,
+		sort: 'donorId',
+		entityTypes: ['donor', ...errorEntities.map((schemaName) => aliasEntityNames[schemaName])],
+		donorIds: errorDonorIds,
+		submitterDonorIds: [],
+	};
 
-  const donorData = (await donorDao.findByPaginatedProgramId(programId, errorQuery)).donors;
+	const donorData = (await donorDao.findByPaginatedProgramId(programId, errorQuery)).donors;
 
-  const validDonorIds = donorData
-    .filter(donor => donor.schemaMetadata.isValid)
-    .map(({ donorId }) => donorId);
+	const validDonorIds = donorData
+		.filter((donor) => donor.schemaMetadata.isValid)
+		.map(({ donorId }) => donorId);
 
-  const invalidDonorIds = errorDonorIds.filter(
-    (donorId, index, array) =>
-      !validDonorIds.includes(donorId) && filterDuplicates(donorId, index, array),
-  );
+	const invalidDonorIds = errorDonorIds.filter(
+		(donorId, index, array) =>
+			!validDonorIds.includes(donorId) && filterDuplicates(donorId, index, array),
+	);
 
-  let clinicalErrors: ClinicalErrorsResponseRecord[] = [];
+	let clinicalErrors: ClinicalErrorsResponseRecord[] = [];
 
-  if (invalidDonorIds.length > 0) {
-    const migrationVersion =
-      lastMigration?.toVersion || (await dictionaryManager.instance().getCurrentVersion());
+	if (invalidDonorIds.length > 0) {
+		const migrationVersion =
+			lastMigration?.toVersion || (await dictionaryManager.instance().getCurrentVersion());
 
-    const schemaName = await dictionaryManager.instance().getCurrentName();
+		const schemaName = await dictionaryManager.instance().getCurrentName();
 
-    const migrationDictionary = await dictionaryManager
-      .instance()
-      .loadSchemaByVersion(schemaName, migrationVersion);
+		const migrationDictionary = await dictionaryManager
+			.instance()
+			.loadSchemaByVersion(schemaName, migrationVersion);
 
-    const invalidDonorRecords = donorData.filter(donor =>
-      invalidDonorIds.includes(donor.donorId),
-    ) as DeepReadonly<Donor>[];
+		const invalidDonorRecords = donorData.filter((donor) =>
+			invalidDonorIds.includes(donor.donorId),
+		) as DeepReadonly<Donor>[];
 
-    // Filters out any Errors for Donors that are now valid post-submission
-    // or which are related to Records which match Program Exceptions
-    const validationErrors = await Promise.all(
-      invalidDonorRecords.map(async currentDonor => {
-        const { donorId, submitterId: submitterDonorId } = currentDonor;
+		// Filters out any Errors for Donors that are now valid post-submission
+		// or which are related to Records which match Program Exceptions
+		const validationErrors = await Promise.all(
+			invalidDonorRecords.map(async (currentDonor) => {
+				const { donorId, submitterId: submitterDonorId } = currentDonor;
 
-        const currentDonorErrors = clinicalMigrationErrors
-          .filter(errorRecord => errorRecord.donorId === donorId)
-          .map(migrationError => migrationError.errors)
-          .flat();
+				const currentDonorErrors = clinicalMigrationErrors
+					.filter((errorRecord) => errorRecord.donorId === donorId)
+					.map((migrationError) => migrationError.errors)
+					.flat();
 
-        const currentDonorEntities = currentDonorErrors
-          .map(error => error.entityName)
-          .filter(filterDuplicates);
+				const currentDonorEntities = currentDonorErrors
+					.map((error) => error.entityName)
+					.filter(filterDuplicates);
 
-        const donorErrorRecords = await Promise.all(
-          currentDonorEntities.map(async entityName => {
-            const clinicalRecords: ClinicalInfo[] = getClinicalEntitiesFromDonorBySchemaName(
-              currentDonor,
-              entityName,
-            );
+				const donorErrorRecords = await Promise.all(
+					currentDonorEntities.map(async (entityName) => {
+						const clinicalRecords: ClinicalInfo[] = getClinicalEntitiesFromDonorBySchemaName(
+							currentDonor,
+							entityName,
+						);
 
-            const stringifiedRecords = clinicalRecords
-              .map(record => {
-                return prepareForSchemaReProcessing(record);
-              })
-              .filter(notEmpty);
+						const stringifiedRecords = clinicalRecords
+							.map((record) => {
+								return prepareForSchemaReProcessing(record);
+							})
+							.filter(notEmpty);
 
-            // Revalidate Donors
-            const { validationErrors, processedRecords } = dictionaryService.processRecords(
-              migrationDictionary,
-              entityName,
-              stringifiedRecords,
-            );
+						// Revalidate Donors
+						const { validationErrors, processedRecords } = dictionaryService.processRecords(
+							migrationDictionary,
+							entityName,
+							stringifiedRecords,
+						);
 
-            let filteredErrors = [...validationErrors];
+						let filteredErrors = [...validationErrors];
 
-            // Check if any Errors match Exceptions
-            if (featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
-              const exceptionErrors = await matchDonorErrorsWithExceptions(
-                programId,
-                entityName,
-                [...processedRecords],
-                filteredErrors,
-              );
+						// Check if any Errors match Exceptions
+						if (featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
+							const exceptionErrors = await matchDonorErrorsWithExceptions(
+								programId,
+								entityName,
+								[...processedRecords],
+								filteredErrors,
+							);
 
-              filteredErrors = exceptionErrors.flat();
-            }
+							filteredErrors = exceptionErrors.flat();
+						}
 
-            // Format Error Objects for UI
-            const entityErrorRecords: ClinicalEntityErrorRecord[] = filteredErrors.map(
-              (validationRecord): ClinicalEntityErrorRecord => ({
-                donorId,
-                entityName,
-                ...validationRecord,
-              }),
-            );
+						// Format Error Objects for UI
+						const entityErrorRecords: ClinicalEntityErrorRecord[] = filteredErrors.map(
+							(validationRecord): ClinicalEntityErrorRecord => ({
+								donorId,
+								entityName,
+								...validationRecord,
+							}),
+						);
 
-            const errorResponseRecord: ClinicalErrorsResponseRecord = {
-              donorId,
-              submitterDonorId,
-              entityName,
-              errors: entityErrorRecords,
-            };
+						const errorResponseRecord: ClinicalErrorsResponseRecord = {
+							donorId,
+							submitterDonorId,
+							entityName,
+							errors: entityErrorRecords,
+						};
 
-            return errorResponseRecord;
-          }),
-        );
+						return errorResponseRecord;
+					}),
+				);
 
-        return donorErrorRecords;
-      }),
-    );
-    clinicalErrors = validationErrors.flat();
-  }
+				return donorErrorRecords;
+			}),
+		);
+		clinicalErrors = validationErrors.flat();
+	}
 
-  const end = new Date().getTime() / 1000;
-  L.debug(`getDonorSubmissionErrorUpdates took ${end - start}s`);
+	const end = new Date().getTime() / 1000;
+	L.debug(`getDonorSubmissionErrorUpdates took ${end - start}s`);
 
-  return { clinicalErrors };
+	return { clinicalErrors };
 };
 
 /**
  * Remove from the list all errors which match Program Exceptions
  */
 export const matchDonorErrorsWithExceptions = async (
-  programId: string,
-  schemaName: ClinicalEntitySchemaNames,
-  processedRecords: DeepReadonly<dictionaryEntities.TypedDataRecord>[],
-  schemaValidationErrors: dictionaryEntities.SchemaValidationError[],
+	programId: string,
+	schemaName: ClinicalEntitySchemaNames,
+	processedRecords: DeepReadonly<dictionaryEntities.TypedDataRecord>[],
+	schemaValidationErrors: dictionaryEntities.SchemaValidationError[],
 ) => {
-  const exceptionResults = await Promise.all(
-    processedRecords.map(
-      async record =>
-        (
-          await checkForProgramAndEntityExceptions({
-            programId,
-            record,
-            schemaName,
-            schemaValidationErrors,
-          })
-        ).filteredErrors,
-    ),
-  );
+	const exceptionResults = await Promise.all(
+		processedRecords.map(
+			async (record) =>
+				(
+					await checkForProgramAndEntityExceptions({
+						programId,
+						record,
+						schemaName,
+						schemaValidationErrors,
+					})
+				).filteredErrors,
+		),
+	);
 
-  return exceptionResults;
+	return exceptionResults;
 };

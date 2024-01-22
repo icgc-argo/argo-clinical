@@ -1245,43 +1245,6 @@ paths:
                 type: string
         '404':
           description: no matching sample found
-  /clinical/donor/{donorId}/completion-stats:
-    patch:
-      tags:
-        - Patch Operations
-        - Admin
-      summary: Used to override donor aggregatedInfoStats
-      description: For coreCompletionOverride, only the ones defined will be overridden the rest will be recalculated
-      parameters:
-        - name: donorId
-          description: the argo donorId
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                coreCompletionOverride:
-                  type: object
-                  properties:
-                    donor:
-                      type: number
-                    treatments:
-                      type: number
-                    primaryDiagnosis:
-                      type: number
-                    followUps:
-                      type: number
-                    specimens:
-                      type: number
-      responses:
-        '200':
-          description: 'Donor with updated stats'
 
   /submission/schema:
     get:
