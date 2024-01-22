@@ -206,16 +206,6 @@ export const checkForProgramAndEntityExceptions = async ({
       (valueType === 'number' || valueType === 'integer') &&
       isValidNumericExceptionType(fieldValue);
 
-    // missing required field, validate as normal, exceptions still require a submitted value
-    const isMissingRequiredField =
-      validationError.errorType ===
-      dictionaryEntities.SchemaValidationErrorTypes.MISSING_REQUIRED_FIELD;
-
-    if (isMissingRequiredField) {
-      filteredErrors.push(validationError);
-      return;
-    }
-
     let normalizedFieldValue = '';
     let normalizedValue: string | string[] = '';
 
@@ -228,7 +218,7 @@ export const checkForProgramAndEntityExceptions = async ({
 
       normalizedFieldValue = normalizedString;
     } else if (!validNumericExceptionValue) {
-      // Field value is a type we cannot allow exceptions for, validate as normal
+      // If field value is not string or number, then value is not a type we allow exceptions for
       filteredErrors.push(validationError);
       return;
     }
