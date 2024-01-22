@@ -21,13 +21,17 @@ import { entities as dictionaryEntities } from '@overturebio-stack/lectern-clien
 import { TypedDataRecord } from '@overturebio-stack/lectern-client/lib/schema-entities';
 import _ from 'lodash';
 import {
-  ClinicalEntitySchemaNames,
-  FollowupFieldsEnum,
-  SpecimenFieldsEnum,
+	ClinicalEntitySchemaNames,
+	FollowupFieldsEnum,
+	SpecimenFieldsEnum,
 } from '../../common-model/entities';
-import entityExceptionRepository from '../../exception/repo/entity';
-import programExceptionRepository from '../../exception/repo/program';
-import { EntityException, ExceptionRecord, ProgramException } from '../../exception/types';
+import entityExceptionRepository from '../../exception/property-exceptions/repo/entity';
+import programExceptionRepository from '../../exception/property-exceptions/repo/program';
+import {
+	EntityException,
+	ExceptionRecord,
+	ProgramException,
+} from '../../exception/property-exceptions/types';
 import { DeepReadonly } from 'deep-freeze';
 
 /**
@@ -36,10 +40,10 @@ import { DeepReadonly } from 'deep-freeze';
  * @returns program and donor level exceptions for this programId
  */
 const queryForExceptions = async (programId: string) => {
-  const programException = await programExceptionRepository.find(programId);
-  const entityException = await entityExceptionRepository.find(programId);
+	const programException = await programExceptionRepository.find(programId);
+	const entityException = await entityExceptionRepository.find(programId);
 
-  return { programException, entityException };
+	return { programException, entityException };
 };
 
 /**
@@ -51,61 +55,65 @@ const queryForExceptions = async (programId: string) => {
  * @returns true if an exception match exists, false otherwise
  */
 const validateFieldValueWithExceptions = ({
-  record,
-  programException,
-  entityException,
-  schemaName,
-  fieldValue,
-  validationErrorFieldName,
+	record,
+	programException,
+	entityException,
+	schemaName,
+	fieldValue,
+	validationErrorFieldName,
 }: {
-  record: DeepReadonly<TypedDataRecord>;
-  programException: ProgramException | null;
-  entityException: EntityException | null;
-  schemaName: ClinicalEntitySchemaNames;
-  fieldValue: string;
-  validationErrorFieldName: string;
+	record: DeepReadonly<TypedDataRecord>;
+	programException: ProgramException | null;
+	entityException: EntityException | null;
+	schemaName: ClinicalEntitySchemaNames;
+	fieldValue: string;
+	validationErrorFieldName: string;
 }): boolean => {
-  const allowedValues: Set<string> = new Set();
+	const allowedValues: Set<string> = new Set();
 
-  // program level is applicable to ALL donors
-  if (programException) {
-    programException.exceptions
-      .filter(
-        exception =>
-          exception.requested_core_field === validationErrorFieldName &&
-          exception.schema === schemaName,
-      )
-      .forEach(matchingException => allowedValues.add(matchingException.requested_exception_value));
-  }
+	// program level is applicable to ALL donors
+	if (programException) {
+		programException.exceptions
+			.filter(
+				(exception) =>
+					exception.requested_core_field === validationErrorFieldName &&
+					exception.schema === schemaName,
+			)
+			.forEach((matchingException) =>
+				allowedValues.add(matchingException.requested_exception_value),
+			);
+	}
 
-  if (entityException) {
-    const exceptions: ExceptionRecord[] = [];
+	if (entityException) {
+		const exceptions: ExceptionRecord[] = [];
 
-    switch (schemaName) {
-      case ClinicalEntitySchemaNames.SPECIMEN:
-        const submitterSpecimenId = record[SpecimenFieldsEnum.submitter_specimen_id] || undefined;
-        entityException.specimen
-          .filter(exception => exception.submitter_specimen_id === submitterSpecimenId)
-          .forEach(exception => exceptions.push(exception));
-        break;
-      case ClinicalEntitySchemaNames.FOLLOW_UP:
-        const submitterFollowupId = record[FollowupFieldsEnum.submitter_follow_up_id] || undefined;
-        entityException.follow_up
-          .filter(exception => exception.submitter_follow_up_id === submitterFollowupId)
-          .forEach(exception => exceptions.push(exception));
-        break;
-      default:
-        // schema is neither speicmen nor followup, do not filter for entity exceptions
-        break;
-    }
+		switch (schemaName) {
+			case ClinicalEntitySchemaNames.SPECIMEN:
+				const submitterSpecimenId = record[SpecimenFieldsEnum.submitter_specimen_id] || undefined;
+				entityException.specimen
+					.filter((exception) => exception.submitter_specimen_id === submitterSpecimenId)
+					.forEach((exception) => exceptions.push(exception));
+				break;
+			case ClinicalEntitySchemaNames.FOLLOW_UP:
+				const submitterFollowupId = record[FollowupFieldsEnum.submitter_follow_up_id] || undefined;
+				entityException.follow_up
+					.filter((exception) => exception.submitter_follow_up_id === submitterFollowupId)
+					.forEach((exception) => exceptions.push(exception));
+				break;
+			default:
+				// schema is neither speicmen nor followup, do not filter for entity exceptions
+				break;
+		}
 
-    exceptions
-      .filter(exception => exception.requested_core_field === validationErrorFieldName)
-      .forEach(matchingException => allowedValues.add(matchingException.requested_exception_value));
-  }
+		exceptions
+			.filter((exception) => exception.requested_core_field === validationErrorFieldName)
+			.forEach((matchingException) =>
+				allowedValues.add(matchingException.requested_exception_value),
+			);
+	}
 
-  // check submitted exception value matches record validation error field value
-  return allowedValues.has(fieldValue);
+	// check submitted exception value matches record validation error field value
+	return allowedValues.has(fieldValue);
 };
 
 /**
@@ -116,19 +124,19 @@ const validateFieldValueWithExceptions = ({
  * @returns normalized string
  */
 const normalizeExceptionValue = (value: Readonly<string>) =>
-  _.upperFirst(value.trim().toLowerCase());
+	_.upperFirst(value.trim().toLowerCase());
 
 /**
  * Check if value is exactly matching an array with a single string value.
  */
 const isSingleString = (value: DeepReadonly<dictionaryEntities.SchemaTypes>): value is [string] =>
-  Array.isArray(value) && value.length === 1 && typeof value[0] === 'string';
+	Array.isArray(value) && value.length === 1 && typeof value[0] === 'string';
 
 /**
  * Exceptions can only be applied to text values. Arrays of strings are allowed if they have a single string value.
  */
 const isAllowedTypeForException = (
-  value: DeepReadonly<dictionaryEntities.SchemaTypes>,
+	value: DeepReadonly<dictionaryEntities.SchemaTypes>,
 ): value is string | [string] => typeof value === 'string' || isSingleString(value);
 
 /**
@@ -143,74 +151,74 @@ const isAllowedTypeForException = (
  * @param schemaValidationErrors
  */
 export const checkForProgramAndEntityExceptions = async ({
-  programId,
-  record,
-  schemaName,
-  schemaValidationErrors,
+	programId,
+	record,
+	schemaName,
+	schemaValidationErrors,
 }: {
-  programId: string;
-  record: DeepReadonly<TypedDataRecord>;
-  schemaName: ClinicalEntitySchemaNames;
-  schemaValidationErrors: dictionaryEntities.SchemaValidationError[];
+	programId: string;
+	record: DeepReadonly<TypedDataRecord>;
+	schemaName: ClinicalEntitySchemaNames;
+	schemaValidationErrors: dictionaryEntities.SchemaValidationError[];
 }) => {
-  const filteredErrors: dictionaryEntities.SchemaValidationError[] = [];
-  let normalizedRecord = record;
+	const filteredErrors: dictionaryEntities.SchemaValidationError[] = [];
+	let normalizedRecord = record;
 
-  // retrieve submitted exceptions for program id (both program level and entity level)
-  const { programException, entityException } = await queryForExceptions(programId);
+	// retrieve submitted exceptions for program id (both program level and entity level)
+	const { programException, entityException } = await queryForExceptions(programId);
 
-  // if there are submitted exceptions for this program, check if they match record values
-  if (!(programException || entityException)) {
-    return { filteredErrors: schemaValidationErrors, normalizedRecord: record };
-  }
+	// if there are submitted exceptions for this program, check if they match record values
+	if (!(programException || entityException)) {
+		return { filteredErrors: schemaValidationErrors, normalizedRecord: record };
+	}
 
-  // check each validation error for a matching exception, and remove the validaiton if the value matches the exception value
-  schemaValidationErrors.forEach(validationError => {
-    const validationErrorFieldName = validationError.fieldName;
-    const fieldValue = record[validationErrorFieldName];
+	// check each validation error for a matching exception, and remove the validaiton if the value matches the exception value
+	schemaValidationErrors.forEach((validationError) => {
+		const validationErrorFieldName = validationError.fieldName;
+		const fieldValue = record[validationErrorFieldName];
 
-    // Field value is a type we cannot allow exceptions for, validate as normal
-    if (!isAllowedTypeForException(fieldValue)) {
-      filteredErrors.push(validationError);
-      return;
-    }
+		// Field value is a type we cannot allow exceptions for, validate as normal
+		if (!isAllowedTypeForException(fieldValue)) {
+			filteredErrors.push(validationError);
+			return;
+		}
 
-    // missing required field, validate as normal, exceptions still require a submitted value
-    const isMissingRequiredField =
-      validationError.errorType ===
-      dictionaryEntities.SchemaValidationErrorTypes.MISSING_REQUIRED_FIELD;
+		// missing required field, validate as normal, exceptions still require a submitted value
+		const isMissingRequiredField =
+			validationError.errorType ===
+			dictionaryEntities.SchemaValidationErrorTypes.MISSING_REQUIRED_FIELD;
 
-    if (isMissingRequiredField) {
-      filteredErrors.push(validationError);
-      return;
-    }
+		if (isMissingRequiredField) {
+			filteredErrors.push(validationError);
+			return;
+		}
 
-    // get normalized value for record, from either the string value or from the single string inside of the array.
-    // we should know from `isAllowedTypeForException` that the fieldValue is one of those two types.
-    const stringFieldValue = isSingleString(fieldValue) ? fieldValue[0] : fieldValue;
-    const normalizedString = normalizeExceptionValue(stringFieldValue);
-    const normalizedValue = isSingleString(fieldValue) ? [normalizedString] : normalizedString;
+		// get normalized value for record, from either the string value or from the single string inside of the array.
+		// we should know from `isAllowedTypeForException` that the fieldValue is one of those two types.
+		const stringFieldValue = isSingleString(fieldValue) ? fieldValue[0] : fieldValue;
+		const normalizedString = normalizeExceptionValue(stringFieldValue);
+		const normalizedValue = isSingleString(fieldValue) ? [normalizedString] : normalizedString;
 
-    const valueHasException = validateFieldValueWithExceptions({
-      record,
-      programException,
-      entityException,
-      schemaName,
-      fieldValue: normalizedString,
-      validationErrorFieldName: validationError.fieldName,
-    });
+		const valueHasException = validateFieldValueWithExceptions({
+			record,
+			programException,
+			entityException,
+			schemaName,
+			fieldValue: normalizedString,
+			validationErrorFieldName: validationError.fieldName,
+		});
 
-    if (valueHasException) {
-      // ensure value is normalized exception value
-      const normalizedExceptionRecord = {
-        ...record,
-        [validationErrorFieldName]: normalizedValue, // normalized value keeps this as array for array fields, or string for string fields
-      };
-      normalizedRecord = normalizedExceptionRecord;
-    } else {
-      // only add validation errors that don't have exceptions
-      filteredErrors.push(validationError);
-    }
-  });
-  return { filteredErrors, normalizedRecord };
+		if (valueHasException) {
+			// ensure value is normalized exception value
+			const normalizedExceptionRecord = {
+				...record,
+				[validationErrorFieldName]: normalizedValue, // normalized value keeps this as array for array fields, or string for string fields
+			};
+			normalizedRecord = normalizedExceptionRecord;
+		} else {
+			// only add validation errors that don't have exceptions
+			filteredErrors.push(validationError);
+		}
+	});
+	return { filteredErrors, normalizedRecord };
 };

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 The Ontario Institute for Cancer Research. All rights reserved
+ * Copyright (c) 2024 The Ontario Institute for Cancer Research. All rights reserved
  *
  * This program and the accompanying materials are made available under the terms of
  * the GNU Affero General Public License v3.0. You should have received a copy of the
@@ -18,16 +18,15 @@
  */
 
 import _ from 'lodash';
-import { ClinicalEntitySchemaNames } from '../common-model/entities';
-
-export type ObjectValues<T> = T[keyof T];
+import { ClinicalEntitySchemaNames } from '../../common-model/entities';
+import { Values } from '../../utils/objectTypes';
 
 // base
 export type ExceptionRecord = {
-  program_name: string;
-  schema: string;
-  requested_core_field: string;
-  requested_exception_value: string;
+	program_name: string;
+	schema: string;
+	requested_core_field: string;
+	requested_exception_value: string;
 };
 
 // program exception
@@ -35,115 +34,115 @@ export type ProgramExceptionRecord = ExceptionRecord;
 
 // type after validation
 export type ProgramException = {
-  programId: string;
-  exceptions: ReadonlyArray<ProgramExceptionRecord>;
+	programId: string;
+	exceptions: ReadonlyArray<ProgramExceptionRecord>;
 };
 
 // Entity
 export type BaseEntityExceptionRecord = ExceptionRecord & { submitter_donor_id: string };
 
 export type SpecimenExceptionRecord = BaseEntityExceptionRecord & {
-  submitter_specimen_id: string;
+	submitter_specimen_id: string;
 };
 
 export type FollowUpExceptionRecord = BaseEntityExceptionRecord & {
-  submitter_follow_up_id: string;
+	submitter_follow_up_id: string;
 };
 
 export type EntityExceptionRecord = SpecimenExceptionRecord | FollowUpExceptionRecord;
 export type EntityExceptionRecords = (SpecimenExceptionRecord | FollowUpExceptionRecord)[];
 export type ExceptionRecords =
-  | ReadonlyArray<ProgramExceptionRecord>
-  | ReadonlyArray<SpecimenExceptionRecord>
-  | ReadonlyArray<FollowUpExceptionRecord>;
+	| ReadonlyArray<ProgramExceptionRecord>
+	| ReadonlyArray<SpecimenExceptionRecord>
+	| ReadonlyArray<FollowUpExceptionRecord>;
 
 /**
  * entity values to be valid EntityException exceptions arrays
  * provide typing to tsv schema string to exception schema string
  */
 export const EntityValues: Record<string, Exclude<keyof EntityException, 'programId'>> = {
-  specimen: 'specimen',
-  follow_up: 'follow_up',
+	specimen: 'specimen',
+	follow_up: 'follow_up',
 } as const;
 
-export type Entity = ObjectValues<typeof EntityValues>;
+export type Entity = Values<typeof EntityValues>;
 
 /**
  * entity keys are same as clinical submission which are the same as dictionary values eg. follow_up
  */
 export type EntityException = {
-  programId: string;
-  specimen: SpecimenExceptionRecord[];
-  follow_up: FollowUpExceptionRecord[];
+	programId: string;
+	specimen: SpecimenExceptionRecord[];
+	follow_up: FollowUpExceptionRecord[];
 };
 
 export type EntityExceptionSchemaNames = Extract<
-  ClinicalEntitySchemaNames,
-  ClinicalEntitySchemaNames.SPECIMEN | ClinicalEntitySchemaNames.FOLLOW_UP
+	ClinicalEntitySchemaNames,
+	ClinicalEntitySchemaNames.SPECIMEN | ClinicalEntitySchemaNames.FOLLOW_UP
 >;
 
 export const ExceptionValue = {
-  Unknown: 'Unknown',
-  NotApplicable: 'Not applicable',
+	Unknown: 'Unknown',
+	NotApplicable: 'Not applicable',
 } as const;
 
-export type ExceptionValueType = ObjectValues<typeof ExceptionValue>;
+export type ExceptionValueType = Values<typeof ExceptionValue>;
 
 const baseEntityExceptionFields = [
-  'program_name',
-  'schema',
-  'requested_core_field',
-  'requested_exception_value',
-  'submitter_donor_id',
+	'program_name',
+	'schema',
+	'requested_core_field',
+	'requested_exception_value',
+	'submitter_donor_id',
 ];
 
 // type guard helpers
 const isExceptionRecordCheck = (input: any) => {
-  return (
-    // input must not be null and be an object (typeof null = 'object', amusingly)
-    typeof input === 'object' &&
-    input !== null &&
-    // program_name must exist and be string
-    'program_name' in input &&
-    typeof input.program_name === 'string' &&
-    // schema must exist and be string
-    'schema' in input &&
-    typeof input.schema === 'string' &&
-    // requested_core_field must exist and be string
-    'requested_core_field' in input &&
-    typeof input.requested_core_field === 'string' &&
-    // requested_exception_value must exist and be string and be in enum list
-    'requested_exception_value' in input &&
-    typeof input.requested_exception_value === 'string'
-  );
+	return (
+		// input must not be null and be an object (typeof null = 'object', amusingly)
+		typeof input === 'object' &&
+		input !== null &&
+		// program_name must exist and be string
+		'program_name' in input &&
+		typeof input.program_name === 'string' &&
+		// schema must exist and be string
+		'schema' in input &&
+		typeof input.schema === 'string' &&
+		// requested_core_field must exist and be string
+		'requested_core_field' in input &&
+		typeof input.requested_core_field === 'string' &&
+		// requested_exception_value must exist and be string and be in enum list
+		'requested_exception_value' in input &&
+		typeof input.requested_exception_value === 'string'
+	);
 };
 
 export const isSpecimenExceptionRecord = (input: any): input is SpecimenExceptionRecord => {
-  return (
-    // submitter_specimen_id must exist and be a string
-    'submitter_specimen_id' in input && typeof input.submitter_specimen_id === 'string'
-  );
+	return (
+		// submitter_specimen_id must exist and be a string
+		'submitter_specimen_id' in input && typeof input.submitter_specimen_id === 'string'
+	);
 };
 
 export const isFollowupExceptionRecord = (input: any): input is FollowUpExceptionRecord => {
-  return (
-    // submitter_follow_up_id must exist and be a string
-    'submitter_follow_up_id' in input && typeof input.submitter_follow_up_id === 'string'
-  );
+	return (
+		// submitter_follow_up_id must exist and be a string
+		'submitter_follow_up_id' in input && typeof input.submitter_follow_up_id === 'string'
+	);
 };
 
 // type guards
 export const isEntityExceptionRecord = (input: any): input is EntityExceptionRecord => {
-  const hasDonorIdField =
-    'submitter_donor_id' in input && typeof input.submitter_donor_id === 'string';
+	const hasDonorIdField =
+		'submitter_donor_id' in input && typeof input.submitter_donor_id === 'string';
 
-  if (hasDonorIdField && isExceptionRecord(input)) {
-    // remove based exception record fields to validate specific entity
-    const entityFields = _.omit(input, baseEntityExceptionFields);
-    // can't have more than one identifying field eg. submitter_specimen_id AND submitter_follow_up_id
-    return Object.keys(entityFields).length === 1;
-  }
-  return false;
+	if (hasDonorIdField && isExceptionRecord(input)) {
+		// remove based exception record fields to validate specific entity
+		const entityFields = _.omit(input, baseEntityExceptionFields);
+		// can't have more than one identifying field eg. submitter_specimen_id AND submitter_follow_up_id
+		return Object.keys(entityFields).length === 1;
+	}
+	return false;
 };
 
 const isExceptionRecord = (input: any): input is ExceptionRecord => isExceptionRecordCheck(input);
@@ -156,17 +155,17 @@ export const isProgramExceptionRecord = isExceptionRecord;
 
 // array helpers
 export const isArrayOf = <T>(
-  input: any[] | readonly any[],
-  validator: (_: any) => _ is T,
+	input: any[] | readonly any[],
+	validator: (_: any) => _ is T,
 ): input is T[] => {
-  return input.every(validator);
+	return input.every(validator);
 };
 
 export const isReadonlyArrayOf = <T>(
-  input: ReadonlyArray<any>,
-  validator: (_: any) => _ is T,
+	input: ReadonlyArray<any>,
+	validator: (_: any) => _ is T,
 ): input is ReadonlyArray<T> => {
-  return input.every(validator);
+	return input.every(validator);
 };
 
 // utility

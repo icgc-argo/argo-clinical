@@ -19,19 +19,10 @@
 
 import mongoose from 'mongoose';
 import { loggerFor } from '../../logger';
-import { DatabaseError, Result, failure, success } from '../error-handling';
+import { Result, failure, success } from '../../utils/results';
+import { MissingEntityException, MissingEntityExceptionSummary } from './model';
 
 const L = loggerFor(__filename);
-
-type MissingEntityException = {
-	programShortName: string;
-	donorSubmitterIds: string[];
-};
-
-type MissingEntityExceptionSummary = {
-	programShortName: string;
-	donorCount: number;
-};
 
 const missingEntityExceptionSchema = new mongoose.Schema<MissingEntityException>({
 	programShortName: String,

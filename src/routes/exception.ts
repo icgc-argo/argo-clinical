@@ -19,11 +19,13 @@
 
 import * as express from 'express';
 import multer from 'multer';
-import exceptionApi, { requestContainsFile } from '../exception/exception-api';
+import exceptionApi, {
+	requestContainsFile,
+} from '../exception/property-exceptions/property-exception-api';
 import { wrapAsync } from '../middleware';
 import featureFlags from '../feature-flags';
 import { Request, Response } from 'express';
-import { ExceptionErrorHandler } from '../exception/error-handling';
+import { ExceptionErrorHandler } from '../exception/property-exceptions/error-handling';
 
 // config
 const router = express.Router({ mergeParams: true });
@@ -44,5 +46,5 @@ router.delete('/entity/:entity', wrapAsync(exceptionApi.deleteEntityException));
 router.use(ExceptionErrorHandler);
 
 export default featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED
-  ? router
-  : (req: Request, res: Response) => res.status(404).send();
+	? router
+	: (req: Request, res: Response) => res.status(404).send();
