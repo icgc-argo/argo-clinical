@@ -1325,8 +1325,6 @@ tags:
     description: Uploading, Deleting, Retrieving exceptions
   - name: Clinical Data
     description: ''
-  - name: Patch Operations
-    description: Clinical Service Patch Operations
   - name: ICGC Import
     description: APIs to do the icgc import
   - name: Admin
