@@ -2,7 +2,7 @@
  * Missing Entity Exception data model
  */
 export type MissingEntityException = {
-	programShortName: string;
+	programId: string;
 	donorSubmitterIds: string[];
 };
 
@@ -11,6 +11,6 @@ export type MissingEntityException = {
  * of donors with an exception for a program instead of all the donor submitter IDs
  */
 export type MissingEntityExceptionSummary = {
-	programShortName: string;
+	programId: string;
 	donorCount: number;
 };

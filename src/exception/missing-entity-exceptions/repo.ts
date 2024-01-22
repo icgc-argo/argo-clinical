@@ -25,7 +25,7 @@ import { MissingEntityException, MissingEntityExceptionSummary } from './model';
 const L = loggerFor(__filename);
 
 const missingEntityExceptionSchema = new mongoose.Schema<MissingEntityException>({
-	programShortName: String,
+	programId: String,
 	donorSubmitterIds: [String],
 });
 
@@ -48,7 +48,7 @@ export const createOrUpdate = async (
 ): Promise<Result<MissingEntityException>> => {
 	try {
 		const updatedException = await MissingEntityExceptionModel.findOneAndReplace(
-			{ programShortName: missingEntityException.programShortName },
+			{ programId: missingEntityException.programId },
 			missingEntityException,
 			{ upsert: true, new: true },
 		).lean(true);
@@ -56,7 +56,7 @@ export const createOrUpdate = async (
 		return success(updatedException);
 	} catch (error) {
 		L.error(
-			`Failure creating or updating Missing Entity Exception for program: ${missingEntityException.programShortName}`,
+			`Failure creating or updating Missing Entity Exception for program: ${missingEntityException.programId}`,
 			error,
 		);
 		return failure(`Unable to save Missing Entity Exception to database.`);
@@ -68,23 +68,25 @@ export const createOrUpdate = async (
  * then an object will be returned with an empty list of donors.
  *
  * If this method returns a failure then an error occurred connecting to the database.
- * @param programShortName
+ * @param programId
  * @returns
  */
-export const getByProgramShortName = async (
-	programShortName: string,
+export const getByProgramId = async (
+	programId: string,
 ): Promise<Result<MissingEntityException>> => {
 	try {
-		const exception = await MissingEntityExceptionModel.findOne({ programShortName }).lean(true);
+		const exception = await MissingEntityExceptionModel.findOne({
+			programId: programId,
+		}).lean(true);
 		if (exception) {
 			return success(exception);
 		}
 		return success({
-			programShortName,
+			programId,
 			donorSubmitterIds: [],
 		});
 	} catch (error) {
-		L.error(`Failure reading Missing Entity Exception for program: ${programShortName}`, error);
+		L.error(`Failure reading Missing Entity Exception for program: ${programId}`, error);
 		return failure(`Error reading data from the database.`, error);
 	}
 };
@@ -103,7 +105,7 @@ export const listAll = async (): Promise<Result<MissingEntityExceptionSummary[]>
 		const summaries: MissingEntityExceptionSummary[] = exceptions.map((exception) => {
 			return {
 				donorCount: exception.donorSubmitterIds.length,
-				programShortName: exception.programShortName,
+				programId: exception.programId,
 			};
 		});
 		return success(summaries);
