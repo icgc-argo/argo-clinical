@@ -26,6 +26,7 @@ import { wrapAsync } from '../middleware';
 import featureFlags from '../feature-flags';
 import { Request, Response } from 'express';
 import { ExceptionErrorHandler } from '../exception/property-exceptions/error-handling';
+import missingEntityExceptionApi from '../exception/missing-entity-exceptions/api';
 
 /**
  * Property exceptions
@@ -58,7 +59,7 @@ const missingEntityExceptionRouter = express.Router({ mergeParams: true });
 missingEntityExceptionRouter.get('/', (req, resp) => resp.send({ msg: 'not implemented yet...' }));
 
 // POST
-missingEntityExceptionRouter.post('/');
+missingEntityExceptionRouter.post('/', missingEntityExceptionApi.createEntityException);
 
 const notFound = (req: Request, res: Response) => res.status(404).send();
 
