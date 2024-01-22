@@ -30,7 +30,7 @@ const parseBoolString = (queryString: string) => {
 };
 
 class MissingEntityExceptionController {
-	// @HasFullWriteAccess()
+	@HasFullWriteAccess()
 	async createEntityException(req: Request, res: Response) {
 		const programId = req.params.programId;
 		const donorSubmitterIds = req.body.donorSubmitterIds;
