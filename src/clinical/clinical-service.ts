@@ -197,17 +197,6 @@ export async function deleteDonors(programId: string) {
 	return await donorDao.deleteByProgramId(programId);
 }
 
-export const updateDonorStats = async (donorId: number, coreCompletionOverride: any) => {
-	const [donor] = await donorDao.findBy({ donorId: donorId }, 1);
-
-	if (!donor) return undefined;
-
-	// Update core
-	const updatedDonor = patchCoreCompletionWithOverride(donor, coreCompletionOverride);
-
-	return await donorDao.update(updatedDonor);
-};
-
 export const getClinicalData = async (programId: string) => {
 	if (!programId) throw new Error('Missing programId!');
 	const start = new Date().getTime() / 1000;
