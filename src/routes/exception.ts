@@ -19,7 +19,7 @@
 
 import * as express from 'express';
 import multer from 'multer';
-import exceptionApi, {
+import propertyExceptionApi, {
 	requestContainsFile,
 } from '../exception/property-exceptions/property-exception-api';
 import { wrapAsync } from '../middleware';
@@ -38,17 +38,20 @@ const upload = multer({ dest: '/tmp' });
 propertyExceptionRouter.use(ExceptionErrorHandler);
 
 // GET
-propertyExceptionRouter.get('/', wrapAsync(exceptionApi.getProgramException));
-propertyExceptionRouter.get('/entity', wrapAsync(exceptionApi.getEntityException));
+propertyExceptionRouter.get('/', wrapAsync(propertyExceptionApi.getProgramException));
+propertyExceptionRouter.get('/entity', wrapAsync(propertyExceptionApi.getEntityException));
 
 // POST
 propertyExceptionRouter.post('*', upload.single('exceptionFile'), requestContainsFile);
-propertyExceptionRouter.post('/', wrapAsync(exceptionApi.createProgramException));
-propertyExceptionRouter.post('/entity', wrapAsync(exceptionApi.createEntityException));
+propertyExceptionRouter.post('/', wrapAsync(propertyExceptionApi.createProgramException));
+propertyExceptionRouter.post('/entity', wrapAsync(propertyExceptionApi.createEntityException));
 
 // DELETE
-propertyExceptionRouter.delete('/', wrapAsync(exceptionApi.clearProgramException));
-propertyExceptionRouter.delete('/entity/:entity', wrapAsync(exceptionApi.deleteEntityException));
+propertyExceptionRouter.delete('/', wrapAsync(propertyExceptionApi.clearProgramException));
+propertyExceptionRouter.delete(
+	'/entity/:entity',
+	wrapAsync(propertyExceptionApi.deleteEntityException),
+);
 
 /**
  * Missing entity exceptions
