@@ -62,7 +62,7 @@ const missingEntityExceptionRouter = express.Router({ mergeParams: true });
 missingEntityExceptionRouter.get('/', (req, resp) => resp.send({ msg: 'not implemented yet...' }));
 
 // POST
-missingEntityExceptionRouter.post('/', missingEntityExceptionApi.createEntityException);
+missingEntityExceptionRouter.post('/', wrapAsync(missingEntityExceptionApi.createEntityException));
 
 const notFound = (req: Request, res: Response) => res.status(404).send();
 
