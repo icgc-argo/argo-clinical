@@ -17,13 +17,25 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { HasFullWriteAccess } from '../../decorators';
+import { HasFullReadAccess, HasFullWriteAccess } from '../../decorators';
 import { Request, Response } from 'express';
 import { parseBoolString } from '../../utils/request';
 import * as service from './service';
 import { z as zod } from 'zod';
+import { listAll } from './repo';
 
 class MissingEntityExceptionController {
+	@HasFullReadAccess()
+	async listMissingEntityExceptions(req: Request, res: Response) {
+		const result = await listAll();
+		if (!result.success) {
+			const { message, errors } = result;
+			return res.status(500).send({ message, errors });
+		} else {
+			return res.status(201).send(result.exception);
+		}
+	}
+
 	@HasFullWriteAccess()
 	async createEntityException(req: Request, res: Response) {
 		const createRequestBody = zod.object({ donorSubmitterIds: zod.string().array() });
