@@ -851,7 +851,11 @@ paths:
         - $ref: '#/components/parameters/PathProgramId'
       responses:
         '200':
-          $ref: '#/component/responses/MissingEntityGet'
+          description: 'Missing entity exception donor submitter ids for a single program.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissingEntityException'
         '500':
           $ref: '#/component/responses/ServerError'
         '401':
@@ -896,7 +900,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/responses/MissingEntityListResponse'
+                type: array
+                items:
+                  $ref: '#/components/schemas/MissingEntityException'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
@@ -1474,13 +1480,6 @@ components:
                 msg: 'string'
                 code: 'INVALID_FILE_NAME'
 
-    MissingEntityGet:
-      description: 'Get missing donor submitter ids for a single program.'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/MissingEntityGetResp'
-
   securitySchemes:
     bearerAuth:
       type: http
@@ -1934,17 +1933,7 @@ components:
           description: 'Amount of donors left unchanged.'
           type: integer
 
-    MissingEntityListResponse:
-      type: array
-      items:
-        type: object
-        properties:
-          programId:
-            type: string
-          donorCount:
-            type: integer
-
-    MissingEntityGetResp:
+    MissingEntityException:
       type: object
       properties:
         programId:
