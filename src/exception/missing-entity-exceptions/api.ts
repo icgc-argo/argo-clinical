@@ -26,31 +26,32 @@ import { z as zod } from 'zod';
 class MissingEntityExceptionController {
 	@HasFullWriteAccess()
 	async createEntityException(req: Request, res: Response) {
-		const createBody = zod.string().array();
+		const createRequestBody = zod.object({ donorSubmitterIds: zod.string().array() });
 
 		const programId = req.params.programId;
 		const donorSubmitterIds = req.body.donorSubmitterIds;
 		const isDryRun = parseBoolString(req.query['dry-run']);
-		const validateBodyResult = createBody.safeParse(donorSubmitterIds);
+		const validateBodyResult = createRequestBody.safeParse(req.body);
 
-		if (validateBodyResult.success) {
-			const result = await service.create({
-				programId,
-				newDonorIds: donorSubmitterIds,
-				isDryRun,
+		if (!validateBodyResult.success) {
+			return res.status(400).send({
+				message: 'Failed to validate request body for donor submitter ids.',
+				errors: validateBodyResult.error,
 			});
-
-			if (!result.success) {
-				const { message, errors } = result;
-				return res.status(500).send({ message, errors });
-			} else {
-				return res.status(201).send(result.exception);
-			}
 		}
-		return res.status(400).send({
-			message: 'Failed to validate request body for donor submitter ids.',
-			errors: validateBodyResult.error,
+
+		const result = await service.create({
+			programId,
+			newDonorIds: donorSubmitterIds,
+			isDryRun,
 		});
+
+		if (!result.success) {
+			const { message, errors } = result;
+			return res.status(500).send({ message, errors });
+		} else {
+			return res.status(201).send(result.exception);
+		}
 	}
 }
 
