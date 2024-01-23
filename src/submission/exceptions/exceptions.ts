@@ -143,14 +143,14 @@ const isSingleString = (value: DeepReadonly<dictionaryEntities.SchemaTypes>): va
   Array.isArray(value) && value.length === 1 && typeof value[0] === 'string';
 
 /**
- * Exceptions can only be applied to text values. Arrays of strings are allowed if they have a single string value.
+ * Check Exception values applied to text fields. Arrays of strings are allowed if they have a single string value.
  */
 const isValidStringExceptionType = (
   value: DeepReadonly<dictionaryEntities.SchemaTypes>,
 ): value is string | [string] => typeof value === 'string' || isSingleString(value);
 
 /**
- * Exceptions can only be applied to text values. Arrays of strings are allowed if they have a single string value.
+ * Exceptions for Numeric fields allow submitting 'blank' values
  */
 const isValidNumericExceptionType = (
   value: DeepReadonly<dictionaryEntities.SchemaTypes>,
