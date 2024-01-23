@@ -95,7 +95,7 @@ const validateFieldValueWithExceptions = ({
           .forEach(exception => exceptions.push(exception));
         break;
       default:
-        // schema is neither speicmen nor followup, do not filter for entity exceptions
+        // schema is neither specimen nor followup, do not filter for entity exceptions
         break;
     }
 

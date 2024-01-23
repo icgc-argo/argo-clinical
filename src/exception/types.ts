@@ -112,7 +112,7 @@ const isExceptionRecordCheck = (input: any) => {
     // requested_core_field must exist and be string
     'requested_core_field' in input &&
     typeof input.requested_core_field === 'string' &&
-    // requested_exception_value must exist and be string and be in enum list
+    // requested_exception_value must exist and be string
     'requested_exception_value' in input &&
     typeof input.requested_exception_value === 'string'
   );
