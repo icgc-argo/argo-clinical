@@ -21,26 +21,36 @@ import { HasFullWriteAccess } from '../../decorators';
 import { Request, Response } from 'express';
 import { parseBoolString } from '../../utils/request';
 import * as service from './service';
+import { z as zod } from 'zod';
 
 class MissingEntityExceptionController {
 	@HasFullWriteAccess()
 	async createEntityException(req: Request, res: Response) {
+		const createBody = zod.string().array();
+
 		const programId = req.params.programId;
 		const donorSubmitterIds = req.body.donorSubmitterIds;
 		const isDryRun = parseBoolString(req.query['dry-run']);
+		const validateBodyResult = createBody.safeParse(donorSubmitterIds);
 
-		const result = await service.create({
-			programId,
-			newDonorIds: donorSubmitterIds,
-			isDryRun,
-		});
+		if (validateBodyResult.success) {
+			const result = await service.create({
+				programId,
+				newDonorIds: donorSubmitterIds,
+				isDryRun,
+			});
 
-		if (!result.success) {
-			const { message, errors } = result;
-			return res.status(500).send({ message, errors });
-		} else {
-			return res.status(201).send(result.exception);
+			if (!result.success) {
+				const { message, errors } = result;
+				return res.status(500).send({ message, errors });
+			} else {
+				return res.status(201).send(result.exception);
+			}
 		}
+		return res.status(400).send({
+			message: 'Failed to validate request body for donor submitter ids.',
+			errors: validateBodyResult.error,
+		});
 	}
 }
 
