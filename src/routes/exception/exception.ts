@@ -23,6 +23,6 @@ import missingEntityExceptionRouter from './missing-entity';
 
 const exceptionRouter = express.Router({ mergeParams: true });
 exceptionRouter.use('/property', propertyExceptionRouter);
-exceptionRouter.use('/missing-entity-exception', missingEntityExceptionRouter);
+exceptionRouter.use('/missing-entity', missingEntityExceptionRouter);
 
 export default exceptionRouter;

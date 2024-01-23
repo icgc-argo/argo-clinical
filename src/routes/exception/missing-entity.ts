@@ -27,11 +27,14 @@ import missingEntityExceptionApi from '../../exception/missing-entity-exceptions
 const missingEntityExceptionRouter = express.Router({ mergeParams: true });
 
 // GET
-missingEntityExceptionRouter.get('/', (req, resp) =>
+missingEntityExceptionRouter.get('/:programId', (req, resp) =>
 	resp.status(500).send({ msg: 'not implemented yet...' }),
 );
 
 // POST
-missingEntityExceptionRouter.post('/', wrapAsync(missingEntityExceptionApi.createEntityException));
+missingEntityExceptionRouter.post(
+	'/:programId',
+	wrapAsync(missingEntityExceptionApi.createEntityException),
+);
 
 export default missingEntityExceptionRouter;
