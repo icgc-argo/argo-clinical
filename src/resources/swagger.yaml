@@ -727,7 +727,7 @@ paths:
         '201':
           description: imported successfully - will indicate number of new donors and number of updated donors
 
-  /exception/{programId}:
+  /exception/property/{programId}:
     get:
       tags:
         - Exception
@@ -778,7 +778,7 @@ paths:
         '404':
           description: 'unsuccessful resource not found'
 
-  /exception/{programId}/entity:
+  /exception/property/{programId}/entity:
     get:
       tags:
         - Exception
@@ -813,7 +813,7 @@ paths:
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
-  /exception/{programId}/entity/{entity}:
+  /exception/property/{programId}/entity/{entity}:
     delete:
       tags:
         - Exception
@@ -842,7 +842,7 @@ paths:
         '200':
           description: 'returns new entity exception after deletion'
 
-  /exception/${programId}/missing-entity:
+  /exception/missing-entity/${programId}:
     post:
       tags:
         - Exception
