@@ -727,7 +727,7 @@ paths:
         '201':
           description: imported successfully - will indicate number of new donors and number of updated donors
 
-  /exception/{programId}:
+  /exception/property/{programId}:
     get:
       tags:
         - Exception
@@ -778,7 +778,7 @@ paths:
         '404':
           description: 'unsuccessful resource not found'
 
-  /exception/{programId}/entity:
+  /exception/property/{programId}/entity:
     get:
       tags:
         - Exception
@@ -813,7 +813,7 @@ paths:
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
-  /exception/{programId}/entity/{entity}:
+  /exception/property/{programId}/entity/{entity}:
     delete:
       tags:
         - Exception
@@ -841,6 +841,32 @@ paths:
       responses:
         '200':
           description: 'returns new entity exception after deletion'
+
+  /exception/missing-entity/${programId}:
+    post:
+      tags:
+        - Exception
+      summary: Add submitter donor ids for exception
+      parameters:
+        - $ref: '#/components/parameters/PathProgramId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MissingEntityExceptionDonorIds'
+
+      responses:
+        '200':
+          description: 'successful upload'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissingEntityCreateResponse'
+        '500':
+          $ref: '#/component/responses/ServerError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
 
   /clinical/donors/tsv:
     post:
@@ -1415,6 +1441,7 @@ components:
               value:
                 msg: 'string'
                 code: 'INVALID_FILE_NAME'
+
   securitySchemes:
     bearerAuth:
       type: http
@@ -1840,3 +1867,30 @@ components:
           comorbidity,
           biomarker,
         ]
+
+    MissingEntityExceptionDonorIds:
+      type: object
+      properties:
+        submitter_donor_ids:
+          description: 'Array of strings, each of which is a submitter donor id to add to this program/s exception. This endpoint is additive.'
+          type: array
+
+    MissingEntityCreateResponse:
+      type: object
+      properties:
+        donorsAdded:
+          description: 'New donors added.'
+          type: array
+          items:
+            type: string
+        donorsAddedCount:
+          description: 'Amount of new donors added.'
+          type: integer
+        donorsUnchanged:
+          description: 'Donors left unchanged.'
+          type: array
+          items:
+            type: string
+        donorsUnchangedCount:
+          description: 'Amount of donors left unchanged.'
+          type: integer
