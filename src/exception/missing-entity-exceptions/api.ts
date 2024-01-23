@@ -31,8 +31,9 @@ class MissingEntityExceptionController {
 		const programId = req.params.programId;
 		const donorSubmitterIds = req.body.donorSubmitterIds;
 		const isDryRun = parseBoolString(req.query['dry-run']);
-		const validateBodyResult = createRequestBody.safeParse(req.body);
 
+		// Validate
+		const validateBodyResult = createRequestBody.safeParse(req.body);
 		if (!validateBodyResult.success) {
 			return res.status(400).send({
 				message: 'Failed to validate request body for donor submitter ids.',
