@@ -17,7 +17,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { Result, failure, success } from '../../utils/results';
+import { Result, success } from '../../utils/results';
 import { createOrUpdate, getByProgramId } from './repo';
 
 type CreateResponse = {
@@ -27,6 +27,13 @@ type CreateResponse = {
 	donorsUnchangedCount: number;
 };
 
+/**
+ * Creates or updates (if exists) donor submitter id missing exception in the database.
+ * With dry run set to true, reports summary of changes but makes no updates.
+ *
+ * @param input Submitter donor ids, a program id and a boolean on whether this request is a dry run.
+ * @returns  Details of of the operation result including a list and count of changes and unchanged ids.
+ */
 export const create = async ({
 	programId,
 	newDonorIds,
