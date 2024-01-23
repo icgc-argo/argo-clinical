@@ -22,9 +22,20 @@ import { Request, Response } from 'express';
 import { parseBoolString } from '../../utils/request';
 import * as service from './service';
 import { z as zod } from 'zod';
-import { listAll } from './repo';
+import { getByProgramId, listAll } from './repo';
 
 class MissingEntityExceptionController {
+	@HasFullReadAccess()
+	async getProgramException(req: Request, res: Response) {
+		const result = await getByProgramId(req.params.programId);
+		if (!result.success) {
+			const { message, errors } = result;
+			return res.status(500).send({ message, errors });
+		} else {
+			return res.status(201).send(result.exception);
+		}
+	}
+
 	@HasFullReadAccess()
 	async listMissingEntityExceptions(req: Request, res: Response) {
 		const result = await listAll();
