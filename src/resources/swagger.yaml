@@ -854,11 +854,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EntityExceptionDonorIds'
+              $ref: '#/components/schemas/MissingEntityExceptionDonorIds'
 
       responses:
         '201':
-          description: 'successful upload'
+          $ref: '#/component/responses/MissingEntityCreate'
+        '500':
+          $ref: '#/component/responses/ServerError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
@@ -1435,6 +1437,13 @@ components:
               value:
                 msg: 'string'
                 code: 'INVALID_FILE_NAME'
+    MissingEntityCreate:
+      description: 'successful upload'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MissingEntityCreateResp'
+
   securitySchemes:
     bearerAuth:
       type: http
@@ -1861,9 +1870,29 @@ components:
           biomarker,
         ]
 
-    EntityExceptionDonorIds:
+    MissingEntityExceptionDonorIds:
       type: object
       properties:
         submitter_donor_ids:
-          description: 'submitter_donor_ids array of strings, each of which is a submitter donor id to add to this program/s exception'
+          description: 'Array of strings, each of which is a submitter donor id to add to this program/s exception. This endpoint is additive.'
           type: array
+
+    MissingEntityCreateResp:
+      type: object
+      properties:
+        donorsAdded:
+          description: 'New donors added.'
+          type: array
+          items:
+            type: string
+        donorsAddedCount:
+          description: 'Amount of new donors added.'
+          type: integer
+        donorsUnchanged:
+          description: 'Donors left unchanged.'
+          type: array
+          items:
+            type: string
+        donorsUnchangedCount:
+          description: 'Amount of donors left unchanged.'
+          type: integer
