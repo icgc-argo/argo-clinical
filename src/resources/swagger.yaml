@@ -857,8 +857,12 @@ paths:
               $ref: '#/components/schemas/MissingEntityExceptionDonorIds'
 
       responses:
-        '201':
-          $ref: '#/component/responses/MissingEntityCreate'
+        '200':
+          description: 'successful upload'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissingEntityCreateResponse'
         '500':
           $ref: '#/component/responses/ServerError'
         '401':
@@ -1437,12 +1441,6 @@ components:
               value:
                 msg: 'string'
                 code: 'INVALID_FILE_NAME'
-    MissingEntityCreate:
-      description: 'successful upload'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/MissingEntityCreateResp'
 
   securitySchemes:
     bearerAuth:
@@ -1877,7 +1875,7 @@ components:
           description: 'Array of strings, each of which is a submitter donor id to add to this program/s exception. This endpoint is additive.'
           type: array
 
-    MissingEntityCreateResp:
+    MissingEntityCreateResponse:
       type: object
       properties:
         donorsAdded:
