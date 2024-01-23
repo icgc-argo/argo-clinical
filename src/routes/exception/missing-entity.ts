@@ -43,4 +43,10 @@ missingEntityExceptionRouter.post(
 	wrapAsync(missingEntityExceptionApi.createEntityException),
 );
 
+// DELETE
+missingEntityExceptionRouter.delete(
+	'/:programId',
+	wrapAsync(missingEntityExceptionApi.deleteEntityException),
+);
+
 export default missingEntityExceptionRouter;
