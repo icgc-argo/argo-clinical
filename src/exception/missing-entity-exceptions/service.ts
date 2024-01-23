@@ -114,7 +114,7 @@ export const deleteIdsByProgramId = async ({
 		if (isDryRun) {
 			return success(stats);
 		} else {
-			const result = { success: true };
+			const result = await createOrUpdate({ programId, donorSubmitterIds: updatedDonorIds });
 			if (result.success) {
 				return success(stats);
 			} else {
