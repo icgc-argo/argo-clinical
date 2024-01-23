@@ -32,7 +32,7 @@ class MissingEntityExceptionController {
 			const { message, errors } = result;
 			return res.status(500).send({ message, errors });
 		} else {
-			return res.status(201).send(result.exception);
+			return res.status(200).send(result.exception);
 		}
 	}
 
