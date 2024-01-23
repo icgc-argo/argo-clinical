@@ -27,6 +27,14 @@ type CreateResponse = {
 	donorsUnchangedCount: number;
 };
 
+type DeleteResponse = {
+	donorsDeleted: string[];
+	donorsDeletedCount: number;
+	donorsUnchanged: string[];
+	donorsUnchangedCount: number;
+	isDryRun: boolean;
+};
+
 /**
  * Creates or updates (if exists) donor submitter id missing exception in the database.
  * With dry run set to true, reports summary of changes but makes no updates.
@@ -51,7 +59,7 @@ export const create = async ({
 		// return unique donor ids
 		const donorSubmitterIds = [...new Set([...currentDonorIds, ...newDonorIds])];
 
-		// calc new and updated ids
+		// calc new and unchanged ids
 		const donorsAdded = donorSubmitterIds.filter((id) => !currentDonorIds.includes(id));
 		const donorsUnchanged = donorSubmitterIds.filter((id) => currentDonorIds.includes(id));
 
@@ -67,6 +75,46 @@ export const create = async ({
 			return success(stats);
 		} else {
 			const result = await createOrUpdate({ programId, donorSubmitterIds });
+			if (result.success) {
+				return success(stats);
+			} else {
+				return result;
+			}
+		}
+	} else {
+		return missingEntityExceptionResult;
+	}
+};
+
+export const deleteIdsByProgramId = async ({
+	programId,
+	donorSubmitterIds,
+	isDryRun,
+}: {
+	programId: string;
+	donorSubmitterIds: string[];
+	isDryRun: boolean;
+}): Promise<Result<DeleteResponse>> => {
+	const missingEntityExceptionResult = await getByProgramId(programId);
+	if (missingEntityExceptionResult.success) {
+		const currentDonorIds = missingEntityExceptionResult.exception.donorSubmitterIds;
+		const updatedDonorIds = currentDonorIds.filter((id) => donorSubmitterIds.includes(id));
+
+		// calc deleted and unchanged ids
+		const donorsDeleted = donorSubmitterIds.filter((id) => currentDonorIds.includes(id));
+		const donorsUnchanged = currentDonorIds.filter((id) => !donorSubmitterIds.includes(id));
+		const stats: DeleteResponse = {
+			donorsDeleted,
+			donorsDeletedCount: donorsDeleted.length,
+			donorsUnchanged,
+			donorsUnchangedCount: donorsUnchanged.length,
+			isDryRun,
+		};
+
+		if (isDryRun) {
+			return success(stats);
+		} else {
+			const result = { success: true };
 			if (result.success) {
 				return success(stats);
 			} else {

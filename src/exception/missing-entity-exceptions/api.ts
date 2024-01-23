@@ -25,6 +25,22 @@ import { z as zod } from 'zod';
 import { getByProgramId, listAll } from './repo';
 
 class MissingEntityExceptionController {
+	@HasFullWriteAccess()
+	async deleteEntityException(req: Request, res: Response) {
+		const programId = req.params.programId;
+		const isDryRun = parseBoolString(req.query['dry-run']);
+		const donorSubmitterIds = req.body.donorSubmitterIds;
+
+		const result = await service.deleteIdsByProgramId({ programId, donorSubmitterIds, isDryRun });
+
+		if (!result.success) {
+			const { message, errors } = result;
+			return res.status(500).send({ message, errors });
+		} else {
+			return res.status(201).send(result.exception);
+		}
+	}
+
 	@HasFullReadAccess()
 	async getProgramException(req: Request, res: Response) {
 		const result = await getByProgramId(req.params.programId);
