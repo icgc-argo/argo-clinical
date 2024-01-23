@@ -85,6 +85,10 @@ export type FieldValidators<RecordT extends Object> = Partial<
   }
 >;
 
+const schemaFilter = (schemaName: string) => (
+  schema: dictionaryEntities.SchemaDefinition,
+): boolean => schema.name === schemaName;
+
 export const checkCoreField: Validator<ExceptionRecord> = async ({ record, fieldName }) => {
   const currentDictionary = await dictionaryManager.instance();
 
@@ -99,11 +103,9 @@ export const checkCoreField: Validator<ExceptionRecord> = async ({ record, field
 
   const coreFieldFilter = (field: dictionaryEntities.FieldDefinition): boolean =>
     field.name === requestedCoreField && !!field.meta?.core;
-  const schemaFilter = (schema: dictionaryEntities.SchemaDefinition): boolean =>
-    schema.name === record.schema;
 
   const existingDictionarySchema = await currentDictionary.getSchemasWithFields(
-    schemaFilter,
+    schemaFilter(record.schema),
     coreFieldFilter,
   );
 
@@ -142,10 +144,9 @@ export const checkRequestedValue: Validator<ExceptionRecord> = async ({ record, 
   const fieldFilter = (field: dictionaryEntities.FieldDefinition): boolean =>
     field.name === requested_core_field;
 
-  const schemaFilter = (schemaDefintion: dictionaryEntities.SchemaDefinition): boolean =>
-    schemaDefintion.name === schemaName;
-
-  const schemaDefinition = (await currentDictionary.getCurrent()).schemas.find(schemaFilter);
+  const schemaDefinition = (await currentDictionary.getCurrent()).schemas.find(
+    schemaFilter(schemaName),
+  );
 
   const exceptionFieldDefinition = schemaDefinition?.fields.find(fieldFilter);
 
@@ -201,10 +202,9 @@ export const checkIsValidDictionarySchema: Validator<ExceptionRecord> = async ({
 
   const currentDictionary = await dictionaryManager.instance();
 
-  const schemaFilter = (schema: dictionaryEntities.SchemaDefinition): boolean =>
-    schema.name === fieldValue;
-
-  const existingDictionarySchema = await currentDictionary.getSchemasWithFields(schemaFilter);
+  const existingDictionarySchema = await currentDictionary.getSchemasWithFields(
+    schemaFilter(fieldValue),
+  );
 
   const isValid = existingDictionarySchema[0];
 
