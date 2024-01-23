@@ -19,8 +19,8 @@
 
 import { HasFullWriteAccess } from '../../decorators';
 import { Request, Response } from 'express';
-import { createOrUpdate } from './repo';
 import { parseBoolString } from '../../utils/request';
+import * as service from './service';
 
 class MissingEntityExceptionController {
 	@HasFullWriteAccess()
@@ -29,14 +29,18 @@ class MissingEntityExceptionController {
 		const donorSubmitterIds = req.body.donorSubmitterIds;
 		const isDryRun = parseBoolString(req.query['dry-run']);
 
-		const result = await createOrUpdate({
+		const result = await service.create({
 			programId,
-			donorSubmitterIds,
+			newDonorIds: donorSubmitterIds,
 			isDryRun,
 		});
 
-		const status = result.success ? 201 : 422;
-		return res.status(status).send({ programId, donorSubmitterIds, isDryRun });
+		if (!result.success) {
+			const { message, errors } = result;
+			return res.status(500).send({ message, errors });
+		} else {
+			return res.status(201).send(result.exception);
+		}
 	}
 }
 
