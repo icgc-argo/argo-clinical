@@ -17,7 +17,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-export const parseBoolString = (queryString: string) => {
+export const parseBoolString = (queryString: string): boolean => {
 	if (queryString) {
 		return queryString.toLowerCase() === 'true';
 	} else {
