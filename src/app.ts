@@ -34,7 +34,7 @@ import submissionRouter from './routes/submission';
 import dictionaryRouter from './routes/dictionary';
 import configRouter from './routes/config';
 import icgcImport from './routes/icgc-import';
-import exceptionRouter from './routes/exception';
+import exceptionRouter from './routes/exception/exception';
 import responseTime from 'response-time';
 import morgan from 'morgan';
 import { EgoJwtData } from '@icgc-argo/ego-token-utils/dist/common';
