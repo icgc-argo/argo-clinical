@@ -1480,6 +1480,13 @@ components:
                 msg: 'string'
                 code: 'INVALID_FILE_NAME'
 
+    MissingEntityGet:
+      description: 'Get missing donor submitter ids for a single program.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MissingEntityGetResp'
+
   securitySchemes:
     bearerAuth:
       type: http
@@ -1934,6 +1941,16 @@ components:
           type: integer
 
     MissingEntityException:
+      type: object
+      properties:
+        programId:
+          type: string
+        donorSubmitterIds:
+          type: array
+          items:
+            type: string
+
+    MissingEntityGetResp:
       type: object
       properties:
         programId:
