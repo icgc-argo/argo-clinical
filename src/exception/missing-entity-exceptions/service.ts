@@ -98,7 +98,7 @@ export const deleteIdsByProgramId = async ({
 	const missingEntityExceptionResult = await getByProgramId(programId);
 	if (missingEntityExceptionResult.success) {
 		const currentDonorIds = missingEntityExceptionResult.exception.donorSubmitterIds;
-		const updatedDonorIds = currentDonorIds.filter((id) => donorSubmitterIds.includes(id));
+		const updatedDonorIds = currentDonorIds.filter((id) => !donorSubmitterIds.includes(id));
 
 		// calc deleted and unchanged ids
 		const donorsDeleted = donorSubmitterIds.filter((id) => currentDonorIds.includes(id));
