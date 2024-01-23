@@ -845,7 +845,7 @@ paths:
   /exception/missing-entity/${programId}:
     post:
       tags:
-        - Exception
+        - 'Exception - Missing Entity'
       summary: Add submitter donor ids for exception
       parameters:
         - $ref: '#/components/parameters/PathProgramId'
@@ -867,6 +867,19 @@ paths:
           description: 'Request body failed validation.'
         '500':
           $ref: '#/component/responses/ServerError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /exception/missing-entity:
+    get:
+      tags:
+        - 'Exception - Missing Entity'
+      summary: Get programs with missing entity exceptions. Return amount of donor submitter exceptions.
+      parameters:
+        - $ref: '#/components/parameters/PathProgramId'
+      responses:
+        '200':
+          $ref: '#/components/responses/MissingEntityList'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
@@ -1896,3 +1909,13 @@ components:
         donorsUnchangedCount:
           description: 'Amount of donors left unchanged.'
           type: integer
+
+    MissingEntityListResp:
+      type: array
+      items:
+        type: object
+        properties:
+          programId:
+            type: string
+          donorCount:
+            type: integer
