@@ -887,6 +887,26 @@ paths:
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
+      delete:
+        tags:
+          - 'Exception - Missing Entity'
+        summary: Delete submitter donor ids for exception
+        parameters:
+          - $ref: '#/components/parameters/PathProgramId'
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissingEntityExceptionDonorIds'
+        responses:
+          '200':
+            $ref: '#/component/responses/MissingEntityCreate'
+          '500':
+            $ref: '#/component/responses/ServerError'
+          '401':
+            $ref: '#/components/responses/UnauthorizedError'
+
   /exception/missing-entity:
     get:
       tags:
