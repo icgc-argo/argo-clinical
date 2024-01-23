@@ -59,7 +59,9 @@ propertyExceptionRouter.delete(
 const missingEntityExceptionRouter = express.Router({ mergeParams: true });
 
 // GET
-missingEntityExceptionRouter.get('/', (req, resp) => resp.send({ msg: 'not implemented yet...' }));
+missingEntityExceptionRouter.get('/', (req, resp) =>
+	resp.status(500).send({ msg: 'not implemented yet...' }),
+);
 
 // POST
 missingEntityExceptionRouter.post('/', wrapAsync(missingEntityExceptionApi.createEntityException));
