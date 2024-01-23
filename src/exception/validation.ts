@@ -85,7 +85,7 @@ export type FieldValidators<RecordT extends Object> = Partial<
   }
 >;
 
-const schemaFilter = (schemaName: string) => (
+export const schemaFilter = (schemaName: string) => (
   schema: dictionaryEntities.SchemaDefinition,
 ): boolean => schema.name === schemaName;
 
