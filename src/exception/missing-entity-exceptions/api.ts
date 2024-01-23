@@ -43,7 +43,7 @@ class MissingEntityExceptionController {
 
 		const result = await service.create({
 			programId,
-			newDonorIds: donorSubmitterIds,
+			newDonorIds: validateBodyResult.data.donorSubmitterIds,
 			isDryRun,
 		});
 
