@@ -19,7 +19,7 @@
 
 export const parseBoolString = (queryString: string) => {
 	if (queryString) {
-		return queryString.toLowerCase() === 'true' || false;
+		return queryString.toLowerCase() === 'true';
 	} else {
 		return false;
 	}
