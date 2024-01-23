@@ -138,7 +138,7 @@ export const isEntityExceptionRecord = (input: any): input is EntityExceptionRec
     'submitter_donor_id' in input && typeof input.submitter_donor_id === 'string';
 
   if (hasDonorIdField && isExceptionRecord(input)) {
-    // remove based exception record fields to validate specific entity
+    // remove base exception record fields to validate specific entity
     const entityFields = _.omit(input, baseEntityExceptionFields);
     // can't have more than one identifying field eg. submitter_specimen_id AND submitter_follow_up_id
     return Object.keys(entityFields).length === 1;

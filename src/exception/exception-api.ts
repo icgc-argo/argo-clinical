@@ -64,6 +64,7 @@ const validateEntityExceptionRecords: ValidateEntityRecords<EntityExceptionRecor
     return { records, schema: ClinicalEntitySchemaNames.SPECIMEN };
   } else if (isReadonlyArrayOf(records, isFollowupExceptionRecord)) {
     return { records, schema: ClinicalEntitySchemaNames.FOLLOW_UP };
+    // TODO: Add donor column
   } else {
     throw new ExceptionTSVError(
       'Invalid file. Please check columns. Only Specimen and Follow Up are accepted.',
