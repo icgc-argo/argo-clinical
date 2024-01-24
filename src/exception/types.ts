@@ -132,6 +132,13 @@ export const isFollowupExceptionRecord = (input: any): input is FollowUpExceptio
   );
 };
 
+export const isTreatmentExceptionRecord = (input: any): input is FollowUpExceptionRecord => {
+  return (
+    // submitter_treatment_id must exist and be a string
+    'submitter_treatment_id' in input && typeof input.submitter_treatment_id === 'string'
+  );
+};
+
 // type guards
 export const isEntityExceptionRecord = (input: any): input is EntityExceptionRecord => {
   const hasDonorIdField =
