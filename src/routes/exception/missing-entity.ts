@@ -32,8 +32,9 @@ missingEntityExceptionRouter.get(
 	wrapAsync(missingEntityExceptionApi.listMissingEntityExceptions),
 );
 
-missingEntityExceptionRouter.get('/:programId', (req, resp) =>
-	resp.status(500).send({ msg: 'not implemented yet...' }),
+missingEntityExceptionRouter.get(
+	'/:programId',
+	wrapAsync(missingEntityExceptionApi.getProgramException),
 );
 
 // POST

@@ -843,6 +843,24 @@ paths:
           description: 'returns new entity exception after deletion'
 
   /exception/missing-entity/${programId}:
+    get:
+      tags:
+        - 'Exception - Missing Entity'
+      summary: Get missing donor submitter exceptions for a single program
+      parameters:
+        - $ref: '#/components/parameters/PathProgramId'
+      responses:
+        '200':
+          description: 'Missing entity exception donor submitter ids for a single program.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissingEntityException'
+        '500':
+          $ref: '#/component/responses/ServerError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
     post:
       tags:
         - 'Exception - Missing Entity'
@@ -855,7 +873,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/MissingEntityExceptionDonorIds'
-
       responses:
         '200':
           description: 'Successfully created or updated missing entity exception.'
@@ -883,7 +900,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/responses/MissingEntityListResponse'
+                type: array
+                items:
+                  $ref: '#/components/schemas/MissingEntityException'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
@@ -1914,12 +1933,12 @@ components:
           description: 'Amount of donors left unchanged.'
           type: integer
 
-    MissingEntityListResponse:
-      type: array
-      items:
-        type: object
-        properties:
-          programId:
+    MissingEntityException:
+      type: object
+      properties:
+        programId:
+          type: string
+        donorSubmitterIds:
+          type: array
+          items:
             type: string
-          donorCount:
-            type: integer
