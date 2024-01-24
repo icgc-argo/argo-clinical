@@ -36,6 +36,7 @@ import {
   getClinicalEntitiesFromDonorBySchemaName,
 } from '../common-model/functions';
 import * as dictionaryManager from '../dictionary/manager';
+import { schemaFilter } from '../exception/validation';
 import featureFlags from '../feature-flags';
 import { loggerFor } from '../logger';
 import { checkForProgramAndEntityExceptions } from '../submission/exceptions/exceptions';
@@ -470,10 +471,7 @@ export const getValidRecordsPostSubmission = async (
               })
               .filter(notEmpty);
 
-            const schemaFilter = (schemaDefintion: dictionaryEntities.SchemaDefinition): boolean =>
-              schemaDefintion.name === entityName;
-
-            const entitySchema = migrationDictionary.schemas.find(schemaFilter);
+            const entitySchema = migrationDictionary.schemas.find(schemaFilter(entityName));
 
             // Revalidate Donors
             const { validationErrors, processedRecords } = dictionaryService.processRecords(

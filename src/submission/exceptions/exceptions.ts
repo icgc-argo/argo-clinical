@@ -27,6 +27,7 @@ import {
 } from '../../common-model/entities';
 import entityExceptionRepository from '../../exception/repo/entity';
 import programExceptionRepository from '../../exception/repo/program';
+import { fieldFilter } from '../../exception/validation';
 import { EntityException, ExceptionRecord, ProgramException } from '../../exception/types';
 import { DeepReadonly } from 'deep-freeze';
 
@@ -143,14 +144,14 @@ const isSingleString = (value: DeepReadonly<dictionaryEntities.SchemaTypes>): va
   Array.isArray(value) && value.length === 1 && typeof value[0] === 'string';
 
 /**
- * Exceptions can only be applied to text values. Arrays of strings are allowed if they have a single string value.
+ * Validate Exception values applied to text fields. Arrays of strings are allowed if they have a single string value.
  */
 const isValidStringExceptionType = (
   value: DeepReadonly<dictionaryEntities.SchemaTypes>,
 ): value is string | [string] => typeof value === 'string' || isSingleString(value);
 
 /**
- * Exceptions can only be applied to text values. Arrays of strings are allowed if they have a single string value.
+ * Validate exception values applied to Numeric fields. Allows submitting 'blank' values.
  */
 const isValidNumericExceptionType = (
   value: DeepReadonly<dictionaryEntities.SchemaTypes>,
@@ -196,10 +197,7 @@ export const checkForProgramAndEntityExceptions = async ({
     const validationErrorFieldName = validationError.fieldName;
     const fieldValue = record[validationErrorFieldName];
 
-    // Todo: Make Reusable
-    const fieldFilter = (field: dictionaryEntities.FieldDefinition): boolean =>
-      field.name === validationErrorFieldName;
-    const fieldSchema = entitySchema?.fields.find(fieldFilter);
+    const fieldSchema = entitySchema?.fields.find(fieldFilter(validationErrorFieldName));
     const valueType = fieldSchema?.valueType;
 
     const validNumericExceptionValue =
