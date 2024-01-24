@@ -27,6 +27,7 @@ import {
 } from '../../common-model/entities';
 import entityExceptionRepository from '../../exception/repo/entity';
 import programExceptionRepository from '../../exception/repo/program';
+import { fieldFilter } from '../../exception/validation';
 import { EntityException, ExceptionRecord, ProgramException } from '../../exception/types';
 import { DeepReadonly } from 'deep-freeze';
 
@@ -196,10 +197,7 @@ export const checkForProgramAndEntityExceptions = async ({
     const validationErrorFieldName = validationError.fieldName;
     const fieldValue = record[validationErrorFieldName];
 
-    // Todo: Make Reusable
-    const fieldFilter = (field: dictionaryEntities.FieldDefinition): boolean =>
-      field.name === validationErrorFieldName;
-    const fieldSchema = entitySchema?.fields.find(fieldFilter);
+    const fieldSchema = entitySchema?.fields.find(fieldFilter(validationErrorFieldName));
     const valueType = fieldSchema?.valueType;
 
     const validNumericExceptionValue =

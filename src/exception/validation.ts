@@ -89,6 +89,10 @@ export const schemaFilter = (schemaName: string) => (
   schema: dictionaryEntities.SchemaDefinition,
 ): boolean => schema.name === schemaName;
 
+export const fieldFilter = (requestedField: string) => (
+  field: dictionaryEntities.FieldDefinition,
+): boolean => field.name === requestedField;
+
 export const checkCoreField: Validator<ExceptionRecord> = async ({ record, fieldName }) => {
   const currentDictionary = await dictionaryManager.instance();
 
@@ -141,14 +145,11 @@ export const checkRequestedValue: Validator<ExceptionRecord> = async ({ record, 
   const validRequests: string[] = Object.values(ExceptionValue);
   const { requested_core_field, requested_exception_value, schema: schemaName } = record;
 
-  const fieldFilter = (field: dictionaryEntities.FieldDefinition): boolean =>
-    field.name === requested_core_field;
-
   const schemaDefinition = (await currentDictionary.getCurrent()).schemas.find(
     schemaFilter(schemaName),
   );
 
-  const exceptionFieldDefinition = schemaDefinition?.fields.find(fieldFilter);
+  const exceptionFieldDefinition = schemaDefinition?.fields.find(fieldFilter(requested_core_field));
 
   if (!exceptionFieldDefinition) {
     return {
