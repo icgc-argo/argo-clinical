@@ -879,7 +879,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MissingEntityCreateResponse'
+                $ref: '#/components/schemas/MissingEntityExceptionStats'
         '400':
           description: 'Request body failed validation.'
         '500':
@@ -901,7 +901,11 @@ paths:
                 $ref: '#/components/schemas/MissingEntityExceptionDonorIds'
         responses:
           '200':
-            $ref: '#/component/responses/MissingEntityCreate'
+            description: 'Successfully retrieved list of programs with exceptions.'
+            content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissingEntityExceptionStats'
           '500':
             $ref: '#/component/responses/ServerError'
           '401':
@@ -1500,13 +1504,6 @@ components:
                 msg: 'string'
                 code: 'INVALID_FILE_NAME'
 
-    MissingEntityGet:
-      description: 'Get missing donor submitter ids for a single program.'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/MissingEntityGetResp'
-
   securitySchemes:
     bearerAuth:
       type: http
@@ -1940,7 +1937,7 @@ components:
           description: 'Array of strings, each of which is a submitter donor id to add to this program/s exception. This endpoint is additive.'
           type: array
 
-    MissingEntityCreateResponse:
+    MissingEntityExceptionMeta:
       type: object
       properties:
         donorsAdded:
@@ -1961,16 +1958,6 @@ components:
           type: integer
 
     MissingEntityException:
-      type: object
-      properties:
-        programId:
-          type: string
-        donorSubmitterIds:
-          type: array
-          items:
-            type: string
-
-    MissingEntityGetResp:
       type: object
       properties:
         programId:
