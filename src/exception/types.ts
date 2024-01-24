@@ -50,12 +50,24 @@ export type FollowUpExceptionRecord = BaseEntityExceptionRecord & {
   submitter_follow_up_id: string;
 };
 
-export type EntityExceptionRecord = SpecimenExceptionRecord | FollowUpExceptionRecord;
-export type EntityExceptionRecords = (SpecimenExceptionRecord | FollowUpExceptionRecord)[];
+export type TreatmentExceptionRecord = BaseEntityExceptionRecord & {
+  submitter_treatment_id: string;
+};
+
+export type EntityExceptionRecord =
+  | SpecimenExceptionRecord
+  | FollowUpExceptionRecord
+  | TreatmentExceptionRecord;
+export type EntityExceptionRecords = (
+  | SpecimenExceptionRecord
+  | FollowUpExceptionRecord
+  | TreatmentExceptionRecord
+)[];
 export type ExceptionRecords =
   | ReadonlyArray<ProgramExceptionRecord>
   | ReadonlyArray<SpecimenExceptionRecord>
-  | ReadonlyArray<FollowUpExceptionRecord>;
+  | ReadonlyArray<FollowUpExceptionRecord>
+  | ReadonlyArray<TreatmentExceptionRecord>;
 
 /**
  * entity values to be valid EntityException exceptions arrays
@@ -75,6 +87,7 @@ export type EntityException = {
   programId: string;
   specimen: SpecimenExceptionRecord[];
   follow_up: FollowUpExceptionRecord[];
+  treatment: TreatmentExceptionRecord[];
 };
 
 export type EntityExceptionSchemaNames = Extract<

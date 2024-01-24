@@ -32,6 +32,7 @@ import {
   ProgramExceptionRecord,
   SpecimenExceptionRecord,
   FollowUpExceptionRecord,
+  TreatmentExceptionRecord,
 } from './types';
 import { isValidEntityType, normalizeEntityFileType } from './util';
 import {
@@ -65,6 +66,8 @@ const recordsToEntityException = ({
     exception.specimen = records as SpecimenExceptionRecord[];
   } else if (schema === ClinicalEntitySchemaNames.FOLLOW_UP) {
     exception.follow_up = records as FollowUpExceptionRecord[];
+  } else if (schema === ClinicalEntitySchemaNames.TREATMENT) {
+    exception.treatment = records as TreatmentExceptionRecord[];
   }
 
   return exception;
