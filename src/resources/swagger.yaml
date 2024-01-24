@@ -867,6 +867,7 @@ paths:
       summary: Add submitter donor ids for exception
       parameters:
         - $ref: '#/components/parameters/PathProgramId'
+        - $ref: '#/components/parameters/IsDryRun'
       requestBody:
         required: true
         content:
@@ -879,7 +880,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MissingEntityExceptionStats'
+                $ref: '#/components/schemas/MissingEntityExceptionUpdateMeta'
         '400':
           description: 'Request body failed validation.'
         '500':
@@ -887,29 +888,30 @@ paths:
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
-      delete:
-        tags:
-          - 'Exception - Missing Entity'
-        summary: Delete submitter donor ids for exception
-        parameters:
-          - $ref: '#/components/parameters/PathProgramId'
-        requestBody:
-          required: true
+    delete:
+      tags:
+        - 'Exception - Missing Entity'
+      summary: Delete submitter donor ids for exception
+      parameters:
+        - $ref: '#/components/parameters/PathProgramId'
+        - $ref: '#/components/parameters/IsDryRun'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MissingEntityExceptionDonorIds'
+      responses:
+        '200':
+          description: 'Successfully retrieved list of programs with exceptions.'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MissingEntityExceptionDonorIds'
-        responses:
-          '200':
-            description: 'Successfully retrieved list of programs with exceptions.'
-            content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MissingEntityExceptionStats'
-          '500':
-            $ref: '#/component/responses/ServerError'
-          '401':
-            $ref: '#/components/responses/UnauthorizedError'
+                $ref: '#/components/schemas/MissingEntityExceptionDeleteMeta'
+        '500':
+          $ref: '#/component/responses/ServerError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
 
   /exception/missing-entity:
     get:
@@ -1471,6 +1473,14 @@ components:
       schema:
         type: string
 
+    IsDryRun:
+      name: 'dry-run'
+      description: If dry run is true, operation does not modify database records.
+      in: query
+      required: false
+      schema:
+        type: boolean
+
   responses:
     ServiceUnavailableError:
       description: Endpoint service unavailable
@@ -1940,14 +1950,6 @@ components:
     MissingEntityExceptionMeta:
       type: object
       properties:
-        donorsAdded:
-          description: 'New donors added.'
-          type: array
-          items:
-            type: string
-        donorsAddedCount:
-          description: 'Amount of new donors added.'
-          type: integer
         donorsUnchanged:
           description: 'Donors left unchanged.'
           type: array
@@ -1956,8 +1958,39 @@ components:
         donorsUnchangedCount:
           description: 'Amount of donors left unchanged.'
           type: integer
+        isDryRun:
+          description: Dry runs do not modify database records.
+          type: boolean
+
+    MissingEntityExceptionUpdateMeta:
+      type: object
+      properties:
+        donorsAdded:
+          description: 'New donors added.'
+          type: array
+          items:
+            type: string
+        donorsAddedCount:
+          description: 'Amount of new donors added.'
+          type: integer
+
+    MissingEntityExceptionDeleteMeta:
+      allOf:
+        - $ref: '#/components/schemas/MissingEntityExceptionUpdateMeta'
+      type: object
+      properties:
+        donorsDeleted:
+          description: 'Donors deleted.'
+          type: array
+          items:
+            type: string
+        donorsDeletedCount:
+          description: 'Amount of donors deleted.'
+          type: integer
 
     MissingEntityException:
+      allOf:
+        - $ref: '#/components/schemas/MissingEntityExceptionUpdateMeta'
       type: object
       properties:
         programId:
