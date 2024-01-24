@@ -43,11 +43,14 @@ const ProgramExceptionModel =
 const programExceptionRepository = {
   async save(exception: ProgramException): Promise<ProgramException> {
     L.debug(`Creating new program exception with: ${JSON.stringify(exception)}`);
+
+    const { exceptions } = exception;
+    const update = { $push: { exceptions } };
     try {
       const doc = await ProgramExceptionModel.findOneAndUpdate(
         { programId: exception.programId },
-        exception,
-        { upsert: true, new: true, overwrite: true },
+        update,
+        { upsert: true, new: true, returnDocument: 'after' },
       ).lean(true);
       L.info(`doc created ${JSON.stringify(doc)}`);
 
