@@ -64,11 +64,11 @@ const validateFieldValueWithExceptions = ({
   programException: ProgramException | null;
   entityException: EntityException | null;
   schemaName: ClinicalEntitySchemaNames;
-  fieldValue: string;
+  fieldValue: string | undefined;
   validationErrorFieldName: string;
   valueType?: dictionaryEntities.ValueType;
 }): boolean => {
-  const allowedValues: Set<string> = new Set();
+  const allowedValues: Set<string | undefined> = new Set();
 
   const isNumericField =
     valueType === dictionaryEntities.ValueType.INTEGER ||
@@ -84,7 +84,7 @@ const validateFieldValueWithExceptions = ({
       )
       .forEach(matchingException => {
         if (isNumericField) {
-          allowedValues.add('');
+          allowedValues.add(undefined);
         } else {
           allowedValues.add(matchingException.requested_exception_value);
         }
@@ -116,7 +116,7 @@ const validateFieldValueWithExceptions = ({
       .filter(exception => exception.requested_core_field === validationErrorFieldName)
       .forEach(matchingException => {
         if (isNumericField) {
-          allowedValues.add('');
+          allowedValues.add(undefined);
         } else {
           allowedValues.add(matchingException.requested_exception_value);
         }
@@ -204,7 +204,7 @@ export const checkForProgramAndEntityExceptions = async ({
       (valueType === 'number' || valueType === 'integer') &&
       isValidNumericExceptionType(fieldValue);
 
-    let normalizedFieldValue = '';
+    let normalizedFieldValue: string | undefined = '';
     let normalizedValue: string | string[] = '';
 
     if (valueType === 'string' && isValidStringExceptionType(fieldValue)) {
@@ -215,7 +215,9 @@ export const checkForProgramAndEntityExceptions = async ({
       normalizedValue = isSingleString(fieldValue) ? [normalizedString] : normalizedString;
 
       normalizedFieldValue = normalizedString;
-    } else if (!validNumericExceptionValue) {
+    } else if (validNumericExceptionValue) {
+      normalizedFieldValue = fieldValue;
+    } else {
       // If field value is not string or number, then value is not a type we allow exceptions for
       filteredErrors.push(validationError);
       return;
