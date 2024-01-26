@@ -42,7 +42,7 @@ const schemaValidationErrors: dictionaryEntities.SchemaValidationError[] = [
   },
 ];
 
-const mockEntitySchema: dictionaryEntities.SchemaDefinition = {
+const mockSpecimenSchema: dictionaryEntities.SchemaDefinition = {
   name: 'specimen',
   description: 'Mock specimen schema',
   fields: [
@@ -50,6 +50,19 @@ const mockEntitySchema: dictionaryEntities.SchemaDefinition = {
       name: 'specimen_acquisition_interval',
       valueType: dictionaryEntities.ValueType.STRING,
       description: 'Mock specimen field',
+      meta: { core: true },
+    },
+  ],
+};
+
+const mockTreatmentSchema: dictionaryEntities.SchemaDefinition = {
+  name: 'treatment',
+  description: 'Mock treatment schema',
+  fields: [
+    {
+      name: 'mockEntitySchema',
+      valueType: dictionaryEntities.ValueType.INTEGER,
+      description: 'Mock treatment field',
       meta: { core: true },
     },
   ],
@@ -76,6 +89,12 @@ describe('submission service apply exceptions', () => {
             requested_core_field: 'specimen_acquisition_interval',
             requested_exception_value: 'Unknown',
           },
+          {
+            program_name: TEST_PROGRAM_ID,
+            schema: 'treatment',
+            requested_core_field: 'treatment_start_interval',
+            requested_exception_value: 'Unknown',
+          },
         ],
       };
 
@@ -94,7 +113,27 @@ describe('submission service apply exceptions', () => {
         schemaValidationErrors,
         record,
         schemaName: ClinicalEntitySchemaNames.SPECIMEN,
-        entitySchema: mockEntitySchema,
+        entitySchema: mockSpecimenSchema,
+      });
+
+      chai.expect(result.filteredErrors).to.be.an('array').that.is.empty;
+    });
+
+    it('should return zero validation errors for blank numeric field', async () => {
+      const record = {
+        program_id: TEST_PROGRAM_ID,
+        submitter_donor_id: 'DO-1',
+        treatment_start_interval: undefined,
+      };
+
+      const validationErrors = [] as dictionaryEntities.SchemaValidationError[];
+
+      const result = await checkForProgramAndEntityExceptions({
+        programId: TEST_PROGRAM_ID,
+        schemaValidationErrors: validationErrors,
+        record,
+        schemaName: ClinicalEntitySchemaNames.TREATMENT,
+        entitySchema: mockTreatmentSchema,
       });
 
       chai.expect(result.filteredErrors).to.be.an('array').that.is.empty;
@@ -112,7 +151,7 @@ describe('submission service apply exceptions', () => {
         schemaValidationErrors,
         record,
         schemaName: ClinicalEntitySchemaNames.SPECIMEN,
-        entitySchema: mockEntitySchema,
+        entitySchema: mockSpecimenSchema,
       });
 
       chai.expect(result.filteredErrors).to.be.an('array').that.is.empty;
@@ -130,7 +169,7 @@ describe('submission service apply exceptions', () => {
         schemaValidationErrors,
         record,
         schemaName: ClinicalEntitySchemaNames.SPECIMEN,
-        entitySchema: mockEntitySchema,
+        entitySchema: mockSpecimenSchema,
       });
 
       chai.expect(result.filteredErrors).deep.equal(schemaValidationErrors);
@@ -148,7 +187,7 @@ describe('submission service apply exceptions', () => {
         schemaValidationErrors,
         record,
         schemaName: ClinicalEntitySchemaNames.SPECIMEN,
-        entitySchema: mockEntitySchema,
+        entitySchema: mockSpecimenSchema,
       });
       chai.expect(result.filteredErrors).deep.equal(schemaValidationErrors);
     });
@@ -191,7 +230,7 @@ describe('submission service apply exceptions', () => {
         schemaValidationErrors,
         record,
         schemaName: ClinicalEntitySchemaNames.SPECIMEN,
-        entitySchema: mockEntitySchema,
+        entitySchema: mockSpecimenSchema,
       });
 
       chai.expect(result.filteredErrors).to.be.an('array').that.is.empty;
@@ -210,7 +249,7 @@ describe('submission service apply exceptions', () => {
         schemaValidationErrors,
         record,
         schemaName: ClinicalEntitySchemaNames.SPECIMEN,
-        entitySchema: mockEntitySchema,
+        entitySchema: mockSpecimenSchema,
       });
       chai.expect(result.filteredErrors).deep.equal(schemaValidationErrors);
     });
