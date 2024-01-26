@@ -220,7 +220,7 @@ export const checkForProgramAndEntityExceptions = async ({
 
       normalizedFieldValue = normalizedString;
     } else if (validNumericExceptionValue) {
-      normalizedFieldValue = fieldValue;
+      normalizedFieldValue = fieldValue === '' ? undefined : fieldValue;
     } else {
       // If field value is not string or number, then value is not a type we allow exceptions for
       filteredErrors.push(validationError);
