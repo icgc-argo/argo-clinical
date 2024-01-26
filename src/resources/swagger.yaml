@@ -1413,6 +1413,8 @@ tags:
     description: Uploading, Validating, and Committing clinical data
   - name: Exception
     description: Uploading, Deleting, Retrieving exceptions
+  - name: Exception - Missing Entity
+    description: Uploading, Deleting, Retrieving missing entity exceptions
   - name: Clinical Data
     description: ''
   - name: ICGC Import
