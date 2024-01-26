@@ -44,6 +44,15 @@ const queryForExceptions = async (programId: string) => {
 };
 
 /**
+ * Determines if Dictionary field is a numeric field
+ * @param valueType
+ * @returns true if valueType is 'integer' or 'number'
+ */
+const isNumericField = (valueType: dictionaryEntities.ValueType | undefined) =>
+  valueType === dictionaryEntities.ValueType.INTEGER ||
+  valueType === dictionaryEntities.ValueType.NUMBER;
+
+/**
  * Checks if there is a program exception or entity exception matching the record value
  *
  * @param exceptions
@@ -70,10 +79,6 @@ const validateFieldValueWithExceptions = ({
 }): boolean => {
   const allowedValues: Set<string | undefined> = new Set();
 
-  const isNumericField =
-    valueType === dictionaryEntities.ValueType.INTEGER ||
-    valueType === dictionaryEntities.ValueType.NUMBER;
-
   // program level is applicable to ALL donors
   if (programException) {
     programException.exceptions
@@ -83,7 +88,7 @@ const validateFieldValueWithExceptions = ({
           exception.schema === schemaName,
       )
       .forEach(matchingException => {
-        if (isNumericField) {
+        if (isNumericField(valueType)) {
           allowedValues.add(undefined);
         } else {
           allowedValues.add(matchingException.requested_exception_value);
@@ -115,7 +120,7 @@ const validateFieldValueWithExceptions = ({
     exceptions
       .filter(exception => exception.requested_core_field === validationErrorFieldName)
       .forEach(matchingException => {
-        if (isNumericField) {
+        if (isNumericField(valueType)) {
           allowedValues.add(undefined);
         } else {
           allowedValues.add(matchingException.requested_exception_value);
@@ -201,8 +206,7 @@ export const checkForProgramAndEntityExceptions = async ({
     const valueType = fieldSchema?.valueType;
 
     const validNumericExceptionValue =
-      (valueType === 'number' || valueType === 'integer') &&
-      isValidNumericExceptionType(fieldValue);
+      isNumericField(valueType) && isValidNumericExceptionType(fieldValue);
 
     let normalizedFieldValue: string | undefined = '';
     let normalizedValue: string | string[] = '';
