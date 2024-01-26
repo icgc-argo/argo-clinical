@@ -27,6 +27,7 @@ import {
 } from '../../common-model/entities';
 import entityExceptionRepository from '../../exception/repo/entity';
 import programExceptionRepository from '../../exception/repo/program';
+import { fieldFilter } from '../../exception/validation';
 import { EntityException, ExceptionRecord, ProgramException } from '../../exception/types';
 import { DeepReadonly } from 'deep-freeze';
 
@@ -43,6 +44,15 @@ const queryForExceptions = async (programId: string) => {
 };
 
 /**
+ * Determines if Dictionary field is a numeric field
+ * @param valueType
+ * @returns true if valueType is 'integer' or 'number'
+ */
+const isNumericField = (valueType: dictionaryEntities.ValueType | undefined) =>
+  valueType === dictionaryEntities.ValueType.INTEGER ||
+  valueType === dictionaryEntities.ValueType.NUMBER;
+
+/**
  * Checks if there is a program exception or entity exception matching the record value
  *
  * @param exceptions
@@ -57,15 +67,17 @@ const validateFieldValueWithExceptions = ({
   schemaName,
   fieldValue,
   validationErrorFieldName,
+  valueType,
 }: {
   record: DeepReadonly<TypedDataRecord>;
   programException: ProgramException | null;
   entityException: EntityException | null;
   schemaName: ClinicalEntitySchemaNames;
-  fieldValue: string;
+  fieldValue: string | undefined;
   validationErrorFieldName: string;
+  valueType?: dictionaryEntities.ValueType;
 }): boolean => {
-  const allowedValues: Set<string> = new Set();
+  const allowedValues: Set<string | undefined> = new Set();
 
   // program level is applicable to ALL donors
   if (programException) {
@@ -75,7 +87,13 @@ const validateFieldValueWithExceptions = ({
           exception.requested_core_field === validationErrorFieldName &&
           exception.schema === schemaName,
       )
-      .forEach(matchingException => allowedValues.add(matchingException.requested_exception_value));
+      .forEach(matchingException => {
+        if (isNumericField(valueType)) {
+          allowedValues.add(undefined);
+        } else {
+          allowedValues.add(matchingException.requested_exception_value);
+        }
+      });
   }
 
   if (entityException) {
@@ -101,7 +119,13 @@ const validateFieldValueWithExceptions = ({
 
     exceptions
       .filter(exception => exception.requested_core_field === validationErrorFieldName)
-      .forEach(matchingException => allowedValues.add(matchingException.requested_exception_value));
+      .forEach(matchingException => {
+        if (isNumericField(valueType)) {
+          allowedValues.add(undefined);
+        } else {
+          allowedValues.add(matchingException.requested_exception_value);
+        }
+      });
   }
 
   // check submitted exception value matches record validation error field value
@@ -125,11 +149,18 @@ const isSingleString = (value: DeepReadonly<dictionaryEntities.SchemaTypes>): va
   Array.isArray(value) && value.length === 1 && typeof value[0] === 'string';
 
 /**
- * Exceptions can only be applied to text values. Arrays of strings are allowed if they have a single string value.
+ * Validate Exception values applied to text fields. Arrays of strings are allowed if they have a single string value.
  */
-const isAllowedTypeForException = (
+const isValidStringExceptionType = (
   value: DeepReadonly<dictionaryEntities.SchemaTypes>,
 ): value is string | [string] => typeof value === 'string' || isSingleString(value);
+
+/**
+ * Validate exception values applied to Numeric fields. Allows submitting 'blank' values.
+ */
+const isValidNumericExceptionType = (
+  value: DeepReadonly<dictionaryEntities.SchemaTypes>,
+): value is undefined | '' => typeof value === 'undefined' || value === '';
 
 /**
  * Check if a valid exception exists and the record value matches it.
@@ -146,11 +177,13 @@ export const checkForProgramAndEntityExceptions = async ({
   programId,
   record,
   schemaName,
+  entitySchema,
   schemaValidationErrors,
 }: {
   programId: string;
   record: DeepReadonly<TypedDataRecord>;
   schemaName: ClinicalEntitySchemaNames;
+  entitySchema: dictionaryEntities.SchemaDefinition | undefined;
   schemaValidationErrors: dictionaryEntities.SchemaValidationError[];
 }) => {
   const filteredErrors: dictionaryEntities.SchemaValidationError[] = [];
@@ -161,7 +194,7 @@ export const checkForProgramAndEntityExceptions = async ({
 
   // if there are submitted exceptions for this program, check if they match record values
   if (!(programException || entityException)) {
-    return { filteredErrors: schemaValidationErrors, normalizedRecord: record };
+    return { filteredErrors: schemaValidationErrors, normalizedRecord };
   }
 
   // check each validation error for a matching exception, and remove the validaiton if the value matches the exception value
@@ -169,44 +202,47 @@ export const checkForProgramAndEntityExceptions = async ({
     const validationErrorFieldName = validationError.fieldName;
     const fieldValue = record[validationErrorFieldName];
 
-    // Field value is a type we cannot allow exceptions for, validate as normal
-    if (!isAllowedTypeForException(fieldValue)) {
+    const fieldSchema = entitySchema?.fields.find(fieldFilter(validationErrorFieldName));
+    const valueType = fieldSchema?.valueType;
+
+    const validNumericExceptionValue =
+      isNumericField(valueType) && isValidNumericExceptionType(fieldValue);
+
+    let normalizedFieldValue: string | undefined = '';
+    let normalizedValue: string | string[] = '';
+
+    if (valueType === 'string' && isValidStringExceptionType(fieldValue)) {
+      // get normalized value for record, from either the string value or from the single string inside of the array.
+      // we should know from `isAllowedTypeForException` that the fieldValue is one of those two types.
+      const stringFieldValue = isSingleString(fieldValue) ? fieldValue[0] : fieldValue;
+      const normalizedString = normalizeExceptionValue(stringFieldValue);
+      normalizedValue = isSingleString(fieldValue) ? [normalizedString] : normalizedString;
+
+      normalizedFieldValue = normalizedString;
+    } else if (validNumericExceptionValue) {
+      normalizedFieldValue = fieldValue === '' ? undefined : fieldValue;
+    } else {
+      // If field value is not string or number, then value is not a type we allow exceptions for
       filteredErrors.push(validationError);
       return;
     }
-
-    // missing required field, validate as normal, exceptions still require a submitted value
-    const isMissingRequiredField =
-      validationError.errorType ===
-      dictionaryEntities.SchemaValidationErrorTypes.MISSING_REQUIRED_FIELD;
-
-    if (isMissingRequiredField) {
-      filteredErrors.push(validationError);
-      return;
-    }
-
-    // get normalized value for record, from either the string value or from the single string inside of the array.
-    // we should know from `isAllowedTypeForException` that the fieldValue is one of those two types.
-    const stringFieldValue = isSingleString(fieldValue) ? fieldValue[0] : fieldValue;
-    const normalizedString = normalizeExceptionValue(stringFieldValue);
-    const normalizedValue = isSingleString(fieldValue) ? [normalizedString] : normalizedString;
 
     const valueHasException = validateFieldValueWithExceptions({
       record,
       programException,
       entityException,
       schemaName,
-      fieldValue: normalizedString,
       validationErrorFieldName: validationError.fieldName,
+      fieldValue: normalizedFieldValue,
+      valueType,
     });
 
     if (valueHasException) {
       // ensure value is normalized exception value
-      const normalizedExceptionRecord = {
-        ...record,
+      normalizedRecord = {
+        ...normalizedRecord,
         [validationErrorFieldName]: normalizedValue, // normalized value keeps this as array for array fields, or string for string fields
       };
-      normalizedRecord = normalizedExceptionRecord;
     } else {
       // only add validation errors that don't have exceptions
       filteredErrors.push(validationError);

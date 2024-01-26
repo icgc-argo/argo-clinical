@@ -40,6 +40,7 @@ import {
   TherapyRxNormFields,
 } from '../common-model/entities';
 import * as dictionaryManager from '../dictionary/manager';
+import { schemaFilter } from '../exception/validation';
 import featureFlags from '../feature-flags';
 import { loggerFor } from '../logger';
 import { RxNormConcept } from '../rxnorm/api';
@@ -862,6 +863,9 @@ export namespace operations {
   ) => {
     const schemaName = command.clinicalType as ClinicalEntitySchemaNames;
 
+    const { schemas } = schema;
+    const entitySchema = schemas.find(schemaFilter(schemaName));
+
     // check records are unique
     const errors: SubmissionValidationError[] = checkUniqueRecords(schemaName, command.records);
 
@@ -890,6 +894,7 @@ export namespace operations {
               programId: command.programId,
               record: schemaResult.processedRecord,
               schemaName,
+              entitySchema,
               schemaValidationErrors: [...schemaResult.validationErrors],
             });
             validationErrors = filteredErrors;

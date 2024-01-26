@@ -36,6 +36,7 @@ import {
   getClinicalEntitiesFromDonorBySchemaName,
 } from '../common-model/functions';
 import * as dictionaryManager from '../dictionary/manager';
+import { schemaFilter } from '../exception/validation';
 import featureFlags from '../feature-flags';
 import { loggerFor } from '../logger';
 import { checkForProgramAndEntityExceptions } from '../submission/exceptions/exceptions';
@@ -470,6 +471,8 @@ export const getValidRecordsPostSubmission = async (
               })
               .filter(notEmpty);
 
+            const entitySchema = migrationDictionary.schemas.find(schemaFilter(entityName));
+
             // Revalidate Donors
             const { validationErrors, processedRecords } = dictionaryService.processRecords(
               migrationDictionary,
@@ -486,6 +489,7 @@ export const getValidRecordsPostSubmission = async (
                 entityName,
                 [...processedRecords],
                 filteredErrors,
+                entitySchema,
               );
 
               filteredErrors = exceptionErrors.flat();
@@ -531,6 +535,7 @@ export const matchDonorErrorsWithExceptions = async (
   schemaName: ClinicalEntitySchemaNames,
   processedRecords: DeepReadonly<dictionaryEntities.TypedDataRecord>[],
   schemaValidationErrors: dictionaryEntities.SchemaValidationError[],
+  entitySchema: dictionaryEntities.SchemaDefinition | undefined,
 ) => {
   const exceptionResults = await Promise.all(
     processedRecords.map(
@@ -541,6 +546,7 @@ export const matchDonorErrorsWithExceptions = async (
             record,
             schemaName,
             schemaValidationErrors,
+            entitySchema,
           })
         ).filteredErrors,
     ),
