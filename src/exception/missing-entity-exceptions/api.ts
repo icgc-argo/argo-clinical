@@ -24,6 +24,8 @@ import * as service from './service';
 import { z as zod } from 'zod';
 import { getByProgramId, listAll } from './repo';
 
+const updateRequestBody = zod.object({ donorSubmitterIds: zod.string().array() });
+
 class MissingEntityExceptionController {
 	@HasFullReadAccess()
 	async getProgramException(req: Request, res: Response) {
@@ -49,14 +51,11 @@ class MissingEntityExceptionController {
 
 	@HasFullWriteAccess()
 	async createEntityException(req: Request, res: Response) {
-		const createRequestBody = zod.object({ donorSubmitterIds: zod.string().array() });
-
 		const programId = req.params.programId;
-		const donorSubmitterIds = req.body.donorSubmitterIds;
 		const isDryRun = parseBoolString(req.query['dry-run']);
 
 		// Validate
-		const validateBodyResult = createRequestBody.safeParse(req.body);
+		const validateBodyResult = updateRequestBody.safeParse(req.body);
 		if (!validateBodyResult.success) {
 			return res.status(400).send({
 				message: 'Failed to validate request body for donor submitter ids.',
@@ -67,6 +66,34 @@ class MissingEntityExceptionController {
 		const result = await service.create({
 			programId,
 			newDonorIds: validateBodyResult.data.donorSubmitterIds,
+			isDryRun,
+		});
+
+		if (!result.success) {
+			const { message, errors } = result;
+			return res.status(500).send({ message, errors });
+		} else {
+			return res.status(200).send(result.exception);
+		}
+	}
+
+	@HasFullWriteAccess()
+	async deleteEntityException(req: Request, res: Response) {
+		const programId = req.params.programId;
+		const isDryRun = parseBoolString(req.query['dry-run']);
+
+		// Validate
+		const validateBodyResult = updateRequestBody.safeParse(req.body);
+		if (!validateBodyResult.success) {
+			return res.status(400).send({
+				message: 'Failed to validate request body for donor submitter ids.',
+				errors: validateBodyResult.error,
+			});
+		}
+
+		const result = await service.deleteIdsByProgramId({
+			programId,
+			donorSubmitterIds: validateBodyResult.data.donorSubmitterIds,
 			isDryRun,
 		});
 

@@ -867,6 +867,7 @@ paths:
       summary: Add submitter donor ids for exception
       parameters:
         - $ref: '#/components/parameters/PathProgramId'
+        - $ref: '#/components/parameters/IsDryRun'
       requestBody:
         required: true
         content:
@@ -879,9 +880,34 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MissingEntityCreateResponse'
+                $ref: '#/components/schemas/MissingEntityExceptionUpdateMeta'
         '400':
           description: 'Request body failed validation.'
+        '500':
+          $ref: '#/component/responses/ServerError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    delete:
+      tags:
+        - 'Exception - Missing Entity'
+      summary: Delete submitter donor ids for exception
+      parameters:
+        - $ref: '#/components/parameters/PathProgramId'
+        - $ref: '#/components/parameters/IsDryRun'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MissingEntityExceptionDonorIds'
+      responses:
+        '200':
+          description: 'Successfully retrieved list of programs with exceptions.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissingEntityExceptionDeleteMeta'
         '500':
           $ref: '#/component/responses/ServerError'
         '401':
@@ -1387,6 +1413,8 @@ tags:
     description: Uploading, Validating, and Committing clinical data
   - name: Exception
     description: Uploading, Deleting, Retrieving exceptions
+  - name: Exception - Missing Entity
+    description: Uploading, Deleting, Retrieving missing entity exceptions
   - name: Clinical Data
     description: ''
   - name: ICGC Import
@@ -1446,6 +1474,14 @@ components:
       required: true
       schema:
         type: string
+
+    IsDryRun:
+      name: 'dry-run'
+      description: If dry run is true, operation does not modify database records.
+      in: query
+      required: false
+      schema:
+        type: boolean
 
   responses:
     ServiceUnavailableError:
@@ -1913,7 +1949,22 @@ components:
           description: 'Array of strings, each of which is a submitter donor id to add to this program/s exception. This endpoint is additive.'
           type: array
 
-    MissingEntityCreateResponse:
+    MissingEntityExceptionMeta:
+      type: object
+      properties:
+        donorsUnchanged:
+          description: 'Donors left unchanged.'
+          type: array
+          items:
+            type: string
+        donorsUnchangedCount:
+          description: 'Amount of donors left unchanged.'
+          type: integer
+        isDryRun:
+          description: Dry runs do not modify database records.
+          type: boolean
+
+    MissingEntityExceptionUpdateMeta:
       type: object
       properties:
         donorsAdded:
@@ -1924,16 +1975,24 @@ components:
         donorsAddedCount:
           description: 'Amount of new donors added.'
           type: integer
-        donorsUnchanged:
-          description: 'Donors left unchanged.'
+
+    MissingEntityExceptionDeleteMeta:
+      allOf:
+        - $ref: '#/components/schemas/MissingEntityExceptionUpdateMeta'
+      type: object
+      properties:
+        donorsDeleted:
+          description: 'Donors deleted.'
           type: array
           items:
             type: string
-        donorsUnchangedCount:
-          description: 'Amount of donors left unchanged.'
+        donorsDeletedCount:
+          description: 'Amount of donors deleted.'
           type: integer
 
     MissingEntityException:
+      allOf:
+        - $ref: '#/components/schemas/MissingEntityExceptionUpdateMeta'
       type: object
       properties:
         programId:

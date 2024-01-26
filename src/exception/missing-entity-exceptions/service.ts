@@ -20,11 +20,20 @@
 import { Result, success } from '../../utils/results';
 import { createOrUpdate, getByProgramId } from './repo';
 
-type CreateResponse = {
-	donorsAdded: string[];
-	donorsAddedCount: number;
+type UpdateResult = {
 	donorsUnchanged: string[];
 	donorsUnchangedCount: number;
+	isDryRun: boolean;
+};
+
+type CreateResult = UpdateResult & {
+	donorsAdded: string[];
+	donorsAddedCount: number;
+};
+
+type DeleteResult = UpdateResult & {
+	donorsDeleted: string[];
+	donorsDeletedCount: number;
 };
 
 /**
@@ -42,7 +51,7 @@ export const create = async ({
 	programId: string;
 	newDonorIds: string[];
 	isDryRun: boolean;
-}): Promise<Result<CreateResponse>> => {
+}): Promise<Result<CreateResult>> => {
 	const missingEntityExceptionResult = await getByProgramId(programId);
 
 	if (missingEntityExceptionResult.success) {
@@ -51,11 +60,11 @@ export const create = async ({
 		// return unique donor ids
 		const donorSubmitterIds = [...new Set([...currentDonorIds, ...newDonorIds])];
 
-		// calc new and updated ids
+		// calc new and unchanged ids
 		const donorsAdded = donorSubmitterIds.filter((id) => !currentDonorIds.includes(id));
 		const donorsUnchanged = donorSubmitterIds.filter((id) => currentDonorIds.includes(id));
 
-		const stats = {
+		const stats: CreateResult = {
 			donorsAdded,
 			donorsAddedCount: donorsAdded.length,
 			donorsUnchanged,
@@ -67,6 +76,46 @@ export const create = async ({
 			return success(stats);
 		} else {
 			const result = await createOrUpdate({ programId, donorSubmitterIds });
+			if (result.success) {
+				return success(stats);
+			} else {
+				return result;
+			}
+		}
+	} else {
+		return missingEntityExceptionResult;
+	}
+};
+
+export const deleteIdsByProgramId = async ({
+	programId,
+	donorSubmitterIds,
+	isDryRun,
+}: {
+	programId: string;
+	donorSubmitterIds: string[];
+	isDryRun: boolean;
+}): Promise<Result<DeleteResult>> => {
+	const missingEntityExceptionResult = await getByProgramId(programId);
+	if (missingEntityExceptionResult.success) {
+		const currentDonorIds = missingEntityExceptionResult.exception.donorSubmitterIds;
+		const updatedDonorIds = currentDonorIds.filter((id) => !donorSubmitterIds.includes(id));
+
+		// calc deleted and unchanged ids
+		const donorsDeleted = donorSubmitterIds.filter((id) => currentDonorIds.includes(id));
+		const donorsUnchanged = currentDonorIds.filter((id) => !donorSubmitterIds.includes(id));
+		const stats: DeleteResult = {
+			donorsDeleted,
+			donorsDeletedCount: donorsDeleted.length,
+			donorsUnchanged,
+			donorsUnchangedCount: donorsUnchanged.length,
+			isDryRun,
+		};
+
+		if (isDryRun) {
+			return success(stats);
+		} else {
+			const result = await createOrUpdate({ programId, donorSubmitterIds: updatedDonorIds });
 			if (result.success) {
 				return success(stats);
 			} else {
