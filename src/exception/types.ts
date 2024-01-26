@@ -76,6 +76,7 @@ export type ExceptionRecords =
 export const EntityValues: Record<string, Exclude<keyof EntityException, 'programId'>> = {
   specimen: 'specimen',
   follow_up: 'follow_up',
+  treatment: 'treatment',
 } as const;
 
 export type Entity = ObjectValues<typeof EntityValues>;
@@ -92,7 +93,9 @@ export type EntityException = {
 
 export type EntityExceptionSchemaNames = Extract<
   ClinicalEntitySchemaNames,
-  ClinicalEntitySchemaNames.SPECIMEN | ClinicalEntitySchemaNames.FOLLOW_UP
+  | ClinicalEntitySchemaNames.SPECIMEN
+  | ClinicalEntitySchemaNames.FOLLOW_UP
+  | ClinicalEntitySchemaNames.TREATMENT
 >;
 
 export const ExceptionValue = {
