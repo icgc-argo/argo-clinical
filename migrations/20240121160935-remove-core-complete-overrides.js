@@ -1,3 +1,9 @@
+/**
+ * This migration is removing all references to `overriddenCoreCompletion` in donor completion stats.
+ *
+ * With the introduction of MissingEntityExceptions we no longer will use this property. This feature was
+ * never used so this should result in no changes to any databases.
+ */
 module.exports = {
 	async up(db, client) {
 		try {
