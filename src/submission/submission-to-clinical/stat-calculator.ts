@@ -149,6 +149,7 @@ export const calculateDonorCoreCompletionStats = (
 		...newCompletionStats,
 		coreCompletionPercentage,
 		coreCompletionDate,
+		hasMissingEntityException,
 	};
 
 	return newCompletionStats;
