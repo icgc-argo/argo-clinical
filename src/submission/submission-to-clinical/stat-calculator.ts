@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 The Ontario Institute for Cancer Research. All rights reserved
+ * Copyright (c) 2024 The Ontario Institute for Cancer Research. All rights reserved
  *
  * This program and the accompanying materials are made available under the terms of
  * the GNU Affero General Public License v3.0. You should have received a copy of the
@@ -17,7 +17,8 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { F } from '../../../src/utils';
+import { DeepReadonly } from 'deep-freeze';
+import { cloneDeep, mean, omit } from 'lodash';
 import { CompletionStats, CoreCompletionFields, Donor } from '../../clinical/clinical-entities';
 import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 import {
@@ -25,14 +26,11 @@ import {
 	filterHasDnaSample,
 	getClinicalEntitiesFromDonorBySchemaName,
 } from '../../common-model/functions';
-import { DeepReadonly } from 'deep-freeze';
-import { cloneDeep, cloneDeepWith, mean, omit, uniq } from 'lodash';
-import * as missingEntityExceptionRepo from '../../exception/missing-entity-exceptions/repo';
 
-type ForceRecaculateFlags = {
-	recalcEvenIfComplete?: boolean; // used to force recalculate if stat is already 100%
-	recalcEvenIfOverridden?: boolean; // used to force recalculate if previously overriden
-};
+import {
+	MissingEntityExceptionCache,
+	createMissingEntityExceptionCache,
+} from '../../exception/missing-entity-exceptions/missing-entity-exception-cache';
 
 type CoreClinicalSchemaName =
 	| ClinicalEntitySchemaNames.DONOR
@@ -98,49 +96,7 @@ const getEmptyCoreStats = (): CompletionStats => ({
 });
 
 /**
- * Re-calculate core-completion stats for each provided donor. Will return a new array with an updated
- * copy of each donor which includes the latest completion stats.
- *
- * This function retrieves missing-entity exception data in order to use this exception information when
- * calculating core completion stats.
- * @param donors
- */
-export const updateDonorsCompletionStats = async (
-	donors: (Donor | Readonly<Donor>)[],
-): Promise<Donor[]> => {
-	// Cache program exceptions so we don't need to repeatedly fetch them
-	const programExceptionData: Record<string, string[]> = {};
-	const getProgramExceptionDonors = async (programId: string): Promise<string[]> => {
-		if (programExceptionData[programId]) {
-			return programExceptionData[programId];
-		}
-
-		const programExceptionResult = await missingEntityExceptionRepo.getByProgramId(programId);
-		const programException = programExceptionResult.success
-			? programExceptionResult.data.donorSubmitterIds
-			: [];
-
-		programExceptionData[programId] = programException;
-
-		return programException;
-	};
-
-	const updatedDonorPromises = donors.map(async (donor) => {
-		const clonedDonor = cloneDeep(donor) as Donor;
-		const hasException = (await getProgramExceptionDonors(clonedDonor.programId)).some(
-			(submitterId) => submitterId === clonedDonor.submitterId,
-		);
-		const completionStats = calculateDonorCoreCompletionStats(clonedDonor, hasException);
-		clonedDonor.completionStats = completionStats;
-		return clonedDonor;
-	});
-	const updatedDonors = await Promise.all(updatedDonorPromises).then((values) => values);
-
-	return updatedDonors;
-};
-
-/**
- * Calculation of core-completion state for the donor.
+ * Main calculation logic for core-completion state for the donor.
  *
  * If the donor has an exception allowing some core entities to be missing, that must be provided in the function arguments.
  * This will excuse the donor from requiring a treatment or followup entity to be core complete.
@@ -198,80 +154,66 @@ export const calculateDonorCoreCompletionStats = (
 	return newCompletionStats;
 };
 
-export const recalculateDonorStatsHoldOverridden = (donor: Donor) => {
-	const updatedDonor = calculateDonorCoreCompletionStats(donor, {
-		recalcEvenIfComplete: true,
-		recalcEvenIfOverridden: false,
-	});
+/**
+ * Re-calculate the completion stats for a single donor. Will return a cloned version of the donor
+ * with updated completion stats.
+ *
+ * If you have an array of donors that all need updating, it may be simpler to use `updateDonorsCompletionStats`
+ * instead of looping this function.
+ *
+ * This function requires an exceptionsCache object. This is a performance optimization to prevent repeated calls
+ * to the database when looping over large numbers of donors from the same program. See the example for how to
+ * set this up.
+ *
+ *
+ * @example
+ * ```ts
+ * import {
+ * 	createMissingEntityExceptionCache,
+ * } from './exception/missing-entity-exceptions/missing-entity-exception-cache';
+ *
+ * const donor: Donor = await someFunctionThatReturnsADonor();
+ * const exceptionsCache = createMissingEntityExceptionCache();
+ *
+ * const updatedDonor = await updateSingleDonorCompletionStats(donor, exceptionsCache);
+ * ```
+ *
+ * @param donor
+ * @param exceptionsCache
+ * @returns
+ */
+export const updateSingleDonorCompletionStats = async (
+	donor: Donor | DeepReadonly<Donor>,
+	exceptionsCache: MissingEntityExceptionCache,
+): Promise<Donor> => {
+	const clonedDonor = cloneDeep(donor) as Donor;
 
-	// extended stats
-	return updatedDonor;
+	const hasException = await exceptionsCache.donorHasException(clonedDonor);
+
+	const completionStats = calculateDonorCoreCompletionStats(clonedDonor, hasException);
+	clonedDonor.completionStats = completionStats;
+	return clonedDonor;
 };
 
-export const updateDonorStatsFromRegistrationCommit = (donor: DeepReadonly<Donor>) => {
-	// no aggregated info so donor has no clinical submission, nothing to calculate
-	if (!donor.completionStats) return donor;
+/**
+ * Re-calculate core-completion stats for each provided donor. Will return a new array with an updated
+ * copy of each donor which includes the latest completion stats.
+ *
+ * This function retrieves missing-entity exception data in order to use this exception information when
+ * calculating core completion stats.
+ * @param donors
+ */
+export const updateDonorsCompletionStats = async (
+	donors: (Donor | DeepReadonly<Donor>)[],
+): Promise<Donor[]> => {
+	// Cache program exceptions so we don't need to repeatedly fetch them
+	const exceptionsCache = createMissingEntityExceptionCache();
 
-	// specimen core stats can change from sample registration when specimens are added
-	const updatedDonor = calculateDonorCoreCompletionStats(donor, {
-		recalcEvenIfComplete: true,
-		recalcEvenIfOverridden: true,
-	});
+	// clone each donor
+	const updatedDonorPromises = donors.map((donor) =>
+		updateSingleDonorCompletionStats(donor, exceptionsCache),
+	);
+	const updatedDonors = await Promise.all(updatedDonorPromises).then((values) => values);
 
-	return F(updatedDonor);
+	return updatedDonors;
 };
-
-export const updateDonorStatsFromSubmissionCommit = (
-	donor: Donor,
-	clinicalType: ClinicalEntitySchemaNames,
-) => {
-	// registration has no buisness here
-	if (clinicalType === ClinicalEntitySchemaNames.REGISTRATION) return;
-
-	let updatedDonor = donor;
-
-	if (isCoreEntitySchemaName(clinicalType)) {
-		updatedDonor = calculateDonorCoreCompletionStats(donor, {
-			recalcEvenIfComplete: false,
-			recalcEvenIfOverridden: true,
-		});
-	}
-
-	return updatedDonor;
-};
-
-const isCoreEntitySchemaName = (clinicalType: string): clinicalType is CoreClinicalSchemaName =>
-	coreClinicalSchemaNamesSet.has(clinicalType as CoreClinicalSchemaName);
-
-function noNeedToCalcCoreStat(
-	donor: Donor,
-	clinicalType: CoreClinicalSchemaName,
-	forceFlags: ForceRecaculateFlags,
-) {
-	// if recalculate overridden, need to ignore completion value since overridden value could be 100%
-	if (forceFlags.recalcEvenIfOverridden && !forceFlags.recalcEvenIfComplete) {
-		return false;
-	}
-
-	// if entity was manually overridden, don't recalculate (might set to undesired value)
-	if (
-		!forceFlags.recalcEvenIfOverridden &&
-		donor.completionStats?.overriddenCoreCompletion?.find(
-			(type) => type === schemaNameToCoreCompletenessStat[clinicalType],
-		)
-	) {
-		return true;
-	}
-
-	// if entity is already core complete it can't become uncomplete since records can't be deleted
-	// only exception is if specimens are added
-	if (
-		!forceFlags.recalcEvenIfComplete &&
-		(donor.completionStats?.coreCompletion || {})[
-			schemaNameToCoreCompletenessStat[clinicalType]
-		] === 1
-	) {
-		return true;
-	}
-	return false;
-}

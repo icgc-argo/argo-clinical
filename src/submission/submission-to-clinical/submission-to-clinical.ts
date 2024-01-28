@@ -22,38 +22,32 @@
  * to the clinical model, somehow as set of ETL operations.
  */
 import { DeepReadonly } from 'deep-freeze';
-import { Donor, Specimen, Sample, SchemaMetadata } from '../../clinical/clinical-entities';
+import _ from 'lodash';
+import { Donor, Sample, SchemaMetadata, Specimen } from '../../clinical/clinical-entities';
+import {
+	DONOR_DOCUMENT_FIELDS,
+	FindByProgramAndSubmitterFilter,
+	donorDao,
+} from '../../clinical/donor-repo';
+import { loggerFor } from '../../logger';
+import { DonorUtils, Errors, F } from '../../utils';
+import { registrationRepository } from '../registration-repo';
 import {
 	ActiveClinicalSubmission,
+	ActiveRegistration,
 	ActiveSubmissionIdentifier,
 	ClinicalSubmissionModifierCommand,
 	CommitRegistrationCommand,
-	ActiveRegistration,
-	SubmittedRegistrationRecord,
-	SampleRegistrationFieldsEnum,
 	SUBMISSION_STATE,
+	SampleRegistrationFieldsEnum,
+	SubmittedRegistrationRecord,
 } from '../submission-entities';
-import { DonorUtils, Errors } from '../../utils';
-import {
-	donorDao,
-	FindByProgramAndSubmitterFilter,
-	DONOR_DOCUMENT_FIELDS,
-} from '../../clinical/donor-repo';
-import _ from 'lodash';
-import { F } from '../../utils';
-import { registrationRepository } from '../registration-repo';
 import { submissionRepository } from '../submission-repo';
-import { mergeActiveSubmissionWithDonors } from './merge-submission';
-import * as dictionaryManager from '../../dictionary/manager';
-import { loggerFor } from '../../logger';
-const L = loggerFor(__filename);
-import {
-	updateDonorStatsFromRegistrationCommit,
-	recalculateDonorStatsHoldOverridden,
-	updateDonorsCompletionStats,
-} from './stat-calculator';
 import * as messenger from '../submission-updates-messenger';
+import { mergeActiveSubmissionWithDonors } from './merge-submission';
+import { updateDonorsCompletionStats } from './stat-calculator';
 import { validateDonorsWithCurrentDictionary } from './validate-donors';
+const L = loggerFor(__filename);
 
 /**
  * This method will move the current submitted clinical data to
@@ -166,7 +160,9 @@ const performCommitSubmission = async (
  *
  * @param command CommitRegistrationCommand the id of the registration to close.
  */
-export const commitRegistration = async (command: Readonly<CommitRegistrationCommand>) => {
+export const commitRegistration = async (
+	command: Readonly<CommitRegistrationCommand>,
+): Promise<string[]> => {
 	const registration = await registrationRepository.findById(command.registrationId);
 
 	if (registration === undefined || registration.programId !== command.programId) {
@@ -187,19 +183,10 @@ export const commitRegistration = async (command: Readonly<CommitRegistrationCom
 	const existingDonors = (await donorDao.findByProgramAndSubmitterId(filters)) || [];
 	const existingDonorsIds = _.keyBy(existingDonors, DONOR_DOCUMENT_FIELDS.SUBMITTER_ID);
 
-	// Performance refactor Note:
-	// instead of awaiting to save donor documents one by one we batch the saving queries and await on the whole batch
-	// AND since each donor document is isolated and only occur once in the collection
-	// and our sequential id generation is atomic it's safe to do so.
-	const DOCUMENTS_PER_BATCH = 200;
-	const totalBatches = Math.ceil(donorSampleDtos.length / DOCUMENTS_PER_BATCH);
-	for (let batchNum = 0; batchNum < totalBatches; batchNum++) {
-		await Promise.all(
-			updateOrCreateDonorsBatch(batchNum, donorSampleDtos, existingDonorsIds, DOCUMENTS_PER_BATCH),
-		);
-	}
+	await updateOrCreateDonors(donorSampleDtos, existingDonorsIds);
 	registrationRepository.delete(command.registrationId);
 	sendMessageOnUpdatesFromRegistration(registration);
+
 	return (
 		(registration?.stats?.newSampleIds &&
 			registration.stats.newSampleIds.map((s) => s.submitterId)) ||
@@ -207,24 +194,29 @@ export const commitRegistration = async (command: Readonly<CommitRegistrationCom
 	);
 };
 
-const updateOrCreateDonorsBatch = (
-	batchNumber: number,
+const updateOrCreateDonors = async (
 	donorSampleDtos: DeepReadonly<CreateDonorSampleDto[]>,
 	existingDonorsIds: _.Dictionary<DeepReadonly<Donor>>,
-	batchSize: number,
 ) => {
-	const donorsBatch = _(donorSampleDtos)
-		.slice(batchNumber * batchSize)
-		.take(batchSize)
-		.value();
-	return donorsBatch.map((dto) => {
-		if (existingDonorsIds[dto.submitterId]) {
-			const mergedDonor = addSamplesToDonor(existingDonorsIds[dto.submitterId], dto);
-			const statUpdatedDonor = updateDonorStatsFromRegistrationCommit(mergedDonor);
-			return donorDao.update(statUpdatedDonor);
-		}
-		return donorDao.create(fromCreateDonorDtoToDonor(dto));
-	});
+	const samplesWithDonor = donorSampleDtos
+		.filter((dto) => existingDonorsIds[dto.submitterId])
+		.map((dto) => ({ sampleDto: dto, existingDonor: existingDonorsIds[dto.submitterId] }));
+	const samplesWithoutDonor = donorSampleDtos.filter(
+		(dto) => existingDonorsIds[dto.submitterId] === undefined,
+	);
+
+	// Process samples with existing donor data
+	const mergedDonors = samplesWithDonor.map((pair) =>
+		addSamplesToDonor(pair.existingDonor, pair.sampleDto),
+	);
+	// recalculate completion stats for donors
+	const recalculatedDonors = await updateDonorsCompletionStats(mergedDonors);
+	await Promise.all(recalculatedDonors.map((donor) => donorDao.update(donor)));
+
+	// Process new samples (no existing donor data)
+	await Promise.all(
+		samplesWithoutDonor.map((sampleDto) => donorDao.create(fromCreateDonorDtoToDonor(sampleDto))),
+	);
 };
 
 const fromCreateDonorDtoToDonor = (createDonorDto: DeepReadonly<CreateDonorSampleDto>) => {
