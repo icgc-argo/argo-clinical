@@ -112,7 +112,7 @@ export const calculateDonorCoreCompletionStats = (
 	donor: Donor,
 	hasMissingEntityException: boolean,
 ): CompletionStats => {
-	let newCompletionStats: CompletionStats = donor.completionStats
+	const newCompletionStats: CompletionStats = donor.completionStats
 		? cloneDeep(donor.completionStats)
 		: getEmptyCoreStats();
 
