@@ -18,249 +18,252 @@
  */
 
 import chai from 'chai';
-import { ExceptionValue, ProgramExceptionRecord } from '../../../src/exception/types';
 import {
-  commonValidators,
-  validateRecords,
-  ValidationResultType,
-} from '../../../src/exception/validation';
+	ExceptionValue,
+	ProgramExceptionRecord,
+} from '../../../src/exception/property-exceptions/types';
+import {
+	commonValidators,
+	validateRecords,
+	ValidationResultType,
+} from '../../../src/exception/property-exceptions/validation';
 import sinon from 'sinon';
 import * as dictionaryManager from '../../../src/dictionary/manager';
 
 function expectToHaveNumberOfErrors(result: any, length = 1) {
-  chai.expect(result).to.be.instanceOf(Array);
-  chai.expect(result).to.have.lengthOf(length, 'unexpected error result array size');
+	chai.expect(result).to.be.instanceOf(Array);
+	chai.expect(result).to.have.lengthOf(length, 'unexpected error result array size');
 }
 
 function expectValidationError(row: any, recordIndex: any, validationResultType: any) {
-  chai.expect(row.recordIndex).to.eq(recordIndex);
-  chai.expect(row.message).to.be.a('string');
-  chai.expect(row.message.length).to.be.greaterThan(0);
-  chai.expect(row.result).to.equal(validationResultType);
+	chai.expect(row.recordIndex).to.eq(recordIndex);
+	chai.expect(row.message).to.be.a('string');
+	chai.expect(row.message.length).to.be.greaterThan(0);
+	chai.expect(row.result).to.equal(validationResultType);
 }
 
 function expectZeroValidationErrors(result: any) {
-  chai.expect(result).to.be.empty;
+	chai.expect(result).to.be.empty;
 }
 
 const DEFAULT_PROGRAM_ID = 'TEST-IE';
 function createRecord(
-  record: Partial<ProgramExceptionRecord> = {},
-  programId = DEFAULT_PROGRAM_ID,
+	record: Partial<ProgramExceptionRecord> = {},
+	programId = DEFAULT_PROGRAM_ID,
 ) {
-  return {
-    ...{
-      program_name: programId,
-      schema: 'treatment',
-      requested_core_field: 'is_primary_treatment',
-      requested_exception_value: ExceptionValue.Unknown,
-    },
-    ...record,
-  };
+	return {
+		...{
+			program_name: programId,
+			schema: 'treatment',
+			requested_core_field: 'is_primary_treatment',
+			requested_exception_value: ExceptionValue.Unknown,
+		},
+		...record,
+	};
 }
 
 describe('program exception service', () => {
-  afterEach(() => {
-    // Restore the default sandbox here
-    sinon.restore();
-  });
+	afterEach(() => {
+		// Restore the default sandbox here
+		sinon.restore();
+	});
 
-  describe('req param should match submitted program_name in tsv', () => {
-    it('[positive] should succeed if req param program id matches program_name in records', async () => {
-      sinon.stub(dictionaryManager, 'instance').returns({
-        // @ts-ignore
-        getSchemasWithFields: () => [
-          {
-            name: 'treatment',
-            fields: [{ name: 'is_primary_treatment', meta: { core: true } }],
-          },
-        ],
-      });
+	describe('req param should match submitted program_name in tsv', () => {
+		it('[positive] should succeed if req param program id matches program_name in records', async () => {
+			sinon.stub(dictionaryManager, 'instance').returns({
+				// @ts-ignore
+				getSchemasWithFields: () => [
+					{
+						name: 'treatment',
+						fields: [{ name: 'is_primary_treatment', meta: { core: true } }],
+					},
+				],
+			});
 
-      const record = createRecord();
-      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
-      expectZeroValidationErrors(result);
-    });
+			const record = createRecord();
+			const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
+			expectZeroValidationErrors(result);
+		});
 
-    it('[negative] should error if req param program id does not match program_name in records', async () => {
-      sinon.stub(dictionaryManager, 'instance').returns({
-        // @ts-ignore
-        getSchemasWithFields: () => [
-          {
-            name: 'treatment',
-            fields: [{ name: 'is_primary_treatment', meta: { core: true } }],
-          },
-        ],
-      });
+		it('[negative] should error if req param program id does not match program_name in records', async () => {
+			sinon.stub(dictionaryManager, 'instance').returns({
+				// @ts-ignore
+				getSchemasWithFields: () => [
+					{
+						name: 'treatment',
+						fields: [{ name: 'is_primary_treatment', meta: { core: true } }],
+					},
+				],
+			});
 
-      const record = createRecord({
-        program_name: 'NOT-TEST-IE',
-      });
-      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
-      expectToHaveNumberOfErrors(result);
-      expectValidationError(result[0], 1, ValidationResultType.PARAM_INVALID);
-    });
-  });
+			const record = createRecord({
+				program_name: 'NOT-TEST-IE',
+			});
+			const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
+			expectToHaveNumberOfErrors(result);
+			expectValidationError(result[0], 1, ValidationResultType.PARAM_INVALID);
+		});
+	});
 
-  describe('check for empty fields', () => {
-    it('[positive] should succeed if no empty fields', async () => {
-      sinon.stub(dictionaryManager, 'instance').returns({
-        // @ts-ignore
-        getSchemasWithFields: () => [
-          { name: 'treatment', fields: [{ name: 'is_primary_treatment', meta: { core: true } }] },
-        ],
-      });
+	describe('check for empty fields', () => {
+		it('[positive] should succeed if no empty fields', async () => {
+			sinon.stub(dictionaryManager, 'instance').returns({
+				// @ts-ignore
+				getSchemasWithFields: () => [
+					{ name: 'treatment', fields: [{ name: 'is_primary_treatment', meta: { core: true } }] },
+				],
+			});
 
-      const record = createRecord({ schema: '' });
-      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
-      expectToHaveNumberOfErrors(result);
-      expectValidationError(result[0], 1, ValidationResultType.EMPTY_FIELD);
-    });
+			const record = createRecord({ schema: '' });
+			const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
+			expectToHaveNumberOfErrors(result);
+			expectValidationError(result[0], 1, ValidationResultType.EMPTY_FIELD);
+		});
 
-    it('[negative] should error if there are empty fields', async () => {
-      sinon.stub(dictionaryManager, 'instance').returns({
-        // @ts-ignore
-        getSchemasWithFields: () => [
-          { name: 'treatment', fields: [{ name: 'is_primary_treatment', meta: { core: true } }] },
-        ],
-      });
+		it('[negative] should error if there are empty fields', async () => {
+			sinon.stub(dictionaryManager, 'instance').returns({
+				// @ts-ignore
+				getSchemasWithFields: () => [
+					{ name: 'treatment', fields: [{ name: 'is_primary_treatment', meta: { core: true } }] },
+				],
+			});
 
-      const record = createRecord({ schema: '' });
-      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
+			const record = createRecord({ schema: '' });
+			const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
 
-      expectToHaveNumberOfErrors(result);
-      expectValidationError(result[0], 1, ValidationResultType.EMPTY_FIELD);
-    });
-  });
+			expectToHaveNumberOfErrors(result);
+			expectValidationError(result[0], 1, ValidationResultType.EMPTY_FIELD);
+		});
+	});
 
-  describe('schema', () => {
-    it('[positive] should return success when submitted schema is valid schema', async () => {
-      sinon.stub(dictionaryManager, 'instance').returns({
-        // @ts-ignore
-        getSchemasWithFields: () => [
-          {
-            name: 'treatment',
-            fields: [{ name: 'is_primary_treatment', meta: { core: true } }],
-          },
-        ],
-      });
+	describe('schema', () => {
+		it('[positive] should return success when submitted schema is valid schema', async () => {
+			sinon.stub(dictionaryManager, 'instance').returns({
+				// @ts-ignore
+				getSchemasWithFields: () => [
+					{
+						name: 'treatment',
+						fields: [{ name: 'is_primary_treatment', meta: { core: true } }],
+					},
+				],
+			});
 
-      const record = createRecord();
-      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
-      expectZeroValidationErrors(result);
-    });
+			const record = createRecord();
+			const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
+			expectZeroValidationErrors(result);
+		});
 
-    it('[negative] should return errors when submitted schema is not valid schema', async () => {
-      sinon.stub(dictionaryManager, 'instance').returns({
-        // @ts-ignore
-        getSchemasWithFields: () => [],
-      });
+		it('[negative] should return errors when submitted schema is not valid schema', async () => {
+			sinon.stub(dictionaryManager, 'instance').returns({
+				// @ts-ignore
+				getSchemasWithFields: () => [],
+			});
 
-      const record = createRecord({ schema: 'not_a_valid_schema' });
-      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
+			const record = createRecord({ schema: 'not_a_valid_schema' });
+			const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
 
-      expectToHaveNumberOfErrors(result, 2);
-      expectValidationError(result[0], 1, ValidationResultType.INVALID);
-    });
-  });
+			expectToHaveNumberOfErrors(result, 2);
+			expectValidationError(result[0], 1, ValidationResultType.INVALID);
+		});
+	});
 
-  describe('requested core field', () => {
-    it('[positive] should return successfully if core field is valid dictionary field', async () => {
-      sinon.stub(dictionaryManager, 'instance').returns({
-        // @ts-ignore
-        getSchemasWithFields: () => [
-          { name: 'treatment', fields: [{ name: 'is_primary_treatment', meta: { core: true } }] },
-        ],
-      });
+	describe('requested core field', () => {
+		it('[positive] should return successfully if core field is valid dictionary field', async () => {
+			sinon.stub(dictionaryManager, 'instance').returns({
+				// @ts-ignore
+				getSchemasWithFields: () => [
+					{ name: 'treatment', fields: [{ name: 'is_primary_treatment', meta: { core: true } }] },
+				],
+			});
 
-      const record = createRecord();
-      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
-      expectZeroValidationErrors(result);
-    });
+			const record = createRecord();
+			const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
+			expectZeroValidationErrors(result);
+		});
 
-    it('[negative] should return errors if requested core field is not a valid dictionary field', async () => {
-      sinon.stub(dictionaryManager, 'instance').returns({
-        // @ts-ignore
-        getSchemasWithFields: () => [],
-      });
-      const record = createRecord({ schema: 'not_a_valid_schema' });
-      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
+		it('[negative] should return errors if requested core field is not a valid dictionary field', async () => {
+			sinon.stub(dictionaryManager, 'instance').returns({
+				// @ts-ignore
+				getSchemasWithFields: () => [],
+			});
+			const record = createRecord({ schema: 'not_a_valid_schema' });
+			const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
 
-      expectToHaveNumberOfErrors(result, 2);
-      expectValidationError(result[0], 1, ValidationResultType.INVALID);
-    });
-  });
+			expectToHaveNumberOfErrors(result, 2);
+			expectValidationError(result[0], 1, ValidationResultType.INVALID);
+		});
+	});
 
-  describe('exception value', () => {
-    it('[positive] should return successfully if exception value is valid', async () => {
-      sinon.stub(dictionaryManager, 'instance').returns({
-        // @ts-ignore
-        getSchemasWithFields: () => [
-          {
-            name: 'treatment',
-            fields: [{ name: 'is_primary_treatment', meta: { core: true } }],
-          },
-        ],
-      });
-      const record = createRecord({ requested_exception_value: ExceptionValue.NotApplicable });
-      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
-      expectZeroValidationErrors(result);
-    });
+	describe('exception value', () => {
+		it('[positive] should return successfully if exception value is valid', async () => {
+			sinon.stub(dictionaryManager, 'instance').returns({
+				// @ts-ignore
+				getSchemasWithFields: () => [
+					{
+						name: 'treatment',
+						fields: [{ name: 'is_primary_treatment', meta: { core: true } }],
+					},
+				],
+			});
+			const record = createRecord({ requested_exception_value: ExceptionValue.NotApplicable });
+			const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
+			expectZeroValidationErrors(result);
+		});
 
-    it('[negative] should return errors if exception value is invalid', async () => {
-      sinon.stub(dictionaryManager, 'instance').returns({
-        // @ts-ignore
-        getSchemasWithFields: () => [
-          {
-            name: 'treatment',
-            fields: [{ name: 'is_primary_treatment', meta: { core: true } }],
-          },
-        ],
-      });
-      const record = createRecord({ requested_exception_value: 'invalid!' });
-      const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
-      expectToHaveNumberOfErrors(result, 1);
-      expectValidationError(result[0], 1, ValidationResultType.INVALID);
-    });
-  });
+		it('[negative] should return errors if exception value is invalid', async () => {
+			sinon.stub(dictionaryManager, 'instance').returns({
+				// @ts-ignore
+				getSchemasWithFields: () => [
+					{
+						name: 'treatment',
+						fields: [{ name: 'is_primary_treatment', meta: { core: true } }],
+					},
+				],
+			});
+			const record = createRecord({ requested_exception_value: 'invalid!' });
+			const result = await validateRecords(DEFAULT_PROGRAM_ID, [record], commonValidators);
+			expectToHaveNumberOfErrors(result, 1);
+			expectValidationError(result[0], 1, ValidationResultType.INVALID);
+		});
+	});
 
-  describe('duplicate rows', () => {
-    it('[positive] should return successfully if there are no duplicate rows', async () => {
-      sinon.stub(dictionaryManager, 'instance').returns({
-        // @ts-ignore
-        getSchemasWithFields: () => [
-          {
-            name: 'treatment',
-            fields: [{ name: 'is_primary_treatment', meta: { core: true } }],
-          },
-        ],
-      });
+	describe('duplicate rows', () => {
+		it('[positive] should return successfully if there are no duplicate rows', async () => {
+			sinon.stub(dictionaryManager, 'instance').returns({
+				// @ts-ignore
+				getSchemasWithFields: () => [
+					{
+						name: 'treatment',
+						fields: [{ name: 'is_primary_treatment', meta: { core: true } }],
+					},
+				],
+			});
 
-      const records = [
-        createRecord(),
-        createRecord({ requested_exception_value: ExceptionValue.NotApplicable }),
-      ];
-      const result = await validateRecords(DEFAULT_PROGRAM_ID, records, commonValidators);
+			const records = [
+				createRecord(),
+				createRecord({ requested_exception_value: ExceptionValue.NotApplicable }),
+			];
+			const result = await validateRecords(DEFAULT_PROGRAM_ID, records, commonValidators);
 
-      expectZeroValidationErrors(result);
-    });
+			expectZeroValidationErrors(result);
+		});
 
-    it('[negative] should return errors if duplicate rows found', async () => {
-      sinon.stub(dictionaryManager, 'instance').returns({
-        // @ts-ignore
-        getSchemasWithFields: () => [
-          {
-            name: 'treatment',
-            fields: [{ name: 'is_primary_treatment', meta: { core: true } }],
-          },
-        ],
-      });
+		it('[negative] should return errors if duplicate rows found', async () => {
+			sinon.stub(dictionaryManager, 'instance').returns({
+				// @ts-ignore
+				getSchemasWithFields: () => [
+					{
+						name: 'treatment',
+						fields: [{ name: 'is_primary_treatment', meta: { core: true } }],
+					},
+				],
+			});
 
-      const records = new Array(2).fill(undefined).map(() => createRecord());
-      const result = await validateRecords(DEFAULT_PROGRAM_ID, records, commonValidators);
+			const records = new Array(2).fill(undefined).map(() => createRecord());
+			const result = await validateRecords(DEFAULT_PROGRAM_ID, records, commonValidators);
 
-      expectToHaveNumberOfErrors(result, 1);
-      expectValidationError(result[0], 2, ValidationResultType.INVALID);
-    });
-  });
+			expectToHaveNumberOfErrors(result, 1);
+			expectValidationError(result[0], 2, ValidationResultType.INVALID);
+		});
+	});
 });

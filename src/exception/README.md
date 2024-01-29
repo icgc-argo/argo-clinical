@@ -1,6 +1,6 @@
 # Exceptions
 
-Exceptions are cases where submitted data is allowed to differ from the dictionary schema. These are allowed because the dictionary is quite strict and there are many edge cases where a submitting program has data to contribute but will never be able to provide certain select pieces of information.
+Exceptions are cases where submitted data is allowed to differ from the typical clinical validation rules.. These are allowed because the ARGO data dictionary is quite strict and there are many edge cases where a submitting program has data to contribute but will never be able to provide certain select pieces of information.
 
 When this is the case, the submitting program requests an exception through the DCC. A DCC admin can then use the clinical service API to add exceptions for that submitting program.
 
