@@ -112,6 +112,12 @@ const validateFieldValueWithExceptions = ({
           .filter(exception => exception.submitter_follow_up_id === submitterFollowupId)
           .forEach(exception => exceptions.push(exception));
         break;
+      case ClinicalEntitySchemaNames.TREATMENT:
+        const submitterTreatmentId = record[FollowupFieldsEnum.submitter_treatment_id] || undefined;
+        entityException.treatment
+          .filter(exception => exception.submitter_treatment_id === submitterTreatmentId)
+          .forEach(exception => exceptions.push(exception));
+        break;
       default:
         // schema is neither specimen nor followup, do not filter for entity exceptions
         break;
