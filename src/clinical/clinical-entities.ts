@@ -21,107 +21,107 @@ import { DeepReadonly } from 'deep-freeze';
 import { ClinicalEntitySchemaNames } from '../common-model/entities';
 
 export interface Donor {
-  _id?: string;
-  __v?: number; // mongodb property not being filtered out
-  createBy?: string;
-  schemaMetadata: SchemaMetadata;
-  donorId: number;
-  gender: string;
-  submitterId: string;
-  programId: string;
-  specimens: Array<Specimen>;
-  clinicalInfo?: ClinicalInfo;
-  primaryDiagnoses?: Array<PrimaryDiagnosis>;
-  familyHistory?: Array<FamilyHistory>;
-  comorbidity?: Array<Comorbidity>;
-  followUps?: Array<FollowUp>;
-  treatments?: Array<Treatment>;
-  exposure?: Array<Exposure>;
-  biomarker?: Array<Biomarker>;
-  createdAt?: string;
-  updatedAt?: string;
-  completionStats?: CompletionStats;
+	_id?: string;
+	__v?: number; // mongodb property not being filtered out
+	createBy?: string;
+	schemaMetadata: SchemaMetadata;
+	donorId: number;
+	gender: string;
+	submitterId: string;
+	programId: string;
+	specimens: Array<Specimen>;
+	clinicalInfo?: ClinicalInfo;
+	primaryDiagnoses?: Array<PrimaryDiagnosis>;
+	familyHistory?: Array<FamilyHistory>;
+	comorbidity?: Array<Comorbidity>;
+	followUps?: Array<FollowUp>;
+	treatments?: Array<Treatment>;
+	exposure?: Array<Exposure>;
+	biomarker?: Array<Biomarker>;
+	createdAt?: string;
+	updatedAt?: string;
+	completionStats?: CompletionStats;
 }
 
 export interface CompletionStats {
-  coreCompletion: CoreCompletionFields;
-  coreCompletionDate?: string;
-  coreCompletionPercentage: number;
-  overriddenCoreCompletion?: CoreClinicalEntities[];
+	coreCompletion: CoreCompletionFields;
+	coreCompletionDate?: string;
+	coreCompletionPercentage: number;
+	hasMissingEntityException?: boolean;
 }
 
 export interface SchemaMetadata {
-  lastMigrationId?: string | undefined | null;
-  lastValidSchemaVersion: string;
-  originalSchemaVersion: string;
-  isValid: boolean;
+	lastMigrationId?: string | undefined | null;
+	lastValidSchemaVersion: string;
+	originalSchemaVersion: string;
+	isValid: boolean;
 }
 
 export type ClinicalEntity = {
-  clinicalInfo: ClinicalInfo;
-  [k: string]: any;
+	clinicalInfo: ClinicalInfo;
+	[k: string]: any;
 };
 
 export interface Specimen extends ClinicalEntity {
-  samples: Array<Sample>;
-  specimenTissueSource: string;
-  submitterId: string;
-  specimenId?: number;
-  tumourNormalDesignation: string;
-  specimenType: string;
+	samples: Array<Sample>;
+	specimenTissueSource: string;
+	submitterId: string;
+	specimenId?: number;
+	tumourNormalDesignation: string;
+	specimenType: string;
 }
 
 export interface Sample {
-  sampleId?: number;
-  sampleType: string;
-  submitterId: string;
+	sampleId?: number;
+	sampleType: string;
+	submitterId: string;
 }
 
 export const dnaSampleTypes = ['Amplified DNA', 'ctDNA', 'Other DNA enrichments', 'Total DNA'];
 
 export interface Treatment extends ClinicalEntity {
-  treatmentId: number | undefined;
-  therapies: Array<Therapy>;
+	treatmentId: number | undefined;
+	therapies: Array<Therapy>;
 }
 
 export interface Therapy extends ClinicalEntity {
-  therapyType: string;
+	therapyType: string;
 }
 
 export interface FollowUp extends ClinicalEntity {
-  followUpId: number | undefined;
+	followUpId: number | undefined;
 }
 
 export interface PrimaryDiagnosis extends ClinicalEntity {
-  primaryDiagnosisId: number | undefined;
+	primaryDiagnosisId: number | undefined;
 }
 
 export interface FamilyHistory extends ClinicalEntity {
-  familyHistoryId: number | undefined;
+	familyHistoryId: number | undefined;
 }
 
 export interface Exposure extends ClinicalEntity {
-  exposureId: number | undefined;
+	exposureId: number | undefined;
 }
 
 export interface Biomarker extends ClinicalEntity {
-  biomarkerId: number | undefined;
+	biomarkerId: number | undefined;
 }
 
 export interface Comorbidity extends ClinicalEntity {
-  comorbidityId: number | undefined;
+	comorbidityId: number | undefined;
 }
 
 export interface ClinicalInfo {
-  [field: string]: string | number | boolean | string[] | number[] | boolean[] | undefined;
+	[field: string]: string | number | boolean | string[] | number[] | boolean[] | undefined;
 }
 
 export type ClinicalEntityData = {
-  entityName: ClinicalEntitySchemaNames;
-  totalDocs: number;
-  records: Array<ClinicalInfo>;
-  entityFields: string[];
-  completionStats?: CompletionDisplayRecord[];
+	entityName: ClinicalEntitySchemaNames;
+	totalDocs: number;
+	records: Array<ClinicalInfo>;
+	entityFields: string[];
+	completionStats?: CompletionDisplayRecord[];
 };
 
 export type DonorMap = Readonly<{ [submitterId: string]: Donor }>;
@@ -129,26 +129,26 @@ export type DonorMap = Readonly<{ [submitterId: string]: Donor }>;
 export type DonorBySubmitterIdMap = { [k: string]: DeepReadonly<Donor> };
 
 export interface CoreCompletionFields {
-  donor: number;
-  specimens: number;
-  primaryDiagnosis: number;
-  followUps: number;
-  treatments: number;
+	donor: number;
+	specimens: number;
+	primaryDiagnosis: number;
+	followUps: number;
+	treatments: number;
 }
 
 export interface SpecimenCoreCompletion {
-  coreCompletionPercentage: number;
-  normalSpecimensPercentage: number;
-  tumourSpecimensPercentage: number;
-  normalRegistrations: number;
-  normalSubmissions: number;
-  tumourRegistrations: number;
-  tumourSubmissions: number;
+	coreCompletionPercentage: number;
+	normalSpecimensPercentage: number;
+	tumourSpecimensPercentage: number;
+	normalRegistrations: number;
+	normalSubmissions: number;
+	tumourRegistrations: number;
+	tumourSubmissions: number;
 }
 
 export interface CompletionDisplayRecord extends CompletionStats {
-  donorId?: number;
-  entityData?: { specimens?: SpecimenCoreCompletion };
+	donorId?: number;
+	entityData?: { specimens?: SpecimenCoreCompletion };
 }
 
 export type CoreClinicalEntities = keyof CoreCompletionFields;

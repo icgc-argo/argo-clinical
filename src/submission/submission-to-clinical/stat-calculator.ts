@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 The Ontario Institute for Cancer Research. All rights reserved
+ * Copyright (c) 2024 The Ontario Institute for Cancer Research. All rights reserved
  *
  * This program and the accompanying materials are made available under the terms of
  * the GNU Affero General Public License v3.0. You should have received a copy of the
@@ -17,246 +17,202 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {
-  CompletionStats,
-  CoreClinicalEntities,
-  CoreCompletionFields,
-  Donor,
-} from '../../clinical/clinical-entities';
+import { DeepReadonly } from 'deep-freeze';
+import { cloneDeep, mean, omit } from 'lodash';
+import { CompletionStats, CoreCompletionFields, Donor } from '../../clinical/clinical-entities';
 import { ClinicalEntitySchemaNames } from '../../common-model/entities';
-import { F } from '../../../src/utils';
 import {
-  calculateSpecimenCompletionStats,
-  dnaSampleFilter,
-  getClinicalEntitiesFromDonorBySchemaName,
+	calculateSpecimenCompletionStats,
+	filterHasDnaSample,
+	getClinicalEntitiesFromDonorBySchemaName,
 } from '../../common-model/functions';
 
-import { DeepReadonly } from 'deep-freeze';
-import { cloneDeep, mean } from 'lodash';
-
-type ForceRecaculateFlags = {
-  recalcEvenIfComplete?: boolean; // used to force recalculate if stat is already 100%
-  recalcEvenIfOverridden?: boolean; // used to force recalculate if previously overriden
-};
+import {
+	MissingEntityExceptionCache,
+	createMissingEntityExceptionCache,
+} from '../../exception/missing-entity-exceptions/missing-entity-exception-cache';
 
 type CoreClinicalSchemaName =
-  | ClinicalEntitySchemaNames.DONOR
-  | ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS
-  | ClinicalEntitySchemaNames.TREATMENT
-  | ClinicalEntitySchemaNames.FOLLOW_UP
-  | ClinicalEntitySchemaNames.SPECIMEN;
+	| ClinicalEntitySchemaNames.DONOR
+	| ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS
+	| ClinicalEntitySchemaNames.TREATMENT
+	| ClinicalEntitySchemaNames.FOLLOW_UP
+	| ClinicalEntitySchemaNames.SPECIMEN;
 
-const getCoreCompletionPercentage = (fields: CoreCompletionFields) =>
-  mean(Object.values(fields || {})) || 0;
+/**
+ * Calculate the core completion percentage for a donor.
+ * This is a value from 0-1 that represents what percentage of the required core entities have been submitted for this donor.
+ *
+ * If the user has a missing-entity exception then they will not require Treatments or Follow Up entities, so their percentage
+ * will be calculated vs 3 required entities instead of the normal 5.
+ *
+ * @param fields
+ * @param hasMissingEntityException
+ * @returns
+ */
+const getCoreCompletionPercentage = (
+	fields: CoreCompletionFields,
+	hasMissingEntityException: boolean,
+): number => {
+	const requiredFields = hasMissingEntityException
+		? omit(fields, 'treatments', 'followUps')
+		: fields;
 
-const getCoreCompletionDate = (donor: Donor, percentage: number) =>
-  percentage === 1
-    ? donor.completionStats?.coreCompletionDate || donor.updatedAt || new Date().toDateString()
-    : undefined;
+	return mean(Object.values(requiredFields)) || 0;
+};
 
+const getCoreCompletionDate = (donor: Donor, coreCompletionStats: CompletionStats) =>
+	coreCompletionStats.coreCompletionPercentage === 1
+		? coreCompletionStats.coreCompletionDate || donor.updatedAt || new Date().toDateString()
+		: undefined;
+
+/**
+ * Map from entity schema names to the property names of Core Completion Stats
+ */
 const schemaNameToCoreCompletenessStat: Record<
-  CoreClinicalSchemaName,
-  keyof CoreCompletionFields
+	CoreClinicalSchemaName,
+	keyof CoreCompletionFields
 > = {
-  [ClinicalEntitySchemaNames.DONOR]: 'donor',
-  [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: 'primaryDiagnosis',
-  [ClinicalEntitySchemaNames.TREATMENT]: 'treatments',
-  [ClinicalEntitySchemaNames.FOLLOW_UP]: 'followUps',
-  [ClinicalEntitySchemaNames.SPECIMEN]: 'specimens',
+	[ClinicalEntitySchemaNames.DONOR]: 'donor',
+	[ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: 'primaryDiagnosis',
+	[ClinicalEntitySchemaNames.TREATMENT]: 'treatments',
+	[ClinicalEntitySchemaNames.FOLLOW_UP]: 'followUps',
+	[ClinicalEntitySchemaNames.SPECIMEN]: 'specimens',
 };
 
 const coreClinicalSchemaNamesSet = new Set<CoreClinicalSchemaName>(
-  Object.keys(schemaNameToCoreCompletenessStat) as CoreClinicalSchemaName[],
+	Object.keys(schemaNameToCoreCompletenessStat) as CoreClinicalSchemaName[],
 );
 
 const getEmptyCoreStats = (): CompletionStats => ({
-  coreCompletion: {
-    donor: 0,
-    specimens: 0,
-    primaryDiagnosis: 0,
-    followUps: 0,
-    treatments: 0,
-  },
-  coreCompletionPercentage: 0,
+	coreCompletion: {
+		donor: 0,
+		specimens: 0,
+		primaryDiagnosis: 0,
+		followUps: 0,
+		treatments: 0,
+	},
+	coreCompletionPercentage: 0,
 });
 
-// This is the main core stat calculation function.
-// We consider only `required & core` fields for core field calculation, which are always submitted.
+/**
+ * Main calculation logic for core-completion state for the donor.
+ *
+ * If the donor has an exception allowing some core entities to be missing, that must be provided in the function arguments.
+ * This will excuse the donor from requiring a treatment or followup entity to be core complete.
+ *
+ * A donor that is marked core-complete (coreCompletionPercentage === 1) cannot lose the complete status.
+ * The individual core entities will still be calculated so the current list of complete entities for this donor will still be known.
+ *
+ * @param donor
+ * @param hasMissingEntityException - Indicates if this donor has been given an exception to allow it to be core complete while missing select core entities
+ * @returns
+ */
+export const calculateDonorCoreCompletionStats = (
+	donor: Donor,
+	hasMissingEntityException: boolean,
+): CompletionStats => {
+	const newCompletionStats: CompletionStats = donor.completionStats
+		? cloneDeep(donor.completionStats)
+		: getEmptyCoreStats();
 
-// Additionally, `optional & core` fields are submitted in relation to `required & core` fields,
-// which are verified at upload/data-validate step. Validation and completion are calculated separately.
+	// update completion state for each core entity
+	Array.from(coreClinicalSchemaNamesSet).forEach((clinicalType) => {
+		if (clinicalType === ClinicalEntitySchemaNames.SPECIMEN) {
+			// Specimen completion calculation requires performing counting of DNA samples only
+			const filteredDonorSpecimens = donor.specimens.filter(filterHasDnaSample);
 
-// This function is referenced in the recalculate-core-completion migration file.
-// Any code updates should validate that migration is unaffected.
-export const calcDonorCoreEntityStats = (
-  donor: Donor | DeepReadonly<Donor>,
-  forceFlags: ForceRecaculateFlags, // used to control recalculate under certain conditions
-) => {
-  // Intentionally create a mutable Donor copy for coreCompletion updates
-  const donorCopy = cloneDeep(donor) as Donor;
+			const { coreCompletionPercentage } = calculateSpecimenCompletionStats(filteredDonorSpecimens);
 
-  let newCompletionStats = donorCopy.completionStats
-    ? { ...donorCopy.completionStats }
-    : getEmptyCoreStats();
+			const statsPropertyName = schemaNameToCoreCompletenessStat[clinicalType];
+			newCompletionStats.coreCompletion[statsPropertyName] = coreCompletionPercentage;
+		} else {
+			// for others we just need to find one clinical info for core entity
+			const entities = getClinicalEntitiesFromDonorBySchemaName(donor, clinicalType);
 
-  const coreStats = newCompletionStats.coreCompletion;
+			const statsPropertyName = schemaNameToCoreCompletenessStat[clinicalType];
+			newCompletionStats.coreCompletion[statsPropertyName] = entities.length >= 1 ? 1 : 0;
+		}
+	});
 
-  const updatedEntities = Array.from(coreClinicalSchemaNamesSet).filter(
-    (clinicalType: CoreClinicalSchemaName) =>
-      !noNeedToCalcCoreStat(donorCopy, clinicalType, forceFlags),
-  );
+	const currentCompletionPecentage = donor.completionStats?.coreCompletionPercentage;
 
-  updatedEntities.forEach(clinicalType => {
-    if (clinicalType === ClinicalEntitySchemaNames.SPECIMEN) {
-      const filteredDonorSpecimens = donorCopy.specimens.filter(dnaSampleFilter);
+	// Don't update core completion if its already complete.
+	const coreCompletionPercentage =
+		currentCompletionPecentage === 1
+			? 1
+			: getCoreCompletionPercentage(newCompletionStats.coreCompletion, hasMissingEntityException);
 
-      const { coreCompletionPercentage } = calculateSpecimenCompletionStats(filteredDonorSpecimens);
+	const coreCompletionDate = getCoreCompletionDate(donor, newCompletionStats);
 
-      coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = coreCompletionPercentage;
-    } else {
-      // for others we just need to find one clinical info for core entity
-      const entities = getClinicalEntitiesFromDonorBySchemaName(donor, clinicalType);
-
-      coreStats[schemaNameToCoreCompletenessStat[clinicalType]] = entities.length >= 1 ? 1 : 0;
-    }
-  });
-
-  const coreCompletionPercentage = getCoreCompletionPercentage(coreStats);
-  const coreCompletionDate = getCoreCompletionDate(
-    donorCopy,
-    newCompletionStats.coreCompletionPercentage,
-  );
-
-  newCompletionStats = {
-    ...newCompletionStats,
-    coreCompletion: coreStats,
-    coreCompletionPercentage,
-    coreCompletionDate,
-  };
-
-  donorCopy.completionStats = newCompletionStats;
-
-  return donorCopy;
+	return {
+		...newCompletionStats,
+		coreCompletionPercentage,
+		coreCompletionDate,
+		hasMissingEntityException,
+	};
 };
 
-export const recalculateDonorStatsHoldOverridden = (donor: Donor) => {
-  const updatedDonor = calcDonorCoreEntityStats(donor, {
-    recalcEvenIfComplete: true,
-    recalcEvenIfOverridden: false,
-  });
+/**
+ * Re-calculate the completion stats for a single donor. Will return a cloned version of the donor
+ * with updated completion stats.
+ *
+ * If you have an array of donors that all need updating, it may be simpler to use `updateDonorsCompletionStats`
+ * instead of looping this function.
+ *
+ * This function requires an exceptionsCache object. This is a performance optimization to prevent repeated calls
+ * to the database when looping over large numbers of donors from the same program. See the example for how to
+ * set this up.
+ *
+ *
+ * @example
+ * ```ts
+ * import {
+ * 	createMissingEntityExceptionCache,
+ * } from './exception/missing-entity-exceptions/missing-entity-exception-cache';
+ *
+ * const donor: Donor = await someFunctionThatReturnsADonor();
+ * const exceptionsCache = createMissingEntityExceptionCache();
+ *
+ * const updatedDonor = await updateSingleDonorCompletionStats(donor, exceptionsCache);
+ * ```
+ *
+ * @param donor
+ * @param exceptionsCache
+ * @returns
+ */
+export const updateSingleDonorCompletionStats = async (
+	donor: Donor | DeepReadonly<Donor>,
+	exceptionsCache: MissingEntityExceptionCache,
+): Promise<Donor> => {
+	const clonedDonor = cloneDeep(donor) as Donor;
 
-  // extended stats
-  return updatedDonor;
+	const hasException = await exceptionsCache.donorHasException(clonedDonor);
+
+	const completionStats = calculateDonorCoreCompletionStats(clonedDonor, hasException);
+	clonedDonor.completionStats = completionStats;
+	return clonedDonor;
 };
 
-export const updateDonorStatsFromRegistrationCommit = (donor: DeepReadonly<Donor>) => {
-  // no aggreagated info so donor has no clinical submission, nothing to calculate
-  if (!donor.completionStats) return donor;
+/**
+ * Re-calculate core-completion stats for each provided donor. Will return a new array with an updated
+ * copy of each donor which includes the latest completion stats.
+ *
+ * This function retrieves missing-entity exception data in order to use this exception information when
+ * calculating core completion stats.
+ * @param donors
+ */
+export const updateDonorsCompletionStats = async (
+	donors: (Donor | DeepReadonly<Donor>)[],
+): Promise<Donor[]> => {
+	// Cache program exceptions so we don't need to repeatedly fetch them
+	const exceptionsCache = createMissingEntityExceptionCache();
 
-  // specimen core stats can change from sample registration when specimens are added
-  const updatedDonor = calcDonorCoreEntityStats(donor, {
-    recalcEvenIfComplete: true,
-    recalcEvenIfOverridden: true,
-  });
+	// clone each donor
+	const updatedDonorPromises = donors.map((donor) =>
+		updateSingleDonorCompletionStats(donor, exceptionsCache),
+	);
+	const updatedDonors = await Promise.all(updatedDonorPromises).then((values) => values);
 
-  return F(updatedDonor);
+	return updatedDonors;
 };
-
-export const updateDonorStatsFromSubmissionCommit = (
-  donor: Donor,
-  clinicalType: ClinicalEntitySchemaNames,
-) => {
-  // registration has no buisness here
-  if (clinicalType === ClinicalEntitySchemaNames.REGISTRATION) return;
-
-  let updatedDonor = donor;
-
-  if (isCoreEntitySchemaName(clinicalType)) {
-    updatedDonor = calcDonorCoreEntityStats(donor, {
-      recalcEvenIfComplete: false,
-      recalcEvenIfOverridden: true,
-    });
-  }
-
-  return updatedDonor;
-};
-
-export const patchCoreCompletionWithOverride = (
-  donor: DeepReadonly<Donor>,
-  coreStatOverride: any = {},
-) => {
-  if (!isValidCoreStatOverride(coreStatOverride)) {
-    throw new Error(`Invalid coreStatOverride`);
-  }
-
-  const updatedDonor = calcDonorCoreEntityStats(donor, {
-    recalcEvenIfComplete: true,
-    recalcEvenIfOverridden: true,
-  });
-
-  const newCoreCompletion = {
-    ...updatedDonor.completionStats?.coreCompletion, // set recalculated core completion
-    ...coreStatOverride, // merge coreStatOverride
-  };
-
-  const coreCompletionPercentage = getCoreCompletionPercentage(newCoreCompletion);
-  const coreCompletionDate = getCoreCompletionDate(updatedDonor, coreCompletionPercentage);
-
-  updatedDonor.completionStats = {
-    ...updatedDonor.completionStats,
-    coreCompletion: newCoreCompletion,
-    coreCompletionDate,
-    coreCompletionPercentage,
-    overriddenCoreCompletion: Object.keys(coreStatOverride || {}) as CoreClinicalEntities[],
-  };
-
-  return updatedDonor;
-};
-
-const isCoreEntitySchemaName = (clinicalType: string): clinicalType is CoreClinicalSchemaName =>
-  coreClinicalSchemaNamesSet.has(clinicalType as CoreClinicalSchemaName);
-
-function noNeedToCalcCoreStat(
-  donor: Donor,
-  clinicalType: CoreClinicalSchemaName,
-  forceFlags: ForceRecaculateFlags,
-) {
-  // if recalculate overridden, need to ignore completion value since overridden value could be 100%
-  if (forceFlags.recalcEvenIfOverridden && !forceFlags.recalcEvenIfComplete) {
-    return false;
-  }
-
-  // if entity was manually overridden, don't recalculate (might set to undesired value)
-  if (
-    !forceFlags.recalcEvenIfOverridden &&
-    donor.completionStats?.overriddenCoreCompletion?.find(
-      type => type === schemaNameToCoreCompletenessStat[clinicalType],
-    )
-  ) {
-    return true;
-  }
-
-  // if entity is already core complete it can't become uncomplete since records can't be deleted
-  // only exception is if specimens are added
-  if (
-    !forceFlags.recalcEvenIfComplete &&
-    (donor.completionStats?.coreCompletion || {})[
-      schemaNameToCoreCompletenessStat[clinicalType]
-    ] === 1
-  ) {
-    return true;
-  }
-  return false;
-}
-
-function isValidCoreStatOverride(
-  updatedCompletion: any,
-): updatedCompletion is CoreCompletionFields {
-  return Object.entries(updatedCompletion).every(
-    ([type, val]) =>
-      Object.values(schemaNameToCoreCompletenessStat).find(field => type === field) &&
-      typeof val === 'number' &&
-      val >= 0 &&
-      val <= 1,
-  );
-}
