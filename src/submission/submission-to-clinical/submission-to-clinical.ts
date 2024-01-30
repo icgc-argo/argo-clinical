@@ -24,11 +24,7 @@
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 import { Donor, Sample, SchemaMetadata, Specimen } from '../../clinical/clinical-entities';
-import {
-	DONOR_DOCUMENT_FIELDS,
-	FindByProgramAndSubmitterFilter,
-	donorDao,
-} from '../../clinical/donor-repo';
+import { FindByProgramAndSubmitterFilter, donorDao } from '../../clinical/donor-repo';
 import { loggerFor } from '../../logger';
 import { DonorUtils, Errors, F } from '../../utils';
 import { registrationRepository } from '../registration-repo';
@@ -169,21 +165,25 @@ export const commitRegistration = async (
 		throw new Errors.NotFound(`no registration with id :${command.registrationId} found`);
 	}
 
-	const donorSampleDtos: DeepReadonly<CreateDonorSampleDto[]> = mapToCreateDonorSampleDto(
-		registration,
-	);
+	const donorSampleDtos = mapToCreateDonorSampleDto(registration);
 
-	const filters = new Array<FindByProgramAndSubmitterFilter>();
-
-	for (const dto of donorSampleDtos) {
-		filters.push({ programId: dto.programId, submitterId: dto.submitterId });
-	}
+	const filters: FindByProgramAndSubmitterFilter[] = donorSampleDtos.map((dto) => ({
+		programId: dto.programId,
+		submitterId: dto.submitterId,
+	}));
 
 	// batch fetch existing donors from db
 	const existingDonors = (await donorDao.findByProgramAndSubmitterId(filters)) || [];
-	const existingDonorsIds = _.keyBy(existingDonors, DONOR_DOCUMENT_FIELDS.SUBMITTER_ID);
 
-	await updateOrCreateDonors(donorSampleDtos, existingDonorsIds);
+	const existingDonorsDictionary = existingDonors.reduce<Map<string, DeepReadonly<Donor>>>(
+		(map, donor) => {
+			map.set(donor.submitterId, donor);
+			return map;
+		},
+		new Map(),
+	);
+
+	await updateOrCreateDonors(donorSampleDtos, existingDonorsDictionary);
 	registrationRepository.delete(command.registrationId);
 	sendMessageOnUpdatesFromRegistration(registration);
 
@@ -196,13 +196,29 @@ export const commitRegistration = async (
 
 const updateOrCreateDonors = async (
 	donorSampleDtos: DeepReadonly<CreateDonorSampleDto[]>,
-	existingDonorsIds: _.Dictionary<DeepReadonly<Donor>>,
+	existingDonorsIds: Map<string, DeepReadonly<Donor>>,
 ) => {
-	const samplesWithDonor = donorSampleDtos
-		.filter((dto) => existingDonorsIds[dto.submitterId])
-		.map((dto) => ({ sampleDto: dto, existingDonor: existingDonorsIds[dto.submitterId] }));
-	const samplesWithoutDonor = donorSampleDtos.filter(
-		(dto) => existingDonorsIds[dto.submitterId] === undefined,
+	const samplePairs = donorSampleDtos.map((dto) => ({
+		sampleDto: dto,
+		existingDonor: existingDonorsIds.get(dto.submitterId),
+	}));
+
+	const samplesWithDonor = samplePairs.filter(
+		(
+			pair,
+		): pair is {
+			sampleDto: DeepReadonly<CreateDonorSampleDto>;
+			existingDonor: DeepReadonly<Donor>;
+		} => pair.existingDonor !== undefined,
+	);
+
+	const samplesWithoutDonor = samplePairs.filter(
+		(
+			pair,
+		): pair is {
+			sampleDto: DeepReadonly<CreateDonorSampleDto>;
+			existingDonor: undefined;
+		} => pair.existingDonor === undefined,
 	);
 
 	// Process samples with existing donor data
@@ -215,7 +231,7 @@ const updateOrCreateDonors = async (
 
 	// Process new samples (no existing donor data)
 	await Promise.all(
-		samplesWithoutDonor.map((sampleDto) => donorDao.create(fromCreateDonorDtoToDonor(sampleDto))),
+		samplesWithoutDonor.map((pair) => donorDao.create(fromCreateDonorDtoToDonor(pair.sampleDto))),
 	);
 };
 
