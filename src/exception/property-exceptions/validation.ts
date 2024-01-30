@@ -17,12 +17,12 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
 import { isEqual } from 'lodash';
 import * as dictionaryManager from '../../dictionary/manager';
-import { SchemaWithFields } from '../../dictionary/manager';
 import { loggerFor } from '../../logger';
-import { ExceptionRecord, ExceptionValue, ProgramExceptionRecord } from './types';
 import { Values } from '../../utils/objectTypes';
+import { ExceptionRecord, ExceptionValue, ProgramExceptionRecord } from './types';
 
 const L = loggerFor(__filename);
 
@@ -86,6 +86,14 @@ export type FieldValidators<RecordT extends Object> = Partial<
 	}
 >;
 
+export const schemaFilter = (schemaName: string) => (
+	schema: dictionaryEntities.SchemaDefinition,
+): boolean => schema.name === schemaName;
+
+export const fieldFilter = (requestedField: string) => (
+	field: dictionaryEntities.FieldDefinition,
+): boolean => field.name === requestedField;
+
 export const checkCoreField: Validator<ExceptionRecord> = async ({ record, fieldName }) => {
 	const currentDictionary = await dictionaryManager.instance();
 
@@ -98,17 +106,12 @@ export const checkCoreField: Validator<ExceptionRecord> = async ({ record, field
 		};
 	}
 
-	const fieldFilter = (field: { name: string; meta?: { core: boolean } }): boolean => {
-		return field.name === requestedCoreField && !!field.meta?.core;
-	};
-
-	const schemaFilter = (schema: SchemaWithFields): boolean => {
-		return schema.name === record.schema;
-	};
+	const coreFieldFilter = (field: dictionaryEntities.FieldDefinition): boolean =>
+		field.name === requestedCoreField && !!field.meta?.core;
 
 	const existingDictionarySchema = await currentDictionary.getSchemasWithFields(
-		schemaFilter,
-		fieldFilter,
+		schemaFilter(record.schema),
+		coreFieldFilter,
 	);
 
 	const isValid = existingDictionarySchema[0] && existingDictionarySchema[0].fields.length > 0;
@@ -137,28 +140,40 @@ export const checkProgramId: Validator<ProgramExceptionRecord> = ({
 	return { result, message };
 };
 
-export const checkRequestedValue: Validator<ExceptionRecord> = ({ record, fieldName }) => {
-	const validRequests: string[] = Object.values(ExceptionValue);
-	const requestedExceptionValue = record.requested_exception_value;
+export const checkRequestedValue: Validator<ExceptionRecord> = async ({ record, fieldName }) => {
+	const currentDictionary = await dictionaryManager.instance();
 
-	if (requestedExceptionValue === undefined) {
+	const validRequests: string[] = Object.values(ExceptionValue);
+	const { requested_core_field, requested_exception_value, schema: schemaName } = record;
+
+	const schemaDefinition = (await currentDictionary.getCurrent()).schemas.find(
+		schemaFilter(schemaName),
+	);
+
+	const exceptionFieldDefinition = schemaDefinition?.fields.find(fieldFilter(requested_core_field));
+
+	if (!exceptionFieldDefinition) {
 		return {
-			result: ValidationResultType.UNDEFINED,
-			message: `${fieldName} value is not defined`,
+			result: ValidationResultType.INVALID,
+			message: `The requested core field '${requested_core_field}' does not match schema '${schemaName}'. Please update your exception request form.`,
 		};
-	} else if (typeof requestedExceptionValue !== 'string') {
+	}
+
+	const { valueType } = exceptionFieldDefinition;
+
+	if (!(valueType === 'number' || valueType === 'integer' || valueType === 'string')) {
 		return {
 			result: ValidationResultType.TYPE_ERROR,
-			message: `${fieldName} value is not a string`,
+			message: `The requested core field '${requested_core_field}' is invalid. Exceptions must be a text or number field.`,
 		};
-	} else if (!validRequests.includes(requestedExceptionValue)) {
+	} else if (!validRequests.includes(requested_exception_value)) {
 		return {
 			result: ValidationResultType.INVALID,
 			message: `'${fieldName}' value is not valid. Must be one of [${validRequests.join(', ')}]`,
 		};
-	} else {
-		return { result: ValidationResultType.VALID, message: '' };
 	}
+
+	return { result: ValidationResultType.VALID, message: '' };
 };
 
 export const checkForEmptyField: Validator<ExceptionRecord> = ({
@@ -189,11 +204,9 @@ export const checkIsValidDictionarySchema: Validator<ExceptionRecord> = async ({
 
 	const currentDictionary = await dictionaryManager.instance();
 
-	const schemaFilter = (schema: SchemaWithFields): boolean => {
-		return schema.name === fieldValue;
-	};
-
-	const existingDictionarySchema = await currentDictionary.getSchemasWithFields(schemaFilter);
+	const existingDictionarySchema = await currentDictionary.getSchemasWithFields(
+		schemaFilter(fieldValue),
+	);
 
 	const isValid = existingDictionarySchema[0];
 

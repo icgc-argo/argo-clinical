@@ -145,14 +145,12 @@ export const calculateDonorCoreCompletionStats = (
 
 	const coreCompletionDate = getCoreCompletionDate(donor, newCompletionStats);
 
-	newCompletionStats = {
+	return {
 		...newCompletionStats,
 		coreCompletionPercentage,
 		coreCompletionDate,
 		hasMissingEntityException,
 	};
-
-	return newCompletionStats;
 };
 
 /**
