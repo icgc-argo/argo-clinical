@@ -112,8 +112,6 @@ const reg2: ActiveRegistration = {
 };
 
 describe('submission-to-clinical', () => {
-	console.log('mocha is here');
-
 	describe('commit registration', () => {
 		let registrationRepoFindByIdStub: sinon.SinonStub<
 			[string],
