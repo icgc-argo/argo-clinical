@@ -2225,7 +2225,7 @@ function assertSameDonorWithoutGeneratedIds(actual: Donor, expected: Donor) {
 			'biomarker',
 			'updatedAt',
 			'createdAt',
-			'coreCompletionStats',
+			'completionStats',
 		])
 		.to.deep.eq(expected);
 }
