@@ -32,6 +32,7 @@ import {
 	ProgramExceptionRecord,
 	isSpecimenExceptionRecord,
 	isFollowupExceptionRecord,
+	isTreatmentExceptionRecord,
 } from './types';
 import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 
@@ -64,9 +65,11 @@ const validateEntityExceptionRecords: ValidateEntityRecords<EntityExceptionRecor
 		return { records, schema: ClinicalEntitySchemaNames.SPECIMEN };
 	} else if (isReadonlyArrayOf(records, isFollowupExceptionRecord)) {
 		return { records, schema: ClinicalEntitySchemaNames.FOLLOW_UP };
+	} else if (isReadonlyArrayOf(records, isTreatmentExceptionRecord)) {
+		return { records, schema: ClinicalEntitySchemaNames.TREATMENT };
 	} else {
 		throw new ExceptionTSVError(
-			'Invalid file. Please check columns. Only Specimen and Follow Up are accepted.',
+			'Invalid file. Please check columns. Only Specimen, Follow Up, or Treatment are accepted.',
 		);
 	}
 };
