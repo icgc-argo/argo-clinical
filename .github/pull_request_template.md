@@ -1,15 +1,21 @@
-**Description of changes**
+## Link to Issue
 
-<!-- Please add a brief description of the changes here. -->
+https://github.com/icgc-argo/roadmap/issues/1092
 
-**Type of Change**
+## Description
+
+<!-- Description of work done in PR -->
+
+## Checklist
+
+### Type of Change
 
 - [ ] Bug
 - [ ] Refactor
 - [ ] New Feature
 - [ ] Release Candidate
 
-**Checklist before requesting review:**
+### Checklist before requesting review:
 
 - [ ] Check branch (code change PRs go to `develop` not master)
 - [ ] Check copyrights for new files
