@@ -54,6 +54,12 @@ const entityExceptionSchema = new mongoose.Schema<EntityException>({
       submitter_follow_up_id: String,
     },
   ],
+  treatment: [
+    {
+      ...BaseExceptionSchema.obj,
+      submitter_treatment_id: String,
+    },
+  ],
 });
 
 // check if model exists already to account for file watchers eg. test runner with live reload

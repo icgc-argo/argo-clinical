@@ -212,6 +212,7 @@ describe('submission service apply exceptions', () => {
           },
         ],
         follow_up: [],
+        treatment: [],
       };
       sinon.stub(entityExceptionRepository, 'find').returns(Promise.resolve(entityStub));
     });

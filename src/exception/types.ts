@@ -50,12 +50,24 @@ export type FollowUpExceptionRecord = BaseEntityExceptionRecord & {
   submitter_follow_up_id: string;
 };
 
-export type EntityExceptionRecord = SpecimenExceptionRecord | FollowUpExceptionRecord;
-export type EntityExceptionRecords = (SpecimenExceptionRecord | FollowUpExceptionRecord)[];
+export type TreatmentExceptionRecord = BaseEntityExceptionRecord & {
+  submitter_treatment_id: string;
+};
+
+export type EntityExceptionRecord =
+  | SpecimenExceptionRecord
+  | FollowUpExceptionRecord
+  | TreatmentExceptionRecord;
+export type EntityExceptionRecords = (
+  | SpecimenExceptionRecord
+  | FollowUpExceptionRecord
+  | TreatmentExceptionRecord
+)[];
 export type ExceptionRecords =
   | ReadonlyArray<ProgramExceptionRecord>
   | ReadonlyArray<SpecimenExceptionRecord>
-  | ReadonlyArray<FollowUpExceptionRecord>;
+  | ReadonlyArray<FollowUpExceptionRecord>
+  | ReadonlyArray<TreatmentExceptionRecord>;
 
 /**
  * entity values to be valid EntityException exceptions arrays
@@ -64,6 +76,7 @@ export type ExceptionRecords =
 export const EntityValues: Record<string, Exclude<keyof EntityException, 'programId'>> = {
   specimen: 'specimen',
   follow_up: 'follow_up',
+  treatment: 'treatment',
 } as const;
 
 export type Entity = ObjectValues<typeof EntityValues>;
@@ -75,11 +88,14 @@ export type EntityException = {
   programId: string;
   specimen: SpecimenExceptionRecord[];
   follow_up: FollowUpExceptionRecord[];
+  treatment: TreatmentExceptionRecord[];
 };
 
 export type EntityExceptionSchemaNames = Extract<
   ClinicalEntitySchemaNames,
-  ClinicalEntitySchemaNames.SPECIMEN | ClinicalEntitySchemaNames.FOLLOW_UP
+  | ClinicalEntitySchemaNames.SPECIMEN
+  | ClinicalEntitySchemaNames.FOLLOW_UP
+  | ClinicalEntitySchemaNames.TREATMENT
 >;
 
 export const ExceptionValue = {
@@ -132,13 +148,20 @@ export const isFollowupExceptionRecord = (input: any): input is FollowUpExceptio
   );
 };
 
+export const isTreatmentExceptionRecord = (input: any): input is FollowUpExceptionRecord => {
+  return (
+    // submitter_treatment_id must exist and be a string
+    'submitter_treatment_id' in input && typeof input.submitter_treatment_id === 'string'
+  );
+};
+
 // type guards
 export const isEntityExceptionRecord = (input: any): input is EntityExceptionRecord => {
   const hasDonorIdField =
     'submitter_donor_id' in input && typeof input.submitter_donor_id === 'string';
 
   if (hasDonorIdField && isExceptionRecord(input)) {
-    // remove based exception record fields to validate specific entity
+    // remove base exception record fields to validate specific entity
     const entityFields = _.omit(input, baseEntityExceptionFields);
     // can't have more than one identifying field eg. submitter_specimen_id AND submitter_follow_up_id
     return Object.keys(entityFields).length === 1;
