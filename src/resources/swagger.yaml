@@ -918,8 +918,6 @@ paths:
       tags:
         - 'Exception - Missing Entity'
       summary: Get programs with missing entity exceptions. Return amount of donor submitter exceptions.
-      parameters:
-        - $ref: '#/components/parameters/PathProgramId'
       responses:
         '200':
           description: 'Successfully retrieved list of programs with exceptions.'
@@ -1965,6 +1963,8 @@ components:
           type: boolean
 
     MissingEntityExceptionUpdateMeta:
+      allOf:
+        - $ref: '#/components/schemas/MissingEntityExceptionMeta'
       type: object
       properties:
         donorsAdded:
@@ -1978,7 +1978,7 @@ components:
 
     MissingEntityExceptionDeleteMeta:
       allOf:
-        - $ref: '#/components/schemas/MissingEntityExceptionUpdateMeta'
+        - $ref: '#/components/schemas/MissingEntityExceptionMeta'
       type: object
       properties:
         donorsDeleted:
@@ -1991,8 +1991,6 @@ components:
           type: integer
 
     MissingEntityException:
-      allOf:
-        - $ref: '#/components/schemas/MissingEntityExceptionUpdateMeta'
       type: object
       properties:
         programId:
