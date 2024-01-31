@@ -842,7 +842,7 @@ paths:
         '200':
           description: 'returns new entity exception after deletion'
 
-  /exception/missing-entity/${programId}:
+  /exception/missing-entity/{programId}:
     get:
       tags:
         - 'Exception - Missing Entity'
