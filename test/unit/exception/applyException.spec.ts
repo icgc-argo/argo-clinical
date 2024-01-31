@@ -22,177 +22,236 @@ import { SchemaValidationErrorTypes } from '@overturebio-stack/lectern-client/li
 import chai from 'chai';
 import sinon from 'sinon';
 import { ClinicalEntitySchemaNames } from '../../../src/common-model/entities';
-import entityExceptionRepository from '../../../src/exception/repo/entity';
-import programExceptionRepository from '../../../src/exception/repo/program';
-import { EntityException } from '../../../src/exception/types';
+import entityExceptionRepository from '../../../src/exception/property-exceptions/repo/entity';
+import programExceptionRepository from '../../../src/exception/property-exceptions/repo/program';
+import { EntityException } from '../../../src/exception/property-exceptions/types';
 import { checkForProgramAndEntityExceptions } from '../../../src/submission/exceptions/exceptions';
 
 const TEST_PROGRAM_ID = 'TEST-IE';
 
 // schema error
 const schemaValidationErrors: dictionaryEntities.SchemaValidationError[] = [
-  {
-    errorType: SchemaValidationErrorTypes.INVALID_FIELD_VALUE_TYPE,
-    fieldName: 'specimen_acquisition_interval',
-    index: 0,
-    info: {
-      value: ['Unknown'],
-    },
-    message: 'The value is not permissible for this field.',
-  },
+	{
+		errorType: SchemaValidationErrorTypes.INVALID_FIELD_VALUE_TYPE,
+		fieldName: 'specimen_acquisition_interval',
+		index: 0,
+		info: {
+			value: ['Unknown'],
+		},
+		message: 'The value is not permissible for this field.',
+	},
 ];
 
+const mockSpecimenSchema: dictionaryEntities.SchemaDefinition = {
+	name: 'specimen',
+	description: 'Mock specimen schema',
+	fields: [
+		{
+			name: 'specimen_acquisition_interval',
+			valueType: dictionaryEntities.ValueType.STRING,
+			description: 'Mock specimen field',
+			meta: { core: true },
+		},
+	],
+};
+
+const mockTreatmentSchema: dictionaryEntities.SchemaDefinition = {
+	name: 'treatment',
+	description: 'Mock treatment schema',
+	fields: [
+		{
+			name: 'mockEntitySchema',
+			valueType: dictionaryEntities.ValueType.INTEGER,
+			description: 'Mock treatment field',
+			meta: { core: true },
+		},
+	],
+};
+
 describe('submission service apply exceptions', () => {
-  afterEach(() => {
-    // Restore the default sandbox here
-    sinon.restore();
-  });
+	afterEach(() => {
+		// Restore the default sandbox here
+		sinon.restore();
+	});
 
-  describe('program level Exceptions', () => {
-    beforeEach(() => {
-      // repo gives back nulls, idiomatic to mongoose
-      // tslint:disable-next-line
-      sinon.stub(entityExceptionRepository, 'find').returns(Promise.resolve(null));
+	describe('program level Exceptions', () => {
+		beforeEach(() => {
+			// repo gives back nulls, idiomatic to mongoose
+			// tslint:disable-next-line
+			sinon.stub(entityExceptionRepository, 'find').returns(Promise.resolve(null));
 
-      const programExceptionStub = {
-        programId: TEST_PROGRAM_ID,
-        exceptions: [
-          {
-            program_name: TEST_PROGRAM_ID,
-            schema: 'specimen',
-            requested_core_field: 'specimen_acquisition_interval',
-            requested_exception_value: 'Unknown',
-          },
-        ],
-      };
+			const programExceptionStub = {
+				programId: TEST_PROGRAM_ID,
+				exceptions: [
+					{
+						program_name: TEST_PROGRAM_ID,
+						schema: 'specimen',
+						requested_core_field: 'specimen_acquisition_interval',
+						requested_exception_value: 'Unknown',
+					},
+					{
+						program_name: TEST_PROGRAM_ID,
+						schema: 'treatment',
+						requested_core_field: 'treatment_start_interval',
+						requested_exception_value: 'Unknown',
+					},
+				],
+			};
 
-      sinon.stub(programExceptionRepository, 'find').returns(Promise.resolve(programExceptionStub));
-    });
+			sinon.stub(programExceptionRepository, 'find').returns(Promise.resolve(programExceptionStub));
+		});
 
-    it('should return zero validation errors if valid program exception exists', async () => {
-      const record = {
-        program_id: TEST_PROGRAM_ID,
-        submitter_donor_id: 'DO-1',
-        specimen_acquisition_interval: 'unknown',
-      };
+		it('should return zero validation errors if valid program exception exists', async () => {
+			const record = {
+				program_id: TEST_PROGRAM_ID,
+				submitter_donor_id: 'DO-1',
+				specimen_acquisition_interval: 'unknown',
+			};
 
-      const result = await checkForProgramAndEntityExceptions({
-        programId: TEST_PROGRAM_ID,
-        schemaValidationErrors,
-        record,
-        schemaName: ClinicalEntitySchemaNames.SPECIMEN,
-      });
+			const result = await checkForProgramAndEntityExceptions({
+				programId: TEST_PROGRAM_ID,
+				schemaValidationErrors,
+				record,
+				schemaName: ClinicalEntitySchemaNames.SPECIMEN,
+				entitySchema: mockSpecimenSchema,
+			});
 
-      chai.expect(result.filteredErrors).to.be.an('array').that.is.empty;
-    });
+			chai.expect(result.filteredErrors).to.be.an('array').that.is.empty;
+		});
 
-    it('array field, single value - should return zero validation errors if valid program exception exists', async () => {
-      const record = {
-        program_id: TEST_PROGRAM_ID,
-        submitter_donor_id: 'DO-1',
-        specimen_acquisition_interval: ['unknown'],
-      };
+		it('should return zero validation errors for blank numeric field', async () => {
+			const record = {
+				program_id: TEST_PROGRAM_ID,
+				submitter_donor_id: 'DO-1',
+				treatment_start_interval: undefined,
+			};
 
-      const result = await checkForProgramAndEntityExceptions({
-        programId: TEST_PROGRAM_ID,
-        schemaValidationErrors,
-        record,
-        schemaName: ClinicalEntitySchemaNames.SPECIMEN,
-      });
+			const validationErrors = [] as dictionaryEntities.SchemaValidationError[];
 
-      chai.expect(result.filteredErrors).to.be.an('array').that.is.empty;
-    });
+			const result = await checkForProgramAndEntityExceptions({
+				programId: TEST_PROGRAM_ID,
+				schemaValidationErrors: validationErrors,
+				record,
+				schemaName: ClinicalEntitySchemaNames.TREATMENT,
+				entitySchema: mockTreatmentSchema,
+			});
 
-    it('array field, multiple values - should return validation errors, even if one value matches an exception', async () => {
-      const record = {
-        program_id: TEST_PROGRAM_ID,
-        submitter_donor_id: 'DO-1',
-        specimen_acquisition_interval: ['unknown', 'another value'],
-      };
+			chai.expect(result.filteredErrors).to.be.an('array').that.is.empty;
+		});
 
-      const result = await checkForProgramAndEntityExceptions({
-        programId: TEST_PROGRAM_ID,
-        schemaValidationErrors,
-        record,
-        schemaName: ClinicalEntitySchemaNames.SPECIMEN,
-      });
+		it('array field, single value - should return zero validation errors if valid program exception exists', async () => {
+			const record = {
+				program_id: TEST_PROGRAM_ID,
+				submitter_donor_id: 'DO-1',
+				specimen_acquisition_interval: ['unknown'],
+			};
 
-      chai.expect(result.filteredErrors).deep.equal(schemaValidationErrors);
-    });
+			const result = await checkForProgramAndEntityExceptions({
+				programId: TEST_PROGRAM_ID,
+				schemaValidationErrors,
+				record,
+				schemaName: ClinicalEntitySchemaNames.SPECIMEN,
+				entitySchema: mockSpecimenSchema,
+			});
 
-    it('should return validation errors if there are no valid program exceptions ', async () => {
-      const record = {
-        program_id: TEST_PROGRAM_ID,
-        submitter_donor_id: 'DO-1',
-        specimen_anatomic_location: 'unknown',
-      };
+			chai.expect(result.filteredErrors).to.be.an('array').that.is.empty;
+		});
 
-      const result = await checkForProgramAndEntityExceptions({
-        programId: TEST_PROGRAM_ID,
-        schemaValidationErrors,
-        record,
-        schemaName: ClinicalEntitySchemaNames.SPECIMEN,
-      });
-      chai.expect(result.filteredErrors).deep.equal(schemaValidationErrors);
-    });
-  });
+		it('array field, multiple values - should return validation errors, even if one value matches an exception', async () => {
+			const record = {
+				program_id: TEST_PROGRAM_ID,
+				submitter_donor_id: 'DO-1',
+				specimen_acquisition_interval: ['unknown', 'another value'],
+			};
 
-  describe('entity Level Exceptions', () => {
-    beforeEach(() => {
-      // repo gives back nulls, idiomatic to mongoose
-      // tslint:disable-next-line
-      sinon.stub(programExceptionRepository, 'find').returns(Promise.resolve(null));
+			const result = await checkForProgramAndEntityExceptions({
+				programId: TEST_PROGRAM_ID,
+				schemaValidationErrors,
+				record,
+				schemaName: ClinicalEntitySchemaNames.SPECIMEN,
+				entitySchema: mockSpecimenSchema,
+			});
 
-      const entityStub: EntityException = {
-        programId: TEST_PROGRAM_ID,
-        specimen: [
-          {
-            program_name: TEST_PROGRAM_ID,
-            requested_core_field: 'specimen_acquisition_interval',
-            schema: 'specimen',
-            requested_exception_value: 'Not applicable',
-            submitter_specimen_id: 'SP-0',
-            submitter_donor_id: 'DO-0',
-          },
-        ],
-        follow_up: [],
-      };
-      sinon.stub(entityExceptionRepository, 'find').returns(Promise.resolve(entityStub));
-    });
+			chai.expect(result.filteredErrors).deep.equal(schemaValidationErrors);
+		});
 
-    it('should return zero validation errors if valid entity exception exists', async () => {
-      const record = {
-        program_id: TEST_PROGRAM_ID,
-        submitter_donor_id: 'DO-0',
-        submitter_specimen_id: 'SP-0',
-        specimen_acquisition_interval: 'not applicable',
-      };
+		it('should return validation errors if there are no valid program exceptions ', async () => {
+			const record = {
+				program_id: TEST_PROGRAM_ID,
+				submitter_donor_id: 'DO-1',
+				specimen_anatomic_location: 'unknown',
+			};
 
-      const result = await checkForProgramAndEntityExceptions({
-        programId: TEST_PROGRAM_ID,
-        schemaValidationErrors,
-        record,
-        schemaName: ClinicalEntitySchemaNames.SPECIMEN,
-      });
+			const result = await checkForProgramAndEntityExceptions({
+				programId: TEST_PROGRAM_ID,
+				schemaValidationErrors,
+				record,
+				schemaName: ClinicalEntitySchemaNames.SPECIMEN,
+				entitySchema: mockSpecimenSchema,
+			});
+			chai.expect(result.filteredErrors).deep.equal(schemaValidationErrors);
+		});
+	});
 
-      chai.expect(result.filteredErrors).to.be.an('array').that.is.empty;
-      chai.expect(result.normalizedRecord.specimen_acquisition_interval).to.equal('Not applicable');
-    });
+	describe('entity Level Exceptions', () => {
+		beforeEach(() => {
+			// repo gives back nulls, idiomatic to mongoose
+			// tslint:disable-next-line
+			sinon.stub(programExceptionRepository, 'find').returns(Promise.resolve(null));
 
-    it('should return validation errors if there are no valid entity exceptions ', async () => {
-      const record = {
-        program_id: TEST_PROGRAM_ID,
-        submitter_donor_id: 'DO-1',
-        specimen_anatomic_location: 'unknown',
-      };
+			const entityStub: EntityException = {
+				programId: TEST_PROGRAM_ID,
+				specimen: [
+					{
+						program_name: TEST_PROGRAM_ID,
+						requested_core_field: 'specimen_acquisition_interval',
+						schema: 'specimen',
+						requested_exception_value: 'Not applicable',
+						submitter_specimen_id: 'SP-0',
+						submitter_donor_id: 'DO-0',
+					},
+				],
+				follow_up: [],
+				treatment: [],
+			};
+			sinon.stub(entityExceptionRepository, 'find').returns(Promise.resolve(entityStub));
+		});
 
-      const result = await checkForProgramAndEntityExceptions({
-        programId: TEST_PROGRAM_ID,
-        schemaValidationErrors,
-        record,
-        schemaName: ClinicalEntitySchemaNames.SPECIMEN,
-      });
-      chai.expect(result.filteredErrors).deep.equal(schemaValidationErrors);
-    });
-  });
+		it('should return zero validation errors if valid entity exception exists', async () => {
+			const record = {
+				program_id: TEST_PROGRAM_ID,
+				submitter_donor_id: 'DO-0',
+				submitter_specimen_id: 'SP-0',
+				specimen_acquisition_interval: 'not applicable',
+			};
+
+			const result = await checkForProgramAndEntityExceptions({
+				programId: TEST_PROGRAM_ID,
+				schemaValidationErrors,
+				record,
+				schemaName: ClinicalEntitySchemaNames.SPECIMEN,
+				entitySchema: mockSpecimenSchema,
+			});
+
+			chai.expect(result.filteredErrors).to.be.an('array').that.is.empty;
+			chai.expect(result.normalizedRecord.specimen_acquisition_interval).to.equal('Not applicable');
+		});
+
+		it('should return validation errors if there are no valid entity exceptions ', async () => {
+			const record = {
+				program_id: TEST_PROGRAM_ID,
+				submitter_donor_id: 'DO-1',
+				specimen_anatomic_location: 'unknown',
+			};
+
+			const result = await checkForProgramAndEntityExceptions({
+				programId: TEST_PROGRAM_ID,
+				schemaValidationErrors,
+				record,
+				schemaName: ClinicalEntitySchemaNames.SPECIMEN,
+				entitySchema: mockSpecimenSchema,
+			});
+			chai.expect(result.filteredErrors).deep.equal(schemaValidationErrors);
+		});
+	});
 });

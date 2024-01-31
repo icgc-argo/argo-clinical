@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 The Ontario Institute for Cancer Research. All rights reserved
+ * Copyright (c) 2024 The Ontario Institute for Cancer Research. All rights reserved
  *
  * This program and the accompanying materials are made available under the terms of
  * the GNU Affero General Public License v3.0. You should have received a copy of the
@@ -17,12 +17,36 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { isArray } from 'lodash';
-import { RepoError } from './types';
+import express from 'express';
+import { wrapAsync } from '../../middleware';
+import missingEntityExceptionApi from '../../exception/missing-entity-exceptions/api';
 
-export function checkDoc<Exception>(doc: Exception | null): RepoError | Exception {
-  if (doc === null || (isArray(doc) && doc.length === 0)) {
-    return RepoError.DOCUMENT_UNDEFINED;
-  }
-  return doc;
-}
+/**
+ * Missing entity exceptions
+ */
+const missingEntityExceptionRouter = express.Router({ mergeParams: true });
+
+// GET
+missingEntityExceptionRouter.get(
+	'/',
+	wrapAsync(missingEntityExceptionApi.listMissingEntityExceptions),
+);
+
+missingEntityExceptionRouter.get(
+	'/:programId',
+	wrapAsync(missingEntityExceptionApi.getProgramException),
+);
+
+// POST
+missingEntityExceptionRouter.post(
+	'/:programId',
+	wrapAsync(missingEntityExceptionApi.createEntityException),
+);
+
+// DELETE
+missingEntityExceptionRouter.delete(
+	'/:programId',
+	wrapAsync(missingEntityExceptionApi.deleteEntityException),
+);
+
+export default missingEntityExceptionRouter;
