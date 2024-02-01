@@ -55,7 +55,7 @@ export const create = async ({
 	const missingEntityExceptionResult = await getByProgramId(programId);
 
 	if (missingEntityExceptionResult.success) {
-		const currentDonorIds = missingEntityExceptionResult.exception.donorSubmitterIds;
+		const currentDonorIds = missingEntityExceptionResult.data.donorSubmitterIds;
 
 		// return unique donor ids
 		const donorSubmitterIds = [...new Set([...currentDonorIds, ...newDonorIds])];
@@ -98,7 +98,7 @@ export const deleteIdsByProgramId = async ({
 }): Promise<Result<DeleteResult>> => {
 	const missingEntityExceptionResult = await getByProgramId(programId);
 	if (missingEntityExceptionResult.success) {
-		const currentDonorIds = missingEntityExceptionResult.exception.donorSubmitterIds;
+		const currentDonorIds = missingEntityExceptionResult.data.donorSubmitterIds;
 		const updatedDonorIds = currentDonorIds.filter((id) => !donorSubmitterIds.includes(id));
 
 		// calc deleted and unchanged ids
