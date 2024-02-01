@@ -1,6 +1,6 @@
 ## Link to Issue
 
-https://github.com/icgc-argo/roadmap/issues/1092
+<!-- Link of the form: https://github.com/icgc-argo/roadmap/issues/xxxx -->
 
 ## Description
 
