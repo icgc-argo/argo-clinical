@@ -1943,9 +1943,11 @@ components:
     MissingEntityExceptionDonorIds:
       type: object
       properties:
-        submitter_donor_ids:
+        donorSubmitterIds:
           description: 'Array of strings, each of which is a submitter donor id to add to this program/s exception. This endpoint is additive.'
           type: array
+      example:
+        donorSubmitterIds: ['donor001', 'donor002']
 
     MissingEntityExceptionMeta:
       type: object

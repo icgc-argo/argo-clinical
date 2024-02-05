@@ -296,7 +296,7 @@ describe('submission-to-clinical', () => {
 			missingEntityRepoGetByProgramStub.returns(
 				Promise.resolve({
 					success: true,
-					exception: { donorSubmitterIds: [], programId: 'ABCD-EF' },
+					data: { donorSubmitterIds: [], programId: 'ABCD-EF' },
 				}),
 			);
 

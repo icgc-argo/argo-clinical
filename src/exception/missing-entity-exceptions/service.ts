@@ -17,9 +17,15 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { Result, success } from '../../utils/results';
+import deepFreeze, { DeepReadonly } from 'deep-freeze';
+import { Donor } from '../../clinical/clinical-entities';
+import { donorDao as donorRepo } from '../../clinical/donor-repo';
+import { loggerFor } from '../../logger';
+import { updateDonorsCompletionStats } from '../../submission/submission-to-clinical/stat-calculator';
+import { Result, failure, success } from '../../utils/results';
 import { createOrUpdate, getByProgramId } from './repo';
 
+const L = loggerFor(__filename);
 type UpdateResult = {
 	donorsUnchanged: string[];
 	donorsUnchangedCount: number;
@@ -55,14 +61,14 @@ export const create = async ({
 	const missingEntityExceptionResult = await getByProgramId(programId);
 
 	if (missingEntityExceptionResult.success) {
-		const currentDonorIds = missingEntityExceptionResult.exception.donorSubmitterIds;
+		const currentDonorIds = missingEntityExceptionResult.data.donorSubmitterIds;
 
 		// return unique donor ids
 		const donorSubmitterIds = [...new Set([...currentDonorIds, ...newDonorIds])];
 
 		// calc new and unchanged ids
-		const donorsAdded = donorSubmitterIds.filter((id) => !currentDonorIds.includes(id));
-		const donorsUnchanged = donorSubmitterIds.filter((id) => currentDonorIds.includes(id));
+		const donorsAdded = newDonorIds.filter((id) => !currentDonorIds.includes(id));
+		const donorsUnchanged = newDonorIds.filter((id) => currentDonorIds.includes(id));
 
 		const stats: CreateResult = {
 			donorsAdded,
@@ -77,6 +83,13 @@ export const create = async ({
 		} else {
 			const result = await createOrUpdate({ programId, donorSubmitterIds });
 			if (result.success) {
+				// Intentionally no await here:
+				// We want this to run asynchronously after we return a response for this request. Consider this a post processing step.
+				recalculateAndUpdateDonors({
+					donorSubmitterIds: newDonorIds,
+					programId,
+				});
+
 				return success(stats);
 			} else {
 				return result;
@@ -98,7 +111,7 @@ export const deleteIdsByProgramId = async ({
 }): Promise<Result<DeleteResult>> => {
 	const missingEntityExceptionResult = await getByProgramId(programId);
 	if (missingEntityExceptionResult.success) {
-		const currentDonorIds = missingEntityExceptionResult.exception.donorSubmitterIds;
+		const currentDonorIds = missingEntityExceptionResult.data.donorSubmitterIds;
 		const updatedDonorIds = currentDonorIds.filter((id) => !donorSubmitterIds.includes(id));
 
 		// calc deleted and unchanged ids
@@ -124,5 +137,26 @@ export const deleteIdsByProgramId = async ({
 		}
 	} else {
 		return missingEntityExceptionResult;
+	}
+};
+
+const recalculateAndUpdateDonors = async (props: {
+	donorSubmitterIds: string[];
+	programId: string;
+}): Promise<Result<DeepReadonly<Donor>[]>> => {
+	try {
+		const donorDocuments = await donorRepo.findByProgramAndSubmitterIds(
+			props.programId,
+			props.donorSubmitterIds,
+		);
+		const updatedDonors = await updateDonorsCompletionStats(
+			(donorDocuments || []) as DeepReadonly<Donor>[],
+		);
+		const savedDonors = await donorRepo.updateAll(updatedDonors.map((dto) => deepFreeze(dto)));
+		return success(savedDonors);
+	} catch (error) {
+		const message = 'Error thrown while updating donor core completion data';
+		L.error(message, error);
+		return failure(message, error);
 	}
 };

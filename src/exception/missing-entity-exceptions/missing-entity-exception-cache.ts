@@ -57,7 +57,7 @@ export const createMissingEntityExceptionCache = () => {
 
 		const programExceptionResult = await missingEntityExceptionRepo.getByProgramId(programId);
 		const programException = programExceptionResult.success
-			? programExceptionResult.exception.donorSubmitterIds
+			? programExceptionResult.data.donorSubmitterIds
 			: [];
 
 		programExceptionData.set(programId, programException);
