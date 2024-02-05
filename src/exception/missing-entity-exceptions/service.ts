@@ -17,12 +17,11 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { DeepReadonly } from 'deep-freeze';
+import deepFreeze, { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
 import { donorDao as donorRepo } from '../../clinical/donor-repo';
 import { loggerFor } from '../../logger';
 import { updateDonorsCompletionStats } from '../../submission/submission-to-clinical/stat-calculator';
-import { F } from '../../utils';
 import { Result, failure, success } from '../../utils/results';
 import { createOrUpdate, getByProgramId } from './repo';
 
@@ -153,7 +152,7 @@ const recalculateAndUpdateDonors = async (props: {
 		const updatedDonors = await updateDonorsCompletionStats(
 			(donorDocuments || []) as DeepReadonly<Donor>[],
 		);
-		const savedDonors = await donorRepo.updateAll(updatedDonors.map((dto) => F(dto)));
+		const savedDonors = await donorRepo.updateAll(updatedDonors.map((dto) => deepFreeze(dto)));
 		return success(savedDonors);
 	} catch (error) {
 		const message = 'Error thrown while updating donor core completion data';
