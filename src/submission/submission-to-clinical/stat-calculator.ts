@@ -198,6 +198,8 @@ export const updateSingleDonorCompletionStats = async (
  * Re-calculate core-completion stats for each provided donor. Will return a new array with an updated
  * copy of each donor which includes the latest completion stats.
  *
+ * Does not save to DB.
+ *
  * This function retrieves missing-entity exception data in order to use this exception information when
  * calculating core completion stats.
  * @param donors
