@@ -72,7 +72,7 @@ const entityExceptionRepository = {
 		records: ReadonlyArray<EntityExceptionRecord>,
 		entity: ClinicalEntitySchemaNames,
 	): Promise<EntityException> {
-		const entities: Record<Entity, []> = {
+		const entities: Record<Entity, typeof records> = {
 			follow_up: [],
 			treatment: [],
 			specimen: [],
