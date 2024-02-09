@@ -24,9 +24,10 @@ import {
 	BaseEntityExceptionRecord,
 	Entity,
 	EntityException,
+	EntityExceptionRecord,
 	ExceptionValue,
-	OnlyRequired,
 } from '../types';
+import { ClinicalEntitySchemaNames } from '../../../common-model/entities';
 
 const L = loggerFor(__filename);
 
@@ -66,17 +67,26 @@ const EntityExceptionModel =
 	mongoose.model<EntityException>('EntityException', entityExceptionSchema);
 
 const entityExceptionRepository = {
-	async save(exception: OnlyRequired<EntityException, 'programId'>): Promise<EntityException> {
-		L.debug(`Creating new donor exception with: ${JSON.stringify(exception)}`);
+	async save(
+		programId: string,
+		records: ReadonlyArray<EntityExceptionRecord>,
+		entity: ClinicalEntitySchemaNames,
+	): Promise<EntityException> {
+		const entities: Record<Entity, typeof records> = {
+			follow_up: [],
+			treatment: [],
+			specimen: [],
+		};
+		const update = { ...entities, ...{ [entity]: records } };
 
-		const update = { $set: exception };
+		L.debug(`Creating new donor exception for program: ${programId}, entity: ${entity}`);
 
 		try {
-			const doc = await EntityExceptionModel.findOneAndUpdate(
-				{ programId: exception.programId },
-				update,
-				{ upsert: true, new: true, returnDocument: 'after' },
-			).lean(true);
+			const doc = await EntityExceptionModel.findOneAndUpdate({ programId }, update, {
+				upsert: true,
+				new: true,
+				returnDocument: 'after',
+			}).lean(true);
 			return doc;
 		} catch (e) {
 			L.error('Failed to create entity exception: ', e);
