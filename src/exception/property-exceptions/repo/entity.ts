@@ -24,9 +24,10 @@ import {
 	BaseEntityExceptionRecord,
 	Entity,
 	EntityException,
+	EntityExceptionRecord,
 	ExceptionValue,
-	OnlyRequired,
 } from '../types';
+import { ClinicalEntitySchemaNames } from '../../../common-model/entities';
 
 const L = loggerFor(__filename);
 
@@ -66,11 +67,19 @@ const EntityExceptionModel =
 	mongoose.model<EntityException>('EntityException', entityExceptionSchema);
 
 const entityExceptionRepository = {
-	async save(programId: string, records: any, schema: any): Promise<EntityException> {
-		const entities = { follow_up: [], treatment: [], specimen: [] };
-		const update = { ...entities, ...{ [schema]: records } };
+	async save(
+		programId: string,
+		records: ReadonlyArray<EntityExceptionRecord>,
+		entity: ClinicalEntitySchemaNames,
+	): Promise<EntityException> {
+		const entities: Record<Entity, []> = {
+			follow_up: [],
+			treatment: [],
+			specimen: [],
+		};
+		const update = { ...entities, ...{ [entity]: records } };
 
-		L.debug(`Creating new donor exception for program: ${programId}, schema: ${schema}`);
+		L.debug(`Creating new donor exception for program: ${programId}, entity: ${entity}`);
 
 		try {
 			const doc = await EntityExceptionModel.findOneAndUpdate({ programId }, update, {
