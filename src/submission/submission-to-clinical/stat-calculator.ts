@@ -112,9 +112,11 @@ export const calculateDonorCoreCompletionStats = (
 	donor: Donor,
 	hasMissingEntityException: boolean,
 ): CompletionStats => {
-	const newCompletionStats: CompletionStats = donor.completionStats
+	const updatedCompletionStats: CompletionStats = donor.completionStats
 		? cloneDeep(donor.completionStats)
 		: getEmptyCoreStats();
+
+	updatedCompletionStats.hasMissingEntityException = hasMissingEntityException;
 
 	// update completion state for each core entity
 	Array.from(coreClinicalSchemaNamesSet).forEach((clinicalType) => {
@@ -125,32 +127,28 @@ export const calculateDonorCoreCompletionStats = (
 			const { coreCompletionPercentage } = calculateSpecimenCompletionStats(filteredDonorSpecimens);
 
 			const statsPropertyName = schemaNameToCoreCompletenessStat[clinicalType];
-			newCompletionStats.coreCompletion[statsPropertyName] = coreCompletionPercentage;
+			updatedCompletionStats.coreCompletion[statsPropertyName] = coreCompletionPercentage;
 		} else {
 			// for others we just need to find one clinical info for core entity
 			const entities = getClinicalEntitiesFromDonorBySchemaName(donor, clinicalType);
 
 			const statsPropertyName = schemaNameToCoreCompletenessStat[clinicalType];
-			newCompletionStats.coreCompletion[statsPropertyName] = entities.length >= 1 ? 1 : 0;
+			updatedCompletionStats.coreCompletion[statsPropertyName] = entities.length >= 1 ? 1 : 0;
 		}
 	});
 
-	const currentCompletionPecentage = donor.completionStats?.coreCompletionPercentage;
-
 	// Don't update core completion if its already complete.
-	const coreCompletionPercentage =
-		currentCompletionPecentage === 1
+	updatedCompletionStats.coreCompletionPercentage =
+		donor.completionStats?.coreCompletionPercentage === 1
 			? 1
-			: getCoreCompletionPercentage(newCompletionStats.coreCompletion, hasMissingEntityException);
+			: getCoreCompletionPercentage(
+					updatedCompletionStats.coreCompletion,
+					hasMissingEntityException,
+			  );
 
-	const coreCompletionDate = getCoreCompletionDate(donor, newCompletionStats);
+	updatedCompletionStats.coreCompletionDate = getCoreCompletionDate(donor, updatedCompletionStats);
 
-	return {
-		...newCompletionStats,
-		coreCompletionPercentage,
-		coreCompletionDate,
-		hasMissingEntityException,
-	};
+	return updatedCompletionStats;
 };
 
 /**
