@@ -66,17 +66,18 @@ const EntityExceptionModel =
 	mongoose.model<EntityException>('EntityException', entityExceptionSchema);
 
 const entityExceptionRepository = {
-	async save(exception: OnlyRequired<EntityException, 'programId'>): Promise<EntityException> {
-		L.debug(`Creating new donor exception with: ${JSON.stringify(exception)}`);
+	async save(programId: string, records: any, schema: any): Promise<EntityException> {
+		const entities = { follow_up: [], treatment: [], specimen: [] };
+		const update = { ...entities, ...{ [schema]: records } };
 
-		const update = { $set: exception };
+		L.debug(`Creating new donor exception for program: ${programId}, schema: ${schema}`);
 
 		try {
-			const doc = await EntityExceptionModel.findOneAndUpdate(
-				{ programId: exception.programId },
-				update,
-				{ upsert: true, new: true, returnDocument: 'after' },
-			).lean(true);
+			const doc = await EntityExceptionModel.findOneAndUpdate({ programId }, update, {
+				upsert: true,
+				new: true,
+				returnDocument: 'after',
+			}).lean(true);
 			return doc;
 		} catch (e) {
 			L.error('Failed to create entity exception: ', e);
