@@ -43,35 +43,6 @@ import {
 } from './validation';
 
 /**
- * creates exception object with tsv style records
- * @param programId
- * @param records
- * @param schema
- * @returns valid EntityException array
- */
-const recordsToEntityException = ({
-	programId,
-	records,
-	schema,
-}: {
-	programId: string;
-	records: ReadonlyArray<EntityExceptionRecord>;
-	schema: ClinicalEntitySchemaNames;
-}) => {
-	const exception: OnlyRequired<EntityException, 'programId'> = { programId };
-
-	if (schema === ClinicalEntitySchemaNames.SPECIMEN) {
-		exception.specimen = records as SpecimenExceptionRecord[];
-	} else if (schema === ClinicalEntitySchemaNames.FOLLOW_UP) {
-		exception.follow_up = records as FollowUpExceptionRecord[];
-	} else if (schema === ClinicalEntitySchemaNames.TREATMENT) {
-		exception.treatment = records as TreatmentExceptionRecord[];
-	}
-
-	return exception;
-};
-
-/**
  * normalize before schema validation
  * tsv record values may contain different casing, validation needs normalized casing
  * eg. tsv record value may be 'Follow Up', this will not pass schema validation for 'follow_up'
@@ -190,8 +161,7 @@ export const createEntityException = async ({
 		throw new ValidationError(errors);
 	}
 
-	const exceptionToSave = recordsToEntityException({ programId, records, schema });
-	const doc = await entityExceptionRepository.save(exceptionToSave);
+	const doc = await entityExceptionRepository.save(programId, records, schema);
 	return success(doc);
 };
 
