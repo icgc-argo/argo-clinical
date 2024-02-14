@@ -121,7 +121,7 @@ class ExceptionController {
 		// validate tsv structure using cols, does not validate field data
 		const { records: entityExceptionRecords, schema } = validateEntityExceptionRecords(records);
 
-		const result = await exceptionService.createEntityException({
+		const result = await exceptionService.setEntityExceptions({
 			programId,
 			records: entityExceptionRecords,
 			schema,
