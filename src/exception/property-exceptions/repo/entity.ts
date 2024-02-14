@@ -67,17 +67,28 @@ const EntityExceptionModel =
 	mongoose.model<EntityException>('EntityException', entityExceptionSchema);
 
 const entityExceptionRepository = {
+	/**
+	 * Create or Update the entity exceptions for this program, setting the exceptions for the specified entity to the list of records provided.
+	 * @param programId
+	 * @param records
+	 * @param entity
+	 * @returns
+	 */
 	async save(
 		programId: string,
 		records: ReadonlyArray<EntityExceptionRecord>,
 		entity: ClinicalEntitySchemaNames,
 	): Promise<EntityException> {
+		// Get the stored entity exceptions for the program. We will replace the records for the entity type specified in the funciton arguments.
+		const existingExceptions = await entityExceptionRepository.find(programId);
+
 		const entities: Record<Entity, typeof records> = {
-			follow_up: [],
-			treatment: [],
-			specimen: [],
+			follow_up: existingExceptions?.follow_up || [],
+			treatment: existingExceptions?.treatment || [],
+			specimen: existingExceptions?.specimen || [],
 		};
-		const update = { ...entities, ...{ [entity]: records } };
+
+		const update = { ...entities, [entity]: records };
 
 		L.debug(`Creating new donor exception for program: ${programId}, entity: ${entity}`);
 
