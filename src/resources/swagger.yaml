@@ -805,7 +805,7 @@ paths:
                 exceptionFile:
                   type: string
                   format: binary
-        description: 'The tsv exception file. There is no required format for the filename. <br/><br/> The "schema" field must use snake case eg. follow_up <br/><br/> __Important:__ Currently we can set entity excpetions for "specimen", "follow_up", are "treatment" schemas. <br/><br/> __Important:__ Be careful when you submit request form, every new submission will override existing entity level exceptions, please check the current exceptions using the GET endpoint before posting new submission.'
+        description: 'The tsv exception file. There is no required format for the filename. <br/><br/> The "schema" field must use snake case eg. follow_up <br/><br/> __Important:__ Currently we can set entity exceptions for "specimen", "follow_up", are "treatment" schemas. <br/><br/> __Important:__ Be careful when you submit request form, every new submission will override existing entity level exceptions, please check the current exceptions using the GET endpoint before posting new submission.'
         required: true
       responses:
         '200':
