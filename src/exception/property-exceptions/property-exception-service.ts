@@ -99,7 +99,7 @@ export const createProgramException = async ({
 };
 
 // entity exceptions
-export const createEntityException = async ({
+export const setEntityExceptions = async ({
 	programId,
 	records,
 	schema,
