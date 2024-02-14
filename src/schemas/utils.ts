@@ -19,10 +19,10 @@
 
 import get from 'lodash/get';
 import {
-  ActiveRegistration,
-  ActiveClinicalSubmission,
-  SubmissionValidationError,
-  SubmissionValidationUpdate,
+	ActiveRegistration,
+	ActiveClinicalSubmission,
+	SubmissionValidationError,
+	SubmissionValidationUpdate,
 } from '../submission/submission-entities';
 import { DeepReadonly } from 'deep-freeze';
 import { getClinicalEntitiesData } from '../dictionary/api';
@@ -33,265 +33,268 @@ const ARRAY_DELIMITER_CHAR = '|';
 type EntityDataRecord = { [k: string]: any; donor_id?: number };
 
 const convertClinicalRecordToGql = (index: number | string, record: EntityDataRecord) => {
-  const fields = [];
-  for (const field in record) {
-    const value = normalizeValue(record[field]);
-    fields.push({ name: field, value: value });
-  }
-  return {
-    row: index,
-    fields: fields,
-  };
+	const fields = [];
+	for (const field in record) {
+		const value = normalizeValue(record[field]);
+		fields.push({ name: field, value: value });
+	}
+	return {
+		row: index,
+		fields: fields,
+	};
 };
 
 const convertRegistrationErrorToGql = (errorData: RegistrationErrorData) => ({
-  type: errorData.type,
-  message: errorData.message,
-  row: errorData.index,
-  field: errorData.fieldName,
-  value: normalizeValue(errorData.info.value),
-  sampleId: errorData.info.sampleSubmitterId,
-  donorId: errorData.info.donorSubmitterId,
-  specimenId: errorData.info.specimenSubmitterId,
+	type: errorData.type,
+	message: errorData.message,
+	row: errorData.index,
+	field: errorData.fieldName,
+	value: normalizeValue(errorData.info.value),
+	sampleId: errorData.info.sampleSubmitterId,
+	donorId: errorData.info.donorSubmitterId,
+	specimenId: errorData.info.specimenSubmitterId,
 });
 
 function normalizeValue(val: unknown) {
-  if (Array.isArray(val)) {
-    return val.map(convertToString).join(ARRAY_DELIMITER_CHAR);
-  }
-  return convertToString(val);
+	if (Array.isArray(val)) {
+		return val.map(convertToString).join(ARRAY_DELIMITER_CHAR);
+	}
+	return convertToString(val);
 }
 
 function convertToString(val: unknown) {
-  return val === undefined || val === null ? '' : `${val}`;
+	return val === undefined || val === null ? '' : `${val}`;
 }
 
 const convertClinicalFileErrorToGql = (
-  fileError: DeepReadonly<{
-    message: string;
-    batchNames: string[];
-    code: string;
-  }>,
+	fileError: DeepReadonly<{
+		message: string;
+		batchNames: string[];
+		code: string;
+	}>,
 ) => {
-  return {
-    message: fileError.message,
-    fileNames: fileError.batchNames,
-    code: fileError.code,
-  };
+	return {
+		message: fileError.message,
+		fileNames: fileError.batchNames,
+		code: fileError.code,
+	};
 };
 
 const convertRegistrationDataToGql = (
-  programShortName: string,
-  data: {
-    registration: DeepReadonly<ActiveRegistration> | undefined;
-    errors?: RegistrationErrorData[];
-    batchErrors?: { message: string; batchNames: string[]; code: string }[];
-  },
+	programShortName: string,
+	data: {
+		registration: DeepReadonly<ActiveRegistration> | undefined;
+		errors?: RegistrationErrorData[];
+		batchErrors?: { message: string; batchNames: string[]; code: string }[];
+	},
 ) => {
-  const registration: Partial<typeof data.registration> = get(data, 'registration', {});
-  const schemaAndValidationErrors: typeof data.errors = get(data, 'errors', []);
-  const fileErrors: typeof data.batchErrors = get(data, 'batchErrors', []);
-  return {
-    id: registration?._id,
-    programShortName,
-    creator: registration?.creator,
-    fileName: registration?.batchName,
-    createdAt: registration?.createdAt,
-    records: () =>
-      get(registration, 'records')?.map((record, i) => convertClinicalRecordToGql(i, record)),
-    errors: schemaAndValidationErrors?.map(convertRegistrationErrorToGql),
-    fileErrors: fileErrors?.map(convertClinicalFileErrorToGql),
-    newDonors: () => convertRegistrationStatsToGql(get(registration, 'stats.newDonorIds', [])),
-    newSpecimens: () =>
-      convertRegistrationStatsToGql(get(registration, 'stats.newSpecimenIds', [])),
-    newSamples: () => convertRegistrationStatsToGql(get(registration, 'stats.newSampleIds', [])),
-    alreadyRegistered: () =>
-      convertRegistrationStatsToGql(get(registration, 'stats.alreadyRegistered', [])),
-  };
+	const registration: Partial<typeof data.registration> = get(data, 'registration', {});
+	const schemaAndValidationErrors: typeof data.errors = get(data, 'errors', []);
+	const fileErrors: typeof data.batchErrors = get(data, 'batchErrors', []);
+	const records = get(registration, 'records', []);
+	const newDonors = get(registration, 'stats.newDonorIds', []);
+	const newSpecimens = get(registration, 'stats.newSpecimenIds', []);
+	const newSamples = get(registration, 'stats.newSampleIds', []);
+	const alreadyRegistered = get(registration, 'stats.alreadyRegistered', []);
+
+	return {
+		id: registration._id,
+		programShortName,
+		creator: registration.creator,
+		fileName: registration.batchName,
+		createdAt: registration.createdAt,
+		records: () => records.map((record, i) => convertClinicalRecordToGql(i, record)),
+		errors: schemaAndValidationErrors.map(convertRegistrationErrorToGql),
+		fileErrors: fileErrors.map(convertClinicalFileErrorToGql),
+		newDonors: () => convertRegistrationStatsToGql(newDonors),
+		newSpecimens: () => convertRegistrationStatsToGql(newSpecimens),
+		newSamples: () => convertRegistrationStatsToGql(newSamples),
+		alreadyRegistered: () => convertRegistrationStatsToGql(alreadyRegistered),
+	};
 };
 
 const convertRegistrationStatsToGql = (
-  statsEntry: {
-    submitterId: string;
-    rowNumbers: (string | number)[];
-  }[],
+	statsEntry: {
+		submitterId: string;
+		rowNumbers: (string | number)[];
+	}[],
 ) => {
-  const output = {
-    count: 0,
-    rows: [] as (string | number)[],
-    names: [] as string[],
-    values: [] as { name: string; rows: (string | number)[] }[],
-  };
-  const names = statsEntry.map(se => se.submitterId) || ([] as string[]);
-  output.count = names.length;
-  names.forEach(name => {
-    output.names.push(name);
-    const rows = statsEntry.find(se => se.submitterId == name)?.rowNumbers || [];
-    rows.forEach(row => !output.rows.includes(row) && output.rows.push(row));
-    output.values.push({ name, rows });
-  });
+	const output = {
+		count: 0,
+		rows: [] as (string | number)[],
+		names: [] as string[],
+		values: [] as { name: string; rows: (string | number)[] }[],
+	};
+	const names = statsEntry.map((se) => se.submitterId) || ([] as string[]);
+	output.count = names.length;
+	names.forEach((name) => {
+		output.names.push(name);
+		const rows = statsEntry.find((se) => se.submitterId == name)?.rowNumbers || [];
+		rows.forEach((row) => !output.rows.includes(row) && output.rows.push(row));
+		output.values.push({ name, rows });
+	});
 
-  return output;
+	return output;
 };
 
 type RegistrationErrorData = ErrorData & {
-  info: {
-    value: string;
-    sampleSubmitterId: string;
-    donorSubmitterId: string;
-    specimenSubmitterId: string;
-  };
+	info: {
+		value: string;
+		sampleSubmitterId: string;
+		donorSubmitterId: string;
+		specimenSubmitterId: string;
+	};
 };
 
 type ErrorData = {
-  type: string;
-  message: string;
-  index: number | string;
-  fieldName: string;
+	type: string;
+	message: string;
+	index: number | string;
+	fieldName: string;
 };
 
 // Clinical Submission
 
 export interface SubmissionEntity {
-  batchName?: string | undefined;
-  creator?: string | undefined;
-  records?: ReadonlyArray<Readonly<{ [key: string]: string }>> | undefined;
-  createdAt?: DeepReadonly<Date> | undefined;
-  schemaErrors?: DeepReadonly<SubmissionValidationError[]> | undefined;
-  dataErrors?: DeepReadonly<SubmissionValidationError[]> | undefined;
-  dataWarnings?: DeepReadonly<SubmissionValidationError[]> | undefined;
-  dataUpdates?: DeepReadonly<SubmissionValidationUpdate[]> | undefined;
-  stats?:
-    | DeepReadonly<{
-        new: number[];
-        noUpdate: number[];
-        updated: number[];
-        errorsFound: number[];
-      }>
-    | undefined;
+	batchName?: string | undefined;
+	creator?: string | undefined;
+	records?: ReadonlyArray<Readonly<{ [key: string]: string }>> | undefined;
+	createdAt?: DeepReadonly<Date> | undefined;
+	schemaErrors?: DeepReadonly<SubmissionValidationError[]> | undefined;
+	dataErrors?: DeepReadonly<SubmissionValidationError[]> | undefined;
+	dataWarnings?: DeepReadonly<SubmissionValidationError[]> | undefined;
+	dataUpdates?: DeepReadonly<SubmissionValidationUpdate[]> | undefined;
+	stats?:
+		| DeepReadonly<{
+				new: number[];
+				noUpdate: number[];
+				updated: number[];
+				errorsFound: number[];
+		  }>
+		| undefined;
 }
 
 const convertClinicalSubmissionEntityToGql = (clinicalType: string, entity: SubmissionEntity) => {
-  const batchName = entity?.batchName;
-  const creator = entity?.creator || undefined;
-  const records = get(entity, 'records', [] as typeof entity.records)?.map((record, index) =>
-    convertClinicalRecordToGql(index, record),
-  );
-  const stats = entity?.stats || undefined;
-  const entityErrors = entity.schemaErrors || [];
-  const schemaErrors = entityErrors.map(error =>
-    convertClinicalSubmissionSchemaErrorToGql(clinicalType, error),
-  );
-  const dataErrors = get(
-    entity,
-    'dataErrors',
-    [] as typeof entity.dataErrors,
-  )?.map((error: ErrorData) => convertClinicalSubmissionDataErrorToGql(error));
-  const dataWarnings = get(
-    entity,
-    'dataWarnings',
-    [] as typeof entity.dataWarnings,
-  )?.map((warning: ErrorData) => convertClinicalSubmissionDataErrorToGql(warning));
-  const dataUpdates = get(entity, 'dataUpdates', [] as typeof entity.dataUpdates)?.map(update =>
-    convertClinicalSubmissionUpdateToGql(update),
-  );
-  const createdAt = entity.createdAt ? entity.createdAt : undefined;
+	const batchName = entity?.batchName;
+	const creator = entity?.creator || undefined;
+	const records = get(entity, 'records', [] as typeof entity.records)?.map((record, index) =>
+		convertClinicalRecordToGql(index, record),
+	);
+	const stats = entity?.stats || undefined;
+	const entityErrors = entity.schemaErrors || [];
+	const schemaErrors = entityErrors.map((error) =>
+		convertClinicalSubmissionSchemaErrorToGql(clinicalType, error),
+	);
+	const dataErrors = get(
+		entity,
+		'dataErrors',
+		[] as typeof entity.dataErrors,
+	)?.map((error: ErrorData) => convertClinicalSubmissionDataErrorToGql(error));
+	const dataWarnings = get(
+		entity,
+		'dataWarnings',
+		[] as typeof entity.dataWarnings,
+	)?.map((warning: ErrorData) => convertClinicalSubmissionDataErrorToGql(warning));
+	const dataUpdates = get(entity, 'dataUpdates', [] as typeof entity.dataUpdates)?.map((update) =>
+		convertClinicalSubmissionUpdateToGql(update),
+	);
+	const createdAt = entity.createdAt ? entity.createdAt : undefined;
 
-  return {
-    clinicalType,
-    batchName,
-    creator,
-    records,
-    stats,
-    schemaErrors,
-    dataErrors,
-    dataWarnings,
-    dataUpdates,
-    createdAt,
-  };
+	return {
+		clinicalType,
+		batchName,
+		creator,
+		records,
+		stats,
+		schemaErrors,
+		dataErrors,
+		dataWarnings,
+		dataUpdates,
+		createdAt,
+	};
 };
 
 const convertClinicalSubmissionSchemaErrorToGql = (
-  clinicalType: unknown,
-  errorData: ErrorData,
+	clinicalType: unknown,
+	errorData: ErrorData,
 ) => ({
-  ...convertClinicalSubmissionDataErrorToGql(errorData),
-  clinicalType,
+	...convertClinicalSubmissionDataErrorToGql(errorData),
+	clinicalType,
 });
 
 const convertClinicalSubmissionDataErrorToGql = (errorData: ErrorData) => {
-  // errorData.info.value may come back as null if not provided in uploaded file
-  const errorValue = get(errorData, 'info.value', '') || '';
-  return {
-    type: errorData.type,
-    message: errorData.message,
-    row: errorData.index,
-    field: errorData.fieldName,
-    donorId: get(errorData, 'info.donorSubmitterId', '') || '',
-    value: normalizeValue(errorValue),
-  };
+	// errorData.info.value may come back as null if not provided in uploaded file
+	const errorValue = get(errorData, 'info.value', '') || '';
+	return {
+		type: errorData.type,
+		message: errorData.message,
+		row: errorData.index,
+		field: errorData.fieldName,
+		donorId: get(errorData, 'info.donorSubmitterId', '') || '',
+		value: normalizeValue(errorValue),
+	};
 };
 
 type UpdateData = {
-  index: string | number;
-  fieldName: string;
-  info: {
-    newValue: unknown;
-    oldValue: unknown;
-    donorSubmitterId: string;
-  };
+	index: string | number;
+	fieldName: string;
+	info: {
+		newValue: unknown;
+		oldValue: unknown;
+		donorSubmitterId: string;
+	};
 };
 
 const convertClinicalSubmissionUpdateToGql = (updateData: UpdateData) => {
-  return {
-    row: updateData.index,
-    field: updateData.fieldName,
-    newValue: normalizeValue(updateData.info.newValue),
-    oldValue: normalizeValue(updateData.info.oldValue),
-    donorId: updateData.info.donorSubmitterId,
-  };
+	return {
+		row: updateData.index,
+		field: updateData.fieldName,
+		newValue: normalizeValue(updateData.info.newValue),
+		oldValue: normalizeValue(updateData.info.oldValue),
+		donorId: updateData.info.donorSubmitterId,
+	};
 };
 
 const convertClinicalSubmissionDataToGql = async (
-  programShortName: string,
-  data: {
-    submission: DeepReadonly<ActiveClinicalSubmission> | undefined;
-    batchErrors?: DeepReadonly<{ message: string; batchNames: string[]; code: string }[]>;
-    successful?: boolean; // | undefined;
-  },
+	programShortName: string,
+	data: {
+		submission: DeepReadonly<ActiveClinicalSubmission> | undefined;
+		batchErrors?: DeepReadonly<{ message: string; batchNames: string[]; code: string }[]>;
+		successful?: boolean; // | undefined;
+	},
 ) => {
-  const submission = get(data, 'submission', {} as Partial<typeof data.submission>);
-  const fileErrors = get(data, 'batchErrors', [] as typeof data.batchErrors);
-  const clinicalEntities = get(submission, 'clinicalEntities');
+	const submission = get(data, 'submission', {} as Partial<typeof data.submission>);
+	const fileErrors = get(data, 'batchErrors', [] as typeof data.batchErrors);
+	const clinicalEntities = get(submission, 'clinicalEntities');
 
-  const clinicalSubmissionTypeList = await getClinicalEntitiesData('false'); // to confirm for true or false
-  const filledClinicalEntities = clinicalSubmissionTypeList.map(clinicalType => ({
-    clinicalType,
-    ...(clinicalEntities ? clinicalEntities[clinicalType.name] : {}),
-  }));
-  const clinicalEntityMap = filledClinicalEntities.map(clinicalEntity =>
-    convertClinicalSubmissionEntityToGql(clinicalEntity?.clinicalType.name, clinicalEntity),
-  );
+	const clinicalSubmissionTypeList = await getClinicalEntitiesData('false'); // to confirm for true or false
+	const filledClinicalEntities = clinicalSubmissionTypeList.map((clinicalType) => ({
+		clinicalType,
+		...(clinicalEntities ? clinicalEntities[clinicalType.name] : {}),
+	}));
+	const clinicalEntityMap = filledClinicalEntities.map((clinicalEntity) =>
+		convertClinicalSubmissionEntityToGql(clinicalEntity?.clinicalType.name, clinicalEntity),
+	);
 
-  return {
-    id: submission?._id || undefined,
-    programShortName,
-    state: submission?.state || undefined,
-    version: submission?.version || undefined,
-    updatedBy: submission?.updatedBy || undefined,
-    updatedAt: submission?.updatedAt ? submission.updatedAt : undefined,
-    clinicalEntities: clinicalEntityMap,
-    fileErrors: fileErrors?.map(convertClinicalFileErrorToGql),
-  };
+	return {
+		id: submission?._id || undefined,
+		programShortName,
+		state: submission?.state || undefined,
+		version: submission?.version || undefined,
+		updatedBy: submission?.updatedBy || undefined,
+		updatedAt: submission?.updatedAt ? submission.updatedAt : undefined,
+		clinicalEntities: clinicalEntityMap,
+		fileErrors: fileErrors?.map(convertClinicalFileErrorToGql),
+	};
 };
 
 export {
-  convertClinicalRecordToGql,
-  convertRegistrationDataToGql,
-  convertRegistrationErrorToGql,
-  convertClinicalFileErrorToGql,
-  convertRegistrationStatsToGql,
-  RegistrationErrorData,
-  convertClinicalSubmissionEntityToGql,
-  convertClinicalSubmissionDataToGql,
+	convertClinicalRecordToGql,
+	convertRegistrationDataToGql,
+	convertRegistrationErrorToGql,
+	convertClinicalFileErrorToGql,
+	convertRegistrationStatsToGql,
+	RegistrationErrorData,
+	convertClinicalSubmissionEntityToGql,
+	convertClinicalSubmissionDataToGql,
 };
