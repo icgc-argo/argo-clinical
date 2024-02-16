@@ -51,6 +51,7 @@ import { ClinicalEntityData, ClinicalInfo, Donor, Sample } from './clinical-enti
 import { DONOR_DOCUMENT_FIELDS, donorDao } from './donor-repo';
 import { runTaskInWorkerThread } from './service-worker-thread/runner';
 import { WorkerTasks } from './service-worker-thread/tasks';
+import { ClinicalDataPaginatedBody } from './api/types';
 
 const L = loggerFor(__filename);
 
@@ -81,7 +82,7 @@ export type ClinicalSearchVariables = {
 // Submitted Data Table, Sidebar, etc.
 export type ClinicalDataVariables = {
 	programShortName: string;
-	filters: PaginatedClinicalQuery;
+	filters: ClinicalDataPaginatedBody;
 };
 
 export async function updateDonorSchemaMetadata(
