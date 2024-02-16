@@ -22,22 +22,22 @@ import submissionAPI from '../../submission/submission-api';
 import { convertClinicalSubmissionDataToGql } from '../utils';
 
 const clearClinicalSubmission = async (
-  obj: unknown,
-  args: { programShortName: string; fileType: string; version: string },
-  contextValue: any,
+	obj: unknown,
+	args: { programShortName: string; fileType: string; version: string },
+	contextValue: any,
 ) => {
-  const { programShortName, fileType, version } = args;
-  const egoToken = (<GlobalGqlContext>contextValue).egoToken;
+	const { programShortName, fileType, version } = args;
+	const egoToken = (<GlobalGqlContext>contextValue).egoToken;
 
-  const response = await submissionAPI.clearFileDataFromActiveSubmission(
-    programShortName,
-    egoToken,
-    fileType || 'all',
-    version,
-  );
-  return convertClinicalSubmissionDataToGql(programShortName, {
-    submission: response,
-  });
+	const response = await submissionAPI.clearFileDataFromActiveSubmission(
+		programShortName,
+		egoToken,
+		fileType || 'all',
+		version,
+	);
+	return convertClinicalSubmissionDataToGql(programShortName, {
+		submission: response,
+	});
 };
 
 export default clearClinicalSubmission;

@@ -26,9 +26,9 @@ const router = express.Router({ mergeParams: true });
 const upload = multer({ dest: '/tmp' });
 
 router.post(
-  '/preprocess/:programId',
-  upload.single('samples'),
-  wrapAsync(submissionAPI.processLegacyIcgcData),
+	'/preprocess/:programId',
+	upload.single('samples'),
+	wrapAsync(submissionAPI.processLegacyIcgcData),
 );
 
 router.post('/', upload.single('donors'), wrapAsync(submissionAPI.addDonors));

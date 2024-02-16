@@ -18,164 +18,164 @@
  */
 
 import {
-  SampleRegistrationFieldsEnum,
-  SubmittedClinicalRecord,
-  DataValidationErrors,
-  SubmissionValidationError,
-  ModificationType,
-  SubmissionValidationUpdate,
-  RecordValidationResult,
-  SubmittedClinicalRecordsMap,
-  TreatmentTypeValuesMappedByTherapy,
+	SampleRegistrationFieldsEnum,
+	SubmittedClinicalRecord,
+	DataValidationErrors,
+	SubmissionValidationError,
+	ModificationType,
+	SubmissionValidationUpdate,
+	RecordValidationResult,
+	SubmittedClinicalRecordsMap,
+	TreatmentTypeValuesMappedByTherapy,
 } from '../submission-entities';
 import {
-  ClinicalEntitySchemaNames,
-  ClinicalUniqueIdentifier,
-  DonorFieldsEnum,
-  ClinicalFields,
-  ClinicalTherapyType,
-  SpecimenFieldsEnum,
+	ClinicalEntitySchemaNames,
+	ClinicalUniqueIdentifier,
+	DonorFieldsEnum,
+	ClinicalFields,
+	ClinicalTherapyType,
+	SpecimenFieldsEnum,
 } from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
 import {
-  validationErrorMessage,
-  RelatedEntityErrorInfo,
-  SubmissionErrorBaseInfo,
+	validationErrorMessage,
+	RelatedEntityErrorInfo,
+	SubmissionErrorBaseInfo,
 } from '../submission-error-messages';
 import _ from 'lodash';
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
 import { Donor, ClinicalInfo, Specimen } from '../../clinical/clinical-entities';
 import {
-  getSingleClinicalEntityFromDonorBySchemaName,
-  getSingleClinicalObjectFromDonor,
-  getEntitySubmitterIdFieldName,
+	getSingleClinicalEntityFromDonorBySchemaName,
+	getSingleClinicalObjectFromDonor,
+	getEntitySubmitterIdFieldName,
 } from '../../common-model/functions';
 import { donorDao, DONOR_DOCUMENT_FIELDS } from '../../clinical/donor-repo';
 import { isEmptyString, isValueNotEqual, convertToArray } from '../../utils';
 
 export const buildSubmissionError = (
-  newRecord: DeepReadonly<SubmittedClinicalRecord>,
-  type: DataValidationErrors,
-  fieldName: ClinicalFields,
-  info: object = {},
+	newRecord: DeepReadonly<SubmittedClinicalRecord>,
+	type: DataValidationErrors,
+	fieldName: ClinicalFields,
+	info: object = {},
 ): SubmissionValidationError => {
-  // typescript refused to take this directly
-  const index: number = newRecord.index;
-  const errorData = {
-    type,
-    fieldName,
-    index,
-    info: {
-      ...info,
-      donorSubmitterId: newRecord[SampleRegistrationFieldsEnum.submitter_donor_id],
-      value: newRecord[fieldName],
-    } as SubmissionErrorBaseInfo,
-  };
-  return {
-    ...errorData,
-    message: validationErrorMessage(type, errorData),
-  };
+	// typescript refused to take this directly
+	const index: number = newRecord.index;
+	const errorData = {
+		type,
+		fieldName,
+		index,
+		info: {
+			...info,
+			donorSubmitterId: newRecord[SampleRegistrationFieldsEnum.submitter_donor_id],
+			value: newRecord[fieldName],
+		} as SubmissionErrorBaseInfo,
+	};
+	return {
+		...errorData,
+		message: validationErrorMessage(type, errorData),
+	};
 };
 
 export const buildSubmissionWarning = (
-  newRecord: DeepReadonly<SubmittedClinicalRecord>,
-  type: DataValidationErrors,
-  fieldName: ClinicalFields,
-  info: object = {},
+	newRecord: DeepReadonly<SubmittedClinicalRecord>,
+	type: DataValidationErrors,
+	fieldName: ClinicalFields,
+	info: object = {},
 ): SubmissionValidationError => {
-  // typescript refused to take this directly
-  const index: number = newRecord.index;
-  const errorData = {
-    type,
-    fieldName,
-    index,
-    info: {
-      ...info,
-      donorSubmitterId: newRecord[SampleRegistrationFieldsEnum.submitter_donor_id],
-      value: newRecord[fieldName],
-    } as SubmissionErrorBaseInfo,
-  };
-  return {
-    ...errorData,
-    message: validationErrorMessage(type, errorData),
-  };
+	// typescript refused to take this directly
+	const index: number = newRecord.index;
+	const errorData = {
+		type,
+		fieldName,
+		index,
+		info: {
+			...info,
+			donorSubmitterId: newRecord[SampleRegistrationFieldsEnum.submitter_donor_id],
+			value: newRecord[fieldName],
+		} as SubmissionErrorBaseInfo,
+	};
+	return {
+		...errorData,
+		message: validationErrorMessage(type, errorData),
+	};
 };
 
 export const buildSubmissionUpdate = (
-  newRecord: DeepReadonly<SubmittedClinicalRecord>,
-  oldValue: string,
-  fieldName: SampleRegistrationFieldsEnum | string,
+	newRecord: DeepReadonly<SubmittedClinicalRecord>,
+	oldValue: string,
+	fieldName: SampleRegistrationFieldsEnum | string,
 ): SubmissionValidationUpdate => {
-  // typescript refused to take this directly
-  const index: number = newRecord.index;
-  return {
-    fieldName,
-    index,
-    info: {
-      donorSubmitterId: newRecord[DonorFieldsEnum.submitter_donor_id],
-      newValue: `${newRecord[fieldName] || ''}`, // we convert the value to string since lectern may converted it to non string (integer, boolean)
-      oldValue: `${oldValue || ''}`,
-    },
-  };
+	// typescript refused to take this directly
+	const index: number = newRecord.index;
+	return {
+		fieldName,
+		index,
+		info: {
+			donorSubmitterId: newRecord[DonorFieldsEnum.submitter_donor_id],
+			newValue: `${newRecord[fieldName] || ''}`, // we convert the value to string since lectern may converted it to non string (integer, boolean)
+			oldValue: `${oldValue || ''}`,
+		},
+	};
 };
 
 export const buildRecordValidationResult = (
-  record: DeepReadonly<SubmittedClinicalRecord>,
-  errors: SubmissionValidationError | SubmissionValidationError[],
-  warnings: SubmissionValidationError[],
-  existentDonor: DeepReadonly<Donor>,
-  clinicalEntitySchemaName: ClinicalEntitySchemaNames,
+	record: DeepReadonly<SubmittedClinicalRecord>,
+	errors: SubmissionValidationError | SubmissionValidationError[],
+	warnings: SubmissionValidationError[],
+	existentDonor: DeepReadonly<Donor>,
+	clinicalEntitySchemaName: ClinicalEntitySchemaNames,
 ): RecordValidationResult => {
-  const errorsArr = convertToArray(errors);
-  if (errorsArr.length > 0) {
-    return {
-      status: ModificationType.ERRORSFOUND,
-      index: record.index,
-      errors: errorsArr,
-      updates: [],
-      warnings: warnings,
-    };
-  }
+	const errorsArr = convertToArray(errors);
+	if (errorsArr.length > 0) {
+		return {
+			status: ModificationType.ERRORSFOUND,
+			index: record.index,
+			errors: errorsArr,
+			updates: [],
+			warnings: warnings,
+		};
+	}
 
-  const clinicalInfo = getSingleClinicalEntityFromDonorBySchemaName(
-    existentDonor,
-    clinicalEntitySchemaName,
-    record as ClinicalInfo,
-  );
+	const clinicalInfo = getSingleClinicalEntityFromDonorBySchemaName(
+		existentDonor,
+		clinicalEntitySchemaName,
+		record as ClinicalInfo,
+	);
 
-  const rvr = addUpdateStatus(record, clinicalInfo);
-  return addWarnings(rvr, warnings);
+	const rvr = addUpdateStatus(record, clinicalInfo);
+	return addWarnings(rvr, warnings);
 };
 
 export function getSpecimenFromDonor(
-  existentDonor: DeepReadonly<Donor>,
-  specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
-  errors: SubmissionValidationError[],
+	existentDonor: DeepReadonly<Donor>,
+	specimenRecord: DeepReadonly<SubmittedClinicalRecord>,
+	errors: SubmissionValidationError[],
 ) {
-  const specimen = getSingleClinicalObjectFromDonor(
-    existentDonor,
-    ClinicalEntitySchemaNames.SPECIMEN,
-    {
-      submitterId: specimenRecord[ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.SPECIMEN]],
-    },
-  ) as DeepReadonly<Specimen>;
+	const specimen = getSingleClinicalObjectFromDonor(
+		existentDonor,
+		ClinicalEntitySchemaNames.SPECIMEN,
+		{
+			submitterId: specimenRecord[ClinicalUniqueIdentifier[ClinicalEntitySchemaNames.SPECIMEN]],
+		},
+	) as DeepReadonly<Specimen>;
 
-  if (!specimen) {
-    errors.push(
-      buildSubmissionError(
-        specimenRecord,
-        DataValidationErrors.ID_NOT_REGISTERED,
-        SpecimenFieldsEnum.submitter_specimen_id,
-      ),
-    );
-    return undefined;
-  }
+	if (!specimen) {
+		errors.push(
+			buildSubmissionError(
+				specimenRecord,
+				DataValidationErrors.ID_NOT_REGISTERED,
+				SpecimenFieldsEnum.submitter_specimen_id,
+			),
+		);
+		return undefined;
+	}
 
-  return specimen;
+	return specimen;
 }
 
 const addWarnings = (rvr: RecordValidationResult, warnings: SubmissionValidationError[]) => {
-  return { ...rvr, warnings };
+	return { ...rvr, warnings };
 };
 
 // cases
@@ -183,377 +183,377 @@ const addWarnings = (rvr: RecordValidationResult, warnings: SubmissionValidation
 // 2 changing clinicalInfo <=> update
 // 3 not new or update <=> noUpdate
 const addUpdateStatus = (
-  record: DeepReadonly<SubmittedClinicalRecord>,
-  clinicalInfo: DeepReadonly<ClinicalInfo> | undefined,
+	record: DeepReadonly<SubmittedClinicalRecord>,
+	clinicalInfo: DeepReadonly<ClinicalInfo> | undefined,
 ): RecordValidationResult => {
-  // clinicalInfo empty so new
-  if (_.isEmpty(clinicalInfo)) {
-    return { status: ModificationType.NEW, index: record.index, warnings: [], updates: [] };
-  }
+	// clinicalInfo empty so new
+	if (_.isEmpty(clinicalInfo)) {
+		return { status: ModificationType.NEW, index: record.index, warnings: [], updates: [] };
+	}
 
-  // check changing fields
-  const submissionUpdates: any[] = getSubmissionUpdates(clinicalInfo, record);
+	// check changing fields
+	const submissionUpdates: any[] = getSubmissionUpdates(clinicalInfo, record);
 
-  // if no updates and not new return noUpdate
-  return submissionUpdates.length === 0
-    ? { status: ModificationType.NOUPDATE, index: record.index, warnings: [], updates: [] }
-    : {
-        status: ModificationType.UPDATED,
-        index: record.index,
-        updates: submissionUpdates,
-        warnings: [],
-      };
+	// if no updates and not new return noUpdate
+	return submissionUpdates.length === 0
+		? { status: ModificationType.NOUPDATE, index: record.index, warnings: [], updates: [] }
+		: {
+				status: ModificationType.UPDATED,
+				index: record.index,
+				updates: submissionUpdates,
+				warnings: [],
+		  };
 };
 
 const getSubmissionUpdates = (
-  clinicalObject: DeepReadonly<ClinicalInfo> | undefined,
-  record: DeepReadonly<SubmittedClinicalRecord>,
+	clinicalObject: DeepReadonly<ClinicalInfo> | undefined,
+	record: DeepReadonly<SubmittedClinicalRecord>,
 ) => {
-  const submissionUpdates: SubmissionValidationUpdate[] = [];
-  if (clinicalObject) {
-    for (const fieldName in record) {
-      // continue since field is index of record or field has no value in both clinicalObject & record
-      if (fieldName == 'index' || (!clinicalObject[fieldName] && !record[fieldName])) continue;
+	const submissionUpdates: SubmissionValidationUpdate[] = [];
+	if (clinicalObject) {
+		for (const fieldName in record) {
+			// continue since field is index of record or field has no value in both clinicalObject & record
+			if (fieldName == 'index' || (!clinicalObject[fieldName] && !record[fieldName])) continue;
 
-      // field's value is different in clinicalObject and in record, so mark it as update
-      if (isValueNotEqual(clinicalObject[fieldName], record[fieldName])) {
-        submissionUpdates.push(
-          buildSubmissionUpdate(record, `${clinicalObject[fieldName] || ''}`, fieldName),
-        );
-      }
-    }
-  }
-  return submissionUpdates;
+			// field's value is different in clinicalObject and in record, so mark it as update
+			if (isValueNotEqual(clinicalObject[fieldName], record[fieldName])) {
+				submissionUpdates.push(
+					buildSubmissionUpdate(record, `${clinicalObject[fieldName] || ''}`, fieldName),
+				);
+			}
+		}
+	}
+	return submissionUpdates;
 };
 
 export const buildClinicalValidationResult = (results: RecordValidationResult[]) => {
-  const stats = {
-    [ModificationType.NEW]: [] as number[],
-    [ModificationType.NOUPDATE]: [] as number[],
-    [ModificationType.UPDATED]: [] as number[],
-    [ModificationType.ERRORSFOUND]: [] as number[],
-  };
-  let dataErrors: SubmissionValidationError[] = [];
-  let dataUpdates: SubmissionValidationUpdate[] = [];
-  let dataWarnings: SubmissionValidationError[] = [];
-  results.forEach(result => {
-    stats[result.status].push(result.index);
-    dataWarnings = dataWarnings.concat(result.warnings);
-    if (result.status === ModificationType.UPDATED) {
-      dataUpdates = dataUpdates.concat(result.updates as SubmissionValidationUpdate[]);
-    } else if (result.status === ModificationType.ERRORSFOUND) {
-      dataErrors = dataErrors.concat(result.errors as SubmissionValidationError[]);
-    }
-  });
+	const stats = {
+		[ModificationType.NEW]: [] as number[],
+		[ModificationType.NOUPDATE]: [] as number[],
+		[ModificationType.UPDATED]: [] as number[],
+		[ModificationType.ERRORSFOUND]: [] as number[],
+	};
+	let dataErrors: SubmissionValidationError[] = [];
+	let dataUpdates: SubmissionValidationUpdate[] = [];
+	let dataWarnings: SubmissionValidationError[] = [];
+	results.forEach((result) => {
+		stats[result.status].push(result.index);
+		dataWarnings = dataWarnings.concat(result.warnings);
+		if (result.status === ModificationType.UPDATED) {
+			dataUpdates = dataUpdates.concat(result.updates as SubmissionValidationUpdate[]);
+		} else if (result.status === ModificationType.ERRORSFOUND) {
+			dataErrors = dataErrors.concat(result.errors as SubmissionValidationError[]);
+		}
+	});
 
-  return {
-    stats: stats,
-    dataWarnings: dataWarnings,
-    dataErrors: dataErrors,
-    dataUpdates: dataUpdates,
-  };
+	return {
+		stats: stats,
+		dataWarnings: dataWarnings,
+		dataErrors: dataErrors,
+		dataUpdates: dataUpdates,
+	};
 };
 
 export const buildRecordValidationError = (
-  record: DeepReadonly<SubmittedClinicalRecord>,
-  errors: SubmissionValidationError | SubmissionValidationError[],
+	record: DeepReadonly<SubmittedClinicalRecord>,
+	errors: SubmissionValidationError | SubmissionValidationError[],
 ): RecordValidationResult => {
-  const errorsArr = convertToArray(errors);
-  return {
-    status: ModificationType.ERRORSFOUND,
-    index: record.index,
-    errors: errorsArr,
-    warnings: [],
-    updates: [],
-  };
+	const errorsArr = convertToArray(errors);
+	return {
+		status: ModificationType.ERRORSFOUND,
+		index: record.index,
+		errors: errorsArr,
+		warnings: [],
+		updates: [],
+	};
 };
 
 export const buildMultipleRecordValidationErrors = (
-  records: DeepReadonly<SubmittedClinicalRecord[]>,
-  commonErrorProperties: {
-    type: DataValidationErrors;
-    fieldName: ClinicalFields;
-    info?: any;
-  },
+	records: DeepReadonly<SubmittedClinicalRecord[]>,
+	commonErrorProperties: {
+		type: DataValidationErrors;
+		fieldName: ClinicalFields;
+		info?: any;
+	},
 ): RecordValidationResult[] => {
-  const validationResults = records.map(record => {
-    return buildRecordValidationError(
-      record,
-      buildSubmissionError(
-        record,
-        commonErrorProperties.type,
-        commonErrorProperties.fieldName,
-        commonErrorProperties.info,
-      ),
-    );
-  });
+	const validationResults = records.map((record) => {
+		return buildRecordValidationError(
+			record,
+			buildSubmissionError(
+				record,
+				commonErrorProperties.type,
+				commonErrorProperties.fieldName,
+				commonErrorProperties.info,
+			),
+		);
+	});
 
-  return validationResults;
+	return validationResults;
 };
 
 export namespace ClinicalSubmissionRecordsOperations {
-  // this function will mutate a SubmittedRecords
-  export function addRecord(
-    type: ClinicalEntitySchemaNames,
-    records: SubmittedClinicalRecordsMap,
-    record: SubmittedClinicalRecord,
-  ) {
-    checkNotRegistration(type);
-    if (!records[type]) {
-      records[type] = [];
-    }
-    records[type].push(record);
-  }
+	// this function will mutate a SubmittedRecords
+	export function addRecord(
+		type: ClinicalEntitySchemaNames,
+		records: SubmittedClinicalRecordsMap,
+		record: SubmittedClinicalRecord,
+	) {
+		checkNotRegistration(type);
+		if (!records[type]) {
+			records[type] = [];
+		}
+		records[type].push(record);
+	}
 
-  export function getSingleRecord(
-    type: ClinicalEntitySchemaNames,
-    records: DeepReadonly<SubmittedClinicalRecordsMap>,
-  ): DeepReadonly<SubmittedClinicalRecord | undefined> {
-    checkNotRegistration(type);
-    if (!records[type]) {
-      return undefined;
-    } else if (records[type].length !== 1) {
-      throw new Error(`Clinical type [${type}] doesn't have single record`);
-    }
-    return records[type][0];
-  }
+	export function getSingleRecord(
+		type: ClinicalEntitySchemaNames,
+		records: DeepReadonly<SubmittedClinicalRecordsMap>,
+	): DeepReadonly<SubmittedClinicalRecord | undefined> {
+		checkNotRegistration(type);
+		if (!records[type]) {
+			return undefined;
+		} else if (records[type].length !== 1) {
+			throw new Error(`Clinical type [${type}] doesn't have single record`);
+		}
+		return records[type][0];
+	}
 
-  export function getArrayRecords(
-    type: ClinicalEntitySchemaNames,
-    records: DeepReadonly<SubmittedClinicalRecordsMap>,
-  ): DeepReadonly<SubmittedClinicalRecord[]> {
-    checkNotRegistration(type);
-    return records[type];
-  }
+	export function getArrayRecords(
+		type: ClinicalEntitySchemaNames,
+		records: DeepReadonly<SubmittedClinicalRecordsMap>,
+	): DeepReadonly<SubmittedClinicalRecord[]> {
+		checkNotRegistration(type);
+		return records[type];
+	}
 
-  export function getRecordBySubmitterId(
-    type: ClinicalEntitySchemaNames,
-    submitter_id: string,
-    records: DeepReadonly<SubmittedClinicalRecordsMap>,
-  ): DeepReadonly<SubmittedClinicalRecord> {
-    // checkNotRegistration(type); typescript wouldn't detect this check
-    if (type === ClinicalEntitySchemaNames.REGISTRATION) {
-      throw new Error(`Invalid clinical type: ${type}`);
-    }
-    return _.find(records[type], [
-      ClinicalUniqueIdentifier[type],
-      submitter_id,
-    ]) as SubmittedClinicalRecord;
-  }
+	export function getRecordBySubmitterId(
+		type: ClinicalEntitySchemaNames,
+		submitter_id: string,
+		records: DeepReadonly<SubmittedClinicalRecordsMap>,
+	): DeepReadonly<SubmittedClinicalRecord> {
+		// checkNotRegistration(type); typescript wouldn't detect this check
+		if (type === ClinicalEntitySchemaNames.REGISTRATION) {
+			throw new Error(`Invalid clinical type: ${type}`);
+		}
+		return _.find(records[type], [
+			ClinicalUniqueIdentifier[type],
+			submitter_id,
+		]) as SubmittedClinicalRecord;
+	}
 
-  function checkNotRegistration(type: ClinicalEntitySchemaNames) {
-    if (type === ClinicalEntitySchemaNames.REGISTRATION) {
-      throw new Error(`Invalid clinical type: ${type}`);
-    }
-  }
+	function checkNotRegistration(type: ClinicalEntitySchemaNames) {
+		if (type === ClinicalEntitySchemaNames.REGISTRATION) {
+			throw new Error(`Invalid clinical type: ${type}`);
+		}
+	}
 }
 
 export const usingInvalidProgramId = (
-  type: ClinicalEntitySchemaNames,
-  newDonorIndex: number,
-  record: dictionaryEntities.DataRecord,
-  expectedProgram: string,
+	type: ClinicalEntitySchemaNames,
+	newDonorIndex: number,
+	record: dictionaryEntities.DataRecord,
+	expectedProgram: string,
 ) => {
-  const errors: SubmissionValidationError[] = [];
-  const programId = record[SampleRegistrationFieldsEnum.program_id];
-  if (programId) {
-    if (expectedProgram !== programId) {
-      errors.push({
-        type: DataValidationErrors.INVALID_PROGRAM_ID,
-        fieldName: SampleRegistrationFieldsEnum.program_id,
-        index: newDonorIndex,
-        info: getSubmissionErrorInfoObject(type, record, expectedProgram),
-        message: validationErrorMessage(DataValidationErrors.INVALID_PROGRAM_ID),
-      });
-    }
-    return errors;
-  }
-  return [];
+	const errors: SubmissionValidationError[] = [];
+	const programId = record[SampleRegistrationFieldsEnum.program_id];
+	if (programId) {
+		if (expectedProgram !== programId) {
+			errors.push({
+				type: DataValidationErrors.INVALID_PROGRAM_ID,
+				fieldName: SampleRegistrationFieldsEnum.program_id,
+				index: newDonorIndex,
+				info: getSubmissionErrorInfoObject(type, record, expectedProgram),
+				message: validationErrorMessage(DataValidationErrors.INVALID_PROGRAM_ID),
+			});
+		}
+		return errors;
+	}
+	return [];
 };
 
 const getSubmissionErrorInfoObject = (
-  type: ClinicalEntitySchemaNames,
-  record: DeepReadonly<dictionaryEntities.DataRecord>,
-  expectedProgram: string,
+	type: ClinicalEntitySchemaNames,
+	record: DeepReadonly<dictionaryEntities.DataRecord>,
+	expectedProgram: string,
 ) => {
-  switch (type) {
-    case ClinicalEntitySchemaNames.REGISTRATION: {
-      return {
-        value: record[SampleRegistrationFieldsEnum.program_id],
-        sampleSubmitterId: record[SampleRegistrationFieldsEnum.submitter_sample_id],
-        specimenSubmitterId: record[SampleRegistrationFieldsEnum.submitter_specimen_id],
-        donorSubmitterId: record[SampleRegistrationFieldsEnum.submitter_donor_id],
-        expectedProgram,
-      };
-    }
-    default: {
-      return {
-        value: record[SampleRegistrationFieldsEnum.program_id],
-        donorSubmitterId: record[SampleRegistrationFieldsEnum.submitter_donor_id],
-        expectedProgram,
-      };
-    }
-  }
+	switch (type) {
+		case ClinicalEntitySchemaNames.REGISTRATION: {
+			return {
+				value: record[SampleRegistrationFieldsEnum.program_id],
+				sampleSubmitterId: record[SampleRegistrationFieldsEnum.submitter_sample_id],
+				specimenSubmitterId: record[SampleRegistrationFieldsEnum.submitter_specimen_id],
+				donorSubmitterId: record[SampleRegistrationFieldsEnum.submitter_donor_id],
+				expectedProgram,
+			};
+		}
+		default: {
+			return {
+				value: record[SampleRegistrationFieldsEnum.program_id],
+				donorSubmitterId: record[SampleRegistrationFieldsEnum.submitter_donor_id],
+				expectedProgram,
+			};
+		}
+	}
 };
 
 // ******* common resued functions *******
 export function treatmentTypeNotMatchTherapyType(
-  treatmentTypes: string[],
-  therapyType: ClinicalTherapyType,
+	treatmentTypes: string[],
+	therapyType: ClinicalTherapyType,
 ): boolean {
-  const treatmentTypeFortherapy = TreatmentTypeValuesMappedByTherapy[therapyType];
-  return !treatmentTypes?.some(t => t === treatmentTypeFortherapy);
+	const treatmentTypeFortherapy = TreatmentTypeValuesMappedByTherapy[therapyType];
+	return !treatmentTypes?.some((t) => t === treatmentTypeFortherapy);
 }
 
 const ClinicalEntitySchemaNameToDonoFieldsMap: { [clinicalType: string]: DONOR_DOCUMENT_FIELDS } = {
-  [ClinicalEntitySchemaNames.TREATMENT]: DONOR_DOCUMENT_FIELDS.TREATMENT_SUBMITTER_ID,
-  [ClinicalEntitySchemaNames.FOLLOW_UP]: DONOR_DOCUMENT_FIELDS.FOLLOWUP_SUBMITTER_ID,
-  [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]:
-    DONOR_DOCUMENT_FIELDS.PRIMARY_DIAGNOSIS_SUBMITTER_ID,
-  [ClinicalEntitySchemaNames.FAMILY_HISTORY]: DONOR_DOCUMENT_FIELDS.FAMILY_HISTORY_ID,
+	[ClinicalEntitySchemaNames.TREATMENT]: DONOR_DOCUMENT_FIELDS.TREATMENT_SUBMITTER_ID,
+	[ClinicalEntitySchemaNames.FOLLOW_UP]: DONOR_DOCUMENT_FIELDS.FOLLOWUP_SUBMITTER_ID,
+	[ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]:
+		DONOR_DOCUMENT_FIELDS.PRIMARY_DIAGNOSIS_SUBMITTER_ID,
+	[ClinicalEntitySchemaNames.FAMILY_HISTORY]: DONOR_DOCUMENT_FIELDS.FAMILY_HISTORY_ID,
 };
 
 // check that a donor is not found with the same clinical entity unique identifier
 export async function checkClinicalEntityDoesntBelongToOtherDonor(
-  clinicalType: Exclude<
-    ClinicalEntitySchemaNames,
-    | ClinicalTherapyType
-    | ClinicalEntitySchemaNames.FAMILY_HISTORY
-    | ClinicalEntitySchemaNames.REGISTRATION
-    | ClinicalEntitySchemaNames.COMORBIDITY
-    | ClinicalEntitySchemaNames.BIOMARKER
-  >,
-  record: DeepReadonly<SubmittedClinicalRecord>,
-  existentDonor: DeepReadonly<Donor>,
-  errors: SubmissionValidationError[],
+	clinicalType: Exclude<
+		ClinicalEntitySchemaNames,
+		| ClinicalTherapyType
+		| ClinicalEntitySchemaNames.FAMILY_HISTORY
+		| ClinicalEntitySchemaNames.REGISTRATION
+		| ClinicalEntitySchemaNames.COMORBIDITY
+		| ClinicalEntitySchemaNames.BIOMARKER
+	>,
+	record: DeepReadonly<SubmittedClinicalRecord>,
+	existentDonor: DeepReadonly<Donor>,
+	errors: SubmissionValidationError[],
 ) {
-  const expectedSubmitterDonorId = record[SampleRegistrationFieldsEnum.submitter_donor_id];
-  const alreadyAssociatedDonor = await donorDao.findByClinicalEntitySubmitterIdAndProgramId(
-    {
-      programId: existentDonor.programId,
-      submitterId: record[ClinicalUniqueIdentifier[clinicalType]] as string,
-    },
-    ClinicalEntitySchemaNameToDonoFieldsMap[clinicalType],
-  );
-  if (alreadyAssociatedDonor && alreadyAssociatedDonor.submitterId !== expectedSubmitterDonorId) {
-    errors.push(
-      buildSubmissionError(
-        record,
-        DataValidationErrors.CLINICAL_ENTITY_BELONGS_TO_OTHER_DONOR,
-        ClinicalUniqueIdentifier[clinicalType],
-        {
-          otherDonorSubmitterId: alreadyAssociatedDonor.submitterId,
-          clinicalType: clinicalType,
-        },
-      ),
-    );
-  }
+	const expectedSubmitterDonorId = record[SampleRegistrationFieldsEnum.submitter_donor_id];
+	const alreadyAssociatedDonor = await donorDao.findByClinicalEntitySubmitterIdAndProgramId(
+		{
+			programId: existentDonor.programId,
+			submitterId: record[ClinicalUniqueIdentifier[clinicalType]] as string,
+		},
+		ClinicalEntitySchemaNameToDonoFieldsMap[clinicalType],
+	);
+	if (alreadyAssociatedDonor && alreadyAssociatedDonor.submitterId !== expectedSubmitterDonorId) {
+		errors.push(
+			buildSubmissionError(
+				record,
+				DataValidationErrors.CLINICAL_ENTITY_BELONGS_TO_OTHER_DONOR,
+				ClinicalUniqueIdentifier[clinicalType],
+				{
+					otherDonorSubmitterId: alreadyAssociatedDonor.submitterId,
+					clinicalType: clinicalType,
+				},
+			),
+		);
+	}
 }
 
 export function checkRelatedEntityExists(
-  parentEntity: ClinicalEntitySchemaNames,
-  record: DeepReadonly<SubmittedClinicalRecord>,
-  childEntity: ClinicalEntitySchemaNames,
-  mergedDonor: Donor,
-  errors: SubmissionValidationError[],
-  required: boolean,
+	parentEntity: ClinicalEntitySchemaNames,
+	record: DeepReadonly<SubmittedClinicalRecord>,
+	childEntity: ClinicalEntitySchemaNames,
+	mergedDonor: Donor,
+	errors: SubmissionValidationError[],
+	required: boolean,
 ) {
-  const entitySubmitterIdField = getEntitySubmitterIdFieldName(parentEntity);
-  const error = buildSubmissionError(
-    record,
-    DataValidationErrors.RELATED_ENTITY_MISSING_OR_CONFLICTING,
-    entitySubmitterIdField as ClinicalFields,
-    {
-      fieldName: entitySubmitterIdField,
-      childEntity: childEntity,
-      parentEntity: parentEntity,
-      donorSubmitterId: record.submitter_donor_id,
-    } as RelatedEntityErrorInfo,
-  );
+	const entitySubmitterIdField = getEntitySubmitterIdFieldName(parentEntity);
+	const error = buildSubmissionError(
+		record,
+		DataValidationErrors.RELATED_ENTITY_MISSING_OR_CONFLICTING,
+		entitySubmitterIdField as ClinicalFields,
+		{
+			fieldName: entitySubmitterIdField,
+			childEntity: childEntity,
+			parentEntity: parentEntity,
+			donorSubmitterId: record.submitter_donor_id,
+		} as RelatedEntityErrorInfo,
+	);
 
-  if (!required && isEmptyString(record[entitySubmitterIdField] as string)) {
-    return;
-  }
+	if (!required && isEmptyString(record[entitySubmitterIdField] as string)) {
+		return;
+	}
 
-  if (required && isEmptyString(record[entitySubmitterIdField] as string)) {
-    errors.push(error);
-    return;
-  }
+	if (required && isEmptyString(record[entitySubmitterIdField] as string)) {
+		errors.push(error);
+		return;
+	}
 
-  const relatedEntity = getRelatedEntityByFK(
-    parentEntity,
-    record[entitySubmitterIdField] as string,
-    mergedDonor,
-  );
+	const relatedEntity = getRelatedEntityByFK(
+		parentEntity,
+		record[entitySubmitterIdField] as string,
+		mergedDonor,
+	);
 
-  if (!relatedEntity) {
-    errors.push(error);
-  }
+	if (!relatedEntity) {
+		errors.push(error);
+	}
 }
 
 export function getRelatedEntityByFK(
-  relatedEntityName: ClinicalEntitySchemaNames,
-  fk: string,
-  mergedDonor: Donor,
+	relatedEntityName: ClinicalEntitySchemaNames,
+	fk: string,
+	mergedDonor: Donor,
 ) {
-  if (
-    relatedEntityName == ClinicalEntitySchemaNames.REGISTRATION ||
-    relatedEntityName == ClinicalEntitySchemaNames.CHEMOTHERAPY ||
-    relatedEntityName == ClinicalEntitySchemaNames.RADIATION ||
-    relatedEntityName == ClinicalEntitySchemaNames.HORMONE_THERAPY ||
-    relatedEntityName == ClinicalEntitySchemaNames.IMMUNOTHERAPY ||
-    relatedEntityName == ClinicalEntitySchemaNames.SURGERY ||
-    relatedEntityName == ClinicalEntitySchemaNames.FAMILY_HISTORY ||
-    relatedEntityName == ClinicalEntitySchemaNames.COMORBIDITY ||
-    relatedEntityName == ClinicalEntitySchemaNames.BIOMARKER
-  ) {
-    throw new Error('method only supports single submitterId as FK');
-  }
+	if (
+		relatedEntityName == ClinicalEntitySchemaNames.REGISTRATION ||
+		relatedEntityName == ClinicalEntitySchemaNames.CHEMOTHERAPY ||
+		relatedEntityName == ClinicalEntitySchemaNames.RADIATION ||
+		relatedEntityName == ClinicalEntitySchemaNames.HORMONE_THERAPY ||
+		relatedEntityName == ClinicalEntitySchemaNames.IMMUNOTHERAPY ||
+		relatedEntityName == ClinicalEntitySchemaNames.SURGERY ||
+		relatedEntityName == ClinicalEntitySchemaNames.FAMILY_HISTORY ||
+		relatedEntityName == ClinicalEntitySchemaNames.COMORBIDITY ||
+		relatedEntityName == ClinicalEntitySchemaNames.BIOMARKER
+	) {
+		throw new Error('method only supports single submitterId as FK');
+	}
 
-  const entity = getSingleClinicalObjectFromDonor(mergedDonor, relatedEntityName, {
-    clinicalInfo: { [ClinicalUniqueIdentifier[relatedEntityName]]: fk as string },
-  });
-  return entity;
+	const entity = getSingleClinicalObjectFromDonor(mergedDonor, relatedEntityName, {
+		clinicalInfo: { [ClinicalUniqueIdentifier[relatedEntityName]]: fk as string },
+	});
+	return entity;
 }
 
 export const getDataFromDonorRecordOrDonor = (
-  submittedRecord: DeepReadonly<SubmittedClinicalRecord>,
-  donor: DeepReadonly<Donor>,
-  errors: SubmissionValidationError[],
-  fieldName: ClinicalFields,
+	submittedRecord: DeepReadonly<SubmittedClinicalRecord>,
+	donor: DeepReadonly<Donor>,
+	errors: SubmissionValidationError[],
+	fieldName: ClinicalFields,
 ) => {
-  let missingDonorFields: string[] = [];
-  let donorVitalStatus: string = '';
-  let donorSurvivalTime: number = NaN;
-  const donorDataSource = donor.clinicalInfo || {};
+	let missingDonorFields: string[] = [];
+	let donorVitalStatus: string = '';
+	let donorSurvivalTime: number = NaN;
+	const donorDataSource = donor.clinicalInfo || {};
 
-  if (_.isEmpty(donorDataSource)) {
-    missingDonorFields = [DonorFieldsEnum.vital_status, DonorFieldsEnum.survival_time];
-  } else {
-    donorVitalStatus = (donorDataSource[DonorFieldsEnum.vital_status] as string) || '';
-    donorSurvivalTime = Number(donorDataSource[DonorFieldsEnum.survival_time]) || NaN;
+	if (_.isEmpty(donorDataSource)) {
+		missingDonorFields = [DonorFieldsEnum.vital_status, DonorFieldsEnum.survival_time];
+	} else {
+		donorVitalStatus = (donorDataSource[DonorFieldsEnum.vital_status] as string) || '';
+		donorSurvivalTime = Number(donorDataSource[DonorFieldsEnum.survival_time]) || NaN;
 
-    if (isEmptyString(donorVitalStatus)) {
-      missingDonorFields.push(DonorFieldsEnum.vital_status);
-    }
-    if (donorVitalStatus.toString().toLowerCase() === 'deceased' && isNaN(donorSurvivalTime)) {
-      missingDonorFields.push(DonorFieldsEnum.survival_time);
-    }
-  }
+		if (isEmptyString(donorVitalStatus)) {
+			missingDonorFields.push(DonorFieldsEnum.vital_status);
+		}
+		if (donorVitalStatus.toString().toLowerCase() === 'deceased' && isNaN(donorSurvivalTime)) {
+			missingDonorFields.push(DonorFieldsEnum.survival_time);
+		}
+	}
 
-  if (missingDonorFields.length > 0) {
-    errors.push(
-      buildSubmissionError(
-        submittedRecord,
-        DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
-        fieldName,
-        {
-          missingField: missingDonorFields.map(s => ClinicalEntitySchemaNames.DONOR + '.' + s),
-        },
-      ),
-    );
-    return undefined;
-  }
+	if (missingDonorFields.length > 0) {
+		errors.push(
+			buildSubmissionError(
+				submittedRecord,
+				DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
+				fieldName,
+				{
+					missingField: missingDonorFields.map((s) => ClinicalEntitySchemaNames.DONOR + '.' + s),
+				},
+			),
+		);
+		return undefined;
+	}
 
-  return { donorVitalStatus, donorSurvivalTime };
+	return { donorVitalStatus, donorSurvivalTime };
 };

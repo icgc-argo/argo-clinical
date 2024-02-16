@@ -20,17 +20,17 @@
 import { commitRegistration } from '../../submission/submission-to-clinical/submission-to-clinical';
 
 const commitClinicalRegistration = async (
-  obj: unknown,
-  args: { shortName: string; registrationId: string },
+	obj: unknown,
+	args: { shortName: string; registrationId: string },
 ) => {
-  const { shortName: programId, registrationId } = args;
+	const { shortName: programId, registrationId } = args;
 
-  const newSampleIds = await commitRegistration({
-    registrationId,
-    programId,
-  });
+	const newSampleIds = await commitRegistration({
+		registrationId,
+		programId,
+	});
 
-  return newSampleIds;
+	return newSampleIds;
 };
 
 export default commitClinicalRegistration;

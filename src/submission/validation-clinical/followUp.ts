@@ -18,11 +18,11 @@
  */
 
 import {
-  SubmissionValidationError,
-  SubmittedClinicalRecord,
-  DataValidationErrors,
-  SubmissionValidationOutput,
-  DonorVitalStatusValues,
+	SubmissionValidationError,
+	SubmittedClinicalRecord,
+	DataValidationErrors,
+	SubmissionValidationOutput,
+	DonorVitalStatusValues,
 } from '../submission-entities';
 import { ClinicalEntitySchemaNames, FollowupFieldsEnum } from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
@@ -32,130 +32,130 @@ import { getClinicalEntitiesFromDonorBySchemaName } from '../../common-model/fun
 import { getEntitySubmitterIdFieldName } from '../../common-model/functions';
 import * as utils from './utils';
 export const validate = async (
-  followUpRecord: DeepReadonly<SubmittedClinicalRecord>,
-  existentDonor: DeepReadonly<Donor>,
-  mergedDonor: Donor,
+	followUpRecord: DeepReadonly<SubmittedClinicalRecord>,
+	existentDonor: DeepReadonly<Donor>,
+	mergedDonor: Donor,
 ): Promise<SubmissionValidationOutput> => {
-  // ***Basic pre-check (to prevent execution if missing required variables)***
-  if (!followUpRecord || !existentDonor) {
-    throw new Error("Can't call this function without followup records");
-  }
-  const errors: SubmissionValidationError[] = [];
+	// ***Basic pre-check (to prevent execution if missing required variables)***
+	if (!followUpRecord || !existentDonor) {
+		throw new Error("Can't call this function without followup records");
+	}
+	const errors: SubmissionValidationError[] = [];
 
-  // check if a primary diagnosis is specified that it exists
-  utils.checkRelatedEntityExists(
-    ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
-    followUpRecord,
-    ClinicalEntitySchemaNames.FOLLOW_UP,
-    mergedDonor,
-    errors,
-    false,
-  );
+	// check if a primary diagnosis is specified that it exists
+	utils.checkRelatedEntityExists(
+		ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+		followUpRecord,
+		ClinicalEntitySchemaNames.FOLLOW_UP,
+		mergedDonor,
+		errors,
+		false,
+	);
 
-  // check if a treatment is specified that it exists
-  utils.checkRelatedEntityExists(
-    ClinicalEntitySchemaNames.TREATMENT,
-    followUpRecord,
-    ClinicalEntitySchemaNames.FOLLOW_UP,
-    mergedDonor,
-    errors,
-    false,
-  );
+	// check if a treatment is specified that it exists
+	utils.checkRelatedEntityExists(
+		ClinicalEntitySchemaNames.TREATMENT,
+		followUpRecord,
+		ClinicalEntitySchemaNames.FOLLOW_UP,
+		mergedDonor,
+		errors,
+		false,
+	);
 
-  // Follow_up.interval_of_followup must be less than Donor.survival_time:
-  const donorDataToValidateWith = utils.getDataFromDonorRecordOrDonor(
-    followUpRecord,
-    mergedDonor,
-    errors,
-    FollowupFieldsEnum.interval_of_followup,
-  );
+	// Follow_up.interval_of_followup must be less than Donor.survival_time:
+	const donorDataToValidateWith = utils.getDataFromDonorRecordOrDonor(
+		followUpRecord,
+		mergedDonor,
+		errors,
+		FollowupFieldsEnum.interval_of_followup,
+	);
 
-  const checkDonorTimeConflict = (
-    donorDataToValidateWith: { [k: string]: any },
-    followUpRecord: DeepReadonly<SubmittedClinicalRecord>,
-    errors: SubmissionValidationError[],
-  ) => {
-    if (
-      donorDataToValidateWith.donorVitalStatus === DonorVitalStatusValues.deceased &&
-      donorDataToValidateWith.donorSurvivalTime <
-        followUpRecord[FollowupFieldsEnum.interval_of_followup]
-    ) {
-      errors.push(
-        utils.buildSubmissionError(
-          followUpRecord,
-          DataValidationErrors.FOLLOW_UP_DONOR_TIME_CONFLICT,
-          FollowupFieldsEnum.interval_of_followup,
-          {},
-        ),
-      );
-    }
-  };
+	const checkDonorTimeConflict = (
+		donorDataToValidateWith: { [k: string]: any },
+		followUpRecord: DeepReadonly<SubmittedClinicalRecord>,
+		errors: SubmissionValidationError[],
+	) => {
+		if (
+			donorDataToValidateWith.donorVitalStatus === DonorVitalStatusValues.deceased &&
+			donorDataToValidateWith.donorSurvivalTime <
+				followUpRecord[FollowupFieldsEnum.interval_of_followup]
+		) {
+			errors.push(
+				utils.buildSubmissionError(
+					followUpRecord,
+					DataValidationErrors.FOLLOW_UP_DONOR_TIME_CONFLICT,
+					FollowupFieldsEnum.interval_of_followup,
+					{},
+				),
+			);
+		}
+	};
 
-  if (donorDataToValidateWith) {
-    checkDonorTimeConflict(donorDataToValidateWith, followUpRecord, errors);
-  }
+	if (donorDataToValidateWith) {
+		checkDonorTimeConflict(donorDataToValidateWith, followUpRecord, errors);
+	}
 
-  const entitySubmitterIdField = getEntitySubmitterIdFieldName(ClinicalEntitySchemaNames.TREATMENT);
-  const treatment = utils.getRelatedEntityByFK(
-    ClinicalEntitySchemaNames.TREATMENT,
-    followUpRecord[entitySubmitterIdField] as string,
-    mergedDonor,
-  ) as DeepReadonly<Treatment>;
+	const entitySubmitterIdField = getEntitySubmitterIdFieldName(ClinicalEntitySchemaNames.TREATMENT);
+	const treatment = utils.getRelatedEntityByFK(
+		ClinicalEntitySchemaNames.TREATMENT,
+		followUpRecord[entitySubmitterIdField] as string,
+		mergedDonor,
+	) as DeepReadonly<Treatment>;
 
-  checkTreatmentTimeConflict(followUpRecord, treatment, errors);
+	checkTreatmentTimeConflict(followUpRecord, treatment, errors);
 
-  const followUpClinicalInfo = getExistingFollowUp(existentDonor, followUpRecord);
-  // adding new follow up to this donor ?
-  if (!followUpClinicalInfo) {
-    // check it is unique in this program
-    await utils.checkClinicalEntityDoesntBelongToOtherDonor(
-      ClinicalEntitySchemaNames.FOLLOW_UP,
-      followUpRecord,
-      existentDonor,
-      errors,
-    );
-  }
-  return { errors };
+	const followUpClinicalInfo = getExistingFollowUp(existentDonor, followUpRecord);
+	// adding new follow up to this donor ?
+	if (!followUpClinicalInfo) {
+		// check it is unique in this program
+		await utils.checkClinicalEntityDoesntBelongToOtherDonor(
+			ClinicalEntitySchemaNames.FOLLOW_UP,
+			followUpRecord,
+			existentDonor,
+			errors,
+		);
+	}
+	return { errors };
 };
 
 function checkTreatmentTimeConflict(
-  followUpRecord: DeepReadonly<SubmittedClinicalRecord>,
-  treatment: DeepReadonly<Treatment>,
-  errors: SubmissionValidationError[],
+	followUpRecord: DeepReadonly<SubmittedClinicalRecord>,
+	treatment: DeepReadonly<Treatment>,
+	errors: SubmissionValidationError[],
 ) {
-  // A follow up may or may not be associated with treatment
-  if (treatment == undefined) return;
+	// A follow up may or may not be associated with treatment
+	if (treatment == undefined) return;
 
-  if (
-    followUpRecord.interval_of_followup &&
-    treatment.clinicalInfo &&
-    treatment.clinicalInfo.treatment_start_interval &&
-    followUpRecord.interval_of_followup <= treatment.clinicalInfo.treatment_start_interval
-  ) {
-    errors.push(
-      utils.buildSubmissionError(
-        followUpRecord,
-        DataValidationErrors.FOLLOW_UP_CONFLICING_INTERVAL,
-        FollowupFieldsEnum.interval_of_followup,
-        [],
-      ),
-    );
-  }
+	if (
+		followUpRecord.interval_of_followup &&
+		treatment.clinicalInfo &&
+		treatment.clinicalInfo.treatment_start_interval &&
+		followUpRecord.interval_of_followup <= treatment.clinicalInfo.treatment_start_interval
+	) {
+		errors.push(
+			utils.buildSubmissionError(
+				followUpRecord,
+				DataValidationErrors.FOLLOW_UP_CONFLICING_INTERVAL,
+				FollowupFieldsEnum.interval_of_followup,
+				[],
+			),
+		);
+	}
 }
 
 function getExistingFollowUp(
-  existingDonor: DeepReadonly<Donor>,
-  record: DeepReadonly<SubmittedClinicalRecord>,
+	existingDonor: DeepReadonly<Donor>,
+	record: DeepReadonly<SubmittedClinicalRecord>,
 ) {
-  if (existingDonor.followUps) {
-    return getClinicalEntitiesFromDonorBySchemaName(
-      existingDonor,
-      ClinicalEntitySchemaNames.FOLLOW_UP,
-    ).find(
-      ci =>
-        ci[FollowupFieldsEnum.submitter_follow_up_id] ==
-        record[FollowupFieldsEnum.submitter_follow_up_id],
-    );
-  }
-  return undefined;
+	if (existingDonor.followUps) {
+		return getClinicalEntitiesFromDonorBySchemaName(
+			existingDonor,
+			ClinicalEntitySchemaNames.FOLLOW_UP,
+		).find(
+			(ci) =>
+				ci[FollowupFieldsEnum.submitter_follow_up_id] ==
+				record[FollowupFieldsEnum.submitter_follow_up_id],
+		);
+	}
+	return undefined;
 }
