@@ -18,18 +18,18 @@
  */
 
 export class InternalError extends Error {
-  // changed to 'errorCause' due to Typescript version upgrad
-  constructor(message: string, private errorCause: Error) {
-    super(message);
-    this.name = 'InternalError';
-  }
-  public getErrorCause() {
-    return this.errorCause;
-  }
+	// changed to 'errorCause' due to Typescript version upgrad
+	constructor(message: string, private errorCause: Error) {
+		super(message);
+		this.name = 'InternalError';
+	}
+	public getErrorCause() {
+		return this.errorCause;
+	}
 }
 
 export class BadRequestError extends Error {
-  constructor(message: string) {
-    super(message);
-  }
+	constructor(message: string) {
+		super(message);
+	}
 }

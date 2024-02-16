@@ -22,75 +22,75 @@ import { ClinicalErrorsResponseRecord } from '../../common-model/entities';
 import { errorResolver } from './clinicalErrors';
 
 export type ClinicalEntityGQLData = {
-  programShortName: string;
-  clinicalEntities: ClinicalEntityDisplayData[];
+	programShortName: string;
+	clinicalEntities: ClinicalEntityDisplayData[];
 };
 
 // FE Clinical Data Query Response Payload
 export type ClinicalEntityDataResponse = ClinicalEntityGQLData & {
-  clinicalErrors?: ClinicalErrorsResponseRecord[];
+	clinicalErrors?: ClinicalErrorsResponseRecord[];
 };
 
 // GQL Formatting
 type EntityDisplayRecord = { name: string; value: string };
 
 interface ClinicalEntityDisplayData extends Omit<ClinicalEntityData, 'records'> {
-  records: EntityDisplayRecord[][];
+	records: EntityDisplayRecord[][];
 }
 
 const convertClinicalDataToGql = (
-  programShortName: string,
-  clinicalEntities: ClinicalEntityData[],
+	programShortName: string,
+	clinicalEntities: ClinicalEntityData[],
 ) => {
-  const clinicalDisplayData: ClinicalEntityDisplayData[] = clinicalEntities.map(
-    (entity: ClinicalEntityData) => {
-      const records: EntityDisplayRecord[][] = [];
+	const clinicalDisplayData: ClinicalEntityDisplayData[] = clinicalEntities.map(
+		(entity: ClinicalEntityData) => {
+			const records: EntityDisplayRecord[][] = [];
 
-      entity.records.forEach((record: ClinicalInfo) => {
-        const displayRecords: EntityDisplayRecord[] = [];
-        for (const [name, val] of Object.entries(record)) {
-          if (name === 'submitter_id') continue;
-          const value = Array.isArray(val) ? val.join(', ') : JSON.stringify(val);
-          displayRecords.push({ name, value });
-        }
-        records.push(displayRecords);
-      });
+			entity.records.forEach((record: ClinicalInfo) => {
+				const displayRecords: EntityDisplayRecord[] = [];
+				for (const [name, val] of Object.entries(record)) {
+					if (name === 'submitter_id') continue;
+					const value = Array.isArray(val) ? val.join(', ') : JSON.stringify(val);
+					displayRecords.push({ name, value });
+				}
+				records.push(displayRecords);
+			});
 
-      const entityData: ClinicalEntityDisplayData = {
-        ...entity,
-        records,
-      };
+			const entityData: ClinicalEntityDisplayData = {
+				...entity,
+				records,
+			};
 
-      return entityData;
-    },
-  );
+			return entityData;
+		},
+	);
 
-  const clinicalData = {
-    programShortName,
-    clinicalEntities: clinicalDisplayData,
-  };
+	const clinicalData = {
+		programShortName,
+		clinicalEntities: clinicalDisplayData,
+	};
 
-  return clinicalData;
+	return clinicalData;
 };
 
 const clinicalDataResolver = async (obj: unknown, args: ClinicalDataVariables) => {
-  const { programShortName, filters } = args;
+	const { programShortName, filters } = args;
 
-  const { clinicalEntities } = await getPaginatedClinicalData(programShortName, filters);
+	const { clinicalEntities } = await getPaginatedClinicalData(programShortName, filters);
 
-  const clinicalEntityData = convertClinicalDataToGql(programShortName, clinicalEntities);
+	const clinicalEntityData = convertClinicalDataToGql(programShortName, clinicalEntities);
 
-  const { clinicalErrors } = await errorResolver(clinicalEntityData, {
-    programShortName,
-    donorIds: [],
-  });
+	const { clinicalErrors } = await errorResolver(clinicalEntityData, {
+		programShortName,
+		donorIds: [],
+	});
 
-  const clinicalData: ClinicalEntityDataResponse = {
-    ...clinicalEntityData,
-    clinicalErrors,
-  };
+	const clinicalData: ClinicalEntityDataResponse = {
+		...clinicalEntityData,
+		clinicalErrors,
+	};
 
-  return clinicalData;
+	return clinicalData;
 };
 
 export default clinicalDataResolver;

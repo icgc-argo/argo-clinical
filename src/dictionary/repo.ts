@@ -24,62 +24,62 @@ import { MongooseUtils } from '../utils';
 const L = loggerFor(__filename);
 
 export interface SchemaRepository {
-  createOrUpdate(
-    schema: dictionaryEntities.SchemasDictionary,
-  ): Promise<dictionaryEntities.SchemasDictionary | undefined>;
-  get(
-    name: string,
-    versionToIgnore?: string,
-  ): Promise<dictionaryEntities.SchemasDictionary | undefined>;
+	createOrUpdate(
+		schema: dictionaryEntities.SchemasDictionary,
+	): Promise<dictionaryEntities.SchemasDictionary | undefined>;
+	get(
+		name: string,
+		versionToIgnore?: string,
+	): Promise<dictionaryEntities.SchemasDictionary | undefined>;
 }
 
 export const schemaRepo: SchemaRepository = {
-  createOrUpdate: async (
-    schema: dictionaryEntities.SchemasDictionary,
-  ): Promise<dictionaryEntities.SchemasDictionary | undefined> => {
-    const result = await DataSchemaModel.findOneAndUpdate(
-      {
-        name: schema.name,
-      },
-      {
-        name: schema.name,
-        version: schema.version,
-        schemas: schema.schemas,
-      },
-      { upsert: true, new: true },
-    ).exec();
+	createOrUpdate: async (
+		schema: dictionaryEntities.SchemasDictionary,
+	): Promise<dictionaryEntities.SchemasDictionary | undefined> => {
+		const result = await DataSchemaModel.findOneAndUpdate(
+			{
+				name: schema.name,
+			},
+			{
+				name: schema.name,
+				version: schema.version,
+				schemas: schema.schemas,
+			},
+			{ upsert: true, new: true },
+		).exec();
 
-    const resultObj = MongooseUtils.toPojo(result) as dictionaryEntities.SchemasDictionary;
-    return resultObj;
-  },
-  get: async (
-    name: string,
-    versionToIgnore?: string,
-  ): Promise<dictionaryEntities.SchemasDictionary | undefined> => {
-    L.debug('in Schema repo get');
-    const doc = await DataSchemaModel.findOne({
-      name: name,
-      version: { $ne: versionToIgnore },
-    }).exec();
-    if (!doc) {
-      return undefined;
-    }
-    return MongooseUtils.toPojo(doc) as dictionaryEntities.SchemasDictionary;
-  },
+		const resultObj = MongooseUtils.toPojo(result) as dictionaryEntities.SchemasDictionary;
+		return resultObj;
+	},
+	get: async (
+		name: string,
+		versionToIgnore?: string,
+	): Promise<dictionaryEntities.SchemasDictionary | undefined> => {
+		L.debug('in Schema repo get');
+		const doc = await DataSchemaModel.findOne({
+			name: name,
+			version: { $ne: versionToIgnore },
+		}).exec();
+		if (!doc) {
+			return undefined;
+		}
+		return MongooseUtils.toPojo(doc) as dictionaryEntities.SchemasDictionary;
+	},
 };
 
 type DataSchemaDocument = mongoose.Document & dictionaryEntities.SchemasDictionary;
 
 const DataSchemaMongooseSchema = new mongoose.Schema(
-  {
-    name: { type: String, unique: true },
-    version: { type: String, required: true },
-    schemas: [],
-  },
-  { timestamps: true },
+	{
+		name: { type: String, unique: true },
+		version: { type: String, required: true },
+		schemas: [],
+	},
+	{ timestamps: true },
 );
 
 export const DataSchemaModel = mongoose.model<DataSchemaDocument>(
-  'dataschema',
-  DataSchemaMongooseSchema,
+	'dataschema',
+	DataSchemaMongooseSchema,
 );

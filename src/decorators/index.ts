@@ -27,60 +27,60 @@ const L = loggerFor(__filename);
 
 type TokenValidationResult = { success: boolean; data?: TokenData };
 type TokenData = {
-  scopes: string[];
+	scopes: string[];
 };
 type JwtPayload = { context: { scope: string[] } };
 
 const getToken = async (request: Request): Promise<TokenValidationResult> => {
-  if (!request.headers.authorization?.startsWith('Bearer ')) {
-    L.debug(`invalid token provided`);
-    return { success: false };
-  }
+	if (!request.headers.authorization?.startsWith('Bearer ')) {
+		L.debug(`invalid token provided`);
+		return { success: false };
+	}
 
-  const authToken = request.headers.authorization.slice(7).trim(); // remove 'Bearer ' from header
-  const isJwt = Boolean(jwt.decode(authToken));
-  const tokenResult = isJwt ? verifyJwt(authToken) : await verifyEgoApiKey(authToken);
+	const authToken = request.headers.authorization.slice(7).trim(); // remove 'Bearer ' from header
+	const isJwt = Boolean(jwt.decode(authToken));
+	const tokenResult = isJwt ? verifyJwt(authToken) : await verifyEgoApiKey(authToken);
 
-  return tokenResult;
+	return tokenResult;
 };
 
 const verifyJwt = (tokenJwtString: string): TokenValidationResult => {
-  const key = config.getConfig().jwtPubKey();
-  if (key.trim() === '') {
-    const err = 'no key found to verify the token';
-    L.debug(err);
-    return { success: false };
-  }
-  try {
-    const decoded = jwt.verify(`${tokenJwtString}`, key);
-    const scopes = _.isObjectLike(decoded) && (<JwtPayload>decoded).context?.scope;
-    return _.isArray(scopes) ? { success: true, data: { scopes } } : { success: false };
-  } catch (err) {
-    L.debug(`invalid token provided ${err}`);
-    return { success: false };
-  }
+	const key = config.getConfig().jwtPubKey();
+	if (key.trim() === '') {
+		const err = 'no key found to verify the token';
+		L.debug(err);
+		return { success: false };
+	}
+	try {
+		const decoded = jwt.verify(`${tokenJwtString}`, key);
+		const scopes = _.isObjectLike(decoded) && (<JwtPayload>decoded).context?.scope;
+		return _.isArray(scopes) ? { success: true, data: { scopes } } : { success: false };
+	} catch (err) {
+		L.debug(`invalid token provided ${err}`);
+		return { success: false };
+	}
 };
 
 const verifyEgoApiKey = async (keyString: string): Promise<TokenValidationResult> => {
-  const EGO_URL = config.getConfig().egoUrl();
-  const EGO_CLIENT_ID = config.getConfig().egoClientId();
-  const EGO_CLIENT_SECRET = config.getConfig().egoClientSecret();
-  const auth = 'Basic ' + Buffer.from(EGO_CLIENT_ID + ':' + EGO_CLIENT_SECRET).toString('base64');
+	const EGO_URL = config.getConfig().egoUrl();
+	const EGO_CLIENT_ID = config.getConfig().egoClientId();
+	const EGO_CLIENT_SECRET = config.getConfig().egoClientSecret();
+	const auth = 'Basic ' + Buffer.from(EGO_CLIENT_ID + ':' + EGO_CLIENT_SECRET).toString('base64');
 
-  return await fetch(`${EGO_URL}/o/check_api_key?apiKey=${keyString}`, {
-    method: 'post',
-    headers: { 'Content-Type': 'application/json', authorization: auth },
-  })
-    .then(async res => {
-      const token = await res.json();
-      const scopes = token.scope;
-      if (token.error || !scopes) throw token.error || 'No token scopes provided';
-      return { success: true, data: { scopes } };
-    })
-    .catch(err => {
-      L.debug(`Error response: ${err}`);
-      return { success: false };
-    });
+	return await fetch(`${EGO_URL}/o/check_api_key?apiKey=${keyString}`, {
+		method: 'post',
+		headers: { 'Content-Type': 'application/json', authorization: auth },
+	})
+		.then(async (res) => {
+			const token = await res.json();
+			const scopes = token.scope;
+			if (token.error || !scopes) throw token.error || 'No token scopes provided';
+			return { success: true, data: { scopes } };
+		})
+		.catch((err) => {
+			L.debug(`Error response: ${err}`);
+			return { success: false };
+		});
 };
 
 /**
@@ -90,115 +90,115 @@ const verifyEgoApiKey = async (keyString: string): Promise<TokenValidationResult
  * @returns {boolean} true if provided scopes contains at least one of the requiredScopes
  */
 const hasScope = (requiredScopes: string[], providedScopes: string[]): boolean =>
-  requiredScopes.some(scope => providedScopes.includes(scope));
+	requiredScopes.some((scope) => providedScopes.includes(scope));
 
 const checkAuthorization = async (scopes: string[], request: Request, response: Response) => {
-  const { success, data } = await getToken(request);
-  if (!success || !data) {
-    return response.status(401).send('This endpoint needs a valid authentication token');
-  }
+	const { success, data } = await getToken(request);
+	if (!success || !data) {
+		return response.status(401).send('This endpoint needs a valid authentication token');
+	}
 
-  const { scopes: tokenScopes } = data;
-  if (!hasScope(scopes, tokenScopes)) {
-    return response.status(403).send("Caller doesn't have the required permissions");
-  }
+	const { scopes: tokenScopes } = data;
+	if (!hasScope(scopes, tokenScopes)) {
+		return response.status(403).send("Caller doesn't have the required permissions");
+	}
 
-  return undefined;
+	return undefined;
 };
 
 const scopeCheckGenerator = (
-  functionName: string,
-  scopesGenerator: (programId: string) => string[],
-  programIdExtractor?: Function,
+	functionName: string,
+	scopesGenerator: (programId: string) => string[],
+	programIdExtractor?: Function,
 ) => {
-  return function(target: any, key: string, descriptor: PropertyDescriptor) {
-    const originalMethod = descriptor.value as RequestHandler;
-    descriptor.value = async function() {
-      const request = arguments[0] as Request;
-      const response = arguments[1] as Response;
-      const next = arguments[2] as NextFunction;
-      const programId = programIdExtractor ? programIdExtractor(request) : '';
-      programIdExtractor && L.debug(`${functionName} @ ${key} was called with: ${programId}`);
-      const unauthorizedResponse = await checkAuthorization(
-        scopesGenerator(programId),
-        request,
-        response,
-      );
-      if (unauthorizedResponse !== undefined) {
-        return unauthorizedResponse;
-      }
-      const result = originalMethod.apply(this, [request, response, next]);
-      return result;
-    };
-    return descriptor;
-  };
+	return function(target: any, key: string, descriptor: PropertyDescriptor) {
+		const originalMethod = descriptor.value as RequestHandler;
+		descriptor.value = async function() {
+			const request = arguments[0] as Request;
+			const response = arguments[1] as Response;
+			const next = arguments[2] as NextFunction;
+			const programId = programIdExtractor ? programIdExtractor(request) : '';
+			programIdExtractor && L.debug(`${functionName} @ ${key} was called with: ${programId}`);
+			const unauthorizedResponse = await checkAuthorization(
+				scopesGenerator(programId),
+				request,
+				response,
+			);
+			if (unauthorizedResponse !== undefined) {
+				return unauthorizedResponse;
+			}
+			const result = originalMethod.apply(this, [request, response, next]);
+			return result;
+		};
+		return descriptor;
+	};
 };
 
 export const ProtectTestEndpoint = () => {
-  return function(target: any, key: string, descriptor: PropertyDescriptor) {
-    const originalMethod = descriptor.value as RequestHandler;
-    descriptor.value = function() {
-      const request = arguments[0] as Request;
-      const response = arguments[1] as Response;
-      const next = arguments[2] as NextFunction;
-      const testPointsDisabled = config.getConfig().testApisDisabled();
+	return function(target: any, key: string, descriptor: PropertyDescriptor) {
+		const originalMethod = descriptor.value as RequestHandler;
+		descriptor.value = function() {
+			const request = arguments[0] as Request;
+			const response = arguments[1] as Response;
+			const next = arguments[2] as NextFunction;
+			const testPointsDisabled = config.getConfig().testApisDisabled();
 
-      if (testPointsDisabled) {
-        return response.status(405).send('not allowed');
-      }
+			if (testPointsDisabled) {
+				return response.status(405).send('not allowed');
+			}
 
-      const result = originalMethod.apply(this, [request, response, next]);
-      return result;
-    };
-    return descriptor;
-  };
+			const result = originalMethod.apply(this, [request, response, next]);
+			return result;
+		};
+		return descriptor;
+	};
 };
 
 export function HasProgramWriteAccess(programIdExtractor: Function) {
-  return scopeCheckGenerator(
-    'HasProgramWriteAccess',
-    programId => [`PROGRAMDATA-${programId}.WRITE`, 'CLINICALSERVICE.WRITE'],
-    programIdExtractor,
-  );
+	return scopeCheckGenerator(
+		'HasProgramWriteAccess',
+		(programId) => [`PROGRAMDATA-${programId}.WRITE`, 'CLINICALSERVICE.WRITE'],
+		programIdExtractor,
+	);
 }
 
 export function queryHasProgramWriteAccess(programId: string, egoToken: string) {
-  L.debug(`queryHasProgramWriteAccess was called with: ${programId}`);
-  const decodedToken = verifyJwt(egoToken).data;
+	L.debug(`queryHasProgramWriteAccess was called with: ${programId}`);
+	const decodedToken = verifyJwt(egoToken).data;
 
-  if (!decodedToken) {
-    throw new Error('This endpoint needs a valid authentication token');
-  }
+	if (!decodedToken) {
+		throw new Error('This endpoint needs a valid authentication token');
+	}
 
-  const scopes = decodedToken.scopes;
-  const requiredScopes = [`PROGRAMDATA-${programId}.WRITE`, 'CLINICALSERVICE.WRITE'];
-  const hasWriteAccess = hasScope(requiredScopes, scopes);
+	const scopes = decodedToken.scopes;
+	const requiredScopes = [`PROGRAMDATA-${programId}.WRITE`, 'CLINICALSERVICE.WRITE'];
+	const hasWriteAccess = hasScope(requiredScopes, scopes);
 
-  if (!hasWriteAccess) throw new Error('Query does not have the required permissions');
+	if (!hasWriteAccess) throw new Error('Query does not have the required permissions');
 
-  return hasWriteAccess;
+	return hasWriteAccess;
 }
 
 export function HasProgramReadAccess(programIdExtractor: Function) {
-  return scopeCheckGenerator(
-    'HasProgramReadAccess',
-    programId => [
-      `PROGRAMDATA-${programId}.WRITE`,
-      `PROGRAMDATA-${programId}.READ`,
-      'CLINICALSERVICE.READ',
-      'CLINICALSERVICE.WRITE',
-    ],
-    programIdExtractor,
-  );
+	return scopeCheckGenerator(
+		'HasProgramReadAccess',
+		(programId) => [
+			`PROGRAMDATA-${programId}.WRITE`,
+			`PROGRAMDATA-${programId}.READ`,
+			'CLINICALSERVICE.READ',
+			'CLINICALSERVICE.WRITE',
+		],
+		programIdExtractor,
+	);
 }
 
 export function HasFullWriteAccess() {
-  return scopeCheckGenerator('HasFullWriteAccess', () => ['CLINICALSERVICE.WRITE']);
+	return scopeCheckGenerator('HasFullWriteAccess', () => ['CLINICALSERVICE.WRITE']);
 }
 
 export function HasFullReadAccess() {
-  return scopeCheckGenerator('HasFullReadAccess', () => [
-    'CLINICALSERVICE.READ',
-    'CLINICALSERVICE.WRITE',
-  ]);
+	return scopeCheckGenerator('HasFullReadAccess', () => [
+		'CLINICALSERVICE.READ',
+		'CLINICALSERVICE.WRITE',
+	]);
 }

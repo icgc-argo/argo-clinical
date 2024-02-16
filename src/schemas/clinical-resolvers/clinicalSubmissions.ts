@@ -24,34 +24,34 @@ import submissionAPI from '../../submission/submission-api';
 import { convertClinicalSubmissionDataToGql } from '../utils';
 
 const clinicalSubmissions = async (obj: unknown, args: { programShortName: string }) => {
-  const { programShortName } = args;
+	const { programShortName } = args;
 
-  const submissionData = await submissionAPI.getActiveSubmissionDataByProgramId(programShortName);
-  return await convertClinicalSubmissionDataToGql(programShortName, {
-    submission: submissionData,
-  });
+	const submissionData = await submissionAPI.getActiveSubmissionDataByProgramId(programShortName);
+	return await convertClinicalSubmissionDataToGql(programShortName, {
+		submission: submissionData,
+	});
 };
 
 export const clinicalSubmissionTypesList = async (
-  obj: unknown,
-  args: { includeFields: string },
+	obj: unknown,
+	args: { includeFields: string },
 ) => {
-  const withFields = args?.includeFields?.toLowerCase() === 'true';
-  const schemas = await schemaApi.getClinicalSchemas(withFields);
+	const withFields = args?.includeFields?.toLowerCase() === 'true';
+	const schemas = await schemaApi.getClinicalSchemas(withFields);
 
-  return schemas;
+	return schemas;
 };
 
 export const clinicalSubmissionSchemaVersion = async () => {
-  const schemaVersion = await manager
-    .instance()
-    .getCurrent()
-    .then(result => result.version);
-  return schemaVersion;
+	const schemaVersion = await manager
+		.instance()
+		.getCurrent()
+		.then((result) => result.version);
+	return schemaVersion;
 };
 
 export const clinicalSubmissionSystemDisabled = async (obj: unknown, args: {}) => {
-  return await configService.getSubmissionDisabledState();
+	return await configService.getSubmissionDisabledState();
 };
 
 export default clinicalSubmissions;
