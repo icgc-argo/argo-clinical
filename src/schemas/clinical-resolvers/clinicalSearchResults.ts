@@ -19,13 +19,13 @@
 import { getClinicalSearchResults, ClinicalSearchVariables } from '../../clinical/clinical-service';
 
 const clinicalSearchResults = async (obj: unknown, args: ClinicalSearchVariables) => {
-  const { programShortName, filters } = args;
+	const { programShortName, filters } = args;
 
-  const searchResults = (await getClinicalSearchResults(programShortName, filters)) || {
-    searchResults: [],
-  };
+	const searchResults = (await getClinicalSearchResults(programShortName, filters)) || {
+		searchResults: [],
+	};
 
-  return { ...searchResults, programShortName };
+	return { ...searchResults, programShortName };
 };
 
 export default clinicalSearchResults;

@@ -20,10 +20,10 @@ import submissionAPI from '../../submission/submission-api';
 import { convertRegistrationDataToGql } from '../utils';
 
 const clinicalRegistration = async (obj: unknown, args: { shortName: string }) => {
-  const registration = await submissionAPI.getRegistrationDataByProgramId(args.shortName);
-  return convertRegistrationDataToGql(args.shortName, {
-    registration: registration,
-  });
+	const registration = await submissionAPI.getRegistrationDataByProgramId(args.shortName);
+	return convertRegistrationDataToGql(args.shortName, {
+		registration: registration,
+	});
 };
 
 export default clinicalRegistration;

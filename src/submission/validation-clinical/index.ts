@@ -29,25 +29,25 @@ import * as primaryDiagnosis from './primaryDiagnosis';
 
 // this done because typescript doesn't allow mapping with string index signature for default export
 const availableValidators: { [k: string]: any } = {
-  [ClinicalEntitySchemaNames.DONOR]: donor,
-  [ClinicalEntitySchemaNames.SPECIMEN]: specimen,
-  [ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: primaryDiagnosis,
-  [ClinicalEntitySchemaNames.FOLLOW_UP]: follow_up,
-  [ClinicalEntitySchemaNames.TREATMENT]: treatment,
-  [ClinicalEntitySchemaNames.BIOMARKER]: biomarker,
-  // all therapies follow the same validation
-  [ClinicalEntitySchemaNames.CHEMOTHERAPY]: therapy,
-  [ClinicalEntitySchemaNames.RADIATION]: therapy,
-  [ClinicalEntitySchemaNames.HORMONE_THERAPY]: therapy,
-  [ClinicalEntitySchemaNames.IMMUNOTHERAPY]: therapy,
-  [ClinicalEntitySchemaNames.SURGERY]: surgery,
+	[ClinicalEntitySchemaNames.DONOR]: donor,
+	[ClinicalEntitySchemaNames.SPECIMEN]: specimen,
+	[ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS]: primaryDiagnosis,
+	[ClinicalEntitySchemaNames.FOLLOW_UP]: follow_up,
+	[ClinicalEntitySchemaNames.TREATMENT]: treatment,
+	[ClinicalEntitySchemaNames.BIOMARKER]: biomarker,
+	// all therapies follow the same validation
+	[ClinicalEntitySchemaNames.CHEMOTHERAPY]: therapy,
+	[ClinicalEntitySchemaNames.RADIATION]: therapy,
+	[ClinicalEntitySchemaNames.HORMONE_THERAPY]: therapy,
+	[ClinicalEntitySchemaNames.IMMUNOTHERAPY]: therapy,
+	[ClinicalEntitySchemaNames.SURGERY]: surgery,
 };
 
 export const submissionValidator = (clinicalType: string): any => {
-  const validator = availableValidators[clinicalType];
-  if (!validator) {
-    // return a dummy validator if one doesn't exist
-    return { validate: () => ({ errors: [], warnings: [] }) };
-  }
-  return validator;
+	const validator = availableValidators[clinicalType];
+	if (!validator) {
+		// return a dummy validator if one doesn't exist
+		return { validate: () => ({ errors: [], warnings: [] }) };
+	}
+	return validator;
 };

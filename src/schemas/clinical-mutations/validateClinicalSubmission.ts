@@ -22,21 +22,21 @@ import { GlobalGqlContext } from '../../app';
 import { convertClinicalSubmissionDataToGql } from '../utils';
 
 const validateClinicalSubmission = async (
-  obj: unknown,
-  args: { programShortName: string; version: string },
-  contextValue: any,
+	obj: unknown,
+	args: { programShortName: string; version: string },
+	contextValue: any,
 ) => {
-  const { programShortName, version } = args;
-  const egoToken = (<GlobalGqlContext>contextValue).egoToken;
+	const { programShortName, version } = args;
+	const egoToken = (<GlobalGqlContext>contextValue).egoToken;
 
-  const response = await submissionAPI.validateActiveSubmissionData(
-    programShortName,
-    egoToken,
-    version,
-  );
-  return convertClinicalSubmissionDataToGql(programShortName, {
-    submission: response?.submission,
-  });
+	const response = await submissionAPI.validateActiveSubmissionData(
+		programShortName,
+		egoToken,
+		version,
+	);
+	return convertClinicalSubmissionDataToGql(programShortName, {
+		submission: response?.submission,
+	});
 };
 
 export default validateClinicalSubmission;

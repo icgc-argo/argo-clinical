@@ -22,21 +22,21 @@ import { GlobalGqlContext } from '../../app';
 import { convertClinicalSubmissionDataToGql } from '../utils';
 
 const commitClinicalSubmission = async (
-  obj: unknown,
-  args: { programShortName: string; version: string },
-  contextValue: any,
+	obj: unknown,
+	args: { programShortName: string; version: string },
+	contextValue: any,
 ) => {
-  const { programShortName, version } = args;
-  const egoToken = (<GlobalGqlContext>contextValue).egoToken;
+	const { programShortName, version } = args;
+	const egoToken = (<GlobalGqlContext>contextValue).egoToken;
 
-  const submissionData = await submissionAPI.commitActiveSubmissionData(
-    programShortName,
-    egoToken,
-    version,
-  );
-  return await convertClinicalSubmissionDataToGql(programShortName, {
-    submission: submissionData,
-  });
+	const submissionData = await submissionAPI.commitActiveSubmissionData(
+		programShortName,
+		egoToken,
+		version,
+	);
+	return await convertClinicalSubmissionDataToGql(programShortName, {
+		submission: submissionData,
+	});
 };
 
 export default commitClinicalSubmission;

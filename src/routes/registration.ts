@@ -29,9 +29,9 @@ const upload = multer({ dest: '/tmp' });
 
 router.get('', wrapAsync(submissionAPI.getRegistrationByProgramId));
 router.post(
-  '/',
-  upload.single('registrationFile'),
-  wrapAsync(submissionAPI.createRegistrationWithTsv),
+	'/',
+	upload.single('registrationFile'),
+	wrapAsync(submissionAPI.createRegistrationWithTsv),
 );
 router.delete('/unregister', wrapAsync(submissionAPI.deleteRegisteredSamples));
 router.post('/:id/commit', wrapAsync(submissionAPI.commitRegistration));
