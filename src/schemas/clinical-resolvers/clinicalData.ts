@@ -76,12 +76,12 @@ const convertClinicalDataToGql = (
 
 const clinicalDataResolver = async (obj: unknown, args: ClinicalDataVariables) => {
 	const { programShortName, filters } = args;
-	const { completionState: state } = filters;
+	const { completionState: state, sort = 'donorId' } = filters;
 	const completionState = completionFilters[state];
 
-	const query = { ...filters, completionState, programShortName };
+	const query = { ...filters, sort, completionState, programShortName };
 
-	const { clinicalEntities } = await getPaginatedClinicalData(programShortName, query);
+	const { clinicalEntities = [] } = await getPaginatedClinicalData(programShortName, query);
 
 	const clinicalEntityData = convertClinicalDataToGql(programShortName, clinicalEntities);
 
