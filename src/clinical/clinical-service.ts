@@ -426,7 +426,11 @@ export const getValidRecordsPostSubmission = async (
 
 		const migrationDictionary = await dictionaryManager
 			.instance()
-			.loadSchemaByVersion(schemaName, migrationVersion);
+			.loadSchemaByVersion(schemaName, migrationVersion)
+			.catch(async (err) => {
+				L.error('getValidRecordsPostSubmission error finding migration schema', err);
+				return await dictionaryManager.instance().getCurrent();
+			});
 
 		const invalidDonorRecords = donorData.filter((donor) =>
 			invalidDonorIds.includes(donor.donorId),
