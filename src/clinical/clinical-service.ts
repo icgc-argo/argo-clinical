@@ -51,6 +51,7 @@ import { ClinicalEntityData, ClinicalInfo, Donor, Sample } from './clinical-enti
 import { DONOR_DOCUMENT_FIELDS, donorDao } from './donor-repo';
 import { runTaskInWorkerThread } from './service-worker-thread/runner';
 import { WorkerTasks } from './service-worker-thread/tasks';
+import { CompletionState } from './api/types';
 
 const L = loggerFor(__filename);
 
@@ -59,7 +60,6 @@ export type ClinicalDonorEntityQuery = {
 	donorIds: number[];
 	submitterDonorIds: string[];
 	entityTypes: EntityAlias[];
-	completionState?: {};
 };
 
 export type PaginationQuery = {
@@ -68,19 +68,21 @@ export type PaginationQuery = {
 	sort: string;
 };
 
-export type PaginatedClinicalQuery = ClinicalDonorEntityQuery & PaginationQuery;
+type ClinicalDataPaginatedQuery = ClinicalDonorEntityQuery & PaginationQuery;
 
-// GQL Query Arguments
-// Submitted Data Search Bar
-export type ClinicalSearchVariables = {
-	programShortName: string;
-	filters: PaginatedClinicalQuery;
+export type ClinicalDataDbQuery = ClinicalDataPaginatedQuery & {
+	completionState?: {};
 };
 
-// Submitted Data Table, Sidebar, etc.
+// GQL Query Arguments
+// Submitted Data Table, SearchBar, Sidebar, etc.
+export type ClinicalDataApiFilters = ClinicalDataPaginatedQuery & {
+	completionState?: CompletionState;
+};
+
 export type ClinicalDataVariables = {
 	programShortName: string;
-	filters: PaginatedClinicalQuery;
+	filters: ClinicalDataApiFilters;
 };
 
 export async function updateDonorSchemaMetadata(
@@ -217,10 +219,7 @@ export const getClinicalData = async (programId: string) => {
 	return data;
 };
 
-export const getPaginatedClinicalData = async (
-	programId: string,
-	query: PaginatedClinicalQuery,
-) => {
+export const getPaginatedClinicalData = async (programId: string, query: ClinicalDataDbQuery) => {
 	if (!programId) throw new Error('Missing programId!');
 
 	const allSchemasWithFields = await dictionaryManager.instance().getSchemasWithFields();
@@ -394,7 +393,7 @@ export const getValidRecordsPostSubmission = async (
 		});
 	});
 
-	const errorQuery: PaginatedClinicalQuery = {
+	const errorQuery: ClinicalDataDbQuery = {
 		page: 0,
 		sort: 'donorId',
 		entityTypes: ['donor', ...errorEntities.map((schemaName) => aliasEntityNames[schemaName])],

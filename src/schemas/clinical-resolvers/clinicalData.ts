@@ -76,7 +76,7 @@ const convertClinicalDataToGql = (
 
 const clinicalDataResolver = async (obj: unknown, args: ClinicalDataVariables) => {
 	const { programShortName, filters } = args;
-	const { completionState: state, sort = 'donorId' } = filters;
+	const { completionState: state = 'all', sort = 'donorId' } = filters;
 	const completionState = completionFilters[state];
 
 	const query = { ...filters, sort, completionState, programShortName };
