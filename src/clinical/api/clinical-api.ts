@@ -116,7 +116,6 @@ class ClinicalController {
 		const completionState = completionFilters[state];
 
 		const query: PaginatedClinicalQuery = {
-			programShortName,
 			sort,
 			entityTypes,
 			page,
@@ -204,7 +203,6 @@ class ClinicalController {
 		const completionState = completionFilters[state];
 
 		const query: PaginatedClinicalQuery = {
-			programShortName,
 			sort,
 			entityTypes,
 			page,
@@ -244,7 +242,6 @@ class ClinicalController {
 
 		// FE filters digits out of search text for Donor search
 		const query: ClinicalDonorEntityQuery = {
-			programShortName,
 			donorIds,
 			submitterDonorIds,
 			entityTypes,

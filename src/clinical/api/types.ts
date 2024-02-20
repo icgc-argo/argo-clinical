@@ -16,8 +16,6 @@ export const ClinicalDataApiBody = zod.object({
 });
 export type ClinicalDataApiBody = zod.infer<typeof ClinicalDataApiBody>;
 
-export type ClinicalDataPaginatedBody = ClinicalDataApiBody & PaginationQuery;
-
 /**
  * Clinical Error API Body
  */

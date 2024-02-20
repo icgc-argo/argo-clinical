@@ -51,13 +51,11 @@ import { ClinicalEntityData, ClinicalInfo, Donor, Sample } from './clinical-enti
 import { DONOR_DOCUMENT_FIELDS, donorDao } from './donor-repo';
 import { runTaskInWorkerThread } from './service-worker-thread/runner';
 import { WorkerTasks } from './service-worker-thread/tasks';
-import { ClinicalDataPaginatedBody } from './api/types';
 
 const L = loggerFor(__filename);
 
 // Base type for Clinical Data Queries
 export type ClinicalDonorEntityQuery = {
-	programShortName: string;
 	donorIds: number[];
 	submitterDonorIds: string[];
 	entityTypes: EntityAlias[];
@@ -76,13 +74,13 @@ export type PaginatedClinicalQuery = ClinicalDonorEntityQuery & PaginationQuery;
 // Submitted Data Search Bar
 export type ClinicalSearchVariables = {
 	programShortName: string;
-	filters: ClinicalDonorEntityQuery;
+	filters: PaginatedClinicalQuery;
 };
 
 // Submitted Data Table, Sidebar, etc.
 export type ClinicalDataVariables = {
 	programShortName: string;
-	filters: ClinicalDataPaginatedBody;
+	filters: PaginatedClinicalQuery;
 };
 
 export async function updateDonorSchemaMetadata(
@@ -397,7 +395,6 @@ export const getValidRecordsPostSubmission = async (
 	});
 
 	const errorQuery: PaginatedClinicalQuery = {
-		programShortName: programId,
 		page: 0,
 		sort: 'donorId',
 		entityTypes: ['donor', ...errorEntities.map((schemaName) => aliasEntityNames[schemaName])],
