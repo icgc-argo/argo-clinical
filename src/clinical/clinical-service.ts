@@ -70,7 +70,7 @@ export type PaginationQuery = {
 
 type ClinicalDataPaginatedQuery = ClinicalDonorEntityQuery & PaginationQuery;
 
-export type ClinicalDataDbQuery = ClinicalDataPaginatedQuery & {
+export type ClinicalDataQuery = ClinicalDataPaginatedQuery & {
 	completionState?: {};
 };
 
@@ -219,7 +219,7 @@ export const getClinicalData = async (programId: string) => {
 	return data;
 };
 
-export const getPaginatedClinicalData = async (programId: string, query: ClinicalDataDbQuery) => {
+export const getPaginatedClinicalData = async (programId: string, query: ClinicalDataQuery) => {
 	if (!programId) throw new Error('Missing programId!');
 
 	const allSchemasWithFields = await dictionaryManager.instance().getSchemasWithFields();
@@ -393,7 +393,7 @@ export const getValidRecordsPostSubmission = async (
 		});
 	});
 
-	const errorQuery: ClinicalDataDbQuery = {
+	const errorQuery: ClinicalDataQuery = {
 		page: 0,
 		sort: 'donorId',
 		entityTypes: ['donor', ...errorEntities.map((schemaName) => aliasEntityNames[schemaName])],

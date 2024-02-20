@@ -1,5 +1,4 @@
 import { EntityAlias } from '../../common-model/entities';
-import { PaginationQuery } from '../clinical-service';
 import { z as zod } from 'zod';
 
 export const CompletionState = zod.enum(['all', 'invalid', 'complete', 'incomplete']);
