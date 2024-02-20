@@ -31,7 +31,7 @@ import clinicalSubmissions, {
 import commitClinicalRegistration from './clinical-mutations/commitRegistration';
 import clearClinicalRegistration from './clinical-mutations/clearRegistration';
 import clearClinicalSubmission from './clinical-mutations/clearClinicalSubmission';
-import validateClinicalSubmissions from './clinical-mutations/validateClinicalSubmission';
+import validateClinicalSubmission from './clinical-mutations/validateClinicalSubmission';
 import commitClinicalSubmission from './clinical-mutations/commitClinicalSubmission';
 import reopenClinicalSubmission from './clinical-mutations/reopenClinicalSubmission';
 import approveClinicalSubmission from './clinical-mutations/approveClinicalSubmission';
@@ -48,7 +48,7 @@ const resolvers = {
 	},
 	Mutation: {
 		clearClinicalSubmission,
-		validateClinicalSubmissions,
+		validateClinicalSubmission,
 		commitClinicalSubmission,
 		clearClinicalRegistration,
 		commitClinicalRegistration,
