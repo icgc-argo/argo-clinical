@@ -18,6 +18,7 @@
  */
 import { getPaginatedClinicalData, ClinicalDataVariables } from '../../clinical/clinical-service';
 import { ClinicalEntityData, ClinicalInfo } from '../../clinical/clinical-entities';
+import { completionFilters } from '../../clinical/api/clinical-api';
 import { ClinicalErrorsResponseRecord } from '../../common-model/entities';
 import { errorResolver } from './clinicalErrors';
 
@@ -75,8 +76,12 @@ const convertClinicalDataToGql = (
 
 const clinicalDataResolver = async (obj: unknown, args: ClinicalDataVariables) => {
 	const { programShortName, filters } = args;
+	const { completionState: state = 'all', sort = 'donorId' } = filters;
+	const completionState = completionFilters[state];
 
-	const { clinicalEntities } = await getPaginatedClinicalData(programShortName, filters);
+	const query = { ...filters, sort, completionState, programShortName };
+
+	const { clinicalEntities = [] } = await getPaginatedClinicalData(programShortName, query);
 
 	const clinicalEntityData = convertClinicalDataToGql(programShortName, clinicalEntities);
 
