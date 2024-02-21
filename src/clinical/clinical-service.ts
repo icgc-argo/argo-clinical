@@ -36,6 +36,7 @@ import {
 	getClinicalEntitiesFromDonorBySchemaName,
 } from '../common-model/functions';
 import * as dictionaryManager from '../dictionary/manager';
+import { schemaRepo } from '../dictionary/repo';
 import { schemaFilter } from '../exception/property-exceptions/validation';
 import featureFlags from '../feature-flags';
 import { loggerFor } from '../logger';
@@ -420,13 +421,9 @@ export const getValidRecordsPostSubmission = async (
 
 		const schemaName = await dictionaryManager.instance().getCurrentName();
 
-		const migrationDictionary = await dictionaryManager
-			.instance()
-			.loadSchemaByVersion(schemaName, migrationVersion)
-			.catch(async (err) => {
-				L.error('getValidRecordsPostSubmission error finding migration schema', err);
-				return await dictionaryManager.instance().getCurrent();
-			});
+		const migrationDictionary =
+			(await schemaRepo.get(schemaName, undefined, migrationVersion)) ||
+			(await dictionaryManager.instance().getCurrent());
 
 		const invalidDonorRecords = donorData.filter((donor) =>
 			invalidDonorIds.includes(donor.donorId),

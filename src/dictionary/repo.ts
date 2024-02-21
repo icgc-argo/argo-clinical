@@ -30,6 +30,7 @@ export interface SchemaRepository {
 	get(
 		name: string,
 		versionToIgnore?: string,
+		requestedVersion?: string,
 	): Promise<dictionaryEntities.SchemasDictionary | undefined>;
 }
 
@@ -55,11 +56,12 @@ export const schemaRepo: SchemaRepository = {
 	get: async (
 		name: string,
 		versionToIgnore?: string,
+		requestedVersion?: string,
 	): Promise<dictionaryEntities.SchemasDictionary | undefined> => {
 		L.debug('in Schema repo get');
 		const doc = await DataSchemaModel.findOne({
 			name: name,
-			version: { $ne: versionToIgnore },
+			version: requestedVersion ? requestedVersion : { $ne: versionToIgnore },
 		}).exec();
 		if (!doc) {
 			return undefined;
