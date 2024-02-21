@@ -503,13 +503,11 @@ export const getValidRecordsPostSubmission = async (
 						}
 
 						// Format Error Objects for UI
-						const entityErrorRecords: ClinicalEntityErrorRecord[] = filteredErrors;
-
 						const errorResponseRecord: ClinicalErrorsResponseRecord = {
 							donorId,
 							submitterDonorId,
 							entityName,
-							errors: entityErrorRecords,
+							errors: filteredErrors,
 						};
 
 						return errorResponseRecord;
