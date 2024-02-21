@@ -449,55 +449,61 @@ export const getValidRecordsPostSubmission = async (
 
 				const donorErrorRecords = await Promise.all(
 					currentDonorEntities.map(async (entityName) => {
+						const mapEntityErrorRecord = (
+							validationRecord: DeepReadonly<dictionaryEntities.SchemaValidationError>,
+						): ClinicalEntityErrorRecord => ({
+							donorId,
+							entityName,
+							...validationRecord,
+						});
+
 						const clinicalRecords: ClinicalInfo[] = getClinicalEntitiesFromDonorBySchemaName(
 							currentDonor,
 							entityName,
 						);
 
-						let filteredErrors = [];
+						let filteredErrors = [...currentDonorErrors];
 
-						const stringifiedRecords = clinicalRecords
+						let stringifiedRecords = clinicalRecords
 							.map((record) => {
 								return prepareForSchemaReProcessing(record);
 							})
 							.filter(notEmpty);
 
+						// Revalidate current records against related migration schema
 						if (migrationDictionary) {
-							const entitySchema = migrationDictionary.schemas.find(schemaFilter(entityName));
-
-							// Revalidate Donors
 							const { validationErrors, processedRecords } = dictionaryService.processRecords(
 								migrationDictionary,
 								entityName,
 								stringifiedRecords,
 							);
 
-							filteredErrors = [...validationErrors];
+							filteredErrors = validationErrors.map(mapEntityErrorRecord);
+							stringifiedRecords = [...processedRecords];
+						}
 
-							// Check if any Errors match Exceptions
-							if (featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
-								const exceptionErrors = await matchDonorErrorsWithExceptions(
-									programId,
-									entityName,
-									[...processedRecords],
-									filteredErrors,
-									entitySchema,
-								);
+						const entitySchema = migrationDictionary
+							? migrationDictionary.schemas.find(schemaFilter(entityName))
+							: await dictionaryManager
+									.instance()
+									.getCurrent()
+									.then((dictionary) => dictionary.schemas.find(schemaFilter(entityName)));
 
-								filteredErrors = exceptionErrors.flat();
-							}
-						} else {
-							filteredErrors = [...currentDonorErrors];
+						// Check if any Errors match Exceptions
+						if (featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
+							const exceptionErrors = await matchDonorErrorsWithExceptions(
+								programId,
+								entityName,
+								[...stringifiedRecords],
+								filteredErrors,
+								entitySchema,
+							);
+
+							filteredErrors = exceptionErrors.flat().map(mapEntityErrorRecord);
 						}
 
 						// Format Error Objects for UI
-						const entityErrorRecords: ClinicalEntityErrorRecord[] = filteredErrors.map(
-							(validationRecord): ClinicalEntityErrorRecord => ({
-								donorId,
-								entityName,
-								...validationRecord,
-							}),
-						);
+						const entityErrorRecords: ClinicalEntityErrorRecord[] = filteredErrors;
 
 						const errorResponseRecord: ClinicalErrorsResponseRecord = {
 							donorId,
