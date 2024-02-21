@@ -424,10 +424,8 @@ export const getValidRecordsPostSubmission = async (
 		const migrationDictionary = await schemaRepo.get(schemaName, undefined, migrationVersion);
 
 		if (!migrationDictionary) {
-			L.error(
-				`getValidRecordsPostSubmission error finding migration schema \n schemaName: ${schemaName} \n migrationVersion: ${migrationVersion}`,
-				undefined,
-			);
+			const err = { schemaName, migrationVersion };
+			L.error('getValidRecordsPostSubmission error finding migration schema', err);
 		}
 
 		const invalidDonorRecords = donorData.filter((donor) =>
@@ -515,7 +513,6 @@ export const getValidRecordsPostSubmission = async (
 				return donorErrorRecords;
 			}),
 		);
-		console.log('\nvalidationErrors', validationErrors);
 		clinicalErrors = validationErrors.flat();
 	}
 
