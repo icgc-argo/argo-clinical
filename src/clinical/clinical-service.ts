@@ -422,7 +422,6 @@ export const getValidRecordsPostSubmission = async (
 		const schemaName = await dictionaryManager.instance().getCurrentName();
 
 		const migrationDictionary = await schemaRepo.get(schemaName, undefined, migrationVersion);
-		console.log('\n migrationDictionary', migrationDictionary);
 
 		if (!migrationDictionary) {
 			L.error(
