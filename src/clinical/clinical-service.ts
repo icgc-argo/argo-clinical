@@ -421,9 +421,15 @@ export const getValidRecordsPostSubmission = async (
 
 		const schemaName = await dictionaryManager.instance().getCurrentName();
 
-		const migrationDictionary =
-			(await schemaRepo.get(schemaName, undefined, migrationVersion)) ||
-			(await dictionaryManager.instance().getCurrent());
+		const migrationDictionary = await schemaRepo.get(schemaName, undefined, migrationVersion);
+		console.log('\n migrationDictionary', migrationDictionary);
+
+		if (!migrationDictionary) {
+			L.error(
+				`getValidRecordsPostSubmission error finding migration schema \n schemaName: ${schemaName} \n migrationVersion: ${migrationVersion}`,
+				undefined,
+			);
+		}
 
 		const invalidDonorRecords = donorData.filter((donor) =>
 			invalidDonorIds.includes(donor.donorId),
@@ -451,34 +457,40 @@ export const getValidRecordsPostSubmission = async (
 							entityName,
 						);
 
+						let filteredErrors = [];
+
 						const stringifiedRecords = clinicalRecords
 							.map((record) => {
 								return prepareForSchemaReProcessing(record);
 							})
 							.filter(notEmpty);
 
-						const entitySchema = migrationDictionary.schemas.find(schemaFilter(entityName));
+						if (migrationDictionary) {
+							const entitySchema = migrationDictionary.schemas.find(schemaFilter(entityName));
 
-						// Revalidate Donors
-						const { validationErrors, processedRecords } = dictionaryService.processRecords(
-							migrationDictionary,
-							entityName,
-							stringifiedRecords,
-						);
-
-						let filteredErrors = [...validationErrors];
-
-						// Check if any Errors match Exceptions
-						if (featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
-							const exceptionErrors = await matchDonorErrorsWithExceptions(
-								programId,
+							// Revalidate Donors
+							const { validationErrors, processedRecords } = dictionaryService.processRecords(
+								migrationDictionary,
 								entityName,
-								[...processedRecords],
-								filteredErrors,
-								entitySchema,
+								stringifiedRecords,
 							);
 
-							filteredErrors = exceptionErrors.flat();
+							filteredErrors = [...validationErrors];
+
+							// Check if any Errors match Exceptions
+							if (featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
+								const exceptionErrors = await matchDonorErrorsWithExceptions(
+									programId,
+									entityName,
+									[...processedRecords],
+									filteredErrors,
+									entitySchema,
+								);
+
+								filteredErrors = exceptionErrors.flat();
+							}
+						} else {
+							filteredErrors = [...currentDonorErrors];
 						}
 
 						// Format Error Objects for UI
@@ -504,6 +516,7 @@ export const getValidRecordsPostSubmission = async (
 				return donorErrorRecords;
 			}),
 		);
+		console.log('\nvalidationErrors', validationErrors);
 		clinicalErrors = validationErrors.flat();
 	}
 
