@@ -365,6 +365,16 @@ export const getClinicalEntityMigrationErrors = async (
 	return { migration, clinicalMigrationErrors };
 };
 
+const formatEntityErrorRecord = (
+	donorId: number,
+	entityName: ClinicalEntitySchemaNames,
+	validationRecord: DeepReadonly<dictionaryEntities.SchemaValidationError>,
+): ClinicalEntityErrorRecord => ({
+	donorId,
+	entityName,
+	...validationRecord,
+});
+
 /**
  * Given a list of Program Migration Errors, this function finds related Donors,
  * and returns a list of DonorIds which are now Valid after submission.
@@ -416,8 +426,7 @@ export const getValidRecordsPostSubmission = async (
 	let clinicalErrors: ClinicalErrorsResponseRecord[] = [];
 
 	if (invalidDonorIds.length > 0) {
-		const migrationVersion =
-			lastMigration?.toVersion || (await dictionaryManager.instance().getCurrentVersion());
+		const migrationVersion = lastMigration?.toVersion;
 
 		const schemaName = await dictionaryManager.instance().getCurrentName();
 
@@ -429,6 +438,13 @@ export const getValidRecordsPostSubmission = async (
 			const err = { schemaName, migrationVersion };
 			L.error('getValidRecordsPostSubmission error finding migration schema', err);
 		}
+
+		const schemas = migrationDictionary
+			? migrationDictionary.schemas
+			: await dictionaryManager
+					.instance()
+					.getCurrent()
+					.then((dictionary) => dictionary.schemas);
 
 		const invalidDonorRecords = donorData.filter((donor) =>
 			invalidDonorIds.includes(donor.donorId),
@@ -451,14 +467,6 @@ export const getValidRecordsPostSubmission = async (
 
 				const donorErrorRecords = await Promise.all(
 					currentDonorEntities.map(async (entityName) => {
-						const mapEntityErrorRecord = (
-							validationRecord: DeepReadonly<dictionaryEntities.SchemaValidationError>,
-						): ClinicalEntityErrorRecord => ({
-							donorId,
-							entityName,
-							...validationRecord,
-						});
-
 						const clinicalRecords: ClinicalInfo[] = getClinicalEntitiesFromDonorBySchemaName(
 							currentDonor,
 							entityName,
@@ -480,19 +488,16 @@ export const getValidRecordsPostSubmission = async (
 								stringifiedRecords,
 							);
 
-							filteredErrors = validationErrors.map(mapEntityErrorRecord);
+							filteredErrors = validationErrors.map((errorRecord) =>
+								formatEntityErrorRecord(donorId, entityName, errorRecord),
+							);
 							stringifiedRecords = [...processedRecords];
 						}
 
-						const entitySchema = migrationDictionary
-							? migrationDictionary.schemas.find(schemaFilter(entityName))
-							: await dictionaryManager
-									.instance()
-									.getCurrent()
-									.then((dictionary) => dictionary.schemas.find(schemaFilter(entityName)));
-
 						// Check if any Errors match Exceptions
 						if (featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
+							const entitySchema = schemas.find(schemaFilter(entityName));
+
 							const exceptionErrors = await matchDonorErrorsWithExceptions(
 								programId,
 								entityName,
@@ -501,7 +506,9 @@ export const getValidRecordsPostSubmission = async (
 								entitySchema,
 							);
 
-							filteredErrors = exceptionErrors.flat().map(mapEntityErrorRecord);
+							filteredErrors = exceptionErrors
+								.flat()
+								.map((errorRecord) => formatEntityErrorRecord(donorId, entityName, errorRecord));
 						}
 
 						// Format Error Objects for UI
