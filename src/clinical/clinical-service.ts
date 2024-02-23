@@ -453,6 +453,7 @@ export const getValidRecordsPostSubmission = async (
 		// Filters out any Errors for Donors that are now valid post-submission
 		// or which are related to Records which match Program Exceptions
 		const validationErrors = await Promise.all(
+			// For each invalid donor ...
 			invalidDonorRecords.map(async (currentDonor) => {
 				const { donorId, submitterId: submitterDonorId } = currentDonor;
 
@@ -466,6 +467,7 @@ export const getValidRecordsPostSubmission = async (
 					.filter(filterDuplicates);
 
 				const donorErrorRecords = await Promise.all(
+					// ... group errors by Entity, then filter stale error records
 					currentDonorEntities.map(async (entityName) => {
 						const clinicalRecords: ClinicalInfo[] = getClinicalEntitiesFromDonorBySchemaName(
 							currentDonor,
@@ -481,6 +483,7 @@ export const getValidRecordsPostSubmission = async (
 							.filter(notEmpty);
 
 						// Revalidate current records against related migration schema
+						// If requested Dictionary version is not found, errors are not revalidated
 						if (migrationDictionary) {
 							const { validationErrors, processedRecords } = dictionaryService.processRecords(
 								migrationDictionary,
@@ -494,7 +497,7 @@ export const getValidRecordsPostSubmission = async (
 							stringifiedRecords = [...processedRecords];
 						}
 
-						// Check if any Errors match Exceptions
+						// Remove any Errors that match Exceptions
 						if (featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
 							const entitySchema = schemas.find(schemaFilter(entityName));
 
