@@ -393,6 +393,23 @@ export const getValidRecordsPostSubmission = async (
 	const start = new Date().getTime() / 1000;
 
 	const { migration: lastMigration, clinicalMigrationErrors } = migrationData;
+
+	const migrationVersion = lastMigration?.toVersion;
+
+	const schemaName = await dictionaryManager.instance().getCurrentName();
+
+	const migrationDictionary = await schemaRepo.get(schemaName, {
+		requestedVersion: migrationVersion,
+	});
+
+	if (!migrationDictionary) {
+		L.error(
+			`getValidRecordsPostSubmission error finding migration schema, migrationVersion: ${migrationVersion}, schemaName: ${schemaName}`,
+			{ migrationVersion, schemaName },
+		);
+		return { clinicalErrors: clinicalMigrationErrors };
+	}
+
 	const errorDonorIds = clinicalMigrationErrors.map((error) => error.donorId);
 	let errorEntities: ClinicalEntitySchemaNames[] = [];
 
@@ -426,19 +443,7 @@ export const getValidRecordsPostSubmission = async (
 	let clinicalErrors: ClinicalErrorsResponseRecord[] = [];
 
 	if (invalidDonorIds.length > 0) {
-		const migrationVersion = lastMigration?.toVersion;
-
-		const schemaName = await dictionaryManager.instance().getCurrentName();
-
-		const migrationDictionary = await schemaRepo.get(schemaName, {
-			requestedVersion: migrationVersion,
-		});
-
-		if (!migrationDictionary) {
-			const err = { schemaName, migrationVersion };
-			L.error('getValidRecordsPostSubmission error finding migration schema', err);
-		}
-
+		// needs review -- validating against current dictionary
 		const schemas = migrationDictionary
 			? migrationDictionary.schemas
 			: await dictionaryManager
@@ -473,46 +478,39 @@ export const getValidRecordsPostSubmission = async (
 							currentDonor,
 							entityName,
 						);
+						const entitySchema = schemas.find(schemaFilter(entityName));
 
-						let filteredErrors = [...currentDonorErrors];
-
-						let stringifiedRecords = clinicalRecords
-							.map((record) => {
-								return prepareForSchemaReProcessing(record);
-							})
+						const stringifiedRecords = clinicalRecords
+							.map((record) => prepareForSchemaReProcessing(record))
 							.filter(notEmpty);
 
 						// Revalidate current records against related migration schema
 						// If requested Dictionary version is not found, errors are not revalidated
-						if (migrationDictionary) {
-							const { validationErrors, processedRecords } = dictionaryService.processRecords(
-								migrationDictionary,
-								entityName,
-								stringifiedRecords,
-							);
+						const postValidationErrors = migrationDictionary
+							? currentDonorErrors.filter((error) => {
+									const { validationErrors } = dictionaryService.processRecords(
+										migrationDictionary,
+										entityName,
+										stringifiedRecords,
+									);
 
-							filteredErrors = validationErrors.map((errorRecord) =>
-								formatEntityErrorRecord(donorId, entityName, errorRecord),
-							);
-							stringifiedRecords = [...processedRecords];
-						}
-
+									return validationErrors;
+							  })
+							: currentDonorErrors;
 						// Remove any Errors that match Exceptions
-						if (featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
-							const entitySchema = schemas.find(schemaFilter(entityName));
+						const postExceptionErrors = featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED
+							? await matchDonorErrorsWithExceptions(
+									programId,
+									entityName,
+									[...stringifiedRecords],
+									postValidationErrors,
+									entitySchema,
+							  ).then((data) => data.flat())
+							: postValidationErrors;
 
-							const exceptionErrors = await matchDonorErrorsWithExceptions(
-								programId,
-								entityName,
-								[...stringifiedRecords],
-								filteredErrors,
-								entitySchema,
-							);
-
-							filteredErrors = exceptionErrors
-								.flat()
-								.map((errorRecord) => formatEntityErrorRecord(donorId, entityName, errorRecord));
-						}
+						const filteredErrors = postExceptionErrors.map((errorRecord) =>
+							formatEntityErrorRecord(donorId, entityName, errorRecord),
+						);
 
 						// Format Error Objects for UI
 						const errorResponseRecord: ClinicalErrorsResponseRecord = {
