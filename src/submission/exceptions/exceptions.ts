@@ -34,6 +34,7 @@ import {
 } from '../../exception/property-exceptions/types';
 import { DeepReadonly } from 'deep-freeze';
 import { fieldFilter } from '../../exception/property-exceptions/validation';
+import { getByProgramId } from '../../exception/missing-entity-exceptions/repo';
 
 /**
  * query db for program or entity exceptions
@@ -260,3 +261,32 @@ export const checkForProgramAndEntityExceptions = async ({
 	});
 	return { filteredErrors, normalizedRecord };
 };
+
+/**
+ * Collect all exception records related to a set of Donors
+ *
+ * @param programId
+ * @param filters {
+ * 	donorIDs: number[]
+ * 	submitterDonorIDs: string[]
+ * }
+ */
+async function collectDonorExceptions(
+	programId: string,
+	filters: { donorIDs: number[]; submitterDonorIDs: string[] },
+) {
+	const { programException, entityException } = await queryForExceptions(programId);
+	const missingEntityException = await getByProgramId(programId);
+
+	const programExceptions = programException?.exceptions || [];
+
+	const entityExceptions = entityException
+		? [...entityException.specimen, ...entityException.treatment, ...entityException.follow_up]
+		: [];
+
+	const missingEntityExceptions = missingEntityException.success
+		? missingEntityException.data.donorSubmitterIds
+		: [];
+
+	return [programExceptions, entityExceptions, missingEntityExceptions];
+}
