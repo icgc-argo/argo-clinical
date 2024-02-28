@@ -398,9 +398,20 @@ export const getValidRecordsPostSubmission = async (
 
 	const schemaName = await dictionaryManager.instance().getCurrentName();
 
-	const migrationDictionary = await schemaRepo.get(schemaName, {
-		requestedVersion: migrationVersion,
-	});
+	const migrationDictionary = migrationVersion
+		? await schemaRepo
+				.get(schemaName, {
+					requestedVersion: migrationVersion,
+				})
+				.then(async (dictionary) => {
+					if (!dictionary) {
+						return await dictionaryManager
+							.instance()
+							.loadAndSaveNewVersion(schemaName, migrationVersion);
+					}
+				})
+		: // Migration Version can be undefined
+		  await dictionaryManager.instance().getCurrent();
 
 	if (!migrationDictionary) {
 		L.error(

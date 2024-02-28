@@ -80,8 +80,8 @@ type DataSchemaDocument = mongoose.Document & dictionaryEntities.SchemasDictiona
 
 const DataSchemaMongooseSchema = new mongoose.Schema(
 	{
-		name: { type: String, unique: true },
-		version: { type: String, required: true },
+		name: { type: String, required: true, unique: false },
+		version: { type: String, required: true, unique: true },
 		schemas: [],
 	},
 	{ timestamps: true },
