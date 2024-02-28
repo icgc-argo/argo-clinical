@@ -72,7 +72,7 @@ export const migrationRepo: DictionaryMigrationRepository = {
 	getLatestSuccessful: async (): Promise<DeepReadonly<DictionaryMigration | undefined>> => {
 		L.debug('in migration repo get latest successful');
 		const migration = await DictionaryMigrationModel.find()
-			.sort({ createdAt: -1 })
+			.sort({ $natural: -1 })
 			.findOne({ stage: 'COMPLETED', dryRun: false })
 			.exec();
 		if (migration == undefined) {
