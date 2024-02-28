@@ -43,6 +43,7 @@ export const schemaRepo: SchemaRepository = {
 		const result = await DataSchemaModel.findOneAndUpdate(
 			{
 				name: schema.name,
+				version: schema.version,
 			},
 			{
 				name: schema.name,
