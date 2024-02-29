@@ -35,6 +35,7 @@ import {
 import { DeepReadonly } from 'deep-freeze';
 import { fieldFilter } from '../../exception/property-exceptions/validation';
 import { getByProgramId } from '../../exception/missing-entity-exceptions/repo';
+import { findDonorBySubmitterId } from 'src/clinical/clinical-service';
 
 /**
  * query db for program or entity exceptions
@@ -266,26 +267,31 @@ export const checkForProgramAndEntityExceptions = async ({
  * Collect all exception records related to a set of Donors
  *
  * @param programId
- * @param filters {
- * 	donorIDs: number[]
- * 	submitterDonorIDs: string[]
- * }
+ * @param filters
+ * @returns [ ExceptionRecords ]
  */
 async function collectDonorExceptions(
 	programId: string,
-	filters: { donorIDs: number[]; submitterDonorIDs: string[] },
+	filters: { donorIDs: number[]; submitterDonorIds: string[] },
 ) {
+	const { donorIDs, submitterDonorIds } = filters;
 	const { programException, entityException } = await queryForExceptions(programId);
 	const missingEntityException = await getByProgramId(programId);
 
 	const programExceptions = programException?.exceptions || [];
 
 	const entityExceptions = entityException
-		? [...entityException.specimen, ...entityException.treatment, ...entityException.follow_up]
+		? [
+				...entityException.specimen,
+				...entityException.treatment,
+				...entityException.follow_up,
+		  ].filter((exceptionRecord) => submitterDonorIds.includes(exceptionRecord.submitter_donor_id))
 		: [];
 
 	const missingEntityExceptions = missingEntityException.success
-		? missingEntityException.data.donorSubmitterIds
+		? missingEntityException.data.donorSubmitterIds.filter((submitterDonorId) =>
+				submitterDonorIds.includes(submitterDonorId),
+		  )
 		: [];
 
 	return [programExceptions, entityExceptions, missingEntityExceptions];
