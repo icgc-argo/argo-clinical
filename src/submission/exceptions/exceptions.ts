@@ -19,6 +19,7 @@
 
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
 import { TypedDataRecord } from '@overturebio-stack/lectern-client/lib/schema-entities';
+import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 import {
 	ClinicalEntitySchemaNames,
@@ -32,10 +33,45 @@ import {
 	ExceptionRecord,
 	ProgramException,
 } from '../../exception/property-exceptions/types';
-import { DeepReadonly } from 'deep-freeze';
 import { fieldFilter } from '../../exception/property-exceptions/validation';
 import { getByProgramId } from '../../exception/missing-entity-exceptions/repo';
-import { findDonorBySubmitterId } from 'src/clinical/clinical-service';
+import { getDonorsByIds } from '../../clinical/clinical-service';
+
+type ExceptionType = 'MissingEntity' | 'ProgramProperty' | 'EntityProperty';
+
+type MissingEntityExceptionRecord = {
+	exceptionType: 'MissingEntity';
+	programId: string;
+	donorId: string;
+
+	submitterDonorId: string;
+};
+type ProgramPropertyExceptionRecord = {
+	exceptionType: 'ProgramProperty';
+	programId: string;
+	donorId: string;
+	submitterDonorId: string;
+	schemaName: string;
+	propertyName: string;
+	exceptionValue: string;
+};
+
+type EntityPropertyExceptionRecord = {
+	exceptionType: ExceptionType;
+	programId: string;
+	donorId: string;
+	submitterDonorId: string;
+	entityId: string;
+	submitterEntityId: string;
+	schemaName: string;
+	propertyName: string;
+	exceptionValue: string;
+};
+
+type DonorExceptionRecord =
+	| MissingEntityExceptionRecord
+	| ProgramPropertyExceptionRecord
+	| EntityPropertyExceptionRecord;
 
 /**
  * query db for program or entity exceptions
@@ -272,13 +308,24 @@ export const checkForProgramAndEntityExceptions = async ({
  */
 async function collectDonorExceptions(
 	programId: string,
-	filters: { donorIDs: number[]; submitterDonorIds: string[] },
-) {
-	const { donorIDs, submitterDonorIds } = filters;
+	filters: { donorIds: number[]; submitterDonorIds: string[] },
+): Promise<DonorExceptionRecord[]> {
+	const { donorIds, submitterDonorIds: querySubmitterIds } = filters;
+
+	const donors = await getDonorsByIds(donorIds);
+	// Exceptions only store submitterIds, so all submitterIds have to be collected before we can filter exceptions
+	const submitterDonorIds = [
+		...querySubmitterIds,
+		...donors
+			.map((donor) => donor.submitterId)
+			.filter((submitterId) => !querySubmitterIds.includes(submitterId)),
+	];
+
 	const { programException, entityException } = await queryForExceptions(programId);
 	const missingEntityException = await getByProgramId(programId);
 
 	const programExceptions = programException?.exceptions || [];
+	// map
 
 	const entityExceptions = entityException
 		? [
@@ -287,12 +334,20 @@ async function collectDonorExceptions(
 				...entityException.follow_up,
 		  ].filter((exceptionRecord) => submitterDonorIds.includes(exceptionRecord.submitter_donor_id))
 		: [];
+	// map
 
 	const missingEntityExceptions = missingEntityException.success
 		? missingEntityException.data.donorSubmitterIds.filter((submitterDonorId) =>
 				submitterDonorIds.includes(submitterDonorId),
 		  )
 		: [];
+	// map
 
-	return [programExceptions, entityExceptions, missingEntityExceptions];
+	const donorExceptionRecords = [
+		...programExceptions,
+		...entityExceptions,
+		...missingEntityExceptions,
+	].sort();
+
+	return donorExceptionRecords;
 }
