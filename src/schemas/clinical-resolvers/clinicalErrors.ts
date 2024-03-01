@@ -29,8 +29,8 @@ export const errorResolver = async (
 	parent.clinicalEntities.forEach((entity) =>
 		entity.records.forEach((displayRecord) => {
 			const donor = displayRecord.find(({ name }) => name === 'donor_id');
-			if (donor && donor.value) {
-				const donorId = parseInt(JSON.stringify(donor.value));
+			if (typeof donor?.value === 'number') {
+				const donorId = donor.value;
 				parentDonorIds.push(donorId);
 			}
 		}),
