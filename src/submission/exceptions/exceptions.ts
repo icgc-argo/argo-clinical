@@ -43,9 +43,9 @@ type MissingEntityExceptionRecord = {
 	exceptionType: 'MissingEntity';
 	programId: string;
 	donorId: string;
-
 	submitterDonorId: string;
 };
+
 type ProgramPropertyExceptionRecord = {
 	exceptionType: 'ProgramProperty';
 	programId: string;
@@ -323,9 +323,14 @@ async function collectDonorExceptions(
 
 	const { programException, entityException } = await queryForExceptions(programId);
 	const missingEntityException = await getByProgramId(programId);
-
-	const programExceptions = programException?.exceptions || [];
-	// map
+	const programExceptions = programException?.exceptions;
+	const programExceptionDisplayRecords = programExceptions
+		? programExceptions.map((exceptionRecord) => {
+				// schemaName: schema
+				const { schema, requested_core_field, requested_exception_value } = exceptionRecord;
+				return { programId, schema, requested_core_field, requested_exception_value };
+		  })
+		: [];
 
 	const entityExceptions = entityException
 		? [
@@ -344,10 +349,20 @@ async function collectDonorExceptions(
 	// map
 
 	const donorExceptionRecords = [
-		...programExceptions,
+		...programExceptionDisplayRecords,
 		...entityExceptions,
 		...missingEntityExceptions,
-	].sort();
+	].sort((a, b) => {
+		// sort
+		return 0;
+	});
 
-	return donorExceptionRecords;
+	return [
+		{
+			exceptionType: 'MissingEntity',
+			programId: '',
+			donorId: '',
+			submitterDonorId: '',
+		},
+	];
 }
