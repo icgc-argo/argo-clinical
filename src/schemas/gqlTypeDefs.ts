@@ -139,13 +139,20 @@ const typeDefs = gql`
 		submitterDonorId: String
 	}
 
+	scalar ClinicalRecordValue
+
+	type ClinicalDisplayRecordField {
+		name: String!
+		value: ClinicalRecordValue
+	}
+
 	"""
 	Submitted Program Clinical Data arranged by Entity type
 	"""
 	type ClinicalDataEntities {
 		entityName: String!
 		totalDocs: Int!
-		records: [[ClinicalRecordField]]!
+		records: [[ClinicalDisplayRecordField]]!
 		entityFields: [String]
 		completionStats: [CompletionStats]
 	}
@@ -252,11 +259,9 @@ const typeDefs = gql`
 		fields: [ClinicalRecordField!]!
 	}
 
-	scalar ClinicalRecordValue
-
 	type ClinicalRecordField {
 		name: String!
-		value: ClinicalRecordValue
+		value: String
 	}
 
 	"""
