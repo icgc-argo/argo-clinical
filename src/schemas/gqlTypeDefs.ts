@@ -252,9 +252,11 @@ const typeDefs = gql`
 		fields: [ClinicalRecordField!]!
 	}
 
+	scalar ClinicalRecordValue
+
 	type ClinicalRecordField {
 		name: String!
-		value: String
+		value: ClinicalRecordValue
 	}
 
 	"""
