@@ -42,9 +42,3 @@ export const errorResolver = async (
 
 	return clinicalErrors;
 };
-
-const clinicalErrorResolver = {
-	clinicalErrors: errorResolver,
-};
-
-export default clinicalErrorResolver;
