@@ -19,7 +19,7 @@
 import { getClinicalErrors } from '../../clinical/clinical-service';
 import { ClinicalEntityGQLData } from './clinicalData';
 
-export const errorResolver = async (
+export const retrieveClinicalDataErrors = async (
 	parent: ClinicalEntityGQLData,
 	args: { programShortName: string; donorIds: number[] },
 ) => {

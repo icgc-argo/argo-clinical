@@ -20,7 +20,7 @@ import { getPaginatedClinicalData, ClinicalDataVariables } from '../../clinical/
 import { ClinicalEntityData, ClinicalInfo } from '../../clinical/clinical-entities';
 import { completionFilters } from '../../clinical/api/clinical-api';
 import { ClinicalErrorsResponseRecord } from '../../common-model/entities';
-import { errorResolver } from './clinicalErrors';
+import { retrieveClinicalDataErrors } from './clinicalErrors';
 
 export type ClinicalEntityGQLData = {
 	programShortName: string;
@@ -88,7 +88,7 @@ const clinicalDataResolver = async (obj: unknown, args: ClinicalDataVariables) =
 
 	const clinicalEntityData = convertClinicalDataToGql(programShortName, clinicalEntities);
 
-	const { clinicalErrors } = await errorResolver(clinicalEntityData, {
+	const { clinicalErrors } = await retrieveClinicalDataErrors(clinicalEntityData, {
 		programShortName,
 		donorIds: [],
 	});
