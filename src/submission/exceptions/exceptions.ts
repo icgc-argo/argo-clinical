@@ -42,15 +42,13 @@ type ExceptionType = 'MissingEntity' | 'ProgramProperty' | 'EntityProperty';
 type MissingEntityExceptionRecord = {
 	exceptionType: 'MissingEntity';
 	programId: string;
-	donorId: string;
+	donorId?: number;
 	submitterDonorId: string;
 };
 
 type ProgramPropertyExceptionRecord = {
 	exceptionType: 'ProgramProperty';
 	programId: string;
-	donorId: string;
-	submitterDonorId: string;
 	schemaName: string;
 	propertyName: string;
 	exceptionValue: string;
@@ -59,10 +57,10 @@ type ProgramPropertyExceptionRecord = {
 type EntityPropertyExceptionRecord = {
 	exceptionType: ExceptionType;
 	programId: string;
-	donorId: string;
-	submitterDonorId: string;
-	entityId: string;
-	submitterEntityId: string;
+	donorId?: number;
+	submitterDonorId?: string;
+	entityId?: string;
+	submitterEntityId?: string;
 	schemaName: string;
 	propertyName: string;
 	exceptionValue: string;
@@ -323,46 +321,62 @@ async function collectDonorExceptions(
 
 	const { programException, entityException } = await queryForExceptions(programId);
 	const missingEntityException = await getByProgramId(programId);
+
 	const programExceptions = programException?.exceptions;
-	const programExceptionDisplayRecords = programExceptions
+
+	const programExceptionDisplayRecords: ProgramPropertyExceptionRecord[] = programExceptions
 		? programExceptions.map((exceptionRecord) => {
-				// schemaName: schema
-				const { schema, requested_core_field, requested_exception_value } = exceptionRecord;
-				return { programId, schema, requested_core_field, requested_exception_value };
+				const exceptionType: ExceptionType = 'ProgramProperty';
+				const {
+					schema: schemaName,
+					requested_core_field: propertyName,
+					requested_exception_value: exceptionValue,
+				} = exceptionRecord;
+				return {
+					exceptionType,
+					programId,
+					schemaName,
+					propertyName,
+					exceptionValue,
+				};
 		  })
 		: [];
 
-	const entityExceptions = entityException
-		? [
-				...entityException.specimen,
-				...entityException.treatment,
-				...entityException.follow_up,
-		  ].filter((exceptionRecord) => submitterDonorIds.includes(exceptionRecord.submitter_donor_id))
-		: [];
-	// map
+	const entityExceptions: EntityPropertyExceptionRecord[] = entityException
+		? [...entityException.specimen, ...entityException.treatment, ...entityException.follow_up]
+				.filter((exceptionRecord) => submitterDonorIds.includes(exceptionRecord.submitter_donor_id))
+				.map((entityExceptionRecord) => {
+					const exceptionType: ExceptionType = 'EntityProperty';
+					const {
+						schema: schemaName,
+						requested_core_field: propertyName,
+						requested_exception_value: exceptionValue,
+					} = entityExceptionRecord;
 
-	const missingEntityExceptions = missingEntityException.success
-		? missingEntityException.data.donorSubmitterIds.filter((submitterDonorId) =>
-				submitterDonorIds.includes(submitterDonorId),
-		  )
+					return { programId, exceptionType, schemaName, propertyName, exceptionValue };
+				})
 		: [];
-	// map
 
-	const donorExceptionRecords = [
+	const missingEntityExceptions: MissingEntityExceptionRecord[] = missingEntityException.success
+		? missingEntityException.data.donorSubmitterIds
+				.filter((submitterDonorId) => submitterDonorIds.includes(submitterDonorId))
+				.map((submitterDonorId) => {
+					const exceptionType: ExceptionType = 'MissingEntity';
+					const { donorId } = donors.find((donor) => donor.submitterId === submitterDonorId) || {};
+					return { programId, exceptionType, submitterDonorId, donorId };
+				})
+		: [];
+
+	const donorExceptionRecords: DonorExceptionRecord[] = [
 		...programExceptionDisplayRecords,
 		...entityExceptions,
 		...missingEntityExceptions,
 	].sort((a, b) => {
 		// sort
+		// - a < b, + a > b
+		if (a.exceptionType === 'ProgramProperty') return 1;
 		return 0;
 	});
 
-	return [
-		{
-			exceptionType: 'MissingEntity',
-			programId: '',
-			donorId: '',
-			submitterDonorId: '',
-		},
-	];
+	return donorExceptionRecords;
 }
