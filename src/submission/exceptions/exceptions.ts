@@ -57,7 +57,7 @@ type ProgramPropertyExceptionRecord = {
 type EntityPropertyExceptionRecord = {
 	exceptionType: ExceptionType;
 	programId: string;
-	donorId?: number;
+	donorId?: string;
 	submitterDonorId?: string;
 	entityId?: string;
 	submitterEntityId?: string;
@@ -304,13 +304,14 @@ export const checkForProgramAndEntityExceptions = async ({
  * @param filters
  * @returns [ ExceptionRecords ]
  */
-async function collectDonorExceptions(
+export async function getExceptionManifestRecords(
 	programId: string,
 	filters: { donorIds: number[]; submitterDonorIds: string[] },
 ): Promise<DonorExceptionRecord[]> {
 	const { donorIds, submitterDonorIds: querySubmitterIds } = filters;
 
 	const donors = await getDonorsByIds(donorIds);
+
 	// Exceptions only store submitterIds, so all submitterIds have to be collected before we can filter exceptions
 	const submitterDonorIds = [
 		...querySubmitterIds,
@@ -320,27 +321,28 @@ async function collectDonorExceptions(
 	];
 
 	const { programException, entityException } = await queryForExceptions(programId);
+
 	const missingEntityException = await getByProgramId(programId);
 
-	const programExceptions = programException?.exceptions;
+	const programExceptions = programException?.exceptions || [];
 
-	const programExceptionDisplayRecords: ProgramPropertyExceptionRecord[] = programExceptions
-		? programExceptions.map((exceptionRecord) => {
-				const exceptionType: ExceptionType = 'ProgramProperty';
-				const {
-					schema: schemaName,
-					requested_core_field: propertyName,
-					requested_exception_value: exceptionValue,
-				} = exceptionRecord;
-				return {
-					exceptionType,
-					programId,
-					schemaName,
-					propertyName,
-					exceptionValue,
-				};
-		  })
-		: [];
+	const programExceptionDisplayRecords: ProgramPropertyExceptionRecord[] = programExceptions.map(
+		(exceptionRecord) => {
+			const exceptionType: ExceptionType = 'ProgramProperty';
+			const {
+				schema: schemaName,
+				requested_core_field: propertyName,
+				requested_exception_value: exceptionValue,
+			} = exceptionRecord;
+			return {
+				exceptionType,
+				programId,
+				schemaName,
+				propertyName,
+				exceptionValue,
+			};
+		},
+	);
 
 	const entityExceptions: EntityPropertyExceptionRecord[] = entityException
 		? [...entityException.specimen, ...entityException.treatment, ...entityException.follow_up]
@@ -348,12 +350,13 @@ async function collectDonorExceptions(
 				.map((entityExceptionRecord) => {
 					const exceptionType: ExceptionType = 'EntityProperty';
 					const {
+						submitter_donor_id: donorId,
 						schema: schemaName,
 						requested_core_field: propertyName,
 						requested_exception_value: exceptionValue,
 					} = entityExceptionRecord;
 
-					return { programId, exceptionType, schemaName, propertyName, exceptionValue };
+					return { programId, exceptionType, schemaName, propertyName, exceptionValue, donorId };
 				})
 		: [];
 
