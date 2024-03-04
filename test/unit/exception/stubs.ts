@@ -18,6 +18,7 @@
  */
 
 import { Donor } from '../../../src/clinical/clinical-entities';
+import { FollowupFieldsEnum, TreatmentFieldsEnum } from '../../../src/common-model/entities';
 
 export const existingDonor01: Donor = {
 	schemaMetadata: {
@@ -62,6 +63,16 @@ export const existingDonor01: Donor = {
 			samples: [],
 		},
 	],
+	followUps: [
+		{
+			followUpId: 1,
+			clinicalInfo: {
+				[FollowupFieldsEnum.submitter_follow_up_id]: 'FF123',
+				some_field: 1,
+				another_field: 'abcd',
+			},
+		},
+	],
 };
 
 export const existingDonor02: Donor = {
@@ -89,6 +100,16 @@ export const existingDonor02: Donor = {
 					submitterId: 'AM1',
 				},
 			],
+		},
+	],
+	treatments: [
+		{
+			treatmentId: 1,
+			clinicalInfo: {
+				[TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+				fieldOne: 'field1',
+			},
+			therapies: [],
 		},
 	],
 };

@@ -63,11 +63,20 @@ const specimenExceptionStub = {
 	submitter_donor_id: 'DO-0',
 };
 
+const treatmentExceptionStub = {
+	program_name: TEST_PROGRAM_ID,
+	schema: 'treatment',
+	requested_core_field: 'treatment_start_interval',
+	requested_exception_value: 'Unknown',
+	submitter_treatment_id: 'TR-0',
+	submitter_donor_id: 'DO-0',
+};
+
 const entityStub: EntityException = {
 	programId: TEST_PROGRAM_ID,
 	specimen: [specimenExceptionStub],
 	follow_up: [followupExceptionStub],
-	treatment: [],
+	treatment: [treatmentExceptionStub],
 };
 
 const missingEntityStub: MissingEntityException = {
@@ -101,7 +110,7 @@ describe('Submission Service Exception Manifest', () => {
 			chai
 				.expect(result)
 				.to.be.an('array')
-				.with.lengthOf(4);
+				.with.lengthOf(5);
 		});
 	});
 });

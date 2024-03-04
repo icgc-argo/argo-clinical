@@ -332,17 +332,53 @@ export async function getExceptionManifestRecords(
 						requested_exception_value: exceptionValue,
 					} = entityExceptionRecord;
 
-					const { donorId } = donors.find((donor) => donor.submitterId === submitterDonorId) || {};
+					const { donorId, specimens, treatments, followUps } =
+						donors.find((donor) => donor.submitterId === submitterDonorId) || {};
 
-					// let entityId;
-					let submitterEntityId;
+					let entityId: DeepReadonly<number | undefined>;
+					let submitterEntityId: string | undefined;
 
 					if (isSpecimenExceptionRecord(entityExceptionRecord)) {
-						submitterEntityId = entityExceptionRecord['submitter_specimen_id'];
+						submitterEntityId = entityExceptionRecord.submitter_specimen_id;
+
+						const specimenRecord = specimens?.find(
+							(specimen) =>
+								submitterEntityId &&
+								typeof submitterEntityId === 'string' &&
+								specimen.submitter_specimen_id &&
+								typeof specimen.submitter_specimen_id === 'string' &&
+								specimen.submitter_specimen_id === submitterEntityId,
+						);
+
+						entityId = specimenRecord?.specimenId;
 					} else if (isTreatmentExceptionRecord(entityExceptionRecord)) {
-						submitterEntityId = entityExceptionRecord['submitter_treatment_id'];
+						submitterEntityId = entityExceptionRecord.submitter_treatment_id;
+
+						const treatmentRecord = treatments?.find((treatment) =>
+							treatment.therapies.some(
+								(therapyRecord) =>
+									submitterEntityId &&
+									typeof submitterEntityId === 'string' &&
+									therapyRecord.clinicalInfo.submitter_treatment_id &&
+									typeof therapyRecord.clinicalInfo.submitter_treatment_id === 'string' &&
+									therapyRecord.clinicalInfo.submitter_treatment_id === submitterEntityId,
+							),
+						);
+
+						entityId = treatmentRecord?.treatmentId;
 					} else if (isFollowupExceptionRecord(entityExceptionRecord)) {
-						submitterEntityId = entityExceptionRecord['submitter_follow_up_id'];
+						submitterEntityId = entityExceptionRecord.submitter_follow_up_id;
+
+						const followUpRecord = followUps?.find(
+							(followUpRecord) =>
+								submitterEntityId &&
+								typeof submitterEntityId === 'string' &&
+								followUpRecord.clinicalInfo.submitter_follow_up_id &&
+								typeof followUpRecord.clinicalInfo.submitter_follow_up_id === 'string' &&
+								followUpRecord.clinicalInfo.submitter_follow_up_id === submitterEntityId,
+						);
+
+						entityId = followUpRecord?.followUpId;
 					}
 
 					return {
@@ -353,6 +389,7 @@ export async function getExceptionManifestRecords(
 						exceptionValue,
 						donorId,
 						submitterDonorId,
+						entityId,
 						submitterEntityId,
 					};
 				})
