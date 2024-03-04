@@ -52,9 +52,10 @@ const convertClinicalDataToGql = (
 
 			entity.records.forEach((record: ClinicalInfo) => {
 				const displayRecords: EntityDisplayRecord[] = [];
-				for (const [name, value] of Object.entries(record)) {
+				for (const [name, val] of Object.entries(record)) {
 					// omit the submitter_id property from the clinical data table
 					if (name === 'submitter_id') continue;
+					const value = Array.isArray(val) ? val.join(', ') : val;
 					displayRecords.push({ name, value });
 				}
 				records.push(displayRecords);
