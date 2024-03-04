@@ -92,19 +92,11 @@ describe('Submission Service Exception Manifest', () => {
 		});
 
 		it('should return all types of Exception records', async () => {
-			const record = {
-				program_id: TEST_PROGRAM_ID,
-				submitter_donor_id: 'DO-0',
-				submitter_specimen_id: 'SP-0',
-				specimen_acquisition_interval: 'not applicable',
-			};
-			console.log('\n record', record);
 			const result = await getExceptionManifestRecords(TEST_PROGRAM_ID, {
 				donorIds: [1, 2],
 				submitterDonorIds: ['AB3'],
 			});
 
-			console.log('\nresult', result);
 			chai.expect(result).to.be.an('array');
 		});
 	});
