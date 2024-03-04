@@ -97,7 +97,11 @@ describe('Submission Service Exception Manifest', () => {
 				submitterDonorIds: ['AB3'],
 			});
 
-			chai.expect(result).to.be.an('array');
+			// Confirm array has program exception, 2 entity exceptions, and missing entity exception
+			chai
+				.expect(result)
+				.to.be.an('array')
+				.with.lengthOf(4);
 		});
 	});
 });
