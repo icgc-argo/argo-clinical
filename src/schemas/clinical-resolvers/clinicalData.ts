@@ -32,11 +32,8 @@ export type ClinicalEntityDataResponse = ClinicalEntityGQLData & {
 	clinicalErrors?: ClinicalErrorsResponseRecord[];
 };
 
-// GQL Formatting
-type EntityDisplayRecord = { name: string; value: string };
-
 interface ClinicalEntityDisplayData extends Omit<ClinicalEntityData, 'records'> {
-	records: EntityDisplayRecord[][];
+	records: ClinicalInfo[][];
 }
 
 const convertClinicalDataToGql = (
@@ -45,13 +42,13 @@ const convertClinicalDataToGql = (
 ) => {
 	const clinicalDisplayData: ClinicalEntityDisplayData[] = clinicalEntities.map(
 		(entity: ClinicalEntityData) => {
-			const records: EntityDisplayRecord[][] = [];
+			const records: ClinicalInfo[][] = [];
 
 			entity.records.forEach((record: ClinicalInfo) => {
-				const displayRecords: EntityDisplayRecord[] = [];
+				const displayRecords: ClinicalInfo[] = [];
 				for (const [name, val] of Object.entries(record)) {
 					if (name === 'submitter_id') continue;
-					const value = Array.isArray(val) ? val.join(', ') : JSON.stringify(val);
+					const value = Array.isArray(val) ? val.join(', ') : val;
 					displayRecords.push({ name, value });
 				}
 				records.push(displayRecords);
