@@ -147,7 +147,7 @@ export const isFollowupExceptionRecord = (input: any): input is FollowUpExceptio
 	);
 };
 
-export const isTreatmentExceptionRecord = (input: any): input is FollowUpExceptionRecord => {
+export const isTreatmentExceptionRecord = (input: any): input is TreatmentExceptionRecord => {
 	return (
 		// submitter_treatment_id must exist and be a string
 		'submitter_treatment_id' in input && typeof input.submitter_treatment_id === 'string'

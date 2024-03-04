@@ -17,43 +17,36 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { RepoError } from './error-handling';
-import { EntityException, ProgramException, EntityValues, Entity } from './types';
-import _ from 'lodash';
+export type ExceptionType = 'MissingEntity' | 'ProgramProperty' | 'EntityProperty';
 
-export function isProgramException(result: ProgramException | null): result is ProgramException {
-	return result?.programId !== undefined;
-}
+export type MissingEntityExceptionRecord = {
+	exceptionType: 'MissingEntity';
+	programId: string;
+	donorId?: number;
+	submitterDonorId: string;
+};
 
-export function isEntityException(result: EntityException | null): result is EntityException {
-	return (
-		result?.programId !== undefined &&
-		(result?.specimen !== undefined ||
-			result?.follow_up !== undefined ||
-			result?.treatment !== undefined)
-	);
-}
+export type ProgramPropertyExceptionRecord = {
+	exceptionType: 'ProgramProperty';
+	programId: string;
+	schemaName: string;
+	propertyName: string;
+	exceptionValue: string;
+};
 
-export function isRepoError(
-	result: ProgramException | EntityException | RepoError,
-): result is RepoError {
-	return result === RepoError.DOCUMENT_UNDEFINED || result === RepoError.SERVER_ERROR;
-}
+export type EntityPropertyExceptionRecord = {
+	exceptionType: ExceptionType;
+	programId: string;
+	donorId?: number;
+	submitterDonorId?: string;
+	entityId?: string;
+	submitterEntityId?: string;
+	schemaName: string;
+	propertyName: string;
+	exceptionValue: string;
+};
 
-/**
- *
- * @param fileType
- * @returns snaked_cased string
- */
-export function normalizeEntityFileType(fileType: string) {
-	return _.snakeCase(fileType);
-}
-
-/**
- *
- * @param fileType
- * @returns true if valid Entity
- */
-export function isValidEntityType(fileType: string): fileType is Entity {
-	return Object.keys(EntityValues).includes(fileType);
-}
+export type ExceptionManifestRecord =
+	| MissingEntityExceptionRecord
+	| ProgramPropertyExceptionRecord
+	| EntityPropertyExceptionRecord;
