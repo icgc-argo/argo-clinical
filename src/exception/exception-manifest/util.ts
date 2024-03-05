@@ -30,43 +30,57 @@ import {
 	isSpecimenExceptionRecord,
 	isTreatmentExceptionRecord,
 	isFollowupExceptionRecord,
+	Entity,
 } from '../property-exceptions/types';
 
-export const getSpecimenId = (
-	submitter_specimen_id: string,
-	specimens: readonly DeepReadonly<Specimen>[],
-) => {
-	const specimenRecord = specimens.find(
-		(specimen) =>
-			typeof specimen.clinicalInfo.submitter_specimen_id === 'string' &&
-			specimen.clinicalInfo.submitter_specimen_id === submitter_specimen_id,
-	);
-	return specimenRecord?.specimenId;
+type entityKeyMap = {
+	specimen: 'specimenId';
+	treatment: 'treatmentId';
+	follow_up: 'followUpId';
 };
 
-export const getTreatmentId = (
-	submitter_treatment_id: string,
-	treatments: readonly DeepReadonly<Treatment>[],
-) => {
-	const treatmentRecord = treatments.find(
-		(treatment) =>
-			typeof treatment.clinicalInfo.submitter_treatment_id === 'string' &&
-			treatment.clinicalInfo.submitter_treatment_id === submitter_treatment_id,
-	);
-	return treatmentRecord?.treatmentId;
+const idKeys = {
+	specimen: 'submitter_specimen_id',
+	treatment: 'submitter_treatment_id',
+	follow_up: 'submitter_follow_up_id',
 };
 
-export const getFollowUpId = (
-	submitter_follow_up_id: string,
-	followUps: readonly DeepReadonly<FollowUp>[],
-) => {
-	const followUpRecord = followUps?.find(
-		(followUpRecord) =>
-			typeof followUpRecord.clinicalInfo.submitter_follow_up_id === 'string' &&
-			followUpRecord.clinicalInfo.submitter_follow_up_id === submitter_follow_up_id,
-	);
-	return followUpRecord?.followUpId;
+const entityKeys: entityKeyMap = {
+	specimen: 'specimenId',
+	treatment: 'treatmentId',
+	follow_up: 'followUpId',
 };
+
+type EntityRecord = DeepReadonly<Specimen> | DeepReadonly<Treatment> | DeepReadonly<FollowUp>;
+
+export function getEntityId(
+	submitterEntityId: string,
+	schema: string,
+	records: readonly EntityRecord[],
+): number | undefined {
+	const schemaIsEntity = (schema: string): schema is Entity =>
+		schema === 'specimen' || schema === 'treatment' || schema === 'follow_up';
+
+	if (!schemaIsEntity(schema)) return undefined;
+
+	const idKey = idKeys[schema];
+	const entityKey = entityKeys[schema];
+
+	const clinicalRecord = records.find(
+		(entityRecord) =>
+			typeof entityRecord.clinicalInfo[idKey] === 'string' &&
+			entityRecord.clinicalInfo[idKey] === submitterEntityId,
+	);
+
+	if (!clinicalRecord) return undefined;
+
+	const entityId:
+		| Specimen['specimenId']
+		| Treatment['treatmentId']
+		| FollowUp['followUpId'] = Number(clinicalRecord[entityKey]);
+
+	return entityId;
+}
 
 export const mapProgramExceptions = (programId: string) => (
 	exceptionRecord: ProgramExceptionRecord,
@@ -100,21 +114,7 @@ export const mapEntityExceptionRecords = (programId: string, donors: DeepReadonl
 	const { donorId, specimens = [], treatments = [], followUps = [] } =
 		donors.find((donor) => donor.submitterId === submitterDonorId) || {};
 
-	let submitterEntityId: string | undefined;
-	let entityId: DeepReadonly<number | undefined>;
-
-	if (isSpecimenExceptionRecord(entityExceptionRecord)) {
-		submitterEntityId = entityExceptionRecord.submitter_specimen_id;
-		entityId = getSpecimenId(submitterEntityId, specimens);
-	} else if (isTreatmentExceptionRecord(entityExceptionRecord)) {
-		submitterEntityId = entityExceptionRecord.submitter_treatment_id;
-		entityId = getTreatmentId(submitterEntityId, treatments);
-	} else if (isFollowupExceptionRecord(entityExceptionRecord)) {
-		submitterEntityId = entityExceptionRecord.submitter_follow_up_id;
-		entityId = getFollowUpId(submitterEntityId, followUps);
-	}
-
-	return {
+	const entityRecord: EntityPropertyExceptionRecord = {
 		programId,
 		exceptionType,
 		schemaName,
@@ -122,7 +122,28 @@ export const mapEntityExceptionRecords = (programId: string, donors: DeepReadonl
 		exceptionValue,
 		donorId,
 		submitterDonorId,
-		entityId,
-		submitterEntityId,
 	};
+
+	if (isSpecimenExceptionRecord(entityExceptionRecord)) {
+		entityRecord.submitterEntityId = entityExceptionRecord.submitter_specimen_id;
+		entityRecord.entityId = getEntityId(entityExceptionRecord.submitter_specimen_id, schemaName, [
+			...specimens,
+		]);
+	} else if (isTreatmentExceptionRecord(entityExceptionRecord)) {
+		entityRecord.submitterEntityId = entityExceptionRecord.submitter_treatment_id;
+		entityRecord.entityId = getEntityId(
+			entityExceptionRecord.submitter_treatment_id,
+			schemaName,
+			treatments,
+		);
+	} else if (isFollowupExceptionRecord(entityExceptionRecord)) {
+		entityRecord.submitterEntityId = entityExceptionRecord.submitter_follow_up_id;
+		entityRecord.entityId = getEntityId(
+			entityExceptionRecord.submitter_follow_up_id,
+			schemaName,
+			followUps,
+		);
+	}
+
+	return entityRecord;
 };

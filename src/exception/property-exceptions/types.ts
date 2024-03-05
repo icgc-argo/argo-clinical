@@ -39,7 +39,9 @@ export type ProgramException = {
 };
 
 // Entity
-export type BaseEntityExceptionRecord = ExceptionRecord & { submitter_donor_id: string };
+export type BaseEntityExceptionRecord = ExceptionRecord & {
+	submitter_donor_id: string;
+};
 
 export type SpecimenExceptionRecord = BaseEntityExceptionRecord & {
 	submitter_specimen_id: string;

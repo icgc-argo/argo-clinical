@@ -184,7 +184,7 @@ export const programExceptionStub: ProgramException = {
 export const followupExceptionStub: FollowUpExceptionRecord = {
 	program_name: TEST_PROGRAM_ID,
 	requested_core_field: 'interval_of_followUp',
-	schema: 'followUp',
+	schema: 'follow_up',
 	requested_exception_value: 'Not applicable',
 	submitter_follow_up_id: 'FL-0',
 	submitter_donor_id: 'AB3',

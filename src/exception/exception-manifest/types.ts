@@ -17,8 +17,6 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { DeepReadonly } from 'deep-freeze';
-
 export type ExceptionType = 'MissingEntity' | 'ProgramProperty' | 'EntityProperty';
 
 export type MissingEntityExceptionRecord = {
@@ -41,7 +39,7 @@ export type EntityPropertyExceptionRecord = {
 	programId: string;
 	donorId?: number;
 	submitterDonorId?: string;
-	entityId?: DeepReadonly<number | undefined>;
+	entityId?: number;
 	submitterEntityId?: string;
 	schemaName: string;
 	propertyName: string;
