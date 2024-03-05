@@ -32,9 +32,6 @@ import {
 	EntityException,
 	ExceptionRecord,
 	ProgramException,
-	isSpecimenExceptionRecord,
-	isTreatmentExceptionRecord,
-	isFollowupExceptionRecord,
 } from '../../exception/property-exceptions/types';
 import { fieldFilter } from '../../exception/property-exceptions/validation';
 import { getByProgramId } from '../../exception/missing-entity-exceptions/repo';
@@ -45,6 +42,10 @@ import {
 	EntityPropertyExceptionRecord,
 	ExceptionManifestRecord,
 } from '../../exception/exception-manifest/types';
+import {
+	mapProgramExceptions,
+	mapEntityExceptionRecords,
+} from '../../exception/exception-manifest/util';
 import { getDonorsByIds, findDonorBySubmitterId } from '../../clinical/clinical-service';
 import { notEmpty } from '../../utils';
 
@@ -289,19 +290,16 @@ export async function getExceptionManifestRecords(
 
 	const donorsByDonorId = await getDonorsByIds(donorIds);
 	const donorsBySubmitterId = await Promise.all(
-		querySubmitterIds.map(async (submitterId) => {
-			const donor = await findDonorBySubmitterId(submitterId, programId);
-			console.log('\n donor', donor);
-			return donor;
-		}),
+		querySubmitterIds.map(
+			async (submitterId) => await findDonorBySubmitterId(submitterId, programId),
+		),
 	);
-	console.log('\n donorsBySubmitterId', donorsBySubmitterId);
-	const donors = [...donorsByDonorId, ...donorsBySubmitterId]
-		.filter(notEmpty)
-		.filter((donorRecord, index, donorArray) => {
+
+	const donors = [...donorsByDonorId, ...donorsBySubmitterId].filter(notEmpty).filter(
+		(donorRecord, index, donorArray) =>
 			// Filter duplicates
-			return index === donorArray.findIndex((donor) => donor.donorId === donorRecord.donorId);
-		});
+			index === donorArray.findIndex((donor) => donor.donorId === donorRecord.donorId),
+	);
 
 	// Exceptions only store submitterIds, so all submitterIds have to be collected before we can filter exceptions
 	const submitterDonorIds = donors.map((donor) => donor.submitterId);
@@ -313,96 +311,13 @@ export async function getExceptionManifestRecords(
 	const programExceptions = programException?.exceptions || [];
 
 	const programExceptionDisplayRecords: ProgramPropertyExceptionRecord[] = programExceptions.map(
-		(exceptionRecord) => {
-			const exceptionType: ExceptionType = 'ProgramProperty';
-			const {
-				schema: schemaName,
-				requested_core_field: propertyName,
-				requested_exception_value: exceptionValue,
-			} = exceptionRecord;
-			return {
-				exceptionType,
-				programId,
-				schemaName,
-				propertyName,
-				exceptionValue,
-			};
-		},
+		mapProgramExceptions(programId),
 	);
 
 	const entityExceptions: EntityPropertyExceptionRecord[] = entityException
 		? [...entityException.specimen, ...entityException.treatment, ...entityException.follow_up]
 				.filter((exceptionRecord) => submitterDonorIds.includes(exceptionRecord.submitter_donor_id))
-				.map((entityExceptionRecord) => {
-					const exceptionType: ExceptionType = 'EntityProperty';
-					const {
-						submitter_donor_id: submitterDonorId,
-						schema: schemaName,
-						requested_core_field: propertyName,
-						requested_exception_value: exceptionValue,
-					} = entityExceptionRecord;
-
-					const { donorId, specimens, treatments, followUps } =
-						donors.find((donor) => donor.submitterId === submitterDonorId) || {};
-
-					let entityId: DeepReadonly<number | undefined>;
-					let submitterEntityId: string | undefined;
-
-					if (isSpecimenExceptionRecord(entityExceptionRecord)) {
-						submitterEntityId = entityExceptionRecord.submitter_specimen_id;
-
-						const specimenRecord = specimens?.find(
-							(specimen) =>
-								submitterEntityId &&
-								typeof submitterEntityId === 'string' &&
-								specimen.submitter_specimen_id &&
-								typeof specimen.submitter_specimen_id === 'string' &&
-								specimen.submitter_specimen_id === submitterEntityId,
-						);
-
-						entityId = specimenRecord?.specimenId;
-					} else if (isTreatmentExceptionRecord(entityExceptionRecord)) {
-						submitterEntityId = entityExceptionRecord.submitter_treatment_id;
-
-						const treatmentRecord = treatments?.find((treatment) =>
-							treatment.therapies.some(
-								(therapyRecord) =>
-									submitterEntityId &&
-									typeof submitterEntityId === 'string' &&
-									therapyRecord.clinicalInfo.submitter_treatment_id &&
-									typeof therapyRecord.clinicalInfo.submitter_treatment_id === 'string' &&
-									therapyRecord.clinicalInfo.submitter_treatment_id === submitterEntityId,
-							),
-						);
-
-						entityId = treatmentRecord?.treatmentId;
-					} else if (isFollowupExceptionRecord(entityExceptionRecord)) {
-						submitterEntityId = entityExceptionRecord.submitter_follow_up_id;
-
-						const followUpRecord = followUps?.find(
-							(followUpRecord) =>
-								submitterEntityId &&
-								typeof submitterEntityId === 'string' &&
-								followUpRecord.clinicalInfo.submitter_follow_up_id &&
-								typeof followUpRecord.clinicalInfo.submitter_follow_up_id === 'string' &&
-								followUpRecord.clinicalInfo.submitter_follow_up_id === submitterEntityId,
-						);
-
-						entityId = followUpRecord?.followUpId;
-					}
-
-					return {
-						programId,
-						exceptionType,
-						schemaName,
-						propertyName,
-						exceptionValue,
-						donorId,
-						submitterDonorId,
-						entityId,
-						submitterEntityId,
-					};
-				})
+				.map(mapEntityExceptionRecords(programId, donors))
 		: [];
 
 	const missingEntityExceptions: MissingEntityExceptionRecord[] = missingEntityException.success
@@ -410,8 +325,7 @@ export async function getExceptionManifestRecords(
 				.filter((submitterDonorId) => submitterDonorIds.includes(submitterDonorId))
 				.map((submitterDonorId) => {
 					const exceptionType: ExceptionType = 'MissingEntity';
-					const { donorId, submitterId } =
-						donors.find((donor) => donor.submitterId === submitterDonorId) || {};
+					const { donorId } = donors.find((donor) => donor.submitterId === submitterDonorId) || {};
 					return { programId, exceptionType, submitterDonorId, donorId };
 				})
 		: [];
