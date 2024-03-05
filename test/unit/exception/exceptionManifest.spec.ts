@@ -22,7 +22,6 @@ import sinon from 'sinon';
 import * as clinicalService from '../../../src/clinical/clinical-service';
 import entityExceptionRepository from '../../../src/exception/property-exceptions/repo/entity';
 import programExceptionRepository from '../../../src/exception/property-exceptions/repo/program';
-import { EntityException } from '../../../src/exception/property-exceptions/types';
 import * as missingEntityExceptionsRepo from '../../../src/exception/missing-entity-exceptions/repo';
 import { getExceptionManifestRecords } from '../../../src/submission/exceptions/exceptions';
 import { success } from '../../../src/utils/results';
@@ -32,29 +31,23 @@ import {
 	existingDonor02,
 	existingDonor03,
 	programExceptionStub,
-	followupExceptionStub,
-	specimenExceptionStub,
-	treatmentExceptionStub,
 	missingEntityStub,
+	allEntitiesStub,
+	emptyEntitiesStub,
+	emptyProgramExceptionStub,
+	emptyMissingEntityStub,
 } from './stubs';
 
 const stubDonors = [existingDonor01, existingDonor02, existingDonor03];
-
-const allEntitiesStub: EntityException = {
-	programId: TEST_PROGRAM_ID,
-	specimen: [specimenExceptionStub],
-	follow_up: [followupExceptionStub],
-	treatment: [treatmentExceptionStub],
-};
 
 describe('Submission Service Exception Manifest', () => {
 	afterEach(() => {
 		// Restore the default sandbox here
 		sinon.restore();
 	});
-	describe('Exception Manifest', () => {
-		beforeEach(() => {
-			// queryForExceptions, getByProgramId
+
+	describe('Exception Manifest - Success', () => {
+		before(() => {
 			sinon.stub(programExceptionRepository, 'find').returns(Promise.resolve(programExceptionStub));
 			sinon.stub(entityExceptionRepository, 'find').returns(Promise.resolve(allEntitiesStub));
 			sinon
@@ -77,6 +70,32 @@ describe('Submission Service Exception Manifest', () => {
 				.expect(result)
 				.to.be.an('array')
 				.with.lengthOf(5);
+		});
+	});
+
+	describe('Exception Manifest - Failure', () => {
+		before(() => {
+			sinon
+				.stub(programExceptionRepository, 'find')
+				.returns(Promise.resolve(emptyProgramExceptionStub));
+			sinon.stub(entityExceptionRepository, 'find').returns(Promise.resolve(emptyEntitiesStub));
+			sinon
+				.stub(missingEntityExceptionsRepo, 'getByProgramId')
+				.returns(Promise.resolve(success(emptyMissingEntityStub)));
+			sinon.stub(clinicalService, 'getDonorsByIds').returns(Promise.resolve([]));
+			sinon.stub(clinicalService, 'findDonorBySubmitterId').returns(Promise.resolve(undefined));
+		});
+
+		it('handles empty values', async () => {
+			const result = await getExceptionManifestRecords(TEST_PROGRAM_ID, {
+				donorIds: [],
+				submitterDonorIds: [],
+			});
+
+			chai
+				.expect(result)
+				.to.be.an('array')
+				.with.lengthOf(0);
 		});
 	});
 });

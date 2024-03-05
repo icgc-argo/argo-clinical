@@ -25,6 +25,7 @@ import {
 	ProgramException,
 	SpecimenExceptionRecord,
 	TreatmentExceptionRecord,
+	EntityException,
 } from '../../../src/exception/property-exceptions/types';
 
 export const TEST_PROGRAM_ID = 'TEST-IE';
@@ -194,4 +195,28 @@ export const treatmentExceptionStub: TreatmentExceptionRecord = {
 export const missingEntityStub: MissingEntityException = {
 	programId: TEST_PROGRAM_ID,
 	donorSubmitterIds: ['AB3'],
+};
+
+export const allEntitiesStub: EntityException = {
+	programId: TEST_PROGRAM_ID,
+	specimen: [specimenExceptionStub],
+	follow_up: [followupExceptionStub],
+	treatment: [treatmentExceptionStub],
+};
+
+export const emptyEntitiesStub: EntityException = {
+	programId: TEST_PROGRAM_ID,
+	specimen: [],
+	follow_up: [],
+	treatment: [],
+};
+
+export const emptyProgramExceptionStub: ProgramException = {
+	programId: TEST_PROGRAM_ID,
+	exceptions: [],
+};
+
+export const emptyMissingEntityStub: MissingEntityException = {
+	programId: TEST_PROGRAM_ID,
+	donorSubmitterIds: [],
 };
