@@ -20,6 +20,8 @@
 import { Donor } from '../../../src/clinical/clinical-entities';
 import { FollowupFieldsEnum, TreatmentFieldsEnum } from '../../../src/common-model/entities';
 
+export const TEST_PROGRAM_ID = 'TEST-IE';
+
 export const existingDonor01: Donor = {
 	schemaMetadata: {
 		isValid: true,
@@ -141,4 +143,43 @@ export const existingDonor03: Donor = {
 			],
 		},
 	],
+};
+
+export const programExceptionStub = {
+	programId: TEST_PROGRAM_ID,
+	exceptions: [
+		{
+			program_name: TEST_PROGRAM_ID,
+			schema: 'treatment',
+			requested_core_field: 'treatment_start_interval',
+			requested_exception_value: 'Unknown',
+		},
+	],
+};
+
+export const followupExceptionStub = {
+	program_name: TEST_PROGRAM_ID,
+	requested_core_field: 'interval_of_followUp',
+	schema: 'followUp',
+	requested_exception_value: 'Not applicable',
+	submitter_follow_up_id: 'FL-0',
+	submitter_donor_id: 'DO-0',
+};
+
+export const specimenExceptionStub = {
+	program_name: TEST_PROGRAM_ID,
+	requested_core_field: 'specimen_acquisition_interval',
+	schema: 'specimen',
+	requested_exception_value: 'Not applicable',
+	submitter_specimen_id: 'SP-0',
+	submitter_donor_id: 'DO-0',
+};
+
+export const treatmentExceptionStub = {
+	program_name: TEST_PROGRAM_ID,
+	schema: 'treatment',
+	requested_core_field: 'treatment_start_interval',
+	requested_exception_value: 'Unknown',
+	submitter_treatment_id: 'TR-0',
+	submitter_donor_id: 'DO-0',
 };

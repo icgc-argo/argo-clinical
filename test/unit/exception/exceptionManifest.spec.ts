@@ -27,50 +27,18 @@ import * as missingEntityExceptionsRepo from '../../../src/exception/missing-ent
 import { MissingEntityException } from '../../../src/exception/missing-entity-exceptions/model';
 import { getExceptionManifestRecords } from '../../../src/submission/exceptions/exceptions';
 import { success } from '../../../src/utils/results';
-import { existingDonor01, existingDonor02, existingDonor03 } from './stubs';
-
-const TEST_PROGRAM_ID = 'TEST-IE';
+import {
+	TEST_PROGRAM_ID,
+	existingDonor01,
+	existingDonor02,
+	existingDonor03,
+	programExceptionStub,
+	followupExceptionStub,
+	specimenExceptionStub,
+	treatmentExceptionStub,
+} from './stubs';
 
 const stubDonors = [existingDonor01, existingDonor02, existingDonor03];
-
-const programExceptionStub = {
-	programId: TEST_PROGRAM_ID,
-	exceptions: [
-		{
-			program_name: TEST_PROGRAM_ID,
-			schema: 'treatment',
-			requested_core_field: 'treatment_start_interval',
-			requested_exception_value: 'Unknown',
-		},
-	],
-};
-
-const followupExceptionStub = {
-	program_name: TEST_PROGRAM_ID,
-	requested_core_field: 'interval_of_followUp',
-	schema: 'followUp',
-	requested_exception_value: 'Not applicable',
-	submitter_follow_up_id: 'FL-0',
-	submitter_donor_id: 'DO-0',
-};
-
-const specimenExceptionStub = {
-	program_name: TEST_PROGRAM_ID,
-	requested_core_field: 'specimen_acquisition_interval',
-	schema: 'specimen',
-	requested_exception_value: 'Not applicable',
-	submitter_specimen_id: 'SP-0',
-	submitter_donor_id: 'DO-0',
-};
-
-const treatmentExceptionStub = {
-	program_name: TEST_PROGRAM_ID,
-	schema: 'treatment',
-	requested_core_field: 'treatment_start_interval',
-	requested_exception_value: 'Unknown',
-	submitter_treatment_id: 'TR-0',
-	submitter_donor_id: 'DO-0',
-};
 
 const entityStub: EntityException = {
 	programId: TEST_PROGRAM_ID,
