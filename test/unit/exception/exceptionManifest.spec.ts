@@ -24,7 +24,6 @@ import entityExceptionRepository from '../../../src/exception/property-exception
 import programExceptionRepository from '../../../src/exception/property-exceptions/repo/program';
 import { EntityException } from '../../../src/exception/property-exceptions/types';
 import * as missingEntityExceptionsRepo from '../../../src/exception/missing-entity-exceptions/repo';
-import { MissingEntityException } from '../../../src/exception/missing-entity-exceptions/model';
 import { getExceptionManifestRecords } from '../../../src/submission/exceptions/exceptions';
 import { success } from '../../../src/utils/results';
 import {
@@ -36,20 +35,16 @@ import {
 	followupExceptionStub,
 	specimenExceptionStub,
 	treatmentExceptionStub,
+	missingEntityStub,
 } from './stubs';
 
 const stubDonors = [existingDonor01, existingDonor02, existingDonor03];
 
-const entityStub: EntityException = {
+const allEntitiesStub: EntityException = {
 	programId: TEST_PROGRAM_ID,
 	specimen: [specimenExceptionStub],
 	follow_up: [followupExceptionStub],
 	treatment: [treatmentExceptionStub],
-};
-
-const missingEntityStub: MissingEntityException = {
-	programId: TEST_PROGRAM_ID,
-	donorSubmitterIds: ['AB3'],
 };
 
 describe('Submission Service Exception Manifest', () => {
@@ -61,7 +56,7 @@ describe('Submission Service Exception Manifest', () => {
 		beforeEach(() => {
 			// queryForExceptions, getByProgramId
 			sinon.stub(programExceptionRepository, 'find').returns(Promise.resolve(programExceptionStub));
-			sinon.stub(entityExceptionRepository, 'find').returns(Promise.resolve(entityStub));
+			sinon.stub(entityExceptionRepository, 'find').returns(Promise.resolve(allEntitiesStub));
 			sinon
 				.stub(missingEntityExceptionsRepo, 'getByProgramId')
 				.returns(Promise.resolve(success(missingEntityStub)));

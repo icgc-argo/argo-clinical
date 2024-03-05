@@ -19,6 +19,13 @@
 
 import { Donor } from '../../../src/clinical/clinical-entities';
 import { FollowupFieldsEnum, TreatmentFieldsEnum } from '../../../src/common-model/entities';
+import { MissingEntityException } from '../../../src/exception/missing-entity-exceptions/model';
+import {
+	FollowUpExceptionRecord,
+	ProgramException,
+	SpecimenExceptionRecord,
+	TreatmentExceptionRecord,
+} from '../../../src/exception/property-exceptions/types';
 
 export const TEST_PROGRAM_ID = 'TEST-IE';
 
@@ -145,7 +152,7 @@ export const existingDonor03: Donor = {
 	],
 };
 
-export const programExceptionStub = {
+export const programExceptionStub: ProgramException = {
 	programId: TEST_PROGRAM_ID,
 	exceptions: [
 		{
@@ -157,7 +164,7 @@ export const programExceptionStub = {
 	],
 };
 
-export const followupExceptionStub = {
+export const followupExceptionStub: FollowUpExceptionRecord = {
 	program_name: TEST_PROGRAM_ID,
 	requested_core_field: 'interval_of_followUp',
 	schema: 'followUp',
@@ -166,7 +173,7 @@ export const followupExceptionStub = {
 	submitter_donor_id: 'DO-0',
 };
 
-export const specimenExceptionStub = {
+export const specimenExceptionStub: SpecimenExceptionRecord = {
 	program_name: TEST_PROGRAM_ID,
 	requested_core_field: 'specimen_acquisition_interval',
 	schema: 'specimen',
@@ -175,11 +182,16 @@ export const specimenExceptionStub = {
 	submitter_donor_id: 'DO-0',
 };
 
-export const treatmentExceptionStub = {
+export const treatmentExceptionStub: TreatmentExceptionRecord = {
 	program_name: TEST_PROGRAM_ID,
 	schema: 'treatment',
 	requested_core_field: 'treatment_start_interval',
 	requested_exception_value: 'Unknown',
 	submitter_treatment_id: 'TR-0',
 	submitter_donor_id: 'DO-0',
+};
+
+export const missingEntityStub: MissingEntityException = {
+	programId: TEST_PROGRAM_ID,
+	donorSubmitterIds: ['AB3'],
 };
