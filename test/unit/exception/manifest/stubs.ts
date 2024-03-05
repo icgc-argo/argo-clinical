@@ -17,16 +17,16 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { Donor } from '../../../src/clinical/clinical-entities';
-import { FollowupFieldsEnum, TreatmentFieldsEnum } from '../../../src/common-model/entities';
-import { MissingEntityException } from '../../../src/exception/missing-entity-exceptions/model';
+import { Donor } from '../../../../src/clinical/clinical-entities';
+import { FollowupFieldsEnum, TreatmentFieldsEnum } from '../../../../src/common-model/entities';
+import { MissingEntityException } from '../../../../src/exception/missing-entity-exceptions/model';
 import {
 	FollowUpExceptionRecord,
 	ProgramException,
 	SpecimenExceptionRecord,
 	TreatmentExceptionRecord,
 	EntityException,
-} from '../../../src/exception/property-exceptions/types';
+} from '../../../../src/exception/property-exceptions/types';
 
 export const TEST_PROGRAM_ID = 'TEST-IE';
 
@@ -39,14 +39,17 @@ export const existingDonor01: Donor = {
 	_id: 'i8321321',
 	submitterId: 'DO-0',
 	programId: 'TEST_PROGRAM_ID',
-	donorId: 1,
+	donorId: 0,
 	clinicalInfo: {},
 	gender: 'Female',
 	specimens: [
 		{
 			submitterId: 'SP1',
 			specimenTissueSource: 'XYZ',
-			clinicalInfo: {},
+			specimenId: 0,
+			clinicalInfo: {
+				submitter_specimen_id: 'SP-0',
+			},
 			tumourNormalDesignation: 'Normal',
 			specimenType: 'Normal',
 			samples: [
@@ -55,32 +58,6 @@ export const existingDonor01: Donor = {
 					submitterId: 'AM1',
 				},
 			],
-		},
-		{
-			submitterId: 'SP13',
-			specimenTissueSource: 'XYZ',
-			clinicalInfo: {},
-			tumourNormalDesignation: 'Normal',
-			specimenType: 'Normal',
-			samples: [],
-		},
-		{
-			submitterId: 'SP14',
-			specimenTissueSource: 'XYZ',
-			clinicalInfo: {},
-			tumourNormalDesignation: 'Normal',
-			specimenType: 'Normal',
-			samples: [],
-		},
-	],
-	followUps: [
-		{
-			followUpId: 1,
-			clinicalInfo: {
-				[FollowupFieldsEnum.submitter_follow_up_id]: 'FF123',
-				some_field: 1,
-				another_field: 'abcd',
-			},
 		},
 	],
 };
@@ -92,7 +69,7 @@ export const existingDonor02: Donor = {
 		originalSchemaVersion: '1.0',
 	},
 	_id: 'juadskasd23',
-	submitterId: 'DO-0',
+	submitterId: 'DO-2',
 	programId: 'TEST_PROGRAM_ID',
 	donorId: 2,
 	clinicalInfo: {},
@@ -114,10 +91,10 @@ export const existingDonor02: Donor = {
 	],
 	treatments: [
 		{
-			treatmentId: 1,
+			treatmentId: 2,
 			clinicalInfo: {
-				[TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
-				fieldOne: 'field1',
+				[TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
+				treatment_start_interval: 'Unknown',
 			},
 			therapies: [],
 		},
@@ -151,6 +128,55 @@ export const existingDonor03: Donor = {
 			],
 		},
 	],
+	followUps: [
+		{
+			followUpId: 3,
+			clinicalInfo: {
+				[FollowupFieldsEnum.submitter_follow_up_id]: 'FL-0',
+				some_field: 1,
+				interval_of_followUp: 'Unknown',
+			},
+		},
+	],
+};
+
+export const existingDonor04: Donor = {
+	schemaMetadata: {
+		isValid: true,
+		lastValidSchemaVersion: '1.0',
+		originalSchemaVersion: '1.0',
+	},
+	_id: 'juadskasd122',
+	submitterId: 'AB4',
+	programId: 'TEST_PROGRAM_ID',
+	donorId: 4,
+	clinicalInfo: {},
+	gender: 'Female',
+	specimens: [
+		{
+			submitterId: 'SP12',
+			specimenTissueSource: 'XYZZ',
+			clinicalInfo: {},
+			tumourNormalDesignation: 'Normal',
+			specimenType: 'Normal',
+			samples: [
+				{
+					sampleType: 'ST10',
+					submitterId: 'AM1',
+				},
+			],
+		},
+	],
+	followUps: [
+		{
+			followUpId: 3,
+			clinicalInfo: {
+				[FollowupFieldsEnum.submitter_follow_up_id]: 'FL-0',
+				some_field: 1,
+				interval_of_followUp: 'Unknown',
+			},
+		},
+	],
 };
 
 export const programExceptionStub: ProgramException = {
@@ -171,7 +197,7 @@ export const followupExceptionStub: FollowUpExceptionRecord = {
 	schema: 'followUp',
 	requested_exception_value: 'Not applicable',
 	submitter_follow_up_id: 'FL-0',
-	submitter_donor_id: 'DO-0',
+	submitter_donor_id: 'AB3',
 };
 
 export const specimenExceptionStub: SpecimenExceptionRecord = {
@@ -188,13 +214,13 @@ export const treatmentExceptionStub: TreatmentExceptionRecord = {
 	schema: 'treatment',
 	requested_core_field: 'treatment_start_interval',
 	requested_exception_value: 'Unknown',
-	submitter_treatment_id: 'TR-0',
-	submitter_donor_id: 'DO-0',
+	submitter_treatment_id: 'T_02',
+	submitter_donor_id: 'DO-2',
 };
 
 export const missingEntityStub: MissingEntityException = {
 	programId: TEST_PROGRAM_ID,
-	donorSubmitterIds: ['AB3'],
+	donorSubmitterIds: ['AB4'],
 };
 
 export const allEntitiesStub: EntityException = {

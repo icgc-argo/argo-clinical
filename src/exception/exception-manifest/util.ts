@@ -38,8 +38,8 @@ export const getSpecimenId = (
 ) => {
 	const specimenRecord = specimens.find(
 		(specimen) =>
-			typeof specimen.submitter_specimen_id === 'string' &&
-			specimen.submitter_specimen_id === submitter_specimen_id,
+			typeof specimen.clinicalInfo.submitter_specimen_id === 'string' &&
+			specimen.clinicalInfo.submitter_specimen_id === submitter_specimen_id,
 	);
 	return specimenRecord?.specimenId;
 };
@@ -48,12 +48,10 @@ export const getTreatmentId = (
 	submitter_treatment_id: string,
 	treatments: readonly DeepReadonly<Treatment>[],
 ) => {
-	const treatmentRecord = treatments.find((treatment) =>
-		treatment.therapies.some(
-			(therapyRecord) =>
-				typeof therapyRecord.clinicalInfo.submitter_treatment_id === 'string' &&
-				therapyRecord.clinicalInfo.submitter_treatment_id === submitter_treatment_id,
-		),
+	const treatmentRecord = treatments.find(
+		(treatment) =>
+			typeof treatment.clinicalInfo.submitter_treatment_id === 'string' &&
+			treatment.clinicalInfo.submitter_treatment_id === submitter_treatment_id,
 	);
 	return treatmentRecord?.treatmentId;
 };

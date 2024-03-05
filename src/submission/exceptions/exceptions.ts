@@ -334,12 +334,7 @@ export async function getExceptionManifestRecords(
 		...programExceptionDisplayRecords,
 		...entityExceptions,
 		...missingEntityExceptions,
-	].sort((a, b) => {
-		// sort
-		// - a < b, + a > b
-		if (a.exceptionType === 'ProgramProperty') return 1;
-		return 0;
-	});
+	];
 
 	return donorExceptionRecords;
 }
