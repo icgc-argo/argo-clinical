@@ -46,7 +46,7 @@ export const existingDonor01: Donor = {
 		{
 			submitterId: 'SP1',
 			specimenTissueSource: 'XYZ',
-			specimenId: 0,
+			specimenId: 10,
 			clinicalInfo: {
 				submitter_specimen_id: 'SP-0',
 			},
@@ -91,7 +91,7 @@ export const existingDonor02: Donor = {
 	],
 	treatments: [
 		{
-			treatmentId: 2,
+			treatmentId: 20,
 			clinicalInfo: {
 				[TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
 				treatment_start_interval: 'Unknown',
@@ -130,7 +130,7 @@ export const existingDonor03: Donor = {
 	],
 	followUps: [
 		{
-			followUpId: 3,
+			followUpId: 30,
 			clinicalInfo: {
 				[FollowupFieldsEnum.submitter_follow_up_id]: 'FL-0',
 				some_field: 1,
@@ -165,16 +165,6 @@ export const existingDonor04: Donor = {
 					submitterId: 'AM1',
 				},
 			],
-		},
-	],
-	followUps: [
-		{
-			followUpId: 3,
-			clinicalInfo: {
-				[FollowupFieldsEnum.submitter_follow_up_id]: 'FL-0',
-				some_field: 1,
-				interval_of_followUp: 'Unknown',
-			},
 		},
 	],
 };
