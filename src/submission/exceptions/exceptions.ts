@@ -45,7 +45,8 @@ import {
 	EntityPropertyExceptionRecord,
 	ExceptionManifestRecord,
 } from '../../exception/exception-manifest/types';
-import { getDonorsByIds } from '../../clinical/clinical-service';
+import { getDonorsByIds, findDonorBySubmitterId } from '../../clinical/clinical-service';
+import { notEmpty } from '../../utils';
 
 /**
  * query db for program or entity exceptions
@@ -286,15 +287,24 @@ export async function getExceptionManifestRecords(
 ): Promise<ExceptionManifestRecord[]> {
 	const { donorIds, submitterDonorIds: querySubmitterIds } = filters;
 
-	const donors = await getDonorsByIds(donorIds);
+	const donorsByDonorId = await getDonorsByIds(donorIds);
+	const donorsBySubmitterId = await Promise.all(
+		querySubmitterIds.map(async (submitterId) => {
+			const donor = await findDonorBySubmitterId(submitterId, programId);
+			console.log('\n donor', donor);
+			return donor;
+		}),
+	);
+	console.log('\n donorsBySubmitterId', donorsBySubmitterId);
+	const donors = [...donorsByDonorId, ...donorsBySubmitterId]
+		.filter(notEmpty)
+		.filter((donorRecord, index, donorArray) => {
+			// Filter duplicates
+			return index === donorArray.findIndex((donor) => donor.donorId === donorRecord.donorId);
+		});
 
 	// Exceptions only store submitterIds, so all submitterIds have to be collected before we can filter exceptions
-	const submitterDonorIds = [
-		...querySubmitterIds,
-		...donors
-			.map((donor) => donor.submitterId)
-			.filter((submitterId) => !querySubmitterIds.includes(submitterId)),
-	];
+	const submitterDonorIds = donors.map((donor) => donor.submitterId);
 
 	const { programException, entityException } = await queryForExceptions(programId);
 

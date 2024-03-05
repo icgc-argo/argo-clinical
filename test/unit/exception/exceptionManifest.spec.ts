@@ -98,6 +98,9 @@ describe('Submission Service Exception Manifest', () => {
 				.stub(missingEntityExceptionsRepo, 'getByProgramId')
 				.returns(Promise.resolve(success(missingEntityStub)));
 			sinon.stub(clinicalService, 'getDonorsByIds').returns(Promise.resolve(stubDonors));
+			sinon
+				.stub(clinicalService, 'findDonorBySubmitterId')
+				.returns(Promise.resolve(existingDonor03));
 		});
 
 		it('should return all types of Exception records', async () => {
