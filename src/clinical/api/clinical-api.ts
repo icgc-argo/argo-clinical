@@ -20,6 +20,7 @@
 import { Request, Response } from 'express';
 import * as service from '../clinical-service';
 import { ClinicalDataQuery } from '../clinical-service';
+import { getExceptionManifestRecords } from '../../submission/exceptions/exceptions';
 import {
 	HasFullWriteAccess,
 	ProtectTestEndpoint,
@@ -128,6 +129,11 @@ class ClinicalController {
 		const entityData = await service
 			.getPaginatedClinicalData(programShortName, query)
 			.then((data) => data.clinicalEntities);
+
+		const exceptionManifest = await getExceptionManifestRecords(programShortName, {
+			donorIds,
+			submitterDonorIds,
+		});
 
 		const fileEntityName = entityData.length === 1 ? `${entityData[0].entityName}_` : '';
 		const todaysDate = currentDateFormatted();
