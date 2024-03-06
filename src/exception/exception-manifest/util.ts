@@ -100,9 +100,10 @@ export const mapProgramExceptions = (programId: string) => (
 	};
 };
 
-export const mapEntityExceptionRecords = (programId: string, donors: DeepReadonly<Donor>[]) => (
-	entityExceptionRecord: EntityExceptionRecord,
-): EntityPropertyExceptionRecord => {
+export const mapEntityExceptionRecords = (
+	programId: string,
+	donors: readonly DeepReadonly<Donor>[],
+) => (entityExceptionRecord: EntityExceptionRecord): EntityPropertyExceptionRecord => {
 	const exceptionType: ExceptionType = 'EntityProperty';
 	const {
 		submitter_donor_id: submitterDonorId,

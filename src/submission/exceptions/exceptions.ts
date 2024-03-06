@@ -46,7 +46,7 @@ import {
 	mapProgramExceptions,
 	mapEntityExceptionRecords,
 } from '../../exception/exception-manifest/util';
-import { getDonorsByIds, findDonorBySubmitterId } from '../../clinical/clinical-service';
+import { getDonors, getDonorsByIds, findDonorBySubmitterId } from '../../clinical/clinical-service';
 import { notEmpty } from '../../utils';
 
 /**
@@ -295,11 +295,14 @@ export async function getExceptionManifestRecords(
 		),
 	);
 
-	const donors = [...donorsByDonorId, ...donorsBySubmitterId].filter(notEmpty).filter(
-		(donorRecord, index, donorArray) =>
-			// Filter duplicates
-			index === donorArray.findIndex((donor) => donor.donorId === donorRecord.donorId),
-	);
+	const donors =
+		donorsByDonorId.length || donorsBySubmitterId.length
+			? [...donorsByDonorId, ...donorsBySubmitterId].filter(notEmpty).filter(
+					(donorRecord, index, donorArray) =>
+						// Filter duplicates
+						index === donorArray.findIndex((donor) => donor.donorId === donorRecord.donorId),
+			  )
+			: await getDonors(programId);
 
 	// Exceptions only store submitterIds, so all submitterIds have to be collected before we can filter exceptions
 	const submitterDonorIds = donors.map((donor) => donor.submitterId);
