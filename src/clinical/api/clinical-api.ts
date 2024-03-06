@@ -70,7 +70,10 @@ export const createClinicalZipFile = (
 		zip.addFile(`${entityData.entityName}.tsv`, Buffer.alloc(tsvData.length, tsvData));
 	});
 	if (exceptionManifest && exceptionManifest.exceptions.length) {
-		const headers = [exceptionManifest.programShortName];
+		const headers = exceptionManifest.exceptions
+			.map((exception) => Object.keys(exception))
+			.flat()
+			.filter((key, index, keyArray) => keyArray.indexOf(key) === index);
 		const tsvData = TsvUtils.convertJsonRecordsToTsv(exceptionManifest.exceptions, headers);
 		zip.addFile(`exceptions.tsv`, Buffer.alloc(tsvData.length, tsvData));
 	}
