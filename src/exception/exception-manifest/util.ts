@@ -19,12 +19,7 @@
 
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, FollowUp, Specimen, Treatment } from '../../clinical/clinical-entities';
-import {
-	EntityPropertyExceptionType,
-	ProgramExceptionType,
-	ProgramPropertyExceptionRecord,
-	EntityPropertyExceptionRecord,
-} from './types';
+import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 import {
 	EntityExceptionRecord,
 	ProgramExceptionRecord,
@@ -33,6 +28,13 @@ import {
 	isFollowupExceptionRecord,
 	Entity,
 } from '../property-exceptions/types';
+import {
+	EntityRecord,
+	EntityPropertyExceptionType,
+	ProgramExceptionType,
+	ProgramPropertyExceptionRecord,
+	EntityPropertyExceptionRecord,
+} from './types';
 
 const idKeys = {
 	specimen: 'submitter_specimen_id',
@@ -46,15 +48,15 @@ const entityKeys = {
 	follow_up: 'followUpId',
 };
 
-type EntityRecord = DeepReadonly<Specimen> | DeepReadonly<Treatment> | DeepReadonly<FollowUp>;
-
 export function getEntityId(
 	submitterEntityId: string,
 	schema: string,
 	records: readonly EntityRecord[],
 ): number | undefined {
 	const schemaIsEntity = (schema: string): schema is Entity =>
-		schema === 'specimen' || schema === 'treatment' || schema === 'follow_up';
+		schema === ClinicalEntitySchemaNames.SPECIMEN ||
+		schema === ClinicalEntitySchemaNames.TREATMENT ||
+		schema === ClinicalEntitySchemaNames.FOLLOW_UP;
 
 	if (!schemaIsEntity(schema)) return undefined;
 

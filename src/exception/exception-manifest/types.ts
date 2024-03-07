@@ -17,11 +17,19 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import { DeepReadonly } from 'deep-freeze';
+import { FollowUp, Specimen, Treatment } from '../../clinical/clinical-entities';
+
 export const MissingEntityExceptionType = 'MissingEntity';
 
 export const ProgramExceptionType = 'ProgramProperty';
 
 export const EntityPropertyExceptionType = 'EntityProperty';
+
+export type EntityRecord =
+	| DeepReadonly<Specimen>
+	| DeepReadonly<Treatment>
+	| DeepReadonly<FollowUp>;
 
 export type MissingEntityExceptionRecord = {
 	exceptionType: typeof MissingEntityExceptionType;
