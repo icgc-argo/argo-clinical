@@ -75,7 +75,7 @@ export function getEntityId(
 	return entityId;
 }
 
-export const mapProgramExceptions = (programId: string) => (
+export const createProgramExceptions = (programId: string) => (
 	exceptionRecord: ProgramExceptionRecord,
 ): ProgramPropertyExceptionRecord => {
 	const exceptionType = ProgramExceptionType;

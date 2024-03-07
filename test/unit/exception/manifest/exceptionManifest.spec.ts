@@ -56,8 +56,8 @@ describe('Exception Manifest', () => {
 				.returns(Promise.resolve(success(missingEntityStub)));
 			sinon.stub(clinicalService, 'getDonorsByIds').returns(Promise.resolve(stubDonors));
 			sinon
-				.stub(clinicalService, 'findDonorBySubmitterId')
-				.returns(Promise.resolve(existingDonor04));
+				.stub(clinicalService, 'findDonorsBySubmitterIds')
+				.returns(Promise.resolve([existingDonor04]));
 		});
 
 		it('should return all types of Exception records', async () => {
@@ -84,7 +84,7 @@ describe('Exception Manifest', () => {
 				.stub(missingEntityExceptionsRepo, 'getByProgramId')
 				.returns(Promise.resolve(success(emptyMissingEntityStub)));
 			sinon.stub(clinicalService, 'getDonorsByIds').returns(Promise.resolve([]));
-			sinon.stub(clinicalService, 'findDonorBySubmitterId').returns(Promise.resolve(undefined));
+			sinon.stub(clinicalService, 'findDonorsBySubmitterIds').returns(Promise.resolve(undefined));
 		});
 
 		it('handles empty values', async () => {

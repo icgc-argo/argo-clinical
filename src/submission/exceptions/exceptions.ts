@@ -43,10 +43,10 @@ import {
 	MissingEntityExceptionType,
 } from '../../exception/exception-manifest/types';
 import {
-	mapProgramExceptions,
+	createProgramExceptions,
 	mapEntityExceptionRecords,
 } from '../../exception/exception-manifest/util';
-import { getDonorsByIds, findDonorBySubmitterId } from '../../clinical/clinical-service';
+import { getDonorsByIds, findDonorsBySubmitterIds } from '../../clinical/clinical-service';
 import { notEmpty } from '../../utils';
 
 /**
@@ -289,11 +289,7 @@ export async function getExceptionManifestRecords(
 	const { donorIds, submitterDonorIds: querySubmitterIds } = filters;
 
 	const donorsByDonorId = await getDonorsByIds(donorIds);
-	const donorsBySubmitterId = await Promise.all(
-		querySubmitterIds.map(
-			async (submitterId) => await findDonorBySubmitterId(submitterId, programId),
-		),
-	);
+	const donorsBySubmitterId = (await findDonorsBySubmitterIds(programId, querySubmitterIds)) || [];
 
 	const donors = [...donorsByDonorId, ...donorsBySubmitterId].filter(notEmpty).filter(
 		(donorRecord, index, donorArray) =>
@@ -313,7 +309,7 @@ export async function getExceptionManifestRecords(
 	const programExceptions = programException?.exceptions || [];
 
 	const programExceptionDisplayRecords: ProgramPropertyExceptionRecord[] = programExceptions.map(
-		mapProgramExceptions(programId),
+		createProgramExceptions(programId),
 	);
 
 	const entityPropertyExceptions: EntityPropertyExceptionRecord[] = entityPropertyException
