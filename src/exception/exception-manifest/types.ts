@@ -17,17 +17,21 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-export type ExceptionType = 'MissingEntity' | 'ProgramProperty' | 'EntityProperty';
+export const MissingEntityExceptionType = 'MissingEntity';
+
+export const ProgramExceptionType = 'ProgramProperty';
+
+export const EntityPropertyExceptionType = 'EntityProperty';
 
 export type MissingEntityExceptionRecord = {
-	exceptionType: 'MissingEntity';
+	exceptionType: typeof MissingEntityExceptionType;
 	programId: string;
 	donorId?: number;
 	submitterDonorId: string;
 };
 
 export type ProgramPropertyExceptionRecord = {
-	exceptionType: 'ProgramProperty';
+	exceptionType: typeof ProgramExceptionType;
 	programId: string;
 	schemaName: string;
 	propertyName: string;
@@ -35,7 +39,7 @@ export type ProgramPropertyExceptionRecord = {
 };
 
 export type EntityPropertyExceptionRecord = {
-	exceptionType: ExceptionType;
+	exceptionType: typeof EntityPropertyExceptionType;
 	programId: string;
 	donorId?: number;
 	submitterDonorId?: string;

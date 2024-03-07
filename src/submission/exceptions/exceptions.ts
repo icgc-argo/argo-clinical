@@ -36,11 +36,11 @@ import {
 import { fieldFilter } from '../../exception/property-exceptions/validation';
 import { getByProgramId } from '../../exception/missing-entity-exceptions/repo';
 import {
-	ExceptionType,
 	MissingEntityExceptionRecord,
 	ProgramPropertyExceptionRecord,
 	EntityPropertyExceptionRecord,
 	ExceptionManifestRecord,
+	MissingEntityExceptionType,
 } from '../../exception/exception-manifest/types';
 import {
 	mapProgramExceptions,
@@ -324,7 +324,7 @@ export async function getExceptionManifestRecords(
 		? missingEntityException.data.donorSubmitterIds
 				.filter((submitterDonorId) => submitterDonorIds.includes(submitterDonorId))
 				.map((submitterDonorId) => {
-					const exceptionType: ExceptionType = 'MissingEntity';
+					const exceptionType = MissingEntityExceptionType;
 					const { donorId } = donors.find((donor) => donor.submitterId === submitterDonorId) || {};
 					return { programId, exceptionType, submitterDonorId, donorId };
 				})

@@ -20,7 +20,8 @@
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, FollowUp, Specimen, Treatment } from '../../clinical/clinical-entities';
 import {
-	ExceptionType,
+	EntityPropertyExceptionType,
+	ProgramExceptionType,
 	ProgramPropertyExceptionRecord,
 	EntityPropertyExceptionRecord,
 } from './types';
@@ -33,19 +34,13 @@ import {
 	Entity,
 } from '../property-exceptions/types';
 
-type entityKeyMap = {
-	specimen: 'specimenId';
-	treatment: 'treatmentId';
-	follow_up: 'followUpId';
-};
-
 const idKeys = {
 	specimen: 'submitter_specimen_id',
 	treatment: 'submitter_treatment_id',
 	follow_up: 'submitter_follow_up_id',
 };
 
-const entityKeys: entityKeyMap = {
+const entityKeys = {
 	specimen: 'specimenId',
 	treatment: 'treatmentId',
 	follow_up: 'followUpId',
@@ -67,9 +62,7 @@ export function getEntityId(
 	const entityKey = entityKeys[schema];
 
 	const clinicalRecord = records.find(
-		(entityRecord) =>
-			typeof entityRecord.clinicalInfo[idKey] === 'string' &&
-			entityRecord.clinicalInfo[idKey] === submitterEntityId,
+		(entityRecord) => entityRecord.clinicalInfo[idKey] === submitterEntityId,
 	);
 
 	if (!clinicalRecord) return undefined;
@@ -85,7 +78,7 @@ export function getEntityId(
 export const mapProgramExceptions = (programId: string) => (
 	exceptionRecord: ProgramExceptionRecord,
 ): ProgramPropertyExceptionRecord => {
-	const exceptionType: ExceptionType = 'ProgramProperty';
+	const exceptionType = ProgramExceptionType;
 	const {
 		schema: schemaName,
 		requested_core_field: propertyName,
@@ -103,7 +96,7 @@ export const mapProgramExceptions = (programId: string) => (
 export const mapEntityExceptionRecords = (programId: string, donors: DeepReadonly<Donor>[]) => (
 	entityExceptionRecord: EntityExceptionRecord,
 ): EntityPropertyExceptionRecord => {
-	const exceptionType: ExceptionType = 'EntityProperty';
+	const exceptionType = EntityPropertyExceptionType;
 	const {
 		submitter_donor_id: submitterDonorId,
 		schema: schemaName,
