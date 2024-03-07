@@ -304,7 +304,9 @@ export async function getExceptionManifestRecords(
 	// Exceptions only store submitterIds, so all submitterIds have to be collected before we can filter exceptions
 	const submitterDonorIds = donors.map((donor) => donor.submitterId);
 
-	const { programException, entityException } = await queryForExceptions(programId);
+	const { programException, entityException: entityPropertyException } = await queryForExceptions(
+		programId,
+	);
 
 	const missingEntityException = await getByProgramId(programId);
 
@@ -314,8 +316,12 @@ export async function getExceptionManifestRecords(
 		mapProgramExceptions(programId),
 	);
 
-	const entityExceptions: EntityPropertyExceptionRecord[] = entityException
-		? [...entityException.specimen, ...entityException.treatment, ...entityException.follow_up]
+	const entityPropertyExceptions: EntityPropertyExceptionRecord[] = entityPropertyException
+		? [
+				...entityPropertyException.specimen,
+				...entityPropertyException.treatment,
+				...entityPropertyException.follow_up,
+		  ]
 				.filter((exceptionRecord) => submitterDonorIds.includes(exceptionRecord.submitter_donor_id))
 				.map(mapEntityExceptionRecords(programId, donors))
 		: [];
@@ -332,7 +338,7 @@ export async function getExceptionManifestRecords(
 
 	const donorExceptionRecords: ExceptionManifestRecord[] = [
 		...programExceptionDisplayRecords,
-		...entityExceptions,
+		...entityPropertyExceptions,
 		...missingEntityExceptions,
 	];
 
