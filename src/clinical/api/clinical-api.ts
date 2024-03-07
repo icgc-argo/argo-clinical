@@ -75,7 +75,7 @@ export const createClinicalZipFile = (
 			.flat()
 			.filter((key, index, keyArray) => keyArray.indexOf(key) === index);
 		const tsvData = TsvUtils.convertJsonRecordsToTsv(exceptionManifest.exceptions, headers);
-		zip.addFile(`exceptions.tsv`, Buffer.alloc(tsvData.length, tsvData));
+		zip.addFile(`exceptions_manifest.tsv`, Buffer.alloc(tsvData.length, tsvData));
 	}
 	return zip;
 };
