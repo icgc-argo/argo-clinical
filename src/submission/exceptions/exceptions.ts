@@ -295,7 +295,7 @@ export async function getExceptionManifestRecords(
 
 	const donorsByDonorId = filteredDonors
 		? await getDonorsByIds(donorIds)
-		: (await getDonors(programId)).map((donor) => donor);
+		: await getDonors(programId);
 	const donorsBySubmitterId = (await findDonorsBySubmitterIds(programId, querySubmitterIds)) || [];
 
 	const donors = [...donorsByDonorId, ...donorsBySubmitterId].filter(notEmpty).filter(
