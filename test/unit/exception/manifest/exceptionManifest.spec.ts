@@ -41,7 +41,9 @@ import {
 	emptyMissingEntityStub,
 } from './stubs';
 
-const stubDonors = [existingDonor01, existingDonor02];
+const stubDonors = [existingDonor01, existingDonor02, existingDonor03, existingDonor04];
+
+const stubFilteredDonors = [existingDonor01, existingDonor02];
 
 const programTestResult = {
 	exceptionType: 'ProgramProperty',
@@ -107,7 +109,8 @@ describe('Exception Manifest', () => {
 			sinon
 				.stub(missingEntityExceptionsRepo, 'getByProgramId')
 				.returns(Promise.resolve(success(missingEntityStub)));
-			sinon.stub(clinicalService, 'getDonorsByIds').returns(Promise.resolve(stubDonors));
+			sinon.stub(clinicalService, 'getDonors').returns(Promise.resolve(stubDonors));
+			sinon.stub(clinicalService, 'getDonorsByIds').returns(Promise.resolve([]));
 			sinon
 				.stub(clinicalService, 'findDonorsBySubmitterIds')
 				.returns(Promise.resolve([existingDonor03, existingDonor04]));
@@ -142,7 +145,8 @@ describe('Exception Manifest', () => {
 			sinon
 				.stub(missingEntityExceptionsRepo, 'getByProgramId')
 				.returns(Promise.resolve(success(emptyMissingEntityStub)));
-			sinon.stub(clinicalService, 'getDonorsByIds').returns(Promise.resolve(stubDonors));
+			sinon.stub(clinicalService, 'getDonors').returns(Promise.resolve([]));
+			sinon.stub(clinicalService, 'getDonorsByIds').returns(Promise.resolve(stubFilteredDonors));
 			sinon.stub(clinicalService, 'findDonorsBySubmitterIds').returns(Promise.resolve([]));
 		});
 
@@ -204,6 +208,7 @@ describe('Exception Manifest', () => {
 			sinon
 				.stub(missingEntityExceptionsRepo, 'getByProgramId')
 				.returns(Promise.resolve(success(emptyMissingEntityStub)));
+			sinon.stub(clinicalService, 'getDonors').returns(Promise.resolve([]));
 			sinon.stub(clinicalService, 'getDonorsByIds').returns(Promise.resolve([]));
 			sinon.stub(clinicalService, 'findDonorsBySubmitterIds').returns(Promise.resolve(undefined));
 		});

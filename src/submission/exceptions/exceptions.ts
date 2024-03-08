@@ -40,13 +40,17 @@ import {
 	ProgramPropertyExceptionRecord,
 	EntityPropertyExceptionRecord,
 	ExceptionManifestRecord,
-	MissingEntityExceptionType,
+	ExceptionTypes,
 } from '../../exception/exception-manifest/types';
 import {
 	createProgramExceptions,
 	mapEntityExceptionRecords,
 } from '../../exception/exception-manifest/util';
-import { getDonorsByIds, findDonorsBySubmitterIds } from '../../clinical/clinical-service';
+import {
+	getDonors,
+	getDonorsByIds,
+	findDonorsBySubmitterIds,
+} from '../../clinical/clinical-service';
 import { notEmpty } from '../../utils';
 
 /**
@@ -287,8 +291,11 @@ export async function getExceptionManifestRecords(
 	filters: { donorIds: number[]; submitterDonorIds: string[] },
 ): Promise<ExceptionManifestRecord[]> {
 	const { donorIds, submitterDonorIds: querySubmitterIds } = filters;
+	const filteredDonors = Boolean(donorIds.length || querySubmitterIds.length);
 
-	const donorsByDonorId = await getDonorsByIds(donorIds);
+	const donorsByDonorId = filteredDonors
+		? await getDonorsByIds(donorIds)
+		: (await getDonors(programId)).map((donor) => donor);
 	const donorsBySubmitterId = (await findDonorsBySubmitterIds(programId, querySubmitterIds)) || [];
 
 	const donors = [...donorsByDonorId, ...donorsBySubmitterId].filter(notEmpty).filter(
@@ -311,7 +318,6 @@ export async function getExceptionManifestRecords(
 	const programExceptionDisplayRecords: ProgramPropertyExceptionRecord[] = programExceptions.map(
 		createProgramExceptions(programId),
 	);
-
 	const entityPropertyExceptions: EntityPropertyExceptionRecord[] = entityPropertyException
 		? [
 				...entityPropertyException.specimen,
@@ -326,7 +332,7 @@ export async function getExceptionManifestRecords(
 		? missingEntityException.data.donorSubmitterIds
 				.filter((submitterDonorId) => submitterDonorIds.includes(submitterDonorId))
 				.map((submitterDonorId) => {
-					const exceptionType = MissingEntityExceptionType;
+					const exceptionType = ExceptionTypes.missingEntity;
 					const { donorId } = donors.find((donor) => donor.submitterId === submitterDonorId) || {};
 					return { programId, exceptionType, submitterDonorId, donorId };
 				})
