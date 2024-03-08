@@ -318,6 +318,7 @@ export async function getExceptionManifestRecords(
 	const programExceptionDisplayRecords: ProgramPropertyExceptionRecord[] = programExceptions.map(
 		createProgramExceptions(programId),
 	);
+
 	const entityPropertyExceptions: EntityPropertyExceptionRecord[] = entityPropertyException
 		? [
 				...entityPropertyException.specimen,
