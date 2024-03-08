@@ -30,8 +30,7 @@ import {
 } from '../property-exceptions/types';
 import {
 	EntityRecord,
-	EntityPropertyExceptionType,
-	ProgramExceptionType,
+	ExceptionTypes,
 	ProgramPropertyExceptionRecord,
 	EntityPropertyExceptionRecord,
 } from './types';
@@ -42,17 +41,11 @@ const idKeys = {
 	follow_up: 'submitter_follow_up_id',
 };
 
-type EntityKeys = {
-	[ClinicalEntitySchemaNames.SPECIMEN]: 'specimenId';
-	[ClinicalEntitySchemaNames.TREATMENT]: 'treatmentId';
-	[ClinicalEntitySchemaNames.FOLLOW_UP]: 'followUpId';
-};
-
-const entityKeys: EntityKeys = {
-	specimen: 'specimenId',
-	treatment: 'treatmentId',
-	follow_up: 'followUpId',
-};
+const entityKeys = {
+	[ClinicalEntitySchemaNames.SPECIMEN]: 'specimenId',
+	[ClinicalEntitySchemaNames.TREATMENT]: 'treatmentId',
+	[ClinicalEntitySchemaNames.FOLLOW_UP]: 'followUpId',
+} as const;
 
 function isSpecimen(record: EntityRecord): record is Specimen {
 	return entityKeys[ClinicalEntitySchemaNames.SPECIMEN] in record;
@@ -96,7 +89,7 @@ export function getEntityId(
 export const createProgramExceptions = (programId: string) => (
 	exceptionRecord: ProgramExceptionRecord,
 ): ProgramPropertyExceptionRecord => {
-	const exceptionType = ProgramExceptionType;
+	const exceptionType = ExceptionTypes.programProperty;
 	const {
 		schema: schemaName,
 		requested_core_field: propertyName,
@@ -114,7 +107,7 @@ export const createProgramExceptions = (programId: string) => (
 export const mapEntityExceptionRecords = (programId: string, donors: DeepReadonly<Donor>[]) => (
 	entityExceptionRecord: EntityExceptionRecord,
 ): EntityPropertyExceptionRecord => {
-	const exceptionType = EntityPropertyExceptionType;
+	const exceptionType = ExceptionTypes.entityProperty;
 	const {
 		submitter_donor_id: submitterDonorId,
 		schema: schemaName,

@@ -220,6 +220,20 @@ export const allEntitiesStub: EntityException = {
 	treatment: [treatmentExceptionStub],
 };
 
+export const donorIdEntitiesStub: EntityException = {
+	programId: TEST_PROGRAM_ID,
+	specimen: [specimenExceptionStub],
+	follow_up: [],
+	treatment: [treatmentExceptionStub],
+};
+
+export const submitterIdEntitiesStub: EntityException = {
+	programId: TEST_PROGRAM_ID,
+	specimen: [],
+	follow_up: [followupExceptionStub],
+	treatment: [],
+};
+
 export const emptyEntitiesStub: EntityException = {
 	programId: TEST_PROGRAM_ID,
 	specimen: [],
