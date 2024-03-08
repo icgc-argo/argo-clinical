@@ -39,7 +39,7 @@ import {
 	emptyMissingEntityStub,
 } from './stubs';
 
-const stubDonors = [existingDonor01, existingDonor02, existingDonor03];
+const stubDonors = [existingDonor01, existingDonor02];
 
 describe('Exception Manifest', () => {
 	afterEach(() => {
@@ -56,8 +56,8 @@ describe('Exception Manifest', () => {
 				.returns(Promise.resolve(success(missingEntityStub)));
 			sinon.stub(clinicalService, 'getDonorsByIds').returns(Promise.resolve(stubDonors));
 			sinon
-				.stub(clinicalService, 'findDonorBySubmitterId')
-				.returns(Promise.resolve(existingDonor04));
+				.stub(clinicalService, 'findDonorsBySubmitterIds')
+				.returns(Promise.resolve([existingDonor03, existingDonor04]));
 		});
 
 		it('should return all types of Exception records', async () => {
@@ -66,11 +66,68 @@ describe('Exception Manifest', () => {
 				submitterDonorIds: ['AB3', 'AB4'],
 			});
 
-			// Confirm array has program exception, 2 entity exceptions, and missing entity exception
+			// Confirm array has all types of exception records
 			chai
 				.expect(result)
 				.to.be.an('array')
 				.with.lengthOf(5);
+
+			const programTestResult = {
+				exceptionType: 'ProgramProperty',
+				programId: 'TEST-IE',
+				schemaName: 'treatment',
+				propertyName: 'treatment_start_interval',
+				exceptionValue: 'Unknown',
+			};
+
+			const entityTestResultA = {
+				programId: 'TEST-IE',
+				exceptionType: 'EntityProperty',
+				schemaName: 'specimen',
+				propertyName: 'specimen_acquisition_interval',
+				exceptionValue: 'Not applicable',
+				donorId: 0,
+				submitterDonorId: 'DO-0',
+				submitterEntityId: 'SP-0',
+				entityId: 10,
+			};
+
+			const entityTestResultB = {
+				programId: 'TEST-IE',
+				exceptionType: 'EntityProperty',
+				schemaName: 'treatment',
+				propertyName: 'treatment_start_interval',
+				exceptionValue: 'Unknown',
+				donorId: 2,
+				submitterDonorId: 'DO-2',
+				submitterEntityId: 'T_02',
+				entityId: 20,
+			};
+
+			const entityTestResultC = {
+				programId: 'TEST-IE',
+				exceptionType: 'EntityProperty',
+				schemaName: 'follow_up',
+				propertyName: 'interval_of_followUp',
+				exceptionValue: 'Not applicable',
+				donorId: 3,
+				submitterDonorId: 'AB3',
+				submitterEntityId: 'FL-0',
+				entityId: 30,
+			};
+
+			const missingEntityTestResult = {
+				programId: 'TEST-IE',
+				exceptionType: 'MissingEntity',
+				submitterDonorId: 'AB4',
+				donorId: 4,
+			};
+
+			chai.expect(result).to.deep.include(programTestResult);
+			chai.expect(result).to.deep.include(entityTestResultA);
+			chai.expect(result).to.deep.include(entityTestResultB);
+			chai.expect(result).to.deep.include(entityTestResultC);
+			chai.expect(result).to.deep.include(missingEntityTestResult);
 		});
 	});
 
@@ -84,7 +141,7 @@ describe('Exception Manifest', () => {
 				.stub(missingEntityExceptionsRepo, 'getByProgramId')
 				.returns(Promise.resolve(success(emptyMissingEntityStub)));
 			sinon.stub(clinicalService, 'getDonorsByIds').returns(Promise.resolve([]));
-			sinon.stub(clinicalService, 'findDonorBySubmitterId').returns(Promise.resolve(undefined));
+			sinon.stub(clinicalService, 'findDonorsBySubmitterIds').returns(Promise.resolve(undefined));
 		});
 
 		it('handles empty values', async () => {

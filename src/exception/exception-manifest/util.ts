@@ -19,11 +19,7 @@
 
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, FollowUp, Specimen, Treatment } from '../../clinical/clinical-entities';
-import {
-	ExceptionType,
-	ProgramPropertyExceptionRecord,
-	EntityPropertyExceptionRecord,
-} from './types';
+import { ClinicalEntitySchemaNames } from '../../common-model/entities';
 import {
 	EntityExceptionRecord,
 	ProgramExceptionRecord,
@@ -32,12 +28,13 @@ import {
 	isFollowupExceptionRecord,
 	Entity,
 } from '../property-exceptions/types';
-
-type entityKeyMap = {
-	specimen: 'specimenId';
-	treatment: 'treatmentId';
-	follow_up: 'followUpId';
-};
+import {
+	EntityRecord,
+	EntityPropertyExceptionType,
+	ProgramExceptionType,
+	ProgramPropertyExceptionRecord,
+	EntityPropertyExceptionRecord,
+} from './types';
 
 const idKeys = {
 	specimen: 'submitter_specimen_id',
@@ -45,47 +42,61 @@ const idKeys = {
 	follow_up: 'submitter_follow_up_id',
 };
 
-const entityKeys: entityKeyMap = {
+type EntityKeys = {
+	[ClinicalEntitySchemaNames.SPECIMEN]: 'specimenId';
+	[ClinicalEntitySchemaNames.TREATMENT]: 'treatmentId';
+	[ClinicalEntitySchemaNames.FOLLOW_UP]: 'followUpId';
+};
+
+const entityKeys: EntityKeys = {
 	specimen: 'specimenId',
 	treatment: 'treatmentId',
 	follow_up: 'followUpId',
 };
 
-type EntityRecord = DeepReadonly<Specimen> | DeepReadonly<Treatment> | DeepReadonly<FollowUp>;
+function isSpecimen(record: EntityRecord): record is Specimen {
+	return entityKeys[ClinicalEntitySchemaNames.SPECIMEN] in record;
+}
+
+function isTreatment(record: EntityRecord): record is Treatment {
+	return entityKeys[ClinicalEntitySchemaNames.TREATMENT] in record;
+}
+
+function isFollowup(record: EntityRecord): record is FollowUp {
+	return entityKeys[ClinicalEntitySchemaNames.FOLLOW_UP] in record;
+}
+
+const schemaIsEntity = (schema: string): schema is Entity =>
+	schema === ClinicalEntitySchemaNames.SPECIMEN ||
+	schema === ClinicalEntitySchemaNames.TREATMENT ||
+	schema === ClinicalEntitySchemaNames.FOLLOW_UP;
 
 export function getEntityId(
 	submitterEntityId: string,
-	schema: string,
+	schema: Entity,
 	records: readonly EntityRecord[],
 ): number | undefined {
-	const schemaIsEntity = (schema: string): schema is Entity =>
-		schema === 'specimen' || schema === 'treatment' || schema === 'follow_up';
-
-	if (!schemaIsEntity(schema)) return undefined;
-
 	const idKey = idKeys[schema];
-	const entityKey = entityKeys[schema];
 
 	const clinicalRecord = records.find(
-		(entityRecord) =>
-			typeof entityRecord.clinicalInfo[idKey] === 'string' &&
-			entityRecord.clinicalInfo[idKey] === submitterEntityId,
+		(entityRecord) => entityRecord.clinicalInfo[idKey] === submitterEntityId,
 	);
 
 	if (!clinicalRecord) return undefined;
 
-	const entityId:
-		| Specimen['specimenId']
-		| Treatment['treatmentId']
-		| FollowUp['followUpId'] = Number(clinicalRecord[entityKey]);
-
-	return entityId;
+	if (isSpecimen(clinicalRecord)) {
+		return clinicalRecord[entityKeys[ClinicalEntitySchemaNames.SPECIMEN]];
+	} else if (isFollowup(clinicalRecord)) {
+		return clinicalRecord[entityKeys[ClinicalEntitySchemaNames.FOLLOW_UP]];
+	} else if (isTreatment(clinicalRecord)) {
+		return clinicalRecord[entityKeys[ClinicalEntitySchemaNames.TREATMENT]];
+	}
 }
 
-export const mapProgramExceptions = (programId: string) => (
+export const createProgramExceptions = (programId: string) => (
 	exceptionRecord: ProgramExceptionRecord,
 ): ProgramPropertyExceptionRecord => {
-	const exceptionType: ExceptionType = 'ProgramProperty';
+	const exceptionType = ProgramExceptionType;
 	const {
 		schema: schemaName,
 		requested_core_field: propertyName,
@@ -100,11 +111,10 @@ export const mapProgramExceptions = (programId: string) => (
 	};
 };
 
-export const mapEntityExceptionRecords = (
-	programId: string,
-	donors: readonly DeepReadonly<Donor>[],
-) => (entityExceptionRecord: EntityExceptionRecord): EntityPropertyExceptionRecord => {
-	const exceptionType: ExceptionType = 'EntityProperty';
+export const mapEntityExceptionRecords = (programId: string, donors: DeepReadonly<Donor>[]) => (
+	entityExceptionRecord: EntityExceptionRecord,
+): EntityPropertyExceptionRecord => {
+	const exceptionType = EntityPropertyExceptionType;
 	const {
 		submitter_donor_id: submitterDonorId,
 		schema: schemaName,
@@ -125,25 +135,30 @@ export const mapEntityExceptionRecords = (
 		submitterDonorId,
 	};
 
-	if (isSpecimenExceptionRecord(entityExceptionRecord)) {
-		entityRecord.submitterEntityId = entityExceptionRecord.submitter_specimen_id;
-		entityRecord.entityId = getEntityId(entityExceptionRecord.submitter_specimen_id, schemaName, [
-			...specimens,
-		]);
-	} else if (isTreatmentExceptionRecord(entityExceptionRecord)) {
-		entityRecord.submitterEntityId = entityExceptionRecord.submitter_treatment_id;
-		entityRecord.entityId = getEntityId(
-			entityExceptionRecord.submitter_treatment_id,
-			schemaName,
-			treatments,
-		);
-	} else if (isFollowupExceptionRecord(entityExceptionRecord)) {
-		entityRecord.submitterEntityId = entityExceptionRecord.submitter_follow_up_id;
-		entityRecord.entityId = getEntityId(
-			entityExceptionRecord.submitter_follow_up_id,
-			schemaName,
-			followUps,
-		);
+	// Base Exceptions give type 'string' to schemaName
+	const isValidEntity = schemaIsEntity(schemaName);
+
+	if (isValidEntity) {
+		if (isSpecimenExceptionRecord(entityExceptionRecord)) {
+			entityRecord.submitterEntityId = entityExceptionRecord.submitter_specimen_id;
+			entityRecord.entityId = getEntityId(entityExceptionRecord.submitter_specimen_id, schemaName, [
+				...specimens,
+			]);
+		} else if (isTreatmentExceptionRecord(entityExceptionRecord)) {
+			entityRecord.submitterEntityId = entityExceptionRecord.submitter_treatment_id;
+			entityRecord.entityId = getEntityId(
+				entityExceptionRecord.submitter_treatment_id,
+				schemaName,
+				treatments,
+			);
+		} else if (isFollowupExceptionRecord(entityExceptionRecord)) {
+			entityRecord.submitterEntityId = entityExceptionRecord.submitter_follow_up_id;
+			entityRecord.entityId = getEntityId(
+				entityExceptionRecord.submitter_follow_up_id,
+				schemaName,
+				followUps,
+			);
+		}
 	}
 
 	return entityRecord;
