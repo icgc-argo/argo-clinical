@@ -20,11 +20,11 @@
 import { DeepReadonly } from 'deep-freeze';
 import { FollowUp, Specimen, Treatment } from '../../clinical/clinical-entities';
 
-export const MissingEntityExceptionType = 'MissingEntity';
-
-export const ProgramExceptionType = 'ProgramProperty';
-
-export const EntityPropertyExceptionType = 'EntityProperty';
+export const ExceptionTypes = {
+	programProperty: 'ProgramProperty',
+	entityProperty: 'EntityProperty',
+	missingEntity: 'MissingEntity',
+} as const;
 
 export type EntityRecord =
 	| DeepReadonly<Specimen>
@@ -32,14 +32,14 @@ export type EntityRecord =
 	| DeepReadonly<FollowUp>;
 
 export type MissingEntityExceptionRecord = {
-	exceptionType: typeof MissingEntityExceptionType;
+	exceptionType: typeof ExceptionTypes.missingEntity;
 	programId: string;
 	donorId?: number;
 	submitterDonorId: string;
 };
 
 export type ProgramPropertyExceptionRecord = {
-	exceptionType: typeof ProgramExceptionType;
+	exceptionType: typeof ExceptionTypes.programProperty;
 	programId: string;
 	schemaName: string;
 	propertyName: string;
@@ -47,7 +47,7 @@ export type ProgramPropertyExceptionRecord = {
 };
 
 export type EntityPropertyExceptionRecord = {
-	exceptionType: typeof EntityPropertyExceptionType;
+	exceptionType: typeof ExceptionTypes.entityProperty;
 	programId: string;
 	donorId?: number;
 	submitterDonorId?: string;
