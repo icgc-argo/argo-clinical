@@ -17,6 +17,9 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import { DeepReadonly } from 'deep-freeze';
+import { isEqual } from 'lodash';
+import _ from 'mongoose-sequence';
 import { Donor, Therapy } from '../../clinical/clinical-entities';
 import {
 	DataValidationErrors,
@@ -24,7 +27,6 @@ import {
 	SubmissionValidationOutput,
 	SubmittedClinicalRecord,
 } from '../submission-entities';
-import { DeepReadonly } from 'deep-freeze';
 import {
 	findClinicalObjects,
 	getSingleClinicalObjectFromDonor,
@@ -37,7 +39,6 @@ import {
 } from '../../common-model/entities';
 import { checkTreatmentHasCorrectTypeForTherapy, getTreatment } from './therapy';
 import * as utils from './utils';
-import _ from 'mongoose-sequence';
 
 export const validate = async (
 	therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
@@ -194,17 +195,29 @@ function checkSurgeryDuplicateOrUpdate(
 	existingSurgery: DeepReadonly<Therapy> | undefined,
 	errors: SubmissionValidationError[],
 ) {
-	// if there is surgery with the current submitter_specimen_id submitted before,
-	// or if there are more than one surgeries with the same submitter_specimen_id
-	// in the current submission, then invalid.
-	errors.push(
-		utils.buildSubmissionError(
-			therapyRecord,
-			DataValidationErrors.DUPLICATE_SUBMITTER_SPECIMEN_ID_IN_SURGERY,
-			DonorFieldsEnum.submitter_donor_id,
-			{
-				submitter_specimen_id: therapyRecord[SurgeryFieldsEnum.submitter_specimen_id],
-			},
-		),
-	);
+	// Clone Submitted Record, minus index key, which is not stored on Clinical Records
+	const submissionClone = (({ index, ...rest }) => ({ ...rest }))(therapyRecord);
+
+	// Determine if Submission is duplicating existing record, or if Submission is an update
+	const submissionValues = Object.values(submissionClone);
+	const existingRecordValues = existingSurgery ? Object.values(existingSurgery.clinicalInfo) : [];
+	const submissionIsDuplicate =
+		submissionValues.length === existingRecordValues.length &&
+		isEqual(submissionValues, existingRecordValues);
+
+	if (submissionIsDuplicate || prevSurgeries.length > 1) {
+		// If there is duplicate surgery with the current submitter_specimen_id submitted before,
+		// or if there are more than one surgeries with the same submitter_specimen_id
+		// in the current submission, then invalid.
+		errors.push(
+			utils.buildSubmissionError(
+				therapyRecord,
+				DataValidationErrors.DUPLICATE_SUBMITTER_SPECIMEN_ID_IN_SURGERY,
+				DonorFieldsEnum.submitter_donor_id,
+				{
+					submitter_specimen_id: therapyRecord[SurgeryFieldsEnum.submitter_specimen_id],
+				},
+			),
+		);
+	}
 }
