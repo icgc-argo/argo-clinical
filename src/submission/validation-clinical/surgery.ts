@@ -189,6 +189,7 @@ function checkSurgeryTypeEquality(
 	return existingSurgeryType === therapyRecordSurgeryType;
 }
 
+// Prevents submitting duplicate records; allows updating existing records with new values
 function checkSurgeryDuplicateOrUpdate(
 	therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
 	prevSurgeries: DeepReadonly<Therapy>[],
