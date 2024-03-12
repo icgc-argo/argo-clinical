@@ -40,7 +40,7 @@ const TreatmentDetailExceptionModel = mongoose.model<TreatmentDetailException>(
  * Otherwise a new TreatmentDetailException will be created in the database.
  *
  * A return with failure state indicates a failure communicating with the database
- * @param missingEntityException
+ * @param treatmentDetailExceptionException
  * @return Result that will indicate if the save happened successfully. If so, a copy of the now saved data will be returned.
  */
 export const createOrUpdate = async (
@@ -64,7 +64,7 @@ export const createOrUpdate = async (
 };
 
 /**
- * Will fetch Treatment Detail Exception record for a given program. If there is a stored program entity exception for the donor
+ * Will fetch Treatment Detail Exception record for a given program. If there is a stored program Treatment exception for the donor
  * then an object will be returned with an empty list of donors.
  *
  * If this method returns a failure then an error occurred connecting to the database.
