@@ -28,7 +28,9 @@ export function isProgramException(result: ProgramException | null): result is P
 export function isEntityException(result: EntityException | null): result is EntityException {
 	return (
 		result?.programId !== undefined &&
-		(result?.specimen !== undefined || result?.follow_up !== undefined)
+		(result?.specimen !== undefined ||
+			result?.follow_up !== undefined ||
+			result?.treatment !== undefined)
 	);
 }
 

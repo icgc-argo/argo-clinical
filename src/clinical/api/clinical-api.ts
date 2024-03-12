@@ -20,6 +20,8 @@
 import { Request, Response } from 'express';
 import * as service from '../clinical-service';
 import { ClinicalDataQuery } from '../clinical-service';
+import { getExceptionManifestRecords } from '../../submission/exceptions/exceptions';
+import { ExceptionManifestRecord } from '../../exception/exception-manifest/types';
 import {
 	HasFullWriteAccess,
 	ProtectTestEndpoint,
@@ -55,12 +57,26 @@ export const parseDonorIdList = (donorIds: string) =>
 		?.filter((match: string) => !!match && parseInt(match))
 		.map((id) => parseInt(id));
 
-export const createClinicalZipFile = (data: ClinicalEntityData[]) => {
+export const createClinicalZipFile = (
+	data: ClinicalEntityData[],
+	exceptionManifest?: {
+		programShortName: string;
+		exceptions: ExceptionManifestRecord[];
+	},
+) => {
 	const zip = new AdmZip();
 	data.forEach((entityData) => {
 		const tsvData = TsvUtils.convertJsonRecordsToTsv(entityData.records, entityData.entityFields);
 		zip.addFile(`${entityData.entityName}.tsv`, Buffer.alloc(tsvData.length, tsvData));
 	});
+	if (exceptionManifest && exceptionManifest.exceptions.length) {
+		const headers = exceptionManifest.exceptions
+			.map((exception) => Object.keys(exception))
+			.flat()
+			.filter((key, index, keyArray) => keyArray.indexOf(key) === index);
+		const tsvData = TsvUtils.convertJsonRecordsToTsv(exceptionManifest.exceptions, headers);
+		zip.addFile(`exceptions_manifest.tsv`, Buffer.alloc(tsvData.length, tsvData));
+	}
 	return zip;
 };
 
@@ -129,6 +145,12 @@ class ClinicalController {
 			.getPaginatedClinicalData(programShortName, query)
 			.then((data) => data.clinicalEntities);
 
+		const exceptions =
+			(await getExceptionManifestRecords(programShortName, {
+				donorIds,
+				submitterDonorIds,
+			})) || [];
+
 		const fileEntityName = entityData.length === 1 ? `${entityData[0].entityName}_` : '';
 		const todaysDate = currentDateFormatted();
 		const fileName = `filename=${programShortName}_Clinical_Data_${fileEntityName}${todaysDate}.zip`;
@@ -138,7 +160,7 @@ class ClinicalController {
 			.attachment(fileName)
 			.setHeader('content-disposition', fileName);
 
-		const zip = createClinicalZipFile(entityData);
+		const zip = createClinicalZipFile(entityData, { programShortName, exceptions });
 
 		res.send(zip.toBuffer());
 	}

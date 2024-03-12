@@ -139,6 +139,10 @@ export async function getDonorsByIds(donorIds: number[]) {
 	return donorDao.findByDonorIds(donorIds);
 }
 
+export async function findDonorsBySubmitterIds(programId: string, submitterIds: string[]) {
+	return await donorDao.findByProgramAndSubmitterIds(programId, submitterIds);
+}
+
 export async function findDonorId(submitterId: string, programId: string) {
 	const donor = await findDonorBySubmitterId(submitterId, programId);
 	if (!donor) {

@@ -30,8 +30,11 @@ export const errorResolver = async (
 		entity.records.forEach((displayRecord) => {
 			const donor = displayRecord.find(({ name }) => name === 'donor_id');
 			if (donor && donor.value) {
-				const donorId = parseInt(donor.value);
-				parentDonorIds.push(donorId);
+				const value = donor.value;
+				if (typeof value === 'number' || typeof value === 'string') {
+					const donorId = typeof value === 'number' ? value : parseInt(value);
+					parentDonorIds.push(donorId);
+				}
 			}
 		}),
 	);
