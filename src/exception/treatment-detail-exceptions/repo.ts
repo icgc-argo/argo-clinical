@@ -24,15 +24,15 @@ import { TreatmentDetailException, TreatmentDetailExceptionSummary } from './mod
 
 const L = loggerFor(__filename);
 
-const missingEntityExceptionSchema = new mongoose.Schema<TreatmentDetailException>({
+const treatmentDetailExceptionSchema = new mongoose.Schema<TreatmentDetailException>({
 	programId: String,
 	donorSubmitterIds: [String],
 });
 
 // check if model exists already to account for file watchers eg. test runner with live reload
-const MissingEntityExceptionModel = mongoose.model<TreatmentDetailException>(
+const TreatmentDetailExceptionModel = mongoose.model<TreatmentDetailException>(
 	'MissingEntityException',
-	missingEntityExceptionSchema,
+	treatmentDetailExceptionSchema,
 );
 
 /**
@@ -47,7 +47,7 @@ export const createOrUpdate = async (
 	missingEntityException: TreatmentDetailException,
 ): Promise<Result<TreatmentDetailException>> => {
 	try {
-		const updatedException = await MissingEntityExceptionModel.findOneAndReplace(
+		const updatedException = await TreatmentDetailExceptionModel.findOneAndReplace(
 			{ programId: missingEntityException.programId },
 			missingEntityException,
 			{ upsert: true, new: true },
@@ -75,7 +75,7 @@ export const getByProgramId = async (
 	programId: string,
 ): Promise<Result<TreatmentDetailException>> => {
 	try {
-		const exception = await MissingEntityExceptionModel.findOne({
+		const exception = await TreatmentDetailExceptionModel.findOne({
 			programId: programId,
 		}).lean(true);
 		if (exception) {
@@ -101,7 +101,7 @@ export const getByProgramId = async (
  */
 export const listAll = async (): Promise<Result<TreatmentDetailExceptionSummary[]>> => {
 	try {
-		const exceptions = await MissingEntityExceptionModel.find();
+		const exceptions = await TreatmentDetailExceptionModel.find();
 		const summaries: TreatmentDetailExceptionSummary[] = exceptions.map((exception) => {
 			return {
 				donorCount: exception.donorSubmitterIds.length,
