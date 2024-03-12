@@ -2908,7 +2908,7 @@ describe('data-validator', () => {
 			chai.expect(result[ClinicalEntitySchemaNames.SURGERY].dataErrors.length).to.equal(0);
 		});
 
-		it('should error when multiple surgeries with the same submitter_specimen_id are found', async () => {
+		it('should error when submitted record is a duplicate of an existing surgery with the same submitter_specimen_id', async () => {
 			const existingDonor = stubs.validation.existingDonor09();
 			const submissionRecordsMap = {};
 			ClinicalSubmissionRecordsOperations.addRecord(
