@@ -200,8 +200,11 @@ function checkSurgeryDuplicateOrUpdate(
 	const submissionClone = (({ index, ...rest }) => ({ ...rest }))(therapyRecord);
 
 	// Determine if Submission is duplicating existing record, or if Submission is an update
-	const submissionValues = Object.values(submissionClone);
-	const existingRecordValues = existingSurgery ? Object.values(existingSurgery.clinicalInfo) : [];
+	// Sort insures [A,B,C] is not compared with [A,C,B]
+	const submissionValues = Object.values(submissionClone).sort();
+	const existingRecordValues = existingSurgery
+		? Object.values(existingSurgery.clinicalInfo).sort()
+		: [];
 	const submissionIsDuplicate =
 		submissionValues.length === existingRecordValues.length &&
 		isEqual(submissionValues, existingRecordValues);
