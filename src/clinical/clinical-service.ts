@@ -408,7 +408,9 @@ export const getValidRecordsPostSubmission = async (
 					requestedVersion: migrationVersion,
 				})
 				.then(async (dictionary) => {
-					if (!dictionary) {
+					if (dictionary) {
+						return dictionary;
+					} else {
 						return await dictionaryManager
 							.instance()
 							.loadAndSaveNewVersion(schemaName, migrationVersion);
