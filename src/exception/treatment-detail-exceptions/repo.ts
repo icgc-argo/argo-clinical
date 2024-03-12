@@ -31,7 +31,7 @@ const treatmentDetailExceptionSchema = new mongoose.Schema<TreatmentDetailExcept
 
 // check if model exists already to account for file watchers eg. test runner with live reload
 const TreatmentDetailExceptionModel = mongoose.model<TreatmentDetailException>(
-	'MissingEntityException',
+	'TreatmentDetailException',
 	treatmentDetailExceptionSchema,
 );
 
@@ -44,19 +44,19 @@ const TreatmentDetailExceptionModel = mongoose.model<TreatmentDetailException>(
  * @return Result that will indicate if the save happened successfully. If so, a copy of the now saved data will be returned.
  */
 export const createOrUpdate = async (
-	missingEntityException: TreatmentDetailException,
+	treatmentDetailException: TreatmentDetailException,
 ): Promise<Result<TreatmentDetailException>> => {
 	try {
 		const updatedException = await TreatmentDetailExceptionModel.findOneAndReplace(
-			{ programId: missingEntityException.programId },
-			missingEntityException,
+			{ programId: treatmentDetailException.programId },
+			treatmentDetailException,
 			{ upsert: true, new: true },
 		).lean(true);
 
 		return success(updatedException);
 	} catch (error) {
 		L.error(
-			`Failure creating or updating Missing Entity Exception for program: ${missingEntityException.programId}`,
+			`Failure creating or updating Missing Entity Exception for program: ${treatmentDetailException.programId}`,
 			error,
 		);
 		return failure(`Unable to save Missing Entity Exception to database.`);
@@ -86,7 +86,7 @@ export const getByProgramId = async (
 			donorSubmitterIds: [],
 		});
 	} catch (error) {
-		L.error(`Failure reading Missing Entity Exception for program: ${programId}`, error);
+		L.error(`Failure reading Treatment Detail Exception for program: ${programId}`, error);
 		return failure(`Error reading data from the database.`, error);
 	}
 };
@@ -110,7 +110,7 @@ export const listAll = async (): Promise<Result<TreatmentDetailExceptionSummary[
 		});
 		return success(summaries);
 	} catch (error) {
-		L.error(`Failure reading Missing Entity Exceptions`, error);
+		L.error(`Failure reading Treatment Detail Exceptions`, error);
 		return failure(`Error reading data from the database.`, error);
 	}
 };
