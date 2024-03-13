@@ -514,10 +514,11 @@ export const getValidRecordsPostSubmission = async (
 						// Remove any Errors that match Exceptions
 						const entitySchema = schemas.find(schemaFilter(entityName));
 
+						// TODO: Investigate why # of errors increases
 						const exceptionErrors = await matchDonorErrorsWithExceptions(
 							programId,
 							entityName,
-							stringifiedRecords,
+							entityRecords,
 							filteredErrors,
 							entitySchema,
 						).then((data) => data.flat());
