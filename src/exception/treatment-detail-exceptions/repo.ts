@@ -56,10 +56,10 @@ export const createOrUpdate = async (
 		return success(updatedException);
 	} catch (error) {
 		L.error(
-			`Failure creating or updating Missing Entity Exception for program: ${treatmentDetailException.programId}`,
+			`Failure creating or updating Treatment Detail Exception for program: ${treatmentDetailException.programId}`,
 			error,
 		);
-		return failure(`Unable to save Missing Entity Exception to database.`);
+		return failure(`Unable to save Treatment Detail Exception to database.`);
 	}
 };
 
