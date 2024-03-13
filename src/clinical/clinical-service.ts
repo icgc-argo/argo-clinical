@@ -508,7 +508,7 @@ export const getValidRecordsPostSubmission = async (
 						stringifiedRecords,
 					);
 
-					let filteredErrors = [...validationErrors];
+					const filteredErrors = [...validationErrors];
 
 					if (featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
 						// Remove any Errors that match Exceptions
