@@ -508,7 +508,7 @@ export const getValidRecordsPostSubmission = async (
 						stringifiedRecords,
 					);
 
-					const filteredErrors = [...validationErrors];
+					let filteredErrors = [...validationErrors];
 
 					if (featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
 						// Remove any Errors that match Exceptions
@@ -522,13 +522,7 @@ export const getValidRecordsPostSubmission = async (
 							entitySchema,
 						).then((data) => data.flat());
 
-						const formattedErrors = exceptionErrors.map(
-							(validationError: dictionaryEntities.SchemaValidationError) => {
-								return formatEntityErrorRecord(donorId, entityName, validationError);
-							},
-						);
-
-						// formattedErrors.forEach((errorRecord) => postExceptionErrors.push(errorRecord));
+						filteredErrors = exceptionErrors;
 					}
 
 					const errors: ClinicalEntityErrorRecord[] = filteredErrors.map((schemaError) =>
@@ -545,7 +539,7 @@ export const getValidRecordsPostSubmission = async (
 					filteredDisplayErrors.push(errorResponseRecord);
 				}
 
-				return currentDonorErrors;
+				return filteredDisplayErrors;
 			}),
 		);
 		clinicalErrors = validationErrors.flat();
