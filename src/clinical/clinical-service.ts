@@ -402,30 +402,28 @@ export const getValidRecordsPostSubmission = async (
 
 	const schemaName = await dictionaryManager.instance().getCurrentName();
 
-	const migrationDictionary = migrationVersion
-		? await schemaRepo
-				.get(schemaName, {
-					requestedVersion: migrationVersion,
-				})
-				.then(async (dictionary) => {
-					if (dictionary) {
-						return dictionary;
-					} else {
-						return await dictionaryManager
-							.instance()
-							.loadAndSaveNewVersion(schemaName, migrationVersion);
-					}
-				})
-		: // Migration Version can be undefined
-		  await dictionaryManager.instance().getCurrent();
-
-	if (!migrationDictionary) {
+	if (!migrationVersion) {
 		L.error(
 			`getValidRecordsPostSubmission error finding migration schema, migrationVersion: ${migrationVersion}, schemaName: ${schemaName}`,
 			{ migrationVersion, schemaName },
 		);
 		return { clinicalErrors: clinicalMigrationErrors };
 	}
+
+	// Retrieve Migration Dictionary from DB, if not found, request from Lectern and save in DB
+	const migrationDictionary = await schemaRepo
+		.get(schemaName, {
+			requestedVersion: migrationVersion,
+		})
+		.then(async (dictionary) => {
+			if (dictionary) {
+				return dictionary;
+			} else {
+				return await dictionaryManager
+					.instance()
+					.loadAndSaveNewVersion(schemaName, migrationVersion);
+			}
+		});
 
 	const errorDonorIds = clinicalMigrationErrors.map((error) => error.donorId);
 	let errorEntities: ClinicalEntitySchemaNames[] = [];
@@ -446,8 +444,10 @@ export const getValidRecordsPostSubmission = async (
 		submitterDonorIds: [],
 	};
 
+	// Retrieve All Invalid Donors from previous migration
 	const donorData = (await donorDao.findByPaginatedProgramId(programId, errorQuery)).donors;
 
+	// Filter any Donors that are now Valid
 	const validDonorIds = donorData
 		.filter((donor) => donor.schemaMetadata.isValid)
 		.map(({ donorId }) => donorId);
@@ -514,7 +514,6 @@ export const getValidRecordsPostSubmission = async (
 						// Remove any Errors that match Exceptions
 						const entitySchema = schemas.find(schemaFilter(entityName));
 
-						// TODO: Investigate why # of errors increases
 						const exceptionErrors = await matchDonorErrorsWithExceptions(
 							programId,
 							entityName,
