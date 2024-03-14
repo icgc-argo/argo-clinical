@@ -446,7 +446,7 @@ const getInvalidDonors = async (
 
 	const donorData = (await donorDao.findByPaginatedProgramId(programId, errorQuery)).donors;
 
-	return [...donorData];
+	return donorData;
 };
 
 /**
