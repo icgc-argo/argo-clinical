@@ -456,7 +456,7 @@ export const getValidRecordsPostSubmission = async (
 		(donorId, index, array) =>
 			!validDonorIds.includes(donorId) && filterDuplicates(donorId, index, array),
 	);
-
+	console.log('\nvalidDonorIds', validDonorIds);
 	let clinicalErrors: ClinicalErrorsResponseRecord[] = [];
 
 	if (invalidDonorIds.length > 0) {
@@ -464,7 +464,7 @@ export const getValidRecordsPostSubmission = async (
 
 		const invalidDonorRecords = donorData.filter((donor) =>
 			invalidDonorIds.includes(donor.donorId),
-		) as DeepReadonly<Donor>[];
+		);
 
 		// Filters out any Errors for Donors that are now valid post-submission
 		// or which are related to Records which match Program Exceptions
