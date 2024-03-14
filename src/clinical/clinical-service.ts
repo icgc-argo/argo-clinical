@@ -563,18 +563,18 @@ export const matchDonorErrorsWithExceptions = async (
 	entitySchema: dictionaryEntities.SchemaDefinition | undefined,
 ) => {
 	const exceptionResults = await Promise.all(
-		processedRecords.map(
-			async (record) =>
-				(
-					await checkForProgramAndEntityExceptions({
-						programId,
-						record,
-						schemaName,
-						schemaValidationErrors,
-						entitySchema,
-					})
-				).filteredErrors,
-		),
+		processedRecords.map(async (record, index) => {
+			const validationErrors = schemaValidationErrors.filter((error) => error.index === index);
+			return (
+				await checkForProgramAndEntityExceptions({
+					programId,
+					record,
+					schemaName,
+					validationErrors,
+					entitySchema,
+				})
+			).filteredErrors;
+		}),
 	);
 
 	return exceptionResults;
