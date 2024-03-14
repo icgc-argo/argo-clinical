@@ -394,6 +394,7 @@ const revalidateEntityRecords = async (
 		.map((record) => prepareForSchemaReProcessing(record))
 		.filter(notEmpty);
 
+	// Revalidate records against Dictionary
 	const { validationErrors } = dictionaryService.processRecords(
 		migrationDictionary,
 		entityName,
