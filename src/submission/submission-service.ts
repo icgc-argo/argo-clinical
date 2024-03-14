@@ -895,7 +895,7 @@ export namespace operations {
 							record: schemaResult.processedRecord,
 							schemaName,
 							entitySchema,
-							schemaValidationErrors: [...schemaResult.validationErrors],
+							validationErrors: [...schemaResult.validationErrors],
 						});
 						validationErrors = filteredErrors;
 						processedRecord = normalizedRecord;
