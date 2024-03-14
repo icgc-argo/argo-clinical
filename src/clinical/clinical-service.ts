@@ -482,7 +482,7 @@ export const getValidRecordsPostSubmission = async (
 				const currentDonorErrors = clinicalMigrationErrors.filter(
 					(errorRecord) => errorRecord.donorId === donorId,
 				);
-
+				// Organize Errors by Entity
 				currentDonorErrors.forEach((migrationError) => {
 					const { entityName, errors } = migrationError;
 					const prevEntityErrors = entityMigrationErrors[entityName];
@@ -525,6 +525,7 @@ export const getValidRecordsPostSubmission = async (
 						filteredErrors = exceptionErrors;
 					}
 
+					// Format Filtered Errors for UI
 					const errors: ClinicalEntityErrorRecord[] = filteredErrors.map((schemaError) =>
 						formatEntityErrorRecord(donorId, entityName, schemaError),
 					);
