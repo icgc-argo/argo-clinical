@@ -22,7 +22,7 @@ import { wrapAsync } from '../../middleware';
 import treatmentDetailExceptionApi from '../../exception/treatment-detail-exceptions/api';
 
 /**
- * Missing entity exceptions
+ * Treatment detail exceptions
  */
 const treatmentDetailExceptionRouter = express.Router({ mergeParams: true });
 
