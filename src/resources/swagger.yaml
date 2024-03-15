@@ -930,6 +930,69 @@ paths:
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
+  /exception/treatment-details:
+    get:
+      tags:
+        - 'Exception - Treatment Details'
+      summary: Get programs with treatment detail exceptions. Return amount of donor submitter exceptions.
+      responses:
+        '200':
+          description: 'Successfully retrieved list of programs with exceptions.'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TreatmentDetailException'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /exception/treatment-details/{programId}:
+    get:
+      tags:
+        - 'Exception - Treatment Details'
+      summary: Get treatment detail exceptions for a single program
+      parameters:
+        - $ref: '#/components/parameters/PathProgramId'
+      responses:
+        '200':
+          description: 'Treatment detail exception donor submitter ids for a single program.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreatmentDetailException'
+        '500':
+          $ref: '#/component/responses/ServerError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    post:
+      tags:
+        - 'Exception - Treatment Details'
+      summary: Add submitter donor ids for exception
+      parameters:
+        - $ref: '#/components/parameters/PathProgramId'
+        - $ref: '#/components/parameters/IsDryRun'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TreatmentDetailsExceptionDonorIds'
+      responses:
+        '200':
+          description: 'Successfully created or updated missing entity exception.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreatmentDetailsExceptionMeta'
+        '400':
+          description: 'Request body failed validation.'
+        '500':
+          $ref: '#/component/responses/ServerError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
   /clinical/donors/tsv:
     post:
       tags:
@@ -1413,6 +1476,8 @@ tags:
     description: Uploading, Deleting, Retrieving exceptions
   - name: Exception - Missing Entity
     description: Uploading, Deleting, Retrieving missing entity exceptions
+  - name: Exception - Treatment Details
+    description: Uploading, Deleting, Retrieving treatment detail exceptions
   - name: Clinical Data
     description: ''
   - name: ICGC Import
@@ -2001,3 +2066,37 @@ components:
           type: array
           items:
             type: string
+
+    TreatmentDetailsException:
+      type: object
+      properties:
+        programId:
+          type: string
+        donorSubmitterIds:
+          type: array
+          items:
+            type: string
+
+    TreatmentDetailsExceptionDonorIds:
+      type: object
+      properties:
+        donorSubmitterIds:
+          description: 'Array of strings, each of which is a submitter donor id to add to this program/s exception. This endpoint is additive.'
+          type: array
+      example:
+        donorSubmitterIds: ['donor001', 'donor002']
+
+    TreatmentDetailsExceptionMeta:
+      type: object
+      properties:
+        donorsUnchanged:
+          description: 'Donors left unchanged.'
+          type: array
+          items:
+            type: string
+        donorsUnchangedCount:
+          description: 'Amount of donors left unchanged.'
+          type: integer
+        isDryRun:
+          description: Dry runs do not modify database records.
+          type: boolean
