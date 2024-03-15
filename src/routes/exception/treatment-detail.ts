@@ -19,7 +19,7 @@
 
 import express from 'express';
 import { wrapAsync } from '../../middleware';
-import treatmentDetailExceptionApi from '../../exception/missing-entity-exceptions/api';
+import treatmentDetailExceptionApi from '../../exception/treatment-detail-exceptions/api';
 
 /**
  * Missing entity exceptions
@@ -29,7 +29,7 @@ const treatmentDetailExceptionRouter = express.Router({ mergeParams: true });
 // GET
 treatmentDetailExceptionRouter.get(
 	'/',
-	wrapAsync(treatmentDetailExceptionApi.listMissingEntityExceptions),
+	wrapAsync(treatmentDetailExceptionApi.listTreatmentDetailExceptions),
 );
 
 treatmentDetailExceptionRouter.get(
