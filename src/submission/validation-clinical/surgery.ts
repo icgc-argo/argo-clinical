@@ -82,9 +82,19 @@ export const validate = async (
 		) as DeepReadonly<Therapy>;
 
 		if (existingSurgeryInDB || surgeries.length > 1) {
-			checkSurgeryDuplicateOrUpdate(therapyRecord, surgeries, existingSurgeryInDB, errors);
+			const duplicationError = checkSurgeryDuplicateOrUpdate(
+				therapyRecord,
+				surgeries,
+				existingSurgeryInDB,
+			);
+			if (duplicationError) errors.push(duplicationError);
 		} else {
-			validateSurgeryByDonorAndTreatment(therapyRecord, existentDonor, mergedDonor, errors);
+			const surgeryNotEqualError = validateSurgeryByDonorAndTreatment(
+				therapyRecord,
+				existentDonor,
+				mergedDonor,
+			);
+			if (surgeryNotEqualError) errors.push(surgeryNotEqualError);
 		}
 	} else {
 		// when submitter_specimen_id is not submitted in tsv, and if surgery with the same combo of submitter_treatment_id
@@ -117,7 +127,6 @@ function validateSurgeryByDonorAndTreatment(
 	therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
 	existentDonor: DeepReadonly<Donor>,
 	mergedDonor: Donor,
-	errors: SubmissionValidationError[],
 ) {
 	const surgeryInDB = findSubmittedSurgeryByDonorAndTreatment(existentDonor, therapyRecord);
 	const surgeriesInCurrentSubmission = findSurgeryInCurrentSubmission(mergedDonor, therapyRecord);
@@ -129,17 +138,15 @@ function validateSurgeryByDonorAndTreatment(
 			surgeriesInCurrentSubmission,
 		);
 		if (!isSurgeryTypeEqual) {
-			errors.push(
-				utils.buildSubmissionError(
-					therapyRecord,
-					DataValidationErrors.SURGERY_TYPES_NOT_EQUAL,
-					SurgeryFieldsEnum.submitter_specimen_id,
-					{
-						submitter_donor_id: therapyRecord[CommonTherapyFields.submitter_donor_id],
-						submitter_treatment_id: therapyRecord[CommonTherapyFields.submitter_treatment_id],
-						surgery_type: therapyRecord[SurgeryFieldsEnum.surgery_type],
-					},
-				),
+			return utils.buildSubmissionError(
+				therapyRecord,
+				DataValidationErrors.SURGERY_TYPES_NOT_EQUAL,
+				SurgeryFieldsEnum.submitter_specimen_id,
+				{
+					submitter_donor_id: therapyRecord[CommonTherapyFields.submitter_donor_id],
+					submitter_treatment_id: therapyRecord[CommonTherapyFields.submitter_treatment_id],
+					surgery_type: therapyRecord[SurgeryFieldsEnum.surgery_type],
+				},
 			);
 		}
 	}
@@ -194,7 +201,6 @@ function checkSurgeryDuplicateOrUpdate(
 	therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
 	prevSurgeries: DeepReadonly<Therapy>[],
 	existingSurgery: DeepReadonly<Therapy> | undefined,
-	errors: SubmissionValidationError[],
 ) {
 	// Clone Submitted Record, minus index key, which is not stored on Clinical Records
 	const submissionClone = omit(therapyRecord, 'index');
@@ -213,15 +219,13 @@ function checkSurgeryDuplicateOrUpdate(
 		// If there is duplicate surgery with the current submitter_specimen_id submitted before,
 		// or if there are more than one surgeries with the same submitter_specimen_id
 		// in the current submission, then invalid.
-		errors.push(
-			utils.buildSubmissionError(
-				therapyRecord,
-				DataValidationErrors.DUPLICATE_SUBMITTER_SPECIMEN_ID_IN_SURGERY,
-				DonorFieldsEnum.submitter_donor_id,
-				{
-					submitter_specimen_id: therapyRecord[SurgeryFieldsEnum.submitter_specimen_id],
-				},
-			),
+		return utils.buildSubmissionError(
+			therapyRecord,
+			DataValidationErrors.DUPLICATE_SUBMITTER_SPECIMEN_ID_IN_SURGERY,
+			DonorFieldsEnum.submitter_donor_id,
+			{
+				submitter_specimen_id: therapyRecord[SurgeryFieldsEnum.submitter_specimen_id],
+			},
 		);
 	}
 }
