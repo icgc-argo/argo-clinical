@@ -18,7 +18,7 @@
  */
 
 import { DeepReadonly } from 'deep-freeze';
-import { isEqual } from 'lodash';
+import { isEqual, omit } from 'lodash';
 import _ from 'mongoose-sequence';
 import { Donor, Therapy } from '../../clinical/clinical-entities';
 import {
@@ -197,7 +197,7 @@ function checkSurgeryDuplicateOrUpdate(
 	errors: SubmissionValidationError[],
 ) {
 	// Clone Submitted Record, minus index key, which is not stored on Clinical Records
-	const submissionClone = (({ index, ...rest }) => ({ ...rest }))(therapyRecord);
+	const submissionClone = omit(therapyRecord, 'index');
 
 	// Determine if Submission is duplicating existing record, or if Submission is an update
 	// Sort insures [A,B,C] is not compared with [A,C,B]
