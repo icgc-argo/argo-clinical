@@ -596,6 +596,7 @@ export const stubs = {
 								[TreatmentFieldsEnum.submitter_treatment_id]: 'Tr-1',
 								[SurgeryFieldsEnum.submitter_specimen_id]: 'sp-1',
 								[SurgeryFieldsEnum.surgery_type]: 'Biopsy',
+								margin_types_involved: ['Circumferential resection margin', 'Distal margin'],
 							},
 						},
 					],
