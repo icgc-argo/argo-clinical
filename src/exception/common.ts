@@ -17,14 +17,18 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import * as express from 'express';
-import propertyExceptionRouter from './property';
-import missingEntityExceptionRouter from './missing-entity';
-import treatmentDetailExceptionRouter from './treatment-detail';
+export type UpdateResult = {
+	donorsUnchanged: string[];
+	donorsUnchangedCount: number;
+	isDryRun: boolean;
+};
 
-const exceptionRouter = express.Router({ mergeParams: true });
-exceptionRouter.use('/property', propertyExceptionRouter);
-exceptionRouter.use('/missing-entity', missingEntityExceptionRouter);
-exceptionRouter.use('/treatment-details', treatmentDetailExceptionRouter);
+export type CreateResult = UpdateResult & {
+	donorsAdded: string[];
+	donorsAddedCount: number;
+};
 
-export default exceptionRouter;
+export type DeleteResult = UpdateResult & {
+	donorsDeleted: string[];
+	donorsDeletedCount: number;
+};

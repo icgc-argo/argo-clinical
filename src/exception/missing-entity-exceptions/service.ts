@@ -23,24 +23,10 @@ import { donorDao as donorRepo } from '../../clinical/donor-repo';
 import { loggerFor } from '../../logger';
 import { updateDonorsCompletionStats } from '../../submission/submission-to-clinical/stat-calculator';
 import { Result, failure, success } from '../../utils/results';
+import { CreateResult, DeleteResult } from '../common';
 import { createOrUpdate, getByProgramId } from './repo';
 
 const L = loggerFor(__filename);
-type UpdateResult = {
-	donorsUnchanged: string[];
-	donorsUnchangedCount: number;
-	isDryRun: boolean;
-};
-
-type CreateResult = UpdateResult & {
-	donorsAdded: string[];
-	donorsAddedCount: number;
-};
-
-type DeleteResult = UpdateResult & {
-	donorsDeleted: string[];
-	donorsDeletedCount: number;
-};
 
 /**
  * Creates or updates (if exists) donor submitter id missing exception in the database.

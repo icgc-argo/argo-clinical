@@ -17,14 +17,27 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import * as express from 'express';
-import propertyExceptionRouter from './property';
-import missingEntityExceptionRouter from './missing-entity';
-import treatmentDetailExceptionRouter from './treatment-detail';
+import express from 'express';
+import { wrapAsync } from '../../middleware';
+import treatmentDetailExceptionApi from '../../exception/treatment-detail-exceptions/api';
 
-const exceptionRouter = express.Router({ mergeParams: true });
-exceptionRouter.use('/property', propertyExceptionRouter);
-exceptionRouter.use('/missing-entity', missingEntityExceptionRouter);
-exceptionRouter.use('/treatment-details', treatmentDetailExceptionRouter);
+/**
+ * Treatment detail exceptions
+ */
+const treatmentDetailExceptionRouter = express.Router({ mergeParams: true });
 
-export default exceptionRouter;
+const {
+	listTreatmentDetailExceptions,
+	getTreatmentDetailException,
+	createTreatmentDetailException,
+} = treatmentDetailExceptionApi;
+
+// GET
+treatmentDetailExceptionRouter.get('/', wrapAsync(listTreatmentDetailExceptions));
+
+treatmentDetailExceptionRouter.get('/:programId', wrapAsync(getTreatmentDetailException));
+
+// POST
+treatmentDetailExceptionRouter.post('/:programId', wrapAsync(createTreatmentDetailException));
+
+export default treatmentDetailExceptionRouter;
