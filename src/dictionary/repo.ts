@@ -58,16 +58,20 @@ export const schemaRepo: SchemaRepository = {
 	},
 	get: async (
 		name: string,
-		options: {
+		options?: {
 			versionToIgnore?: string;
 			requestedVersion?: string;
 		},
 	): Promise<dictionaryEntities.SchemasDictionary | undefined> => {
 		L.debug('in Schema repo get');
-		const { requestedVersion, versionToIgnore } = options;
+		const version = options
+			? options.requestedVersion
+				? options.requestedVersion
+				: { $ne: options.versionToIgnore }
+			: undefined;
 		const doc = await DataSchemaModel.findOne({
 			name: name,
-			version: requestedVersion ? requestedVersion : { $ne: versionToIgnore },
+			version,
 		}).exec();
 		if (!doc) {
 			return undefined;
