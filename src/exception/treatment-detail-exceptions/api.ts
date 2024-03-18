@@ -28,7 +28,7 @@ const updateRequestBody = zod.object({ donorSubmitterIds: zod.string().array() }
 
 class TreatmentDetailExceptionController {
 	@HasFullReadAccess()
-	async getProgramException(req: Request, res: Response) {
+	async getTreatmentDetailException(req: Request, res: Response) {
 		const result = await getByProgramId(req.params.programId);
 		if (!result.success) {
 			const { message, errors } = result;
@@ -50,7 +50,7 @@ class TreatmentDetailExceptionController {
 	}
 
 	@HasFullWriteAccess()
-	async createEntityException(req: Request, res: Response) {
+	async createTreatmentDetailException(req: Request, res: Response) {
 		const programId = req.params.programId;
 		const isDryRun = parseBoolString(req.query['dry-run']);
 
