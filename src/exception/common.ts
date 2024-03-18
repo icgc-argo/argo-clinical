@@ -17,27 +17,18 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import express from 'express';
-import { wrapAsync } from '../../middleware';
-import treatmentDetailExceptionApi from '../../exception/treatment-detail-exceptions/api';
+export type UpdateResult = {
+	donorsUnchanged: string[];
+	donorsUnchangedCount: number;
+	isDryRun: boolean;
+};
 
-/**
- * Treatment detail exceptions
- */
-const treatmentDetailExceptionRouter = express.Router({ mergeParams: true });
+export type CreateResult = UpdateResult & {
+	donorsAdded: string[];
+	donorsAddedCount: number;
+};
 
-const {
-	listTreatmentDetailExceptions,
-	getTreatmentDetailException,
-	createTreatmentDetailException,
-} = treatmentDetailExceptionApi;
-
-// GET
-treatmentDetailExceptionRouter.get('/', wrapAsync(listTreatmentDetailExceptions));
-
-treatmentDetailExceptionRouter.get('/:programId', wrapAsync(getTreatmentDetailException));
-
-// POST
-treatmentDetailExceptionRouter.post('/:programId', wrapAsync(createTreatmentDetailException));
-
-export default treatmentDetailExceptionRouter;
+export type DeleteResult = UpdateResult & {
+	donorsDeleted: string[];
+	donorsDeletedCount: number;
+};
