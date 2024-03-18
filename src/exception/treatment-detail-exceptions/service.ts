@@ -19,7 +19,7 @@
 
 import { loggerFor } from '../../logger';
 import { Result, success } from '../../utils/results';
-import { CreateResult, UpdateResult, DeleteResult } from '../common';
+import { CreateResult } from '../common';
 import { createOrUpdate, getByProgramId } from './repo';
 
 const L = loggerFor(__filename);
