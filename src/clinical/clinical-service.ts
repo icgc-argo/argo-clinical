@@ -595,15 +595,14 @@ export const matchDonorErrorsWithExceptions = async (
 	const exceptionResults = await Promise.all(
 		processedRecords.map(async (record, index) => {
 			const validationErrors = schemaValidationErrors.filter((error) => error.index === index);
-			return (
-				await checkForProgramAndEntityExceptions({
-					programId,
-					record,
-					schemaName,
-					validationErrors,
-					entitySchema,
-				})
-			).filteredErrors;
+			const postExceptionRecords = await checkForProgramAndEntityExceptions({
+				programId,
+				record,
+				schemaName,
+				validationErrors,
+				entitySchema,
+			});
+			return postExceptionRecords.filteredErrors;
 		}),
 	);
 
