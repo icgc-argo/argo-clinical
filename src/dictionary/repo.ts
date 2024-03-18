@@ -29,7 +29,10 @@ export interface SchemaRepository {
 	): Promise<dictionaryEntities.SchemasDictionary | undefined>;
 	get(
 		name: string,
-		versionToIgnore?: string,
+		options: {
+			versionToIgnore?: string;
+			requestedVersion?: string;
+		},
 	): Promise<dictionaryEntities.SchemasDictionary | undefined>;
 }
 
@@ -40,6 +43,7 @@ export const schemaRepo: SchemaRepository = {
 		const result = await DataSchemaModel.findOneAndUpdate(
 			{
 				name: schema.name,
+				version: schema.version,
 			},
 			{
 				name: schema.name,
@@ -54,12 +58,20 @@ export const schemaRepo: SchemaRepository = {
 	},
 	get: async (
 		name: string,
-		versionToIgnore?: string,
+		options?: {
+			versionToIgnore?: string;
+			requestedVersion?: string;
+		},
 	): Promise<dictionaryEntities.SchemasDictionary | undefined> => {
 		L.debug('in Schema repo get');
+		const version = options
+			? options.requestedVersion
+				? options.requestedVersion
+				: { $ne: options.versionToIgnore }
+			: undefined;
 		const doc = await DataSchemaModel.findOne({
 			name: name,
-			version: { $ne: versionToIgnore },
+			version,
 		}).exec();
 		if (!doc) {
 			return undefined;
@@ -72,8 +84,8 @@ type DataSchemaDocument = mongoose.Document & dictionaryEntities.SchemasDictiona
 
 const DataSchemaMongooseSchema = new mongoose.Schema(
 	{
-		name: { type: String, unique: true },
-		version: { type: String, required: true },
+		name: { type: String, required: true, unique: false },
+		version: { type: String, required: true, unique: true },
 		schemas: [],
 	},
 	{ timestamps: true },

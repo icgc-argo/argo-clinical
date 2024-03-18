@@ -57,10 +57,10 @@ class SchemaManager {
 
 	updateManagerDictionaryIfNeeded = async () => {
 		const name = this.currentSchemaDictionary.name;
-		const verToIgnore = this.currentSchemaDictionary.version;
+		const versionToIgnore = this.currentSchemaDictionary.version;
 
 		// try to get dictionary with different version
-		const dictionaryWithDiffVer = await schemaRepo.get(name, verToIgnore);
+		const dictionaryWithDiffVer = await schemaRepo.get(name, { versionToIgnore });
 		if (dictionaryWithDiffVer !== undefined) {
 			// dictionaryWithDiffVer found so update manager dictionary
 			this.currentSchemaDictionary = dictionaryWithDiffVer;
@@ -224,7 +224,7 @@ class SchemaManager {
 		if (!initialVersion) {
 			throw new Error('initial version cannot be empty.');
 		}
-		const storedSchema = await schemaRepo.get(name);
+		const storedSchema = await schemaRepo.get(name, {});
 		if (storedSchema === undefined) {
 			L.info(`schema not found in db`);
 			this.currentSchemaDictionary = {
