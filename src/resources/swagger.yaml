@@ -969,7 +969,7 @@ paths:
     post:
       tags:
         - 'Exception - Treatment Details'
-      summary: Add submitter donor ids for exception
+      summary: Add submitter donor ids for treatment detail exception
       parameters:
         - $ref: '#/components/parameters/PathProgramId'
         - $ref: '#/components/parameters/IsDryRun'
@@ -981,7 +981,7 @@ paths:
               $ref: '#/components/schemas/TreatmentDetailsExceptionDonorIds'
       responses:
         '200':
-          description: 'Successfully created or updated missing entity exception.'
+          description: 'Successfully created or updated treatment detail exception.'
           content:
             application/json:
               schema:
