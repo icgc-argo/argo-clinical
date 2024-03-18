@@ -25,7 +25,7 @@ import { createOrUpdate, getByProgramId } from './repo';
 const L = loggerFor(__filename);
 
 /**
- * Creates or updates (if exists) donor submitter id missing exception in the database.
+ * Creates or updates (if exists) donor submitter ids for treat detail exception in the database.
  * With dry run set to true, reports summary of changes but makes no updates.
  *
  * @param input Submitter donor ids, a program id and a boolean on whether this request is a dry run.
