@@ -232,7 +232,7 @@ export const checkForProgramAndEntityExceptions = async ({
 		const fieldSchema = entitySchema?.fields.find(fieldFilter(validationErrorFieldName));
 
 		const valueType = fieldSchema?.valueType;
-		const validStringValue = valueType === 'string' && isValidStringExceptionType(fieldValue);
+		const validStringValue = isValidStringExceptionType(fieldValue);
 		const validNumericExceptionValue =
 			isNumericField(valueType) && isValidNumericExceptionType(fieldValue);
 
