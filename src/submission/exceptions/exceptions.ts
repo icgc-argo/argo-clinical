@@ -239,22 +239,19 @@ export const checkForProgramAndEntityExceptions = async ({
 		let normalizedFieldValue: string | undefined = '';
 		let normalizedValue: string | string[] = '';
 
-		if (validStringValue) {
-			// get normalized value for record, from either the string value or from the single string inside of the array.
-			// we should know from `isAllowedTypeForException` that the fieldValue is one of those two types.
-			const stringFieldValue = isSingleString(fieldValue) ? fieldValue[0] : fieldValue;
-			const normalizedString = normalizeExceptionValue(stringFieldValue);
-			normalizedValue = isSingleString(fieldValue) ? [normalizedString] : normalizedString;
-
-			normalizedFieldValue = normalizedString;
-		} else if (validNumericExceptionValue) {
-			normalizedFieldValue = fieldValue === '' ? undefined : fieldValue;
-		} else {
-			// If field value is not string or number, then value is not a type we allow exceptions for
-			filteredErrors.push(validationError);
-		}
-
 		if (validStringValue || validNumericExceptionValue) {
+			if (validStringValue) {
+				// get normalized value for record, from either the string value or from the single string inside of the array.
+				// we should know from `isAllowedTypeForException` that the fieldValue is one of those two types.
+				const stringFieldValue = isSingleString(fieldValue) ? fieldValue[0] : fieldValue;
+				const normalizedString = normalizeExceptionValue(stringFieldValue);
+				normalizedValue = isSingleString(fieldValue) ? [normalizedString] : normalizedString;
+
+				normalizedFieldValue = normalizedString;
+			} else if (validNumericExceptionValue) {
+				normalizedFieldValue = fieldValue === '' ? undefined : fieldValue;
+			}
+
 			const valueHasException = validateFieldValueWithExceptions({
 				record,
 				programException,
@@ -272,9 +269,12 @@ export const checkForProgramAndEntityExceptions = async ({
 					[validationErrorFieldName]: normalizedValue, // normalized value keeps this as array for array fields, or string for string fields
 				};
 			} else {
-				// Only add validation errors that are valid exception type, but don't have exceptions
 				filteredErrors.push(validationError);
+				// Add validation errors if they are valid exception type, but don't have exceptions
 			}
+		} else {
+			// If field value is not string or number, then value is not a type we allow exceptions for
+			filteredErrors.push(validationError);
 		}
 	});
 
