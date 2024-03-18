@@ -29,7 +29,7 @@ const L = loggerFor(__filename);
  * With dry run set to true, reports summary of changes but makes no updates.
  *
  * @param input Submitter donor ids, a program id and a boolean on whether this request is a dry run.
- * @returns  Details of of the operation result including a list and count of changes and unchanged ids.
+ * @returns  Details of the operation result including a list and count of changes and unchanged ids.
  */
 export const create = async ({
 	programId,
