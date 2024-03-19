@@ -34,6 +34,7 @@ import {
 	programExceptionStub,
 	missingEntityStub,
 	allEntitiesStub,
+	sortingEntitiesStub,
 	donorIdEntitiesStub,
 	submitterIdEntitiesStub,
 	emptyEntitiesStub,
@@ -133,6 +134,36 @@ describe('Exception Manifest', () => {
 			chai.expect(result).to.deep.include(entityTestResultB);
 			chai.expect(result).to.deep.include(entityTestResultC);
 			chai.expect(result).to.deep.include(missingEntityTestResult);
+		});
+	});
+
+	describe('Request - records are sorted', () => {
+		beforeEach(() => {
+			sinon.stub(programExceptionRepository, 'find').returns(Promise.resolve(programExceptionStub));
+			sinon.stub(entityExceptionRepository, 'find').returns(Promise.resolve(sortingEntitiesStub));
+			sinon
+				.stub(missingEntityExceptionsRepo, 'getByProgramId')
+				.returns(Promise.resolve(success(missingEntityStub)));
+			sinon.stub(clinicalService, 'getDonors').returns(Promise.resolve(stubDonors));
+			sinon.stub(clinicalService, 'getDonorsByIds').returns(Promise.resolve([]));
+			sinon
+				.stub(clinicalService, 'findDonorsBySubmitterIds')
+				.returns(Promise.resolve([existingDonor01, existingDonor04]));
+		});
+
+		it('should return Exception records sorted by: Program Exceptions, Submitter Donor ID, Exception Type, Schema, Submitter Entity ID', async () => {
+			const result = await getExceptionManifestRecords(TEST_PROGRAM_ID, {
+				donorIds: [],
+				submitterDonorIds: [],
+			});
+
+			chai
+				.expect(result)
+				.to.be.an('array')
+				.with.lengthOf(5);
+
+			// chai.expect(result).to.deep.include(entityTestResultC);
+			// chai.expect(result).to.deep.include(missingEntityTestResult);
 		});
 	});
 

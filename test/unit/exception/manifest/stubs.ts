@@ -60,6 +60,16 @@ export const existingDonor01: Donor = {
 			],
 		},
 	],
+	followUps: [
+		{
+			followUpId: 10,
+			clinicalInfo: {
+				[FollowupFieldsEnum.submitter_follow_up_id]: 'FL-1',
+				some_field: 1,
+				interval_of_followUp: 'Unknown',
+			},
+		},
+	],
 };
 
 export const existingDonor02: Donor = {
@@ -138,6 +148,16 @@ export const existingDonor03: Donor = {
 			},
 		},
 	],
+	treatments: [
+		{
+			treatmentId: 50,
+			clinicalInfo: {
+				[TreatmentFieldsEnum.submitter_treatment_id]: 'T_05',
+				treatment_start_interval: 'Unknown',
+			},
+			therapies: [],
+		},
+	],
 };
 
 export const existingDonor04: Donor = {
@@ -190,6 +210,15 @@ export const followupExceptionStub: FollowUpExceptionRecord = {
 	submitter_donor_id: 'AB3',
 };
 
+export const followupExceptionStub2: FollowUpExceptionRecord = {
+	program_name: TEST_PROGRAM_ID,
+	requested_core_field: 'interval_of_followUp',
+	schema: 'follow_up',
+	requested_exception_value: 'Not applicable',
+	submitter_follow_up_id: 'FL-1',
+	submitter_donor_id: 'DO-0',
+};
+
 export const specimenExceptionStub: SpecimenExceptionRecord = {
 	program_name: TEST_PROGRAM_ID,
 	requested_core_field: 'specimen_acquisition_interval',
@@ -199,6 +228,15 @@ export const specimenExceptionStub: SpecimenExceptionRecord = {
 	submitter_donor_id: 'DO-0',
 };
 
+export const specimenExceptionStub2: SpecimenExceptionRecord = {
+	program_name: TEST_PROGRAM_ID,
+	requested_core_field: 'specimen_acquisition_interval',
+	schema: 'specimen',
+	requested_exception_value: 'Not applicable',
+	submitter_specimen_id: 'SP12',
+	submitter_donor_id: 'AB4',
+};
+
 export const treatmentExceptionStub: TreatmentExceptionRecord = {
 	program_name: TEST_PROGRAM_ID,
 	schema: 'treatment',
@@ -206,6 +244,15 @@ export const treatmentExceptionStub: TreatmentExceptionRecord = {
 	requested_exception_value: 'Unknown',
 	submitter_treatment_id: 'T_02',
 	submitter_donor_id: 'DO-2',
+};
+
+export const treatmentExceptionStub2: TreatmentExceptionRecord = {
+	program_name: TEST_PROGRAM_ID,
+	schema: 'treatment',
+	requested_core_field: 'treatment_start_interval',
+	requested_exception_value: 'Unknown',
+	submitter_treatment_id: 'T_05',
+	submitter_donor_id: 'AB3',
 };
 
 export const missingEntityStub: MissingEntityException = {
@@ -218,6 +265,13 @@ export const allEntitiesStub: EntityException = {
 	specimen: [specimenExceptionStub],
 	follow_up: [followupExceptionStub],
 	treatment: [treatmentExceptionStub],
+};
+
+export const sortingEntitiesStub: EntityException = {
+	programId: TEST_PROGRAM_ID,
+	specimen: [specimenExceptionStub2],
+	follow_up: [followupExceptionStub2],
+	treatment: [treatmentExceptionStub2],
 };
 
 export const donorIdEntitiesStub: EntityException = {
