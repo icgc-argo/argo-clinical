@@ -103,7 +103,7 @@ describe('Exception Manifest', () => {
 		sinon.restore();
 	});
 
-	describe('Request - donorIds and submitterIds are empty', () => {
+	describe('donorIds and submitterIds are empty', () => {
 		before(() => {
 			sinon.stub(programExceptionRepository, 'find').returns(Promise.resolve(programExceptionStub));
 			sinon.stub(entityExceptionRepository, 'find').returns(Promise.resolve(allEntitiesStub));
@@ -137,7 +137,7 @@ describe('Exception Manifest', () => {
 		});
 	});
 
-	describe('Request - records are sorted', () => {
+	describe('records are sorted', () => {
 		beforeEach(() => {
 			sinon.stub(programExceptionRepository, 'find').returns(Promise.resolve(programExceptionStub));
 			sinon.stub(entityExceptionRepository, 'find').returns(Promise.resolve(sortingEntitiesStub));
@@ -167,7 +167,7 @@ describe('Exception Manifest', () => {
 		});
 	});
 
-	describe('Request - Specific donorIds', () => {
+	describe('Specific donorIds', () => {
 		before(() => {
 			sinon
 				.stub(programExceptionRepository, 'find')
@@ -197,7 +197,7 @@ describe('Exception Manifest', () => {
 		});
 	});
 
-	describe('Request - Specific submitterIds', () => {
+	describe('Specific submitterIds', () => {
 		before(() => {
 			sinon
 				.stub(programExceptionRepository, 'find')
