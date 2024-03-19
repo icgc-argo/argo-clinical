@@ -269,9 +269,9 @@ export const allEntitiesStub: EntityException = {
 
 export const sortingEntitiesStub: EntityException = {
 	programId: TEST_PROGRAM_ID,
-	specimen: [specimenExceptionStub2],
-	follow_up: [followupExceptionStub2],
-	treatment: [treatmentExceptionStub2],
+	specimen: [specimenExceptionStub, specimenExceptionStub2],
+	follow_up: [followupExceptionStub, followupExceptionStub2],
+	treatment: [treatmentExceptionStub, treatmentExceptionStub2],
 };
 
 export const donorIdEntitiesStub: EntityException = {

@@ -160,7 +160,15 @@ describe('Exception Manifest', () => {
 			chai
 				.expect(result)
 				.to.be.an('array')
-				.with.lengthOf(5);
+				.with.lengthOf(8);
+
+			// expect program to have index 0
+			// expect missing to have index length -1
+			// expect exception Follow Up to have index < Specimen
+			// expect exception Specimen to have index < Treatment
+			// expect exception Follow Up A to have index < Follow Up B
+			// expect exception Specimen A to have index < Specimen B
+			// expect exception Treatment A to have index < Treatment B
 
 			// chai.expect(result).to.deep.include(entityTestResultC);
 			// chai.expect(result).to.deep.include(missingEntityTestResult);

@@ -30,6 +30,7 @@ import entityExceptionRepository from '../../exception/property-exceptions/repo/
 import programExceptionRepository from '../../exception/property-exceptions/repo/program';
 import {
 	EntityException,
+	EntityExceptionRecord,
 	ExceptionRecord,
 	ProgramException,
 } from '../../exception/property-exceptions/types';
@@ -281,6 +282,16 @@ export const checkForProgramAndEntityExceptions = async ({
 	return { filteredErrors, normalizedRecord };
 };
 
+const sortExceptionRecordsBySubmitterId = (
+	first: EntityExceptionRecord,
+	next: EntityExceptionRecord,
+): number =>
+	first.submitter_donor_id === next.submitter_donor_id
+		? 0
+		: first.submitter_donor_id > next.submitter_donor_id
+		? 1
+		: -1;
+
 /**
  * Collect all exception records related to a set of Donors
  *
@@ -321,12 +332,20 @@ export async function getExceptionManifestRecords(
 		createProgramExceptions(programId),
 	);
 
+	const sortedFollowUpExceptions = entityPropertyException
+		? [...entityPropertyException.follow_up].sort(sortExceptionRecordsBySubmitterId)
+		: [];
+
+	const sortedSpecimenExceptions = entityPropertyException
+		? [...entityPropertyException.specimen].sort(sortExceptionRecordsBySubmitterId)
+		: [];
+
+	const sortedTreatmentExceptions = entityPropertyException
+		? [...entityPropertyException.treatment].sort(sortExceptionRecordsBySubmitterId)
+		: [];
+
 	const entityPropertyExceptions: EntityPropertyExceptionRecord[] = entityPropertyException
-		? [
-				...entityPropertyException.specimen,
-				...entityPropertyException.treatment,
-				...entityPropertyException.follow_up,
-		  ]
+		? [...sortedFollowUpExceptions, ...sortedSpecimenExceptions, ...sortedTreatmentExceptions]
 				.filter((exceptionRecord) => submitterDonorIds.includes(exceptionRecord.submitter_donor_id))
 				.map(mapEntityExceptionRecords(programId, donors))
 		: [];
