@@ -162,8 +162,16 @@ describe('Exception Manifest', () => {
 				.to.be.an('array')
 				.with.lengthOf(8);
 
-			// expect program to have index 0
-			// expect missing to have index length -1
+			// Expect Program Exceptions sorted first
+			chai
+				.expect(result.findIndex((exception) => exception.exceptionType === 'ProgramProperty'))
+				.equals(0);
+
+			// Expect Missing Entity Exceptions sorted last
+			chai
+				.expect(result.findIndex((exception) => exception.exceptionType === 'MissingEntity'))
+				.equals(result.length - 1);
+
 			// expect exception Follow Up to have index < Specimen
 			// expect exception Specimen to have index < Treatment
 			// expect exception Follow Up A to have index < Follow Up B
