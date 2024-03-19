@@ -177,9 +177,6 @@ describe('Exception Manifest', () => {
 			// expect exception Follow Up A to have index < Follow Up B
 			// expect exception Specimen A to have index < Specimen B
 			// expect exception Treatment A to have index < Treatment B
-
-			// chai.expect(result).to.deep.include(entityTestResultC);
-			// chai.expect(result).to.deep.include(missingEntityTestResult);
 		});
 	});
 
