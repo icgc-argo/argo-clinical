@@ -174,7 +174,7 @@ describe('Exception Manifest', () => {
 				.expect(result.findIndex((exception) => exception.exceptionType === 'MissingEntity'))
 				.equals(result.length - 1);
 
-			// expect exception Follow Up to have index < Specimen
+			// expect Follow Up to have index < Specimen
 			chai
 				.expect(
 					result.findIndex(
@@ -188,10 +188,41 @@ describe('Exception Manifest', () => {
 					),
 				);
 
-			// expect exception Specimen to have index < Treatment
-			// expect exception Follow Up A to have index < Follow Up B
-			// expect exception Specimen A to have index < Specimen B
-			// expect exception Treatment A to have index < Treatment B
+			// expect Specimen to have index < Treatment
+			chai
+				.expect(
+					result.findIndex(
+						(exception) => isEntityManifestRecord(exception) && exception.schemaName === 'specimen',
+					),
+				)
+				.lessThan(
+					result.findIndex(
+						(exception) =>
+							isEntityManifestRecord(exception) && exception.schemaName === 'treatment',
+					),
+				);
+
+			// expect Follow Up A to have index < Follow Up B
+			chai
+				.expect(
+					result.findIndex(
+						(exception) =>
+							isEntityManifestRecord(exception) &&
+							exception.schemaName === 'follow_up' &&
+							exception.submitterDonorId === 'AB3',
+					),
+				)
+				.lessThan(
+					result.findIndex(
+						(exception) =>
+							isEntityManifestRecord(exception) &&
+							exception.schemaName === 'follow_up' &&
+							exception.submitterDonorId === 'DO-0',
+					),
+				);
+
+			// expect Specimen A to have index < Specimen B
+			// expect Treatment A to have index < Treatment B
 		});
 	});
 
