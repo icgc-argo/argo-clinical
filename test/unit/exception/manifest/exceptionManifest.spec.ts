@@ -23,7 +23,6 @@ import * as clinicalService from '../../../../src/clinical/clinical-service';
 import { isEntityManifestRecord } from '../../../../src/exception/exception-manifest/types';
 import entityExceptionRepository from '../../../../src/exception/property-exceptions/repo/entity';
 import programExceptionRepository from '../../../../src/exception/property-exceptions/repo/program';
-import { isEntityExceptionRecord } from '../../../../src/exception/property-exceptions/types';
 import * as missingEntityExceptionsRepo from '../../../../src/exception/missing-entity-exceptions/repo';
 import { getExceptionManifestRecords } from '../../../../src/submission/exceptions/exceptions';
 import { success } from '../../../../src/utils/results';
