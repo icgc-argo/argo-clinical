@@ -20,8 +20,10 @@
 import chai from 'chai';
 import sinon from 'sinon';
 import * as clinicalService from '../../../../src/clinical/clinical-service';
+import { isEntityManifestRecord } from '../../../../src/exception/exception-manifest/types';
 import entityExceptionRepository from '../../../../src/exception/property-exceptions/repo/entity';
 import programExceptionRepository from '../../../../src/exception/property-exceptions/repo/program';
+import { isEntityExceptionRecord } from '../../../../src/exception/property-exceptions/types';
 import * as missingEntityExceptionsRepo from '../../../../src/exception/missing-entity-exceptions/repo';
 import { getExceptionManifestRecords } from '../../../../src/submission/exceptions/exceptions';
 import { success } from '../../../../src/utils/results';
@@ -173,6 +175,19 @@ describe('Exception Manifest', () => {
 				.equals(result.length - 1);
 
 			// expect exception Follow Up to have index < Specimen
+			chai
+				.expect(
+					result.findIndex(
+						(exception) =>
+							isEntityManifestRecord(exception) && exception.schemaName === 'follow_up',
+					),
+				)
+				.lessThan(
+					result.findIndex(
+						(exception) => isEntityManifestRecord(exception) && exception.schemaName === 'specimen',
+					),
+				);
+
 			// expect exception Specimen to have index < Treatment
 			// expect exception Follow Up A to have index < Follow Up B
 			// expect exception Specimen A to have index < Specimen B
