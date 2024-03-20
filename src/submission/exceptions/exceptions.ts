@@ -333,15 +333,15 @@ export async function getExceptionManifestRecords(
 	);
 
 	const sortedFollowUpExceptions = entityPropertyException
-		? [...entityPropertyException.follow_up].sort(sortExceptionRecordsBySubmitterId)
+		? entityPropertyException.follow_up.sort(sortExceptionRecordsBySubmitterId)
 		: [];
 
 	const sortedSpecimenExceptions = entityPropertyException
-		? [...entityPropertyException.specimen].sort(sortExceptionRecordsBySubmitterId)
+		? entityPropertyException.specimen.sort(sortExceptionRecordsBySubmitterId)
 		: [];
 
 	const sortedTreatmentExceptions = entityPropertyException
-		? [...entityPropertyException.treatment].sort(sortExceptionRecordsBySubmitterId)
+		? entityPropertyException.treatment.sort(sortExceptionRecordsBySubmitterId)
 		: [];
 
 	const entityPropertyExceptions: EntityPropertyExceptionRecord[] = entityPropertyException
