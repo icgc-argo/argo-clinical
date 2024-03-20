@@ -87,14 +87,18 @@ export const validate = async (
 				surgeries,
 				existingSurgeryInDB,
 			);
-			if (duplicationError) errors.push(duplicationError);
+			if (duplicationError) {
+				errors.push(duplicationError);
+			}
 		} else {
 			const surgeryNotEqualError = validateSurgeryByDonorAndTreatment(
 				therapyRecord,
 				existentDonor,
 				mergedDonor,
 			);
-			if (surgeryNotEqualError) errors.push(surgeryNotEqualError);
+			if (surgeryNotEqualError) {
+				errors.push(surgeryNotEqualError);
+			}
 		}
 	} else {
 		// when submitter_specimen_id is not submitted in tsv, and if surgery with the same combo of submitter_treatment_id
