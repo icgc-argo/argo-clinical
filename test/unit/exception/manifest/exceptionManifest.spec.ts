@@ -222,7 +222,42 @@ describe('Exception Manifest', () => {
 				);
 
 			// expect Specimen A to have index < Specimen B
+			chai
+				.expect(
+					result.findIndex(
+						(exception) =>
+							isEntityManifestRecord(exception) &&
+							exception.schemaName === 'specimen' &&
+							exception.submitterDonorId === 'AB4',
+					),
+				)
+				.lessThan(
+					result.findIndex(
+						(exception) =>
+							isEntityManifestRecord(exception) &&
+							exception.schemaName === 'specimen' &&
+							exception.submitterDonorId === 'DO-0',
+					),
+				);
+
 			// expect Treatment A to have index < Treatment B
+			chai
+				.expect(
+					result.findIndex(
+						(exception) =>
+							isEntityManifestRecord(exception) &&
+							exception.schemaName === 'treatment' &&
+							exception.submitterDonorId === 'AB3',
+					),
+				)
+				.lessThan(
+					result.findIndex(
+						(exception) =>
+							isEntityManifestRecord(exception) &&
+							exception.schemaName === 'treatment' &&
+							exception.submitterDonorId === 'DO-2',
+					),
+				);
 		});
 	});
 
