@@ -20,7 +20,10 @@
 import chai from 'chai';
 import sinon from 'sinon';
 import * as clinicalService from '../../../../src/clinical/clinical-service';
-import { isEntityManifestRecord } from '../../../../src/exception/exception-manifest/types';
+import {
+	isEntityManifestRecord,
+	EntityPropertyExceptionRecord,
+} from '../../../../src/exception/exception-manifest/types';
 import entityExceptionRepository from '../../../../src/exception/property-exceptions/repo/entity';
 import programExceptionRepository from '../../../../src/exception/property-exceptions/repo/program';
 import * as missingEntityExceptionsRepo from '../../../../src/exception/missing-entity-exceptions/repo';
@@ -173,90 +176,47 @@ describe('Exception Manifest', () => {
 				.expect(result.findIndex((exception) => exception.exceptionType === 'MissingEntity'))
 				.equals(result.length - 1);
 
+			const entityResults = result.filter((exception) =>
+				isEntityManifestRecord(exception),
+			) as EntityPropertyExceptionRecord[];
+
 			// expect Follow Up to have index < Specimen
 			chai
-				.expect(
-					result.findIndex(
-						(exception) =>
-							isEntityManifestRecord(exception) && exception.schemaName === 'follow_up',
-					),
-				)
-				.lessThan(
-					result.findIndex(
-						(exception) => isEntityManifestRecord(exception) && exception.schemaName === 'specimen',
-					),
-				);
+				.expect(entityResults.findIndex((exception) => exception.schemaName === 'follow_up'))
+				.lessThan(entityResults.findIndex((exception) => exception.schemaName === 'specimen'));
 
 			// expect Specimen to have index < Treatment
 			chai
-				.expect(
-					result.findIndex(
-						(exception) => isEntityManifestRecord(exception) && exception.schemaName === 'specimen',
-					),
-				)
-				.lessThan(
-					result.findIndex(
-						(exception) =>
-							isEntityManifestRecord(exception) && exception.schemaName === 'treatment',
-					),
-				);
+				.expect(entityResults.findIndex((exception) => exception.schemaName === 'specimen'))
+				.lessThan(entityResults.findIndex((exception) => exception.schemaName === 'treatment'));
 
 			// expect Follow Up A to have index < Follow Up B
+			const followUpExceptions = entityResults.filter(
+				(exception) => exception.schemaName === 'follow_up',
+			);
 			chai
-				.expect(
-					result.findIndex(
-						(exception) =>
-							isEntityManifestRecord(exception) &&
-							exception.schemaName === 'follow_up' &&
-							exception.submitterDonorId === 'AB3',
-					),
-				)
+				.expect(followUpExceptions.findIndex((exception) => exception.submitterDonorId === 'AB3'))
 				.lessThan(
-					result.findIndex(
-						(exception) =>
-							isEntityManifestRecord(exception) &&
-							exception.schemaName === 'follow_up' &&
-							exception.submitterDonorId === 'DO-0',
-					),
+					followUpExceptions.findIndex((exception) => exception.submitterDonorId === 'DO-0'),
 				);
 
 			// expect Specimen A to have index < Specimen B
+			const specimenExceptions = entityResults.filter(
+				(exception) => exception.schemaName === 'specimen',
+			);
 			chai
-				.expect(
-					result.findIndex(
-						(exception) =>
-							isEntityManifestRecord(exception) &&
-							exception.schemaName === 'specimen' &&
-							exception.submitterDonorId === 'AB4',
-					),
-				)
+				.expect(specimenExceptions.findIndex((exception) => exception.submitterDonorId === 'AB4'))
 				.lessThan(
-					result.findIndex(
-						(exception) =>
-							isEntityManifestRecord(exception) &&
-							exception.schemaName === 'specimen' &&
-							exception.submitterDonorId === 'DO-0',
-					),
+					specimenExceptions.findIndex((exception) => exception.submitterDonorId === 'DO-0'),
 				);
 
 			// expect Treatment A to have index < Treatment B
+			const treatmentExceptions = entityResults.filter(
+				(exception) => exception.schemaName === 'treatment',
+			);
 			chai
-				.expect(
-					result.findIndex(
-						(exception) =>
-							isEntityManifestRecord(exception) &&
-							exception.schemaName === 'treatment' &&
-							exception.submitterDonorId === 'AB3',
-					),
-				)
-				.lessThan(
-					result.findIndex(
-						(exception) =>
-							isEntityManifestRecord(exception) &&
-							exception.schemaName === 'treatment' &&
-							exception.submitterDonorId === 'DO-2',
-					),
-				);
+				.expect(treatmentExceptions.findIndex((exception) => exception.submitterDonorId === 'AB3'))
+				.lessThan(entityResults.findIndex((exception) => exception.submitterDonorId === 'DO-2'));
 		});
 	});
 
