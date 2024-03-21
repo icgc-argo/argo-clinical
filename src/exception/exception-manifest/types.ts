@@ -62,3 +62,7 @@ export type ExceptionManifestRecord =
 	| MissingEntityExceptionRecord
 	| ProgramPropertyExceptionRecord
 	| EntityPropertyExceptionRecord;
+
+export const isEntityManifestRecord = (
+	input: ExceptionManifestRecord,
+): input is EntityPropertyExceptionRecord => input.exceptionType === ExceptionTypes.entityProperty;

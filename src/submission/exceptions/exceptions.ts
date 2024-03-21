@@ -45,6 +45,8 @@ import {
 import {
 	createProgramExceptions,
 	mapEntityExceptionRecords,
+	sortExceptionRecordsBySubmitterId,
+	sortExceptionRecordsByEntityId,
 } from '../../exception/exception-manifest/util';
 import {
 	getDonors,
@@ -321,15 +323,23 @@ export async function getExceptionManifestRecords(
 		createProgramExceptions(programId),
 	);
 
-	const entityPropertyExceptions: EntityPropertyExceptionRecord[] = entityPropertyException
-		? [
-				...entityPropertyException.specimen,
-				...entityPropertyException.treatment,
-				...entityPropertyException.follow_up,
-		  ]
-				.filter((exceptionRecord) => submitterDonorIds.includes(exceptionRecord.submitter_donor_id))
-				.map(mapEntityExceptionRecords(programId, donors))
-		: [];
+	const sortedFollowUpExceptions =
+		entityPropertyException?.follow_up.sort(sortExceptionRecordsBySubmitterId) || [];
+
+	const sortedSpecimenExceptions =
+		entityPropertyException?.specimen.sort(sortExceptionRecordsBySubmitterId) || [];
+
+	const sortedTreatmentExceptions =
+		entityPropertyException?.treatment.sort(sortExceptionRecordsBySubmitterId) || [];
+
+	const entityPropertyExceptions: EntityPropertyExceptionRecord[] = [
+		...sortedFollowUpExceptions,
+		...sortedSpecimenExceptions,
+		...sortedTreatmentExceptions,
+	]
+		.filter((exceptionRecord) => submitterDonorIds.includes(exceptionRecord.submitter_donor_id))
+		.map(mapEntityExceptionRecords(programId, donors))
+		.sort(sortExceptionRecordsByEntityId);
 
 	const missingEntityExceptions: MissingEntityExceptionRecord[] = missingEntityException.success
 		? missingEntityException.data.donorSubmitterIds

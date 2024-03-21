@@ -20,6 +20,10 @@
 import chai from 'chai';
 import sinon from 'sinon';
 import * as clinicalService from '../../../../src/clinical/clinical-service';
+import {
+	isEntityManifestRecord,
+	EntityPropertyExceptionRecord,
+} from '../../../../src/exception/exception-manifest/types';
 import entityExceptionRepository from '../../../../src/exception/property-exceptions/repo/entity';
 import programExceptionRepository from '../../../../src/exception/property-exceptions/repo/program';
 import * as missingEntityExceptionsRepo from '../../../../src/exception/missing-entity-exceptions/repo';
@@ -34,6 +38,7 @@ import {
 	programExceptionStub,
 	missingEntityStub,
 	allEntitiesStub,
+	sortingEntitiesStub,
 	donorIdEntitiesStub,
 	submitterIdEntitiesStub,
 	emptyEntitiesStub,
@@ -102,7 +107,7 @@ describe('Exception Manifest', () => {
 		sinon.restore();
 	});
 
-	describe('Request - donorIds and submitterIds are empty', () => {
+	describe('donorIds and submitterIds are empty', () => {
 		before(() => {
 			sinon.stub(programExceptionRepository, 'find').returns(Promise.resolve(programExceptionStub));
 			sinon.stub(entityExceptionRepository, 'find').returns(Promise.resolve(allEntitiesStub));
@@ -136,7 +141,98 @@ describe('Exception Manifest', () => {
 		});
 	});
 
-	describe('Request - Specific donorIds', () => {
+	describe('records are sorted', () => {
+		beforeEach(() => {
+			sinon.stub(programExceptionRepository, 'find').returns(Promise.resolve(programExceptionStub));
+			sinon.stub(entityExceptionRepository, 'find').returns(Promise.resolve(sortingEntitiesStub));
+			sinon
+				.stub(missingEntityExceptionsRepo, 'getByProgramId')
+				.returns(Promise.resolve(success(missingEntityStub)));
+			sinon.stub(clinicalService, 'getDonors').returns(Promise.resolve(stubDonors));
+			sinon.stub(clinicalService, 'getDonorsByIds').returns(Promise.resolve([]));
+			sinon
+				.stub(clinicalService, 'findDonorsBySubmitterIds')
+				.returns(Promise.resolve([existingDonor01, existingDonor04]));
+		});
+
+		it('should return Exception records sorted by: Program Exceptions, Submitter Donor ID, Exception Type, Schema, Submitter Entity ID', async () => {
+			const result = await getExceptionManifestRecords(TEST_PROGRAM_ID, {
+				donorIds: [],
+				submitterDonorIds: [],
+			});
+
+			chai
+				.expect(result)
+				.to.be.an('array')
+				.with.lengthOf(10);
+
+			// Expect Program Exceptions sorted first
+			chai
+				.expect(result.findIndex((exception) => exception.exceptionType === 'ProgramProperty'))
+				.equals(0);
+
+			// Expect Missing Entity Exceptions sorted last
+			chai
+				.expect(result.findIndex((exception) => exception.exceptionType === 'MissingEntity'))
+				.equals(result.length - 1);
+
+			// Test Entities
+			const entityResults = result.filter((exception) =>
+				isEntityManifestRecord(exception),
+			) as EntityPropertyExceptionRecord[];
+
+			// expect Follow Up to have index < Specimen
+			chai
+				.expect(entityResults.findIndex((exception) => exception.schemaName === 'follow_up'))
+				.lessThan(entityResults.findIndex((exception) => exception.schemaName === 'specimen'));
+
+			// expect Specimen to have index < Treatment
+			chai
+				.expect(entityResults.findIndex((exception) => exception.schemaName === 'specimen'))
+				.lessThan(entityResults.findIndex((exception) => exception.schemaName === 'treatment'));
+
+			// Test Submitter Donor Ids
+			// expect Follow Up A to have index < Follow Up B
+			const followUpExceptions = entityResults.filter(
+				(exception) => exception.schemaName === 'follow_up',
+			);
+			chai
+				.expect(followUpExceptions.findIndex((exception) => exception.submitterDonorId === 'AB3'))
+				.lessThan(
+					followUpExceptions.findIndex((exception) => exception.submitterDonorId === 'DO-0'),
+				);
+
+			// expect Specimen A to have index < Specimen B
+			const specimenExceptions = entityResults.filter(
+				(exception) => exception.schemaName === 'specimen',
+			);
+			chai
+				.expect(specimenExceptions.findIndex((exception) => exception.submitterDonorId === 'AB4'))
+				.lessThan(
+					specimenExceptions.findIndex((exception) => exception.submitterDonorId === 'DO-0'),
+				);
+
+			// expect Treatment A to have index < Treatment B
+			const treatmentExceptions = entityResults.filter(
+				(exception) => exception.schemaName === 'treatment',
+			);
+			chai
+				.expect(treatmentExceptions.findIndex((exception) => exception.submitterDonorId === 'AB3'))
+				.lessThan(entityResults.findIndex((exception) => exception.submitterDonorId === 'DO-2'));
+
+			// Test Entity Id A to have index < Entity Id B
+			chai
+				.expect(
+					treatmentExceptions.findIndex((exception) => exception.submitterEntityId === 'T_05'),
+				)
+				.lessThan(entityResults.findIndex((exception) => exception.submitterEntityId === 'T_06'))
+				.and.lessThan(
+					entityResults.findIndex((exception) => exception.submitterEntityId === 'T_07'),
+				);
+		});
+	});
+
+	describe('Specific donorIds', () => {
 		before(() => {
 			sinon
 				.stub(programExceptionRepository, 'find')
@@ -166,7 +262,7 @@ describe('Exception Manifest', () => {
 		});
 	});
 
-	describe('Request - Specific submitterIds', () => {
+	describe('Specific submitterIds', () => {
 		before(() => {
 			sinon
 				.stub(programExceptionRepository, 'find')
