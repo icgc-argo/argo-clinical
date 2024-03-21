@@ -30,7 +30,6 @@ import entityExceptionRepository from '../../exception/property-exceptions/repo/
 import programExceptionRepository from '../../exception/property-exceptions/repo/program';
 import {
 	EntityException,
-	EntityExceptionRecord,
 	ExceptionRecord,
 	ProgramException,
 } from '../../exception/property-exceptions/types';
@@ -46,6 +45,8 @@ import {
 import {
 	createProgramExceptions,
 	mapEntityExceptionRecords,
+	sortExceptionRecordsBySubmitterId,
+	sortExceptionRecordsByEntityId,
 } from '../../exception/exception-manifest/util';
 import {
 	getDonors,
@@ -282,16 +283,6 @@ export const checkForProgramAndEntityExceptions = async ({
 	return { filteredErrors, normalizedRecord };
 };
 
-const sortExceptionRecordsBySubmitterId = (
-	first: EntityExceptionRecord,
-	next: EntityExceptionRecord,
-): number =>
-	first.submitter_donor_id === next.submitter_donor_id
-		? 0
-		: first.submitter_donor_id > next.submitter_donor_id
-		? 1
-		: -1;
-
 /**
  * Collect all exception records related to a set of Donors
  *
@@ -348,6 +339,7 @@ export async function getExceptionManifestRecords(
 		? [...sortedFollowUpExceptions, ...sortedSpecimenExceptions, ...sortedTreatmentExceptions]
 				.filter((exceptionRecord) => submitterDonorIds.includes(exceptionRecord.submitter_donor_id))
 				.map(mapEntityExceptionRecords(programId, donors))
+				.sort(sortExceptionRecordsByEntityId)
 		: [];
 
 	const missingEntityExceptions: MissingEntityExceptionRecord[] = missingEntityException.success

@@ -164,7 +164,7 @@ describe('Exception Manifest', () => {
 			chai
 				.expect(result)
 				.to.be.an('array')
-				.with.lengthOf(8);
+				.with.lengthOf(10);
 
 			// Expect Program Exceptions sorted first
 			chai
@@ -176,6 +176,7 @@ describe('Exception Manifest', () => {
 				.expect(result.findIndex((exception) => exception.exceptionType === 'MissingEntity'))
 				.equals(result.length - 1);
 
+			// Test Entities
 			const entityResults = result.filter((exception) =>
 				isEntityManifestRecord(exception),
 			) as EntityPropertyExceptionRecord[];
@@ -190,6 +191,7 @@ describe('Exception Manifest', () => {
 				.expect(entityResults.findIndex((exception) => exception.schemaName === 'specimen'))
 				.lessThan(entityResults.findIndex((exception) => exception.schemaName === 'treatment'));
 
+			// Test Submitter Donor Ids
 			// expect Follow Up A to have index < Follow Up B
 			const followUpExceptions = entityResults.filter(
 				(exception) => exception.schemaName === 'follow_up',
@@ -217,6 +219,16 @@ describe('Exception Manifest', () => {
 			chai
 				.expect(treatmentExceptions.findIndex((exception) => exception.submitterDonorId === 'AB3'))
 				.lessThan(entityResults.findIndex((exception) => exception.submitterDonorId === 'DO-2'));
+
+			// Test Entity Id A to have index < Entity Id B
+			chai
+				.expect(
+					treatmentExceptions.findIndex((exception) => exception.submitterEntityId === 'T_05'),
+				)
+				.lessThan(entityResults.findIndex((exception) => exception.submitterEntityId === 'T_06'))
+				.and.lessThan(
+					entityResults.findIndex((exception) => exception.submitterEntityId === 'T_07'),
+				);
 		});
 	});
 

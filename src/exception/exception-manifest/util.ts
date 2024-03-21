@@ -156,3 +156,40 @@ export const mapEntityExceptionRecords = (programId: string, donors: DeepReadonl
 
 	return entityRecord;
 };
+
+export const sortExceptionRecordsBySubmitterId = (
+	first: EntityExceptionRecord,
+	next: EntityExceptionRecord,
+): number =>
+	first.submitter_donor_id === next.submitter_donor_id
+		? 0
+		: first.submitter_donor_id > next.submitter_donor_id
+		? 1
+		: -1;
+
+export const sortExceptionRecordsByEntityId = (
+	first: EntityPropertyExceptionRecord,
+	next: EntityPropertyExceptionRecord,
+): number => {
+	const {
+		schemaName: firstSchema,
+		submitterDonorId: firstSubmitterId,
+		submitterEntityId: firstEntityId,
+	} = first;
+	const {
+		schemaName: nextSchema,
+		submitterDonorId: nextSubmitterId,
+		submitterEntityId: nextEntityId,
+	} = next;
+
+	if (
+		firstSchema !== nextSchema ||
+		firstSubmitterId !== nextSubmitterId ||
+		!firstEntityId ||
+		!nextEntityId
+	) {
+		return 0;
+	}
+
+	return firstEntityId > nextEntityId ? 1 : -1;
+};

@@ -157,6 +157,22 @@ export const existingDonor03: Donor = {
 			},
 			therapies: [],
 		},
+		{
+			treatmentId: 51,
+			clinicalInfo: {
+				[TreatmentFieldsEnum.submitter_treatment_id]: 'T_06',
+				treatment_start_interval: 'Unknown',
+			},
+			therapies: [],
+		},
+		{
+			treatmentId: 52,
+			clinicalInfo: {
+				[TreatmentFieldsEnum.submitter_treatment_id]: 'T_07',
+				treatment_start_interval: 'Unknown',
+			},
+			therapies: [],
+		},
 	],
 };
 
@@ -255,6 +271,24 @@ export const treatmentExceptionStub2: TreatmentExceptionRecord = {
 	submitter_donor_id: 'AB3',
 };
 
+export const treatmentExceptionStub3: TreatmentExceptionRecord = {
+	program_name: TEST_PROGRAM_ID,
+	schema: 'treatment',
+	requested_core_field: 'treatment_start_interval',
+	requested_exception_value: 'Unknown',
+	submitter_treatment_id: 'T_06',
+	submitter_donor_id: 'AB3',
+};
+
+export const treatmentExceptionStub4: TreatmentExceptionRecord = {
+	program_name: TEST_PROGRAM_ID,
+	schema: 'treatment',
+	requested_core_field: 'treatment_start_interval',
+	requested_exception_value: 'Unknown',
+	submitter_treatment_id: 'T_07',
+	submitter_donor_id: 'AB3',
+};
+
 export const missingEntityStub: MissingEntityException = {
 	programId: TEST_PROGRAM_ID,
 	donorSubmitterIds: ['AB4'],
@@ -271,7 +305,12 @@ export const sortingEntitiesStub: EntityException = {
 	programId: TEST_PROGRAM_ID,
 	specimen: [specimenExceptionStub, specimenExceptionStub2],
 	follow_up: [followupExceptionStub, followupExceptionStub2],
-	treatment: [treatmentExceptionStub, treatmentExceptionStub2],
+	treatment: [
+		treatmentExceptionStub,
+		treatmentExceptionStub2,
+		treatmentExceptionStub3,
+		treatmentExceptionStub4,
+	],
 };
 
 export const donorIdEntitiesStub: EntityException = {
