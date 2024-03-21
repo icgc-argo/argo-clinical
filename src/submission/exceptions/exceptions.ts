@@ -323,24 +323,23 @@ export async function getExceptionManifestRecords(
 		createProgramExceptions(programId),
 	);
 
-	const sortedFollowUpExceptions = entityPropertyException
-		? entityPropertyException.follow_up.sort(sortExceptionRecordsBySubmitterId)
-		: [];
+	const sortedFollowUpExceptions =
+		entityPropertyException?.follow_up.sort(sortExceptionRecordsBySubmitterId) || [];
 
-	const sortedSpecimenExceptions = entityPropertyException
-		? entityPropertyException.specimen.sort(sortExceptionRecordsBySubmitterId)
-		: [];
+	const sortedSpecimenExceptions =
+		entityPropertyException?.specimen.sort(sortExceptionRecordsBySubmitterId) || [];
 
-	const sortedTreatmentExceptions = entityPropertyException
-		? entityPropertyException.treatment.sort(sortExceptionRecordsBySubmitterId)
-		: [];
+	const sortedTreatmentExceptions =
+		entityPropertyException?.treatment.sort(sortExceptionRecordsBySubmitterId) || [];
 
-	const entityPropertyExceptions: EntityPropertyExceptionRecord[] = entityPropertyException
-		? [...sortedFollowUpExceptions, ...sortedSpecimenExceptions, ...sortedTreatmentExceptions]
-				.filter((exceptionRecord) => submitterDonorIds.includes(exceptionRecord.submitter_donor_id))
-				.map(mapEntityExceptionRecords(programId, donors))
-				.sort(sortExceptionRecordsByEntityId)
-		: [];
+	const entityPropertyExceptions: EntityPropertyExceptionRecord[] = [
+		...sortedFollowUpExceptions,
+		...sortedSpecimenExceptions,
+		...sortedTreatmentExceptions,
+	]
+		.filter((exceptionRecord) => submitterDonorIds.includes(exceptionRecord.submitter_donor_id))
+		.map(mapEntityExceptionRecords(programId, donors))
+		.sort(sortExceptionRecordsByEntityId);
 
 	const missingEntityExceptions: MissingEntityExceptionRecord[] = missingEntityException.success
 		? missingEntityException.data.donorSubmitterIds

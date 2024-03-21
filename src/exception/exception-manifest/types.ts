@@ -65,4 +65,4 @@ export type ExceptionManifestRecord =
 
 export const isEntityManifestRecord = (
 	input: ExceptionManifestRecord,
-): input is EntityPropertyExceptionRecord => input.exceptionType === 'EntityProperty';
+): input is EntityPropertyExceptionRecord => input.exceptionType === ExceptionTypes.entityProperty;

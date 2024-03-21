@@ -160,12 +160,13 @@ export const mapEntityExceptionRecords = (programId: string, donors: DeepReadonl
 export const sortExceptionRecordsBySubmitterId = (
 	first: EntityExceptionRecord,
 	next: EntityExceptionRecord,
-): number =>
-	first.submitter_donor_id === next.submitter_donor_id
+): number => {
+	return first.submitter_donor_id === next.submitter_donor_id
 		? 0
 		: first.submitter_donor_id > next.submitter_donor_id
 		? 1
 		: -1;
+};
 
 export const sortExceptionRecordsByEntityId = (
 	first: EntityPropertyExceptionRecord,
