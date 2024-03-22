@@ -35,19 +35,8 @@ import {
 } from '../../exception/property-exceptions/types';
 import { fieldFilter } from '../../exception/property-exceptions/validation';
 import { getByProgramId } from '../../exception/missing-entity-exceptions/repo';
-import {
-	MissingEntityExceptionRecord,
-	ProgramPropertyExceptionRecord,
-	EntityPropertyExceptionRecord,
-	ExceptionManifestRecord,
-	ExceptionTypes,
-} from '../../exception/exception-manifest/types';
-import {
-	createProgramExceptions,
-	mapEntityExceptionRecords,
-	sortExceptionRecordsBySubmitterId,
-	sortExceptionRecordsByEntityId,
-} from '../../exception/exception-manifest/util';
+import { createExceptionManifest } from '../../exception/exception-manifest/index';
+import { ExceptionManifestRecord } from '../../exception/exception-manifest/types';
 import {
 	getDonors,
 	getDonorsByIds,
@@ -308,54 +297,23 @@ export async function getExceptionManifestRecords(
 			index === donorArray.findIndex((donor) => donor.donorId === donorRecord.donorId),
 	);
 
-	// Exceptions only store submitterIds, so all submitterIds have to be collected before we can filter exceptions
-	const submitterDonorIds = donors.map((donor) => donor.submitterId);
+	const { programException, entityException } = await queryForExceptions(programId);
 
-	const { programException, entityException: entityPropertyException } = await queryForExceptions(
-		programId,
-	);
+	const programExceptionRecords = programException?.exceptions || [];
 
 	const missingEntityException = await getByProgramId(programId);
 
-	const programExceptions = programException?.exceptions || [];
-
-	const programExceptionDisplayRecords: ProgramPropertyExceptionRecord[] = programExceptions.map(
-		createProgramExceptions(programId),
-	);
-
-	const sortedFollowUpExceptions =
-		entityPropertyException?.follow_up.sort(sortExceptionRecordsBySubmitterId) || [];
-
-	const sortedSpecimenExceptions =
-		entityPropertyException?.specimen.sort(sortExceptionRecordsBySubmitterId) || [];
-
-	const sortedTreatmentExceptions =
-		entityPropertyException?.treatment.sort(sortExceptionRecordsBySubmitterId) || [];
-
-	const entityPropertyExceptions: EntityPropertyExceptionRecord[] = [
-		...sortedFollowUpExceptions,
-		...sortedSpecimenExceptions,
-		...sortedTreatmentExceptions,
-	]
-		.filter((exceptionRecord) => submitterDonorIds.includes(exceptionRecord.submitter_donor_id))
-		.map(mapEntityExceptionRecords(programId, donors))
-		.sort(sortExceptionRecordsByEntityId);
-
-	const missingEntityExceptions: MissingEntityExceptionRecord[] = missingEntityException.success
+	const missingExceptionRecords = missingEntityException.success
 		? missingEntityException.data.donorSubmitterIds
-				.filter((submitterDonorId) => submitterDonorIds.includes(submitterDonorId))
-				.map((submitterDonorId) => {
-					const exceptionType = ExceptionTypes.missingEntity;
-					const { donorId } = donors.find((donor) => donor.submitterId === submitterDonorId) || {};
-					return { programId, exceptionType, submitterDonorId, donorId };
-				})
 		: [];
 
-	const donorExceptionRecords: ExceptionManifestRecord[] = [
-		...programExceptionDisplayRecords,
-		...entityPropertyExceptions,
-		...missingEntityExceptions,
-	];
+	const exceptionManifest = createExceptionManifest(
+		programId,
+		donors,
+		programExceptionRecords,
+		entityException,
+		missingExceptionRecords,
+	);
 
-	return donorExceptionRecords;
+	return exceptionManifest;
 }
