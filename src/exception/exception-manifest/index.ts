@@ -42,7 +42,7 @@ export const createExceptionManifest = (
 	donors: DeepReadonly<Donor>[],
 	programExceptions: ReadonlyArray<ProgramExceptionRecord>,
 	entityPropertyException: EntityException | null,
-	missingEntitySubmitterIds: string[],
+	missingEntitySubmitterIds: MissingEntityException['donorSubmitterIds'],
 ) => {
 	// Exceptions only store submitterIds, so all submitterIds have to be collected before we can filter exceptions
 	const submitterDonorIds = donors.map((donor) => donor.submitterId);
