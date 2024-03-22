@@ -294,6 +294,11 @@ export const missingEntityStub: MissingEntityException = {
 	donorSubmitterIds: ['AB4'],
 };
 
+export const emptyTreatmentDetailStub: MissingEntityException = {
+	programId: TEST_PROGRAM_ID,
+	donorSubmitterIds: [],
+};
+
 export const allEntitiesStub: EntityException = {
 	programId: TEST_PROGRAM_ID,
 	specimen: [specimenExceptionStub],
