@@ -40,6 +40,7 @@ import {
 	missingEntityStub,
 	allEntitiesStub,
 	sortingEntitiesStub,
+	treatmentDetailStub,
 	donorIdEntitiesStub,
 	submitterIdEntitiesStub,
 	emptyEntitiesStub,
@@ -103,6 +104,13 @@ const missingEntityTestResult = {
 	donorId: 4,
 };
 
+const treatmentDetailTestResult = {
+	programId: 'TEST-IE',
+	exceptionType: 'TreatmentDetail',
+	submitterDonorId: 'DO-2',
+	donorId: 2,
+};
+
 describe('Exception Manifest', () => {
 	afterEach(() => {
 		// Restore the default sandbox here
@@ -118,7 +126,7 @@ describe('Exception Manifest', () => {
 				.returns(Promise.resolve(success(missingEntityStub)));
 			sinon
 				.stub(treatmentDetailExceptionsRepo, 'getByProgramId')
-				.returns(Promise.resolve(success(emptyTreatmentDetailStub)));
+				.returns(Promise.resolve(success(treatmentDetailStub)));
 			sinon.stub(clinicalService, 'getDonors').returns(Promise.resolve(stubDonors));
 			sinon.stub(clinicalService, 'getDonorsByIds').returns(Promise.resolve([]));
 			sinon
@@ -136,13 +144,14 @@ describe('Exception Manifest', () => {
 			chai
 				.expect(result)
 				.to.be.an('array')
-				.with.lengthOf(5);
+				.with.lengthOf(6);
 
 			chai.expect(result).to.deep.include(programTestResult);
 			chai.expect(result).to.deep.include(entityTestResultA);
 			chai.expect(result).to.deep.include(entityTestResultB);
 			chai.expect(result).to.deep.include(entityTestResultC);
 			chai.expect(result).to.deep.include(missingEntityTestResult);
+			chai.expect(result).to.deep.include(treatmentDetailTestResult);
 		});
 	});
 
