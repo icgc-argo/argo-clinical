@@ -34,7 +34,6 @@ import {
 	ProgramException,
 } from '../../exception/property-exceptions/types';
 import { fieldFilter } from '../../exception/property-exceptions/validation';
-import { MissingEntityException } from '../../exception/missing-entity-exceptions/model';
 import { getByProgramId as getMissinEntityExceptionByProgram } from '../../exception/missing-entity-exceptions/repo';
 import { getByProgramId as getTreatmentDetailExceptionByProgram } from '../../exception/treatment-detail-exceptions/repo';
 import { createExceptionManifest } from '../../exception/exception-manifest/index';
@@ -45,7 +44,6 @@ import {
 	findDonorsBySubmitterIds,
 } from '../../clinical/clinical-service';
 import { notEmpty } from '../../utils';
-import { Result } from '../../utils/results';
 
 /**
  * query db for program or entity exceptions
@@ -308,7 +306,7 @@ export async function getExceptionManifestRecords(
 
 	const treatmentDetailException = await getTreatmentDetailExceptionByProgram(programId);
 
-	const exceptionManifest = createExceptionManifest(programId, donors, {
+	const exceptionManifest = await createExceptionManifest(programId, donors, {
 		programExceptions,
 		entityException,
 		missingEntityException,
