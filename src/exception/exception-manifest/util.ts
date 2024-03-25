@@ -33,6 +33,8 @@ import {
 	ExceptionTypes,
 	ProgramPropertyExceptionRecord,
 	EntityPropertyExceptionRecord,
+	MissingEntityExceptionRecord,
+	TreatmentDetailExceptionRecord,
 } from './types';
 
 const idKeys = {
@@ -157,13 +159,24 @@ export const mapEntityExceptionRecords = (programId: string, donors: DeepReadonl
 	return entityRecord;
 };
 
-export const sortExceptionRecordsBySubmitterId = (
+export const sortEntityExceptionRecordsBySubmitterId = (
 	first: EntityExceptionRecord,
 	next: EntityExceptionRecord,
 ): number => {
 	return first.submitter_donor_id === next.submitter_donor_id
 		? 0
 		: first.submitter_donor_id > next.submitter_donor_id
+		? 1
+		: -1;
+};
+
+export const sortDonorExceptionRecordsBySubmitterId = (
+	first: MissingEntityExceptionRecord | TreatmentDetailExceptionRecord,
+	next: MissingEntityExceptionRecord | TreatmentDetailExceptionRecord,
+): number => {
+	return first.submitterDonorId === next.submitterDonorId
+		? 0
+		: first.submitterDonorId > next.submitterDonorId
 		? 1
 		: -1;
 };

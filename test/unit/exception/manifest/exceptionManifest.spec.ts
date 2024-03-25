@@ -164,7 +164,7 @@ describe('Exception Manifest', () => {
 				.returns(Promise.resolve(success(missingEntityStub)));
 			sinon
 				.stub(treatmentDetailExceptionsRepo, 'getByProgramId')
-				.returns(Promise.resolve(success(emptyTreatmentDetailStub)));
+				.returns(Promise.resolve(success(treatmentDetailStub)));
 			sinon.stub(clinicalService, 'getDonors').returns(Promise.resolve(stubDonors));
 			sinon.stub(clinicalService, 'getDonorsByIds').returns(Promise.resolve([]));
 			sinon
@@ -172,25 +172,39 @@ describe('Exception Manifest', () => {
 				.returns(Promise.resolve([existingDonor01, existingDonor04]));
 		});
 
-		it('should return Exception records sorted by: Program Exceptions, Submitter Donor ID, Exception Type, Schema, Submitter Entity ID', async () => {
+		it('should return Exception records in correct sort order', async () => {
 			const result = await getExceptionManifestRecords(TEST_PROGRAM_ID, {
 				donorIds: [],
 				submitterDonorIds: [],
 			});
 
+			// Expected sort order:
+			// Program Exceptions
+			// Entity Property Exceptions:
+			//  - Submitter Donor ID
+			//  - Schema
+			//  - Submitter Entity ID
+			// Missing Entity Exceptions
+			// Treatment Details Exceptions
+
 			chai
 				.expect(result)
 				.to.be.an('array')
-				.with.lengthOf(10);
+				.with.lengthOf(11);
 
 			// Expect Program Exceptions sorted first
 			chai
 				.expect(result.findIndex((exception) => exception.exceptionType === 'ProgramProperty'))
 				.equals(0);
 
-			// Expect Missing Entity Exceptions sorted last
+			// Expect Missing Entity Exceptions sorted after Entity Property exceptions
 			chai
 				.expect(result.findIndex((exception) => exception.exceptionType === 'MissingEntity'))
+				.greaterThan(result.findIndex((exception) => exception.exceptionType === 'EntityProperty'));
+
+			// Expect Treatment Detail Exceptions sorted last
+			chai
+				.expect(result.findIndex((exception) => exception.exceptionType === 'TreatmentDetail'))
 				.equals(result.length - 1);
 
 			// Test Entities

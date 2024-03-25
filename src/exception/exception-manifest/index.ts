@@ -36,7 +36,8 @@ import {
 import {
 	createProgramExceptions,
 	mapEntityExceptionRecords,
-	sortExceptionRecordsBySubmitterId,
+	sortDonorExceptionRecordsBySubmitterId,
+	sortEntityExceptionRecordsBySubmitterId,
 	sortExceptionRecordsByEntityId,
 } from './util';
 
@@ -65,13 +66,13 @@ export const createExceptionManifest = async (
 	);
 
 	const sortedFollowUpExceptions =
-		entityException?.follow_up.sort(sortExceptionRecordsBySubmitterId) || [];
+		entityException?.follow_up.sort(sortEntityExceptionRecordsBySubmitterId) || [];
 
 	const sortedSpecimenExceptions =
-		entityException?.specimen.sort(sortExceptionRecordsBySubmitterId) || [];
+		entityException?.specimen.sort(sortEntityExceptionRecordsBySubmitterId) || [];
 
 	const sortedTreatmentExceptions =
-		entityException?.treatment.sort(sortExceptionRecordsBySubmitterId) || [];
+		entityException?.treatment.sort(sortEntityExceptionRecordsBySubmitterId) || [];
 
 	const entityPropertyRecords: EntityPropertyExceptionRecord[] = [
 		...sortedFollowUpExceptions,
@@ -92,7 +93,8 @@ export const createExceptionManifest = async (
 			const exceptionType = ExceptionTypes.missingEntity;
 			const { donorId } = donors.find((donor) => donor.submitterId === submitterDonorId) || {};
 			return { programId, exceptionType, submitterDonorId, donorId };
-		});
+		})
+		.sort(sortDonorExceptionRecordsBySubmitterId);
 
 	const treatmentDetailSubmitterIds = treatmentDetailException?.success
 		? treatmentDetailException.data.donorSubmitterIds
@@ -104,7 +106,8 @@ export const createExceptionManifest = async (
 			const exceptionType = ExceptionTypes.treatmentDetail;
 			const { donorId } = donors.find((donor) => donor.submitterId === submitterDonorId) || {};
 			return { programId, exceptionType, submitterDonorId, donorId };
-		});
+		})
+		.sort(sortDonorExceptionRecordsBySubmitterId);
 
 	const exceptionManifest: ExceptionManifestRecord[] = [
 		...programExceptionRecords,
