@@ -306,7 +306,7 @@ export async function getExceptionManifestRecords(
 
 	const treatmentDetailException = await getTreatmentDetailExceptionByProgram(programId);
 
-	const exceptionManifest = await createExceptionManifest(programId, donors, {
+	const exceptionManifest = createExceptionManifest(programId, donors, {
 		programExceptions,
 		entityException,
 		missingEntityException,

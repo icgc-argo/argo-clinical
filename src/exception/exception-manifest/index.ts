@@ -41,7 +41,7 @@ import {
 	sortExceptionRecordsByEntityId,
 } from './util';
 
-export const createExceptionManifest = async (
+export const createExceptionManifest = (
 	programId: string,
 	donors: DeepReadonly<Donor>[],
 	exceptions: {
