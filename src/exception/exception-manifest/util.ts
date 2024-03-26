@@ -159,13 +159,13 @@ export const mapEntityExceptionRecords = (programId: string, donors: DeepReadonl
 	return entityRecord;
 };
 
-function baseExceptionSort<Exception>(
+export const baseExceptionSort = <Exception>(
 	first: Exception,
 	next: Exception,
 	key: keyof Exception,
-): number {
+): number => {
 	return first[key] === next[key] ? 0 : first[key] > next[key] ? 1 : -1;
-}
+};
 
 export const sortEntityExceptionRecordsBySubmitterId = (
 	first: EntityExceptionRecord,
