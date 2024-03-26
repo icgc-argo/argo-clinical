@@ -97,14 +97,42 @@ const entityTestResultC = {
 	entityId: 30,
 };
 
-const missingEntityTestResult = {
+const missingEntityTestResultA = {
+	programId: 'TEST-IE',
+	exceptionType: 'MissingEntity',
+	submitterDonorId: 'AB3',
+	donorId: 3,
+};
+
+const missingEntityTestResultB = {
 	programId: 'TEST-IE',
 	exceptionType: 'MissingEntity',
 	submitterDonorId: 'AB4',
 	donorId: 4,
 };
 
-const treatmentDetailTestResult = {
+const missingEntityTestResultC = {
+	programId: 'TEST-IE',
+	exceptionType: 'MissingEntity',
+	submitterDonorId: 'DO-0',
+	donorId: 0,
+};
+
+const treatmentDetailTestResultA = {
+	programId: 'TEST-IE',
+	exceptionType: 'TreatmentDetail',
+	submitterDonorId: 'AB3',
+	donorId: 3,
+};
+
+const treatmentDetailTestResultB = {
+	programId: 'TEST-IE',
+	exceptionType: 'TreatmentDetail',
+	submitterDonorId: 'DO-0',
+	donorId: 0,
+};
+
+const treatmentDetailTestResultC = {
 	programId: 'TEST-IE',
 	exceptionType: 'TreatmentDetail',
 	submitterDonorId: 'DO-2',
@@ -144,14 +172,18 @@ describe('Exception Manifest', () => {
 			chai
 				.expect(result)
 				.to.be.an('array')
-				.with.lengthOf(6);
+				.with.lengthOf(10);
 
 			chai.expect(result).to.deep.include(programTestResult);
 			chai.expect(result).to.deep.include(entityTestResultA);
 			chai.expect(result).to.deep.include(entityTestResultB);
 			chai.expect(result).to.deep.include(entityTestResultC);
-			chai.expect(result).to.deep.include(missingEntityTestResult);
-			chai.expect(result).to.deep.include(treatmentDetailTestResult);
+			chai.expect(result).to.deep.include(missingEntityTestResultA);
+			chai.expect(result).to.deep.include(missingEntityTestResultB);
+			chai.expect(result).to.deep.include(missingEntityTestResultC);
+			chai.expect(result).to.deep.include(treatmentDetailTestResultA);
+			chai.expect(result).to.deep.include(treatmentDetailTestResultB);
+			chai.expect(result).to.deep.include(treatmentDetailTestResultC);
 		});
 	});
 
@@ -190,7 +222,7 @@ describe('Exception Manifest', () => {
 			chai
 				.expect(result)
 				.to.be.an('array')
-				.with.lengthOf(11);
+				.with.lengthOf(15);
 
 			// Expect Program Exceptions sorted first
 			chai
@@ -204,9 +236,14 @@ describe('Exception Manifest', () => {
 
 			// Expect Treatment Detail Exceptions sorted last
 			chai
-				.expect(result.findIndex((exception) => exception.exceptionType === 'TreatmentDetail'))
+				.expect(
+					result.findIndex(
+						(exception) =>
+							exception.exceptionType === 'TreatmentDetail' &&
+							exception.submitterDonorId === treatmentDetailTestResultC.submitterDonorId,
+					),
+				)
 				.equals(result.length - 1);
-
 			// Test Entities
 			const entityResults = result.filter((exception) =>
 				isEntityManifestRecord(exception),
@@ -325,10 +362,10 @@ describe('Exception Manifest', () => {
 			chai
 				.expect(result)
 				.to.be.an('array')
-				.with.lengthOf(2);
+				.with.lengthOf(4);
 
 			chai.expect(result).to.deep.include(entityTestResultC);
-			chai.expect(result).to.deep.include(missingEntityTestResult);
+			chai.expect(result).to.deep.include(missingEntityTestResultA);
 		});
 	});
 
