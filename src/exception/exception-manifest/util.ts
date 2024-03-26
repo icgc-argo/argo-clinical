@@ -159,7 +159,7 @@ export const mapEntityExceptionRecords = (programId: string, donors: DeepReadonl
 	return entityRecord;
 };
 
-export const baseExceptionSort = <Exception>(
+const baseExceptionSort = <Exception>(
 	first: Exception,
 	next: Exception,
 	key: keyof Exception,
