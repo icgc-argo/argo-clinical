@@ -302,15 +302,35 @@ export async function getExceptionManifestRecords(
 
 	const programExceptions = programException?.exceptions || [];
 
+	const {
+		specimen: specimenExceptions,
+		follow_up: followUpExceptions,
+		treatment: treatmentExceptions,
+	} = entityException || {
+		specimen: [],
+		follow_up: [],
+		treatment: [],
+	};
+
 	const missingEntityException = await getMissingEntityExceptionByProgram(programId);
+
+	const missingEntitySubmitterIds = missingEntityException?.success
+		? missingEntityException.data.donorSubmitterIds
+		: [];
 
 	const treatmentDetailException = await getTreatmentDetailExceptionByProgram(programId);
 
+	const treatmentDetailSubmitterIds = treatmentDetailException?.success
+		? treatmentDetailException.data.donorSubmitterIds
+		: [];
+
 	const exceptionManifest = createExceptionManifest(programId, donors, {
 		programExceptions,
-		entityException,
-		missingEntityException,
-		treatmentDetailException,
+		specimenExceptions,
+		followUpExceptions,
+		treatmentExceptions,
+		missingEntitySubmitterIds,
+		treatmentDetailSubmitterIds,
 	});
 
 	return exceptionManifest;

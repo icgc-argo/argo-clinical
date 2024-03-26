@@ -19,7 +19,6 @@
 
 import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../../clinical/clinical-entities';
-import { Result } from '../../utils/results';
 import { EntityException, ProgramExceptionRecord } from '../property-exceptions/types';
 import { MissingEntityException } from '../missing-entity-exceptions/model';
 import { TreatmentDetailException } from '../treatment-detail-exceptions/model';
@@ -46,16 +45,20 @@ export const createExceptionManifest = (
 	donors: DeepReadonly<Donor>[],
 	exceptions: {
 		programExceptions: ReadonlyArray<ProgramExceptionRecord>;
-		entityException: EntityException | null;
-		missingEntityException: Result<MissingEntityException> | null;
-		treatmentDetailException: Result<TreatmentDetailException> | null;
+		specimenExceptions: EntityException['specimen'];
+		followUpExceptions: EntityException['follow_up'];
+		treatmentExceptions: EntityException['treatment'];
+		missingEntitySubmitterIds: MissingEntityException['donorSubmitterIds'];
+		treatmentDetailSubmitterIds: TreatmentDetailException['donorSubmitterIds'];
 	},
 ) => {
 	const {
 		programExceptions,
-		entityException,
-		missingEntityException,
-		treatmentDetailException,
+		specimenExceptions,
+		followUpExceptions,
+		treatmentExceptions,
+		missingEntitySubmitterIds,
+		treatmentDetailSubmitterIds,
 	} = exceptions;
 
 	// Exceptions only store submitterIds, so all submitterIds have to be collected before we can filter exceptions
@@ -65,14 +68,13 @@ export const createExceptionManifest = (
 		createProgramExceptions(programId),
 	);
 
-	const sortedFollowUpExceptions =
-		entityException?.follow_up.sort(sortEntityExceptionRecordsBySubmitterId) || [];
+	const sortedFollowUpExceptions = followUpExceptions.sort(sortEntityExceptionRecordsBySubmitterId);
 
-	const sortedSpecimenExceptions =
-		entityException?.specimen.sort(sortEntityExceptionRecordsBySubmitterId) || [];
+	const sortedSpecimenExceptions = specimenExceptions.sort(sortEntityExceptionRecordsBySubmitterId);
 
-	const sortedTreatmentExceptions =
-		entityException?.treatment.sort(sortEntityExceptionRecordsBySubmitterId) || [];
+	const sortedTreatmentExceptions = treatmentExceptions.sort(
+		sortEntityExceptionRecordsBySubmitterId,
+	);
 
 	const entityPropertyRecords: EntityPropertyExceptionRecord[] = [
 		...sortedFollowUpExceptions,
@@ -83,10 +85,6 @@ export const createExceptionManifest = (
 		.map(mapEntityExceptionRecords(programId, donors))
 		.sort(sortExceptionRecordsByEntityId);
 
-	const missingEntitySubmitterIds = missingEntityException?.success
-		? missingEntityException.data.donorSubmitterIds
-		: [];
-
 	const missingEntityRecords: MissingEntityExceptionRecord[] = missingEntitySubmitterIds
 		.filter((submitterDonorId) => submitterDonorIds.includes(submitterDonorId))
 		.map((submitterDonorId) => {
@@ -95,10 +93,6 @@ export const createExceptionManifest = (
 			return { programId, exceptionType, submitterDonorId, donorId };
 		})
 		.sort(sortDonorExceptionRecordsBySubmitterId);
-
-	const treatmentDetailSubmitterIds = treatmentDetailException?.success
-		? treatmentDetailException.data.donorSubmitterIds
-		: [];
 
 	const treatmentDetailRecords: TreatmentDetailExceptionRecord[] = treatmentDetailSubmitterIds
 		.filter((submitterDonorId) => submitterDonorIds.includes(submitterDonorId))
