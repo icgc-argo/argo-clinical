@@ -217,7 +217,9 @@ describe('Exception Manifest', () => {
 			//  - Schema
 			//  - Submitter Entity ID
 			// Missing Entity Exceptions
+			//  - Submitter Donor ID
 			// Treatment Details Exceptions
+			//  - Submitter Donor ID
 
 			chai
 				.expect(result)
