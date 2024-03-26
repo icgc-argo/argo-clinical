@@ -34,7 +34,7 @@ import {
 	ProgramException,
 } from '../../exception/property-exceptions/types';
 import { fieldFilter } from '../../exception/property-exceptions/validation';
-import { getByProgramId as getMissinEntityExceptionByProgram } from '../../exception/missing-entity-exceptions/repo';
+import { getByProgramId as getMissingEntityExceptionByProgram } from '../../exception/missing-entity-exceptions/repo';
 import { getByProgramId as getTreatmentDetailExceptionByProgram } from '../../exception/treatment-detail-exceptions/repo';
 import { createExceptionManifest } from '../../exception/exception-manifest/index';
 import { ExceptionManifestRecord } from '../../exception/exception-manifest/types';
@@ -302,7 +302,7 @@ export async function getExceptionManifestRecords(
 
 	const programExceptions = programException?.exceptions || [];
 
-	const missingEntityException = await getMissinEntityExceptionByProgram(programId);
+	const missingEntityException = await getMissingEntityExceptionByProgram(programId);
 
 	const treatmentDetailException = await getTreatmentDetailExceptionByProgram(programId);
 
