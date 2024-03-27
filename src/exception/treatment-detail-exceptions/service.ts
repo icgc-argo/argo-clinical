@@ -84,9 +84,9 @@ export const deleteIdsByProgramId = async ({
 	donorSubmitterIds: string[];
 	isDryRun: boolean;
 }): Promise<Result<DeleteResult>> => {
-	const missingEntityExceptionResult = await getByProgramId(programId);
-	if (missingEntityExceptionResult.success) {
-		const currentDonorIds = missingEntityExceptionResult.data.donorSubmitterIds;
+	const treatmentDetailExceptionResult = await getByProgramId(programId);
+	if (treatmentDetailExceptionResult.success) {
+		const currentDonorIds = treatmentDetailExceptionResult.data.donorSubmitterIds;
 		const updatedDonorIds = currentDonorIds.filter((id) => !donorSubmitterIds.includes(id));
 
 		// calc deleted and unchanged ids
@@ -111,6 +111,6 @@ export const deleteIdsByProgramId = async ({
 			}
 		}
 	} else {
-		return missingEntityExceptionResult;
+		return treatmentDetailExceptionResult;
 	}
 };

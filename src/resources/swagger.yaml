@@ -943,7 +943,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/TreatmentDetailException'
+                  $ref: '#/components/schemas/TreatmentDetailsException'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
@@ -960,9 +960,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TreatmentDetailException'
+                $ref: '#/components/schemas/TreatmentDetailsException'
         '500':
-          $ref: '#/component/responses/ServerError'
+          $ref: '#/components/responses/ServerError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
@@ -989,7 +989,7 @@ paths:
         '400':
           description: 'Request body failed validation.'
         '500':
-          $ref: '#/component/responses/ServerError'
+          $ref: '#/components/responses/ServerError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
@@ -1005,16 +1005,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TreatmentDetailExceptionDonorIds'
+              $ref: '#/components/schemas/TreatmentDetailsExceptionDonorIds'
       responses:
         '200':
           description: 'Successfully retrieved list of programs with exceptions.'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TreatmentDetailExceptionDeleteMeta'
+                $ref: '#/components/schemas/TreatmentDetailsExceptionDeleteMeta'
         '500':
-          $ref: '#/component/responses/ServerError'
+          $ref: '#/components/responses/ServerError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
@@ -2125,3 +2125,17 @@ components:
         isDryRun:
           description: Dry runs do not modify database records.
           type: boolean
+
+    TreatmentDetailsExceptionDeleteMeta:
+      allOf:
+        - $ref: '#/components/schemas/TreatmentDetailsExceptionMeta'
+      type: object
+      properties:
+        donorsDeleted:
+          description: 'Donors deleted.'
+          type: array
+          items:
+            type: string
+        donorsDeletedCount:
+          description: 'Amount of donors deleted.'
+          type: integer
