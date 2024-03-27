@@ -596,6 +596,7 @@ export const stubs = {
 								[TreatmentFieldsEnum.submitter_treatment_id]: 'Tr-1',
 								[SurgeryFieldsEnum.submitter_specimen_id]: 'sp-1',
 								[SurgeryFieldsEnum.surgery_type]: 'Biopsy',
+								margin_types_involved: ['Circumferential resection margin', 'Distal margin'],
 							},
 						},
 					],
@@ -658,6 +659,126 @@ export const stubs = {
 					tumourNormalDesignation: 'Tumour',
 					specimenType: 'Tumour',
 					samples: [],
+				},
+			],
+		}),
+
+		existingDonor12: (): Donor => ({
+			schemaMetadata: {
+				isValid: true,
+				lastValidSchemaVersion: '1.0',
+				originalSchemaVersion: '1.0',
+			},
+			_id: '22f23223f',
+			submitterId: 'ICGC_0002',
+			programId: 'TEST-CA',
+			donorId: 250001,
+			clinicalInfo: {
+				[DonorFieldsEnum.program_id]: 'TEST-CA',
+				[DonorFieldsEnum.submitter_donor_id]: 'ICGC_0002',
+				[DonorFieldsEnum.vital_status]: 'Deceased',
+				[DonorFieldsEnum.survival_time]: 9,
+			},
+			gender: 'Female',
+			specimens: [
+				{
+					specimenId: 210001,
+					submitterId: 'sp-1',
+					specimenTissueSource: 'Saliva',
+					clinicalInfo: {
+						[SpecimenFieldsEnum.program_id]: 'TEST-CA',
+						[SpecimenFieldsEnum.submitter_donor_id]: 'ICGC_0002',
+						[SpecimenFieldsEnum.submitter_primary_diagnosis_id]: 'P1',
+						[SpecimenFieldsEnum.submitter_specimen_id]: 'sp-1',
+						[SpecimenFieldsEnum.specimen_acquisition_interval]: 200,
+					},
+					tumourNormalDesignation: 'Tumour',
+					specimenType: 'Primary tumour',
+					samples: [
+						{
+							sampleType: 'Total RNA',
+							submitterId: 'sm123-2',
+							sampleId: 610003,
+						},
+					],
+				},
+				{
+					specimenId: 210002,
+					submitterId: 'sp-2',
+					specimenTissueSource: 'Saliva',
+					clinicalInfo: {
+						[SpecimenFieldsEnum.program_id]: 'TEST-CA',
+						[SpecimenFieldsEnum.submitter_donor_id]: 'ICGC_0002',
+						[SpecimenFieldsEnum.submitter_primary_diagnosis_id]: 'P2',
+						[SpecimenFieldsEnum.submitter_specimen_id]: 'sp-2',
+						[SpecimenFieldsEnum.specimen_acquisition_interval]: 200,
+					},
+					tumourNormalDesignation: 'Tumour',
+					specimenType: 'Primary tumour',
+					samples: [
+						{
+							sampleType: 'Total RNA',
+							submitterId: 'sm-2-220-1',
+							sampleId: 610001,
+						},
+					],
+				},
+			],
+			treatments: [
+				{
+					treatmentId: 3,
+					clinicalInfo: {
+						[TreatmentFieldsEnum.program_id]: 'TEST-CA',
+						[TreatmentFieldsEnum.submitter_treatment_id]: 'Tr-1',
+						[TreatmentFieldsEnum.submitter_donor_id]: 'ICGC_0002',
+						[TreatmentFieldsEnum.submitter_primary_diagnosis_id]: 'P1',
+						[TreatmentFieldsEnum.treatment_type]: ['Surgery'],
+						[TreatmentFieldsEnum.treatment_start_interval]: 5,
+					},
+					therapies: [
+						{
+							therapyType: 'surgery',
+							clinicalInfo: {
+								[TreatmentFieldsEnum.program_id]: 'TEST-CA',
+								[TreatmentFieldsEnum.submitter_donor_id]: 'ICGC_0002',
+								[TreatmentFieldsEnum.submitter_treatment_id]: 'Tr-1',
+								[SurgeryFieldsEnum.submitter_specimen_id]: 'sp-1',
+								[SurgeryFieldsEnum.surgery_type]: 'Biopsy',
+							},
+						},
+						{
+							therapyType: 'surgery',
+							clinicalInfo: {
+								[TreatmentFieldsEnum.program_id]: 'TEST-CA',
+								[TreatmentFieldsEnum.submitter_donor_id]: 'ICGC_0002',
+								[TreatmentFieldsEnum.submitter_treatment_id]: 'Tr-1',
+								[SurgeryFieldsEnum.submitter_specimen_id]: 'sp-1',
+								[SurgeryFieldsEnum.surgery_type]: 'Reexcision',
+							},
+						},
+					],
+				},
+			],
+			primaryDiagnoses: [
+				{
+					primaryDiagnosisId: 3,
+					clinicalInfo: {
+						[PrimaryDiagnosisFieldsEnum.program_id]: 'TEST-CA',
+						[PrimaryDiagnosisFieldsEnum.submitter_donor_id]: 'ICGC_0002',
+						[PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'P1',
+						[PrimaryDiagnosisFieldsEnum.age_at_diagnosis]: 96,
+						[PrimaryDiagnosisFieldsEnum.cancer_type_code]: 'C41.1',
+					},
+				},
+				{
+					primaryDiagnosisId: 3,
+					clinicalInfo: {
+						[PrimaryDiagnosisFieldsEnum.program_id]: 'TEST-CA',
+						[PrimaryDiagnosisFieldsEnum.submitter_donor_id]: 'ICGC_0002',
+						[PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'P2',
+						[PrimaryDiagnosisFieldsEnum.age_at_diagnosis]: 96,
+						[PrimaryDiagnosisFieldsEnum.cancer_type_code]: 'C41.1',
+					},
 				},
 			],
 		}),

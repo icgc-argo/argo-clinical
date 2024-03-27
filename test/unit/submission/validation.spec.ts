@@ -2908,13 +2908,52 @@ describe('data-validator', () => {
 			chai.expect(result[ClinicalEntitySchemaNames.SURGERY].dataErrors.length).to.equal(0);
 		});
 
-		it('should error when multiple surgeries with the same submitter_specimen_id are found', async () => {
+		it('should error when submitted record is a duplicate of an existing surgery with the same submitter_specimen_id', async () => {
 			const existingDonor = stubs.validation.existingDonor09();
 			const submissionRecordsMap = {};
 			ClinicalSubmissionRecordsOperations.addRecord(
 				ClinicalEntitySchemaNames.SURGERY,
 				submissionRecordsMap,
 				{
+					program_id: 'TEST-CA',
+					[SampleRegistrationFieldsEnum.submitter_donor_id]: 'ICGC_0002',
+					[SurgeryFieldsEnum.submitter_specimen_id]: 'sp-1',
+					[TreatmentFieldsEnum.submitter_treatment_id]: 'Tr-1',
+					[SurgeryFieldsEnum.surgery_type]: 'Biopsy',
+					margin_types_involved: ['Circumferential resection margin', 'Distal margin'],
+					index: 0,
+				},
+			);
+
+			const result = await dv
+				.validateSubmissionData({ ICGC_0002: submissionRecordsMap }, { ICGC_0002: existingDonor })
+				.catch((err: any) => fail(err));
+
+			const error: SubmissionValidationError = {
+				fieldName: DonorFieldsEnum.submitter_donor_id,
+				message:
+					"The submitter_specimen_id 'sp-1' has already been associated with a surgery in the current or previous submission. Specimen can only be submitted once for a single surgery.",
+				type: DataValidationErrors.DUPLICATE_SUBMITTER_SPECIMEN_ID_IN_SURGERY,
+				index: 0,
+				info: {
+					submitter_specimen_id: 'sp-1',
+					donorSubmitterId: 'ICGC_0002',
+					value: 'ICGC_0002',
+				},
+			};
+
+			chai.expect(result[ClinicalEntitySchemaNames.SURGERY].dataErrors.length).equal(1);
+			chai.expect(result[ClinicalEntitySchemaNames.SURGERY].dataErrors[0]).to.deep.eq(error);
+		});
+
+		it('should error when multiple surgeries with the same submitter_specimen_id are found', async () => {
+			const existingDonor = stubs.validation.existingDonor12();
+			const submissionRecordsMap = {};
+			ClinicalSubmissionRecordsOperations.addRecord(
+				ClinicalEntitySchemaNames.SURGERY,
+				submissionRecordsMap,
+				{
+					program_id: 'TEST-CA',
 					[SampleRegistrationFieldsEnum.submitter_donor_id]: 'ICGC_0002',
 					[SurgeryFieldsEnum.submitter_specimen_id]: 'sp-1',
 					[TreatmentFieldsEnum.submitter_treatment_id]: 'Tr-1',
