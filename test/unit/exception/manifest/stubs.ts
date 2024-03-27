@@ -20,6 +20,7 @@
 import { Donor } from '../../../../src/clinical/clinical-entities';
 import { FollowupFieldsEnum, TreatmentFieldsEnum } from '../../../../src/common-model/entities';
 import { MissingEntityException } from '../../../../src/exception/missing-entity-exceptions/model';
+import { TreatmentDetailException } from '../../../../src/exception/treatment-detail-exceptions/model';
 import {
 	FollowUpExceptionRecord,
 	ProgramException,
@@ -291,7 +292,12 @@ export const treatmentExceptionStub4: TreatmentExceptionRecord = {
 
 export const missingEntityStub: MissingEntityException = {
 	programId: TEST_PROGRAM_ID,
-	donorSubmitterIds: ['AB4'],
+	donorSubmitterIds: ['AB4', 'AB3', 'DO-0'],
+};
+
+export const treatmentDetailStub: MissingEntityException = {
+	programId: TEST_PROGRAM_ID,
+	donorSubmitterIds: ['DO-2', 'AB3', 'DO-0'],
 };
 
 export const allEntitiesStub: EntityException = {
@@ -340,6 +346,11 @@ export const emptyProgramExceptionStub: ProgramException = {
 };
 
 export const emptyMissingEntityStub: MissingEntityException = {
+	programId: TEST_PROGRAM_ID,
+	donorSubmitterIds: [],
+};
+
+export const emptyTreatmentDetailStub: TreatmentDetailException = {
 	programId: TEST_PROGRAM_ID,
 	donorSubmitterIds: [],
 };

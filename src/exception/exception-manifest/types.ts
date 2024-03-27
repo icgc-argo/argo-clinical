@@ -24,6 +24,7 @@ export const ExceptionTypes = {
 	programProperty: 'ProgramProperty',
 	entityProperty: 'EntityProperty',
 	missingEntity: 'MissingEntity',
+	treatmentDetail: 'TreatmentDetail',
 } as const;
 
 export type EntityRecord =
@@ -33,6 +34,13 @@ export type EntityRecord =
 
 export type MissingEntityExceptionRecord = {
 	exceptionType: typeof ExceptionTypes.missingEntity;
+	programId: string;
+	donorId?: number;
+	submitterDonorId: string;
+};
+
+export type TreatmentDetailExceptionRecord = {
+	exceptionType: typeof ExceptionTypes.treatmentDetail;
 	programId: string;
 	donorId?: number;
 	submitterDonorId: string;
@@ -59,6 +67,7 @@ export type EntityPropertyExceptionRecord = {
 };
 
 export type ExceptionManifestRecord =
+	| TreatmentDetailExceptionRecord
 	| MissingEntityExceptionRecord
 	| ProgramPropertyExceptionRecord
 	| EntityPropertyExceptionRecord;

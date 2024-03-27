@@ -27,6 +27,7 @@ import {
 import entityExceptionRepository from '../../../../src/exception/property-exceptions/repo/entity';
 import programExceptionRepository from '../../../../src/exception/property-exceptions/repo/program';
 import * as missingEntityExceptionsRepo from '../../../../src/exception/missing-entity-exceptions/repo';
+import * as treatmentDetailExceptionsRepo from '../../../../src/exception/treatment-detail-exceptions/repo';
 import { getExceptionManifestRecords } from '../../../../src/submission/exceptions/exceptions';
 import { success } from '../../../../src/utils/results';
 import {
@@ -39,11 +40,13 @@ import {
 	missingEntityStub,
 	allEntitiesStub,
 	sortingEntitiesStub,
+	treatmentDetailStub,
 	donorIdEntitiesStub,
 	submitterIdEntitiesStub,
 	emptyEntitiesStub,
 	emptyProgramExceptionStub,
 	emptyMissingEntityStub,
+	emptyTreatmentDetailStub,
 } from './stubs';
 
 const stubDonors = [existingDonor01, existingDonor02, existingDonor03, existingDonor04];
@@ -94,11 +97,46 @@ const entityTestResultC = {
 	entityId: 30,
 };
 
-const missingEntityTestResult = {
+const missingEntityTestResultA = {
+	programId: 'TEST-IE',
+	exceptionType: 'MissingEntity',
+	submitterDonorId: 'AB3',
+	donorId: 3,
+};
+
+const missingEntityTestResultB = {
 	programId: 'TEST-IE',
 	exceptionType: 'MissingEntity',
 	submitterDonorId: 'AB4',
 	donorId: 4,
+};
+
+const missingEntityTestResultC = {
+	programId: 'TEST-IE',
+	exceptionType: 'MissingEntity',
+	submitterDonorId: 'DO-0',
+	donorId: 0,
+};
+
+const treatmentDetailTestResultA = {
+	programId: 'TEST-IE',
+	exceptionType: 'TreatmentDetail',
+	submitterDonorId: 'AB3',
+	donorId: 3,
+};
+
+const treatmentDetailTestResultB = {
+	programId: 'TEST-IE',
+	exceptionType: 'TreatmentDetail',
+	submitterDonorId: 'DO-0',
+	donorId: 0,
+};
+
+const treatmentDetailTestResultC = {
+	programId: 'TEST-IE',
+	exceptionType: 'TreatmentDetail',
+	submitterDonorId: 'DO-2',
+	donorId: 2,
 };
 
 describe('Exception Manifest', () => {
@@ -114,6 +152,9 @@ describe('Exception Manifest', () => {
 			sinon
 				.stub(missingEntityExceptionsRepo, 'getByProgramId')
 				.returns(Promise.resolve(success(missingEntityStub)));
+			sinon
+				.stub(treatmentDetailExceptionsRepo, 'getByProgramId')
+				.returns(Promise.resolve(success(treatmentDetailStub)));
 			sinon.stub(clinicalService, 'getDonors').returns(Promise.resolve(stubDonors));
 			sinon.stub(clinicalService, 'getDonorsByIds').returns(Promise.resolve([]));
 			sinon
@@ -131,13 +172,18 @@ describe('Exception Manifest', () => {
 			chai
 				.expect(result)
 				.to.be.an('array')
-				.with.lengthOf(5);
+				.with.lengthOf(10);
 
 			chai.expect(result).to.deep.include(programTestResult);
 			chai.expect(result).to.deep.include(entityTestResultA);
 			chai.expect(result).to.deep.include(entityTestResultB);
 			chai.expect(result).to.deep.include(entityTestResultC);
-			chai.expect(result).to.deep.include(missingEntityTestResult);
+			chai.expect(result).to.deep.include(missingEntityTestResultA);
+			chai.expect(result).to.deep.include(missingEntityTestResultB);
+			chai.expect(result).to.deep.include(missingEntityTestResultC);
+			chai.expect(result).to.deep.include(treatmentDetailTestResultA);
+			chai.expect(result).to.deep.include(treatmentDetailTestResultB);
+			chai.expect(result).to.deep.include(treatmentDetailTestResultC);
 		});
 	});
 
@@ -148,6 +194,9 @@ describe('Exception Manifest', () => {
 			sinon
 				.stub(missingEntityExceptionsRepo, 'getByProgramId')
 				.returns(Promise.resolve(success(missingEntityStub)));
+			sinon
+				.stub(treatmentDetailExceptionsRepo, 'getByProgramId')
+				.returns(Promise.resolve(success(treatmentDetailStub)));
 			sinon.stub(clinicalService, 'getDonors').returns(Promise.resolve(stubDonors));
 			sinon.stub(clinicalService, 'getDonorsByIds').returns(Promise.resolve([]));
 			sinon
@@ -155,27 +204,48 @@ describe('Exception Manifest', () => {
 				.returns(Promise.resolve([existingDonor01, existingDonor04]));
 		});
 
-		it('should return Exception records sorted by: Program Exceptions, Submitter Donor ID, Exception Type, Schema, Submitter Entity ID', async () => {
+		it('should return Exception records in correct sort order', async () => {
 			const result = await getExceptionManifestRecords(TEST_PROGRAM_ID, {
 				donorIds: [],
 				submitterDonorIds: [],
 			});
 
+			// Expected sort order:
+			// Program Exceptions
+			// Entity Property Exceptions:
+			//  - Submitter Donor ID
+			//  - Schema
+			//  - Submitter Entity ID
+			// Missing Entity Exceptions
+			//  - Submitter Donor ID
+			// Treatment Details Exceptions
+			//  - Submitter Donor ID
+
 			chai
 				.expect(result)
 				.to.be.an('array')
-				.with.lengthOf(10);
+				.with.lengthOf(15);
 
 			// Expect Program Exceptions sorted first
 			chai
 				.expect(result.findIndex((exception) => exception.exceptionType === 'ProgramProperty'))
 				.equals(0);
 
-			// Expect Missing Entity Exceptions sorted last
+			// Expect Missing Entity Exceptions sorted after Entity Property exceptions
 			chai
 				.expect(result.findIndex((exception) => exception.exceptionType === 'MissingEntity'))
-				.equals(result.length - 1);
+				.greaterThan(result.findIndex((exception) => exception.exceptionType === 'EntityProperty'));
 
+			// Expect Treatment Detail Exceptions sorted last
+			chai
+				.expect(
+					result.findIndex(
+						(exception) =>
+							exception.exceptionType === 'TreatmentDetail' &&
+							exception.submitterDonorId === treatmentDetailTestResultC.submitterDonorId,
+					),
+				)
+				.equals(result.length - 1);
 			// Test Entities
 			const entityResults = result.filter((exception) =>
 				isEntityManifestRecord(exception),
@@ -241,6 +311,9 @@ describe('Exception Manifest', () => {
 			sinon
 				.stub(missingEntityExceptionsRepo, 'getByProgramId')
 				.returns(Promise.resolve(success(emptyMissingEntityStub)));
+			sinon
+				.stub(treatmentDetailExceptionsRepo, 'getByProgramId')
+				.returns(Promise.resolve(success(emptyTreatmentDetailStub)));
 			sinon.stub(clinicalService, 'getDonors').returns(Promise.resolve([]));
 			sinon.stub(clinicalService, 'getDonorsByIds').returns(Promise.resolve(stubFilteredDonors));
 			sinon.stub(clinicalService, 'findDonorsBySubmitterIds').returns(Promise.resolve([]));
@@ -273,6 +346,9 @@ describe('Exception Manifest', () => {
 			sinon
 				.stub(missingEntityExceptionsRepo, 'getByProgramId')
 				.returns(Promise.resolve(success(missingEntityStub)));
+			sinon
+				.stub(treatmentDetailExceptionsRepo, 'getByProgramId')
+				.returns(Promise.resolve(success(emptyTreatmentDetailStub)));
 			sinon.stub(clinicalService, 'getDonorsByIds').returns(Promise.resolve(stubDonors));
 			sinon
 				.stub(clinicalService, 'findDonorsBySubmitterIds')
@@ -288,10 +364,10 @@ describe('Exception Manifest', () => {
 			chai
 				.expect(result)
 				.to.be.an('array')
-				.with.lengthOf(2);
+				.with.lengthOf(4);
 
 			chai.expect(result).to.deep.include(entityTestResultC);
-			chai.expect(result).to.deep.include(missingEntityTestResult);
+			chai.expect(result).to.deep.include(missingEntityTestResultA);
 		});
 	});
 
@@ -304,6 +380,9 @@ describe('Exception Manifest', () => {
 			sinon
 				.stub(missingEntityExceptionsRepo, 'getByProgramId')
 				.returns(Promise.resolve(success(emptyMissingEntityStub)));
+			sinon
+				.stub(treatmentDetailExceptionsRepo, 'getByProgramId')
+				.returns(Promise.resolve(success(emptyTreatmentDetailStub)));
 			sinon.stub(clinicalService, 'getDonors').returns(Promise.resolve([]));
 			sinon.stub(clinicalService, 'getDonorsByIds').returns(Promise.resolve([]));
 			sinon.stub(clinicalService, 'findDonorsBySubmitterIds').returns(Promise.resolve(undefined));
