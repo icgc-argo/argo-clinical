@@ -993,6 +993,31 @@ paths:
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
+    delete:
+      tags:
+        - 'Exception - Treatment Details'
+      summary: Delete submitter donor ids for exception
+      parameters:
+        - $ref: '#/components/parameters/PathProgramId'
+        - $ref: '#/components/parameters/IsDryRun'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TreatmentDetailExceptionDonorIds'
+      responses:
+        '200':
+          description: 'Successfully retrieved list of programs with exceptions.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreatmentDetailExceptionDeleteMeta'
+        '500':
+          $ref: '#/component/responses/ServerError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
   /clinical/donors/tsv:
     post:
       tags:
