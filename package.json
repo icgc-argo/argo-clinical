@@ -142,7 +142,7 @@
 		"swagger-ui-express": "^4.3.0",
 		"winston": "^3.2.1",
 		"yamljs": "^0.3.0",
-		"zod": "^3.21.4"
+		"zod": "^3.22.3"
 	},
 	"husky": {
 		"hooks": {
