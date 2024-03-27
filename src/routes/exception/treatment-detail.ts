@@ -30,6 +30,7 @@ const {
 	listTreatmentDetailExceptions,
 	getTreatmentDetailException,
 	createTreatmentDetailException,
+	removeTreatmentDetailException,
 } = treatmentDetailExceptionApi;
 
 // GET
@@ -39,5 +40,8 @@ treatmentDetailExceptionRouter.get('/:programId', wrapAsync(getTreatmentDetailEx
 
 // POST
 treatmentDetailExceptionRouter.post('/:programId', wrapAsync(createTreatmentDetailException));
+
+// DELETE
+treatmentDetailExceptionRouter.delete('/:programId', wrapAsync(removeTreatmentDetailException));
 
 export default treatmentDetailExceptionRouter;

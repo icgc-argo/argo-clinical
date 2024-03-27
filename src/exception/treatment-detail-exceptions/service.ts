@@ -19,7 +19,7 @@
 
 import { loggerFor } from '../../logger';
 import { Result, success } from '../../utils/results';
-import { CreateResult } from '../common';
+import { CreateResult, DeleteResult } from '../common';
 import { createOrUpdate, getByProgramId } from './repo';
 
 const L = loggerFor(__filename);
@@ -64,6 +64,46 @@ export const create = async ({
 			return success(stats);
 		} else {
 			const result = await createOrUpdate({ programId, donorSubmitterIds });
+			if (result.success) {
+				return success(stats);
+			} else {
+				return result;
+			}
+		}
+	} else {
+		return treatmentDetailExceptionResult;
+	}
+};
+
+export const deleteIdsByProgramId = async ({
+	programId,
+	donorSubmitterIds,
+	isDryRun,
+}: {
+	programId: string;
+	donorSubmitterIds: string[];
+	isDryRun: boolean;
+}): Promise<Result<DeleteResult>> => {
+	const treatmentDetailExceptionResult = await getByProgramId(programId);
+	if (treatmentDetailExceptionResult.success) {
+		const currentDonorIds = treatmentDetailExceptionResult.data.donorSubmitterIds;
+		const updatedDonorIds = currentDonorIds.filter((id) => !donorSubmitterIds.includes(id));
+
+		// calc deleted and unchanged ids
+		const donorsDeleted = donorSubmitterIds.filter((id) => currentDonorIds.includes(id));
+		const donorsUnchanged = currentDonorIds.filter((id) => !donorSubmitterIds.includes(id));
+		const stats: DeleteResult = {
+			donorsDeleted,
+			donorsDeletedCount: donorsDeleted.length,
+			donorsUnchanged,
+			donorsUnchangedCount: donorsUnchanged.length,
+			isDryRun,
+		};
+
+		if (isDryRun) {
+			return success(stats);
+		} else {
+			const result = await createOrUpdate({ programId, donorSubmitterIds: updatedDonorIds });
 			if (result.success) {
 				return success(stats);
 			} else {
