@@ -58,11 +58,18 @@ export const validate = async (
 	// to validate therapies
 	const validateTherapies = errors.length == 0;
 	if (validateTherapies) {
-		const { programId } = mergedDonor;
+		const { programId, submitterId } = mergedDonor;
 		const treatmentDetailException = await getTreatmentDetailException({ programId });
 
-		for (const therapyName of ClinicalTherapySchemaNames) {
-			checkTherapyFileNeeded(treatmentRecord, mergedDonor, therapyName, errors);
+		const donorHasException =
+			treatmentDetailException.success &&
+			treatmentDetailException.data.donorSubmitterIds.includes(submitterId);
+		// && valid treatment_type
+
+		if (!donorHasException) {
+			for (const therapyName of ClinicalTherapySchemaNames) {
+				checkTherapyFileNeeded(treatmentRecord, mergedDonor, therapyName, errors);
+			}
 		}
 	}
 
