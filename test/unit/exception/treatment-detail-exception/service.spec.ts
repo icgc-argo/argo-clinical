@@ -138,7 +138,7 @@ describe('Treatment Detail exception service', () => {
 				isDryRun,
 			})) as Success<DeleteResult>;
 
-			chai.expect(result.data.donorsDeleted).includes('DN001');
+			chai.expect(result.data.donorsDeleted).includes(donorSubmitterIds[0]);
 		});
 	});
 });
