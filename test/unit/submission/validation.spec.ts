@@ -22,6 +22,7 @@ import sinon from 'sinon';
 import _ from 'lodash';
 import { donorDao } from '../../../src/clinical/donor-repo';
 import * as dv from '../../../src/submission/validation-clinical/validation';
+import * as treatmentDetailExceptionsRepo from '../../../src/exception/treatment-detail-exceptions/repo';
 import {
 	SubmissionValidationError,
 	DataValidationErrors,
@@ -46,6 +47,7 @@ import {
 	SurgeryFieldsEnum,
 	RadiationFieldsEnum,
 } from '../../../src/common-model/entities';
+import { success } from '../../../src/utils/results';
 import featureFlags from '../../../src/feature-flags';
 
 const genderMutatedErr: SubmissionValidationError = {
@@ -178,6 +180,10 @@ describe('data-validator', () => {
 	let donorDaoFindByClinicalEntitySubmitterIdAndProgramIdStub: sinon.SinonStub<[any, any], any>;
 	let donorDaoFindByPaginatedProgramId: sinon.SinonStub<[any, any], any>;
 	let radiationFeatureFlagStub: sinon.SinonStub<any, any>;
+	let getExceptionByProgramStub: sinon.SinonStub<
+		Parameters<typeof treatmentDetailExceptionsRepo.getByProgramId>,
+		ReturnType<typeof treatmentDetailExceptionsRepo.getByProgramId>
+	>;
 
 	beforeEach((done) => {
 		donorDaoCountByStub = sinon.stub(donorDao, 'countBy');
@@ -203,6 +209,15 @@ describe('data-validator', () => {
 			.stub(featureFlags, 'FEATURE_REFERENCE_RADIATION_ENABLED')
 			.value(true);
 
+		getExceptionByProgramStub = sinon
+			.stub(treatmentDetailExceptionsRepo, 'getByProgramId')
+			.resolves(
+				success({
+					donorSubmitterIds: [],
+					programId: 'PEME-CA',
+				}),
+			);
+
 		done();
 	});
 
@@ -213,6 +228,7 @@ describe('data-validator', () => {
 		donorDaoFindByClinicalEntitySubmitterIdAndProgramIdStub.restore();
 		donorDaoFindByPaginatedProgramId.restore();
 		radiationFeatureFlagStub.restore();
+		getExceptionByProgramStub.restore();
 		done();
 	});
 

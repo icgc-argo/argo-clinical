@@ -32,6 +32,7 @@ import {
 	ClinicalTherapySchemaNames,
 } from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
+import { getTreatmentDetailException } from '../../exception/treatment-detail-exceptions/service';
 import { Donor, Treatment, FollowUp } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
@@ -57,6 +58,9 @@ export const validate = async (
 	// to validate therapies
 	const validateTherapies = errors.length == 0;
 	if (validateTherapies) {
+		const { programId } = mergedDonor;
+		const treatmentDetailException = await getTreatmentDetailException({ programId });
+
 		for (const therapyName of ClinicalTherapySchemaNames) {
 			checkTherapyFileNeeded(treatmentRecord, mergedDonor, therapyName, errors);
 		}
