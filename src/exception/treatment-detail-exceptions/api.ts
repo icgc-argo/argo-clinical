@@ -91,9 +91,10 @@ class TreatmentDetailExceptionController {
 			});
 		}
 
+		const donorSubmitterIds = validateBodyResult.data.donorSubmitterIds;
 		const result = await service.deleteIdsByProgramId({
 			programId,
-			donorSubmitterIds: validateBodyResult.data.donorSubmitterIds,
+			donorSubmitterIds,
 			isDryRun,
 		});
 
