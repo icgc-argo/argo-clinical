@@ -139,6 +139,7 @@ describe('Treatment Detail exception service', () => {
 			})) as Success<DeleteResult>;
 
 			chai.expect(result.data.donorsDeleted).includes(donorSubmitterIds[0]);
+			chai.expect(result.data.donorsUnchanged).includes(deleteResult.donorSubmitterIds[0]);
 		});
 	});
 });
