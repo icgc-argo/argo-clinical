@@ -60,11 +60,14 @@ export const validate = async (
 	if (validateTherapies) {
 		const { programId, submitterId } = mergedDonor;
 		const treatmentDetailException = await getTreatmentDetailException({ programId });
+		const treatmentType = new String(
+			treatmentRecord.treatment_type,
+		).toLowerCase() as ClinicalTherapyType;
 
 		const donorHasException =
 			treatmentDetailException.success &&
-			treatmentDetailException.data.donorSubmitterIds.includes(submitterId);
-		// && valid treatment_type
+			treatmentDetailException.data.donorSubmitterIds.includes(submitterId) &&
+			ClinicalTherapySchemaNames.includes(treatmentType);
 
 		if (!donorHasException) {
 			for (const therapyName of ClinicalTherapySchemaNames) {
