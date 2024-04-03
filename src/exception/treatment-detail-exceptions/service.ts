@@ -19,7 +19,7 @@
 
 import { loggerFor } from '../../logger';
 import { AsyncResult, Result, success, failure } from '../../utils/results';
-import { CreateResult } from '../common';
+import { CreateResult, DeleteResult } from '../common';
 import { TreatmentDetailException } from './model';
 import { createOrUpdate, getByProgramId } from './repo';
 
@@ -83,4 +83,44 @@ export const getTreatmentDetailException = async ({
 }): AsyncResult<TreatmentDetailException> => {
 	const result = await getByProgramId(programId);
 	return result ? result : failure(`Cannot find program exceptions for ${programId}`);
+};
+
+export const deleteIdsByProgramId = async ({
+	programId,
+	donorSubmitterIds,
+	isDryRun,
+}: {
+	programId: string;
+	donorSubmitterIds: string[];
+	isDryRun: boolean;
+}): Promise<Result<DeleteResult>> => {
+	const treatmentDetailExceptionResult = await getByProgramId(programId);
+	if (treatmentDetailExceptionResult.success) {
+		const currentDonorIds = treatmentDetailExceptionResult.data.donorSubmitterIds;
+		const updatedDonorIds = currentDonorIds.filter((id) => !donorSubmitterIds.includes(id));
+
+		// calc deleted and unchanged ids
+		const donorsDeleted = donorSubmitterIds.filter((id) => currentDonorIds.includes(id));
+		const donorsUnchanged = currentDonorIds.filter((id) => !donorSubmitterIds.includes(id));
+		const stats: DeleteResult = {
+			donorsDeleted,
+			donorsDeletedCount: donorsDeleted.length,
+			donorsUnchanged,
+			donorsUnchangedCount: donorsUnchanged.length,
+			isDryRun,
+		};
+
+		if (isDryRun) {
+			return success(stats);
+		} else {
+			const result = await createOrUpdate({ programId, donorSubmitterIds: updatedDonorIds });
+			if (result.success) {
+				return success(stats);
+			} else {
+				return result;
+			}
+		}
+	} else {
+		return treatmentDetailExceptionResult;
+	}
 };
