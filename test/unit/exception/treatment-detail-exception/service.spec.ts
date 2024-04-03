@@ -20,9 +20,13 @@
 import chai from 'chai';
 import sinon from 'sinon';
 import { donorDao as donorRepo } from '../../../../src/clinical/donor-repo';
-import { create } from '../../../../src/exception/treatment-detail-exceptions/service';
+import { TreatmentDetailException } from '../../../../src/exception/treatment-detail-exceptions/model';
+import {
+	create,
+	deleteIdsByProgramId,
+} from '../../../../src/exception/treatment-detail-exceptions/service';
 import * as treatmentDetailExceptionsRepo from '../../../../src/exception/treatment-detail-exceptions/repo';
-import { CreateResult } from '../../../../src/exception/common';
+import { CreateResult, DeleteResult } from '../../../../src/exception/common';
 import { Success, success } from '../../../../src/utils/results';
 
 describe('Treatment Detail exception service', () => {
@@ -90,6 +94,52 @@ describe('Treatment Detail exception service', () => {
 			chai.expect(result.data.donorsAddedCount).equals(2);
 			chai.expect(result.data.donorsAdded).includes(inputs.newDonorIds[0]);
 			chai.expect(result.data.donorsAdded).includes(inputs.newDonorIds[1]);
+		});
+	});
+
+	describe('delete', () => {
+		let getByProgramStub: sinon.SinonStub<
+			Parameters<typeof treatmentDetailExceptionsRepo.getByProgramId>,
+			ReturnType<typeof treatmentDetailExceptionsRepo.getByProgramId>
+		>;
+
+		let createOrUpdateStub: sinon.SinonStub<
+			Parameters<typeof treatmentDetailExceptionsRepo.createOrUpdate>,
+			ReturnType<typeof treatmentDetailExceptionsRepo.createOrUpdate>
+		>;
+
+		beforeEach(() => {
+			getByProgramStub = sandbox.stub(treatmentDetailExceptionsRepo, 'getByProgramId');
+			createOrUpdateStub = sandbox.stub(treatmentDetailExceptionsRepo, 'createOrUpdate');
+		});
+
+		it('removes submitter ids from exception', async () => {
+			const programId = 'EXAMPLE-CA';
+			const donorSubmitterIds = ['DN001'];
+			const isDryRun = false;
+
+			const exceptionResult: TreatmentDetailException = {
+				donorSubmitterIds: ['DN001', 'DN002'],
+				programId,
+			};
+
+			getByProgramStub.returns(Promise.resolve(success(exceptionResult)));
+
+			const deleteResult: TreatmentDetailException = {
+				donorSubmitterIds: ['DN002'],
+				programId,
+			};
+
+			createOrUpdateStub.returns(Promise.resolve(success(deleteResult)));
+
+			const result = (await deleteIdsByProgramId({
+				programId,
+				donorSubmitterIds,
+				isDryRun,
+			})) as Success<DeleteResult>;
+
+			chai.expect(result.data.donorsDeleted).includes(donorSubmitterIds[0]);
+			chai.expect(result.data.donorsUnchanged).includes(deleteResult.donorSubmitterIds[0]);
 		});
 	});
 });

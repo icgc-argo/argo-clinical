@@ -76,6 +76,35 @@ class TreatmentDetailExceptionController {
 			return res.status(200).send(result.data);
 		}
 	}
+
+	@HasFullWriteAccess()
+	async removeTreatmentDetailException(req: Request, res: Response) {
+		const programId = req.params.programId;
+		const isDryRun = parseBoolString(req.query['dry-run']);
+
+		// Validate
+		const validateBodyResult = updateRequestBody.safeParse(req.body);
+		if (!validateBodyResult.success) {
+			return res.status(400).send({
+				message: 'Failed to validate request body for donor submitter ids.',
+				errors: validateBodyResult.error,
+			});
+		}
+
+		const donorSubmitterIds = validateBodyResult.data.donorSubmitterIds;
+		const result = await service.deleteIdsByProgramId({
+			programId,
+			donorSubmitterIds,
+			isDryRun,
+		});
+
+		if (!result.success) {
+			const { message, errors } = result;
+			return res.status(500).send({ message, errors });
+		} else {
+			return res.status(200).send(result.data);
+		}
+	}
 }
 
 export default new TreatmentDetailExceptionController();
