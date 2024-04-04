@@ -180,7 +180,7 @@ describe('data-validator', () => {
 	let donorDaoFindByClinicalEntitySubmitterIdAndProgramIdStub: sinon.SinonStub<[any, any], any>;
 	let donorDaoFindByPaginatedProgramId: sinon.SinonStub<[any, any], any>;
 	let radiationFeatureFlagStub: sinon.SinonStub<any, any>;
-	let getExceptionByProgramStub: sinon.SinonStub<
+	let getTreatmentExceptionByProgramStub: sinon.SinonStub<
 		Parameters<typeof treatmentDetailExceptionsRepo.getByProgramId>,
 		ReturnType<typeof treatmentDetailExceptionsRepo.getByProgramId>
 	>;
@@ -209,7 +209,7 @@ describe('data-validator', () => {
 			.stub(featureFlags, 'FEATURE_REFERENCE_RADIATION_ENABLED')
 			.value(true);
 
-		getExceptionByProgramStub = sinon
+		getTreatmentExceptionByProgramStub = sinon
 			.stub(treatmentDetailExceptionsRepo, 'getByProgramId')
 			.resolves(
 				success({
@@ -228,7 +228,7 @@ describe('data-validator', () => {
 		donorDaoFindByClinicalEntitySubmitterIdAndProgramIdStub.restore();
 		donorDaoFindByPaginatedProgramId.restore();
 		radiationFeatureFlagStub.restore();
-		getExceptionByProgramStub.restore();
+		getTreatmentExceptionByProgramStub.restore();
 		done();
 	});
 
@@ -2590,6 +2590,51 @@ describe('data-validator', () => {
 			chai.expect(result.treatment.dataErrors).to.deep.include(treatmentTherapyErr);
 			chai.expect(result.treatment.dataErrors).to.deep.include(treatmentTherapyErr2);
 			chai.expect(result.treatment.dataErrors).to.deep.include(treatmentTherapyErr3);
+		});
+
+		it('should allow empty therapy details when there is a Treatment Detail exception', async () => {
+			const existingDonorMock: Donor = stubs.validation.existingDonor01();
+			const newDonorAB1Records = {};
+
+			getTreatmentExceptionByProgramStub.resolves(
+				success({
+					donorSubmitterIds: ['AB1'],
+					programId: 'PEME-CA',
+				}),
+			);
+
+			ClinicalSubmissionRecordsOperations.addRecord(
+				ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+				newDonorAB1Records,
+				{
+					[PrimaryDiagnosisFieldsEnum.submitter_donor_id]: 'AB1',
+					[PrimaryDiagnosisFieldsEnum.program_id]: 'PEME-CA',
+					[PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
+					index: 0,
+				},
+			);
+
+			ClinicalSubmissionRecordsOperations.addRecord(
+				ClinicalEntitySchemaNames.TREATMENT,
+				newDonorAB1Records,
+				{
+					[SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+					[TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
+					[PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP-2',
+					[TreatmentFieldsEnum.treatment_type]: [
+						'Chemotherapy',
+						'Radiation therapy',
+						'Immunotherapy',
+					],
+					index: 0,
+				},
+			);
+
+			const result = await dv
+				.validateSubmissionData({ AB1: newDonorAB1Records }, { AB1: existingDonorMock })
+				.catch((err: any) => fail(err));
+
+			chai.expect(result.treatment.dataErrors.length).to.eq(0);
 		});
 
 		it('should detect missing or invalid treatment for chemotherapy', async () => {
