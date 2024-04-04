@@ -82,7 +82,7 @@ export const getTreatmentDetailException = async ({
 	programId: string;
 }): AsyncResult<TreatmentDetailException> => {
 	const result = await getByProgramId(programId);
-	return result ? result : failure(`Cannot find program exceptions for ${programId}`);
+	return result.success ? result : failure(`Cannot find program exceptions for ${programId}`);
 };
 
 export const deleteIdsByProgramId = async ({
