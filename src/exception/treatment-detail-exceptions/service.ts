@@ -18,8 +18,9 @@
  */
 
 import { loggerFor } from '../../logger';
-import { Result, success } from '../../utils/results';
+import { AsyncResult, Result, success, failure } from '../../utils/results';
 import { CreateResult, DeleteResult } from '../common';
+import { TreatmentDetailException } from './model';
 import { createOrUpdate, getByProgramId } from './repo';
 
 const L = loggerFor(__filename);
@@ -73,6 +74,15 @@ export const create = async ({
 	} else {
 		return treatmentDetailExceptionResult;
 	}
+};
+
+export const getTreatmentDetailException = async ({
+	programId,
+}: {
+	programId: string;
+}): AsyncResult<TreatmentDetailException> => {
+	const result = await getByProgramId(programId);
+	return result.success ? result : failure(`Cannot find program exceptions for ${programId}`);
 };
 
 export const deleteIdsByProgramId = async ({

@@ -48,7 +48,7 @@ export const validate = async (
 ): Promise<SubmissionValidationOutput> => {
 	// ***Basic pre-check (to prevent execution if missing required variables)***
 	if (!therapyRecord || !mergedDonor || !existentDonor) {
-		throw new Error("Can't call this function without a registerd donor & therapy record");
+		throw new Error("Can't call this function without a registered donor & therapy record");
 	}
 
 	let errors: SubmissionValidationError[] = [];

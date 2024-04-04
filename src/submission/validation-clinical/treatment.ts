@@ -32,6 +32,7 @@ import {
 	ClinicalTherapySchemaNames,
 } from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
+import { getTreatmentDetailException } from '../../exception/treatment-detail-exceptions/service';
 import { Donor, Treatment, FollowUp } from '../../clinical/clinical-entities';
 import * as utils from './utils';
 import _ from 'lodash';
@@ -57,8 +58,14 @@ export const validate = async (
 	// to validate therapies
 	const validateTherapies = errors.length == 0;
 	if (validateTherapies) {
-		for (const therapyName of ClinicalTherapySchemaNames) {
-			checkTherapyFileNeeded(treatmentRecord, mergedDonor, therapyName, errors);
+		const { programId, submitterId } = mergedDonor;
+
+		const donorHasException = await checkTreatmentDetailException(programId, submitterId);
+
+		if (!donorHasException) {
+			for (const therapyName of ClinicalTherapySchemaNames) {
+				checkTherapyFileNeeded(treatmentRecord, mergedDonor, therapyName, errors);
+			}
 		}
 	}
 
@@ -103,6 +110,15 @@ export const validate = async (
 	checkForDeletedTreatmentTherapies(treatmentRecord, existentDonor, warnings);
 
 	return { errors, warnings: warnings };
+};
+
+const checkTreatmentDetailException = async (programId: string, submitterId: string) => {
+	const treatmentDetailException = await getTreatmentDetailException({ programId });
+
+	return (
+		treatmentDetailException.success &&
+		treatmentDetailException.data.donorSubmitterIds.includes(submitterId)
+	);
 };
 
 async function checkTreatmentDoesntBelongToOtherDonor(
