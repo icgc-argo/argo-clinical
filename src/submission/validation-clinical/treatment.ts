@@ -60,11 +60,7 @@ export const validate = async (
 	if (validateTherapies) {
 		const { programId, submitterId } = mergedDonor;
 
-		const donorHasException = await checkTreatmentDetailException(
-			programId,
-			submitterId,
-			treatmentRecord,
-		);
+		const donorHasException = await checkTreatmentDetailException(programId, submitterId);
 
 		if (!donorHasException) {
 			for (const therapyName of ClinicalTherapySchemaNames) {
@@ -116,29 +112,12 @@ export const validate = async (
 	return { errors, warnings: warnings };
 };
 
-const checkTreatmentDetailException = async (
-	programId: string,
-	submitterId: string,
-	treatmentRecord: DeepReadonly<SubmittedClinicalRecord>,
-) => {
+const checkTreatmentDetailException = async (programId: string, submitterId: string) => {
 	const treatmentDetailException = await getTreatmentDetailException({ programId });
-	const treatmentType = new String(treatmentRecord.treatment_type).toLowerCase().replace(' ', '_');
-
-	// These treatment_type values are different from their schema names
-	const treatmentTypeNames = {
-		HORMONAL_THERAPY: 'hormonal_therapy',
-		RADIATION: 'radiation_therapy',
-	};
-
-	const isTreatmentDetailEntity =
-		ClinicalTherapySchemaNames.includes(treatmentType as ClinicalTherapyType) ||
-		treatmentType === treatmentTypeNames.HORMONAL_THERAPY ||
-		treatmentType === treatmentTypeNames.RADIATION;
 
 	return (
 		treatmentDetailException.success &&
-		treatmentDetailException.data.donorSubmitterIds.includes(submitterId) &&
-		isTreatmentDetailEntity
+		treatmentDetailException.data.donorSubmitterIds.includes(submitterId)
 	);
 };
 
