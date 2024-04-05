@@ -168,6 +168,7 @@ export async function findInDb(dburl: string, collection: string, filter: any) {
 		.db('clinical')
 		.collection(collection)
 		.find(filter)
+		.sort({ $natural: -1 })
 		.toArray();
 	await conn.close();
 	return result;

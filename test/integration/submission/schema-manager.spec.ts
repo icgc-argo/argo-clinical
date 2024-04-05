@@ -148,7 +148,8 @@ describe('manager', () => {
 
 		const dbSchema = (await findInDb(dburl, 'dataschemas', {})) as any[];
 		chai.expect(dbSchema).to.not.be.undefined;
-		chai.expect(dbSchema.length).to.eq(1);
+		// Manager now adds the latest Dictionary, rather than replacing
+		chai.expect(dbSchema.length).to.eq(2);
 		chai.expect(dbSchema[0].name).to.eq(schemaName);
 		chai.expect(dbSchema[0].version).to.eq('2.0');
 		chai.expect(dbSchema[0].schemas.length).to.eq(9);
