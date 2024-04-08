@@ -110,7 +110,7 @@ describe('submission service apply exceptions', () => {
 
 			const result = await checkForProgramAndEntityExceptions({
 				programId: TEST_PROGRAM_ID,
-				schemaValidationErrors,
+				validationErrors: schemaValidationErrors,
 				record,
 				schemaName: ClinicalEntitySchemaNames.SPECIMEN,
 				entitySchema: mockSpecimenSchema,
@@ -130,7 +130,7 @@ describe('submission service apply exceptions', () => {
 
 			const result = await checkForProgramAndEntityExceptions({
 				programId: TEST_PROGRAM_ID,
-				schemaValidationErrors: validationErrors,
+				validationErrors,
 				record,
 				schemaName: ClinicalEntitySchemaNames.TREATMENT,
 				entitySchema: mockTreatmentSchema,
@@ -148,7 +148,7 @@ describe('submission service apply exceptions', () => {
 
 			const result = await checkForProgramAndEntityExceptions({
 				programId: TEST_PROGRAM_ID,
-				schemaValidationErrors,
+				validationErrors: schemaValidationErrors,
 				record,
 				schemaName: ClinicalEntitySchemaNames.SPECIMEN,
 				entitySchema: mockSpecimenSchema,
@@ -166,7 +166,7 @@ describe('submission service apply exceptions', () => {
 
 			const result = await checkForProgramAndEntityExceptions({
 				programId: TEST_PROGRAM_ID,
-				schemaValidationErrors,
+				validationErrors: schemaValidationErrors,
 				record,
 				schemaName: ClinicalEntitySchemaNames.SPECIMEN,
 				entitySchema: mockSpecimenSchema,
@@ -184,7 +184,7 @@ describe('submission service apply exceptions', () => {
 
 			const result = await checkForProgramAndEntityExceptions({
 				programId: TEST_PROGRAM_ID,
-				schemaValidationErrors,
+				validationErrors: schemaValidationErrors,
 				record,
 				schemaName: ClinicalEntitySchemaNames.SPECIMEN,
 				entitySchema: mockSpecimenSchema,
@@ -227,7 +227,7 @@ describe('submission service apply exceptions', () => {
 
 			const result = await checkForProgramAndEntityExceptions({
 				programId: TEST_PROGRAM_ID,
-				schemaValidationErrors,
+				validationErrors: schemaValidationErrors,
 				record,
 				schemaName: ClinicalEntitySchemaNames.SPECIMEN,
 				entitySchema: mockSpecimenSchema,
@@ -246,7 +246,7 @@ describe('submission service apply exceptions', () => {
 
 			const result = await checkForProgramAndEntityExceptions({
 				programId: TEST_PROGRAM_ID,
-				schemaValidationErrors,
+				validationErrors: schemaValidationErrors,
 				record,
 				schemaName: ClinicalEntitySchemaNames.SPECIMEN,
 				entitySchema: mockSpecimenSchema,

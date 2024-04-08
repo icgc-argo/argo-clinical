@@ -24,45 +24,45 @@ export type MigrationStage = 'SUBMITTED' | 'ANALYZED' | 'IN_PROGRESS' | 'COMPLET
 export type MigrationState = 'OPEN' | 'CLOSED';
 
 export interface DictionaryMigration {
-  _id?: string;
-  fromVersion: string;
-  toVersion: string;
-  state: MigrationState;
-  stage: MigrationStage;
-  dryRun: boolean;
-  analysis: any;
-  stats: {
-    totalProcessed: number;
-    validDocumentsCount: number;
-    invalidDocumentsCount: number;
-  };
-  invalidDonorsErrors: any[];
-  checkedSubmissions: any[];
-  invalidSubmissions: any[];
-  programsWithDonorUpdates: string[];
-  createdBy: string;
-  updatedAt?: string;
-  newSchemaErrors?: NewSchemaVerificationResult | string;
+	_id?: string;
+	fromVersion: string;
+	toVersion: string;
+	state: MigrationState;
+	stage: MigrationStage;
+	dryRun: boolean;
+	analysis: any;
+	stats: {
+		totalProcessed: number;
+		validDocumentsCount: number;
+		invalidDocumentsCount: number;
+	};
+	invalidDonorsErrors: any[];
+	checkedSubmissions: any[];
+	invalidSubmissions: any[];
+	programsWithDonorUpdates: string[];
+	createdBy: string;
+	updatedAt?: string;
+	newSchemaErrors?: NewSchemaVerificationResult | string;
 }
 
 export type DonorMigrationError = {
-  donorId: number;
-  submitterDonorId: string;
-  programId: string;
-  errors: DonorMigrationSchemaErrors[];
+	donorId: number;
+	submitterDonorId: string;
+	programId: string;
+	errors: DonorMigrationSchemaErrors[];
 };
 
 export type NewSchemaVerificationResult = {
-  [clinicalEntity: string]: {
-    missingFields?: string[];
-    invalidFieldCodeLists?: { fieldName: string; missingCodeListValue: string[] }[];
-    valueTypeChanges?: string[];
-    errorMessage?: string;
-  };
+	[clinicalEntity: string]: {
+		missingFields?: string[];
+		invalidFieldCodeLists?: { fieldName: string; missingCodeListValue: string[] }[];
+		valueTypeChanges?: string[];
+		errorMessage?: string;
+	};
 };
 
 export type DonorMigrationSchemaErrors = Partial<
-  {
-    [k in ClinicalEntitySchemaNames]: ReadonlyArray<dictionaryEntities.SchemaValidationError>;
-  }
+	{
+		[k in ClinicalEntitySchemaNames]: ReadonlyArray<dictionaryEntities.SchemaValidationError>;
+	}
 >;

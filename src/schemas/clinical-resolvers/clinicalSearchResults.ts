@@ -16,16 +16,16 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-import { getClinicalSearchResults, ClinicalSearchVariables } from '../../clinical/clinical-service';
+import { getClinicalSearchResults, ClinicalDataVariables } from '../../clinical/clinical-service';
 
-const clinicalSearchResults = async (obj: unknown, args: ClinicalSearchVariables) => {
-  const { programShortName, filters } = args;
+const clinicalSearchResults = async (obj: unknown, args: ClinicalDataVariables) => {
+	const { programShortName, filters } = args;
 
-  const searchResults = (await getClinicalSearchResults(programShortName, filters)) || {
-    searchResults: [],
-  };
+	const searchResults = (await getClinicalSearchResults(programShortName, filters)) || {
+		searchResults: [],
+	};
 
-  return { ...searchResults, programShortName };
+	return { ...searchResults, programShortName };
 };
 
 export default clinicalSearchResults;

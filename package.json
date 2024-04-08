@@ -1,6 +1,6 @@
 {
 	"name": "argo-clinical",
-	"version": "1.86.3",
+	"version": "1.87.0",
 	"description": "Clinical submission system and repo.",
 	"scripts": {
 		"start": "npm run serve",
@@ -10,7 +10,7 @@
 		"watch-node": "nodemon dist/src/server.js",
 		"test": "npm run unit-test && npm run int-test",
 		"int-test": "npm run build && DEBUG=testcontainers mocha --exit --timeout 60000 -r ts-node/register test/integration/**/*.ts",
-		"unit-test": "npm run build && mocha --exit --timeout 5000 -r ts-node/register test/unit/**/*.spec.ts",
+		"unit-test": "npm run build && mocha --exit --timeout 5000 -r ts-node/register test/unit/**/*.spec.ts test/unit/**/**/*.spec.ts",
 		"perf-test": "npm run build && mocha --exit --timeout 60000 -r ts-node/register test/performance-test/**/*.spec.ts",
 		"build-ts": "tsc",
 		"watch-ts": "tsc -w",

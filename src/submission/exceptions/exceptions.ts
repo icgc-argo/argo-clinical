@@ -19,6 +19,7 @@
 
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
 import { TypedDataRecord } from '@overturebio-stack/lectern-client/lib/schema-entities';
+import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 import {
 	ClinicalEntitySchemaNames,
@@ -32,8 +33,17 @@ import {
 	ExceptionRecord,
 	ProgramException,
 } from '../../exception/property-exceptions/types';
-import { DeepReadonly } from 'deep-freeze';
 import { fieldFilter } from '../../exception/property-exceptions/validation';
+import { getByProgramId as getMissingEntityExceptionByProgram } from '../../exception/missing-entity-exceptions/repo';
+import { getByProgramId as getTreatmentDetailExceptionByProgram } from '../../exception/treatment-detail-exceptions/repo';
+import { createExceptionManifest } from '../../exception/exception-manifest/index';
+import { ExceptionManifestRecord } from '../../exception/exception-manifest/types';
+import {
+	getDonors,
+	getDonorsByIds,
+	findDonorsBySubmitterIds,
+} from '../../clinical/clinical-service';
+import { notEmpty } from '../../utils';
 
 /**
  * query db for program or entity exceptions
@@ -188,13 +198,13 @@ export const checkForProgramAndEntityExceptions = async ({
 	record,
 	schemaName,
 	entitySchema,
-	schemaValidationErrors,
+	validationErrors,
 }: {
 	programId: string;
 	record: DeepReadonly<TypedDataRecord>;
 	schemaName: ClinicalEntitySchemaNames;
 	entitySchema: dictionaryEntities.SchemaDefinition | undefined;
-	schemaValidationErrors: dictionaryEntities.SchemaValidationError[];
+	validationErrors: dictionaryEntities.SchemaValidationError[];
 }) => {
 	const filteredErrors: dictionaryEntities.SchemaValidationError[] = [];
 	let normalizedRecord = record;
@@ -204,59 +214,124 @@ export const checkForProgramAndEntityExceptions = async ({
 
 	// if there are submitted exceptions for this program, check if they match record values
 	if (!(programException || entityException)) {
-		return { filteredErrors: schemaValidationErrors, normalizedRecord };
+		return { filteredErrors: validationErrors, normalizedRecord };
 	}
 
 	// check each validation error for a matching exception, and remove the validaiton if the value matches the exception value
-	schemaValidationErrors.forEach((validationError) => {
+	validationErrors.forEach((validationError) => {
 		const validationErrorFieldName = validationError.fieldName;
 		const fieldValue = record[validationErrorFieldName];
-
 		const fieldSchema = entitySchema?.fields.find(fieldFilter(validationErrorFieldName));
-		const valueType = fieldSchema?.valueType;
 
+		const valueType = fieldSchema?.valueType;
+		const validStringValue = isValidStringExceptionType(fieldValue);
 		const validNumericExceptionValue =
 			isNumericField(valueType) && isValidNumericExceptionType(fieldValue);
 
 		let normalizedFieldValue: string | undefined = '';
 		let normalizedValue: string | string[] = '';
 
-		if (valueType === 'string' && isValidStringExceptionType(fieldValue)) {
-			// get normalized value for record, from either the string value or from the single string inside of the array.
-			// we should know from `isAllowedTypeForException` that the fieldValue is one of those two types.
-			const stringFieldValue = isSingleString(fieldValue) ? fieldValue[0] : fieldValue;
-			const normalizedString = normalizeExceptionValue(stringFieldValue);
-			normalizedValue = isSingleString(fieldValue) ? [normalizedString] : normalizedString;
+		if (validStringValue || validNumericExceptionValue) {
+			if (validStringValue) {
+				// get normalized value for record, from either the string value or from the single string inside of the array.
+				// we should know from `isAllowedTypeForException` that the fieldValue is one of those two types.
+				const stringFieldValue = isSingleString(fieldValue) ? fieldValue[0] : fieldValue;
+				const normalizedString = normalizeExceptionValue(stringFieldValue);
+				normalizedValue = isSingleString(fieldValue) ? [normalizedString] : normalizedString;
 
-			normalizedFieldValue = normalizedString;
-		} else if (validNumericExceptionValue) {
-			normalizedFieldValue = fieldValue === '' ? undefined : fieldValue;
+				normalizedFieldValue = normalizedString;
+			} else if (validNumericExceptionValue) {
+				normalizedFieldValue = fieldValue === '' ? undefined : fieldValue;
+			}
+
+			const valueHasException = validateFieldValueWithExceptions({
+				record,
+				programException,
+				entityException,
+				schemaName,
+				validationErrorFieldName: validationError.fieldName,
+				fieldValue: normalizedFieldValue,
+				valueType,
+			});
+
+			if (valueHasException) {
+				// ensure value is normalized exception value
+				normalizedRecord = {
+					...normalizedRecord,
+					[validationErrorFieldName]: normalizedValue, // normalized value keeps this as array for array fields, or string for string fields
+				};
+			} else {
+				filteredErrors.push(validationError);
+				// Add validation errors if they are valid exception type, but don't have exceptions
+			}
 		} else {
 			// If field value is not string or number, then value is not a type we allow exceptions for
 			filteredErrors.push(validationError);
-			return;
-		}
-
-		const valueHasException = validateFieldValueWithExceptions({
-			record,
-			programException,
-			entityException,
-			schemaName,
-			validationErrorFieldName: validationError.fieldName,
-			fieldValue: normalizedFieldValue,
-			valueType,
-		});
-
-		if (valueHasException) {
-			// ensure value is normalized exception value
-			normalizedRecord = {
-				...normalizedRecord,
-				[validationErrorFieldName]: normalizedValue, // normalized value keeps this as array for array fields, or string for string fields
-			};
-		} else {
-			// only add validation errors that don't have exceptions
-			filteredErrors.push(validationError);
 		}
 	});
+
 	return { filteredErrors, normalizedRecord };
 };
+
+/**
+ * Collect all exception records related to a set of Donors
+ *
+ * @param programId
+ * @param filters
+ * @returns [ ExceptionRecords ]
+ */
+export async function getExceptionManifestRecords(
+	programId: string,
+	filters: { donorIds: number[]; submitterDonorIds: string[] },
+): Promise<ExceptionManifestRecord[]> {
+	const { donorIds, submitterDonorIds: querySubmitterIds } = filters;
+	const filteredDonors = Boolean(donorIds.length || querySubmitterIds.length);
+
+	const donorsByDonorId = filteredDonors
+		? await getDonorsByIds(donorIds)
+		: await getDonors(programId);
+	const donorsBySubmitterId = (await findDonorsBySubmitterIds(programId, querySubmitterIds)) || [];
+
+	const donors = [...donorsByDonorId, ...donorsBySubmitterId].filter(notEmpty).filter(
+		(donorRecord, index, donorArray) =>
+			// Filter duplicates
+			index === donorArray.findIndex((donor) => donor.donorId === donorRecord.donorId),
+	);
+
+	const { programException, entityException } = await queryForExceptions(programId);
+
+	const programExceptions = programException?.exceptions || [];
+
+	const {
+		specimen: specimenExceptions,
+		follow_up: followUpExceptions,
+		treatment: treatmentExceptions,
+	} = entityException || {
+		specimen: [],
+		follow_up: [],
+		treatment: [],
+	};
+
+	const missingEntityException = await getMissingEntityExceptionByProgram(programId);
+
+	const missingEntitySubmitterIds = missingEntityException?.success
+		? missingEntityException.data.donorSubmitterIds
+		: [];
+
+	const treatmentDetailException = await getTreatmentDetailExceptionByProgram(programId);
+
+	const treatmentDetailSubmitterIds = treatmentDetailException?.success
+		? treatmentDetailException.data.donorSubmitterIds
+		: [];
+
+	const exceptionManifest = createExceptionManifest(programId, donors, {
+		programExceptions,
+		specimenExceptions,
+		followUpExceptions,
+		treatmentExceptions,
+		missingEntitySubmitterIds,
+		treatmentDetailSubmitterIds,
+	});
+
+	return exceptionManifest;
+}

@@ -27,36 +27,36 @@ console.log('log level configured: ', LOG_LEVEL);
 
 // Logger configuration
 const logConfiguration = {
-  level: LOG_LEVEL,
-  format: combine(json(), simple(), timestamp()),
-  transports: [new winston.transports.Console()],
+	level: LOG_LEVEL,
+	format: combine(json(), simple(), timestamp()),
+	transports: [new winston.transports.Console()],
 };
 
 export interface Logger {
-  error(msg: string, err: Error | unknown): void;
-  info(msg: string): void;
-  debug(msg: string): void;
-  profile(s: string): void;
+	error(msg: string, err: Error | unknown): void;
+	info(msg: string): void;
+	debug(msg: string): void;
+	profile(s: string): void;
 }
 
 const winstonLogger = winston.createLogger(logConfiguration);
 if (process.env.LOG_LEVEL === 'debug') {
-  console.log('logger configured: ', winstonLogger);
+	console.log('logger configured: ', winstonLogger);
 }
 export const loggerFor = (fileName: string): Logger => {
-  const source = fileName.substring(fileName.indexOf('argo-clinical'));
-  return {
-    error: (msg: string, err: Error): void => {
-      winstonLogger.error(msg, err, { source });
-    },
-    debug: (msg: string): void => {
-      winstonLogger.debug(msg, { source });
-    },
-    info: (msg: string): void => {
-      winstonLogger.info(msg, { source });
-    },
-    profile: (id: string): void => {
-      winstonLogger.profile(id);
-    },
-  };
+	const source = fileName.substring(fileName.indexOf('argo-clinical'));
+	return {
+		error: (msg: string, err: Error): void => {
+			winstonLogger.error(msg, err, { source });
+		},
+		debug: (msg: string): void => {
+			winstonLogger.debug(msg, { source });
+		},
+		info: (msg: string): void => {
+			winstonLogger.info(msg, { source });
+		},
+		profile: (id: string): void => {
+			winstonLogger.profile(id);
+		},
+	};
 };

@@ -19,7 +19,7 @@
 
 import _ from 'lodash';
 import { ClinicalEntitySchemaNames } from '../../common-model/entities';
-import { Result, failure, success } from '../../utils/results';
+import { AsyncResult, failure, success } from '../../utils/results';
 import { ValidationError } from './error-handling';
 import entityExceptionRepository from './repo/entity';
 import programExceptionRepository from './repo/program';
@@ -53,8 +53,6 @@ const normalizeRecords = (records: readonly EntityExceptionRecord[]) =>
 		...record,
 		schema: _.snakeCase(record.schema),
 	}));
-
-type AsyncResult<T> = Promise<Result<T>>;
 
 // program exceptions
 export const getProgramException = async ({

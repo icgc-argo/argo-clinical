@@ -22,39 +22,39 @@ import clinicalData from './clinical-resolvers/clinicalData';
 import clinicalRegistration from './clinical-resolvers/clinicalRegistrationData';
 import clinicalSearchResults from './clinical-resolvers/clinicalSearchResults';
 import clinicalSubmissions, {
-  clinicalSubmissionTypesList,
-  clinicalSubmissionSchemaVersion,
-  clinicalSubmissionSystemDisabled,
+	clinicalSubmissionTypesList,
+	clinicalSubmissionSchemaVersion,
+	clinicalSubmissionSystemDisabled,
 } from './clinical-resolvers/clinicalSubmissions';
 
 // Mutation
 import commitClinicalRegistration from './clinical-mutations/commitRegistration';
 import clearClinicalRegistration from './clinical-mutations/clearRegistration';
 import clearClinicalSubmission from './clinical-mutations/clearClinicalSubmission';
-import validateClinicalSubmissions from './clinical-mutations/validateClinicalSubmission';
+import validateClinicalSubmission from './clinical-mutations/validateClinicalSubmission';
 import commitClinicalSubmission from './clinical-mutations/commitClinicalSubmission';
 import reopenClinicalSubmission from './clinical-mutations/reopenClinicalSubmission';
 import approveClinicalSubmission from './clinical-mutations/approveClinicalSubmission';
 
 const resolvers = {
-  Query: {
-    clinicalData,
-    clinicalRegistration,
-    clinicalSearchResults,
-    clinicalSubmissions,
-    clinicalSubmissionTypesList,
-    clinicalSubmissionSchemaVersion,
-    clinicalSubmissionSystemDisabled,
-  },
-  Mutation: {
-    clearClinicalSubmission,
-    validateClinicalSubmissions,
-    commitClinicalSubmission,
-    clearClinicalRegistration,
-    commitClinicalRegistration,
-    reopenClinicalSubmission,
-    approveClinicalSubmission,
-  },
+	Query: {
+		clinicalData,
+		clinicalRegistration,
+		clinicalSearchResults,
+		clinicalSubmissions,
+		clinicalSubmissionTypesList,
+		clinicalSubmissionSchemaVersion,
+		clinicalSubmissionSystemDisabled,
+	},
+	Mutation: {
+		clearClinicalSubmission,
+		validateClinicalSubmission,
+		commitClinicalSubmission,
+		clearClinicalRegistration,
+		commitClinicalRegistration,
+		reopenClinicalSubmission,
+		approveClinicalSubmission,
+	},
 };
 
 export default resolvers;

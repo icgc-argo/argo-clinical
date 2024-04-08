@@ -33,12 +33,12 @@ const poolTimeOutMs = 20 * 1000;
 const jsWorkerLocation = __dirname + '/worker.js';
 
 const pool = new StaticPool({
-  size: availableCpus,
-  task: jsWorkerLocation,
+	size: availableCpus,
+	task: jsWorkerLocation,
 });
 
 export async function runTaskInWorkerThread<T>(taskToRun: WorkerTasks, taskArgs: any): Promise<T> {
-  const poolExecArgs = { taskToRun, taskArgs };
-  const result = await pool.exec(poolExecArgs, poolTimeOutMs);
-  return result as T;
+	const poolExecArgs = { taskToRun, taskArgs };
+	const result = await pool.exec(poolExecArgs, poolTimeOutMs);
+	return result as T;
 }

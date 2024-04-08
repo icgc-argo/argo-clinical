@@ -20,9 +20,11 @@
 import * as express from 'express';
 import propertyExceptionRouter from './property';
 import missingEntityExceptionRouter from './missing-entity';
+import treatmentDetailExceptionRouter from './treatment-detail';
 
 const exceptionRouter = express.Router({ mergeParams: true });
 exceptionRouter.use('/property', propertyExceptionRouter);
 exceptionRouter.use('/missing-entity', missingEntityExceptionRouter);
+exceptionRouter.use('/treatment-details', treatmentDetailExceptionRouter);
 
 export default exceptionRouter;

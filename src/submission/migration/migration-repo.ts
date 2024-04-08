@@ -25,99 +25,99 @@ import { DeepReadonly } from 'deep-freeze';
 const L = loggerFor(__filename);
 
 export interface DictionaryMigrationRepository {
-  getAll(): Promise<DeepReadonly<DictionaryMigration[]>>;
-  create(migration: DictionaryMigration): Promise<DeepReadonly<DictionaryMigration | undefined>>;
-  getByState(state: MigrationState): Promise<DeepReadonly<DictionaryMigration | undefined>>;
-  getById(migrationId: string): Promise<DeepReadonly<DictionaryMigration | undefined>>;
-  getLatestSuccessful(): Promise<DeepReadonly<DictionaryMigration | undefined>>;
-  update(migration: DictionaryMigration): Promise<DictionaryMigration>;
+	getAll(): Promise<DeepReadonly<DictionaryMigration[]>>;
+	create(migration: DictionaryMigration): Promise<DeepReadonly<DictionaryMigration | undefined>>;
+	getByState(state: MigrationState): Promise<DeepReadonly<DictionaryMigration | undefined>>;
+	getById(migrationId: string): Promise<DeepReadonly<DictionaryMigration | undefined>>;
+	getLatestSuccessful(): Promise<DeepReadonly<DictionaryMigration | undefined>>;
+	update(migration: DictionaryMigration): Promise<DictionaryMigration>;
 }
 
 export const migrationRepo: DictionaryMigrationRepository = {
-  create: async (
-    migration: DictionaryMigration,
-  ): Promise<DeepReadonly<DictionaryMigration | undefined>> => {
-    const doc = new DictionaryMigrationModel(migration);
-    await doc.save();
-    const dm = MongooseUtils.toPojo(doc) as DictionaryMigration;
-    return F(dm);
-  },
-  getByState: async (
-    state: MigrationState,
-  ): Promise<DeepReadonly<DictionaryMigration | undefined>> => {
-    L.debug('in migration repo get');
-    const migration = await DictionaryMigrationModel.findOne({ state: state }).exec();
-    if (migration == undefined) {
-      return undefined;
-    }
-    return F(MongooseUtils.toPojo(migration) as DictionaryMigration);
-  },
-  getAll: async (): Promise<DeepReadonly<DictionaryMigration[]>> => {
-    const migrationDocs = await DictionaryMigrationModel.find({}).exec();
-    const migrations = migrationDocs
-      .map(d => {
-        return MongooseUtils.toPojo(d);
-      })
-      .filter(notEmpty);
-    return F(migrations as DictionaryMigration[]);
-  },
-  getById: async (migrationId: string): Promise<DeepReadonly<DictionaryMigration | undefined>> => {
-    L.debug('in migration repo get');
-    const migration = await DictionaryMigrationModel.findOne({ _id: migrationId }).exec();
-    if (migration == undefined) {
-      return undefined;
-    }
-    return F(MongooseUtils.toPojo(migration) as DictionaryMigration);
-  },
-  getLatestSuccessful: async (): Promise<DeepReadonly<DictionaryMigration | undefined>> => {
-    L.debug('in migration repo get latest successful');
-    const migration = await DictionaryMigrationModel.find()
-      .sort({ createdAt: -1 })
-      .findOne({ stage: 'COMPLETED', dryRun: false })
-      .exec();
-    if (migration == undefined) {
-      return undefined;
-    }
-    return F(MongooseUtils.toPojo(migration) as DictionaryMigration);
-  },
-  update: async (migration: DictionaryMigration): Promise<DictionaryMigration> => {
-    const doc = new DictionaryMigrationModel(migration);
-    doc.isNew = false;
-    const updated = await doc.save();
-    return updated;
-  },
+	create: async (
+		migration: DictionaryMigration,
+	): Promise<DeepReadonly<DictionaryMigration | undefined>> => {
+		const doc = new DictionaryMigrationModel(migration);
+		await doc.save();
+		const dm = MongooseUtils.toPojo(doc) as DictionaryMigration;
+		return F(dm);
+	},
+	getByState: async (
+		state: MigrationState,
+	): Promise<DeepReadonly<DictionaryMigration | undefined>> => {
+		L.debug('in migration repo get');
+		const migration = await DictionaryMigrationModel.findOne({ state: state }).exec();
+		if (migration == undefined) {
+			return undefined;
+		}
+		return F(MongooseUtils.toPojo(migration) as DictionaryMigration);
+	},
+	getAll: async (): Promise<DeepReadonly<DictionaryMigration[]>> => {
+		const migrationDocs = await DictionaryMigrationModel.find({}).exec();
+		const migrations = migrationDocs
+			.map((d) => {
+				return MongooseUtils.toPojo(d);
+			})
+			.filter(notEmpty);
+		return F(migrations as DictionaryMigration[]);
+	},
+	getById: async (migrationId: string): Promise<DeepReadonly<DictionaryMigration | undefined>> => {
+		L.debug('in migration repo get');
+		const migration = await DictionaryMigrationModel.findOne({ _id: migrationId }).exec();
+		if (migration == undefined) {
+			return undefined;
+		}
+		return F(MongooseUtils.toPojo(migration) as DictionaryMigration);
+	},
+	getLatestSuccessful: async (): Promise<DeepReadonly<DictionaryMigration | undefined>> => {
+		L.debug('in migration repo get latest successful');
+		const migration = await DictionaryMigrationModel.find()
+			.sort({ $natural: -1 })
+			.findOne({ stage: 'COMPLETED', dryRun: false })
+			.exec();
+		if (migration == undefined) {
+			return undefined;
+		}
+		return F(MongooseUtils.toPojo(migration) as DictionaryMigration);
+	},
+	update: async (migration: DictionaryMigration): Promise<DictionaryMigration> => {
+		const doc = new DictionaryMigrationModel(migration);
+		doc.isNew = false;
+		const updated = await doc.save();
+		return updated;
+	},
 };
 
 type DictionaryMigrationDocument = mongoose.Document & DictionaryMigration;
 
 const DictionaryMigrationSchema = new mongoose.Schema(
-  {
-    fromVersion: { type: String, required: true },
-    toVersion: { type: String, required: true },
-    state: {
-      type: String,
-      enum: ['OPEN', 'CLOSED'],
-      required: true,
-    },
-    stage: {
-      type: String,
-      enum: ['SUBMITTED', 'ANALYZED', 'IN_PROGRESS', 'COMPLETED', 'FAILED'],
-      required: true,
-    },
-    analysis: {},
-    invalidDonorsErrors: [],
-    invalidSubmissions: [],
-    checkedSubmissions: [],
-    programsWithDonorUpdates: [],
-    dryRun: { type: Boolean, required: false },
-    stats: {},
-    createdBy: { type: String, required: true },
-    newSchemaErrors: {},
-  },
-  { timestamps: true, minimize: false },
+	{
+		fromVersion: { type: String, required: true },
+		toVersion: { type: String, required: true },
+		state: {
+			type: String,
+			enum: ['OPEN', 'CLOSED'],
+			required: true,
+		},
+		stage: {
+			type: String,
+			enum: ['SUBMITTED', 'ANALYZED', 'IN_PROGRESS', 'COMPLETED', 'FAILED'],
+			required: true,
+		},
+		analysis: {},
+		invalidDonorsErrors: [],
+		invalidSubmissions: [],
+		checkedSubmissions: [],
+		programsWithDonorUpdates: [],
+		dryRun: { type: Boolean, required: false },
+		stats: {},
+		createdBy: { type: String, required: true },
+		newSchemaErrors: {},
+	},
+	{ timestamps: true, minimize: false },
 );
 
 export const DictionaryMigrationModel = mongoose.model<DictionaryMigrationDocument>(
-  'DictionaryMigration',
-  DictionaryMigrationSchema,
+	'DictionaryMigration',
+	DictionaryMigrationSchema,
 );

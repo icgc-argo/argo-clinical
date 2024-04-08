@@ -25,150 +25,151 @@ import { Donor } from '../../src/clinical/clinical-entities';
 import * as utils from 'util';
 
 export const clearCollections = async (dburl: string, collections: string[]) => {
-  try {
-    const promises = collections.map(collectionName => cleanCollection(dburl, collectionName));
-    await Promise.all(promises);
-    await resetCounters(dburl);
-    return;
-  } catch (err) {
-    console.error(err);
-    return err;
-  }
+	try {
+		const promises = collections.map((collectionName) => cleanCollection(dburl, collectionName));
+		await Promise.all(promises);
+		await resetCounters(dburl);
+		return;
+	} catch (err) {
+		console.error(err);
+		return err;
+	}
 };
 
 export const cleanCollection = async (dburl: string, collection: string): Promise<any> => {
-  const conn = await mongo.connect(dburl);
-  try {
-    await conn
-      .db('clinical')
-      .collection(collection)
-      .remove({});
-    await conn.db('clinical').dropCollection(collection);
-  } catch (err) {
-    console.error('failed to drop collection', collection, err);
-  }
-  await conn.db('clinical').createCollection(collection);
-  await conn.close();
+	const conn = await mongo.connect(dburl);
+	try {
+		await conn
+			.db('clinical')
+			.collection(collection)
+			.remove({});
+		await conn.db('clinical').dropCollection(collection);
+	} catch (err) {
+		console.error('failed to drop collection', collection, err);
+	}
+	await conn.db('clinical').createCollection(collection);
+	await conn.close();
 };
 
 export const resetCounters = async (dburl: string): Promise<any> => {
-  const conn = await mongo.connect(dburl);
-  await conn
-    .db('clinical')
-    .collection('counters')
-    .updateMany({}, { $set: { seq: 0 } });
-  await conn.close();
+	const conn = await mongo.connect(dburl);
+	await conn
+		.db('clinical')
+		.collection('counters')
+		.updateMany({}, { $set: { seq: 0 } });
+	await conn.close();
 };
 
 export const insertData = async (
-  dburl: string,
-  collection: string,
-  document: any,
+	dburl: string,
+	collection: string,
+	document: any,
 ): Promise<any> => {
-  const conn = await mongo.connect(dburl);
-  await conn
-    .db('clinical')
-    .collection(collection)
-    .insert(document);
-  await conn.close();
-  return document._id;
+	const conn = await mongo.connect(dburl);
+	await conn
+		.db('clinical')
+		.collection(collection)
+		.insert(document);
+	await conn.close();
+	return document._id;
 };
 
 export async function execMysqlQuery(sql: string, pool: mysql.Pool) {
-  const query = utils.promisify(pool.query).bind(pool);
-  await query(sql);
+	const query = utils.promisify(pool.query).bind(pool);
+	await query(sql);
 }
 
 export async function createtRxNormTables(pool: mysql.Pool) {
-  const sql = 'CREATE TABLE RXNCONSO (RXCUI VARCHAR(255), STR VARCHAR(255))';
-  await execMysqlQuery(sql, pool);
+	const sql = 'CREATE TABLE RXNCONSO (RXCUI VARCHAR(255), STR VARCHAR(255))';
+	await execMysqlQuery(sql, pool);
 }
 
 export async function insertRxNormDrug(id: string, name: string, pool: mysql.Pool) {
-  await execMysqlQuery(`insert into RXNCONSO (RXCUI, STR) values('${id}', '${name}')`, pool);
+	await execMysqlQuery(`insert into RXNCONSO (RXCUI, STR) values('${id}', '${name}')`, pool);
 }
 
 export const updateData = async (
-  dburl: string,
-  collection: string,
-  document: any,
-  filter: any = {},
+	dburl: string,
+	collection: string,
+	document: any,
+	filter: any = {},
 ): Promise<any> => {
-  const conn = await mongo.connect(dburl);
-  await conn
-    .db('clinical')
-    .collection(collection)
-    .update(filter, document, { upsert: true });
-  await conn.close();
-  return document._id;
+	const conn = await mongo.connect(dburl);
+	await conn
+		.db('clinical')
+		.collection(collection)
+		.update(filter, document, { upsert: true });
+	await conn.close();
+	return document._id;
 };
 
 export const emptyDonorDocument = (overrides?: Partial<Donor>) => {
-  const gender = Math.random() > 0.5 ? 'Male' : 'Female';
-  const donor: Donor = {
-    donorId: 1,
-    gender: gender,
-    submitterId: '',
-    schemaMetadata: {
-      isValid: true,
-      lastValidSchemaVersion: '1.0',
-      originalSchemaVersion: '1.0',
-    },
-    programId: '',
-    specimens: [],
-    clinicalInfo: {},
-    createdAt: undefined,
-    followUps: [],
-    primaryDiagnoses: [],
-    familyHistory: [],
-    exposure: [],
-    comorbidity: [],
-    biomarker: [],
-    treatments: [],
-  };
-  if (!overrides) {
-    return donor;
-  }
-  return _.merge(donor, overrides);
+	const gender = Math.random() > 0.5 ? 'Male' : 'Female';
+	const donor: Donor = {
+		donorId: 1,
+		gender: gender,
+		submitterId: '',
+		schemaMetadata: {
+			isValid: true,
+			lastValidSchemaVersion: '1.0',
+			originalSchemaVersion: '1.0',
+		},
+		programId: '',
+		specimens: [],
+		clinicalInfo: {},
+		createdAt: undefined,
+		followUps: [],
+		primaryDiagnoses: [],
+		familyHistory: [],
+		exposure: [],
+		comorbidity: [],
+		biomarker: [],
+		treatments: [],
+	};
+	if (!overrides) {
+		return donor;
+	}
+	return _.merge(donor, overrides);
 };
 
 export const createDonorDoc = async (dburl: string, donorDoc: Donor) => {
-  await insertData(dburl, 'donors', donorDoc);
-  return donorDoc;
+	await insertData(dburl, 'donors', donorDoc);
+	return donorDoc;
 };
 
 export const generateDonor = async (
-  dburl: string,
-  programId: string,
-  submitterDonorId?: string,
+	dburl: string,
+	programId: string,
+	submitterDonorId?: string,
 ) => {
-  const submitterId = submitterDonorId || `${Date.now()}`;
+	const submitterId = submitterDonorId || `${Date.now()}`;
 
-  const doc = emptyDonorDocument({
-    submitterId,
-    programId,
-    donorId: Date.now(),
-  });
-  return createDonorDoc(dburl, doc);
+	const doc = emptyDonorDocument({
+		submitterId,
+		programId,
+		donorId: Date.now(),
+	});
+	return createDonorDoc(dburl, doc);
 };
 
 export async function assertDbCollectionEmpty(dburl: string, collection: string) {
-  const conn = await mongo.connect(dburl);
-  const count = await conn
-    .db('clinical')
-    .collection(collection)
-    .count({});
-  await conn.close();
-  chai.expect(count).to.eq(0);
+	const conn = await mongo.connect(dburl);
+	const count = await conn
+		.db('clinical')
+		.collection(collection)
+		.count({});
+	await conn.close();
+	chai.expect(count).to.eq(0);
 }
 
 export async function findInDb(dburl: string, collection: string, filter: any) {
-  const conn = await mongo.connect(dburl);
-  const result = await conn
-    .db('clinical')
-    .collection(collection)
-    .find(filter)
-    .toArray();
-  await conn.close();
-  return result;
+	const conn = await mongo.connect(dburl);
+	const result = await conn
+		.db('clinical')
+		.collection(collection)
+		.find(filter)
+		.sort({ $natural: -1 })
+		.toArray();
+	await conn.close();
+	return result;
 }
