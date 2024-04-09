@@ -24,6 +24,7 @@ import mongoose, { PaginateModel } from 'mongoose';
 import mongoosePaginate from 'mongoose-paginate-v2';
 import { DeepReadonly } from 'deep-freeze';
 import { F, MongooseUtils, notEmpty } from '../utils';
+import { setEntityIds } from './id-generator';
 
 export const SUBMITTER_ID = 'submitterId';
 export const SPECIMEN_SUBMITTER_ID = 'specimen.submitterId';
@@ -109,8 +110,11 @@ export interface DonorRepository {
 	): Promise<DeepReadonly<Donor> | undefined>;
 	iterateAllByProgramId(programId: string): AsyncIterable<DeepReadonly<Donor>>;
 	create(donor: DeepReadonly<Partial<Donor>>): Promise<DeepReadonly<Donor>>;
+	create2(donor: DeepReadonly<Partial<Donor>>): Promise<DeepReadonly<Donor>>; // UK: idgen
 	update(donor: DeepReadonly<Donor>): Promise<DeepReadonly<Donor>>;
+	update2(donor: Donor): Promise<DeepReadonly<Donor>>; // UK: idgen
 	updateAll(donors: DeepReadonly<Donor>[]): Promise<DeepReadonly<Donor>[]>;
+	updateAll2(donors: Donor[]): Promise<string>; // Promise<Donor>[]; // Promise<DeepReadonly<Donor>[]>; // UK: idgen
 	countBy(filter: any): Promise<number>;
 }
 
@@ -421,6 +425,15 @@ export const donorDao: DonorRepository = {
 		return F(MongooseUtils.toPojo(newDonor) as Donor);
 	},
 
+	// UK: idgen
+	async update2(donor: Donor) {
+		const newDonor = new DonorModel(await setEntityIds(donor));
+		unsetIsNewFlagForUpdate(newDonor);
+
+		await newDonor.save();
+		return F(MongooseUtils.toPojo(newDonor) as Donor);
+	},
+
 	async updateAll(donors: DeepReadonly<Donor>[]) {
 		const newDonors = donors.map((donor) => {
 			const newDonor = new DonorModel(donor);
@@ -432,8 +445,35 @@ export const donorDao: DonorRepository = {
 		return newDonors.map((donor) => F(MongooseUtils.toPojo(donor) as Donor));
 	},
 
+	// UK: idgen
+	async updateAll2(donors: Donor[]) {
+		console.log('donors array in updateAll2: ' + donors[0].submitterId);
+		const newDonors = donors.map(async (donor) => {
+			// await someFunction();
+			const newDonor = new DonorModel(await setEntityIds(donor));
+			unsetIsNewFlagForUpdate(newDonor);
+			return newDonor;
+		});
+
+		const results = await Promise.all(
+			newDonors.map((donor) => {
+				donor.then((d) => {
+					d.save();
+				});
+			}),
+		);
+		return ''; // await newDonors.map((donor) => F(MongooseUtils.toPojo(donor) as Donor));
+	},
+
 	async create(donor: DeepReadonly<Donor>) {
 		const newDonor = new DonorModel(donor);
+		const doc = await newDonor.save();
+		return F(MongooseUtils.toPojo(newDonor) as Donor);
+	},
+
+	// UK: idgen
+	async create2(donor: Partial<Donor>) {
+		const newDonor = new DonorModel(await setEntityIds(donor));
 		const doc = await newDonor.save();
 		return F(MongooseUtils.toPojo(newDonor) as Donor);
 	},
@@ -656,14 +696,17 @@ DonorSchema.index({ 'specimens.samples.submitterId': 1, programId: 1 }, { unique
  * multiple times, and that makes them hard to test because tests depend
  * on resetting the config and bootstraping but global variables keep their state.
  */
-DonorSchema.plugin(AutoIncrement, {
+
+// UK: idgen
+/*DonorSchema.plugin(AutoIncrement, {
 	inc_field: 'donorId',
 	start_seq: process.env.DONOR_ID_SEED || 250000,
-});
+});*/
 
 DonorSchema.plugin(mongoosePaginate);
 
-SpecimenSchema.plugin(AutoIncrement, {
+// UK: idgen
+/*SpecimenSchema.plugin(AutoIncrement, {
 	inc_field: 'specimenId',
 	start_seq: process.env.SPECIMEN_ID_SEED || 210000,
 });
@@ -706,7 +749,8 @@ ComorbiditySchema.plugin(AutoIncrement, {
 TreatmentSchema.plugin(AutoIncrement, {
 	inc_field: 'treatmentId',
 	start_seq: 1,
-});
+});*/
+// UK: idgen
 
 export let DonorModel = mongoose.model<DonorDocument>('Donor', DonorSchema) as PaginateModel<
 	DonorDocument
