@@ -24,7 +24,7 @@ import mongoose, { PaginateModel } from 'mongoose';
 import mongoosePaginate from 'mongoose-paginate-v2';
 import { DeepReadonly } from 'deep-freeze';
 import { F, MongooseUtils, notEmpty } from '../utils';
-import { setEntityIds } from './id-generator';
+import { setEntityIds, setEntityIdsForDonors } from './id-generator';
 
 export const SUBMITTER_ID = 'submitterId';
 export const SPECIMEN_SUBMITTER_ID = 'specimen.submitterId';
@@ -110,23 +110,28 @@ export interface DonorRepository {
 	): Promise<DeepReadonly<Donor> | undefined>;
 	iterateAllByProgramId(programId: string): AsyncIterable<DeepReadonly<Donor>>;
 	create(donor: DeepReadonly<Partial<Donor>>): Promise<DeepReadonly<Donor>>;
-	create2(donor: DeepReadonly<Partial<Donor>>): Promise<DeepReadonly<Donor>>; // UK: idgen
-	update(donor: DeepReadonly<Donor>): Promise<DeepReadonly<Donor>>;
-	update2(donor: Donor): Promise<DeepReadonly<Donor>>; // UK: idgen
-	updateAll(donors: DeepReadonly<Donor>[]): Promise<DeepReadonly<Donor>[]>;
-	updateAll2(donors: Donor[]): Promise<string>; // Promise<Donor>[]; // Promise<DeepReadonly<Donor>[]>; // UK: idgen
+	// create2(donor: DeepReadonly<Partial<Donor>>): Promise<DeepReadonly<Donor>>; // UK: idgen
+	// update(donor: DeepReadonly<Donor>): Promise<DeepReadonly<Donor>>;
+	update(donor: Donor): Promise<DeepReadonly<Donor>>; // UK: idgen
+	// updateAll(donors: DeepReadonly<Donor>[]): Promise<DeepReadonly<Donor>[]>;
+	updateAll(donors: Donor[]): Promise<DeepReadonly<Donor>[]>; // Promise<Donor>[]; // Promise<DeepReadonly<Donor>[]>; // UK: idgen
 	countBy(filter: any): Promise<number>;
 }
 
 // Mongoose implementation of the DonorRepository
 export const donorDao: DonorRepository = {
-	async insertDonors(donors: Donor[]) {
+	/*async insertDonors(donors: Donor[]) {
 		await mongoose.connection.db.collection('donors').insertMany(donors);
+	},*/
+	async insertDonors(donors: Donor[]) {
+		const donorsWithIds = await setEntityIdsForDonors(donors);
+		await mongoose.connection.db.collection('donors').insertMany(donorsWithIds);
 	},
 	async updateDonor(donor: Donor) {
+		const donorsWithIds = await setEntityIds(donor); // UK: idgen
 		await mongoose.connection.db
 			.collection('donors')
-			.findOneAndUpdate({ donorId: donor.donorId }, { $set: donor });
+			.findOneAndUpdate({ donorId: donor.donorId }, { $set: donorsWithIds });
 	},
 	async countBy(filter: any) {
 		return await DonorModel.count(filter).exec();
@@ -417,24 +422,25 @@ export const donorDao: DonorRepository = {
 		return iterateAllByProgramId(programId);
 	},
 
-	async update(donor: DeepReadonly<Donor>) {
+	/*	async update(donor: DeepReadonly<Donor>) {
 		const newDonor = new DonorModel(donor);
 		unsetIsNewFlagForUpdate(newDonor);
 
 		await newDonor.save();
 		return F(MongooseUtils.toPojo(newDonor) as Donor);
-	},
+	},*/
 
 	// UK: idgen
-	async update2(donor: Donor) {
-		const newDonor = new DonorModel(await setEntityIds(donor));
+	async update(donor: Donor) {
+		const dnr = await setEntityIds(donor);
+		const newDonor = new DonorModel(await setEntityIds(donor)); // UK: idgen
 		unsetIsNewFlagForUpdate(newDonor);
-
+		console.log('newDonor._id' + newDonor._id);
 		await newDonor.save();
 		return F(MongooseUtils.toPojo(newDonor) as Donor);
 	},
 
-	async updateAll(donors: DeepReadonly<Donor>[]) {
+	/*async updateAll(donors: DeepReadonly<Donor>[]) {
 		const newDonors = donors.map((donor) => {
 			const newDonor = new DonorModel(donor);
 			unsetIsNewFlagForUpdate(newDonor);
@@ -443,10 +449,10 @@ export const donorDao: DonorRepository = {
 
 		const results = await Promise.all(newDonors.map((donor) => donor.save()));
 		return newDonors.map((donor) => F(MongooseUtils.toPojo(donor) as Donor));
-	},
+	},*/
 
 	// UK: idgen
-	async updateAll2(donors: Donor[]) {
+	async updateAll(donors: Donor[]) {
 		console.log('donors array in updateAll2: ' + donors[0].submitterId);
 		const newDonors = donors.map(async (donor) => {
 			// await someFunction();
@@ -455,24 +461,32 @@ export const donorDao: DonorRepository = {
 			return newDonor;
 		});
 
-		const results = await Promise.all(
+		await Promise.all(
 			newDonors.map((donor) => {
 				donor.then((d) => {
 					d.save();
 				});
 			}),
 		);
-		return ''; // await newDonors.map((donor) => F(MongooseUtils.toPojo(donor) as Donor));
+		const result = await Promise.all(
+			newDonors.map((donor) =>
+				donor.then((d) => {
+					return F(MongooseUtils.toPojo(d) as Donor);
+				}),
+			),
+		);
+
+		return result; // newDonors.map((donor) =>  donor.then((d) => { return F(MongooseUtils.toPojo(d) as Donor);}).then(res => res));
 	},
 
-	async create(donor: DeepReadonly<Donor>) {
+	/*async create(donor: DeepReadonly<Donor>) {
 		const newDonor = new DonorModel(donor);
 		const doc = await newDonor.save();
 		return F(MongooseUtils.toPojo(newDonor) as Donor);
-	},
+	},*/
 
 	// UK: idgen
-	async create2(donor: Partial<Donor>) {
+	async create(donor: Partial<Donor>) {
 		const newDonor = new DonorModel(await setEntityIds(donor));
 		const doc = await newDonor.save();
 		return F(MongooseUtils.toPojo(newDonor) as Donor);
