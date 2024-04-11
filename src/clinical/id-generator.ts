@@ -35,9 +35,7 @@ import {
 	Treatment,
 } from './clinical-entities';
 import { ClinicalEntitySchemaNames } from '../common-model/entities';
-
-// const token = await getToken();
-//   'eyJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3MTI3ODM5NjksImV4cCI6MTcxMjc5NDc2OSwic3ViIjoiZmU1MzVjNTAtOGNkYy00MmI4LTk4ZTctNzVjZWRjMDQwMDhmIiwiaXNzIjoiZWdvIiwianRpIjoiNmI1MDZhYTUtNzZiZi00ZmIyLTkxMGQtMzA4ZjJhZTI5MjViIiwiY29udGV4dCI6eyJzY29wZSI6WyJGSUxFU0VSVklDRS5XUklURSIsIkNMSU5JQ0FMU0VSVklDRS5SRUFEIiwiRklMRVNFUlZJQ0UuUkVBRCIsIlJEUEMtQ0EuUkVBRCIsIlBST0dSQU1TRVJWSUNFLlJFQUQiLCJSRFBDLWNvbGxhYi5SRUFEIiwiREMtUkVHSVNUUlkuV1JJVEUiLCJEQUNPLVJFVklFVy5SRUFEIiwiRElDVElPTkFSWS5XUklURSIsInNjb3JlLlJFQUQiLCJEQy1SRUdJU1RSWS5SRUFEIiwic29uZy5XUklURSIsInJvYi5SRUFEIiwiUFJPR1JBTURBVEEtRlVMTC1DQS5SRUFEIiwiRElDVElPTkFSWS5SRUFEIiwiREFDTy5SRUFEIiwiUkRQQy1DQS5XUklURSIsIlBST0dSQU1TRVJWSUNFLldSSVRFIiwiREFDTy1SRVZJRVcuV1JJVEUiLCJSRFBDLWNvbGxhYi5XUklURSIsInNvbmcuUkVBRCIsIlBST0dSQU1EQVRBLUZVTEwtQ0EuV1JJVEUiLCJDTElOSUNBTFNFUlZJQ0UuV1JJVEUiLCJQUk9HUkFNLUZVTEwtQ0EuUkVBRCIsInNjb3JlLldSSVRFIiwicm9iLldSSVRFIiwiUFJPR1JBTS1GVUxMLUNBLldSSVRFIiwiUFJPR1JBTU1FTUJFUlNISVAtRlVMTC5SRUFEIl0sInVzZXIiOnsiZW1haWwiOiJ1cmFuZ3dhbGFAb2ljci5vbi5jYSIsInN0YXR1cyI6IkFQUFJPVkVEIiwiZmlyc3ROYW1lIjoiVW1tdWxraXJhbSIsImxhc3ROYW1lIjoiUmFuZ3dhbGEiLCJjcmVhdGVkQXQiOjE2NTgxNzgxMjk2NzksImxhc3RMb2dpbiI6MTcxMjc4Mzk2OTY2MSwicHJlZmVycmVkTGFuZ3VhZ2UiOm51bGwsInByb3ZpZGVyVHlwZSI6IkdPT0dMRSIsInByb3ZpZGVyU3ViamVjdElkIjoiMTA2MTExNDQyNTcxNDcxODEwNDgyIiwidHlwZSI6IkFETUlOIiwiZ3JvdXBzIjpbIjcxOGU5ZWM1LTBkMjgtNGUyYS05ODMxLTQ2NDI4MGMzZjVjNiIsImUyNDRkMjM4LTU3MjktNDYzMy05MzI2LTY3MTFhYmYwYzM3YyIsImIwNDcxMzc4LTRmMWMtNDVlZi05NzViLTU1MjEwNjdmNjUyNCIsImI3NGJhYTNiLTcyNGMtNDdkMi1hMTllLWRjNGEyNTc4OTgyYyIsImNkMzhjNDU2LTBkY2ItNDAwMS05ZDM1LWU4ODRhYWI0Nzk0ZiIsIjBhNDMwMzFiLWJiOWYtNGQzNy05ZGNkLTZkNDdiZTc0YTY5MyJdfX0sImF1ZCI6W119.v0GLGIT_gkxVOSM6p2ynVaWOidde2Ag2kjRzP7PUE7Ssp3xu4Z9aqUwBXug7fhlDBX_AsYlp0N0kYXJcL52LkW3WBZ6neOZ0W3XuVbWJN-KW8UF_PMDWXaYn2XUDNHDzg3u_wF7gV3Xe15BHarvxhU1Ulvli2WxxAumWGAJgunfWpdsFI0tK4M6N1e1r2xGd5Xgu3OtSxHZ41h4GLACxafyImySu9_wysNfdRr_j-FANYUNNWNO6U6UHPdFkqBfXOjF_aN7NfiYWNE44wd0dG7fbOGipsIuPR-KXuPDhiPMMp-kNffFZgPLOwKlLm8Nm1yKElweRe7bfaIPyqUK1Kg';
+import { config } from '../config';
 
 interface IdGenerationRequest {
 	programId: string;
@@ -49,7 +47,7 @@ interface IdGenerationRequest {
 	entityType: string;
 }
 
-const request: IdGenerationRequest = {
+const request = {
 	programId: 'null',
 	submitterId: 'null',
 	submitterDonorId: 'null',
@@ -91,32 +89,18 @@ export async function getId(req: IdGenerationRequest) {
 		},
 	};
 
-	console.log(
-		'request params: ' +
-			req.programId +
-			' - ' +
-			req.submitterId +
-			' - ' +
-			req.submitterDonorId +
-			' - ' +
-			req.testInterval +
-			' - ' +
-			req.family_relative_id +
-			' - ' +
-			req.comorbidityTypeCode +
-			' - ' +
-			req.entityType,
-	);
 	try {
 		const response = await axios.get(
-			`http://localhost:9001/${req.programId}/${req.submitterId}/${req.submitterDonorId}/${req.testInterval}/${req.family_relative_id}/${req.comorbidityTypeCode}/${req.entityType}`,
+			// `http://localhost:9001/${req.programId}/${req.submitterId}/${req.submitterDonorId}/${req.testInterval}/${req.family_relative_id}/${req.comorbidityTypeCode}/${req.entityType}`,
+			config.getConfig().tokenUrl() +
+				`${req.programId}/${req.submitterId}/${req.submitterDonorId}/${req.testInterval}/${req.family_relative_id}/${req.comorbidityTypeCode}/${req.entityType}`,
 			headers,
 		);
 		console.log('getId response: ' + response.data.entityId + ' - ' + response.data.entityType);
 		return parseInt(response.data.entityId);
 	} catch (e) {
 		console.log(e);
-		// do something here
+		throw Error('Error fetching ids');
 	}
 }
 
@@ -128,8 +112,6 @@ export async function setEntityIdsForDonors(donors: Donor[]) {
 }
 
 export async function setEntityIds(donor: PartialDonor) {
-	// const programId = donor.programId as string;
-
 	// -- DONOR --
 	const donorId = await getId({
 		...request,
@@ -297,25 +279,15 @@ const getToken = memoize(
 		};
 		const data = {
 			grant_type: 'client_credentials',
-			client_id: 'clinical-service',
-			client_secret: 'top-secret',
+			client_id: config.getConfig().egoClientId(),
+			client_secret: config.getConfig().egoClientSecret(),
 		};
-		// const response = await axios.post('https://ego.argo-qa.cumulus.genomeinformatics.org/api/oauth/token', data, headers);
-		const response = await axios.get('http://localhost:9001/');
+		const response = await axios.post(config.getConfig().tokenUrl(), data, headers);
 		console.log('token response: ' + response.data.access_token);
-		return 'eyJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3MTI4NTEzNjYsImV4cCI6MTcxMjg2MjE2Niwic3ViIjoiZmU1MzVjNTAtOGNkYy00MmI4LTk4ZTctNzVjZWRjMDQwMDhmIiwiaXNzIjoiZWdvIiwianRpIjoiMGM5ZmQ5OTgtODU1MS00MjJjLWEwNTUtNDU0NDkwZDYyYzU5IiwiY29udGV4dCI6eyJzY29wZSI6WyJGSUxFU0VSVklDRS5XUklURSIsIkNMSU5JQ0FMU0VSVklDRS5SRUFEIiwiRklMRVNFUlZJQ0UuUkVBRCIsIlJEUEMtQ0EuUkVBRCIsIlBST0dSQU1TRVJWSUNFLlJFQUQiLCJSRFBDLWNvbGxhYi5SRUFEIiwiREMtUkVHSVNUUlkuV1JJVEUiLCJEQUNPLVJFVklFVy5SRUFEIiwiRElDVElPTkFSWS5XUklURSIsInNjb3JlLlJFQUQiLCJEQy1SRUdJU1RSWS5SRUFEIiwic29uZy5XUklURSIsInJvYi5SRUFEIiwiUFJPR1JBTURBVEEtRlVMTC1DQS5SRUFEIiwiRElDVElPTkFSWS5SRUFEIiwiREFDTy5SRUFEIiwiUkRQQy1DQS5XUklURSIsIlBST0dSQU1TRVJWSUNFLldSSVRFIiwiREFDTy1SRVZJRVcuV1JJVEUiLCJSRFBDLWNvbGxhYi5XUklURSIsInNvbmcuUkVBRCIsIlBST0dSQU1EQVRBLUZVTEwtQ0EuV1JJVEUiLCJDTElOSUNBTFNFUlZJQ0UuV1JJVEUiLCJQUk9HUkFNLUZVTEwtQ0EuUkVBRCIsInNjb3JlLldSSVRFIiwicm9iLldSSVRFIiwiUFJPR1JBTS1GVUxMLUNBLldSSVRFIiwiUFJPR1JBTU1FTUJFUlNISVAtRlVMTC5SRUFEIl0sInVzZXIiOnsiZW1haWwiOiJ1cmFuZ3dhbGFAb2ljci5vbi5jYSIsInN0YXR1cyI6IkFQUFJPVkVEIiwiZmlyc3ROYW1lIjoiVW1tdWxraXJhbSIsImxhc3ROYW1lIjoiUmFuZ3dhbGEiLCJjcmVhdGVkQXQiOjE2NTgxNzgxMjk2NzksImxhc3RMb2dpbiI6MTcxMjg1MTM2NjEyOSwicHJlZmVycmVkTGFuZ3VhZ2UiOm51bGwsInByb3ZpZGVyVHlwZSI6IkdPT0dMRSIsInByb3ZpZGVyU3ViamVjdElkIjoiMTA2MTExNDQyNTcxNDcxODEwNDgyIiwidHlwZSI6IkFETUlOIiwiZ3JvdXBzIjpbIjcxOGU5ZWM1LTBkMjgtNGUyYS05ODMxLTQ2NDI4MGMzZjVjNiIsImUyNDRkMjM4LTU3MjktNDYzMy05MzI2LTY3MTFhYmYwYzM3YyIsImIwNDcxMzc4LTRmMWMtNDVlZi05NzViLTU1MjEwNjdmNjUyNCIsImI3NGJhYTNiLTcyNGMtNDdkMi1hMTllLWRjNGEyNTc4OTgyYyIsImNkMzhjNDU2LTBkY2ItNDAwMS05ZDM1LWU4ODRhYWI0Nzk0ZiIsIjBhNDMwMzFiLWJiOWYtNGQzNy05ZGNkLTZkNDdiZTc0YTY5MyJdfX0sImF1ZCI6W119.S5ikld62ZwNHFxycKJT-tZIUYHJYY9-DCvQ8T_TOR9IR23sxELK3tDgfJyMPSSkZR1MvlopL3akNhwzwVHOoMSOjhMbMrmSwXdCosEmDi6pbcdPzgW71fLfDO5JveEiFf6_arWPb3GuV5zj9EuJYTEaqCH2M_J7gHT0shu1AwAcdAkoHn6y-ywrxB0ge1340ywnPqd5-FuwhwhnU4gQppo6S9T5QRJfisziAP1RBwJSNC7IGT2DbodbJqYvC2h6hZzlGiHgDFOvPcvAOVw798qW3uWu_7jWpbg_w6sSOdhLOdcI_IslHDXr0_6ajegy0twjGINy6CPWSPdnzrktHsA';
-		// response.data['access_token'];
+		response.data.access_token;
 	},
 	{
 		maxAge: ms('1d'),
 		preFetch: true,
 	},
 );
-
-// UK: idgen
-// `http://localhost:9001/${req.programId}/${req.submitterDonorId}/${req.submitterSpecimenId}/${req.submitterSampleId}/${req.submitterPrimaryDiagnosisId}/${req.submitterTreatmentId}/${req.submitterFollowUpId}/${req.testInterval}/${req.family_relative_id}/${req.comorbidityTypeCode}/${req.entityType}`,
-
-// todo
-// get ego token in memoizee
-// handle error from getId api
-//

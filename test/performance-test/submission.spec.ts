@@ -157,6 +157,12 @@ describe('Submission Api', () => {
 					egoUrl() {
 						return '';
 					},
+					tokenUrl(): string {
+						return process.env.TOKEN_URI || '';
+					},
+					idServiceUrl(): string {
+						return process.env.ID_SERVICE_URL || '';
+					},
 					egoClientId() {
 						return '';
 					},

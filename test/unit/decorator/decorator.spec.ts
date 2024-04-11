@@ -86,6 +86,12 @@ describe('decorator', () => {
 			egoUrl() {
 				return '';
 			},
+			idServiceUrl(): string {
+				return process.env.ID_SERVICE_URL || '';
+			},
+			tokenUrl(): string {
+				return process.env.TOKEN_URI || '';
+			},
 			egoClientId() {
 				return '';
 			},

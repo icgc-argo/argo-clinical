@@ -41,6 +41,7 @@ export interface AppConfig {
 	egoClientId(): string;
 	egoClientSecret(): string;
 	tokenUrl(): string;
+	idServiceUrl(): string;
 }
 
 class ConfigManager {

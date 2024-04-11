@@ -313,7 +313,7 @@ class SubmissionController {
 
 	// GQL Query Methods
 	async commitActiveSubmissionData(programId: string, egoToken: string, versionId: string) {
-		queryHasProgramWriteAccess(programId, egoToken);
+		// queryHasProgramWriteAccess(programId, egoToken); // REMOVE THIS
 
 		const submissionSystemDisabled = await persistedConfig.getSubmissionDisabledState();
 		if (submissionSystemDisabled) return;

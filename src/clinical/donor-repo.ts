@@ -110,25 +110,19 @@ export interface DonorRepository {
 	): Promise<DeepReadonly<Donor> | undefined>;
 	iterateAllByProgramId(programId: string): AsyncIterable<DeepReadonly<Donor>>;
 	create(donor: DeepReadonly<Partial<Donor>>): Promise<DeepReadonly<Donor>>;
-	// create2(donor: DeepReadonly<Partial<Donor>>): Promise<DeepReadonly<Donor>>; // UK: idgen
-	// update(donor: DeepReadonly<Donor>): Promise<DeepReadonly<Donor>>;
-	update(donor: Donor): Promise<DeepReadonly<Donor>>; // UK: idgen
-	// updateAll(donors: DeepReadonly<Donor>[]): Promise<DeepReadonly<Donor>[]>;
-	updateAll(donors: Donor[]): Promise<DeepReadonly<Donor>[]>; // Promise<Donor>[]; // Promise<DeepReadonly<Donor>[]>; // UK: idgen
+	update(donor: Donor): Promise<DeepReadonly<Donor>>;
+	updateAll(donors: Donor[]): Promise<DeepReadonly<Donor>[]>;
 	countBy(filter: any): Promise<number>;
 }
 
 // Mongoose implementation of the DonorRepository
 export const donorDao: DonorRepository = {
-	/*async insertDonors(donors: Donor[]) {
-		await mongoose.connection.db.collection('donors').insertMany(donors);
-	},*/
 	async insertDonors(donors: Donor[]) {
 		const donorsWithIds = await setEntityIdsForDonors(donors);
 		await mongoose.connection.db.collection('donors').insertMany(donorsWithIds);
 	},
 	async updateDonor(donor: Donor) {
-		const donorsWithIds = await setEntityIds(donor); // UK: idgen
+		const donorsWithIds = await setEntityIds(donor);
 		await mongoose.connection.db
 			.collection('donors')
 			.findOneAndUpdate({ donorId: donor.donorId }, { $set: donorsWithIds });
@@ -422,36 +416,15 @@ export const donorDao: DonorRepository = {
 		return iterateAllByProgramId(programId);
 	},
 
-	/*	async update(donor: DeepReadonly<Donor>) {
-		const newDonor = new DonorModel(donor);
-		unsetIsNewFlagForUpdate(newDonor);
-
-		await newDonor.save();
-		return F(MongooseUtils.toPojo(newDonor) as Donor);
-	},*/
-
-	// UK: idgen
 	async update(donor: Donor) {
 		const dnr = await setEntityIds(donor);
-		const newDonor = new DonorModel(await setEntityIds(donor)); // UK: idgen
+		const newDonor = new DonorModel(await setEntityIds(donor));
 		unsetIsNewFlagForUpdate(newDonor);
 		console.log('newDonor._id' + newDonor._id);
 		await newDonor.save();
 		return F(MongooseUtils.toPojo(newDonor) as Donor);
 	},
 
-	/*async updateAll(donors: DeepReadonly<Donor>[]) {
-		const newDonors = donors.map((donor) => {
-			const newDonor = new DonorModel(donor);
-			unsetIsNewFlagForUpdate(newDonor);
-			return newDonor;
-		});
-
-		const results = await Promise.all(newDonors.map((donor) => donor.save()));
-		return newDonors.map((donor) => F(MongooseUtils.toPojo(donor) as Donor));
-	},*/
-
-	// UK: idgen
 	async updateAll(donors: Donor[]) {
 		console.log('donors array in updateAll2: ' + donors[0].submitterId);
 		const newDonors = donors.map(async (donor) => {
@@ -479,13 +452,6 @@ export const donorDao: DonorRepository = {
 		return result; // newDonors.map((donor) =>  donor.then((d) => { return F(MongooseUtils.toPojo(d) as Donor);}).then(res => res));
 	},
 
-	/*async create(donor: DeepReadonly<Donor>) {
-		const newDonor = new DonorModel(donor);
-		const doc = await newDonor.save();
-		return F(MongooseUtils.toPojo(newDonor) as Donor);
-	},*/
-
-	// UK: idgen
 	async create(donor: Partial<Donor>) {
 		const newDonor = new DonorModel(await setEntityIds(donor));
 		const doc = await newDonor.save();
@@ -711,60 +677,7 @@ DonorSchema.index({ 'specimens.samples.submitterId': 1, programId: 1 }, { unique
  * on resetting the config and bootstraping but global variables keep their state.
  */
 
-// UK: idgen
-/*DonorSchema.plugin(AutoIncrement, {
-	inc_field: 'donorId',
-	start_seq: process.env.DONOR_ID_SEED || 250000,
-});*/
-
 DonorSchema.plugin(mongoosePaginate);
-
-// UK: idgen
-/*SpecimenSchema.plugin(AutoIncrement, {
-	inc_field: 'specimenId',
-	start_seq: process.env.SPECIMEN_ID_SEED || 210000,
-});
-
-SampleSchema.plugin(AutoIncrement, {
-	inc_field: 'sampleId',
-	start_seq: process.env.SAMPLE_ID_SEED || 610000,
-});
-
-FollowUpSchema.plugin(AutoIncrement, {
-	inc_field: 'followUpId',
-	start_seq: 1,
-});
-
-PrimaryDiagnosisSchema.plugin(AutoIncrement, {
-	inc_field: 'primaryDiagnosisId',
-	start_seq: 1,
-});
-
-FamilyHistorySchema.plugin(AutoIncrement, {
-	inc_field: 'familyHistoryId',
-	start_seq: 1,
-});
-
-ExposureSchema.plugin(AutoIncrement, {
-	inc_field: 'exposureId',
-	start_seq: 1,
-});
-
-BiomarkerSchema.plugin(AutoIncrement, {
-	inc_field: 'biomarkerId',
-	start_seq: 1,
-});
-
-ComorbiditySchema.plugin(AutoIncrement, {
-	inc_field: 'comorbidityId',
-	start_seq: 1,
-});
-
-TreatmentSchema.plugin(AutoIncrement, {
-	inc_field: 'treatmentId',
-	start_seq: 1,
-});*/
-// UK: idgen
 
 export let DonorModel = mongoose.model<DonorDocument>('Donor', DonorSchema) as PaginateModel<
 	DonorDocument
