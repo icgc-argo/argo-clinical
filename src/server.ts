@@ -136,6 +136,10 @@ let server: Server;
 		egoUrl(): string {
 			return process.env.EGO_URL || secrets.EGO_URL || '';
 		},
+		tokenUrl(): string {
+			// UK: idgen
+			return process.env.TOKEN_URI || '';
+		},
 		egoClientId(): string {
 			return process.env.EGO_CLIENT_ID || secrets.EGO_CLIENT_ID || '';
 		},
