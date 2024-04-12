@@ -94,6 +94,16 @@ class ClinicalController {
 		}
 
 		const data = await service.getClinicalData(programId);
+		const donors = await service.getDonors(programId);
+
+		const donorIds = donors.map((donor: DeepReadonly<Donor>) => donor.donorId);
+		const submitterDonorIds = donors.map((donor: DeepReadonly<Donor>) => donor.submitterId);
+
+		const exceptions =
+			(await getExceptionManifestRecords(programId, {
+				donorIds,
+				submitterDonorIds,
+			})) || [];
 
 		const todaysDate = currentDateFormatted();
 		res
@@ -101,7 +111,7 @@ class ClinicalController {
 			.contentType('application/zip')
 			.attachment(`${programId}_Clinical_Data_${todaysDate}.zip`);
 
-		const zip = createClinicalZipFile(data);
+		const zip = createClinicalZipFile(data, { programShortName: programId, exceptions });
 
 		res.send(zip.toBuffer());
 	}
