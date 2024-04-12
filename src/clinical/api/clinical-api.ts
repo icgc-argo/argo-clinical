@@ -59,22 +59,19 @@ export const parseDonorIdList = (donorIds: string) =>
 
 export const createClinicalZipFile = (
 	data: ClinicalEntityData[],
-	exceptionManifest?: {
-		programShortName: string;
-		exceptions: ExceptionManifestRecord[];
-	},
+	exceptions?: ExceptionManifestRecord[],
 ) => {
 	const zip = new AdmZip();
 	data.forEach((entityData) => {
 		const tsvData = TsvUtils.convertJsonRecordsToTsv(entityData.records, entityData.entityFields);
 		zip.addFile(`${entityData.entityName}.tsv`, Buffer.alloc(tsvData.length, tsvData));
 	});
-	if (exceptionManifest && exceptionManifest.exceptions.length) {
-		const headers = exceptionManifest.exceptions
+	if (exceptions?.length) {
+		const headers = exceptions
 			.map((exception) => Object.keys(exception))
 			.flat()
 			.filter((key, index, keyArray) => keyArray.indexOf(key) === index);
-		const tsvData = TsvUtils.convertJsonRecordsToTsv(exceptionManifest.exceptions, headers);
+		const tsvData = TsvUtils.convertJsonRecordsToTsv(exceptions, headers);
 		zip.addFile(`exceptions_manifest.tsv`, Buffer.alloc(tsvData.length, tsvData));
 	}
 	return zip;
@@ -160,7 +157,7 @@ class ClinicalController {
 			.attachment(fileName)
 			.setHeader('content-disposition', fileName);
 
-		const zip = createClinicalZipFile(entityData, { programShortName, exceptions });
+		const zip = createClinicalZipFile(entityData, exceptions);
 
 		res.send(zip.toBuffer());
 	}
@@ -188,6 +185,7 @@ class ClinicalController {
 
 		const date = currentDateFormatted();
 		const fileName = `filename=Donor_Clinical_Data_${date}.zip`;
+
 		res
 			.status(200)
 			.contentType('application/zip')
