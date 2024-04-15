@@ -19,6 +19,7 @@
 
 // Query
 import clinicalData from './clinical-resolvers/clinicalData';
+import clinicalErrors from './clinical-resolvers/clinicalErrors';
 import clinicalRegistration from './clinical-resolvers/clinicalRegistrationData';
 import clinicalSearchResults from './clinical-resolvers/clinicalSearchResults';
 import clinicalSubmissions, {
@@ -39,6 +40,7 @@ import approveClinicalSubmission from './clinical-mutations/approveClinicalSubmi
 const resolvers = {
 	Query: {
 		clinicalData,
+		clinicalErrors,
 		clinicalRegistration,
 		clinicalSearchResults,
 		clinicalSubmissions,
