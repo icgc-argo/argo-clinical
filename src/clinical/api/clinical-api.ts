@@ -186,6 +186,12 @@ class ClinicalController {
 		const date = currentDateFormatted();
 		const fileName = `filename=Donor_Clinical_Data_${date}.zip`;
 
+		// const exceptions =
+		// 	(await getExceptionManifestRecords(programShortName, {
+		// 		donorIds,
+		// 		submitterDonorIds,
+		// 	})) || [];
+
 		res
 			.status(200)
 			.contentType('application/zip')
