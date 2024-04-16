@@ -108,7 +108,7 @@ class ClinicalController {
 			.contentType('application/zip')
 			.attachment(`${programId}_Clinical_Data_${todaysDate}.zip`);
 
-		const zip = createClinicalZipFile(data, { programShortName: programId, exceptions });
+		const zip = createClinicalZipFile(data, exceptions);
 
 		res.send(zip.toBuffer());
 	}
