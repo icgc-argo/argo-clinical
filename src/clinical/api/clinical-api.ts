@@ -183,21 +183,31 @@ class ClinicalController {
 
 		const donorEntityData = await service.getDonorEntityData(donorIds);
 
-		const entityRecords = donorEntityData[0].records;
-
-		// File Table can request multiple programs
-		const donorPrograms = entityRecords
-			.map((record) => record.program_id as string)
-			.filter((programId, index, array) => programId && array.indexOf(programId) === index);
+		const allExceptions: ExceptionManifestRecord[][] = [];
 
 		const date = currentDateFormatted();
 		const fileName = `filename=Donor_Clinical_Data_${date}.zip`;
 
-		const exceptions = await Promise.all(
-			donorPrograms.map(async (programShortName) => {
+		if (donorEntityData.length) {
+			const entityRecords = donorEntityData[0].records;
+
+			// File Table can request multiple programs
+			const donorPrograms = entityRecords
+				.map((record) => record.program_id)
+				.filter(
+					// Remove duplicate program names
+					(programId, index, array): programId is string =>
+						typeof programId === 'string' && array.indexOf(programId) === index,
+				);
+
+			for (const programShortName of donorPrograms) {
+				// Get Donor Ids + Exceptions for each program
 				const programDonors = entityRecords
-					.filter((record) => record.donor_id && record.program_id === programShortName)
-					.map((record) => record.donor_Id as number);
+					.filter(
+						(record) =>
+							typeof record.donor_id === 'number' && record.program_id === programShortName,
+					)
+					.map((record) => Number(record.donor_id));
 
 				const programExceptions =
 					(await getExceptionManifestRecords(programShortName, {
@@ -205,9 +215,11 @@ class ClinicalController {
 						submitterDonorIds: [],
 					})) || [];
 
-				return programExceptions;
-			}),
-		).then((exceptionsArray) => exceptionsArray.flat());
+				allExceptions.push(programExceptions);
+			}
+		}
+
+		const exceptions = allExceptions.flat();
 
 		res
 			.status(200)
