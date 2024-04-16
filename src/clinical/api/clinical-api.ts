@@ -30,7 +30,7 @@ import {
 } from '../../decorators';
 import { ControllerUtils, DonorUtils, TsvUtils } from '../../utils';
 import AdmZip from 'adm-zip';
-import { ClinicalEntityData, Donor } from '../clinical-entities';
+import { ClinicalEntityData, ClinicalInfo, Donor } from '../clinical-entities';
 import { omit } from 'lodash';
 import { DeepReadonly } from 'deep-freeze';
 import {
@@ -204,10 +204,10 @@ class ClinicalController {
 				// Get Donor Ids + Exceptions for each program
 				const programDonors = entityRecords
 					.filter(
-						(record) =>
+						(record): record is ClinicalInfo & { donor_id: number; program_id: string } =>
 							typeof record.donor_id === 'number' && record.program_id === programShortName,
 					)
-					.map((record) => Number(record.donor_id))
+					.map((record) => record.donor_id)
 					.filter(
 						(donorId, index, array) =>
 							// Remove duplicate donorIds
