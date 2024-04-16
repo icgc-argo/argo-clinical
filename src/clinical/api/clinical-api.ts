@@ -207,7 +207,12 @@ class ClinicalController {
 						(record) =>
 							typeof record.donor_id === 'number' && record.program_id === programShortName,
 					)
-					.map((record) => Number(record.donor_id));
+					.map((record) => Number(record.donor_id))
+					.filter(
+						(donorId, index, array) =>
+							// Remove duplicate donorIds
+							array.indexOf(donorId) === index,
+					);
 
 				const programExceptions =
 					(await getExceptionManifestRecords(programShortName, {
