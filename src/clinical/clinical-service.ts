@@ -48,7 +48,7 @@ import {
 import { migrationRepo } from '../submission/migration/migration-repo';
 import { prepareForSchemaReProcessing } from '../submission/submission-service';
 import { Errors, notEmpty } from '../utils';
-import { ClinicalEntityData, ClinicalInfo, Donor, Sample } from './clinical-entities';
+import { ClinicalEntityData, Donor, Sample } from './clinical-entities';
 import { DONOR_DOCUMENT_FIELDS, donorDao } from './donor-repo';
 import { runTaskInWorkerThread } from './service-worker-thread/runner';
 import { WorkerTasks } from './service-worker-thread/tasks';
