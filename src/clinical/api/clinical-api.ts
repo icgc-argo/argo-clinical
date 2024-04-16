@@ -183,30 +183,31 @@ class ClinicalController {
 
 		const donorEntityData = await service.getDonorEntityData(donorIds);
 
-		const donors = await service.getDonorsByIds(donorIds);
+		const entityRecords = donorEntityData[0].records;
 
 		// File Table can request multiple programs
-		const donorPrograms = donors
-			.map((donor) => donor.programId)
-			.filter((programId, index, array) => array.indexOf(programId) === index);
+		const donorPrograms = entityRecords
+			.map((record) => record.program_id as string)
+			.filter((programId, index, array) => programId && array.indexOf(programId) === index);
 
 		const date = currentDateFormatted();
 		const fileName = `filename=Donor_Clinical_Data_${date}.zip`;
 
-		const exceptions: ExceptionManifestRecord[][] = [];
-		for (const programShortName of donorPrograms) {
-			const programDonors = donors
-				.filter((donor) => donor.programId === programShortName)
-				.map((donor) => donor.donorId);
+		const exceptions = await Promise.all(
+			donorPrograms.map(async (programShortName) => {
+				const programDonors = entityRecords
+					.filter((record) => record.donor_id && record.program_id === programShortName)
+					.map((record) => record.donor_Id as number);
 
-			const programExceptions =
-				(await getExceptionManifestRecords(programShortName, {
-					donorIds: programDonors,
-					submitterDonorIds: [],
-				})) || [];
+				const programExceptions =
+					(await getExceptionManifestRecords(programShortName, {
+						donorIds: programDonors,
+						submitterDonorIds: [],
+					})) || [];
 
-			exceptions.push(programExceptions);
-		}
+				return programExceptions;
+			}),
+		).then((exceptionsArray) => exceptionsArray.flat());
 
 		res
 			.status(200)
@@ -214,7 +215,7 @@ class ClinicalController {
 			.attachment(fileName)
 			.setHeader('content-disposition', fileName);
 
-		const zip = createClinicalZipFile(donorEntityData, exceptions.flat());
+		const zip = createClinicalZipFile(donorEntityData, exceptions);
 
 		res.send(zip.toBuffer());
 	}
