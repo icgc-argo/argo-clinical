@@ -231,8 +231,19 @@ export const getPaginatedClinicalData = async (programId: string, query: Clinica
 	// Get all donors + records for given entity
 	const { donors, totalDonors } = await donorDao.findByPaginatedProgramId(programId, query);
 
+	const donorIds = donors.map((donor) => donor.donorId);
+	// Todo: Only retrieve if invalidSort
+	const { clinicalErrors } = await getClinicalErrors(programId, donorIds);
+
 	const taskToRun = WorkerTasks.ExtractEntityDataFromDonors;
-	const taskArgs = [donors as Donor[], totalDonors, allSchemasWithFields, query.entityTypes, query];
+	const taskArgs = [
+		donors as Donor[],
+		totalDonors,
+		allSchemasWithFields,
+		query.entityTypes,
+		query,
+		clinicalErrors,
+	];
 
 	// Return paginated data
 	const data = await runTaskInWorkerThread<{ clinicalEntities: ClinicalEntityData[] }>(
