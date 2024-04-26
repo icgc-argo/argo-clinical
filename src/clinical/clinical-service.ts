@@ -231,18 +231,14 @@ export const getPaginatedClinicalData = async (programId: string, query: Clinica
 	// Get all donors + records for given entity
 	const { donors, totalDonors } = await donorDao.findByPaginatedProgramId(programId, query);
 
-	const donorIds = donors.map((donor) => donor.donorId);
-	// Todo: Only retrieve if invalidSort
-	const { clinicalErrors } = await getClinicalErrors(programId, donorIds);
-
 	const taskToRun = WorkerTasks.ExtractEntityDataFromDonors;
 	const taskArgs = [
+		programId,
 		donors as Donor[],
 		totalDonors,
 		allSchemasWithFields,
 		query.entityTypes,
 		query,
-		clinicalErrors,
 	];
 
 	// Return paginated data
@@ -516,12 +512,12 @@ export const filterErrorsWithUpdatesOrExceptions = async (
 	const validDonorIds = donorData
 		.filter((donor) => donor.schemaMetadata.isValid)
 		.map(({ donorId }) => donorId);
-
 	const invalidDonorIds = errorDonorIds.filter(
 		(donorId, index, array) =>
 			!validDonorIds.includes(donorId) && filterDuplicates(donorId, index, array),
 	);
 
+	console.log('\n invalidDonorIds', invalidDonorIds);
 	let clinicalErrors: ClinicalErrorsResponseRecord[] = [];
 
 	if (invalidDonorIds.length > 0) {

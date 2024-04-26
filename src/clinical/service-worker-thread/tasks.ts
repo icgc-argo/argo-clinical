@@ -34,7 +34,7 @@ import {
 	getSampleRegistrationDataFromDonor,
 } from '../../common-model/functions';
 import { notEmpty } from '../../utils';
-import { ClinicalDonorEntityQuery, PaginationQuery } from '../clinical-service';
+import { ClinicalDonorEntityQuery, getClinicalErrors, PaginationQuery } from '../clinical-service';
 import {
 	ClinicalEntityData,
 	ClinicalInfo,
@@ -53,31 +53,32 @@ type EntityClinicalInfo = {
 
 const DONOR_ID_FIELD = 'donor_id';
 
+enum sortTypes {
+	'defaultDonor' = 'defaultDonor',
+	'invalidEntity' = 'invalidEntity',
+	'columnSort' = 'columnSort',
+}
+
 const isEntityInQuery = (entityName: ClinicalEntitySchemaNames, entityTypes: string[]) =>
 	entityTypes.includes(aliasEntityNames[entityName]);
 
 // Main Sort Function
 const sortDocs = (
 	sortQuery: string,
-	entityName: string,
+	sortType: sortTypes,
 	completionStats: CompletionDisplayRecord[],
 	errors: ClinicalErrorsResponseRecord[],
 ) => (currentRecord: ClinicalInfo, nextRecord: ClinicalInfo) => {
 	// Sort Value: 0 order is Unchanged, -1 Current lower index than Next, +1 Current higher index than Next
 	let order = 0;
+
 	const isDescending = sortQuery.startsWith('-');
-	const isDefaultDonorSort =
-		entityName === ClinicalEntitySchemaNames.DONOR &&
-		sortQuery.includes('completionStats.coreCompletionPercentage');
-	// Todo: Define this rule
-	const isInvalidSort = true;
-
 	const queryKey = isDescending ? sortQuery.split('-')[1] : sortQuery;
-	const key = queryKey === 'donorId' ? 'donor_id' : queryKey;
-
-	if (isDefaultDonorSort) {
+	const key = queryKey === 'donorId' ? DONOR_ID_FIELD : queryKey;
+	console.log('\nsortType', sortType);
+	if (sortType === sortTypes['defaultDonor']) {
 		order = sortDonorRecordsByCompletion(currentRecord, nextRecord, completionStats);
-	} else if (isInvalidSort) {
+	} else if (sortType === sortTypes['invalidEntity']) {
 		order = sortInvalidRecords(currentRecord, nextRecord, errors);
 	} else {
 		order = sortRecordsByColumn(currentRecord, nextRecord, key);
@@ -146,9 +147,11 @@ const mapEntityDocuments = (
 	paginationQuery: PaginationQuery,
 	completionStats: CompletionDisplayRecord[],
 	errors: ClinicalErrorsResponseRecord[],
+	sortType: sortTypes,
 ): ClinicalEntityData | undefined => {
 	const { entityName, results } = entity;
-
+	console.log('\n entityTypes', entityTypes);
+	console.log('\n paginationQuery', paginationQuery);
 	// Filter, Paginate + Sort
 	const { page, pageSize = results.length, sort } = paginationQuery;
 	const relevantSchemaWithFields = schemas.find((s: any) => s.name === entityName);
@@ -160,7 +163,9 @@ const mapEntityDocuments = (
 	}
 
 	const totalDocs = entityName === ClinicalEntitySchemaNames.DONOR ? donorCount : results.length;
-	let records = results.sort(sortDocs(sort, entityName, completionStats, entityErrors));
+	console.log('\n entityErrors', entityErrors);
+
+	let records = results.sort(sortDocs(sort, sortType, completionStats, entityErrors));
 
 	if (records.length > pageSize) {
 		// Manual Pagination
@@ -264,6 +269,7 @@ function extractDataFromDonors(donors: DeepReadonly<Donor>[], schemasWithFields:
 
 /**
  * Main Clinical Entity Submitted Data Function
+ * @param programId
  * @param donors
  * @param totalDonors
  * @param schemasWithFields
@@ -271,13 +277,13 @@ function extractDataFromDonors(donors: DeepReadonly<Donor>[], schemasWithFields:
  * @param paginationQuery
  * @returns
  */
-function extractEntityDataFromDonors(
+async function extractEntityDataFromDonors(
+	programId: string,
 	donors: Donor[],
 	totalDonors: number,
 	schemasWithFields: any,
 	entityTypes: EntityAlias[],
 	paginationQuery: PaginationQuery,
-	errors: ClinicalErrorsResponseRecord[],
 ) {
 	let clinicalEntityData: EntityClinicalInfo[] = [];
 
@@ -327,6 +333,29 @@ function extractEntityDataFromDonors(
 		})
 		.filter(notEmpty);
 
+	const isDefaultDonorSort =
+		// entityName === ClinicalEntitySchemaNames.DONOR &&
+		paginationQuery.sort.includes('completionStats.coreCompletionPercentage');
+
+	const isInvalidSort =
+		// !(entityName === ClinicalEntitySchemaNames.DONOR) &&
+		paginationQuery.sort.includes('schemaMetadata.isValid');
+
+	const sortType = isDefaultDonorSort
+		? sortTypes['defaultDonor']
+		: isInvalidSort
+		? sortTypes['invalidEntity']
+		: sortTypes['columnSort'];
+
+	const getErrorsForSorting = async () => {
+		const donorIds = donors.map((donor) => donor.donorId);
+		return (await getClinicalErrors(programId, donorIds)).clinicalErrors;
+	};
+
+	const errors: ClinicalErrorsResponseRecord[] = [];
+	// sortType === sortTypes['invalidEntity'] ?
+	// await getErrorsForSorting() : [];
+
 	const clinicalEntities: ClinicalEntityData[] = clinicalEntityData
 		.map((entity: EntityClinicalInfo) =>
 			mapEntityDocuments(
@@ -337,6 +366,7 @@ function extractEntityDataFromDonors(
 				paginationQuery,
 				completionStats,
 				errors,
+				sortType,
 			),
 		)
 		.filter(notEmpty);
