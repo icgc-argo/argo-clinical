@@ -51,7 +51,7 @@ import { Errors, notEmpty } from '../utils';
 import { ClinicalEntityData, Donor, Sample } from './clinical-entities';
 import { DONOR_DOCUMENT_FIELDS, donorDao } from './donor-repo';
 import { runTaskInWorkerThread } from './service-worker-thread/runner';
-import { WorkerTasks } from './service-worker-thread/tasks';
+import { WorkerTasks, extractEntityDataFromDonors } from './service-worker-thread/tasks';
 import { CompletionState } from './api/types';
 
 const L = loggerFor(__filename);
@@ -68,6 +68,12 @@ export type PaginationQuery = {
 	pageSize?: number;
 	sort: string;
 };
+
+export enum sortTypes {
+	'defaultDonor' = 'defaultDonor',
+	'invalidEntity' = 'invalidEntity',
+	'columnSort' = 'columnSort',
+}
 
 type ClinicalDataPaginatedQuery = ClinicalDonorEntityQuery & PaginationQuery;
 
@@ -230,22 +236,35 @@ export const getPaginatedClinicalData = async (programId: string, query: Clinica
 	const allSchemasWithFields = await dictionaryManager.instance().getSchemasWithFields();
 	// Get all donors + records for given entity
 	const { donors, totalDonors } = await donorDao.findByPaginatedProgramId(programId, query);
+	const donorIds = donors.map((donor) => donor.donorId);
+	const { clinicalErrors } = await getClinicalErrors(programId, donorIds);
 
-	const taskToRun = WorkerTasks.ExtractEntityDataFromDonors;
-	const taskArgs = [
-		programId,
+	const isDefaultDonorSort = query.sort.includes('completionStats.coreCompletionPercentage');
+	const isInvalidSort = query.sort.includes('schemaMetadata.isValid');
+
+	const sortType = isDefaultDonorSort
+		? sortTypes['defaultDonor']
+		: isInvalidSort
+		? sortTypes['invalidEntity']
+		: sortTypes['columnSort'];
+
+	const data = extractEntityDataFromDonors(
 		donors as Donor[],
 		totalDonors,
 		allSchemasWithFields,
 		query.entityTypes,
 		query,
-	];
+		clinicalErrors,
+		sortType,
+	);
+
+	// const taskArgs = [];
 
 	// Return paginated data
-	const data = await runTaskInWorkerThread<{ clinicalEntities: ClinicalEntityData[] }>(
-		taskToRun,
-		taskArgs,
-	);
+	// const data = await runTaskInWorkerThread<{ clinicalEntities: ClinicalEntityData[] }>(
+	// 	taskToRun,
+	// 	taskArgs,
+	// );
 
 	return data;
 };
