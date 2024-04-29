@@ -86,6 +86,12 @@ export type ClinicalDataVariables = {
 	filters: ClinicalDataApiFilters;
 };
 
+export enum ClinicalDataSortTypes {
+	'defaultDonor' = 'defaultDonor',
+	'invalidEntity' = 'invalidEntity',
+	'columnSort' = 'columnSort',
+}
+
 export async function updateDonorSchemaMetadata(
 	donor: DeepReadonly<Donor>,
 	migrationId: string,
@@ -231,8 +237,28 @@ export const getPaginatedClinicalData = async (programId: string, query: Clinica
 	// Get all donors + records for given entity
 	const { donors, totalDonors } = await donorDao.findByPaginatedProgramId(programId, query);
 
+	const donorIds = donors.map((donor) => donor.donorId);
+
+	const { clinicalErrors } = await getClinicalErrors(programId, donorIds);
+	const isDefaultDonorSort = query.sort.includes('completionStats.coreCompletionPercentage');
+	const isInvalidSort = query.sort.includes('schemaMetadata.isValid');
+
+	const sortType = isDefaultDonorSort
+		? ClinicalDataSortTypes['defaultDonor']
+		: isInvalidSort
+		? ClinicalDataSortTypes['invalidEntity']
+		: ClinicalDataSortTypes['columnSort'];
+
 	const taskToRun = WorkerTasks.ExtractEntityDataFromDonors;
-	const taskArgs = [donors as Donor[], totalDonors, allSchemasWithFields, query.entityTypes, query];
+	const taskArgs = [
+		donors as Donor[],
+		totalDonors,
+		allSchemasWithFields,
+		query.entityTypes,
+		query,
+		clinicalErrors,
+		sortType,
+	];
 
 	// Return paginated data
 	const data = await runTaskInWorkerThread<{ clinicalEntities: ClinicalEntityData[] }>(
