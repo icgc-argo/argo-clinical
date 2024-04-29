@@ -20,26 +20,18 @@
 import axios from 'axios';
 import memoize from 'memoizee';
 import ms from 'ms';
-import {
-	Biomarker,
-	ClinicalInfo,
-	Comorbidity,
-	CompletionStats,
-	Donor,
-	Exposure,
-	FamilyHistory,
-	FollowUp,
-	PrimaryDiagnosis,
-	SchemaMetadata,
-	Specimen,
-	Treatment,
-} from './clinical-entities';
+import { Donor } from './clinical-entities';
 import { ClinicalEntitySchemaNames } from '../common-model/entities';
 import { config } from '../config';
+import { Errors } from '../utils';
 
 interface IdGenerationRequest {
 	programId: string;
-	submitterId: any;
+	submitterSpecimenId: string;
+	submitterSampleId: string;
+	submitterPrimaryDiagnosisId: string;
+	submitterFollowUpId: string;
+	submitterTreatmentId: string;
 	submitterDonorId: string;
 	testInterval: string;
 	family_relative_id: string;
@@ -48,40 +40,23 @@ interface IdGenerationRequest {
 }
 
 const request = {
-	programId: 'null',
-	submitterId: 'null',
-	submitterDonorId: 'null',
-	testInterval: 'null',
-	family_relative_id: 'null',
-	comorbidityTypeCode: 'null',
-	entityType: 'null',
+	programId: '-',
+	submitterSpecimenId: '-',
+	submitterSampleId: '-',
+	submitterPrimaryDiagnosisId: '-',
+	submitterFollowUpId: '-',
+	submitterTreatmentId: '-',
+	submitterDonorId: '-',
+	testInterval: '-',
+	family_relative_id: '-',
+	comorbidityTypeCode: '-',
+	entityType: '-',
 };
 
-export interface PartialDonor {
-	_id?: string;
-	__v?: number; // mongodb property not being filtered out
-	createBy?: string;
-	schemaMetadata?: SchemaMetadata | undefined;
-	donorId?: number;
-	gender?: string;
-	submitterId?: string;
-	programId?: string;
-	specimens?: Array<Specimen> | undefined;
-	clinicalInfo?: ClinicalInfo;
-	primaryDiagnoses?: Array<PrimaryDiagnosis>;
-	familyHistory?: Array<FamilyHistory>;
-	comorbidity?: Array<Comorbidity>;
-	followUps?: Array<FollowUp>;
-	treatments?: Array<Treatment>;
-	exposure?: Array<Exposure>;
-	biomarker?: Array<Biomarker>;
-	createdAt?: string;
-	updatedAt?: string;
-	completionStats?: CompletionStats;
-}
+export interface PartialDonor extends Partial<Donor> {}
 
 export async function getId(req: IdGenerationRequest) {
-	console.log('getId function called');
+	console.log('getId function called: ' + req.submitterDonorId);
 	const token = await getToken();
 	const headers = {
 		headers: {
@@ -90,17 +65,14 @@ export async function getId(req: IdGenerationRequest) {
 	};
 
 	try {
-		const response = await axios.get(
-			// `http://localhost:9001/${req.programId}/${req.submitterId}/${req.submitterDonorId}/${req.testInterval}/${req.family_relative_id}/${req.comorbidityTypeCode}/${req.entityType}`,
-			config.getConfig().tokenUrl() +
-				`${req.programId}/${req.submitterId}/${req.submitterDonorId}/${req.testInterval}/${req.family_relative_id}/${req.comorbidityTypeCode}/${req.entityType}`,
-			headers,
-		);
+		const url =
+			config.getConfig().idServiceUrl() +
+			`${req.programId}/${req.submitterDonorId}/${req.submitterSpecimenId}/${req.submitterSampleId}/${req.submitterPrimaryDiagnosisId}/${req.submitterFollowUpId}/${req.submitterTreatmentId}/${req.testInterval}/${req.family_relative_id}/${req.comorbidityTypeCode}/${req.entityType}`;
+		const response = await axios.get(url, headers);
 		console.log('getId response: ' + response.data.entityId + ' - ' + response.data.entityType);
 		return parseInt(response.data.entityId);
 	} catch (e) {
-		console.log(e);
-		throw Error('Error fetching ids');
+		throw new Errors.IdGenerationError('Error sending request to ID service. Caused by: ' + e);
 	}
 }
 
@@ -112,11 +84,11 @@ export async function setEntityIdsForDonors(donors: Donor[]) {
 }
 
 export async function setEntityIds(donor: PartialDonor) {
+	const submitterDonorId = donor.submitterId as string;
 	// -- DONOR --
 	const donorId = await getId({
 		...request,
 		programId: donor.programId as string,
-		submitterId: donor.submitterId as string,
 		submitterDonorId: donor.submitterId as string,
 		entityType: ClinicalEntitySchemaNames.DONOR,
 	});
@@ -132,11 +104,11 @@ export async function setEntityIds(donor: PartialDonor) {
 			const id = await getId({
 				...request,
 				programId: donor.programId as string,
-				submitterId: submitterId as string,
+				submitterSpecimenId: submitterId as string,
+				submitterDonorId,
 				entityType: ClinicalEntitySchemaNames.SPECIMEN,
 			});
 			specimen.specimenId = id;
-			console.log('specimen.specimenId: ' + specimen.specimenId);
 
 			// -- SAMPLE --
 			const samples = specimen.samples;
@@ -144,126 +116,120 @@ export async function setEntityIds(donor: PartialDonor) {
 				const id = await getId({
 					...request,
 					programId: donor.programId as string,
-					submitterId: sample.submitterId as string,
+					submitterSampleId: sample.submitterId as string,
+					submitterSpecimenId: specimen.submitterId,
+					submitterDonorId,
 					entityType: ClinicalEntitySchemaNames.REGISTRATION,
 				});
 				sample.sampleId = id;
-				console.log('sample.sampleId: ' + sample.sampleId);
 			}
 		}
 	}
 
 	// -- BIOMARKER --
-	// submitter_specimen_id
 	if (donor.biomarker && donor.biomarker.length > 0) {
-		for (const bm of donor.biomarker) {
-			const submitterBiomarkerId =
-				bm.clinicalInfo.submitter_specimen_id?.toString() ??
-				bm.clinicalInfo.submitter_primary_diagnosis_id?.toString() ??
-				bm.clinicalInfo.submitter_follow_up_id?.toString() ??
-				bm.clinicalInfo.submitter_treatment_id?.toString() ??
-				'null';
-
+		for (const biomarker of donor.biomarker) {
 			const id = await getId({
 				...request,
 				programId: donor.programId as string,
-				submitterId: submitterBiomarkerId,
-				submitterDonorId: bm.clinicalInfo.submitter_donor_id as string,
-				testInterval: bm.clinicalInfo.test_interval as string,
+				submitterSpecimenId: biomarker.clinicalInfo.submitter_specimen_id?.toString() || '-',
+				submitterPrimaryDiagnosisId:
+					biomarker.clinicalInfo.submitter_primary_diagnosis_id?.toString() || '-',
+				submitterFollowUpId: biomarker.clinicalInfo.submitter_follow_up_id?.toString() || '-',
+				submitterTreatmentId: biomarker.clinicalInfo.submitter_treatment_id?.toString() || '-',
+				submitterDonorId,
+				testInterval: biomarker.clinicalInfo.test_interval?.toString() || '-',
 				entityType: ClinicalEntitySchemaNames.BIOMARKER,
 			});
-
-			bm.biomarkerId = id;
-			console.log('biomarkerId: ' + bm.biomarkerId);
+			biomarker.biomarkerId = id;
 		}
 	}
 
 	// -- COMORBIDITY --
-	// submitter_donor_id and comorbidity_type_code - UK-confirm
 	if (donor.comorbidity && donor.comorbidity.length > 0) {
-		for (const cm of donor.comorbidity) {
+		for (const comorbidity of donor.comorbidity) {
 			const id = await getId({
 				...request,
 				programId: donor.programId as string,
-				submitterId: cm.clinicalInfo.submitter_donor_id as string,
-				comorbidityTypeCode: cm.clinicalInfo.comorbidity_type_code as string,
+				submitterDonorId,
+				comorbidityTypeCode: comorbidity.clinicalInfo.comorbidity_type_code as string,
 				entityType: ClinicalEntitySchemaNames.COMORBIDITY,
 			});
-			cm.comorbidityId = id;
-			console.log('comorbidityId: ' + cm.comorbidityId);
+			comorbidity.comorbidityId = id;
 		}
 	}
 
 	// -- PRIMARY DIAGNOSIS --
 	if (donor.primaryDiagnoses && donor.primaryDiagnoses.length > 0) {
-		for (const p of donor.primaryDiagnoses) {
+		for (const primaryDiagnosis of donor.primaryDiagnoses) {
 			const id = await getId({
 				...request,
 				programId: donor.programId as string,
-				submitterId: p.clinicalInfo.submitter_primary_diagnosis_id as string,
+				submitterPrimaryDiagnosisId: primaryDiagnosis.clinicalInfo
+					.submitter_primary_diagnosis_id as string,
+				submitterDonorId,
 				entityType: ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
 			});
-			p.primaryDiagnosisId = id;
-			console.log('primaryDiagnosisId: ' + p.primaryDiagnosisId);
+			primaryDiagnosis.primaryDiagnosisId = id;
 		}
 	}
 
 	// -- TREATMENT --
 	if (donor.treatments && donor.treatments.length > 0) {
-		for (const t of donor.treatments) {
+		for (const treatment of donor.treatments) {
+			const submitter_treatment_id = treatment.clinicalInfo?.submitter_treatment_id?.toString();
+			const therapy_submitter_treatment_id = treatment.therapies[0]?.clinicalInfo?.submitter_treatment_id?.toString();
 			const id = await getId({
 				...request,
 				programId: donor.programId as string,
-				submitterId: t.clinicalInfo.submitter_treatment_id as string,
+				submitterTreatmentId: (!submitter_treatment_id
+					? therapy_submitter_treatment_id
+					: submitter_treatment_id) as string,
+				submitterDonorId,
 				entityType: ClinicalEntitySchemaNames.TREATMENT,
 			});
-			t.treatmentId = id;
-			console.log('treatmentId: ' + t.treatmentId);
+			treatment.treatmentId = id;
 		}
 	}
 
 	// -- FAMILY HISTORY --
-	// submitter_donor_id and family_relative_id - UK: confirm
 	if (donor.familyHistory && donor.familyHistory.length > 0) {
-		for (const fh of donor.familyHistory) {
+		for (const familyHistory of donor.familyHistory) {
 			const id = await getId({
 				...request,
 				programId: donor.programId as string,
-				submitterId: fh.clinicalInfo.submitter_donor_id as string,
-				family_relative_id: fh.clinicalInfo.family_relative_id as string,
+				submitterDonorId,
+				family_relative_id: familyHistory.clinicalInfo.family_relative_id as string,
 				entityType: ClinicalEntitySchemaNames.FAMILY_HISTORY,
 			});
-			fh.familyHistoryId = id;
-			console.log('familyHistoryId: ' + fh.familyHistoryId);
+			familyHistory.familyHistoryId = id;
 		}
 	}
 
 	// -- FOLLOW UP --
 	if (donor.followUps && donor.followUps.length > 0) {
-		for (const fl of donor.followUps) {
+		for (const followUp of donor.followUps) {
 			const id = await getId({
 				...request,
 				programId: donor.programId as string,
-				submitterId: fl.clinicalInfo.submitter_follow_up_id as string,
+				submitterFollowUpId: followUp.clinicalInfo.submitter_follow_up_id as string,
+				submitterDonorId,
 				entityType: ClinicalEntitySchemaNames.FOLLOW_UP,
 			});
-			fl.followUpId = id;
-			console.log('followUpId: ' + fl.followUpId);
+			followUp.followUpId = id;
 		}
 	}
 
 	// -- EXPOSURE --
-	// submitter_donor_id
 	if (donor.exposure && donor.exposure.length > 0) {
-		for (const ex of donor.exposure) {
+		for (const exposure of donor.exposure) {
 			const id = await getId({
 				...request,
 				programId: donor.programId as string,
-				submitterId: ex.clinicalInfo.submitter_donor_id as string,
+				submitterDonorId,
 				entityType: ClinicalEntitySchemaNames.EXPOSURE,
 			});
-			ex.exposureId = id;
-			console.log('exposureId: ' + ex.exposureId);
+			exposure.exposureId = id;
 		}
 	}
 
@@ -282,9 +248,13 @@ const getToken = memoize(
 			client_id: config.getConfig().egoClientId(),
 			client_secret: config.getConfig().egoClientSecret(),
 		};
-		const response = await axios.post(config.getConfig().tokenUrl(), data, headers);
-		console.log('token response: ' + response.data.access_token);
-		response.data.access_token;
+		try {
+			const url = config.getConfig().tokenUrl();
+			const response = await axios.post(config.getConfig().tokenUrl(), data, headers);
+			response.data.access_token;
+		} catch (e) {
+			throw new Errors.IdGenerationError('Error fetching ego token. Caused by: ' + e);
+		}
 	},
 	{
 		maxAge: ms('1d'),

@@ -123,13 +123,11 @@ const scopeCheckGenerator = (
 				scopesGenerator(programId),
 				request,
 				response,
-			); // REMOVE THIS
-			/*if (unauthorizedResponse !== undefined) {
-				return unauthorizedResponse;
-			}*/ const result = originalMethod.apply(
-				this,
-				[request, response, next],
 			);
+			if (unauthorizedResponse !== undefined) {
+				return unauthorizedResponse;
+			}
+			const result = originalMethod.apply(this, [request, response, next]);
 			return result;
 		};
 		return descriptor;

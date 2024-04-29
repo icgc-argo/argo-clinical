@@ -216,7 +216,7 @@ describe('schema migration api', () => {
 						return '';
 					},
 					tokenUrl(): string {
-						return process.env.TOKEN_URI || '';
+						return process.env.TOKEN_URL || '';
 					},
 					idServiceUrl(): string {
 						return process.env.ID_SERVICE_URL || '';

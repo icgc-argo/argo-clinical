@@ -137,7 +137,7 @@ let server: Server;
 			return process.env.EGO_URL || secrets.EGO_URL || '';
 		},
 		tokenUrl(): string {
-			return process.env.TOKEN_URI || '';
+			return process.env.TOKEN_URL || '';
 		},
 		idServiceUrl(): string {
 			return process.env.ID_SERVICE_URL || '';

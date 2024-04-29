@@ -420,15 +420,12 @@ export const donorDao: DonorRepository = {
 		const dnr = await setEntityIds(donor);
 		const newDonor = new DonorModel(await setEntityIds(donor));
 		unsetIsNewFlagForUpdate(newDonor);
-		console.log('newDonor._id' + newDonor._id);
 		await newDonor.save();
 		return F(MongooseUtils.toPojo(newDonor) as Donor);
 	},
 
 	async updateAll(donors: Donor[]) {
-		console.log('donors array in updateAll2: ' + donors[0].submitterId);
 		const newDonors = donors.map(async (donor) => {
-			// await someFunction();
 			const newDonor = new DonorModel(await setEntityIds(donor));
 			unsetIsNewFlagForUpdate(newDonor);
 			return newDonor;
@@ -436,8 +433,8 @@ export const donorDao: DonorRepository = {
 
 		await Promise.all(
 			newDonors.map((donor) => {
-				donor.then((d) => {
-					d.save();
+				donor.then(async (d) => {
+					await d.save();
 				});
 			}),
 		);
@@ -449,7 +446,7 @@ export const donorDao: DonorRepository = {
 			),
 		);
 
-		return result; // newDonors.map((donor) =>  donor.then((d) => { return F(MongooseUtils.toPojo(d) as Donor);}).then(res => res));
+		return result;
 	},
 
 	async create(donor: Partial<Donor>) {
