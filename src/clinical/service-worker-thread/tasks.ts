@@ -20,7 +20,6 @@
 import { DeepReadonly } from 'deep-freeze';
 import _, { isEmpty } from 'lodash';
 import {
-	ClinicalDataSortTypes,
 	ClinicalEntitySchemaNames,
 	ClinicalErrorsResponseRecord,
 	EntityAlias,
@@ -35,7 +34,7 @@ import {
 	getSampleRegistrationDataFromDonor,
 } from '../../common-model/functions';
 import { notEmpty } from '../../utils';
-import { ClinicalDonorEntityQuery, PaginationQuery } from '../clinical-service';
+import { ClinicalDonorEntityQuery, ClinicalDataSortTypes, PaginationQuery } from '../types';
 import {
 	ClinicalEntityData,
 	ClinicalInfo,

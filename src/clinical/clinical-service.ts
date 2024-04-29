@@ -24,11 +24,9 @@ import {
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 import {
-	ClinicalDataSortTypes,
 	ClinicalEntityErrorRecord,
 	ClinicalEntitySchemaNames,
 	ClinicalErrorsResponseRecord,
-	EntityAlias,
 	aliasEntityNames,
 	allEntityNames,
 } from '../common-model/entities';
@@ -53,39 +51,14 @@ import { ClinicalEntityData, Donor, Sample } from './clinical-entities';
 import { DONOR_DOCUMENT_FIELDS, donorDao } from './donor-repo';
 import { runTaskInWorkerThread } from './service-worker-thread/runner';
 import { WorkerTasks } from './service-worker-thread/tasks';
-import { CompletionState } from './api/types';
+import {
+	ClinicalDataQuery,
+	ClinicalDataSortTypes,
+	ClinicalDonorEntityQuery,
+	PaginationQuery,
+} from './types';
 
 const L = loggerFor(__filename);
-
-// Base type for Clinical Data Queries
-export type ClinicalDonorEntityQuery = {
-	donorIds: number[];
-	submitterDonorIds: string[];
-	entityTypes: EntityAlias[];
-};
-
-export type PaginationQuery = {
-	page: number;
-	pageSize?: number;
-	sort: string;
-};
-
-export type ClinicalDataPaginatedQuery = ClinicalDonorEntityQuery & PaginationQuery;
-
-export type ClinicalDataQuery = ClinicalDataPaginatedQuery & {
-	completionState?: {};
-};
-
-// GQL Query Arguments
-// Submitted Data Table, SearchBar, Sidebar, etc.
-export type ClinicalDataApiFilters = ClinicalDataPaginatedQuery & {
-	completionState?: CompletionState;
-};
-
-export type ClinicalDataVariables = {
-	programShortName: string;
-	filters: ClinicalDataApiFilters;
-};
 
 export async function updateDonorSchemaMetadata(
 	donor: DeepReadonly<Donor>,
