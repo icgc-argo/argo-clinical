@@ -94,6 +94,12 @@ export interface ClinicalErrorsResponseRecord {
 	errors: ClinicalEntityErrorRecord[];
 }
 
+export const ClinicalDataSortTypes = {
+	defaultDonor: 'defaultDonor',
+	invalidEntity: 'invalidEntity',
+	columnSort: 'columnSort',
+};
+
 export type ClinicalFields =
 	| DonorFieldsEnum
 	| SpecimenFieldsEnum
