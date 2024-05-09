@@ -20,6 +20,7 @@
 import { DeepReadonly } from 'deep-freeze';
 import _, { isEmpty } from 'lodash';
 import {
+	ClinicalDataSortType,
 	ClinicalDataSortTypes,
 	ClinicalEntitySchemaNames,
 	ClinicalErrorsResponseRecord,
@@ -132,7 +133,7 @@ const mapEntityDocuments = (
 	entityTypes: EntityAlias[],
 	paginationQuery: PaginationQuery,
 	completionStats: CompletionDisplayRecord[],
-	sortType: keyof typeof ClinicalDataSortTypes,
+	sortType: ClinicalDataSortType,
 	errors: ClinicalErrorsResponseRecord[],
 ): ClinicalEntityData | undefined => {
 	const { entityName, results } = entity;
@@ -282,7 +283,7 @@ function extractEntityDataFromDonors(
 	schemasWithFields: any,
 	entityTypes: EntityAlias[],
 	paginationQuery: PaginationQuery,
-	sortType: keyof typeof ClinicalDataSortTypes,
+	sortType: ClinicalDataSortType,
 	errors: ClinicalErrorsResponseRecord[],
 ) {
 	let clinicalEntityData: EntityClinicalInfo[] = [];

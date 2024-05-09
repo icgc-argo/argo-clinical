@@ -24,6 +24,7 @@ import {
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 import {
+	ClinicalDataSortType,
 	ClinicalDataSortTypes,
 	ClinicalEntityErrorRecord,
 	ClinicalEntitySchemaNames,
@@ -241,7 +242,7 @@ export const getPaginatedClinicalData = async (programId: string, query: Clinica
 		? (await getClinicalErrors(programId, donorIds)).clinicalErrors
 		: [];
 
-	const sortType = isDefaultDonorSort
+	const sortType: ClinicalDataSortType = isDefaultDonorSort
 		? ClinicalDataSortTypes.defaultDonor
 		: isInvalidSort
 		? ClinicalDataSortTypes.invalidEntity

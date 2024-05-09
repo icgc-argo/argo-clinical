@@ -19,6 +19,7 @@
 
 import { z as zod } from 'zod';
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
+import { Values } from '../utils/objectTypes';
 
 // this is temporary to keep code compiling until surgery is ready in dictionary, to be removed in favor of
 // the surgery in ClinicalEntitySchemaNames
@@ -99,6 +100,8 @@ export const ClinicalDataSortTypes = {
 	invalidEntity: 'invalidEntity',
 	columnSort: 'columnSort',
 };
+
+export type ClinicalDataSortType = Values<typeof ClinicalDataSortTypes>;
 
 export type ClinicalFields =
 	| DonorFieldsEnum
