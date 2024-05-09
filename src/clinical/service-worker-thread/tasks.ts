@@ -61,7 +61,7 @@ const isEntityInQuery = (entityName: ClinicalEntitySchemaNames, entityTypes: str
 const sortDocs = (
 	sortQuery: string,
 	sortFunction: (currentRecord: ClinicalInfo, nextRecord: ClinicalInfo, rest: any) => number,
-	sortArgs: any,
+	sortArgs: CompletionDisplayRecord[] | Set<number> | string,
 ) => (currentRecord: ClinicalInfo, nextRecord: ClinicalInfo) => {
 	// Sort Value: 0 order is Unchanged, -1 Current lower index than Next, +1 Current higher index than Next
 	let order = 0;
