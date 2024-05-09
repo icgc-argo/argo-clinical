@@ -57,27 +57,17 @@ const DONOR_ID_FIELD = 'donor_id';
 const isEntityInQuery = (entityName: ClinicalEntitySchemaNames, entityTypes: string[]) =>
 	entityTypes.includes(aliasEntityNames[entityName]);
 
-// Main Sort Function
+// Base Sort Function Wrapper
 const sortDocs = (
 	sortQuery: string,
-	completionStats: CompletionDisplayRecord[],
-	sortType: keyof typeof ClinicalDataSortTypes,
-	errors: ClinicalErrorsResponseRecord[],
+	sortFunction: (currentRecord: ClinicalInfo, nextRecord: ClinicalInfo, rest: any) => number,
+	...rest: any[]
 ) => (currentRecord: ClinicalInfo, nextRecord: ClinicalInfo) => {
 	// Sort Value: 0 order is Unchanged, -1 Current lower index than Next, +1 Current higher index than Next
 	let order = 0;
 	const isDescending = sortQuery.startsWith('-');
 
-	const queryKey = isDescending ? sortQuery.split('-')[1] : sortQuery;
-	const key = queryKey === 'donorId' ? DONOR_ID_FIELD : queryKey;
-
-	if (sortType === ClinicalDataSortTypes.defaultDonor) {
-		order = sortDonorRecordsByCompletion(currentRecord, nextRecord, completionStats);
-	} else if (sortType === ClinicalDataSortTypes.invalidEntity) {
-		order = sortInvalidRecords(currentRecord, nextRecord, errors);
-	} else {
-		order = sortRecordsByColumn(currentRecord, nextRecord, key);
-	}
+	order = sortFunction(currentRecord, nextRecord, rest);
 
 	order = isDescending ? -order : order;
 
@@ -156,7 +146,18 @@ const mapEntityDocuments = (
 	}
 
 	const totalDocs = entityName === ClinicalEntitySchemaNames.DONOR ? donorCount : results.length;
-	let records = results.sort(sortDocs(sort, completionStats, sortType, entityErrors));
+
+	const queryKey = sort[0] === '-' ? sort.split('-')[1] : sort;
+	const key = queryKey === 'donorId' ? DONOR_ID_FIELD : queryKey;
+
+	const sortRecords =
+		sortType === ClinicalDataSortTypes.defaultDonor
+			? sortDocs(sort, sortDonorRecordsByCompletion, completionStats)
+			: sortType === ClinicalDataSortTypes.invalidEntity
+			? sortDocs(sort, sortInvalidRecords, entityErrors)
+			: sortDocs(sort, sortRecordsByColumn, key);
+
+	let records = results.sort(sortRecords);
 
 	if (records.length > pageSize) {
 		// Manual Pagination
