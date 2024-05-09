@@ -58,21 +58,23 @@ const isEntityInQuery = (entityName: ClinicalEntitySchemaNames, entityTypes: str
 	entityTypes.includes(aliasEntityNames[entityName]);
 
 // Base Sort Function Wrapper
-const sortDocs = (
+function sortDocs<SortArgs>(
 	sortQuery: string,
-	sortFunction: (currentRecord: ClinicalInfo, nextRecord: ClinicalInfo, rest: any) => number,
-	sortArgs: CompletionDisplayRecord[] | Set<number> | string,
-) => (currentRecord: ClinicalInfo, nextRecord: ClinicalInfo) => {
-	// Sort Value: 0 order is Unchanged, -1 Current lower index than Next, +1 Current higher index than Next
-	let order = 0;
-	const isDescending = sortQuery.startsWith('-');
+	sortArgs: SortArgs,
+	sortFunction: (currentRecord: ClinicalInfo, nextRecord: ClinicalInfo, args: SortArgs) => number,
+) {
+	return (currentRecord: ClinicalInfo, nextRecord: ClinicalInfo) => {
+		// Sort Value: 0 order is Unchanged, -1 Current lower index than Next, +1 Current higher index than Next
+		let order = 0;
+		const isDescending = sortQuery.startsWith('-');
 
-	order = sortFunction(currentRecord, nextRecord, sortArgs);
+		order = sortFunction(currentRecord, nextRecord, sortArgs);
 
-	order = isDescending ? -order : order;
+		order = isDescending ? -order : order;
 
-	return order;
-};
+		return order;
+	};
+}
 
 // Sort Clinically Incomplete donors to top (sorted by donorId at DB level)
 const sortDonorRecordsByCompletion = (
@@ -146,26 +148,24 @@ const mapEntityDocuments = (
 
 	const totalDocs = entityName === ClinicalEntitySchemaNames.DONOR ? donorCount : results.length;
 
-	const sortKey = sort[0] === '-' ? sort.split('-')[1] : sort;
-	const key = sortKey === 'donorId' ? DONOR_ID_FIELD : sortKey;
+	let records = results;
 
-	const entityErrors =
-		sortType === ClinicalDataSortTypes.invalidEntity
-			? errors.filter((errorRecord) => errorRecord.entityName === entityName)
-			: [];
-	const donorIdsWithErrors =
-		sortType === ClinicalDataSortTypes.invalidEntity
-			? entityErrors.reduce<Set<number>>((acc, error) => acc.add(error.donorId), new Set())
-			: new Set([]);
-
-	const sortRecords =
-		sortType === ClinicalDataSortTypes.defaultDonor
-			? sortDocs(sort, sortDonorRecordsByCompletion, completionStats)
-			: sortType === ClinicalDataSortTypes.invalidEntity
-			? sortDocs(sort, sortInvalidRecords, donorIdsWithErrors)
-			: sortDocs(sort, sortRecordsByColumn, key);
-
-	let records = results.sort(sortRecords);
+	switch (sortType) {
+		case ClinicalDataSortTypes.defaultDonor:
+			records = results.sort(sortDocs(sort, completionStats, sortDonorRecordsByCompletion));
+		case ClinicalDataSortTypes.invalidEntity:
+			const entityErrors = errors.filter((errorRecord) => errorRecord.entityName === entityName);
+			const donorIdsWithErrors = entityErrors.reduce<Set<number>>(
+				(acc, error) => acc.add(error.donorId),
+				new Set(),
+			);
+			records = results.sort(sortDocs(sort, donorIdsWithErrors, sortInvalidRecords));
+		case ClinicalDataSortTypes.columnSort:
+		default:
+			const sortKey = sort[0] === '-' ? sort.split('-')[1] : sort;
+			const key = sortKey === 'donorId' ? DONOR_ID_FIELD : sortKey;
+			sortDocs(sort, key, sortRecordsByColumn);
+	}
 
 	if (records.length > pageSize) {
 		// Manual Pagination
