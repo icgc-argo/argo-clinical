@@ -165,7 +165,7 @@ const mapEntityDocuments = (
 		default:
 			const sortKey = sort[0] === '-' ? sort.split('-')[1] : sort;
 			const key = sortKey === 'donorId' ? DONOR_ID_FIELD : sortKey;
-			sortDocs(sort, key, sortRecordsByColumn);
+			records = results.sort(sortDocs(sort, key, sortRecordsByColumn));
 	}
 
 	if (records.length > pageSize) {
