@@ -61,13 +61,13 @@ const isEntityInQuery = (entityName: ClinicalEntitySchemaNames, entityTypes: str
 const sortDocs = (
 	sortQuery: string,
 	sortFunction: (currentRecord: ClinicalInfo, nextRecord: ClinicalInfo, rest: any) => number,
-	...rest: any[]
+	sortArgs: any,
 ) => (currentRecord: ClinicalInfo, nextRecord: ClinicalInfo) => {
 	// Sort Value: 0 order is Unchanged, -1 Current lower index than Next, +1 Current higher index than Next
 	let order = 0;
 	const isDescending = sortQuery.startsWith('-');
 
-	order = sortFunction(currentRecord, nextRecord, rest);
+	order = sortFunction(currentRecord, nextRecord, sortArgs);
 
 	order = isDescending ? -order : order;
 
@@ -112,10 +112,10 @@ const sortRecordsByColumn = (
 const sortInvalidRecords = (
 	currentRecord: ClinicalInfo,
 	nextRecord: ClinicalInfo,
-	errors: ClinicalErrorsResponseRecord[],
+	errorIds: Set<number>,
 ) => {
-	const currentRecordIsInvalid = errors.some((record) => record.donorId === currentRecord.donor_id);
-	const nextRecordIsInvalid = errors.some((record) => record.donorId === nextRecord.donor_id);
+	const currentRecordIsInvalid = errorIds.has(currentRecord.donor_id as number);
+	const nextRecordIsInvalid = errorIds.has(nextRecord.donor_id as number);
 	const invalidSort =
 		currentRecordIsInvalid === nextRecordIsInvalid ? 0 : currentRecordIsInvalid ? -1 : 1;
 
@@ -139,7 +139,6 @@ const mapEntityDocuments = (
 	const { page, pageSize = results.length, sort } = paginationQuery;
 	const relevantSchemaWithFields = schemas.find((s: any) => s.name === entityName);
 	const entityInQuery = isEntityInQuery(entityName, entityTypes);
-	const entityErrors = errors.filter((errorRecord) => errorRecord.entityName === entityName);
 
 	if (!relevantSchemaWithFields || !entityInQuery || isEmpty(results)) {
 		return undefined;
@@ -147,14 +146,23 @@ const mapEntityDocuments = (
 
 	const totalDocs = entityName === ClinicalEntitySchemaNames.DONOR ? donorCount : results.length;
 
-	const queryKey = sort[0] === '-' ? sort.split('-')[1] : sort;
-	const key = queryKey === 'donorId' ? DONOR_ID_FIELD : queryKey;
+	const sortKey = sort[0] === '-' ? sort.split('-')[1] : sort;
+	const key = sortKey === 'donorId' ? DONOR_ID_FIELD : sortKey;
+
+	const entityErrors =
+		sortType === ClinicalDataSortTypes.invalidEntity
+			? errors.filter((errorRecord) => errorRecord.entityName === entityName)
+			: [];
+	const donorIdsWithErrors =
+		sortType === ClinicalDataSortTypes.invalidEntity
+			? entityErrors.reduce<Set<number>>((acc, error) => acc.add(error.donorId), new Set())
+			: new Set([]);
 
 	const sortRecords =
 		sortType === ClinicalDataSortTypes.defaultDonor
 			? sortDocs(sort, sortDonorRecordsByCompletion, completionStats)
 			: sortType === ClinicalDataSortTypes.invalidEntity
-			? sortDocs(sort, sortInvalidRecords, entityErrors)
+			? sortDocs(sort, sortInvalidRecords, donorIdsWithErrors)
 			: sortDocs(sort, sortRecordsByColumn, key);
 
 	let records = results.sort(sortRecords);
