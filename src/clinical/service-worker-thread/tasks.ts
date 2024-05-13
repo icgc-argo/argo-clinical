@@ -156,11 +156,37 @@ const mapEntityDocuments = (
 			records = results.sort(sortDocs(sort, completionStats, sortDonorRecordsByCompletion));
 		case ClinicalDataSortTypes.invalidEntity:
 			const entityErrors = errors.filter((errorRecord) => errorRecord.entityName === entityName);
-			const donorIdsWithErrors = entityErrors.reduce<Set<number>>(
-				(acc, error) => acc.add(error.donorId),
-				new Set(),
+			const errorIds = entityErrors.map((errorRecord) => errorRecord.donorId);
+
+			const validRecords = records.filter(
+				(record) => typeof record.donor_id === 'number' && !errorIds.includes(record.donor_id),
 			);
-			records = results.sort(sortDocs(sort, donorIdsWithErrors, sortInvalidRecords));
+
+			const invalidRecords: ClinicalInfo[] = [];
+			records
+				.filter(
+					(record) => typeof record.donor_id === 'number' && errorIds.includes(record.donor_id),
+				)
+				.forEach((invalidDonorRecord, index, recordArray) => {
+					const currentDonorErrors = entityErrors.filter(
+						(errorRecord) => invalidDonorRecord.donor_id === errorRecord.donorId,
+					)[0]?.errors;
+
+					const currentDonorRecords = recordArray.filter(
+						(filteredRecord) => invalidDonorRecord.donor_id === filteredRecord.donor_id,
+					);
+
+					currentDonorRecords.forEach((entityRecord, index) => {
+						const recordHasError = currentDonorErrors.find((error) => error.index === index);
+						if (recordHasError) {
+							invalidRecords.push(entityRecord);
+						} else {
+							validRecords.push(entityRecord);
+						}
+					});
+				});
+
+			records = [...invalidRecords, ...validRecords];
 		case ClinicalDataSortTypes.columnSort:
 		default:
 			const sortKey = sort[0] === '-' ? sort.split('-')[1] : sort;
