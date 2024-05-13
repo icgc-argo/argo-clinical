@@ -156,10 +156,7 @@ const mapEntityDocuments = (
 			records = results.sort(sortDocs(sort, completionStats, sortDonorRecordsByCompletion));
 		case ClinicalDataSortTypes.invalidEntity:
 			const entityErrors = errors.filter((errorRecord) => errorRecord.entityName === entityName);
-			const donorIdsWithErrors = entityErrors.reduce<Set<number>>(
-				(acc, error) => acc.add(error.donorId),
-				new Set(),
-			);
+			const donorIdsWithErrors = new Set(entityErrors.map((error) => error.donorId));
 			records = results.sort(sortDocs(sort, donorIdsWithErrors, sortInvalidRecords));
 		case ClinicalDataSortTypes.columnSort:
 		default:
