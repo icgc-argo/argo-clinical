@@ -180,8 +180,10 @@ const mapEntityDocuments = (
 	switch (sortType) {
 		case ClinicalDataSortTypes.defaultDonor:
 			records = results.sort(sortDocs(sort, completionStats, sortDonorRecordsByCompletion));
+			break;
 		case ClinicalDataSortTypes.invalidEntity:
 			records = sortInvalidRecords(errors, results, entityName);
+			break;
 		case ClinicalDataSortTypes.columnSort:
 		default:
 			const sortKey = sort[0] === '-' ? sort.split('-')[1] : sort;
