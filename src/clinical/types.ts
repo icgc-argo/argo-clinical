@@ -19,6 +19,7 @@
 
 import { EntityAlias } from '../common-model/entities';
 import { CompletionState } from './api/types';
+import { Values } from '../utils/objectTypes';
 
 // Types Specific to Clinical Service and Related Tasks
 
@@ -47,6 +48,8 @@ export const ClinicalDataSortTypes = {
 	invalidEntity: 'invalidEntity',
 	columnSort: 'columnSort',
 };
+
+export type ClinicalDataSortType = Values<typeof ClinicalDataSortTypes>;
 
 // GQL Query Arguments
 // Submitted Data Table, SearchBar, Sidebar, etc.

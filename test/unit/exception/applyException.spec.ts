@@ -53,6 +53,7 @@ const mockSpecimenSchema: dictionaryEntities.SchemaDefinition = {
 			meta: { core: true },
 		},
 	],
+	restrictions: {},
 };
 
 const mockTreatmentSchema: dictionaryEntities.SchemaDefinition = {
@@ -66,6 +67,7 @@ const mockTreatmentSchema: dictionaryEntities.SchemaDefinition = {
 			meta: { core: true },
 		},
 	],
+	restrictions: {},
 };
 
 describe('submission service apply exceptions', () => {

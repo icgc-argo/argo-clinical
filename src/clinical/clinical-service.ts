@@ -53,6 +53,7 @@ import { runTaskInWorkerThread } from './service-worker-thread/runner';
 import { WorkerTasks } from './service-worker-thread/tasks';
 import {
 	ClinicalDataQuery,
+	ClinicalDataSortType,
 	ClinicalDataSortTypes,
 	ClinicalDonorEntityQuery,
 	PaginationQuery,
@@ -214,7 +215,7 @@ export const getPaginatedClinicalData = async (programId: string, query: Clinica
 		? (await getClinicalErrors(programId, donorIds)).clinicalErrors
 		: [];
 
-	const sortType = isDefaultDonorSort
+	const sortType: ClinicalDataSortType = isDefaultDonorSort
 		? ClinicalDataSortTypes.defaultDonor
 		: isInvalidSort
 		? ClinicalDataSortTypes.invalidEntity
