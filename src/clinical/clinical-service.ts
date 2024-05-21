@@ -24,6 +24,8 @@ import {
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 import {
+	ClinicalDataSortType,
+	ClinicalDataSortTypes,
 	ClinicalEntityErrorRecord,
 	ClinicalEntitySchemaNames,
 	ClinicalErrorsResponseRecord,
@@ -69,7 +71,7 @@ export type PaginationQuery = {
 	sort: string;
 };
 
-type ClinicalDataPaginatedQuery = ClinicalDonorEntityQuery & PaginationQuery;
+export type ClinicalDataPaginatedQuery = ClinicalDonorEntityQuery & PaginationQuery;
 
 export type ClinicalDataQuery = ClinicalDataPaginatedQuery & {
 	completionState?: {};
@@ -231,8 +233,31 @@ export const getPaginatedClinicalData = async (programId: string, query: Clinica
 	// Get all donors + records for given entity
 	const { donors, totalDonors } = await donorDao.findByPaginatedProgramId(programId, query);
 
+	const donorIds = donors.map((donor) => donor.donorId);
+
+	const isDefaultDonorSort = query.sort.includes('completionStats.coreCompletionPercentage');
+	const isInvalidSort = query.sort.includes('schemaMetadata.isValid');
+
+	const clinicalErrors = isInvalidSort
+		? (await getClinicalErrors(programId, donorIds)).clinicalErrors
+		: [];
+
+	const sortType: ClinicalDataSortType = isDefaultDonorSort
+		? ClinicalDataSortTypes.defaultDonor
+		: isInvalidSort
+		? ClinicalDataSortTypes.invalidEntity
+		: ClinicalDataSortTypes.columnSort;
+
 	const taskToRun = WorkerTasks.ExtractEntityDataFromDonors;
-	const taskArgs = [donors as Donor[], totalDonors, allSchemasWithFields, query.entityTypes, query];
+	const taskArgs = [
+		donors as Donor[],
+		totalDonors,
+		allSchemasWithFields,
+		query.entityTypes,
+		query,
+		sortType,
+		clinicalErrors,
+	];
 
 	// Return paginated data
 	const data = await runTaskInWorkerThread<{ clinicalEntities: ClinicalEntityData[] }>(
