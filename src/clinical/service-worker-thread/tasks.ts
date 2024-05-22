@@ -171,7 +171,6 @@ const mapEntityDocuments = (
 	const { page, pageSize = results.length, sort } = paginationQuery;
 	const relevantSchemaWithFields = schemas.find((s: any) => s.name === entityName);
 	const entityInQuery = isEntityInQuery(entityName, entityTypes);
-	const entityErrors = errors.filter((errorRecord) => errorRecord.entityName === entityName);
 
 	if (!relevantSchemaWithFields || !entityInQuery || isEmpty(results)) {
 		return undefined;
