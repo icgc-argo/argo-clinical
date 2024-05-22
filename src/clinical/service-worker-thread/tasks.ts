@@ -181,17 +181,21 @@ const mapEntityDocuments = (
 	let records = results;
 
 	switch (sortType) {
-		case ClinicalDataSortTypes.defaultDonor:
+		case ClinicalDataSortTypes.defaultDonor: {
 			records = results.sort(sortDocs(sort, completionStats, sortDonorRecordsByCompletion));
 			break;
-		case ClinicalDataSortTypes.invalidEntity:
+		}
+		case ClinicalDataSortTypes.invalidEntity: {
 			records = sortInvalidRecords(errors, results, entityName);
 			break;
+		}
+		// Column Sort is the default, fallback here is intentional
 		case ClinicalDataSortTypes.columnSort:
-		default:
+		default: {
 			const sortKey = sort[0] === '-' ? sort.split('-')[1] : sort;
 			const key = sortKey === 'donorId' ? DONOR_ID_FIELD : sortKey;
 			records = results.sort(sortDocs(sort, key, sortRecordsByColumn));
+		}
 	}
 
 	if (records.length > pageSize) {
