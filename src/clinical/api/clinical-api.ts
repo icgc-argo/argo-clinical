@@ -19,7 +19,7 @@
 
 import { Request, Response } from 'express';
 import * as service from '../clinical-service';
-import { ClinicalDataQuery } from '../clinical-service';
+import { ClinicalDataQuery } from '../types';
 import { getExceptionManifestRecords } from '../../submission/exceptions/exceptions';
 import { ExceptionManifestRecord } from '../../exception/exception-manifest/types';
 import {

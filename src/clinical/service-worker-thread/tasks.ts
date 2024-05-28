@@ -20,8 +20,6 @@
 import { DeepReadonly } from 'deep-freeze';
 import _, { isEmpty } from 'lodash';
 import {
-	ClinicalDataSortType,
-	ClinicalDataSortTypes,
 	ClinicalEntitySchemaNames,
 	ClinicalErrorsResponseRecord,
 	EntityAlias,
@@ -36,7 +34,12 @@ import {
 	getSampleRegistrationDataFromDonor,
 } from '../../common-model/functions';
 import { notEmpty } from '../../utils';
-import { ClinicalDonorEntityQuery, PaginationQuery } from '../clinical-service';
+import {
+	ClinicalDonorEntityQuery,
+	ClinicalDataSortType,
+	ClinicalDataSortTypes,
+	PaginationQuery,
+} from '../types';
 import {
 	ClinicalEntityData,
 	ClinicalInfo,
@@ -178,17 +181,21 @@ const mapEntityDocuments = (
 	let records = results;
 
 	switch (sortType) {
-		case ClinicalDataSortTypes.defaultDonor:
+		case ClinicalDataSortTypes.defaultDonor: {
 			records = results.sort(sortDocs(sort, completionStats, sortDonorRecordsByCompletion));
 			break;
-		case ClinicalDataSortTypes.invalidEntity:
+		}
+		case ClinicalDataSortTypes.invalidEntity: {
 			records = sortInvalidRecords(errors, results, entityName);
 			break;
+		}
+		// Column Sort is the default, fallback here is intentional
 		case ClinicalDataSortTypes.columnSort:
-		default:
+		default: {
 			const sortKey = sort[0] === '-' ? sort.split('-')[1] : sort;
 			const key = sortKey === 'donorId' ? DONOR_ID_FIELD : sortKey;
 			records = results.sort(sortDocs(sort, key, sortRecordsByColumn));
+		}
 	}
 
 	if (records.length > pageSize) {
