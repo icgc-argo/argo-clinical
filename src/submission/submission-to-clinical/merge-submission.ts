@@ -60,7 +60,22 @@ export const mergeActiveSubmissionWithDonors = async (
 	donors: readonly DeepReadonly<Donor>[],
 ) => {
 	const updatedDonors = _.cloneDeep(donors as Donor[]);
-	for (const entityType in activeSubmission.clinicalEntities) {
+	mergeClinicalEntities(activeSubmission, updatedDonors);
+	mergeTherapiesInTreatments(activeSubmission, updatedDonors);
+	return updatedDonors;
+};
+
+const mergeClinicalEntities = (
+	activeSubmission: DeepReadonly<ActiveClinicalSubmission>,
+	updatedDonors: Donor[],
+) => {
+	const submittedEntities = _.difference(
+		Object.keys(
+			activeSubmission.clinicalEntities,
+		) as (keyof typeof activeSubmission.clinicalEntities)[],
+		ClinicalTherapySchemaNames,
+	);
+	submittedEntities.forEach((entityType) => {
 		const entityData = activeSubmission.clinicalEntities[entityType];
 
 		// Find the donor that matches each record, and update the entity within that donor
@@ -73,7 +88,6 @@ export const mergeActiveSubmissionWithDonors = async (
 				);
 			}
 			// update clinical info in clinical object
-
 			// Note: This section contains functions that are modifying the provided donor record in place.
 			switch (entityType) {
 				case ClinicalEntitySchemaNames.DONOR: {
@@ -112,10 +126,6 @@ export const mergeActiveSubmissionWithDonors = async (
 					updateOrAddFollowUpInfo(donor, record);
 					break;
 				}
-				case ClinicalTherapySchemaNames.find((tsn) => tsn === entityType): {
-					updateOrAddTherapyInfoInDonor(donor, record, entityType, true);
-					break;
-				}
 				default: {
 					const error = new Error(`Entity ${entityType} not implemented yet`);
 					L.error(
@@ -126,9 +136,26 @@ export const mergeActiveSubmissionWithDonors = async (
 				}
 			}
 		});
-	}
+	});
+};
 
-	return updatedDonors;
+const mergeTherapiesInTreatments = (
+	activeSubmission: DeepReadonly<ActiveClinicalSubmission>,
+	updatedDonors: Donor[],
+) => {
+	ClinicalTherapySchemaNames.forEach((therapyType) => {
+		const entityData = activeSubmission.clinicalEntities[therapyType];
+		entityData?.records.forEach((record) => {
+			const donorId = record[DonorFieldsEnum.submitter_donor_id];
+			const donor = _.find(updatedDonors, ['submitterId', donorId]);
+			if (!donor) {
+				throw new Errors.StateConflict(
+					`Donor ${donorId} has not been registered but is part of the activeSubmission, merge cannot be completed.`,
+				);
+			}
+			updateOrAddTherapyInfoInDonor(donor, record, therapyType, true);
+		});
+	});
 };
 
 // This function will return a merged donor of records mapped by clinical type and the DB existentDonor
