@@ -16,7 +16,9 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-import { getClinicalSearchResults, ClinicalDataVariables } from '../../clinical/clinical-service';
+
+import { ClinicalDataVariables } from '../../clinical/types';
+import { getClinicalSearchResults } from '../../clinical/clinical-service';
 
 const clinicalSearchResults = async (obj: unknown, args: ClinicalDataVariables) => {
 	const { programShortName, filters } = args;

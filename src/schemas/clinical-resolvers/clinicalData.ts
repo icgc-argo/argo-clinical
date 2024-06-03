@@ -16,7 +16,9 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-import { getPaginatedClinicalData, ClinicalDataVariables } from '../../clinical/clinical-service';
+
+import { ClinicalDataVariables } from '../../clinical/types';
+import { getPaginatedClinicalData } from '../../clinical/clinical-service';
 import { ClinicalEntityData, ClinicalInfo } from '../../clinical/clinical-entities';
 import { completionFilters } from '../../clinical/api/clinical-api';
 import { ClinicalErrorsResponseRecord } from '../../common-model/entities';
