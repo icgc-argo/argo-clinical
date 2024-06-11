@@ -41,7 +41,7 @@ const getSchema = (
 ): MutableSchemaDefinition => {
 	const schema = dictionary.schemas.find((s) => s.name == schemaName);
 	if (!schema) throw new Error('schema not found');
-	return schema as MutableSchemaDefinition;
+	return { ...schema, fields: [...schema.fields] } as MutableSchemaDefinition;
 };
 
 const getField = (
@@ -93,6 +93,7 @@ export const buildDynamicStubSchema = () => {
 				valueType: dictionaryEntities.ValueType.STRING,
 			},
 		],
+		restrictions: {},
 	});
 
 	// Change #8.1.2.1 removing a value from enum

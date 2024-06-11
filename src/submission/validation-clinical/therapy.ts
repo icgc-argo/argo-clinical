@@ -36,7 +36,7 @@ import {
 import { getSingleClinicalObjectFromDonor } from '../../common-model/functions';
 import { donorDao } from '../../clinical/donor-repo';
 import { ClinicalInfo, Donor, Treatment } from '../../clinical/clinical-entities';
-import { ClinicalDataQuery } from '../../clinical/clinical-service';
+import { ClinicalDataQuery } from '../../clinical/types';
 import featureFlags from '../../feature-flags';
 import { isValueEqual } from '../../utils';
 

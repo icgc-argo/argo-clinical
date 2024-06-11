@@ -18,7 +18,7 @@
  */
 
 import { Donor } from './clinical-entities';
-import { ClinicalDataQuery, ClinicalDonorEntityQuery } from './clinical-service';
+import { ClinicalDataQuery, ClinicalDonorEntityQuery } from './types';
 import { getRequiredDonorFieldsForEntityTypes } from '../common-model/functions';
 import mongoose, { PaginateModel } from 'mongoose';
 import mongoosePaginate from 'mongoose-paginate-v2';

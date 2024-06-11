@@ -21,6 +21,7 @@ import { DeepReadonly } from 'deep-freeze';
 import _, { isEmpty } from 'lodash';
 import {
 	ClinicalEntitySchemaNames,
+	ClinicalErrorsResponseRecord,
 	EntityAlias,
 	aliasEntityNames,
 } from '../../common-model/entities';
@@ -33,7 +34,12 @@ import {
 	getSampleRegistrationDataFromDonor,
 } from '../../common-model/functions';
 import { notEmpty } from '../../utils';
-import { ClinicalDonorEntityQuery, PaginationQuery } from '../clinical-service';
+import {
+	ClinicalDonorEntityQuery,
+	ClinicalDataSortType,
+	ClinicalDataSortTypes,
+	PaginationQuery,
+} from '../types';
 import {
 	ClinicalEntityData,
 	ClinicalInfo,
@@ -55,32 +61,24 @@ const DONOR_ID_FIELD = 'donor_id';
 const isEntityInQuery = (entityName: ClinicalEntitySchemaNames, entityTypes: string[]) =>
 	entityTypes.includes(aliasEntityNames[entityName]);
 
-// Main Sort Function
-const sortDocs = (
+// Base Sort Function Wrapper
+function sortDocs<SortArgs>(
 	sortQuery: string,
-	entityName: string,
-	completionStats: CompletionDisplayRecord[],
-) => (currentRecord: ClinicalInfo, nextRecord: ClinicalInfo) => {
-	// Sort Value: 0 order is Unchanged, -1 Current lower index than Next, +1 Current higher index than Next
-	let order = 0;
-	const isDescending = sortQuery.startsWith('-');
-	const isDefaultSort =
-		entityName === ClinicalEntitySchemaNames.DONOR &&
-		sortQuery.includes('completionStats.coreCompletionPercentage');
+	sortArgs: SortArgs,
+	sortFunction: (currentRecord: ClinicalInfo, nextRecord: ClinicalInfo, args: SortArgs) => number,
+) {
+	return (currentRecord: ClinicalInfo, nextRecord: ClinicalInfo) => {
+		// Sort Value: 0 order is Unchanged, -1 Current lower index than Next, +1 Current higher index than Next
+		let order = 0;
+		const isDescending = sortQuery.startsWith('-');
 
-	const queryKey = isDescending ? sortQuery.split('-')[1] : sortQuery;
-	const key = queryKey === 'donorId' ? 'donor_id' : queryKey;
+		order = sortFunction(currentRecord, nextRecord, sortArgs);
 
-	if (isDefaultSort) {
-		order = sortDonorRecordsByCompletion(currentRecord, nextRecord, completionStats);
-	} else {
-		order = sortRecordsByColumn(currentRecord, nextRecord, key);
-	}
+		order = isDescending ? -order : order;
 
-	order = isDescending ? -order : order;
-
-	return order;
-};
+		return order;
+	};
+}
 
 // Sort Clinically Incomplete donors to top (sorted by donorId at DB level)
 const sortDonorRecordsByCompletion = (
@@ -116,6 +114,46 @@ const sortRecordsByColumn = (
 	return valueSort;
 };
 
+// Sort Invalid Records to Top
+const sortInvalidRecords = (
+	errors: ClinicalErrorsResponseRecord[],
+	records: ClinicalInfo[],
+	entityName: ClinicalEntitySchemaNames,
+) => {
+	const entityErrors = errors.filter((errorRecord) => errorRecord.entityName === entityName);
+	const errorIds = new Set(entityErrors.map((error) => error.donorId));
+
+	const validRecords: ClinicalInfo[] = [];
+	const invalidRecords: ClinicalInfo[] = [];
+
+	records.forEach((record) => {
+		if (typeof record.donor_id === 'number') {
+			if (!errorIds.has(record.donor_id)) {
+				validRecords.push(record);
+			} else {
+				const currentRecordIsInvalid = entityErrors.find((errorRecord) => {
+					const idValid = errorRecord.donorId === record.donor_id;
+					const recordValid = errorRecord.errors.some((error) => {
+						const recordValue = record[error.fieldName];
+						const errorValue = Array.isArray(error.info.value)
+							? error.info.value[0]
+							: error.info.value;
+						return recordValue === errorValue;
+					});
+					return idValid && recordValid;
+				});
+				if (currentRecordIsInvalid) {
+					invalidRecords.push(record);
+				} else {
+					validRecords.push(record);
+				}
+			}
+		}
+	});
+
+	return [...invalidRecords, ...validRecords];
+};
+
 // Formats + Organizes Clinical Data
 const mapEntityDocuments = (
 	entity: EntityClinicalInfo,
@@ -124,6 +162,8 @@ const mapEntityDocuments = (
 	entityTypes: EntityAlias[],
 	paginationQuery: PaginationQuery,
 	completionStats: CompletionDisplayRecord[],
+	sortType: ClinicalDataSortType,
+	errors: ClinicalErrorsResponseRecord[],
 ): ClinicalEntityData | undefined => {
 	const { entityName, results } = entity;
 
@@ -137,7 +177,26 @@ const mapEntityDocuments = (
 	}
 
 	const totalDocs = entityName === ClinicalEntitySchemaNames.DONOR ? donorCount : results.length;
-	let records = results.sort(sortDocs(sort, entityName, completionStats));
+
+	let records = results;
+
+	switch (sortType) {
+		case ClinicalDataSortTypes.defaultDonor: {
+			records = results.sort(sortDocs(sort, completionStats, sortDonorRecordsByCompletion));
+			break;
+		}
+		case ClinicalDataSortTypes.invalidEntity: {
+			records = sortInvalidRecords(errors, results, entityName);
+			break;
+		}
+		// Column Sort is the default, fallback here is intentional
+		case ClinicalDataSortTypes.columnSort:
+		default: {
+			const sortKey = sort[0] === '-' ? sort.split('-')[1] : sort;
+			const key = sortKey === 'donorId' ? DONOR_ID_FIELD : sortKey;
+			records = results.sort(sortDocs(sort, key, sortRecordsByColumn));
+		}
+	}
 
 	if (records.length > pageSize) {
 		// Manual Pagination
@@ -254,6 +313,8 @@ function extractEntityDataFromDonors(
 	schemasWithFields: any,
 	entityTypes: EntityAlias[],
 	paginationQuery: PaginationQuery,
+	sortType: ClinicalDataSortType,
+	errors: ClinicalErrorsResponseRecord[],
 ) {
 	let clinicalEntityData: EntityClinicalInfo[] = [];
 
@@ -312,6 +373,8 @@ function extractEntityDataFromDonors(
 				entityTypes,
 				paginationQuery,
 				completionStats,
+				sortType,
+				errors,
 			),
 		)
 		.filter(notEmpty);

@@ -19,7 +19,7 @@
 
 import { Request, Response } from 'express';
 import * as service from '../clinical-service';
-import { ClinicalDataQuery } from '../clinical-service';
+import { ClinicalDataQuery } from '../types';
 import { getExceptionManifestRecords } from '../../submission/exceptions/exceptions';
 import { ExceptionManifestRecord } from '../../exception/exception-manifest/types';
 import {
@@ -30,7 +30,7 @@ import {
 } from '../../decorators';
 import { ControllerUtils, DonorUtils, TsvUtils } from '../../utils';
 import AdmZip from 'adm-zip';
-import { ClinicalEntityData, Donor } from '../clinical-entities';
+import { ClinicalEntityData, ClinicalInfo, Donor } from '../clinical-entities';
 import { omit } from 'lodash';
 import { DeepReadonly } from 'deep-freeze';
 import {
@@ -59,22 +59,19 @@ export const parseDonorIdList = (donorIds: string) =>
 
 export const createClinicalZipFile = (
 	data: ClinicalEntityData[],
-	exceptionManifest?: {
-		programShortName: string;
-		exceptions: ExceptionManifestRecord[];
-	},
+	exceptions?: ExceptionManifestRecord[],
 ) => {
 	const zip = new AdmZip();
 	data.forEach((entityData) => {
 		const tsvData = TsvUtils.convertJsonRecordsToTsv(entityData.records, entityData.entityFields);
 		zip.addFile(`${entityData.entityName}.tsv`, Buffer.alloc(tsvData.length, tsvData));
 	});
-	if (exceptionManifest && exceptionManifest.exceptions.length) {
-		const headers = exceptionManifest.exceptions
+	if (exceptions?.length) {
+		const headers = exceptions
 			.map((exception) => Object.keys(exception))
 			.flat()
 			.filter((key, index, keyArray) => keyArray.indexOf(key) === index);
-		const tsvData = TsvUtils.convertJsonRecordsToTsv(exceptionManifest.exceptions, headers);
+		const tsvData = TsvUtils.convertJsonRecordsToTsv(exceptions, headers);
 		zip.addFile(`exceptions_manifest.tsv`, Buffer.alloc(tsvData.length, tsvData));
 	}
 	return zip;
@@ -94,6 +91,16 @@ class ClinicalController {
 		}
 
 		const data = await service.getClinicalData(programId);
+		const donors = await service.getDonors(programId);
+
+		const donorIds = donors.map((donor: DeepReadonly<Donor>) => donor.donorId);
+		const submitterDonorIds = donors.map((donor: DeepReadonly<Donor>) => donor.submitterId);
+
+		const exceptions =
+			(await getExceptionManifestRecords(programId, {
+				donorIds,
+				submitterDonorIds,
+			})) || [];
 
 		const todaysDate = currentDateFormatted();
 		res
@@ -101,7 +108,7 @@ class ClinicalController {
 			.contentType('application/zip')
 			.attachment(`${programId}_Clinical_Data_${todaysDate}.zip`);
 
-		const zip = createClinicalZipFile(data);
+		const zip = createClinicalZipFile(data, exceptions);
 
 		res.send(zip.toBuffer());
 	}
@@ -160,7 +167,7 @@ class ClinicalController {
 			.attachment(fileName)
 			.setHeader('content-disposition', fileName);
 
-		const zip = createClinicalZipFile(entityData, { programShortName, exceptions });
+		const zip = createClinicalZipFile(entityData, exceptions);
 
 		res.send(zip.toBuffer());
 	}
@@ -186,15 +193,56 @@ class ClinicalController {
 
 		const donorEntityData = await service.getDonorEntityData(donorIds);
 
+		const allExceptions: ExceptionManifestRecord[][] = [];
+
 		const date = currentDateFormatted();
 		const fileName = `filename=Donor_Clinical_Data_${date}.zip`;
+
+		if (donorEntityData.length) {
+			const entityRecords = donorEntityData[0].records;
+
+			// File Table can request multiple programs
+			const donorPrograms = entityRecords
+				.map((record) => record.program_id)
+				.filter(
+					// Remove duplicate program names
+					(programId, index, array): programId is string =>
+						typeof programId === 'string' && array.indexOf(programId) === index,
+				);
+
+			for (const programShortName of donorPrograms) {
+				// Get Donor Ids + Exceptions for each program
+				const programDonors = entityRecords
+					.filter(
+						(record): record is ClinicalInfo & { donor_id: number; program_id: string } =>
+							typeof record.donor_id === 'number' && record.program_id === programShortName,
+					)
+					.map((record) => record.donor_id)
+					.filter(
+						(donorId, index, array) =>
+							// Remove duplicate donorIds
+							array.indexOf(donorId) === index,
+					);
+
+				const programExceptions =
+					(await getExceptionManifestRecords(programShortName, {
+						donorIds: programDonors,
+						submitterDonorIds: [],
+					})) || [];
+
+				allExceptions.push(programExceptions);
+			}
+		}
+
+		const exceptions = allExceptions.flat();
+
 		res
 			.status(200)
 			.contentType('application/zip')
 			.attachment(fileName)
 			.setHeader('content-disposition', fileName);
 
-		const zip = createClinicalZipFile(donorEntityData);
+		const zip = createClinicalZipFile(donorEntityData, exceptions);
 
 		res.send(zip.toBuffer());
 	}
