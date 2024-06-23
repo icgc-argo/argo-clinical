@@ -251,7 +251,7 @@ const getToken = memoize(
 		try {
 			const url = config.getConfig().tokenUrl();
 			const response = await axios.post(config.getConfig().tokenUrl(), data, headers);
-			response.data.access_token;
+			return response.data.access_token;
 		} catch (e) {
 			throw new Errors.IdGenerationError('Error fetching ego token. Caused by: ' + e);
 		}
