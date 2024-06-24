@@ -213,6 +213,11 @@ export namespace Errors {
 			super(msg);
 		}
 	}
+	export class NetworkError extends Error {
+		constructor(msg: string) {
+			super(msg);
+		}
+	}
 }
 
 export namespace MongooseUtils {

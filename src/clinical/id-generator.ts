@@ -64,16 +64,20 @@ export async function getId(req: IdGenerationRequest) {
 		},
 	};
 
+	let response;
 	try {
 		const url =
 			config.getConfig().idServiceUrl() +
 			`${req.programId}/${req.submitterDonorId}/${req.submitterSpecimenId}/${req.submitterSampleId}/${req.submitterPrimaryDiagnosisId}/${req.submitterFollowUpId}/${req.submitterTreatmentId}/${req.testInterval}/${req.family_relative_id}/${req.comorbidityTypeCode}/${req.entityType}`;
-		const response = await axios.get(url, headers);
+		response = await axios.get(url, headers);
 		console.log('getId response: ' + response.data.entityId + ' - ' + response.data.entityType);
-		return parseInt(response.data.entityId);
 	} catch (e) {
-		throw new Errors.IdGenerationError('Error sending request to ID service. Caused by: ' + e);
+		throw new Errors.NetworkError('Error sending request to ID service. Caused by: ' + e);
 	}
+	if (!response.data.entityId) {
+		throw new Errors.IdGenerationError('Error generating entity ids.');
+	}
+	return parseInt(response.data.entityId);
 }
 
 export async function setEntityIdsForDonors(donors: Donor[]) {
@@ -253,7 +257,7 @@ const getToken = memoize(
 			const response = await axios.post(config.getConfig().tokenUrl(), data, headers);
 			return response.data.access_token;
 		} catch (e) {
-			throw new Errors.IdGenerationError('Error fetching ego token. Caused by: ' + e);
+			throw new Errors.NetworkError('Error fetching ego token. Caused by: ' + e);
 		}
 	},
 	{
