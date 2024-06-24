@@ -40,6 +40,8 @@ export interface AppConfig {
 	egoUrl(): string;
 	egoClientId(): string;
 	egoClientSecret(): string;
+	tokenUrl(): string;
+	idServiceUrl(): string;
 }
 
 class ConfigManager {
