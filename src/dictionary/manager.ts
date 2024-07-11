@@ -18,20 +18,20 @@
  */
 
 import {
+	analyzer,
 	entities as dictionaryEntities,
+	restClient as dictionaryRestClient,
 	functions as dictionaryService,
 	parallel,
-	analyzer,
-	restClient as dictionaryRestClient,
 } from '@overturebio-stack/lectern-client';
-import { schemaRepo } from './repo';
-import { loggerFor } from '../logger';
-import { Donor } from '../clinical/clinical-entities';
 import { DeepReadonly } from 'deep-freeze';
-import { ClinicalEntitySchemaNames } from '../common-model/entities';
 import _ from 'lodash';
+import { Donor } from '../clinical/clinical-entities';
+import { ClinicalEntitySchemaNames } from '../common-model/entities';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../common-model/functions';
+import { loggerFor } from '../logger';
 import { MigrationManager } from '../submission/migration/migration-manager';
+import { schemaRepo } from './repo';
 const L = loggerFor(__filename);
 
 let manager: SchemaManager;
@@ -51,20 +51,7 @@ class SchemaManager {
 	constructor(private schemaServiceUrl: string) {}
 
 	getCurrent = async (): Promise<dictionaryEntities.SchemasDictionary> => {
-		await this.updateManagerDictionaryIfNeeded();
 		return this.currentSchemaDictionary;
-	};
-
-	updateManagerDictionaryIfNeeded = async () => {
-		const name = this.currentSchemaDictionary.name;
-		const versionToIgnore = this.currentSchemaDictionary.version;
-
-		// try to get dictionary with different version
-		const dictionaryWithDiffVer = await schemaRepo.get(name, { versionToIgnore });
-		if (dictionaryWithDiffVer !== undefined) {
-			// dictionaryWithDiffVer found so update manager dictionary
-			this.currentSchemaDictionary = dictionaryWithDiffVer;
-		}
 	};
 
 	getCurrentName = (): string => {
