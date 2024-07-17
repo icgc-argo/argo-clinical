@@ -27,10 +27,20 @@ export interface SchemaRepository {
 	createOrUpdate(
 		schema: dictionaryEntities.SchemasDictionary,
 	): Promise<dictionaryEntities.SchemasDictionary | undefined>;
+
+	/**
+	 * Get a single dictionary of the provided name.
+	 *
+	 * If a value is given for `requestedVersion` this will look for the specified dictionary and return `undefined` if
+	 * that version is not found. When a `requestedVersion` value is not provided, this will return the most recent
+	 * version available.
+	 *
+	 * @param name
+	 * @param options
+	 */
 	get(
 		name: string,
 		options: {
-			versionToIgnore?: string;
 			requestedVersion?: string;
 		},
 	): Promise<dictionaryEntities.SchemasDictionary | undefined>;
@@ -59,20 +69,16 @@ export const schemaRepo: SchemaRepository = {
 	get: async (
 		name: string,
 		options?: {
-			versionToIgnore?: string;
 			requestedVersion?: string;
 		},
 	): Promise<dictionaryEntities.SchemasDictionary | undefined> => {
 		L.debug('in Schema repo get');
-		const version = options
-			? options.requestedVersion
-				? options.requestedVersion
-				: { $ne: options.versionToIgnore }
-			: undefined;
-		const doc = await DataSchemaModel.findOne({
-			name: name,
-			version,
-		}).exec();
+		const filter = options?.requestedVersion
+			? { name, version: options.requestedVersion }
+			: { name };
+		const doc = await DataSchemaModel.findOne(filter)
+			.sort({ version: -1 }) // sort by version descending to retrieve latest
+			.exec();
 		if (!doc) {
 			return undefined;
 		}

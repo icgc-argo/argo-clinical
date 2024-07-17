@@ -158,33 +158,6 @@ describe('manager', () => {
 		chai.expect(resultV2).to.deep.eq(dbSchema[0]);
 	});
 
-	it('should re-load if version is different in db', async function() {
-		manager.create('http://localhost:54321/lectern');
-		const dictionaries: dictionaryEntities.SchemasDictionary[] = require('./dictionary.response.1.json') as dictionaryEntities.SchemasDictionary[];
-		server.on({
-			method: 'GET',
-			path: '/lectern/dictionaries',
-			reply: {
-				status: 200,
-				headers: { 'content-type': 'application/json' },
-				body: () => {
-					console.log('in mock server reply');
-					return JSON.stringify(dictionaries);
-				},
-			},
-		});
-		await manager.instance().loadSchemaAndSave(schemaName, '1.0');
-
-		const initialDictionary = await manager.instance().getCurrent();
-		chai.expect(initialDictionary.version).to.eq('1.0');
-
-		// imagine data in db was updated out side of the manager
-		await updateData(dburl, 'dataschemas', { ...initialDictionary, version: '4.0' });
-
-		const dictionaryAfter = await manager.instance().getCurrent();
-		chai.expect(dictionaryAfter.version).to.eq('4.0');
-	});
-
 	describe('migration apis', () => {
 		describe('probe changes api', () => {});
 	});
