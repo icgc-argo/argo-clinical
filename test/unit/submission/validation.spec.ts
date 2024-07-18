@@ -3134,6 +3134,57 @@ describe('data-validator', () => {
 			chai.expect(result[ClinicalEntitySchemaNames.SURGERY].dataErrors[0]).to.deep.eq(error);
 		});
 
+		it('should error when submitted reference_radiation_treatment_id does not match an existing treatment_id', async () => {
+			const existingDonor = stubs.validation.existingDonor13();
+			const submissionRecordsMap = {};
+			ClinicalSubmissionRecordsOperations.addRecord(
+				ClinicalEntitySchemaNames.TREATMENT,
+				submissionRecordsMap,
+				{
+					[SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1-',
+					[TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
+					[TreatmentFieldsEnum.treatment_type]: ['Radiation'],
+					index: 0,
+				},
+			);
+
+			ClinicalSubmissionRecordsOperations.addRecord(
+				ClinicalEntitySchemaNames.RADIATION,
+				submissionRecordsMap,
+				{
+					[SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB10',
+					[TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
+					[RadiationFieldsEnum.radiation_therapy_modality]: 'Proton',
+					[RadiationFieldsEnum.radiation_boost]: 'Yes',
+					[RadiationFieldsEnum.reference_radiation_treatment_id]: 'T_03',
+					index: 0,
+				},
+			);
+
+			const result = await dv
+				.validateSubmissionData({ ICGC_0002: submissionRecordsMap }, { ICGC_0002: existingDonor })
+				.catch((err: any) => fail(err));
+
+			console.log(result.radiation.dataErrors);
+
+			// const error: SubmissionValidationError = {
+			// 	fieldName: DonorFieldsEnum.submitter_donor_id,
+			// 	message:
+			// 		"When submitter_specimen_id is not submitted, the combination of [submitter_donor_id = 'ICGC_0002' and submitter_treatment_id = 'Tr-1' ] should only be submitted once in the Surgery schema. Please correct your data submission.",
+			// 	type: DataValidationErrors.DUPLICATE_SURGERY_WHEN_SPECIMEN_NOT_SUBMITTED,
+			// 	index: 0,
+			// 	info: {
+			// 		submitter_donor_id: 'ICGC_0002',
+			// 		submitter_treatment_id: 'Tr-1',
+			// 		donorSubmitterId: 'ICGC_0002',
+			// 		value: 'ICGC_0002',
+			// 	},
+			// };
+
+			// chai.expect(result[ClinicalEntitySchemaNames.SURGERY].dataErrors.length).equal(1);
+			// chai.expect(result[ClinicalEntitySchemaNames.SURGERY].dataErrors[0]).to.deep.eq(error);
+		});
+
 		it('should error when submitter_specimen_id is not submitted, two surgeries are associated with the same submitter_donor_id and submitter_treatment_id', async () => {
 			const existingDonor = stubs.validation.existingDonor09();
 			const submissionRecordsMap = {};
