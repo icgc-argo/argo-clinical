@@ -3136,14 +3136,22 @@ describe('data-validator', () => {
 
 		it('should error when submitted reference_radiation_treatment_id does not match an existing treatment_id', async () => {
 			const existingDonor = stubs.validation.existingDonor13();
+			donorDaoFindByPaginatedProgramId.restore();
+
+			sinon
+				.stub(donorDao, 'findByPaginatedProgramId')
+				.resolves({ donors: [existingDonor], totalDonors: 1 });
+
 			const submissionRecordsMap = {};
+
+			// Success Case
 			ClinicalSubmissionRecordsOperations.addRecord(
 				ClinicalEntitySchemaNames.TREATMENT,
 				submissionRecordsMap,
 				{
-					[SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1-',
+					[SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB10',
 					[TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
-					[TreatmentFieldsEnum.treatment_type]: ['Radiation'],
+					[TreatmentFieldsEnum.treatment_type]: ['Radiation therapy'],
 					index: 0,
 				},
 			);
@@ -3161,28 +3169,52 @@ describe('data-validator', () => {
 				},
 			);
 
+			// Failure Case
+			ClinicalSubmissionRecordsOperations.addRecord(
+				ClinicalEntitySchemaNames.TREATMENT,
+				submissionRecordsMap,
+				{
+					[SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB10',
+					[TreatmentFieldsEnum.submitter_treatment_id]: 'T_04',
+					[TreatmentFieldsEnum.treatment_type]: ['Radiation therapy'],
+					index: 0,
+				},
+			);
+
+			ClinicalSubmissionRecordsOperations.addRecord(
+				ClinicalEntitySchemaNames.RADIATION,
+				submissionRecordsMap,
+				{
+					[SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB10',
+					[TreatmentFieldsEnum.submitter_treatment_id]: 'T_04',
+					[RadiationFieldsEnum.radiation_therapy_modality]: 'Electron',
+					[RadiationFieldsEnum.radiation_boost]: 'Yes',
+					[RadiationFieldsEnum.reference_radiation_treatment_id]: 'T_05',
+					index: 0,
+				},
+			);
+
 			const result = await dv
 				.validateSubmissionData({ ICGC_0002: submissionRecordsMap }, { ICGC_0002: existingDonor })
 				.catch((err: any) => fail(err));
 
-			console.log(result.radiation.dataErrors);
+			const error: SubmissionValidationError = {
+				fieldName: TreatmentFieldsEnum.submitter_treatment_id,
+				message:
+					'The submitter_treatment_id T_05 submitted in the "reference_radiation_treatment_id" field does not exist.',
+				type: DataValidationErrors.INVALID_REFERENCE_RADIATION_DONOR_ID,
+				index: 0,
+				info: {
+					treatment_type: ['Radiation therapy'],
+					reference_radiation_treatment_id: 'T_05',
+					therapyType: 'radiation',
+					donorSubmitterId: 'AB10',
+					value: 'T_04',
+				},
+			};
 
-			// const error: SubmissionValidationError = {
-			// 	fieldName: DonorFieldsEnum.submitter_donor_id,
-			// 	message:
-			// 		"When submitter_specimen_id is not submitted, the combination of [submitter_donor_id = 'ICGC_0002' and submitter_treatment_id = 'Tr-1' ] should only be submitted once in the Surgery schema. Please correct your data submission.",
-			// 	type: DataValidationErrors.DUPLICATE_SURGERY_WHEN_SPECIMEN_NOT_SUBMITTED,
-			// 	index: 0,
-			// 	info: {
-			// 		submitter_donor_id: 'ICGC_0002',
-			// 		submitter_treatment_id: 'Tr-1',
-			// 		donorSubmitterId: 'ICGC_0002',
-			// 		value: 'ICGC_0002',
-			// 	},
-			// };
-
-			// chai.expect(result[ClinicalEntitySchemaNames.SURGERY].dataErrors.length).equal(1);
-			// chai.expect(result[ClinicalEntitySchemaNames.SURGERY].dataErrors[0]).to.deep.eq(error);
+			chai.expect(result[ClinicalEntitySchemaNames.RADIATION].dataErrors.length).equal(1);
+			chai.expect(result[ClinicalEntitySchemaNames.RADIATION].dataErrors[0]).to.deep.eq(error);
 		});
 
 		it('should error when submitter_specimen_id is not submitted, two surgeries are associated with the same submitter_donor_id and submitter_treatment_id', async () => {
