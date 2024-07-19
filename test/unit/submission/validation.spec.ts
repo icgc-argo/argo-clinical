@@ -3134,7 +3134,7 @@ describe('data-validator', () => {
 			chai.expect(result[ClinicalEntitySchemaNames.SURGERY].dataErrors[0]).to.deep.eq(error);
 		});
 
-		it('should succeed when submitted reference_radiation_treatment_id matched the current Donors treatment_id', async () => {
+		it('should validate submitted reference_radiation_treatment_id against the current Donors treatment_id', async () => {
 			const existingDonor = stubs.validation.existingDonor13();
 			donorDaoFindByPaginatedProgramId.restore();
 
@@ -3158,11 +3158,42 @@ describe('data-validator', () => {
 				},
 			);
 
+			// Failure Case
+			ClinicalSubmissionRecordsOperations.addRecord(
+				ClinicalEntitySchemaNames.RADIATION,
+				submissionRecordsMap,
+				{
+					[SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB10',
+					[TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+					[RadiationFieldsEnum.radiation_therapy_modality]: 'Electron',
+					[RadiationFieldsEnum.radiation_boost]: 'Yes',
+					[RadiationFieldsEnum.reference_radiation_treatment_id]: 'T_08',
+					index: 0,
+				},
+			);
+
 			const result = await dv
 				.validateSubmissionData({ ICGC_0002: submissionRecordsMap }, { ICGC_0002: existingDonor })
 				.catch((err: any) => fail(err));
 
-			chai.expect(result[ClinicalEntitySchemaNames.RADIATION].dataErrors.length).equal(0);
+			const error: SubmissionValidationError = {
+				fieldName: TreatmentFieldsEnum.submitter_treatment_id,
+				message:
+					'The submitter_treatment_id T_08 submitted in the "reference_radiation_treatment_id" field does not exist.',
+				type: DataValidationErrors.INVALID_REFERENCE_RADIATION_DONOR_ID,
+				index: 0,
+				info: {
+					treatment_type: ['Chemotherapy', 'Radiation therapy'],
+					reference_radiation_treatment_id: 'T_08',
+					therapyType: 'radiation',
+					donorSubmitterId: 'AB10',
+					value: 'T_03',
+				},
+			};
+
+			console.log(result[ClinicalEntitySchemaNames.RADIATION].dataErrors);
+			chai.expect(result[ClinicalEntitySchemaNames.RADIATION].dataErrors.length).equal(1);
+			chai.expect(result[ClinicalEntitySchemaNames.RADIATION].dataErrors[0]).to.deep.eq(error);
 		});
 
 		it('should error when submitted reference_radiation_treatment_id does not match submitted treatment_id', async () => {

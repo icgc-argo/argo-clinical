@@ -801,6 +801,13 @@ export const stubs = {
 						[PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP1',
 					},
 				},
+				{
+					primaryDiagnosisId: 2,
+					clinicalInfo: {
+						[PrimaryDiagnosisFieldsEnum.submitter_donor_id]: 'AB10',
+						[PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PP2',
+					},
+				},
 			],
 			clinicalInfo: {
 				[DonorFieldsEnum.vital_status]: 'Deceased',
@@ -836,6 +843,23 @@ export const stubs = {
 							therapyType: 'radiation',
 							clinicalInfo: {
 								[TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+							},
+						},
+					],
+				},
+				{
+					treatmentId: 1,
+					clinicalInfo: {
+						[TreatmentFieldsEnum.submitter_treatment_id]: 'T_07',
+						[TreatmentFieldsEnum.submitter_donor_id]: 'AB10',
+						[TreatmentFieldsEnum.submitter_primary_diagnosis_id]: 'PP2',
+						[TreatmentFieldsEnum.treatment_type]: ['Chemotherapy', 'Radiation therapy'],
+					},
+					therapies: [
+						{
+							therapyType: 'radiation',
+							clinicalInfo: {
+								[TreatmentFieldsEnum.submitter_treatment_id]: 'T_07',
 							},
 						},
 					],
