@@ -3134,6 +3134,37 @@ describe('data-validator', () => {
 			chai.expect(result[ClinicalEntitySchemaNames.SURGERY].dataErrors[0]).to.deep.eq(error);
 		});
 
+		it('should succeed when submitted reference_radiation_treatment_id matched the current Donors treatment_id', async () => {
+			const existingDonor = stubs.validation.existingDonor13();
+			donorDaoFindByPaginatedProgramId.restore();
+
+			sinon
+				.stub(donorDao, 'findByPaginatedProgramId')
+				.resolves({ donors: [existingDonor], totalDonors: 1 });
+
+			const submissionRecordsMap = {};
+
+			// Success Case
+			ClinicalSubmissionRecordsOperations.addRecord(
+				ClinicalEntitySchemaNames.RADIATION,
+				submissionRecordsMap,
+				{
+					[SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB10',
+					[TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+					[RadiationFieldsEnum.radiation_therapy_modality]: 'Proton',
+					[RadiationFieldsEnum.radiation_boost]: 'Yes',
+					[RadiationFieldsEnum.reference_radiation_treatment_id]: 'T_03',
+					index: 0,
+				},
+			);
+
+			const result = await dv
+				.validateSubmissionData({ ICGC_0002: submissionRecordsMap }, { ICGC_0002: existingDonor })
+				.catch((err: any) => fail(err));
+
+			chai.expect(result[ClinicalEntitySchemaNames.RADIATION].dataErrors.length).equal(0);
+		});
+
 		it('should error when submitted reference_radiation_treatment_id does not match submitted treatment_id', async () => {
 			const existingDonor = stubs.validation.existingDonor13();
 
