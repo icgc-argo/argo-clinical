@@ -219,6 +219,8 @@ export enum SurgeryFieldsEnum {
 
 export enum RadiationFieldsEnum {
 	radiation_therapy_modality = 'radiation_therapy_modality',
+	radiation_boost = 'radiation_boost',
+	reference_radiation_treatment_id = 'reference_radiation_treatment_id',
 }
 
 export enum ImmunotherapyFields {
