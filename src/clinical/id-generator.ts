@@ -61,7 +61,6 @@ const request = {
 	entityType: '-',
 };
 
-// export interface PartialDonor extends Partial<Donor> {}
 
 export async function getId(req: IdGenerationRequest) {
 	console.log('getId function called: ' + req.submitterDonorId);
