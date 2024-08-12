@@ -125,7 +125,7 @@ export namespace ControllerUtils {
 		return res.status(422).send({ message });
 	};
 
-	export const unableToGenerateId = (res: Response, message: string): any => {
+	export const unableToGenerateId = (res: Response, message: string) => {
 		return res.status(500).send({ message });
 	};
 

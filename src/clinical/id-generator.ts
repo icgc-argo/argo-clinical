@@ -24,19 +24,27 @@ import { Donor } from './clinical-entities';
 import { ClinicalEntitySchemaNames } from '../common-model/entities';
 import { config } from '../config';
 import { Errors } from '../utils';
+import urlJoin from 'url-join';
 
 interface IdGenerationRequest {
-	programId: string;
-	submitterSpecimenId: string;
-	submitterSampleId: string;
-	submitterPrimaryDiagnosisId: string;
-	submitterFollowUpId: string;
-	submitterTreatmentId: string;
-	submitterDonorId: string;
-	testInterval: string;
-	family_relative_id: string;
-	comorbidityTypeCode: string;
-	entityType: string;
+	programId: string | undefined;
+	submitterSpecimenId: string | number | boolean | string[] | number[] | boolean[] | undefined;
+	submitterSampleId: string | undefined;
+	submitterPrimaryDiagnosisId:
+		| string
+		| number
+		| boolean
+		| string[]
+		| number[]
+		| boolean[]
+		| undefined;
+	submitterFollowUpId: string | number | boolean | string[] | number[] | boolean[] | undefined;
+	submitterTreatmentId: string | undefined;
+	submitterDonorId: string | undefined;
+	testInterval: string | undefined;
+	family_relative_id: string | number | boolean | string[] | number[] | boolean[] | undefined;
+	comorbidityTypeCode: string | number | boolean | string[] | number[] | boolean[] | undefined;
+	entityType: string | undefined;
 }
 
 const request = {
@@ -53,7 +61,7 @@ const request = {
 	entityType: '-',
 };
 
-export interface PartialDonor extends Partial<Donor> {}
+// export interface PartialDonor extends Partial<Donor> {}
 
 export async function getId(req: IdGenerationRequest) {
 	console.log('getId function called: ' + req.submitterDonorId);
@@ -69,6 +77,7 @@ export async function getId(req: IdGenerationRequest) {
 		const url =
 			config.getConfig().idServiceUrl() +
 			`${req.programId}/${req.submitterDonorId}/${req.submitterSpecimenId}/${req.submitterSampleId}/${req.submitterPrimaryDiagnosisId}/${req.submitterFollowUpId}/${req.submitterTreatmentId}/${req.testInterval}/${req.family_relative_id}/${req.comorbidityTypeCode}/${req.entityType}`;
+
 		response = await axios.get(url, headers);
 		console.log('getId response: ' + response.data.entityId + ' - ' + response.data.entityType);
 	} catch (e) {
@@ -87,13 +96,13 @@ export async function setEntityIdsForDonors(donors: Donor[]) {
 	return await Promise.all(donorsWithIds);
 }
 
-export async function setEntityIds(donor: PartialDonor) {
-	const submitterDonorId = donor.submitterId as string;
+export async function setEntityIds(donor: Partial<Donor>) {
+	const submitterDonorId = donor.submitterId;
 	// -- DONOR --
 	const donorId = await getId({
 		...request,
-		programId: donor.programId as string,
-		submitterDonorId: donor.submitterId as string,
+		programId: donor.programId,
+		submitterDonorId: donor.submitterId,
 		entityType: ClinicalEntitySchemaNames.DONOR,
 	});
 	donor.donorId = donorId;
@@ -107,8 +116,8 @@ export async function setEntityIds(donor: PartialDonor) {
 				: specimen.clinicalInfo.submitter_specimen_id;
 			const id = await getId({
 				...request,
-				programId: donor.programId as string,
-				submitterSpecimenId: submitterId as string,
+				programId: donor.programId,
+				submitterSpecimenId: submitterId,
 				submitterDonorId,
 				entityType: ClinicalEntitySchemaNames.SPECIMEN,
 			});
@@ -119,8 +128,8 @@ export async function setEntityIds(donor: PartialDonor) {
 			for (const sample of samples) {
 				const id = await getId({
 					...request,
-					programId: donor.programId as string,
-					submitterSampleId: sample.submitterId as string,
+					programId: donor.programId,
+					submitterSampleId: sample.submitterId,
 					submitterSpecimenId: specimen.submitterId,
 					submitterDonorId,
 					entityType: ClinicalEntitySchemaNames.REGISTRATION,
@@ -135,7 +144,7 @@ export async function setEntityIds(donor: PartialDonor) {
 		for (const biomarker of donor.biomarker) {
 			const id = await getId({
 				...request,
-				programId: donor.programId as string,
+				programId: donor.programId,
 				submitterSpecimenId: biomarker.clinicalInfo.submitter_specimen_id?.toString() || '-',
 				submitterPrimaryDiagnosisId:
 					biomarker.clinicalInfo.submitter_primary_diagnosis_id?.toString() || '-',
@@ -154,9 +163,9 @@ export async function setEntityIds(donor: PartialDonor) {
 		for (const comorbidity of donor.comorbidity) {
 			const id = await getId({
 				...request,
-				programId: donor.programId as string,
+				programId: donor.programId,
 				submitterDonorId,
-				comorbidityTypeCode: comorbidity.clinicalInfo.comorbidity_type_code as string,
+				comorbidityTypeCode: comorbidity.clinicalInfo.comorbidity_type_code,
 				entityType: ClinicalEntitySchemaNames.COMORBIDITY,
 			});
 			comorbidity.comorbidityId = id;
@@ -168,9 +177,8 @@ export async function setEntityIds(donor: PartialDonor) {
 		for (const primaryDiagnosis of donor.primaryDiagnoses) {
 			const id = await getId({
 				...request,
-				programId: donor.programId as string,
-				submitterPrimaryDiagnosisId: primaryDiagnosis.clinicalInfo
-					.submitter_primary_diagnosis_id as string,
+				programId: donor.programId,
+				submitterPrimaryDiagnosisId: primaryDiagnosis.clinicalInfo.submitter_primary_diagnosis_id,
 				submitterDonorId,
 				entityType: ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
 			});
@@ -185,10 +193,10 @@ export async function setEntityIds(donor: PartialDonor) {
 			const therapy_submitter_treatment_id = treatment.therapies[0]?.clinicalInfo?.submitter_treatment_id?.toString();
 			const id = await getId({
 				...request,
-				programId: donor.programId as string,
-				submitterTreatmentId: (!submitter_treatment_id
+				programId: donor.programId,
+				submitterTreatmentId: !submitter_treatment_id
 					? therapy_submitter_treatment_id
-					: submitter_treatment_id) as string,
+					: submitter_treatment_id,
 				submitterDonorId,
 				entityType: ClinicalEntitySchemaNames.TREATMENT,
 			});
@@ -201,9 +209,9 @@ export async function setEntityIds(donor: PartialDonor) {
 		for (const familyHistory of donor.familyHistory) {
 			const id = await getId({
 				...request,
-				programId: donor.programId as string,
+				programId: donor.programId,
 				submitterDonorId,
-				family_relative_id: familyHistory.clinicalInfo.family_relative_id as string,
+				family_relative_id: familyHistory.clinicalInfo.family_relative_id,
 				entityType: ClinicalEntitySchemaNames.FAMILY_HISTORY,
 			});
 			familyHistory.familyHistoryId = id;
@@ -215,8 +223,8 @@ export async function setEntityIds(donor: PartialDonor) {
 		for (const followUp of donor.followUps) {
 			const id = await getId({
 				...request,
-				programId: donor.programId as string,
-				submitterFollowUpId: followUp.clinicalInfo.submitter_follow_up_id as string,
+				programId: donor.programId,
+				submitterFollowUpId: followUp.clinicalInfo.submitter_follow_up_id,
 				submitterDonorId,
 				entityType: ClinicalEntitySchemaNames.FOLLOW_UP,
 			});
@@ -229,7 +237,7 @@ export async function setEntityIds(donor: PartialDonor) {
 		for (const exposure of donor.exposure) {
 			const id = await getId({
 				...request,
-				programId: donor.programId as string,
+				programId: donor.programId,
 				submitterDonorId,
 				entityType: ClinicalEntitySchemaNames.EXPOSURE,
 			});
