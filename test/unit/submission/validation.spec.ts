@@ -17,38 +17,38 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import chai from 'chai';
-import sinon from 'sinon';
-import _ from 'lodash';
-import { donorDao } from '../../../src/clinical/donor-repo';
-import * as dv from '../../../src/submission/validation-clinical/validation';
-import * as treatmentDetailExceptionsRepo from '../../../src/exception/treatment-detail-exceptions/repo';
-import {
-	SubmissionValidationError,
-	DataValidationErrors,
-	CreateRegistrationRecord,
-	SampleRegistrationFieldsEnum,
-} from '../../../src/submission/submission-entities';
-import { Donor } from '../../../src/clinical/clinical-entities';
-import { stubs } from './stubs';
 import { fail } from 'assert';
+import chai from 'chai';
+import _ from 'lodash';
+import sinon from 'sinon';
+import { Donor } from '../../../src/clinical/clinical-entities';
+import { donorDao } from '../../../src/clinical/donor-repo';
+import {
+	ClinicalEntitySchemaNames,
+	ClinicalUniqueIdentifier,
+	DonorFieldsEnum,
+	FollowupFieldsEnum,
+	PrimaryDiagnosisFieldsEnum,
+	RadiationFieldsEnum,
+	SpecimenFieldsEnum,
+	SurgeryFieldsEnum,
+	TreatmentFieldsEnum,
+} from '../../../src/common-model/entities';
+import * as treatmentDetailExceptionsRepo from '../../../src/exception/treatment-detail-exceptions/repo';
+import featureFlags from '../../../src/feature-flags';
+import {
+	CreateRegistrationRecord,
+	DataValidationErrors,
+	SampleRegistrationFieldsEnum,
+	SubmissionValidationError,
+} from '../../../src/submission/submission-entities';
 import {
 	ClinicalSubmissionRecordsOperations,
 	usingInvalidProgramId,
 } from '../../../src/submission/validation-clinical/utils';
-import {
-	ClinicalEntitySchemaNames,
-	SpecimenFieldsEnum,
-	DonorFieldsEnum,
-	TreatmentFieldsEnum,
-	FollowupFieldsEnum,
-	ClinicalUniqueIdentifier,
-	PrimaryDiagnosisFieldsEnum,
-	SurgeryFieldsEnum,
-	RadiationFieldsEnum,
-} from '../../../src/common-model/entities';
+import * as dv from '../../../src/submission/validation-clinical/validation';
 import { success } from '../../../src/utils/results';
-import featureFlags from '../../../src/feature-flags';
+import { stubs } from './stubs';
 
 const genderMutatedErr: SubmissionValidationError = {
 	fieldName: 'gender',
@@ -3403,6 +3403,69 @@ describe('data-validator', () => {
 
 			chai.expect(result[ClinicalEntitySchemaNames.SURGERY].dataErrors.length).equal(1);
 			chai.expect(result[ClinicalEntitySchemaNames.SURGERY].dataErrors[0]).to.deep.eq(error);
+		});
+
+		it('should correctly validate drug norm fields', async () => {
+			const existingDonorMock: Donor = stubs.validation.existingDonor01();
+			const newDonorAB1Records = {};
+			ClinicalSubmissionRecordsOperations.addRecord(
+				ClinicalEntitySchemaNames.TREATMENT,
+				newDonorAB1Records,
+				{
+					[SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+					[TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
+					[TreatmentFieldsEnum.treatment_type]: ['Ablation'],
+					index: 0,
+				},
+			);
+			ClinicalSubmissionRecordsOperations.addRecord(
+				ClinicalEntitySchemaNames.CHEMOTHERAPY,
+				newDonorAB1Records,
+				{
+					[SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+					[TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+					index: 0,
+				},
+			);
+			ClinicalSubmissionRecordsOperations.addRecord(
+				ClinicalEntitySchemaNames.CHEMOTHERAPY,
+				newDonorAB1Records,
+				{
+					[SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+					[TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
+					index: 1,
+				},
+			);
+
+			const result = await dv
+				.validateSubmissionData({ AB1: newDonorAB1Records }, { AB1: existingDonorMock })
+				.catch((err: any) => fail(err));
+
+			const chemoTreatmentIdErr: SubmissionValidationError = {
+				fieldName: TreatmentFieldsEnum.submitter_treatment_id,
+				message: `Treatment and treatment_type files are required to be initialized together. Please upload a corresponding treatment file in this submission.`,
+				type: DataValidationErrors.TREATMENT_ID_NOT_FOUND,
+				index: 0,
+				info: {
+					donorSubmitterId: 'AB1',
+					value: 'T_03',
+				},
+			};
+			const chemoTreatmentInvalidErr: SubmissionValidationError = {
+				fieldName: TreatmentFieldsEnum.submitter_treatment_id,
+				message: `[Chemotherapy] records can not be submitted for treatment types of [Ablation].`,
+				type: DataValidationErrors.INCOMPATIBLE_PARENT_TREATMENT_TYPE,
+				index: 1,
+				info: {
+					donorSubmitterId: 'AB1',
+					value: 'T_02',
+					treatment_type: ['Ablation'],
+					therapyType: ClinicalEntitySchemaNames.CHEMOTHERAPY,
+				},
+			};
+			chai.expect(result.chemotherapy.dataErrors.length).to.eq(2);
+			chai.expect(result.chemotherapy.dataErrors).to.deep.include(chemoTreatmentIdErr);
+			chai.expect(result.chemotherapy.dataErrors).to.deep.include(chemoTreatmentInvalidErr);
 		});
 	});
 
