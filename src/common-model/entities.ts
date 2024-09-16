@@ -17,8 +17,8 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { z as zod } from 'zod';
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
+import { z as zod } from 'zod';
 
 // this is temporary to keep code compiling until surgery is ready in dictionary, to be removed in favor of
 // the surgery in ClinicalEntitySchemaNames
@@ -204,6 +204,12 @@ export enum TreatmentFieldsEnum {
 export enum TherapyRxNormFields {
 	drug_name = 'drug_name',
 	drug_rxnormid = 'drug_rxnormcui',
+}
+
+export enum TherapyDrugFields {
+	drug_database = 'drug_database',
+	drug_id = 'drug_id',
+	drug_term = 'drug_term',
 }
 
 export enum CommonTherapyFields {

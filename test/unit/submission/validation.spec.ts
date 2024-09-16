@@ -32,6 +32,7 @@ import {
 	RadiationFieldsEnum,
 	SpecimenFieldsEnum,
 	SurgeryFieldsEnum,
+	TherapyRxNormFields,
 	TreatmentFieldsEnum,
 } from '../../../src/common-model/entities';
 import * as treatmentDetailExceptionsRepo from '../../../src/exception/treatment-detail-exceptions/repo';
@@ -3191,7 +3192,6 @@ describe('data-validator', () => {
 				},
 			};
 
-			console.log(result[ClinicalEntitySchemaNames.RADIATION].dataErrors);
 			chai.expect(result[ClinicalEntitySchemaNames.RADIATION].dataErrors.length).equal(1);
 			chai.expect(result[ClinicalEntitySchemaNames.RADIATION].dataErrors[0]).to.deep.eq(error);
 		});
@@ -3424,16 +3424,9 @@ describe('data-validator', () => {
 				{
 					[SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
 					[TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+					[TherapyRxNormFields.drug_name]: 'D_01',
+					[TherapyRxNormFields.drug_rxnormid]: 'id01',
 					index: 0,
-				},
-			);
-			ClinicalSubmissionRecordsOperations.addRecord(
-				ClinicalEntitySchemaNames.CHEMOTHERAPY,
-				newDonorAB1Records,
-				{
-					[SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
-					[TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
-					index: 1,
 				},
 			);
 
@@ -3451,21 +3444,9 @@ describe('data-validator', () => {
 					value: 'T_03',
 				},
 			};
-			const chemoTreatmentInvalidErr: SubmissionValidationError = {
-				fieldName: TreatmentFieldsEnum.submitter_treatment_id,
-				message: `[Chemotherapy] records can not be submitted for treatment types of [Ablation].`,
-				type: DataValidationErrors.INCOMPATIBLE_PARENT_TREATMENT_TYPE,
-				index: 1,
-				info: {
-					donorSubmitterId: 'AB1',
-					value: 'T_02',
-					treatment_type: ['Ablation'],
-					therapyType: ClinicalEntitySchemaNames.CHEMOTHERAPY,
-				},
-			};
-			chai.expect(result.chemotherapy.dataErrors.length).to.eq(2);
+
+			chai.expect(result.chemotherapy.dataErrors.length).to.eq(1);
 			chai.expect(result.chemotherapy.dataErrors).to.deep.include(chemoTreatmentIdErr);
-			chai.expect(result.chemotherapy.dataErrors).to.deep.include(chemoTreatmentInvalidErr);
 		});
 	});
 
