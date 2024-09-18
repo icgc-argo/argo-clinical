@@ -116,7 +116,7 @@ export const validate = async (
 		Array.isArray(treatment_type) &&
 		treatment_type.some((treatment) => drugTreatmentTypes.includes(treatment))
 	) {
-		validateDrugTreatmentFields(treatmentRecord, errors);
+		validateDrugTreatmentFields(treatmentRecord, mergedDonor, errors);
 	}
 
 	return { errors, warnings: warnings };
@@ -262,7 +262,36 @@ function checkDonorTimeConflict(
 
 const validateDrugTreatmentFields = (
 	treatmentRecord: DeepReadonly<SubmittedClinicalRecord>,
+	mergedDonor: Donor,
 	errors: SubmissionValidationError[],
 ) => {
-	console.log('validate', treatmentRecord);
+	const { treatments } = mergedDonor;
+	if (Array.isArray(treatments)) {
+		const { submitter_treatment_id } = treatmentRecord;
+		const currentTreatment = treatments.find(
+			(record) => record.clinicalInfo.submitter_treatment_id === submitter_treatment_id,
+		);
+		if (currentTreatment) {
+			const { therapies } = currentTreatment;
+			therapies.forEach((therapy) => {
+				const {
+					drug_name,
+					drug_rxnormcui,
+					drug_database,
+					drug_term,
+					drug_id,
+				} = therapy.clinicalInfo;
+
+				console.log('drug_name', drug_name);
+				console.log('drug_rxnormcui', drug_rxnormcui);
+				console.log('drug_database', drug_database);
+				console.log('drug_term', drug_term);
+				console.log('drug_id', drug_id);
+			});
+		} else {
+			throw new Error('No Matching Drug Treatment Record');
+		}
+	} else {
+		console.error('not an array', treatments);
+	}
 };
