@@ -19,14 +19,9 @@
 
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
-import * as utils from './utils';
-import {
-	SubmissionValidationError,
-	SubmittedClinicalRecord,
-	DataValidationErrors,
-	SubmissionValidationOutput,
-	ClinicalSubmissionRecordsByDonorIdMap,
-} from '../submission-entities';
+import { ClinicalInfo, Donor, Treatment } from '../../clinical/clinical-entities';
+import { donorDao } from '../../clinical/donor-repo';
+import { ClinicalDataQuery } from '../../clinical/types';
 import {
 	ClinicalEntitySchemaNames,
 	ClinicalTherapyType,
@@ -34,11 +29,16 @@ import {
 	TreatmentFieldsEnum,
 } from '../../common-model/entities';
 import { getSingleClinicalObjectFromDonor } from '../../common-model/functions';
-import { donorDao } from '../../clinical/donor-repo';
-import { ClinicalInfo, Donor, Treatment } from '../../clinical/clinical-entities';
-import { ClinicalDataQuery } from '../../clinical/types';
 import featureFlags from '../../feature-flags';
 import { isValueEqual } from '../../utils';
+import {
+	ClinicalSubmissionRecordsByDonorIdMap,
+	DataValidationErrors,
+	SubmissionValidationError,
+	SubmissionValidationOutput,
+	SubmittedClinicalRecord,
+} from '../submission-entities';
+import * as utils from './utils';
 
 export const validate = async (
 	therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
