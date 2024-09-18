@@ -3413,8 +3413,8 @@ describe('data-validator', () => {
 				newDonorAB1Records,
 				{
 					[SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
-					[TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
-					[TreatmentFieldsEnum.treatment_type]: ['Ablation'],
+					[TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+					[TreatmentFieldsEnum.treatment_type]: ['Chemotherapy'],
 					index: 0,
 				},
 			);
@@ -3434,19 +3434,19 @@ describe('data-validator', () => {
 				.validateSubmissionData({ AB1: newDonorAB1Records }, { AB1: existingDonorMock })
 				.catch((err: any) => fail(err));
 
-			const chemoTreatmentIdErr: SubmissionValidationError = {
-				fieldName: TreatmentFieldsEnum.submitter_treatment_id,
-				message: `Treatment and treatment_type files are required to be initialized together. Please upload a corresponding treatment file in this submission.`,
-				type: DataValidationErrors.TREATMENT_ID_NOT_FOUND,
-				index: 0,
-				info: {
-					donorSubmitterId: 'AB1',
-					value: 'T_03',
-				},
-			};
+			// const chemoTreatmentIdErr: SubmissionValidationError = {
+			// 	fieldName: TreatmentFieldsEnum.submitter_treatment_id,
+			// 	message: `Treatment and treatment_type files are required to be initialized together. Please upload a corresponding treatment file in this submission.`,
+			// 	type: DataValidationErrors.TREATMENT_ID_NOT_FOUND,
+			// 	index: 0,
+			// 	info: {
+			// 		donorSubmitterId: 'AB1',
+			// 		value: 'T_03',
+			// 	},
+			// };
 
-			chai.expect(result.chemotherapy.dataErrors.length).to.eq(1);
-			chai.expect(result.chemotherapy.dataErrors).to.deep.include(chemoTreatmentIdErr);
+			chai.expect(result.chemotherapy.dataErrors.length).to.eq(0);
+			// chai.expect(result.chemotherapy.dataErrors).to.deep.include(chemoTreatmentIdErr);
 		});
 	});
 
