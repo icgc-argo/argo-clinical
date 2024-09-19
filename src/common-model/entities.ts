@@ -102,6 +102,7 @@ export type ClinicalFields =
 	| FamilyHistoryFieldsEnum
 	| TreatmentFieldsEnum
 	| TherapyRxNormFields
+	| TherapyDrugFields
 	| RadiationFieldsEnum
 	| SurgeryFieldsEnum
 	| CommonTherapyFields

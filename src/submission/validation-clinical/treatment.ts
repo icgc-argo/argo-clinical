@@ -19,12 +19,15 @@
 
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
-import { Donor, FollowUp, Treatment } from '../../clinical/clinical-entities';
+import { ClinicalInfo, Donor, FollowUp, Treatment } from '../../clinical/clinical-entities';
 import {
 	ClinicalEntitySchemaNames,
+	ClinicalFields,
 	ClinicalTherapySchemaNames,
 	ClinicalTherapyType,
 	ClinicalUniqueIdentifier,
+	TherapyDrugFields,
+	TherapyRxNormFields,
 	TreatmentFieldsEnum,
 } from '../../common-model/entities';
 import {
@@ -282,11 +285,32 @@ const validateDrugTreatmentFields = (
 					drug_id,
 				} = therapy.clinicalInfo;
 
-				console.log('drug_name', drug_name);
-				console.log('drug_rxnormcui', drug_rxnormcui);
-				console.log('drug_database', drug_database);
-				console.log('drug_term', drug_term);
-				console.log('drug_id', drug_id);
+				if (drug_name && drug_rxnormcui) {
+					// check rxnom
+				} else if (!(drug_database && drug_id && drug_term)) {
+					const drugFields = { drug_database, drug_term, drug_id };
+					const missingFields: ClinicalInfo[] = [];
+					for (const [key, value] of Object.entries(drugFields)) {
+						if (!value) {
+							const data = { [key]: value };
+							missingFields.push(data);
+						}
+					}
+
+					missingFields.forEach((field) => {
+						const [key, value] = Object.entries(field)[0];
+						const fieldName: ClinicalFields = key as ClinicalFields;
+
+						errors.push(
+							utils.buildSubmissionError(
+								treatmentRecord,
+								DataValidationErrors.INVALID_DRUG_INFO,
+								fieldName,
+								{},
+							),
+						);
+					});
+				}
 			});
 		} else {
 			throw new Error('No Matching Drug Treatment Record');

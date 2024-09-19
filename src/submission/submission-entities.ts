@@ -17,24 +17,24 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { DeepReadonly } from 'deep-freeze';
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
+import { DeepReadonly } from 'deep-freeze';
 import {
-	ClinicalEntitySchemaNames,
-	DonorFieldsEnum,
-	SpecimenFieldsEnum,
-	PrimaryDiagnosisFieldsEnum,
-	FollowupFieldsEnum,
-	TreatmentFieldsEnum,
-	TherapyRxNormFields,
-	CommonTherapyFields,
-	RadiationFieldsEnum,
-	ClinicalTherapyType,
-	ImmunotherapyFields,
-	FamilyHistoryFieldsEnum,
-	ExposureFieldsEnum,
-	ComorbidityFieldsEnum,
 	BiomarkerFieldsEnum,
+	ClinicalEntitySchemaNames,
+	ClinicalTherapyType,
+	CommonTherapyFields,
+	ComorbidityFieldsEnum,
+	DonorFieldsEnum,
+	ExposureFieldsEnum,
+	FamilyHistoryFieldsEnum,
+	FollowupFieldsEnum,
+	ImmunotherapyFields,
+	PrimaryDiagnosisFieldsEnum,
+	RadiationFieldsEnum,
+	SpecimenFieldsEnum,
+	TherapyRxNormFields,
+	TreatmentFieldsEnum,
 } from '../common-model/entities';
 
 /**
@@ -170,6 +170,7 @@ export enum DataValidationErrors {
 	INVALID_LOST_TO_FOLLOW_UP_ID = 'INVALID_LOST_TO_FOLLOW_UP_ID',
 	INVALID_SUBMISSION_AFTER_LOST_TO_FOLLOW_UP = 'INVALID_SUBMISSION_AFTER_LOST_TO_FOLLOW_UP',
 	INVALID_DIAGNOSIS_AFTER_LOST_TO_FOLLOW_UP = 'INVALID_DIAGNOSIS_AFTER_LOST_TO_FOLLOW_UP',
+	INVALID_DRUG_INFO = 'INVALID_DRUG_INFO',
 }
 
 export type RegistrationStat = Array<{

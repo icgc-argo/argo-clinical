@@ -17,8 +17,8 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { SubmissionBatchErrorTypes } from './submission-entities';
 import _ from 'lodash';
+import { SubmissionBatchErrorTypes } from './submission-entities';
 
 const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
 	/* ***************** *
@@ -140,6 +140,7 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
 		info: { lost_to_followup_diagnosis_id, lost_to_followup_age, submitter_primary_diagnosis_id },
 	}) =>
 		`A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up at age ${lost_to_followup_age} after their primary diagnosis ("submitter_primary_diagnosis_id" = "${lost_to_followup_diagnosis_id}"), but a new primary diagnosis ("${submitter_primary_diagnosis_id}") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.`,
+	INVALID_DRUG_INFO: () => 'Please provide the missing drug information.',
 };
 
 const BATCH_ERROR_MESSAGES: Record<SubmissionBatchErrorTypes, (errorData: any) => string> = {
