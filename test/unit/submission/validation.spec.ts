@@ -3406,7 +3406,7 @@ describe('data-validator', () => {
 			chai.expect(result[ClinicalEntitySchemaNames.SURGERY].dataErrors[0]).to.deep.eq(error);
 		});
 
-		it('should error when drug info fields are missing', async () => {
+		it('should error when drug id field is missing (chemotherapy)', async () => {
 			const existingDonorMock: Donor = stubs.validation.existingDonor01();
 			const newDonorAB1Records = {};
 
@@ -3439,6 +3439,8 @@ describe('data-validator', () => {
 				{
 					[SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
 					[TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+					[TherapyDrugFields.drug_term]: 'Epinephrine',
+					[TherapyDrugFields.drug_database]: 'KEGG',
 					index: 0,
 				},
 			);
@@ -3458,7 +3460,54 @@ describe('data-validator', () => {
 				},
 			};
 
-			const chemoDrugTermErr: SubmissionValidationError = {
+			chai.expect(result.treatment.dataErrors.length).to.eq(1);
+			chai.expect(result.treatment.dataErrors).to.deep.include(chemoDrugIdErr);
+		});
+
+		it('should error when drug term field is missing (immunotherapy)', async () => {
+			const existingDonorMock: Donor = stubs.validation.existingDonor01();
+			const newDonorAB1Records = {};
+
+			ClinicalSubmissionRecordsOperations.addRecord(
+				ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+				newDonorAB1Records,
+				{
+					[PrimaryDiagnosisFieldsEnum.submitter_donor_id]: 'AB1',
+					[PrimaryDiagnosisFieldsEnum.program_id]: 'TEST-CA',
+					[PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PD-1',
+					index: 0,
+				},
+			);
+
+			ClinicalSubmissionRecordsOperations.addRecord(
+				ClinicalEntitySchemaNames.TREATMENT,
+				newDonorAB1Records,
+				{
+					[SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+					[TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+					[PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PD-1',
+					[TreatmentFieldsEnum.treatment_type]: ['Immunotherapy'],
+					index: 0,
+				},
+			);
+
+			ClinicalSubmissionRecordsOperations.addRecord(
+				ClinicalEntitySchemaNames.IMMUNOTHERAPY,
+				newDonorAB1Records,
+				{
+					[SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+					[TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+					[TherapyDrugFields.drug_id]: '2244',
+					[TherapyDrugFields.drug_database]: 'PubChem',
+					index: 0,
+				},
+			);
+
+			const result = await dv
+				.validateSubmissionData({ AB1: newDonorAB1Records }, { AB1: existingDonorMock })
+				.catch((err: any) => fail(err));
+
+			const immunoDrugTermErr: SubmissionValidationError = {
 				fieldName: TherapyDrugFields.drug_term,
 				message: `Please provide the missing drug information.`,
 				type: DataValidationErrors.INVALID_DRUG_INFO,
@@ -3469,7 +3518,54 @@ describe('data-validator', () => {
 				},
 			};
 
-			const chemoDrugDbErr: SubmissionValidationError = {
+			chai.expect(result.treatment.dataErrors.length).to.eq(1);
+			chai.expect(result.treatment.dataErrors).to.deep.include(immunoDrugTermErr);
+		});
+
+		it('should error when drug db field is missing (hormonal therapy)', async () => {
+			const existingDonorMock: Donor = stubs.validation.existingDonor01();
+			const newDonorAB1Records = {};
+
+			ClinicalSubmissionRecordsOperations.addRecord(
+				ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+				newDonorAB1Records,
+				{
+					[PrimaryDiagnosisFieldsEnum.submitter_donor_id]: 'AB1',
+					[PrimaryDiagnosisFieldsEnum.program_id]: 'TEST-CA',
+					[PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PD-1',
+					index: 0,
+				},
+			);
+
+			ClinicalSubmissionRecordsOperations.addRecord(
+				ClinicalEntitySchemaNames.TREATMENT,
+				newDonorAB1Records,
+				{
+					[SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+					[TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+					[PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PD-1',
+					[TreatmentFieldsEnum.treatment_type]: ['Hormonal therapy'],
+					index: 0,
+				},
+			);
+
+			ClinicalSubmissionRecordsOperations.addRecord(
+				ClinicalEntitySchemaNames.HORMONE_THERAPY,
+				newDonorAB1Records,
+				{
+					[SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
+					[TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
+					[TherapyDrugFields.drug_id]: '2244',
+					[TherapyDrugFields.drug_term]: 'Aspirin',
+					index: 0,
+				},
+			);
+
+			const result = await dv
+				.validateSubmissionData({ AB1: newDonorAB1Records }, { AB1: existingDonorMock })
+				.catch((err: any) => fail(err));
+
+			const hormoneDrugDbErr: SubmissionValidationError = {
 				fieldName: TherapyDrugFields.drug_database,
 				message: `Please provide the missing drug information.`,
 				type: DataValidationErrors.INVALID_DRUG_INFO,
@@ -3480,10 +3576,8 @@ describe('data-validator', () => {
 				},
 			};
 
-			chai.expect(result.treatment.dataErrors.length).to.eq(3);
-			chai.expect(result.treatment.dataErrors).to.deep.include(chemoDrugIdErr);
-			chai.expect(result.treatment.dataErrors).to.deep.include(chemoDrugTermErr);
-			chai.expect(result.treatment.dataErrors).to.deep.include(chemoDrugDbErr);
+			chai.expect(result.treatment.dataErrors.length).to.eq(1);
+			chai.expect(result.treatment.dataErrors).to.deep.include(hormoneDrugDbErr);
 		});
 
 		it('should pass when all drug info fields are populated', async () => {
@@ -3508,13 +3602,13 @@ describe('data-validator', () => {
 					[SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
 					[TreatmentFieldsEnum.submitter_treatment_id]: 'T_04',
 					[PrimaryDiagnosisFieldsEnum.submitter_primary_diagnosis_id]: 'PD-1',
-					[TreatmentFieldsEnum.treatment_type]: ['Immunotherapy', 'Hormone Therapy'],
+					[TreatmentFieldsEnum.treatment_type]: ['Chemotherapy'],
 					index: 0,
 				},
 			);
 
 			ClinicalSubmissionRecordsOperations.addRecord(
-				ClinicalEntitySchemaNames.IMMUNOTHERAPY,
+				ClinicalEntitySchemaNames.CHEMOTHERAPY,
 				newDonorAB1Records,
 				{
 					[SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
@@ -3522,19 +3616,6 @@ describe('data-validator', () => {
 					[TherapyDrugFields.drug_id]: '2244',
 					[TherapyDrugFields.drug_term]: 'Aspirin',
 					[TherapyDrugFields.drug_database]: 'PubChem',
-					index: 0,
-				},
-			);
-
-			ClinicalSubmissionRecordsOperations.addRecord(
-				ClinicalEntitySchemaNames.IMMUNOTHERAPY,
-				newDonorAB1Records,
-				{
-					[SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
-					[TreatmentFieldsEnum.submitter_treatment_id]: 'T_04',
-					[TherapyDrugFields.drug_id]: 'DG00013',
-					[TherapyDrugFields.drug_term]: 'Epinephrine',
-					[TherapyDrugFields.drug_database]: 'KEGG',
 					index: 0,
 				},
 			);

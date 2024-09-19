@@ -113,7 +113,7 @@ export const validate = async (
 	checkForDeletedTreatmentTherapies(treatmentRecord, existentDonor, warnings);
 
 	// Validation for Treatment Drug Fields
-	const drugTreatmentTypes = ['Chemotherapy', 'Hormonal Therapy', 'Immunotherapy'];
+	const drugTreatmentTypes = ['Chemotherapy', 'Hormonal therapy', 'Immunotherapy'];
 	const { treatment_type } = treatmentRecord;
 	if (
 		Array.isArray(treatment_type) &&
