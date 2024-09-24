@@ -18,6 +18,7 @@
  */
 
 import mongoose from 'mongoose';
+import { ClinicalEntitySchemaNames } from '../../../common-model/entities';
 import { loggerFor } from '../../../logger';
 import { DatabaseError } from '../error-handling';
 import {
@@ -27,7 +28,6 @@ import {
 	EntityExceptionRecord,
 	ExceptionValue,
 } from '../types';
-import { ClinicalEntitySchemaNames } from '../../../common-model/entities';
 
 const L = loggerFor(__filename);
 
@@ -97,7 +97,8 @@ const entityExceptionRepository = {
 				upsert: true,
 				new: true,
 				returnDocument: 'after',
-			}).lean(true);
+			}).lean<EntityException>(true);
+			if (!doc) throw new Error();
 			return doc;
 		} catch (e) {
 			L.error('Failed to create entity exception: ', e);
@@ -109,7 +110,8 @@ const entityExceptionRepository = {
 		L.debug(`Finding entity exception with program id: ${JSON.stringify(programId)}`);
 		try {
 			// first found document, or null
-			const doc = await EntityExceptionModel.findOne({ programId }).lean(true);
+			const doc = await EntityExceptionModel.findOne({ programId }).lean<EntityException>(true);
+			if (!doc) throw new Error();
 			return doc;
 		} catch (e) {
 			L.error('Failed to find program exception', e);

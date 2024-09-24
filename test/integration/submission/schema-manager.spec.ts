@@ -20,15 +20,15 @@
 // using import fails when running the test
 import chai from 'chai';
 // needed for types
+import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
+import { promisify } from 'bluebird';
 import 'chai-http';
+import _ from 'lodash';
 import 'mocha';
 import mongoose from 'mongoose';
-import { GenericContainer } from 'testcontainers';
-import { cleanCollection, findInDb, updateData } from '../testutils';
-import _ from 'lodash';
+import { GenericContainer, Network } from 'testcontainers';
 import * as manager from '../../../src/dictionary/manager';
-import { promisify } from 'bluebird';
-import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
+import { cleanCollection, findInDb, updateData } from '../testutils';
 const ServerMock: any = require('mock-http-server') as any;
 
 chai.use(require('chai-http'));
@@ -55,9 +55,9 @@ describe('manager', () => {
 	before(() => {
 		return (async () => {
 			try {
-				mongoContainer = await new GenericContainer('mongo', '4.0').withExposedPorts(27017).start();
+				mongoContainer = await new GenericContainer('mongo').withExposedPorts(27017).start();
 				console.log('mongo test container started');
-				dburl = `mongodb://${mongoContainer.getContainerIpAddress()}:${mongoContainer.getMappedPort(
+				dburl = `mongodb://${mongoContainer.getIpAddress()}:${mongoContainer.getMappedPort(
 					27017,
 				)}/clinical`;
 				await prep(dburl);

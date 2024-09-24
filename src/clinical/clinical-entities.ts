@@ -18,6 +18,7 @@
  */
 
 import { DeepReadonly } from 'deep-freeze';
+import { ObjectId } from 'mongoose';
 import { ClinicalEntitySchemaNames } from '../common-model/entities';
 
 export interface Donor {

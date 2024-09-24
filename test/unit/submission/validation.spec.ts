@@ -17,38 +17,38 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import chai from 'chai';
-import sinon from 'sinon';
-import _ from 'lodash';
-import { donorDao } from '../../../src/clinical/donor-repo';
-import * as dv from '../../../src/submission/validation-clinical/validation';
-import * as treatmentDetailExceptionsRepo from '../../../src/exception/treatment-detail-exceptions/repo';
-import {
-	SubmissionValidationError,
-	DataValidationErrors,
-	CreateRegistrationRecord,
-	SampleRegistrationFieldsEnum,
-} from '../../../src/submission/submission-entities';
-import { Donor } from '../../../src/clinical/clinical-entities';
-import { stubs } from './stubs';
 import { fail } from 'assert';
+import chai from 'chai';
+import _ from 'lodash';
+import sinon from 'sinon';
+import { Donor } from '../../../src/clinical/clinical-entities';
+import { donorDao } from '../../../src/clinical/donor-repo';
+import {
+	ClinicalEntitySchemaNames,
+	ClinicalUniqueIdentifier,
+	DonorFieldsEnum,
+	FollowupFieldsEnum,
+	PrimaryDiagnosisFieldsEnum,
+	RadiationFieldsEnum,
+	SpecimenFieldsEnum,
+	SurgeryFieldsEnum,
+	TreatmentFieldsEnum,
+} from '../../../src/common-model/entities';
+import * as treatmentDetailExceptionsRepo from '../../../src/exception/treatment-detail-exceptions/repo';
+import featureFlags from '../../../src/feature-flags';
+import {
+	CreateRegistrationRecord,
+	DataValidationErrors,
+	SampleRegistrationFieldsEnum,
+	SubmissionValidationError,
+} from '../../../src/submission/submission-entities';
 import {
 	ClinicalSubmissionRecordsOperations,
 	usingInvalidProgramId,
 } from '../../../src/submission/validation-clinical/utils';
-import {
-	ClinicalEntitySchemaNames,
-	SpecimenFieldsEnum,
-	DonorFieldsEnum,
-	TreatmentFieldsEnum,
-	FollowupFieldsEnum,
-	ClinicalUniqueIdentifier,
-	PrimaryDiagnosisFieldsEnum,
-	SurgeryFieldsEnum,
-	RadiationFieldsEnum,
-} from '../../../src/common-model/entities';
+import * as dv from '../../../src/submission/validation-clinical/validation';
 import { success } from '../../../src/utils/results';
-import featureFlags from '../../../src/feature-flags';
+import { stubs } from './stubs';
 
 const genderMutatedErr: SubmissionValidationError = {
 	fieldName: 'gender',
@@ -174,7 +174,6 @@ const NEW_SPEC_ATTR_CONFLICT =
 	'You are trying to register the same specimen with different values.';
 
 describe('data-validator', () => {
-	let donorDaoCountByStub: sinon.SinonStub<[any], any>;
 	let donorDaoFindBySpecimenSubmitterIdAndProgramIdStub: sinon.SinonStub<[any], any>;
 	let donorDaoFindBySampleSubmitterIdAndProgramIdStub: sinon.SinonStub<[any], any>;
 	let donorDaoFindByClinicalEntitySubmitterIdAndProgramIdStub: sinon.SinonStub<[any, any], any>;
@@ -186,7 +185,6 @@ describe('data-validator', () => {
 	>;
 
 	beforeEach((done) => {
-		donorDaoCountByStub = sinon.stub(donorDao, 'countBy');
 		donorDaoFindBySpecimenSubmitterIdAndProgramIdStub = sinon.stub(
 			donorDao,
 			'findBySpecimenSubmitterIdAndProgramId',
@@ -222,7 +220,6 @@ describe('data-validator', () => {
 	});
 
 	afterEach((done) => {
-		donorDaoCountByStub.restore();
 		donorDaoFindBySpecimenSubmitterIdAndProgramIdStub.restore();
 		donorDaoFindBySampleSubmitterIdAndProgramIdStub.restore();
 		donorDaoFindByClinicalEntitySubmitterIdAndProgramIdStub.restore();
@@ -234,7 +231,6 @@ describe('data-validator', () => {
 
 	describe('registration-validation', () => {
 		it('should detect invalid program id', async () => {
-			donorDaoCountByStub.returns(Promise.resolve(0));
 			// test call
 			const result = await usingInvalidProgramId(
 				ClinicalEntitySchemaNames.REGISTRATION,
@@ -258,7 +254,6 @@ describe('data-validator', () => {
 		});
 
 		it('should detect gender update', async () => {
-			donorDaoCountByStub.returns(Promise.resolve(0));
 			const existingDonorMock: Donor = stubs.validation.existingDonor01();
 
 			// test call
@@ -293,7 +288,6 @@ describe('data-validator', () => {
 		});
 
 		it('should detect specimen type update', async () => {
-			donorDaoCountByStub.returns(Promise.resolve(0));
 			const existingDonorMock: Donor = stubs.validation.existingDonor01();
 
 			// test call
@@ -328,7 +322,6 @@ describe('data-validator', () => {
 		});
 
 		it('should detect tumourNormalDesignation update', async () => {
-			donorDaoCountByStub.returns(Promise.resolve(0));
 			const existingDonorMock: Donor = stubs.validation.existingDonor01();
 
 			// test call
@@ -363,7 +356,6 @@ describe('data-validator', () => {
 		});
 
 		it('should detect sampleType update', async () => {
-			donorDaoCountByStub.returns(Promise.resolve(0));
 			const existingDonorMock: Donor = stubs.validation.existingDonor01();
 
 			// test call
@@ -398,7 +390,6 @@ describe('data-validator', () => {
 		});
 
 		it('should detect sampleType, specimenTissueSource,tnd, gender update togather', async () => {
-			donorDaoCountByStub.returns(Promise.resolve(0));
 			const existingDonorMock: Donor = stubs.validation.existingDonor01();
 			const valid2ndRecord: CreateRegistrationRecord = {
 				donorSubmitterId: 'AB11',
@@ -620,7 +611,6 @@ describe('data-validator', () => {
 
 		// different donor different specimen same sample id
 		it('should detect sample id conflict between new registrations', async () => {
-			donorDaoCountByStub.returns(Promise.resolve(0));
 			// test call
 			const result = await dv.validateRegistrationData(
 				[
@@ -688,7 +678,6 @@ describe('data-validator', () => {
 
 		// different donors & samples same specimen Id
 		it('should detect specimen conflict between new registrations', async () => {
-			donorDaoCountByStub.returns(Promise.resolve(0));
 			// test call
 			const result = await dv.validateRegistrationData(
 				[
@@ -770,7 +759,6 @@ describe('data-validator', () => {
 
 		// same donor same specimen different specimen type
 		it('should detect specimen type conflict for same new donor', async () => {
-			donorDaoCountByStub.returns(Promise.resolve(0));
 			// test call
 			const result = await dv.validateRegistrationData(
 				[
@@ -850,7 +838,6 @@ describe('data-validator', () => {
 
 		// same donor same specimen different specimen type
 		it('should detect sample type conflict for same new specimen & sample Id', async () => {
-			donorDaoCountByStub.returns(Promise.resolve(0));
 			// test call
 			const result = await dv.validateRegistrationData(
 				[
@@ -929,7 +916,6 @@ describe('data-validator', () => {
 		});
 
 		it('should detect gender conflict in new donors', async () => {
-			donorDaoCountByStub.returns(Promise.resolve(0));
 			// test call
 			const result = await dv.validateRegistrationData(
 				[
@@ -1008,7 +994,6 @@ describe('data-validator', () => {
 		});
 
 		it('should detect sample id conflict for same donor & different specimen Id', async () => {
-			donorDaoCountByStub.returns(Promise.resolve(0));
 			// test call
 			const result = await dv.validateRegistrationData(
 				[
@@ -1087,7 +1072,6 @@ describe('data-validator', () => {
 		});
 
 		it('should detect sample type conflict for same new specimen & sample Id', async () => {
-			donorDaoCountByStub.returns(Promise.resolve(0));
 			// test call
 			const result = await dv.validateRegistrationData(
 				[
@@ -1167,7 +1151,6 @@ describe('data-validator', () => {
 
 		// records with same donor, specimen & sample submitter_id
 		it('should detect duplicate registration records', async () => {
-			donorDaoCountByStub.returns(Promise.resolve(0));
 			const result = await dv.validateRegistrationData(
 				[
 					{

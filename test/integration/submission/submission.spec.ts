@@ -20,55 +20,55 @@
 // using import fails when running the test
 // import * as chai from "chai";
 import chai from 'chai';
-import mongo from 'mongodb';
 import fs from 'fs';
+import mongo from 'mongodb';
 // needed for types
+import AdmZip from 'adm-zip';
+import chaiExclude from 'chai-exclude';
 import 'chai-http';
 import 'deep-equal-in-any-order';
+import _ from 'lodash';
 import 'mocha';
 import mongoose from 'mongoose';
 import { GenericContainer, Wait } from 'testcontainers';
 import app from '../../../src/app';
 import * as bootstrap from '../../../src/bootstrap';
-import * as pool from '../../../src/rxnorm/pool';
-import {
-	cleanCollection,
-	insertData,
-	emptyDonorDocument,
-	resetCounters,
-	generateDonor,
-	assertDbCollectionEmpty,
-	findInDb,
-	createDonorDoc,
-	createtRxNormTables,
-	insertRxNormDrug,
-	updateData,
-} from '../testutils';
-import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN, JWT_ABCDEF, JWT_WXYZEF } from '../test.jwt';
-import {
-	ActiveRegistration,
-	ActiveClinicalSubmission,
-	SampleRegistrationFieldsEnum,
-	SUBMISSION_STATE,
-	DataValidationErrors,
-	SubmissionBatchErrorTypes,
-	ClinicalEntities,
-	ValidateSubmissionResult,
-} from '../../../src/submission/submission-entities';
+import { Donor } from '../../../src/clinical/clinical-entities';
+import { donorDao } from '../../../src/clinical/donor-repo';
 import {
 	ClinicalEntitySchemaNames,
-	DonorFieldsEnum,
 	ClinicalUniqueIdentifier,
-	PrimaryDiagnosisFieldsEnum,
+	DonorFieldsEnum,
 	FollowupFieldsEnum,
+	PrimaryDiagnosisFieldsEnum,
 	TreatmentFieldsEnum,
 } from '../../../src/common-model/entities';
+import * as pool from '../../../src/rxnorm/pool';
+import {
+	ActiveClinicalSubmission,
+	ActiveRegistration,
+	ClinicalEntities,
+	DataValidationErrors,
+	SUBMISSION_STATE,
+	SampleRegistrationFieldsEnum,
+	SubmissionBatchErrorTypes,
+	ValidateSubmissionResult,
+} from '../../../src/submission/submission-entities';
 import { TsvUtils } from '../../../src/utils';
-import { donorDao } from '../../../src/clinical/donor-repo';
-import { Donor } from '../../../src/clinical/clinical-entities';
-import AdmZip from 'adm-zip';
-import _ from 'lodash';
-import chaiExclude from 'chai-exclude';
+import { JWT_ABCDEF, JWT_CLINICALSVCADMIN, JWT_WXYZEF, TEST_PUB_KEY } from '../test.jwt';
+import {
+	assertDbCollectionEmpty,
+	cleanCollection,
+	createDonorDoc,
+	createtRxNormTables,
+	emptyDonorDocument,
+	findInDb,
+	generateDonor,
+	insertData,
+	insertRxNormDrug,
+	resetCounters,
+	updateData,
+} from '../testutils';
 
 chai.use(require('chai-http'));
 chai.use(require('deep-equal-in-any-order'));
@@ -94,12 +94,12 @@ describe('Submission Api', () => {
 	before(() => {
 		return (async () => {
 			try {
-				mongoContainer = await new GenericContainer('mongo', '4.0').withExposedPorts(27017).start();
-				mysqlContainer = await new GenericContainer('mysql', '5.7')
-					.withEnv('MYSQL_DATABASE', RXNORM_DB)
-					.withEnv('MYSQL_USER', RXNORM_USER)
-					.withEnv('MYSQL_ROOT_PASSWORD', RXNORM_PASS)
-					.withEnv('MYSQL_PASSWORD', RXNORM_PASS)
+				mongoContainer = await new GenericContainer('mongo').withExposedPorts(27017).start();
+				mysqlContainer = await new GenericContainer('mysql')
+					.withEnvironment({ MYSQL_DATABASE: RXNORM_DB })
+					.withEnvironment({ MYSQL_USER: RXNORM_USER })
+					.withEnvironment({ MYSQL_ROOT_PASSWORD: RXNORM_PASS })
+					.withEnvironment({ MYSQL_PASSWORD: RXNORM_PASS })
 					.withExposedPorts(3306)
 					.start();
 				console.log('mongo test container started');
@@ -111,7 +111,7 @@ describe('Submission Api', () => {
 						return '';
 					},
 					mongoUrl: () => {
-						dburl = `mongodb://${mongoContainer.getContainerIpAddress()}:${mongoContainer.getMappedPort(
+						dburl = `mongodb://${mongoContainer.getIpAddress()}:${mongoContainer.getMappedPort(
 							27017,
 						)}/clinical`;
 						return dburl;
@@ -162,7 +162,7 @@ describe('Submission Api', () => {
 							user: RXNORM_USER,
 							password: RXNORM_PASS,
 							timeout: 5000,
-							host: mysqlContainer.getContainerIpAddress(),
+							host: mysqlContainer.getIpAddress(),
 							port: mysqlContainer.getMappedPort(3306),
 						};
 					},
@@ -401,11 +401,11 @@ describe('Submission Api', () => {
 			} catch (err) {
 				return err;
 			}
-			const conn = await mongo.connect(dburl);
-			const existingDonors: ActiveRegistration | null = await conn
+			const conn = await new mongo.MongoClient(dburl).connect();
+			const existingDonors = await conn
 				.db('clinical')
 				.collection('donors')
-				.findOne({});
+				.findOne<ActiveRegistration | null>({});
 			console.log(JSON.stringify(existingDonors));
 			const response1 = await chai
 				.request(app)
@@ -481,11 +481,11 @@ describe('Submission Api', () => {
 				.end(async (err: any, res: any) => {
 					try {
 						res.should.have.status(201);
-						const conn = await mongo.connect(dburl);
-						const savedRegistration: ActiveRegistration | null = await conn
+						const conn = await new mongo.MongoClient(dburl).connect();
+						const savedRegistration = await conn
 							.db('clinical')
 							.collection('activeregistrations')
-							.findOne({});
+							.findOne<ActiveRegistration | null>({});
 						await conn.close();
 						if (!savedRegistration) {
 							throw new Error("saved registration shouldn't be null");
@@ -773,11 +773,11 @@ describe('Submission Api', () => {
 				.attach('clinicalFiles', file, 'donor.tsv')
 				.end(async (err: any, res: any) => {
 					res.should.have.status(200);
-					const conn = await mongo.connect(dburl);
-					const savedSubmission: ActiveClinicalSubmission | null = await conn
+					const conn = await new mongo.MongoClient(dburl).connect();
+					const savedSubmission = await conn
 						.db('clinical')
 						.collection('activesubmissions')
-						.findOne({});
+						.findOne<ActiveClinicalSubmission | null>({});
 					await conn.close();
 					if (!savedSubmission) {
 						throw new Error("saved submission shouldn't be null");
@@ -1554,10 +1554,10 @@ describe('Submission Api', () => {
 			]);
 			await validateSubmission();
 			await commitActiveSubmission();
-			const [donorBeforeUpdate] = (await findInDb(dburl, 'donors', {
+			const [donorBeforeUpdate] = await findInDb(dburl, 'donors', {
 				programId: programId,
 				submitterId: 'ICGC_0001',
-			})) as Donor[];
+			});
 
 			const entityBase = { program_id: programId, submitter_donor_id: 'ICGC_0001' };
 
@@ -1604,10 +1604,10 @@ describe('Submission Api', () => {
 				'family_history_update.tsv',
 			]);
 
-			const [submission] = (await findInDb(dburl, 'activesubmissions', {
+			const [submission] = await findInDb(dburl, 'activesubmissions', {
 				programId: programId,
 				submitterId: 'ICGC_0001',
-			})) as Donor[];
+			});
 
 			await validateSubmission();
 			validateResult.submission?.clinicalEntities.treatment.dataWarnings.length.should.eq(1);
@@ -1647,10 +1647,10 @@ describe('Submission Api', () => {
 					res.should.have.status(200);
 					res.body.should.be.empty;
 					await assertDbCollectionEmpty(dburl, 'activesubmissions');
-					const [updatedDonor] = (await findInDb(dburl, 'donors', {
+					const [updatedDonor] = await findInDb(dburl, 'donors', {
 						programId: programId,
 						submitterId: 'ICGC_0001',
-					})) as Donor[];
+					});
 
 					// ** merge shouldn't have mutated clinical entities except for the ones being updated **
 					const donorBeforeUpdates = _.omit(donorBeforeApproveCommit, [
@@ -1889,12 +1889,12 @@ describe('Submission Api', () => {
 					await assertDbCollectionEmpty(dburl, 'activesubmissions');
 
 					// check donor merge
-					const [updatedDonor]: Donor[] = await findInDb(dburl, 'donors', {
+					const [updatedDonor] = await findInDb(dburl, 'donors', {
 						programId: programId,
 						submitterId: 'ICGC_0002',
 					});
 
-					const [updatedDonor2]: Donor[] = await findInDb(dburl, 'donors', {
+					const [updatedDonor2] = await findInDb(dburl, 'donors', {
 						programId: programId,
 						submitterId: 'ICGC_0003',
 					});
@@ -2173,7 +2173,7 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dburl: 
 		);
 	});
 
-	const conn = await mongo.connect(dburl);
+	const conn = await new mongo.MongoClient(dburl).connect();
 	const actualDonors: any[] | null = await conn
 		.db('clinical')
 		.collection('donors')
@@ -2182,9 +2182,9 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dburl: 
 		.toArray();
 	await conn.close();
 
-	chai.expect(actualDonors.length).to.eq(4);
+	chai.expect(actualDonors?.length).to.eq(4);
 	// ids are not in sequence so we check that they are in range only.
-	actualDonors.forEach((ad) => {
+	actualDonors?.forEach((ad) => {
 		chai.expect(ad.donorId).to.be.gte(baseDonorId);
 		const specimensIdInRangeCount = ad.specimens.filter(
 			(sp: any) => sp.specimenId >= baseSpecimenId,
@@ -2199,7 +2199,7 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dburl: 
 
 	expectedDonors.forEach((dr, i) => {
 		dr = JSON.parse(JSON.stringify(dr)) as Donor;
-		const actualDonor = actualDonors.find((d) => d.submitterId == dr.submitterId);
+		const actualDonor = actualDonors?.find((d) => d.submitterId == dr.submitterId);
 		assertSameDonorWithoutGeneratedIds(actualDonor, dr);
 	});
 
@@ -2232,11 +2232,11 @@ function assertSameDonorWithoutGeneratedIds(actual: Donor, expected: Donor) {
 
 async function assertUploadOKRegistrationCreated(res: any, dburl: string) {
 	res.should.have.status(201);
-	const conn = await mongo.connect(dburl);
-	const savedRegistration: ActiveRegistration | null = await conn
+	const conn = await new mongo.MongoClient(dburl).connect();
+	const savedRegistration = await conn
 		.db('clinical')
 		.collection('activeregistrations')
-		.findOne({});
+		.findOne<ActiveRegistration | null>({});
 	await conn.close();
 	if (!savedRegistration) {
 		throw new Error("saved registration shouldn't be null");

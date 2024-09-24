@@ -17,18 +17,18 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import { promisify } from 'bluebird';
 import mongoose from 'mongoose';
-import { loggerFor } from './logger';
-import { AppConfig, initConfigs, JWT_TOKEN_PUBLIC_KEY, RxNormDbConfig } from './config';
-import * as dictionaryManager from './dictionary/manager';
-import * as utils from './utils';
+import { Pool } from 'mysql';
 import fetch from 'node-fetch';
 import { setStatus, Status } from './app-health';
+import { AppConfig, initConfigs, JWT_TOKEN_PUBLIC_KEY, RxNormDbConfig } from './config';
+import * as dictionaryManager from './dictionary/manager';
+import { loggerFor } from './logger';
+import { initPool } from './rxnorm/pool';
 import * as persistedConfig from './submission/persisted-config/service';
 import * as submissionUpdatesMessenger from './submission/submission-updates-messenger';
-import { initPool } from './rxnorm/pool';
-import { promisify } from 'bluebird';
-import { Pool } from 'mysql';
+import * as utils from './utils';
 
 const L = loggerFor(__filename);
 
@@ -65,9 +65,13 @@ const connectToDb = async (
 ) => {
 	L.debug('in connectToDb');
 	try {
+		console.log('mongoUrl', mongoUrl);
+		console.log('username', username);
+		console.log('password', password);
 		await connect(delayMillis, mongoUrl, username, password);
 	} catch (err) {
 		L.error('failed to connect', err);
+		throw err;
 	}
 };
 
@@ -75,15 +79,15 @@ async function connect(delayMillis: number, mongoUrl: string, username: string, 
 	try {
 		// https://mongoosejs.com/docs/connections.html
 		await mongoose.connect(mongoUrl, {
-			autoReconnect: true,
+			// autoReconnect: true,
 			// http://mongodb.github.io/node-mongodb-native/3.1/reference/faq/
-			socketTimeoutMS: 10000,
-			connectTimeoutMS: 30000,
-			keepAlive: true,
-			reconnectTries: 10,
-			reconnectInterval: 3000,
+			// socketTimeoutMS: 10000,
+			// connectTimeoutMS: 30000,
+			// keepAlive: true,
+			// reconnectTries: 10,
+			// reconnectInterval: 3000,
 			bufferCommands: false,
-			bufferMaxEntries: 0,
+			// bufferMaxEntries: 0,
 			user: username,
 			pass: password,
 			// https://mongoosejs.com/docs/deprecations.html
@@ -201,11 +205,9 @@ export const run = async (config: AppConfig) => {
 	// close app connections on termination
 	const gracefulExit = async () => {
 		await submissionUpdatesMessenger.getInstance().closeOpenConnections();
+		await mongoose.connection.close();
 
-		await mongoose.connection.close(function() {
-			L.debug('Mongoose default connection is disconnected through app termination');
-		});
-
+		L.debug('Mongoose default connection is disconnected through app termination');
 		process.exit(0);
 	};
 

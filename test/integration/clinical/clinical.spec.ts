@@ -19,25 +19,25 @@
 
 import chai from 'chai';
 // needed for typescript
-import 'chai-http';
-import 'mocha';
-import { GenericContainer } from 'testcontainers';
-import app from '../../../src/app';
-import * as bootstrap from '../../../src/bootstrap';
-import {
-	cleanCollection,
-	insertData,
-	assertDbCollectionEmpty,
-	emptyDonorDocument,
-} from '../testutils';
-import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN, JWT_ABCDEF } from '../test.jwt';
-import mongoose from 'mongoose';
 import AdmZip from 'adm-zip';
-import { ClinicalEntitySchemaNames } from '../../../src/common-model/entities';
-import { TsvUtils, notEmpty } from '../../../src/utils';
-import { getClinicalEntitiesFromDonorBySchemaName } from '../../../src/common-model/functions';
+import 'chai-http';
 import deepEqualInAnyOrder from 'deep-equal-in-any-order';
 import _ from 'lodash';
+import 'mocha';
+import mongoose from 'mongoose';
+import { GenericContainer, Network } from 'testcontainers';
+import app from '../../../src/app';
+import * as bootstrap from '../../../src/bootstrap';
+import { ClinicalEntitySchemaNames } from '../../../src/common-model/entities';
+import { getClinicalEntitiesFromDonorBySchemaName } from '../../../src/common-model/functions';
+import { TsvUtils, notEmpty } from '../../../src/utils';
+import { JWT_ABCDEF, JWT_CLINICALSVCADMIN, TEST_PUB_KEY } from '../test.jwt';
+import {
+	assertDbCollectionEmpty,
+	cleanCollection,
+	emptyDonorDocument,
+	insertData,
+} from '../testutils';
 
 chai.use(require('chai-http'));
 chai.use(deepEqualInAnyOrder);
@@ -45,6 +45,7 @@ chai.should();
 
 describe('clinical Api', () => {
 	let mongoContainer: any;
+	let testNetwork: any;
 	let dburl = ``;
 
 	const programId = 'PACA-AU';
@@ -101,10 +102,14 @@ describe('clinical Api', () => {
 	before(() => {
 		return (async () => {
 			try {
-				mongoContainer = await new GenericContainer('mongo', '4.0').withExposedPorts(27017).start();
-				dburl = `mongodb://${mongoContainer.getContainerIpAddress()}:${mongoContainer.getMappedPort(
-					27017,
-				)}/clinical`;
+				testNetwork = await new Network().start();
+				mongoContainer = await new GenericContainer('mongo')
+					.withNetwork(testNetwork)
+					.withExposedPorts(27017)
+					.start();
+				dburl = `mongodb://${mongoContainer.getIpAddress(
+					testNetwork.getName(),
+				)}:${mongoContainer.getMappedPort(27017)}/clinical`;
 				console.log(`mongo test container started ${dburl}`);
 				await bootstrap.run({
 					mongoPassword() {
@@ -186,6 +191,7 @@ describe('clinical Api', () => {
 	after(async () => {
 		await mongoose.disconnect();
 		await mongoContainer.stop();
+		await testNetwork.stop();
 		return;
 	});
 
