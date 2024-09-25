@@ -65,9 +65,6 @@ const connectToDb = async (
 ) => {
 	L.debug('in connectToDb');
 	try {
-		console.log('mongoUrl', mongoUrl);
-		console.log('username', username);
-		console.log('password', password);
 		await connect(delayMillis, mongoUrl, username, password);
 	} catch (err) {
 		L.error('failed to connect', err);
@@ -91,9 +88,9 @@ async function connect(delayMillis: number, mongoUrl: string, username: string, 
 			user: username,
 			pass: password,
 			// https://mongoosejs.com/docs/deprecations.html
-			useNewUrlParser: true,
-			useFindAndModify: false,
-			useCreateIndex: true,
+			// useNewUrlParser: true,
+			// useFindAndModify: false,
+			// useCreateIndex: true,
 		});
 		L.debug('mongoose connected');
 	} catch (err) {

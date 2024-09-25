@@ -37,25 +37,27 @@ export const clearCollections = async (dburl: string, collections: string[]) => 
 };
 
 export const cleanCollection = async (dburl: string, collection: string): Promise<any> => {
-	const conn = await new mongo.MongoClient(dburl).connect();
+	const dbClient = new mongo.MongoClient(dburl);
+	await dbClient.connect();
 	try {
-		await conn.db('clinical').collection(collection);
+		await dbClient.db('clinical').collection(collection);
 		// .remove({});
-		await conn.db('clinical').dropCollection(collection);
+		await dbClient.db('clinical').dropCollection(collection);
 	} catch (err) {
 		console.error('failed to drop collection', collection, err);
 	}
-	await conn.db('clinical').createCollection(collection);
-	await conn.close();
+	await dbClient.db('clinical').createCollection(collection);
+	await dbClient.close();
 };
 
 export const resetCounters = async (dburl: string): Promise<any> => {
-	const conn = await new mongo.MongoClient(dburl).connect();
-	await conn
+	const dbClient = new mongo.MongoClient(dburl);
+	await dbClient.connect();
+	await dbClient
 		.db('clinical')
 		.collection('counters')
 		.updateMany({}, { $set: { seq: 0 } });
-	await conn.close();
+	await dbClient.close();
 };
 
 export const insertData = async (
@@ -63,10 +65,11 @@ export const insertData = async (
 	collection: string,
 	document: any,
 ): Promise<any> => {
-	const conn = await new mongo.MongoClient(dburl).connect();
-	await conn.db('clinical').collection(collection);
+	const dbClient = new mongo.MongoClient(dburl);
+	await dbClient.connect();
+	await dbClient.db('clinical').collection(collection);
 	// .insert(document);
-	await conn.close();
+	await dbClient.close();
 	return document._id;
 };
 
@@ -90,10 +93,11 @@ export const updateData = async (
 	document: any,
 	filter: any = {},
 ): Promise<any> => {
-	const conn = await new mongo.MongoClient(dburl).connect();
-	await conn.db('clinical').collection(collection);
+	const dbClient = new mongo.MongoClient(dburl);
+	await dbClient.connect();
+	await dbClient.db('clinical').collection(collection);
 	// .update(filter, document, { upsert: true });
-	await conn.close();
+	await dbClient.close();
 	return document._id;
 };
 
@@ -147,23 +151,25 @@ export const generateDonor = async (
 };
 
 export async function assertDbCollectionEmpty(dburl: string, collection: string) {
-	const conn = await new mongo.MongoClient(dburl).connect();
-	const count = await conn
+	const dbClient = new mongo.MongoClient(dburl);
+	await dbClient.connect();
+	const count = await dbClient
 		.db('clinical')
 		.collection(collection)
-		.count({});
-	await conn.close();
+		.countDocuments();
+	await dbClient.close();
 	chai.expect(count).to.eq(0);
 }
 
 export async function findInDb(dburl: string, collection: string, filter: any) {
-	const conn = await new mongo.MongoClient(dburl).connect();
-	const result = await conn
+	const dbClient = new mongo.MongoClient(dburl);
+	await dbClient.connect();
+	const result = await dbClient
 		.db('clinical')
 		.collection(collection)
 		.find(filter)
 		.sort({ $natural: -1 })
 		.toArray();
-	await conn.close();
+	await dbClient.close();
 	return result;
 }
