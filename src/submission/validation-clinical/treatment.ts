@@ -119,7 +119,10 @@ export const validate = async (
 		Array.isArray(treatment_type) &&
 		treatment_type.some((treatment) => drugTreatmentTypes.includes(treatment))
 	) {
-		validateDrugTreatmentFields(treatmentRecord, mergedDonor, errors);
+		const { treatments } = mergedDonor;
+		if (Array.isArray(treatments)) {
+			validateDrugTreatmentFields(treatmentRecord, treatments, errors);
+		}
 	}
 
 	return { errors, warnings: warnings };
@@ -265,57 +268,46 @@ function checkDonorTimeConflict(
 
 const validateDrugTreatmentFields = (
 	treatmentRecord: DeepReadonly<SubmittedClinicalRecord>,
-	mergedDonor: Donor,
+	treatments: Treatment[],
 	errors: SubmissionValidationError[],
 ) => {
-	const { treatments } = mergedDonor;
-	if (Array.isArray(treatments)) {
-		const { submitter_treatment_id } = treatmentRecord;
-		const currentTreatment = treatments.find(
-			(record) => record.clinicalInfo.submitter_treatment_id === submitter_treatment_id,
-		);
-		if (currentTreatment) {
-			const { therapies } = currentTreatment;
-			therapies.forEach((therapy) => {
-				const {
-					drug_name,
-					drug_rxnormcui,
-					drug_database,
-					drug_term,
-					drug_id,
-				} = therapy.clinicalInfo;
+	const { submitter_treatment_id } = treatmentRecord;
+	const currentTreatment = treatments?.find(
+		(record) => record.clinicalInfo.submitter_treatment_id === submitter_treatment_id,
+	);
+	if (currentTreatment) {
+		const { therapies } = currentTreatment;
+		therapies.forEach((therapy) => {
+			const { drug_name, drug_rxnormcui, drug_database, drug_term, drug_id } = therapy.clinicalInfo;
+			const isRxNorm = drug_name && drug_rxnormcui;
+			const isDrugDb = drug_database && drug_id && drug_term;
 
-				if (drug_name && drug_rxnormcui) {
-					// check rxnom
-				} else if (!(drug_database && drug_id && drug_term)) {
-					const drugFields = { drug_database, drug_term, drug_id };
-					const missingFields: ClinicalInfo[] = [];
-					for (const [key, value] of Object.entries(drugFields)) {
-						if (!value) {
-							const data = { [key]: value };
-							missingFields.push(data);
-						}
+			if (!isRxNorm && !isDrugDb) {
+				const drugFields = { drug_database, drug_term, drug_id };
+				const missingFields: ClinicalInfo[] = [];
+				for (const [key, value] of Object.entries(drugFields)) {
+					if (!value) {
+						const data = { [key]: value };
+						missingFields.push(data);
 					}
-
-					missingFields.forEach((field) => {
-						const [key, value] = Object.entries(field)[0];
-						const fieldName: ClinicalFields = key as ClinicalFields;
-
-						errors.push(
-							utils.buildSubmissionError(
-								treatmentRecord,
-								DataValidationErrors.INVALID_DRUG_INFO,
-								fieldName,
-								{},
-							),
-						);
-					});
 				}
-			});
-		} else {
-			throw new Error('No Matching Drug Treatment Record');
-		}
+
+				missingFields.forEach((field) => {
+					const [key, value] = Object.entries(field)[0];
+					const fieldName: ClinicalFields = key as ClinicalFields;
+
+					errors.push(
+						utils.buildSubmissionError(
+							treatmentRecord,
+							DataValidationErrors.INVALID_DRUG_INFO,
+							fieldName,
+							{},
+						),
+					);
+				});
+			}
+		});
 	} else {
-		console.error('not an array', treatments);
+		throw new Error('No Matching Drug Treatment Record');
 	}
 };
