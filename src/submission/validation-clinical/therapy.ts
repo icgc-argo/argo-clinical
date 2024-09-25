@@ -24,6 +24,7 @@ import { donorDao } from '../../clinical/donor-repo';
 import { ClinicalDataQuery } from '../../clinical/types';
 import {
 	ClinicalEntitySchemaNames,
+	ClinicalFields,
 	ClinicalTherapyType,
 	RadiationFieldsEnum,
 	TreatmentFieldsEnum,
@@ -66,6 +67,17 @@ export const validate = async (
 		);
 
 		errors = [...errors, ...crossFileErrors];
+	}
+
+	// Validation for Treatment Drug Fields
+	const drugTreatmentTypes = ['Chemotherapy', 'Hormonal therapy', 'Immunotherapy'];
+	const { treatment_type } = treatment.clinicalInfo;
+
+	if (
+		Array.isArray(treatment_type) &&
+		treatment_type.some((treatment) => drugTreatmentTypes.includes(treatment))
+	) {
+		validateDrugTreatmentFields(therapyRecord, errors);
 	}
 
 	return { errors };
@@ -270,3 +282,39 @@ export function getTreatment(
 
 	return treatment;
 }
+
+const validateDrugTreatmentFields = (
+	therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
+	errors: SubmissionValidationError[],
+) => {
+	const { drug_name, drug_rxnormcui, drug_database, drug_term, drug_id } = therapyRecord;
+	const isRxNorm = Boolean(drug_name && drug_rxnormcui);
+	const isDrugDb = Boolean(drug_database && drug_id && drug_term);
+
+	if (!isRxNorm && !isDrugDb) {
+		const drugFields = { drug_database, drug_term, drug_id };
+		const missingFields: ClinicalInfo[] = [];
+		for (const [key, value] of Object.entries(drugFields)) {
+			if (!value) {
+				const data = { [key]: value };
+				missingFields.push(data);
+			}
+		}
+
+		missingFields.forEach((field) => {
+			const [key] = Object.entries(field)[0];
+			const fieldName: ClinicalFields = key as ClinicalFields;
+
+			errors.push(
+				utils.buildSubmissionError(
+					therapyRecord,
+					DataValidationErrors.INVALID_DRUG_INFO,
+					fieldName,
+					{},
+				),
+			);
+		});
+	} else {
+		throw new Error('No Matching Drug Treatment Record');
+	}
+};

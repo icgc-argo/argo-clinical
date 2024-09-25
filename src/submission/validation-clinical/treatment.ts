@@ -19,15 +19,12 @@
 
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
-import { ClinicalInfo, Donor, FollowUp, Treatment } from '../../clinical/clinical-entities';
+import { Donor, FollowUp, Treatment } from '../../clinical/clinical-entities';
 import {
 	ClinicalEntitySchemaNames,
-	ClinicalFields,
 	ClinicalTherapySchemaNames,
 	ClinicalTherapyType,
 	ClinicalUniqueIdentifier,
-	TherapyDrugFields,
-	TherapyRxNormFields,
 	TreatmentFieldsEnum,
 } from '../../common-model/entities';
 import {
@@ -111,19 +108,6 @@ export const validate = async (
 
 	const warnings: SubmissionValidationError[] = [];
 	checkForDeletedTreatmentTherapies(treatmentRecord, existentDonor, warnings);
-
-	// Validation for Treatment Drug Fields
-	const drugTreatmentTypes = ['Chemotherapy', 'Hormonal therapy', 'Immunotherapy'];
-	const { treatment_type } = treatmentRecord;
-	if (
-		Array.isArray(treatment_type) &&
-		treatment_type.some((treatment) => drugTreatmentTypes.includes(treatment))
-	) {
-		const { treatments } = mergedDonor;
-		if (Array.isArray(treatments)) {
-			validateDrugTreatmentFields(treatmentRecord, treatments, errors);
-		}
-	}
 
 	return { errors, warnings: warnings };
 };
@@ -265,49 +249,3 @@ function checkDonorTimeConflict(
 		);
 	}
 }
-
-const validateDrugTreatmentFields = (
-	treatmentRecord: DeepReadonly<SubmittedClinicalRecord>,
-	treatments: Treatment[],
-	errors: SubmissionValidationError[],
-) => {
-	const { submitter_treatment_id } = treatmentRecord;
-	const currentTreatment = treatments?.find(
-		(record) => record.clinicalInfo.submitter_treatment_id === submitter_treatment_id,
-	);
-	if (currentTreatment) {
-		const { therapies } = currentTreatment;
-		therapies.forEach((therapy) => {
-			const { drug_name, drug_rxnormcui, drug_database, drug_term, drug_id } = therapy.clinicalInfo;
-			const isRxNorm = drug_name && drug_rxnormcui;
-			const isDrugDb = drug_database && drug_id && drug_term;
-
-			if (!isRxNorm && !isDrugDb) {
-				const drugFields = { drug_database, drug_term, drug_id };
-				const missingFields: ClinicalInfo[] = [];
-				for (const [key, value] of Object.entries(drugFields)) {
-					if (!value) {
-						const data = { [key]: value };
-						missingFields.push(data);
-					}
-				}
-
-				missingFields.forEach((field) => {
-					const [key, value] = Object.entries(field)[0];
-					const fieldName: ClinicalFields = key as ClinicalFields;
-
-					errors.push(
-						utils.buildSubmissionError(
-							treatmentRecord,
-							DataValidationErrors.INVALID_DRUG_INFO,
-							fieldName,
-							{},
-						),
-					);
-				});
-			}
-		});
-	} else {
-		throw new Error('No Matching Drug Treatment Record');
-	}
-};
