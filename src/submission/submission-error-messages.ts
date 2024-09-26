@@ -141,6 +141,7 @@ const ERROR_MESSAGES: { [key: string]: (errorData: any) => string } = {
 	}) =>
 		`A clinical event that occurs after the donor was lost to follow up cannot be submitted. The donor was indicated to be lost to follow up at age ${lost_to_followup_age} after their primary diagnosis ("submitter_primary_diagnosis_id" = "${lost_to_followup_diagnosis_id}"), but a new primary diagnosis ("${submitter_primary_diagnosis_id}") that started after the donor was lost to follow up has been submitted. If the donor was found later on, then update the "lost_to_followup_after_clinical_event_id" field to be empty.`,
 	INVALID_DRUG_INFO: () => 'Please provide the missing drug information.',
+	MISSING_DRUG_INFO: () => 'No Matching Drug Treatment Record',
 };
 
 const BATCH_ERROR_MESSAGES: Record<SubmissionBatchErrorTypes, (errorData: any) => string> = {

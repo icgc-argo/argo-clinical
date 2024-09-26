@@ -33,7 +33,7 @@ import {
 	SpecimenFieldsEnum,
 	SurgeryFieldsEnum,
 	TherapyDrugFields,
-	TherapyRxNormFields,
+	TherapyRxNormFieldsEnum,
 	TreatmentFieldsEnum,
 } from '../../../src/common-model/entities';
 import * as treatmentDetailExceptionsRepo from '../../../src/exception/treatment-detail-exceptions/repo';

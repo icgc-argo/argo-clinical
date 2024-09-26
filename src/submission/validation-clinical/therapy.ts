@@ -27,6 +27,7 @@ import {
 	ClinicalFields,
 	ClinicalTherapyType,
 	RadiationFieldsEnum,
+	TherapyDrugFieldsEnum,
 	TreatmentFieldsEnum,
 } from '../../common-model/entities';
 import { getSingleClinicalObjectFromDonor } from '../../common-model/functions';
@@ -287,16 +288,19 @@ const validateDrugTreatmentFields = (
 	therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
 	errors: SubmissionValidationError[],
 ) => {
+	console.log('therapyRecord', therapyRecord);
 	const { drug_name, drug_rxnormcui, drug_database, drug_term, drug_id } = therapyRecord;
 	const isRxNorm = Boolean(drug_name && drug_rxnormcui);
 	const isDrugDb = Boolean(drug_database && drug_id && drug_term);
-
+	console.log('drug_database', drug_database);
+	console.log('drug_id', drug_id);
+	console.log('drug_term', drug_term);
 	if (!isRxNorm && !isDrugDb) {
 		const drugFields = { drug_database, drug_term, drug_id };
 		const missingFields: ClinicalInfo[] = [];
-		for (const [key, value] of Object.entries(drugFields)) {
-			if (!value) {
-				const data = { [key]: value };
+		for (const [drugKey, drugValue] of Object.entries(drugFields)) {
+			if (!drugValue) {
+				const data = { [drugKey]: drugValue };
 				missingFields.push(data);
 			}
 		}
@@ -315,6 +319,13 @@ const validateDrugTreatmentFields = (
 			);
 		});
 	} else {
-		throw new Error('No Matching Drug Treatment Record');
+		errors.push(
+			utils.buildSubmissionError(
+				therapyRecord,
+				DataValidationErrors.MISSING_DRUG_INFO,
+				TherapyDrugFieldsEnum['drug_id'],
+				{},
+			),
+		);
 	}
 };
