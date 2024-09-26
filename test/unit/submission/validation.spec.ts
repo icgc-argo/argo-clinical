@@ -32,7 +32,7 @@ import {
 	RadiationFieldsEnum,
 	SpecimenFieldsEnum,
 	SurgeryFieldsEnum,
-	TherapyDrugFields,
+	TherapyDrugFieldsEnum,
 	TherapyRxNormFieldsEnum,
 	TreatmentFieldsEnum,
 } from '../../../src/common-model/entities';
@@ -3439,8 +3439,8 @@ describe('data-validator', () => {
 				{
 					[SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
 					[TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
-					[TherapyDrugFields.drug_term]: 'Epinephrine',
-					[TherapyDrugFields.drug_database]: 'KEGG',
+					[TherapyDrugFieldsEnum.drug_term]: 'Epinephrine',
+					[TherapyDrugFieldsEnum.drug_database]: 'KEGG',
 					index: 0,
 				},
 			);
@@ -3450,7 +3450,7 @@ describe('data-validator', () => {
 				.catch((err: any) => fail(err));
 
 			const chemoDrugIdErr: SubmissionValidationError = {
-				fieldName: TherapyDrugFields.drug_id,
+				fieldName: TherapyDrugFieldsEnum.drug_id,
 				message: `Please provide the missing drug information.`,
 				type: DataValidationErrors.INVALID_DRUG_INFO,
 				index: 0,
@@ -3497,8 +3497,8 @@ describe('data-validator', () => {
 				{
 					[SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
 					[TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
-					[TherapyDrugFields.drug_id]: '2244',
-					[TherapyDrugFields.drug_database]: 'PubChem',
+					[TherapyDrugFieldsEnum.drug_id]: '2244',
+					[TherapyDrugFieldsEnum.drug_database]: 'PubChem',
 					index: 0,
 				},
 			);
@@ -3508,7 +3508,7 @@ describe('data-validator', () => {
 				.catch((err: any) => fail(err));
 
 			const immunoDrugTermErr: SubmissionValidationError = {
-				fieldName: TherapyDrugFields.drug_term,
+				fieldName: TherapyDrugFieldsEnum.drug_term,
 				message: `Please provide the missing drug information.`,
 				type: DataValidationErrors.INVALID_DRUG_INFO,
 				index: 0,
@@ -3555,8 +3555,8 @@ describe('data-validator', () => {
 				{
 					[SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
 					[TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
-					[TherapyDrugFields.drug_id]: '2244',
-					[TherapyDrugFields.drug_term]: 'Aspirin',
+					[TherapyDrugFieldsEnum.drug_id]: '2244',
+					[TherapyDrugFieldsEnum.drug_term]: 'Aspirin',
 					index: 0,
 				},
 			);
@@ -3566,7 +3566,7 @@ describe('data-validator', () => {
 				.catch((err: any) => fail(err));
 
 			const hormoneDrugDbErr: SubmissionValidationError = {
-				fieldName: TherapyDrugFields.drug_database,
+				fieldName: TherapyDrugFieldsEnum.drug_database,
 				message: `Please provide the missing drug information.`,
 				type: DataValidationErrors.INVALID_DRUG_INFO,
 				index: 0,
@@ -3613,9 +3613,9 @@ describe('data-validator', () => {
 				{
 					[SampleRegistrationFieldsEnum.submitter_donor_id]: 'AB1',
 					[TreatmentFieldsEnum.submitter_treatment_id]: 'T_04',
-					[TherapyDrugFields.drug_id]: '2244',
-					[TherapyDrugFields.drug_term]: 'Aspirin',
-					[TherapyDrugFields.drug_database]: 'PubChem',
+					[TherapyDrugFieldsEnum.drug_id]: '2244',
+					[TherapyDrugFieldsEnum.drug_term]: 'Aspirin',
+					[TherapyDrugFieldsEnum.drug_database]: 'PubChem',
 					index: 0,
 				},
 			);

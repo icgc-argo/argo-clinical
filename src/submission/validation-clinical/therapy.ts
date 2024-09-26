@@ -288,14 +288,17 @@ const validateDrugTreatmentFields = (
 	therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
 	errors: SubmissionValidationError[],
 ) => {
-	console.log('therapyRecord', therapyRecord);
 	const { drug_name, drug_rxnormcui, drug_database, drug_term, drug_id } = therapyRecord;
 	const isRxNorm = Boolean(drug_name && drug_rxnormcui);
 	const isDrugDb = Boolean(drug_database && drug_id && drug_term);
-	console.log('drug_database', drug_database);
-	console.log('drug_id', drug_id);
-	console.log('drug_term', drug_term);
+
+	if (!isRxNorm && isDrugDb) {
+		// No RxNorm, All Drug DB Fields, no further validation
+		return;
+	}
+
 	if (!isRxNorm && !isDrugDb) {
+		// Not RxNorm, but Not All Drug Fields -> Error
 		const drugFields = { drug_database, drug_term, drug_id };
 		const missingFields: ClinicalInfo[] = [];
 		for (const [drugKey, drugValue] of Object.entries(drugFields)) {
@@ -319,6 +322,7 @@ const validateDrugTreatmentFields = (
 			);
 		});
 	} else {
+		// No RxNorm and No Drug DB
 		errors.push(
 			utils.buildSubmissionError(
 				therapyRecord,
