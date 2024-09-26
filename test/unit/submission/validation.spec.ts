@@ -3460,8 +3460,8 @@ describe('data-validator', () => {
 				},
 			};
 
-			chai.expect(result.treatment.dataErrors.length).to.eq(1);
-			chai.expect(result.treatment.dataErrors).to.deep.include(chemoDrugIdErr);
+			chai.expect(result.chemotherapy.dataErrors.length).to.eq(1);
+			chai.expect(result.chemotherapy.dataErrors).to.deep.include(chemoDrugIdErr);
 		});
 
 		it('should error when drug term field is missing (immunotherapy)', async () => {
@@ -3518,8 +3518,8 @@ describe('data-validator', () => {
 				},
 			};
 
-			chai.expect(result.treatment.dataErrors.length).to.eq(1);
-			chai.expect(result.treatment.dataErrors).to.deep.include(immunoDrugTermErr);
+			chai.expect(result.immunotherapy.dataErrors.length).to.eq(1);
+			chai.expect(result.immunotherapy.dataErrors).to.deep.include(immunoDrugTermErr);
 		});
 
 		it('should error when drug db field is missing (hormonal therapy)', async () => {
@@ -3576,8 +3576,8 @@ describe('data-validator', () => {
 				},
 			};
 
-			chai.expect(result.treatment.dataErrors.length).to.eq(1);
-			chai.expect(result.treatment.dataErrors).to.deep.include(hormoneDrugDbErr);
+			chai.expect(result.hormone_therapy.dataErrors.length).to.eq(1);
+			chai.expect(result.hormone_therapy.dataErrors).to.deep.include(hormoneDrugDbErr);
 		});
 
 		it('should pass when all drug info fields are populated', async () => {
