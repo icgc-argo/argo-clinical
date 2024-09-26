@@ -305,9 +305,7 @@ const validateDrugTreatmentFields = (
 	if (!isRxNorm && isDrugDb) {
 		// No RxNorm, All Drug DB Fields, no further validation
 		return;
-	}
-
-	if (!isRxNorm && !isDrugDb) {
+	} else if (!isRxNorm && !isDrugDb) {
 		// Not RxNorm, but Not All Drug Fields -> Error
 		const drugFields = { drug_database, drug_term, drug_id };
 		const missingFields: ClinicalInfo[] = [];
@@ -331,15 +329,5 @@ const validateDrugTreatmentFields = (
 				),
 			);
 		});
-	} else {
-		// No RxNorm and No Drug DB
-		errors.push(
-			utils.buildSubmissionError(
-				therapyRecord,
-				DataValidationErrors.MISSING_DRUG_INFO,
-				TherapyDrugFieldsEnum['drug_id'],
-				{},
-			),
-		);
 	}
 };
