@@ -408,9 +408,9 @@ export namespace operations {
 			// after the update/delete submission is callled below
 			if (schemaErrorsTemp.length > 0) {
 				// store errors found and remove clinical type from clinical entities
-				// schemaErrors[clinicalType] = schemaErrorsTemp;
-				// delete updatedClinicalEntities[clinicalType];
-				// continue;
+				schemaErrors[clinicalType] = schemaErrorsTemp;
+				delete updatedClinicalEntities[clinicalType];
+				continue;
 			}
 
 			// update or add entity

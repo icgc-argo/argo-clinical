@@ -71,12 +71,22 @@ export const validate = async (
 	}
 
 	// Validation for Treatment Drug Fields
-	const drugTreatmentTypes = ['Chemotherapy', 'Hormonal therapy', 'Immunotherapy'];
+	const drugTreatmentTypes = [
+		'chemotherapy',
+		'hormonal therapy',
+		'hormone_therapy',
+		'immunotherapy',
+	];
 	const { treatment_type } = treatment.clinicalInfo;
+	const therapyType = treatment.therapies.find((therapy) =>
+		isValueEqual(therapy.clinicalInfo, therapyRecord),
+	)?.therapyType;
 
 	if (
 		Array.isArray(treatment_type) &&
-		treatment_type.some((treatment) => drugTreatmentTypes.includes(treatment))
+		therapyType &&
+		treatment_type.some((treatment) => drugTreatmentTypes.includes(treatment.toLowerCase())) &&
+		drugTreatmentTypes.includes(therapyType.toLowerCase())
 	) {
 		validateDrugTreatmentFields(therapyRecord, errors);
 	}
@@ -309,8 +319,8 @@ const validateDrugTreatmentFields = (
 		}
 
 		missingFields.forEach((field) => {
-			const [key] = Object.entries(field)[0];
-			const fieldName: ClinicalFields = key as ClinicalFields;
+			const [drugKey] = Object.entries(field)[0];
+			const fieldName = drugKey as ClinicalFields;
 
 			errors.push(
 				utils.buildSubmissionError(
