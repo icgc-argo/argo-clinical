@@ -17,8 +17,8 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { z as zod } from 'zod';
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
+import { z as zod } from 'zod';
 
 // this is temporary to keep code compiling until surgery is ready in dictionary, to be removed in favor of
 // the surgery in ClinicalEntitySchemaNames
@@ -101,10 +101,11 @@ export type ClinicalFields =
 	| PrimaryDiagnosisFieldsEnum
 	| FamilyHistoryFieldsEnum
 	| TreatmentFieldsEnum
-	| TherapyRxNormFields
+	| TherapyRxNormFieldsEnum
+	| TherapyDrugFieldsEnum
 	| RadiationFieldsEnum
 	| SurgeryFieldsEnum
-	| CommonTherapyFields
+	| CommonTherapyFieldsEnum
 	| ExposureFieldsEnum
 	| ComorbidityFieldsEnum
 	| BiomarkerFieldsEnum;
@@ -201,12 +202,18 @@ export enum TreatmentFieldsEnum {
 	treatment_duration = 'treatment_duration',
 }
 
-export enum TherapyRxNormFields {
+export enum TherapyRxNormFieldsEnum {
 	drug_name = 'drug_name',
 	drug_rxnormid = 'drug_rxnormcui',
 }
 
-export enum CommonTherapyFields {
+export enum TherapyDrugFieldsEnum {
+	drug_database = 'drug_database',
+	drug_id = 'drug_id',
+	drug_term = 'drug_term',
+}
+
+export enum CommonTherapyFieldsEnum {
 	program_id = 'program_id',
 	submitter_donor_id = 'submitter_donor_id',
 	submitter_treatment_id = 'submitter_treatment_id',
@@ -223,7 +230,7 @@ export enum RadiationFieldsEnum {
 	reference_radiation_treatment_id = 'reference_radiation_treatment_id',
 }
 
-export enum ImmunotherapyFields {
+export enum ImmunotherapyFieldsEnum {
 	immunotherapy_type = 'immunotherapy_type',
 }
 
@@ -282,29 +289,29 @@ export const ClinicalUniqueIdentifier: TypeEntitySchemaNameToIndenfiterType = {
 	[ClinicalEntitySchemaNames.FOLLOW_UP]: FollowupFieldsEnum.submitter_follow_up_id,
 	[ClinicalEntitySchemaNames.TREATMENT]: TreatmentFieldsEnum.submitter_treatment_id,
 	[ClinicalEntitySchemaNames.CHEMOTHERAPY]: [
-		CommonTherapyFields.submitter_donor_id,
-		CommonTherapyFields.submitter_treatment_id,
-		TherapyRxNormFields.drug_rxnormid,
+		CommonTherapyFieldsEnum.submitter_donor_id,
+		CommonTherapyFieldsEnum.submitter_treatment_id,
+		TherapyRxNormFieldsEnum.drug_rxnormid,
 	],
 	[ClinicalEntitySchemaNames.IMMUNOTHERAPY]: [
-		CommonTherapyFields.submitter_donor_id,
-		CommonTherapyFields.submitter_treatment_id,
-		TherapyRxNormFields.drug_rxnormid,
+		CommonTherapyFieldsEnum.submitter_donor_id,
+		CommonTherapyFieldsEnum.submitter_treatment_id,
+		TherapyRxNormFieldsEnum.drug_rxnormid,
 	],
 	[SURGERY_SCHEMA_NAME]: [
-		CommonTherapyFields.submitter_donor_id,
-		CommonTherapyFields.submitter_treatment_id,
+		CommonTherapyFieldsEnum.submitter_donor_id,
+		CommonTherapyFieldsEnum.submitter_treatment_id,
 		SpecimenFieldsEnum.submitter_specimen_id,
 	],
 	[ClinicalEntitySchemaNames.RADIATION]: [
-		CommonTherapyFields.submitter_donor_id,
-		CommonTherapyFields.submitter_treatment_id,
+		CommonTherapyFieldsEnum.submitter_donor_id,
+		CommonTherapyFieldsEnum.submitter_treatment_id,
 		RadiationFieldsEnum.radiation_therapy_modality,
 	],
 	[ClinicalEntitySchemaNames.HORMONE_THERAPY]: [
-		CommonTherapyFields.submitter_donor_id,
-		CommonTherapyFields.submitter_treatment_id,
-		TherapyRxNormFields.drug_rxnormid,
+		CommonTherapyFieldsEnum.submitter_donor_id,
+		CommonTherapyFieldsEnum.submitter_treatment_id,
+		TherapyRxNormFieldsEnum.drug_rxnormid,
 	],
 	[ClinicalEntitySchemaNames.COMORBIDITY]: [
 		ComorbidityFieldsEnum.submitter_donor_id,
