@@ -21,11 +21,11 @@ import { Donor } from '../../../src/clinical/clinical-entities';
 import {
 	DonorFieldsEnum,
 	FollowupFieldsEnum,
-	TreatmentFieldsEnum,
-	TherapyRxNormFields,
 	PrimaryDiagnosisFieldsEnum,
 	SpecimenFieldsEnum,
 	SurgeryFieldsEnum,
+	TherapyRxNormFieldsEnum,
+	TreatmentFieldsEnum,
 } from '../../../src/common-model/entities';
 
 /**
@@ -372,8 +372,8 @@ export const stubs = {
 							clinicalInfo: {
 								[TreatmentFieldsEnum.submitter_treatment_id]: 'T_03',
 								[TreatmentFieldsEnum.submitter_donor_id]: 'AB10',
-								[TherapyRxNormFields.drug_name]: 'd1',
-								[TherapyRxNormFields.drug_rxnormid]: '1234',
+								[TherapyRxNormFieldsEnum.drug_name]: 'd1',
+								[TherapyRxNormFieldsEnum.drug_rxnormid]: '1234',
 							},
 						},
 					],
@@ -494,8 +494,8 @@ export const stubs = {
 								[TreatmentFieldsEnum.program_id]: 'TEST-CA',
 								[TreatmentFieldsEnum.submitter_donor_id]: 'ICGC_0002',
 								[TreatmentFieldsEnum.submitter_treatment_id]: 'T_02',
-								[TherapyRxNormFields.drug_name]: 'Aminobenzoic Acid',
-								[TherapyRxNormFields.drug_rxnormid]: '74',
+								[TherapyRxNormFieldsEnum.drug_name]: 'Aminobenzoic Acid',
+								[TherapyRxNormFieldsEnum.drug_rxnormid]: '74',
 							},
 						},
 					],

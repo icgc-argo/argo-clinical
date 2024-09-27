@@ -22,21 +22,21 @@ import { isEqual, omit } from 'lodash';
 import _ from 'mongoose-sequence';
 import { Donor, Therapy } from '../../clinical/clinical-entities';
 import {
-	DataValidationErrors,
-	SubmissionValidationError,
-	SubmissionValidationOutput,
-	SubmittedClinicalRecord,
-} from '../submission-entities';
+	ClinicalEntitySchemaNames,
+	CommonTherapyFieldsEnum,
+	DonorFieldsEnum,
+	SurgeryFieldsEnum,
+} from '../../common-model/entities';
 import {
 	findClinicalObjects,
 	getSingleClinicalObjectFromDonor,
 } from '../../common-model/functions';
 import {
-	ClinicalEntitySchemaNames,
-	CommonTherapyFields,
-	DonorFieldsEnum,
-	SurgeryFieldsEnum,
-} from '../../common-model/entities';
+	DataValidationErrors,
+	SubmissionValidationError,
+	SubmissionValidationOutput,
+	SubmittedClinicalRecord,
+} from '../submission-entities';
 import { checkTreatmentHasCorrectTypeForTherapy, getTreatment } from './therapy';
 import * as utils from './utils';
 
@@ -112,8 +112,8 @@ export const validate = async (
 					DataValidationErrors.DUPLICATE_SURGERY_WHEN_SPECIMEN_NOT_SUBMITTED,
 					DonorFieldsEnum.submitter_donor_id,
 					{
-						submitter_donor_id: therapyRecord[CommonTherapyFields.submitter_donor_id],
-						submitter_treatment_id: therapyRecord[CommonTherapyFields.submitter_treatment_id],
+						submitter_donor_id: therapyRecord[CommonTherapyFieldsEnum.submitter_donor_id],
+						submitter_treatment_id: therapyRecord[CommonTherapyFieldsEnum.submitter_treatment_id],
 					},
 				),
 			);
@@ -147,8 +147,8 @@ function validateSurgeryByDonorAndTreatment(
 				DataValidationErrors.SURGERY_TYPES_NOT_EQUAL,
 				SurgeryFieldsEnum.submitter_specimen_id,
 				{
-					submitter_donor_id: therapyRecord[CommonTherapyFields.submitter_donor_id],
-					submitter_treatment_id: therapyRecord[CommonTherapyFields.submitter_treatment_id],
+					submitter_donor_id: therapyRecord[CommonTherapyFieldsEnum.submitter_donor_id],
+					submitter_treatment_id: therapyRecord[CommonTherapyFieldsEnum.submitter_treatment_id],
 					surgery_type: therapyRecord[SurgeryFieldsEnum.surgery_type],
 				},
 			);
@@ -160,12 +160,12 @@ function findSubmittedSurgeryByDonorAndTreatment(
 	existenDonor: DeepReadonly<Donor>,
 	therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
 ) {
-	const submitterDonorId = therapyRecord[CommonTherapyFields.submitter_donor_id];
-	const sumitterTreatmentId = therapyRecord[CommonTherapyFields.submitter_treatment_id];
+	const submitterDonorId = therapyRecord[CommonTherapyFieldsEnum.submitter_donor_id];
+	const sumitterTreatmentId = therapyRecord[CommonTherapyFieldsEnum.submitter_treatment_id];
 	return getSingleClinicalObjectFromDonor(existenDonor, ClinicalEntitySchemaNames.SURGERY, {
 		clinicalInfo: {
-			[CommonTherapyFields.submitter_donor_id]: submitterDonorId as string,
-			[CommonTherapyFields.submitter_treatment_id]: sumitterTreatmentId as string,
+			[CommonTherapyFieldsEnum.submitter_donor_id]: submitterDonorId as string,
+			[CommonTherapyFieldsEnum.submitter_treatment_id]: sumitterTreatmentId as string,
 		},
 	}) as DeepReadonly<Therapy>;
 }
@@ -174,12 +174,12 @@ function findSurgeryInCurrentSubmission(
 	mergedDonor: Donor,
 	therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
 ) {
-	const submitterDonorId = therapyRecord[CommonTherapyFields.submitter_donor_id];
-	const sumitterTreatmentId = therapyRecord[CommonTherapyFields.submitter_treatment_id];
+	const submitterDonorId = therapyRecord[CommonTherapyFieldsEnum.submitter_donor_id];
+	const sumitterTreatmentId = therapyRecord[CommonTherapyFieldsEnum.submitter_treatment_id];
 	const sugeries = findClinicalObjects(mergedDonor, ClinicalEntitySchemaNames.SURGERY, {
 		clinicalInfo: {
-			[CommonTherapyFields.submitter_donor_id]: submitterDonorId as string,
-			[CommonTherapyFields.submitter_treatment_id]: sumitterTreatmentId as string,
+			[CommonTherapyFieldsEnum.submitter_donor_id]: submitterDonorId as string,
+			[CommonTherapyFieldsEnum.submitter_treatment_id]: sumitterTreatmentId as string,
 		},
 	}) as DeepReadonly<Therapy>[];
 
