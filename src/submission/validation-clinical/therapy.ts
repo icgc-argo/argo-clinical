@@ -308,26 +308,17 @@ const validateDrugTreatmentFields = (
 	} else if (!isRxNorm && !isDrugDb) {
 		// Not RxNorm, but Not All Drug Fields -> Error
 		const drugFields = { drug_database, drug_term, drug_id };
-		const missingFields: ClinicalInfo[] = [];
-		for (const [drugKey, drugValue] of Object.entries(drugFields)) {
+		for (const [fieldName, drugValue] of Object.entries(drugFields)) {
 			if (!drugValue) {
-				const data = { [drugKey]: drugValue };
-				missingFields.push(data);
+				errors.push(
+					utils.buildSubmissionError(
+						therapyRecord,
+						DataValidationErrors.INVALID_DRUG_INFO,
+						fieldName as ClinicalFields,
+						{},
+					),
+				);
 			}
 		}
-
-		missingFields.forEach((field) => {
-			const [drugKey] = Object.entries(field)[0];
-			const fieldName = drugKey as ClinicalFields;
-
-			errors.push(
-				utils.buildSubmissionError(
-					therapyRecord,
-					DataValidationErrors.INVALID_DRUG_INFO,
-					fieldName,
-					{},
-				),
-			);
-		});
 	}
 };
