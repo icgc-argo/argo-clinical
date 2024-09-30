@@ -918,9 +918,18 @@ export namespace operations {
 				);
 				errorsAccumulator = errorsAccumulator.concat(programIdError);
 
-				// special case for therapies where we need to populate the rxnorm Ids, only do this step
-				// if the record is valid so far to avoid spending alot of time here
-				if (errorsAccumulator.length == 0 && isRxNormTherapy(command.clinicalType)) {
+				// Records using alternate Drug DB fields should skip RxNorm validation
+				// Drug DB field validation is handled downstream in validation-clinical/therapy.ts
+				const { drug_database, drug_term, drug_id } = processedRecord;
+				const hasDrugDbFields = Boolean(drug_database || drug_id || drug_term);
+
+				// Special case for therapies where we need to populate the rxnorm Ids
+				// Only do this step if the record is valid so far to avoid spending alot of time here
+				if (
+					errorsAccumulator.length == 0 &&
+					isRxNormTherapy(command.clinicalType) &&
+					!hasDrugDbFields
+				) {
 					const result = await validateRxNormFields(processedRecord, index, schemaName);
 					if (result.error != undefined) {
 						errorsAccumulator = errorsAccumulator.concat([result.error]);
@@ -941,7 +950,7 @@ export namespace operations {
 		};
 	};
 
-	function isRxNormTherapy(entity: string) {
+	export function isRxNormTherapy(entity: string) {
 		return (
 			entity == ClinicalEntitySchemaNames.CHEMOTHERAPY ||
 			entity == ClinicalEntitySchemaNames.HORMONE_THERAPY ||
