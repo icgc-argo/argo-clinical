@@ -950,7 +950,7 @@ export namespace operations {
 		};
 	};
 
-	export function isRxNormTherapy(entity: string) {
+	function isRxNormTherapy(entity: string) {
 		return (
 			entity == ClinicalEntitySchemaNames.CHEMOTHERAPY ||
 			entity == ClinicalEntitySchemaNames.HORMONE_THERAPY ||
