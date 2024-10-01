@@ -19,26 +19,28 @@
 
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
-import * as utils from './utils';
-import {
-	SubmissionValidationError,
-	SubmittedClinicalRecord,
-	DataValidationErrors,
-	SubmissionValidationOutput,
-	ClinicalSubmissionRecordsByDonorIdMap,
-} from '../submission-entities';
+import { ClinicalInfo, Donor, Treatment } from '../../clinical/clinical-entities';
+import { donorDao } from '../../clinical/donor-repo';
+import { ClinicalDataQuery } from '../../clinical/types';
 import {
 	ClinicalEntitySchemaNames,
+	ClinicalFields,
 	ClinicalTherapyType,
 	RadiationFieldsEnum,
+	TherapyDrugFieldsEnum,
 	TreatmentFieldsEnum,
 } from '../../common-model/entities';
 import { getSingleClinicalObjectFromDonor } from '../../common-model/functions';
-import { donorDao } from '../../clinical/donor-repo';
-import { ClinicalInfo, Donor, Treatment } from '../../clinical/clinical-entities';
-import { ClinicalDataQuery } from '../../clinical/types';
 import featureFlags from '../../feature-flags';
 import { isValueEqual } from '../../utils';
+import {
+	ClinicalSubmissionRecordsByDonorIdMap,
+	DataValidationErrors,
+	SubmissionValidationError,
+	SubmissionValidationOutput,
+	SubmittedClinicalRecord,
+} from '../submission-entities';
+import * as utils from './utils';
 
 export const validate = async (
 	therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
@@ -66,6 +68,27 @@ export const validate = async (
 		);
 
 		errors = [...errors, ...crossFileErrors];
+	}
+
+	// Validation for Treatment Drug Fields
+	const drugTreatmentTypes = [
+		'chemotherapy',
+		'hormonal therapy',
+		'hormone_therapy',
+		'immunotherapy',
+	];
+	const { treatment_type } = treatment.clinicalInfo;
+	const therapyType = treatment.therapies.find((therapy) =>
+		isValueEqual(therapy.clinicalInfo, therapyRecord),
+	)?.therapyType;
+
+	if (
+		Array.isArray(treatment_type) &&
+		therapyType &&
+		treatment_type.some((treatment) => drugTreatmentTypes.includes(treatment.toLowerCase())) &&
+		drugTreatmentTypes.includes(therapyType.toLowerCase())
+	) {
+		validateDrugTreatmentFields(therapyRecord, errors);
 	}
 
 	return { errors };
@@ -270,3 +293,32 @@ export function getTreatment(
 
 	return treatment;
 }
+
+const validateDrugTreatmentFields = (
+	therapyRecord: DeepReadonly<SubmittedClinicalRecord>,
+	errors: SubmissionValidationError[],
+) => {
+	const { drug_name, drug_rxnormcui, drug_database, drug_term, drug_id } = therapyRecord;
+	const isRxNorm = Boolean(drug_name && drug_rxnormcui);
+	const isDrugDb = Boolean(drug_database && drug_id && drug_term);
+
+	if (!isRxNorm && isDrugDb) {
+		// No RxNorm, All Drug DB Fields, no further validation
+		return;
+	} else if (!isRxNorm && !isDrugDb) {
+		// Not RxNorm, but Not All Drug Fields -> Error
+		const drugFields = { drug_database, drug_term, drug_id };
+		for (const [fieldName, drugValue] of Object.entries(drugFields)) {
+			if (!drugValue) {
+				errors.push(
+					utils.buildSubmissionError(
+						therapyRecord,
+						DataValidationErrors.INVALID_DRUG_INFO,
+						fieldName as ClinicalFields,
+						{},
+					),
+				);
+			}
+		}
+	}
+};

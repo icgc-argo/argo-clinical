@@ -17,24 +17,24 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { DeepReadonly } from 'deep-freeze';
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
+import { DeepReadonly } from 'deep-freeze';
 import {
-	ClinicalEntitySchemaNames,
-	DonorFieldsEnum,
-	SpecimenFieldsEnum,
-	PrimaryDiagnosisFieldsEnum,
-	FollowupFieldsEnum,
-	TreatmentFieldsEnum,
-	TherapyRxNormFields,
-	CommonTherapyFields,
-	RadiationFieldsEnum,
-	ClinicalTherapyType,
-	ImmunotherapyFields,
-	FamilyHistoryFieldsEnum,
-	ExposureFieldsEnum,
-	ComorbidityFieldsEnum,
 	BiomarkerFieldsEnum,
+	ClinicalEntitySchemaNames,
+	ClinicalTherapyType,
+	CommonTherapyFieldsEnum,
+	ComorbidityFieldsEnum,
+	DonorFieldsEnum,
+	ExposureFieldsEnum,
+	FamilyHistoryFieldsEnum,
+	FollowupFieldsEnum,
+	ImmunotherapyFieldsEnum,
+	PrimaryDiagnosisFieldsEnum,
+	RadiationFieldsEnum,
+	SpecimenFieldsEnum,
+	TherapyRxNormFieldsEnum,
+	TreatmentFieldsEnum,
 } from '../common-model/entities';
 
 /**
@@ -170,6 +170,7 @@ export enum DataValidationErrors {
 	INVALID_LOST_TO_FOLLOW_UP_ID = 'INVALID_LOST_TO_FOLLOW_UP_ID',
 	INVALID_SUBMISSION_AFTER_LOST_TO_FOLLOW_UP = 'INVALID_SUBMISSION_AFTER_LOST_TO_FOLLOW_UP',
 	INVALID_DIAGNOSIS_AFTER_LOST_TO_FOLLOW_UP = 'INVALID_DIAGNOSIS_AFTER_LOST_TO_FOLLOW_UP',
+	INVALID_DRUG_INFO = 'INVALID_DRUG_INFO',
 }
 
 export type RegistrationStat = Array<{
@@ -406,19 +407,19 @@ export const ClinicalEntityToEnumFieldsMap: Record<ClinicalEntitySchemaNames, st
 	[ClinicalEntitySchemaNames.BIOMARKER]: Object.values(BiomarkerFieldsEnum),
 	[ClinicalEntitySchemaNames.FOLLOW_UP]: Object.values(FollowupFieldsEnum),
 	[ClinicalEntitySchemaNames.TREATMENT]: Object.values(TreatmentFieldsEnum),
-	[ClinicalEntitySchemaNames.CHEMOTHERAPY]: (Object.values(TherapyRxNormFields) as string[]).concat(
-		Object.values(CommonTherapyFields),
-	),
+	[ClinicalEntitySchemaNames.CHEMOTHERAPY]: (Object.values(
+		TherapyRxNormFieldsEnum,
+	) as string[]).concat(Object.values(CommonTherapyFieldsEnum)),
 	[ClinicalEntitySchemaNames.RADIATION]: (Object.values(RadiationFieldsEnum) as string[]).concat(
-		Object.values(CommonTherapyFields),
+		Object.values(CommonTherapyFieldsEnum),
 	),
 	[ClinicalEntitySchemaNames.HORMONE_THERAPY]: (Object.values(
-		TherapyRxNormFields,
-	) as string[]).concat(Object.values(CommonTherapyFields)),
-	[ClinicalEntitySchemaNames.IMMUNOTHERAPY]: (Object.values(TherapyRxNormFields) as string[])
-		.concat(Object.values(CommonTherapyFields))
-		.concat(Object.values(ImmunotherapyFields) as string[]),
-	[ClinicalEntitySchemaNames.SURGERY]: Object.values(CommonTherapyFields) as string[],
+		TherapyRxNormFieldsEnum,
+	) as string[]).concat(Object.values(CommonTherapyFieldsEnum)),
+	[ClinicalEntitySchemaNames.IMMUNOTHERAPY]: (Object.values(TherapyRxNormFieldsEnum) as string[])
+		.concat(Object.values(CommonTherapyFieldsEnum))
+		.concat(Object.values(ImmunotherapyFieldsEnum) as string[]),
+	[ClinicalEntitySchemaNames.SURGERY]: Object.values(CommonTherapyFieldsEnum) as string[],
 };
 
 export const TreatmentTypeValuesMappedByTherapy: Record<ClinicalTherapyType, string> = {
