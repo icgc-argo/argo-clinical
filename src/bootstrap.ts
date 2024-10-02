@@ -73,25 +73,16 @@ const connectToDb = async (
 };
 
 async function connect(delayMillis: number, mongoUrl: string, username: string, password: string) {
+	const connectionString = `mongodb://${mongoUrl}`;
 	try {
 		// https://mongoosejs.com/docs/connections.html
-		await mongoose.connect(mongoUrl, {
-			// autoReconnect: true,
-			// http://mongodb.github.io/node-mongodb-native/3.1/reference/faq/
-			// socketTimeoutMS: 10000,
-			// connectTimeoutMS: 30000,
-			// keepAlive: true,
-			// reconnectTries: 10,
-			// reconnectInterval: 3000,
-			bufferCommands: false,
-			// bufferMaxEntries: 0,
+		await mongoose.connect(connectionString, {
 			user: username,
 			pass: password,
-			// https://mongoosejs.com/docs/deprecations.html
-			// useNewUrlParser: true,
-			// useFindAndModify: false,
-			// useCreateIndex: true,
+			socketTimeoutMS: 10000,
+			serverSelectionTimeoutMS: 30000,
 		});
+
 		L.debug('mongoose connected');
 	} catch (err) {
 		L.error('failed to connect to mongo', err);
@@ -168,7 +159,6 @@ async function pingRxNorm(pool: Pool) {
 
 export const run = async (config: AppConfig) => {
 	initConfigs(config);
-
 	// setup mongo connection
 	await setupDBConnection(config.mongoUrl(), config.mongoUser(), config.mongoPassword());
 	if (process.env.LOG_LEVEL === 'debug') {

@@ -107,16 +107,16 @@ describe('clinical Api', () => {
 					.withNetwork(testNetwork)
 					.withExposedPorts(27017)
 					.start();
-				dburl = `mongodb://${mongoContainer.getIpAddress(
+				dburl = `${mongoContainer.getIpAddress(
 					testNetwork.getName(),
 				)}:${mongoContainer.getMappedPort(27017)}/clinical`;
 				console.log(`mongo test container started ${dburl}`);
 				await bootstrap.run({
 					mongoPassword() {
-						return '';
+						return 'password';
 					},
 					mongoUser() {
-						return '';
+						return 'admin';
 					},
 					mongoUrl: () => {
 						return dburl;

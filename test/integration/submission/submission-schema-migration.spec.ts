@@ -161,7 +161,7 @@ describe('schema migration api', () => {
 						return '';
 					},
 					mongoUrl: () => {
-						dburl = `mongodb://${mongoContainer.getIpAddress(
+						dburl = `${mongoContainer.getIpAddress(
 							testNetwork.getName(),
 						)}:${mongoContainer.getMappedPort(27017)}/clinical`;
 						return dburl;

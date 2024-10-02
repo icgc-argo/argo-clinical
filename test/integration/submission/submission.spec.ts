@@ -111,7 +111,7 @@ describe('Submission Api', () => {
 						return '';
 					},
 					mongoUrl: () => {
-						dburl = `mongodb://${mongoContainer.getIpAddress()}:${mongoContainer.getMappedPort(
+						dburl = `${mongoContainer.getIpAddress()}:${mongoContainer.getMappedPort(
 							27017,
 						)}/clinical`;
 						return dburl;
