@@ -26,7 +26,7 @@ import deepEqualInAnyOrder from 'deep-equal-in-any-order';
 import _ from 'lodash';
 import 'mocha';
 import mongoose from 'mongoose';
-import { GenericContainer, Network } from 'testcontainers';
+import { Network } from 'testcontainers';
 import app from '../../../src/app';
 import * as bootstrap from '../../../src/bootstrap';
 import { ClinicalEntitySchemaNames } from '../../../src/common-model/entities';
@@ -47,7 +47,7 @@ chai.should();
 describe('clinical Api', () => {
 	let mongoContainer: any;
 	let testNetwork: any;
-	let dburl = ``;
+	let dbUrl = ``;
 
 	const programId = 'PACA-AU';
 	const donorRegistrationRecord = {
@@ -108,8 +108,8 @@ describe('clinical Api', () => {
 					.withNetwork(testNetwork)
 					.withExposedPorts(27017)
 					.start();
-				dburl = mongoContainer.getConnectionString();
-				console.log(`mongo test container started ${dburl}`);
+				dbUrl = `${mongoContainer.getConnectionString()}/clinical`;
+				console.log(`mongo test container started ${dbUrl}`);
 				await bootstrap.run({
 					mongoPassword() {
 						return '';
@@ -118,7 +118,7 @@ describe('clinical Api', () => {
 						return '';
 					},
 					mongoUrl: () => {
-						return dburl;
+						return dbUrl;
 					},
 					initialSchemaVersion() {
 						return '1.0';
@@ -198,8 +198,8 @@ describe('clinical Api', () => {
 		const donor = emptyDonorDocument(donorDoc);
 		this.beforeEach(async () => {
 			try {
-				await cleanCollection(dburl, 'donors');
-				await insertData(dburl, 'donors', donor);
+				await cleanCollection(dbUrl, 'donors');
+				await insertData(dbUrl, 'donors', donor);
 				return;
 			} catch (err) {
 				console.error(err);
@@ -301,7 +301,7 @@ describe('clinical Api', () => {
 					.auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
 					.then(async (res: any) => {
 						res.should.have.status(200);
-						await assertDbCollectionEmpty(dburl, 'donors');
+						await assertDbCollectionEmpty(dbUrl, 'donors');
 					});
 			});
 			it('/clinical/donors should not allow delete without proper auth', async function() {

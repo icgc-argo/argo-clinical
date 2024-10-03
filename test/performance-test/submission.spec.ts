@@ -52,11 +52,13 @@ chai.use(require('chai-http'));
 chai.use(require('deep-equal-in-any-order'));
 chai.should();
 
-const clearCollections = async (dburl: string, collections: string[]) => {
+const clearCollections = async (dbUrl: string, collections: string[]) => {
 	try {
-		const promises = collections.map((collectionName) => cleanCollection(dburl, collectionName));
+		const promises = collections.map(
+			async (collectionName) => await cleanCollection(dbUrl, collectionName),
+		);
 		await Promise.all(promises);
-		await resetCounters(dburl);
+		await resetCounters(dbUrl);
 		return;
 	} catch (err) {
 		console.error(err);
@@ -69,7 +71,7 @@ const schemaVersion = '1.0';
 describe('Submission Api', () => {
 	let mongoContainer: any;
 	let mysqlContainer: any;
-	let dburl = ``;
+	let dbUrl = ``;
 	// will run when all tests are finished
 	before(() => {
 		return (async () => {
@@ -97,10 +99,10 @@ describe('Submission Api', () => {
 						return '';
 					},
 					mongoUrl: () => {
-						dburl = `mongodb://${mongoContainer.getIpAddress()}:${mongoContainer.getMappedPort(
+						dbUrl = `mongodb://${mongoContainer.getIpAddress()}:${mongoContainer.getMappedPort(
 							27017,
 						)}/clinical`;
-						return dburl;
+						return dbUrl;
 					},
 					initialSchemaVersion() {
 						return schemaVersion;
@@ -178,7 +180,7 @@ describe('Submission Api', () => {
 		const num = 3000;
 
 		this.beforeEach(async () => {
-			await clearCollections(dburl, [
+			await clearCollections(dbUrl, [
 				'donors',
 				'activeregistrations',
 				'activesubmissions',

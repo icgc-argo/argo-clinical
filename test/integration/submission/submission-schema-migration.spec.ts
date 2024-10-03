@@ -62,7 +62,7 @@ describe('schema migration api', () => {
 	let mongoContainer: any;
 	let mysqlContainer: any;
 	let testNetwork: any;
-	let dburl = ``;
+	let dbUrl = ``;
 
 	const programId = 'ABCD-EF';
 	const donor: Donor = emptyDonorDocument({
@@ -161,10 +161,10 @@ describe('schema migration api', () => {
 						return '';
 					},
 					mongoUrl: () => {
-						dburl = `${mongoContainer.getIpAddress(
+						dbUrl = `${mongoContainer.getIpAddress(
 							testNetwork.getName(),
 						)}:${mongoContainer.getMappedPort(27017)}/clinical`;
-						return dburl;
+						return dbUrl;
 					},
 					initialSchemaVersion() {
 						return startingSchemaVersion;
@@ -241,9 +241,9 @@ describe('schema migration api', () => {
 	});
 
 	beforeEach(async () => {
-		await clearCollections(dburl, ['donors', 'dictionarymigrations', 'dataschemas']);
-		await insertData(dburl, 'donors', donor);
-		await insertData(dburl, 'donors', donor2);
+		await clearCollections(dbUrl, ['donors', 'dictionarymigrations', 'dataschemas']);
+		await insertData(dbUrl, 'donors', donor);
+		await insertData(dbUrl, 'donors', donor2);
 		// reset the base schema since tests can load new one
 		await bootstrap.loadSchema(schemaName, startingSchemaVersion);
 		sendProgramUpdatedMessageFunc = spy(getInstance(), 'sendProgramUpdatedMessage');
@@ -258,7 +258,7 @@ describe('schema migration api', () => {
 
 	const assertSuccessfulMigration = async (res: any, version: string) => {
 		res.should.have.status(200);
-		const schema = await findInDb(dburl, 'dataschemas', {});
+		const schema = await findInDb(dbUrl, 'dataschemas', {});
 		schema[0].version.should.eq(version);
 	};
 
@@ -344,11 +344,11 @@ describe('schema migration api', () => {
 					hasMissingEntityException: false,
 				},
 			});
-			await insertData(dburl, 'donors', donorInvalidWithNewSchema);
+			await insertData(dbUrl, 'donors', donorInvalidWithNewSchema);
 			await migrateSyncTo('4.0').then((res: any) => {
 				res.should.have.status(200);
 			});
-			const updatedDonor = await findInDb(dburl, 'donors', {});
+			const updatedDonor = await findInDb(dbUrl, 'donors', {});
 
 			// donor 1 stats after migration, added entity completion
 			chai.expect(updatedDonor[0].completionStats.coreCompletion).to.deep.include({
@@ -408,7 +408,7 @@ describe('schema migration api', () => {
 			});
 
 			const res = await getAllMigrationDocs();
-			const donors = await findInDb(dburl, 'donors', {});
+			const donors = await findInDb(dbUrl, 'donors', {});
 
 			const [migration] = res.body;
 			assertNoMigrationErrors(res, VERSION);
@@ -437,7 +437,7 @@ describe('schema migration api', () => {
 			const VERSION = '9.0';
 			await migrateSyncTo(VERSION).then(async (res: any) => {
 				res.should.have.status(200);
-				const schema = await findInDb(dburl, 'dataschemas', {});
+				const schema = await findInDb(dbUrl, 'dataschemas', {});
 				// migration will fail
 				schema[0].version.should.eq(startingSchemaVersion);
 			});
@@ -568,13 +568,13 @@ describe('schema migration api', () => {
 
 	describe('dry run migration api', () => {
 		it('should report donor validation errors', async () => {
-			await insertData(dburl, 'donors', newSchemaInvalidDonor);
+			await insertData(dbUrl, 'donors', newSchemaInvalidDonor);
 
 			await dryRunMigrateTo('7.0').then(async (res: any) => {
 				res.should.have.status(200);
 				const migration = res.body as DictionaryMigration;
 				migration.should.not.be.undefined;
-				const migrations = await findInDb(dburl, 'dictionarymigrations', {});
+				const migrations = await findInDb(dbUrl, 'dictionarymigrations', {});
 				migrations.should.not.be.empty;
 				migrations[0].should.not.be.undefined;
 				const dbMigration = migrations[0];

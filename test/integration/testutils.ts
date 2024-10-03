@@ -19,18 +19,19 @@
 
 import chai from 'chai';
 import _ from 'lodash';
-import mongo, { MongoClient } from 'mongodb';
+import mongo from 'mongodb';
 import * as mysql from 'mysql';
 import * as utils from 'util';
+import { createConnection } from '../../src/bootstrap';
 import { Donor } from '../../src/clinical/clinical-entities';
 
-export const clearCollections = async (dburl: string, collections: string[]) => {
+export const clearCollections = async (dbUrl: string, collections: string[]) => {
 	try {
 		const promises = collections.map(
-			async (collectionName) => await cleanCollection(dburl, collectionName),
+			async (collectionName) => await cleanCollection(dbUrl, collectionName),
 		);
 		await Promise.all(promises);
-		await resetCounters(dburl);
+		await resetCounters(dbUrl);
 		return;
 	} catch (err) {
 		console.error(err);
@@ -38,26 +39,21 @@ export const clearCollections = async (dburl: string, collections: string[]) => 
 	}
 };
 
-export const cleanCollection = async (dburl: string, collection: string): Promise<any> => {
-	const dbClient = new MongoClient(dburl);
-	const session = await dbClient.startSession();
+export const cleanCollection = async (dbUrl: string, collection: string): Promise<any> => {
+	const dbConnection = await createConnection(dbUrl);
+
 	try {
-		session.withTransaction(async () => {
-			await dbClient
-				.db('clinical')
-				.collection(collection)
-				.deleteMany();
-			await dbClient.db('clinical').dropCollection(collection);
-		});
+		await dbConnection.collection(collection).deleteMany({});
+		await dbConnection.collection(collection).drop();
+		await dbConnection.createCollection(collection);
 	} catch (err) {
 		console.error('failed to drop collection', collection, err);
 	}
-	await dbClient.db('clinical').createCollection(collection);
-	await dbClient.close();
+	await dbConnection.close();
 };
 
-export const resetCounters = async (dburl: string): Promise<any> => {
-	const dbClient = new mongo.MongoClient(dburl);
+export const resetCounters = async (dbUrl: string): Promise<any> => {
+	const dbClient = new mongo.MongoClient(dbUrl);
 	await dbClient.connect();
 	await dbClient
 		.db('clinical')
@@ -67,15 +63,13 @@ export const resetCounters = async (dburl: string): Promise<any> => {
 };
 
 export const insertData = async (
-	dburl: string,
+	dbUrl: string,
 	collection: string,
 	document: any,
 ): Promise<any> => {
-	const dbClient = new mongo.MongoClient(dburl);
-	await dbClient.connect();
-	await dbClient.db('clinical').collection(collection);
-	// .insert(document);
-	await dbClient.close();
+	const dbConnection = await createConnection(dbUrl);
+	await dbConnection.collection(collection).insertOne(document);
+	await dbConnection.close();
 	return document._id;
 };
 
@@ -94,12 +88,12 @@ export async function insertRxNormDrug(id: string, name: string, pool: mysql.Poo
 }
 
 export const updateData = async (
-	dburl: string,
+	dbUrl: string,
 	collection: string,
 	document: any,
 	filter: any = {},
 ): Promise<any> => {
-	const dbClient = new mongo.MongoClient(dburl);
+	const dbClient = new mongo.MongoClient(dbUrl);
 	await dbClient.connect();
 	await dbClient.db('clinical').collection(collection);
 	// .update(filter, document, { upsert: true });
@@ -136,13 +130,13 @@ export const emptyDonorDocument = (overrides?: Partial<Donor>) => {
 	return _.merge(donor, overrides);
 };
 
-export const createDonorDoc = async (dburl: string, donorDoc: Donor) => {
-	await insertData(dburl, 'donors', donorDoc);
+export const createDonorDoc = async (dbUrl: string, donorDoc: Donor) => {
+	await insertData(dbUrl, 'donors', donorDoc);
 	return donorDoc;
 };
 
 export const generateDonor = async (
-	dburl: string,
+	dbUrl: string,
 	programId: string,
 	submitterDonorId?: string,
 ) => {
@@ -153,11 +147,11 @@ export const generateDonor = async (
 		programId,
 		donorId: Date.now(),
 	});
-	return createDonorDoc(dburl, doc);
+	return createDonorDoc(dbUrl, doc);
 };
 
-export async function assertDbCollectionEmpty(dburl: string, collection: string) {
-	const dbClient = new mongo.MongoClient(dburl);
+export async function assertDbCollectionEmpty(dbUrl: string, collection: string) {
+	const dbClient = new mongo.MongoClient(dbUrl);
 	await dbClient.connect();
 	const count = await dbClient
 		.db('clinical')
@@ -167,8 +161,8 @@ export async function assertDbCollectionEmpty(dburl: string, collection: string)
 	chai.expect(count).to.eq(0);
 }
 
-export async function findInDb(dburl: string, collection: string, filter: any) {
-	const dbClient = new mongo.MongoClient(dburl);
+export async function findInDb(dbUrl: string, collection: string, filter: any) {
+	const dbClient = new mongo.MongoClient(dbUrl);
 	await dbClient.connect();
 	const result = await dbClient
 		.db('clinical')

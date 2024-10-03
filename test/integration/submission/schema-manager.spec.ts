@@ -36,7 +36,7 @@ chai.should();
 
 describe('manager', () => {
 	let mongoContainer: any;
-	let dburl = ``;
+	let dbUrl = ``;
 	const schemaName = 'ARGO Clinical Submission';
 	const server = new ServerMock({ host: 'localhost', port: 54321 });
 	const startServerPromise = promisify(server.start);
@@ -57,10 +57,10 @@ describe('manager', () => {
 			try {
 				mongoContainer = await new GenericContainer('mongo').withExposedPorts(27017).start();
 				console.log('mongo test container started');
-				dburl = `mongodb://${mongoContainer.getIpAddress()}:${mongoContainer.getMappedPort(
+				dbUrl = `mongodb://${mongoContainer.getIpAddress()}:${mongoContainer.getMappedPort(
 					27017,
 				)}/clinical`;
-				await prep(dburl);
+				await prep(dbUrl);
 				await startServerPromise();
 			} catch (err) {
 				console.error('Lectern Client : before >>>>>>>>>>>', err);
@@ -75,7 +75,9 @@ describe('manager', () => {
 		await mongoContainer.stop();
 	});
 
-	beforeEach(async () => await cleanCollection(dburl, 'dataschemas'));
+	beforeEach(async () => {
+		await cleanCollection(dbUrl, 'dataschemas');
+	});
 
 	it('should load schema in db', async function() {
 		// has to be done in every test to reset the state of the manager
@@ -100,7 +102,7 @@ describe('manager', () => {
 		} catch (er) {
 			return er;
 		}
-		const dbSchema = (await findInDb(dburl, 'dataschemas', {})) as any[];
+		const dbSchema = (await findInDb(dbUrl, 'dataschemas', {})) as any[];
 		chai.expect(dbSchema).to.not.be.undefined;
 		chai.expect(dbSchema.length).to.eq(1);
 		chai.expect(dbSchema[0].name).to.eq(schemaName);
@@ -146,7 +148,7 @@ describe('manager', () => {
 			return er;
 		}
 
-		const dbSchema = (await findInDb(dburl, 'dataschemas', {})) as any[];
+		const dbSchema = (await findInDb(dbUrl, 'dataschemas', {})) as any[];
 		chai.expect(dbSchema).to.not.be.undefined;
 		// Manager now adds the latest Dictionary, rather than replacing
 		chai.expect(dbSchema.length).to.eq(2);
