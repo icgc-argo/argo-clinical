@@ -73,19 +73,19 @@ const connectToDb = async (
 };
 
 async function connect(delayMillis: number, mongoUrl: string, username: string, password: string) {
-	const connectionString = `mongodb://${mongoUrl}`;
 	try {
 		// https://mongoosejs.com/docs/connections.html
-		await mongoose.connect(connectionString, {
+		await mongoose.connect(mongoUrl, {
+			directConnection: true,
 			user: username,
 			pass: password,
 			socketTimeoutMS: 10000,
-			serverSelectionTimeoutMS: 30000,
 		});
 
 		L.debug('mongoose connected');
 	} catch (err) {
-		L.error('failed to connect to mongo', err);
+		console.error('Failed to connect to Mongo');
+		console.error(err);
 		setStatus('db', { status: Status.ERROR });
 		setTimeout(() => {
 			L.debug('retrying to connect to mongo');

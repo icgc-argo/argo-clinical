@@ -19,14 +19,16 @@
 
 import chai from 'chai';
 import _ from 'lodash';
-import mongo from 'mongodb';
+import mongo, { MongoClient } from 'mongodb';
 import * as mysql from 'mysql';
 import * as utils from 'util';
 import { Donor } from '../../src/clinical/clinical-entities';
 
 export const clearCollections = async (dburl: string, collections: string[]) => {
 	try {
-		const promises = collections.map((collectionName) => cleanCollection(dburl, collectionName));
+		const promises = collections.map(
+			async (collectionName) => await cleanCollection(dburl, collectionName),
+		);
 		await Promise.all(promises);
 		await resetCounters(dburl);
 		return;
@@ -37,12 +39,16 @@ export const clearCollections = async (dburl: string, collections: string[]) => 
 };
 
 export const cleanCollection = async (dburl: string, collection: string): Promise<any> => {
-	const dbClient = new mongo.MongoClient(dburl);
-	await dbClient.connect();
+	const dbClient = new MongoClient(dburl);
+	const session = await dbClient.startSession();
 	try {
-		await dbClient.db('clinical').collection(collection);
-		// .remove({});
-		await dbClient.db('clinical').dropCollection(collection);
+		session.withTransaction(async () => {
+			await dbClient
+				.db('clinical')
+				.collection(collection)
+				.deleteMany();
+			await dbClient.db('clinical').dropCollection(collection);
+		});
 	} catch (err) {
 		console.error('failed to drop collection', collection, err);
 	}

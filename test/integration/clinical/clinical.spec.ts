@@ -19,6 +19,7 @@
 
 import chai from 'chai';
 // needed for typescript
+import { MongoDBContainer } from '@testcontainers/mongodb';
 import AdmZip from 'adm-zip';
 import 'chai-http';
 import deepEqualInAnyOrder from 'deep-equal-in-any-order';
@@ -103,20 +104,18 @@ describe('clinical Api', () => {
 		return (async () => {
 			try {
 				testNetwork = await new Network().start();
-				mongoContainer = await new GenericContainer('mongo')
+				mongoContainer = await new MongoDBContainer('mongo:6.0.1')
 					.withNetwork(testNetwork)
 					.withExposedPorts(27017)
 					.start();
-				dburl = `${mongoContainer.getIpAddress(
-					testNetwork.getName(),
-				)}:${mongoContainer.getMappedPort(27017)}/clinical`;
+				dburl = mongoContainer.getConnectionString();
 				console.log(`mongo test container started ${dburl}`);
 				await bootstrap.run({
 					mongoPassword() {
-						return 'password';
+						return '';
 					},
 					mongoUser() {
-						return 'admin';
+						return '';
 					},
 					mongoUrl: () => {
 						return dburl;
