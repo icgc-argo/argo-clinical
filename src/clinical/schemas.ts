@@ -18,6 +18,7 @@
  */
 
 import mongoose from 'mongoose';
+import mongoosePaginate from 'mongoose-paginate-v2';
 import { Donor } from './clinical-entities';
 
 export const SampleSchema = new mongoose.Schema(
@@ -136,6 +137,6 @@ export const DonorSchema = new mongoose.Schema(
 		completionStats: {},
 	},
 	{ timestamps: true, minimize: false }, // minimize false is to avoid omitting clinicalInfo:{}
-);
+).plugin(mongoosePaginate);
 
 export type DonorDocument = mongoose.Document & Donor;

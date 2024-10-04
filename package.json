@@ -128,7 +128,7 @@
 		"mock-http-server": "^1.4.1",
 		"mongodb": "^6.9.0",
 		"mongoose": "^8.6.3",
-		"mongoose-paginate-v2": "^1.8.3",
+		"mongoose-paginate-v2": "^1.8.5",
 		"mongoose-sequence": "^5.2.2",
 		"morgan": "^1.10.0",
 		"mquery": ">=3.2.3",

@@ -53,13 +53,9 @@ export const cleanCollection = async (dbUrl: string, collection: string): Promis
 };
 
 export const resetCounters = async (dbUrl: string): Promise<any> => {
-	const dbClient = new mongo.MongoClient(dbUrl);
-	await dbClient.connect();
-	await dbClient
-		.db('clinical')
-		.collection('counters')
-		.updateMany({}, { $set: { seq: 0 } });
-	await dbClient.close();
+	const dbConnection = await createConnection(dbUrl);
+	await dbConnection.collection('counters').updateMany({}, { $set: { seq: 0 } });
+	await dbConnection.close();
 };
 
 export const insertData = async (
@@ -93,11 +89,9 @@ export const updateData = async (
 	document: any,
 	filter: any = {},
 ): Promise<any> => {
-	const dbClient = new mongo.MongoClient(dbUrl);
-	await dbClient.connect();
-	await dbClient.db('clinical').collection(collection);
-	// .update(filter, document, { upsert: true });
-	await dbClient.close();
+	const dbConnection = await createConnection(dbUrl);
+	await dbConnection.collection(collection).findOneAndUpdate(filter, document, { upsert: true });
+	await dbConnection.close();
 	return document._id;
 };
 
@@ -151,25 +145,19 @@ export const generateDonor = async (
 };
 
 export async function assertDbCollectionEmpty(dbUrl: string, collection: string) {
-	const dbClient = new mongo.MongoClient(dbUrl);
-	await dbClient.connect();
-	const count = await dbClient
-		.db('clinical')
-		.collection(collection)
-		.countDocuments();
-	await dbClient.close();
+	const dbConnection = await createConnection(dbUrl);
+	const count = await dbConnection.collection(collection).countDocuments();
+	await dbConnection.close();
 	chai.expect(count).to.eq(0);
 }
 
 export async function findInDb(dbUrl: string, collection: string, filter: any) {
-	const dbClient = new mongo.MongoClient(dbUrl);
-	await dbClient.connect();
-	const result = await dbClient
-		.db('clinical')
+	const dbConnection = await createConnection(dbUrl);
+	const result = await dbConnection
 		.collection(collection)
 		.find(filter)
 		.sort({ $natural: -1 })
 		.toArray();
-	await dbClient.close();
+	await dbConnection.close();
 	return result;
 }
