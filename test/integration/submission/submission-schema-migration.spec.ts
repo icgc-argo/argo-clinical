@@ -18,6 +18,8 @@
  */
 
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
+import { MongoDBContainer } from '@testcontainers/mongodb';
+import { MySqlContainer } from '@testcontainers/mysql';
 import app from '../../../src/app';
 import * as bootstrap from '../../../src/bootstrap';
 import { Donor } from '../../../src/clinical/clinical-entities';
@@ -138,11 +140,12 @@ describe('schema migration api', () => {
 		return (async () => {
 			try {
 				testNetwork = await new Network().start();
-				const mongoContainerPromise = new GenericContainer('mongo')
+				mongoContainer = await new MongoDBContainer('mongo:6.0.1')
 					.withNetwork(testNetwork)
 					.withExposedPorts(27017)
 					.start();
-				const mysqlContainerPromise = new GenericContainer('mysql')
+				dbUrl = `${mongoContainer.getConnectionString()}/clinical`;
+				mysqlContainer = await new MySqlContainer()
 					.withNetwork(testNetwork)
 					.withEnvironment({ MYSQL_DATABASE: 'rxnorm' })
 					.withEnvironment({ MYSQL_USER: 'clinical' })
@@ -150,8 +153,7 @@ describe('schema migration api', () => {
 					.withEnvironment({ MYSQL_PASSWORD: 'password' })
 					.withExposedPorts(3306)
 					.start();
-				mongoContainer = await mongoContainerPromise;
-				mysqlContainer = await mysqlContainerPromise;
+
 				console.log('db test containers started');
 				await bootstrap.run({
 					mongoPassword() {
@@ -161,9 +163,6 @@ describe('schema migration api', () => {
 						return '';
 					},
 					mongoUrl: () => {
-						dbUrl = `${mongoContainer.getIpAddress(
-							testNetwork.getName(),
-						)}:${mongoContainer.getMappedPort(27017)}/clinical`;
 						return dbUrl;
 					},
 					initialSchemaVersion() {

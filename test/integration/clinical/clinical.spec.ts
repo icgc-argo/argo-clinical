@@ -17,10 +17,9 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import chai from 'chai';
-// needed for typescript
 import { MongoDBContainer } from '@testcontainers/mongodb';
 import AdmZip from 'adm-zip';
+import chai from 'chai';
 import 'chai-http';
 import deepEqualInAnyOrder from 'deep-equal-in-any-order';
 import _ from 'lodash';
@@ -316,7 +315,7 @@ describe('clinical Api', () => {
 		});
 
 		describe('export endpoints', function() {
-			it('shoud download zip file with tsvs of program clinical data', (done) => {
+			it('should download zip file with tsvs of program clinical data', (done) => {
 				chai
 					.request(app)
 					.get(`/clinical/program/${programId}/tsv-export`)

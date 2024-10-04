@@ -17,27 +17,22 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// using import fails when running the test
-// import * as chai from "chai";
+import { MongoDBContainer } from '@testcontainers/mongodb';
+import { MySqlContainer } from '@testcontainers/mysql';
 import chai from 'chai';
-import fs from 'fs';
-import mongo from 'mongodb';
-// needed for types
-import AdmZip from 'adm-zip';
 import chaiExclude from 'chai-exclude';
 import 'chai-http';
 import 'deep-equal-in-any-order';
+import fs from 'fs';
 import _ from 'lodash';
 import 'mocha';
 import mongoose from 'mongoose';
-import { GenericContainer, Wait } from 'testcontainers';
 import app from '../../../src/app';
 import * as bootstrap from '../../../src/bootstrap';
 import { Donor } from '../../../src/clinical/clinical-entities';
 import { donorDao } from '../../../src/clinical/donor-repo';
 import {
 	ClinicalEntitySchemaNames,
-	ClinicalUniqueIdentifier,
 	DonorFieldsEnum,
 	FollowupFieldsEnum,
 	PrimaryDiagnosisFieldsEnum,
@@ -94,8 +89,9 @@ describe('Submission Api', () => {
 	before(() => {
 		return (async () => {
 			try {
-				mongoContainer = await new GenericContainer('mongo').withExposedPorts(27017).start();
-				mysqlContainer = await new GenericContainer('mysql')
+				mongoContainer = await new MongoDBContainer('mongo:6.0.1').withExposedPorts(27017).start();
+				dbUrl = `${mongoContainer.getConnectionString()}/clinical`;
+				mysqlContainer = await new MySqlContainer()
 					.withEnvironment({ MYSQL_DATABASE: RXNORM_DB })
 					.withEnvironment({ MYSQL_USER: RXNORM_USER })
 					.withEnvironment({ MYSQL_ROOT_PASSWORD: RXNORM_PASS })
@@ -111,9 +107,6 @@ describe('Submission Api', () => {
 						return '';
 					},
 					mongoUrl: () => {
-						dbUrl = `${mongoContainer.getIpAddress()}:${mongoContainer.getMappedPort(
-							27017,
-						)}/clinical`;
 						return dbUrl;
 					},
 					initialSchemaVersion() {
@@ -401,9 +394,9 @@ describe('Submission Api', () => {
 			} catch (err) {
 				return err;
 			}
-			const conn = await new mongo.MongoClient(dbUrl).connect();
-			const existingDonors = await conn
-				.db('clinical')
+
+			const dbConnection = await bootstrap.createConnection(dbUrl);
+			const existingDonors = await dbConnection
 				.collection('donors')
 				.findOne<ActiveRegistration | null>({});
 			console.log(JSON.stringify(existingDonors));
@@ -481,9 +474,8 @@ describe('Submission Api', () => {
 				.end(async (err: any, res: any) => {
 					try {
 						res.should.have.status(201);
-						const conn = await new mongo.MongoClient(dbUrl).connect();
+						const conn = await bootstrap.createConnection(dbUrl);
 						const savedRegistration = await conn
-							.db('clinical')
 							.collection('activeregistrations')
 							.findOne<ActiveRegistration | null>({});
 						await conn.close();
@@ -773,9 +765,8 @@ describe('Submission Api', () => {
 				.attach('clinicalFiles', file, 'donor.tsv')
 				.end(async (err: any, res: any) => {
 					res.should.have.status(200);
-					const conn = await new mongo.MongoClient(dbUrl).connect();
+					const conn = await bootstrap.createConnection(dbUrl);
 					const savedSubmission = await conn
-						.db('clinical')
 						.collection('activesubmissions')
 						.findOne<ActiveClinicalSubmission | null>({});
 					await conn.close();
@@ -2173,9 +2164,8 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dbUrl: 
 		);
 	});
 
-	const conn = await new mongo.MongoClient(dbUrl).connect();
+	const conn = await bootstrap.createConnection(dbUrl);
 	const actualDonors: any[] | null = await conn
-		.db('clinical')
 		.collection('donors')
 		.find({})
 		.sort('donorId', 1)
@@ -2232,9 +2222,8 @@ function assertSameDonorWithoutGeneratedIds(actual: Donor, expected: Donor) {
 
 async function assertUploadOKRegistrationCreated(res: any, dbUrl: string) {
 	res.should.have.status(201);
-	const conn = await new mongo.MongoClient(dbUrl).connect();
+	const conn = await bootstrap.createConnection(dbUrl);
 	const savedRegistration = await conn
-		.db('clinical')
 		.collection('activeregistrations')
 		.findOne<ActiveRegistration | null>({});
 	await conn.close();

@@ -17,18 +17,16 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// using import fails when running the test
-import chai from 'chai';
-// needed for types
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
+import { MongoDBContainer } from '@testcontainers/mongodb';
 import { promisify } from 'bluebird';
+import chai from 'chai';
 import 'chai-http';
 import _ from 'lodash';
 import 'mocha';
 import mongoose from 'mongoose';
-import { GenericContainer, Network } from 'testcontainers';
 import * as manager from '../../../src/dictionary/manager';
-import { cleanCollection, findInDb, updateData } from '../testutils';
+import { cleanCollection, findInDb } from '../testutils';
 const ServerMock: any = require('mock-http-server') as any;
 
 chai.use(require('chai-http'));
@@ -47,7 +45,6 @@ describe('manager', () => {
 		await mongoose.connect(mongoUrl, {
 			// https://mongoosejs.com/docs/deprecations.html
 			useNewUrlParser: true,
-			useFindAndModify: false,
 		});
 	};
 
@@ -55,11 +52,9 @@ describe('manager', () => {
 	before(() => {
 		return (async () => {
 			try {
-				mongoContainer = await new GenericContainer('mongo').withExposedPorts(27017).start();
+				mongoContainer = await new MongoDBContainer('mongo:6.0.1').withExposedPorts(27017).start();
+				dbUrl = `${mongoContainer.getConnectionString()}/clinical`;
 				console.log('mongo test container started');
-				dbUrl = `mongodb://${mongoContainer.getIpAddress()}:${mongoContainer.getMappedPort(
-					27017,
-				)}/clinical`;
 				await prep(dbUrl);
 				await startServerPromise();
 			} catch (err) {
