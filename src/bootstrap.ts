@@ -168,6 +168,7 @@ async function pingRxNorm(pool: Pool) {
 
 export const run = async (config: AppConfig) => {
 	initConfigs(config);
+
 	// setup mongo connection
 	await setupDBConnection(config.mongoUrl(), config.mongoUser(), config.mongoPassword());
 	if (process.env.LOG_LEVEL === 'debug') {
