@@ -19,7 +19,6 @@
 
 import chai from 'chai';
 import _ from 'lodash';
-import mongo from 'mongodb';
 import * as mysql from 'mysql';
 import * as utils from 'util';
 import { createConnection } from '../../src/bootstrap';
@@ -135,7 +134,6 @@ export const generateDonor = async (
 	submitterDonorId?: string,
 ) => {
 	const submitterId = submitterDonorId || `${Date.now()}`;
-
 	const doc = emptyDonorDocument({
 		submitterId,
 		programId,
@@ -146,18 +144,18 @@ export const generateDonor = async (
 
 export async function assertDbCollectionEmpty(dbUrl: string, collection: string) {
 	const dbConnection = await createConnection(dbUrl);
-	const count = await dbConnection.collection(collection).countDocuments();
+	const dbCollection = dbConnection.collection(collection);
+	const count = await dbCollection.estimatedDocumentCount();
 	await dbConnection.close();
 	chai.expect(count).to.eq(0);
 }
 
 export async function findInDb(dbUrl: string, collection: string, filter: any) {
 	const dbConnection = await createConnection(dbUrl);
-	const result = await dbConnection
+	const collectionCursor = await dbConnection
 		.collection(collection)
-		.find(filter)
-		.sort({ $natural: -1 })
-		.toArray();
+		.find(filter, { sort: { $natural: -1 } });
+	const result = await collectionCursor.toArray();
 	await dbConnection.close();
 	return result;
 }
