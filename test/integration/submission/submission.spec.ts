@@ -155,7 +155,7 @@ describe('Submission Api', () => {
 							user: RXNORM_USER,
 							password: RXNORM_PASS,
 							timeout: 5000,
-							host: mysqlContainer.getIpAddress(),
+							host: mysqlContainer.getHost(),
 							port: mysqlContainer.getMappedPort(3306),
 						};
 					},
@@ -1408,7 +1408,6 @@ describe('Submission Api', () => {
 			const files: Buffer[] = [];
 			let req = chai
 				.request(app)
-				// .post(`/submission/program/${programId}/clinical/upload`)
 				.post('/submission/program/ABCD-EF/clinical/submissionUpload')
 				.auth(JWT_CLINICALSVCADMIN, { type: 'bearer' });
 

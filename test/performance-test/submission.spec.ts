@@ -144,7 +144,7 @@ describe('Submission Api', () => {
 							user: 'clinical',
 							password: 'password',
 							timeout: 5000,
-							host: mysqlContainer.getIpAddress(),
+							host: mysqlContainer.getHost(),
 							port: mysqlContainer.getMappedPort(3306),
 						};
 					},
