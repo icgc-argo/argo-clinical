@@ -17,7 +17,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import mysql from 'mysql';
+import mysql from 'mysql2/promise';
 
 let pool: mysql.Pool;
 

@@ -17,25 +17,30 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import * as mysql from 'mysql';
-import { RxNormService, RxNormConcept } from './api';
-import { promisify } from 'bluebird';
+import mysql from 'mysql2/promise';
+import { RxNormConcept, RxNormService } from './api';
 import { getPool } from './pool';
 
 // we take the first one orderd alphabetically
 const rxcuiQuery = 'select RXCUI, STR from RXNCONSO where RXCUI = ? order by STR asc';
 
+type RxNormRecord = { RXCUI: string; STR: string };
+
 class MysqlRxNormService implements RxNormService {
 	async lookupByRxcui(rxcui: string): Promise<RxNormConcept[]> {
 		const pool = getPool();
-		const query = promisify(pool.query).bind(pool);
 		const formattedQuery = mysql.format(rxcuiQuery, [rxcui]);
-		const rs = (await query(formattedQuery)) as any[];
-		if (rs.length == 0) return new Array<RxNormConcept>();
-		return rs.map((r) => ({
-			rxcui: r['RXCUI'],
-			str: r['STR'] as string,
-		}));
+		const [result] = await pool.query(formattedQuery);
+
+		if (Array.isArray(result)) {
+			const records = result as RxNormRecord[];
+			return records.map((r) => ({
+				rxcui: r['RXCUI'],
+				str: r['STR'],
+			}));
+		} else {
+			return new Array<RxNormConcept>();
+		}
 	}
 }
 

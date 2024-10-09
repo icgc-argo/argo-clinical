@@ -19,8 +19,7 @@
 
 import chai from 'chai';
 import _ from 'lodash';
-import * as mysql from 'mysql';
-import * as utils from 'util';
+import mysql from 'mysql2/promise';
 import { createConnection } from '../../src/bootstrap';
 import { Donor } from '../../src/clinical/clinical-entities';
 
@@ -69,8 +68,7 @@ export const insertData = async (
 };
 
 export async function execMysqlQuery(sql: string, pool: mysql.Pool) {
-	const query = utils.promisify(pool.query).bind(pool);
-	await query(sql);
+	await pool.query(sql);
 }
 
 export async function createtRxNormTables(pool: mysql.Pool) {

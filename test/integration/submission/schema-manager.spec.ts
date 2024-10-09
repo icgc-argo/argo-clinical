@@ -39,15 +39,6 @@ describe('manager', () => {
 	const server = new ServerMock({ host: 'localhost', port: 54321 });
 	const startServerPromise = promisify(server.start);
 
-	// we don't do a full bootstrap here like other integration tests, this test is meant to be
-	// lectern client specific and agnostic of clinical so it can be isolated without dependencies on argo
-	const prep = async (mongoUrl: string) => {
-		await mongoose.connect(mongoUrl, {
-			// https://mongoosejs.com/docs/deprecations.html
-			useNewUrlParser: true,
-		});
-	};
-
 	// will run when all tests are finished
 	before(() => {
 		return (async () => {
@@ -55,7 +46,10 @@ describe('manager', () => {
 				mongoContainer = await new MongoDBContainer('mongo:6.0.1').withExposedPorts(27017).start();
 				dbUrl = `${mongoContainer.getConnectionString()}/clinical`;
 				console.log('mongo test container started');
-				await prep(dbUrl);
+
+				// we don't do a full bootstrap here like other integration tests, this test is meant to be
+				// lectern client specific and agnostic of clinical so it can be isolated without dependencies on argo
+				await mongoose.connect(dbUrl);
 				await startServerPromise();
 			} catch (err) {
 				console.error('Lectern Client : before >>>>>>>>>>>', err);

@@ -147,10 +147,10 @@ describe('schema migration api', () => {
 				dbUrl = `${mongoContainer.getConnectionString()}/clinical`;
 				mysqlContainer = await new MySqlContainer()
 					.withNetwork(testNetwork)
-					.withEnvironment({ MYSQL_DATABASE: 'rxnorm' })
-					.withEnvironment({ MYSQL_USER: 'clinical' })
-					.withEnvironment({ MYSQL_ROOT_PASSWORD: 'password' })
-					.withEnvironment({ MYSQL_PASSWORD: 'password' })
+					.withDatabase('rxnorm')
+					.withUsername('clinical')
+					.withRootPassword('password')
+					.withUserPassword('password')
 					.withExposedPorts(3306)
 					.start();
 
@@ -208,8 +208,8 @@ describe('schema migration api', () => {
 					rxNormDbProperties() {
 						return {
 							database: 'rxnorm',
-							user: 'clinical',
-							password: 'password',
+							user: mysqlContainer.getUsername(),
+							password: mysqlContainer.getUserPassword(),
 							timeout: 5000,
 							host: mysqlContainer.getHost(),
 							port: mysqlContainer.getMappedPort(3306),

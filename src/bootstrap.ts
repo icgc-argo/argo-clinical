@@ -17,9 +17,8 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { promisify } from 'bluebird';
 import mongoose from 'mongoose';
-import { Pool } from 'mysql';
+import { Pool } from 'mysql2/promise';
 import fetch from 'node-fetch';
 import { setStatus, Status } from './app-health';
 import { AppConfig, initConfigs, JWT_TOKEN_PUBLIC_KEY, RxNormDbConfig } from './config';
@@ -136,15 +135,15 @@ const setJwtPublicKey = (keyUrl: string) => {
 	getKey(1);
 };
 
-const setupRxNormConnection = (conf: RxNormDbConfig) => {
-	if (!conf.host) return;
+const setupRxNormConnection = (config: RxNormDbConfig) => {
+	if (!config.host) return;
 	const pool = initPool({
-		database: conf.database,
-		host: conf.host,
-		password: conf.password,
-		user: conf.user,
-		port: conf.port,
-		timeout: conf.timeout,
+		database: config.database,
+		host: config.host,
+		password: config.password,
+		user: config.user,
+		port: config.port,
+		timeout: config.timeout,
 	});
 	pool.on('connection', () => setStatus('rxNormDb', { status: Status.OK }));
 
@@ -157,8 +156,8 @@ const setupRxNormConnection = (conf: RxNormDbConfig) => {
 
 async function pingRxNorm(pool: Pool) {
 	try {
-		const query = promisify(pool.query).bind(pool);
-		await query('select 1');
+		const connection = await pool.getConnection();
+		await connection.query('select 1');
 		setStatus('rxNormDb', { status: Status.OK });
 	} catch (err) {
 		L.error('cannot get connection to rxnorm', err);

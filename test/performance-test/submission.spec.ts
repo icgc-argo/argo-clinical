@@ -78,10 +78,10 @@ describe('Submission Api', () => {
 				mongoContainer = await new MongoDBContainer('mongo:6.0.1');
 				dbUrl = `${mongoContainer.getConnectionString()}/clinical`;
 				mysqlContainer = await new MySqlContainer()
-					.withEnvironment({ MYSQL_DATABASE: 'rxnorm' })
-					.withEnvironment({ MYSQL_USER: 'clinical' })
-					.withEnvironment({ MYSQL_ROOT_PASSWORD: 'password' })
-					.withEnvironment({ MYSQL_PASSWORD: 'password' })
+					.withDatabase('rxnorm')
+					.withUsername('clinical')
+					.withRootPassword('password')
+					.withUserPassword('password')
 					.withWaitStrategy(Wait.forLogMessage('ready for connections.'))
 					.withExposedPorts(3306)
 					.start();
@@ -140,9 +140,9 @@ describe('Submission Api', () => {
 					},
 					rxNormDbProperties() {
 						return {
-							database: 'rxnorm',
-							user: 'clinical',
-							password: 'password',
+							database: mysqlContainer.getDatabase(),
+							user: mysqlContainer.getUsername(),
+							password: mysqlContainer.getUserPassword(),
 							timeout: 5000,
 							host: mysqlContainer.getHost(),
 							port: mysqlContainer.getMappedPort(3306),
