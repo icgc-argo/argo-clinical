@@ -138,7 +138,7 @@ const recalculateAndUpdateDonors = async (props: {
 		const updatedDonors = await updateDonorsCompletionStats(
 			(donorDocuments || []) as DeepReadonly<Donor>[],
 		);
-		const savedDonors = await donorRepo.updateAll(updatedDonors.map((dto) => deepFreeze(dto)));
+		const savedDonors = await donorRepo.updateAll(updatedDonors);
 		return success(savedDonors);
 	} catch (error) {
 		const message = 'Error thrown while updating donor core completion data';
