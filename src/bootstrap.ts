@@ -96,8 +96,6 @@ async function connect(delayMillis: number, mongoUrl: string, username: string, 
 export async function createConnection(dbUrl: string) {
 	return mongoose.createConnection(`${dbUrl}`, {
 		directConnection: true,
-		user: '',
-		pass: '',
 		socketTimeoutMS: 10000,
 	});
 }

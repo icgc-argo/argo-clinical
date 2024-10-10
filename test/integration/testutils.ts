@@ -19,6 +19,7 @@
 
 import chai from 'chai';
 import _ from 'lodash';
+import mongodb from 'mongodb';
 import mysql from 'mysql2/promise';
 import { createConnection } from '../../src/bootstrap';
 import { Donor } from '../../src/clinical/clinical-entities';
@@ -41,9 +42,16 @@ export const cleanCollection = async (dbUrl: string, collection: string): Promis
 	const dbConnection = await createConnection(dbUrl);
 
 	try {
-		await dbConnection.collection(collection).deleteMany({});
-		await dbConnection.collection(collection).drop();
-		await dbConnection.createCollection(collection);
+		const collections = await dbConnection.listCollections();
+		if (
+			collections.some(
+				(collectionRecord: mongodb.CollectionInfo) => collectionRecord.name === collection,
+			)
+		) {
+			await dbConnection.collection(collection).deleteMany({});
+			await dbConnection.dropCollection(collection);
+			await dbConnection.createCollection(collection);
+		}
 	} catch (err) {
 		console.error('failed to drop collection', collection, err);
 	}

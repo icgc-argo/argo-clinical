@@ -44,12 +44,12 @@ describe('manager', () => {
 		return (async () => {
 			try {
 				mongoContainer = await new MongoDBContainer('mongo:6.0.1').withExposedPorts(27017).start();
-				dbUrl = `${mongoContainer.getConnectionString()}/clinical`;
+				dbUrl = await mongoContainer.getConnectionString();
 				console.log('mongo test container started');
 
 				// we don't do a full bootstrap here like other integration tests, this test is meant to be
 				// lectern client specific and agnostic of clinical so it can be isolated without dependencies on argo
-				await mongoose.connect(dbUrl);
+				await mongoose.connect(dbUrl, { directConnection: true });
 				await startServerPromise();
 			} catch (err) {
 				console.error('Lectern Client : before >>>>>>>>>>>', err);

@@ -26,7 +26,7 @@ export function initPool(args: {
 	user: string;
 	password: string;
 	database: string;
-	timeout: number;
+	timeout?: number;
 	port: number;
 }) {
 	pool = mysql.createPool({
