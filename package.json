@@ -134,7 +134,7 @@
 		"multer": "^1.4.2",
 		"mysql": "^2.18.1",
 		"node-fetch": "^2.6.7",
-		"node-vault": "^0.9.11",
+		"node-vault": "^0.10.2",
 		"node-worker-threads-pool": "^1.2.2",
 		"nodemailer": "^6.7.2",
 		"promise-tools": "^2.1.0",
