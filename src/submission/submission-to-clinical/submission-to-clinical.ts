@@ -140,11 +140,9 @@ const performCommitSubmission = async (
 	try {
 		// write each updated donor to the db
 		await donorDao.updateAll(updatedDonors.map((dto) => F(dto)));
-
 		// If the save completed without error, we can delete the active registration
-		submissionRepository.deleteByProgramId(activeSubmission.programId);
-
-		sendMessageOnUpdatesFromClinicalSubmission(activeSubmission);
+		await submissionRepository.deleteByProgramId(activeSubmission.programId);
+		await sendMessageOnUpdatesFromClinicalSubmission(activeSubmission);
 	} catch (err) {
 		throw new Error(`Failure occured saving clinical data: ${err}`);
 	}
@@ -184,8 +182,8 @@ export const commitRegistration = async (
 	);
 
 	await updateOrCreateDonors(donorSampleDtos, existingDonorsDictionary);
-	registrationRepository.delete(command.registrationId);
-	sendMessageOnUpdatesFromRegistration(registration);
+	await registrationRepository.delete(command.registrationId);
+	await sendMessageOnUpdatesFromRegistration(registration);
 
 	return (
 		(registration?.stats?.newSampleIds &&
@@ -227,11 +225,12 @@ const updateOrCreateDonors = async (
 	);
 	// recalculate completion stats for donors
 	const recalculatedDonors = await updateDonorsCompletionStats(mergedDonors);
-	await Promise.all(recalculatedDonors.map((donor) => donorDao.update(donor)));
-
+	await Promise.all(recalculatedDonors.map(async (donor) => await donorDao.update(donor)));
 	// Process new samples (no existing donor data)
 	await Promise.all(
-		samplesWithoutDonor.map((pair) => donorDao.create(fromCreateDonorDtoToDonor(pair.sampleDto))),
+		samplesWithoutDonor.map(
+			async (pair) => await donorDao.create(fromCreateDonorDtoToDonor(pair.sampleDto)),
+		),
 	);
 };
 

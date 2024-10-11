@@ -71,7 +71,7 @@ export const create = async ({
 			if (result.success) {
 				// Intentionally no await here:
 				// We want this to run asynchronously after we return a response for this request. Consider this a post processing step.
-				recalculateAndUpdateDonors({
+				await recalculateAndUpdateDonors({
 					donorSubmitterIds: newDonorIds,
 					programId,
 				});

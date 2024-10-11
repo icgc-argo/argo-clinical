@@ -28,7 +28,7 @@ import _ from 'lodash';
 import 'mocha';
 import mongoose from 'mongoose';
 import app from '../../../src/app';
-import * as bootstrap from '../../../src/bootstrap';
+import { createConnection, run } from '../../../src/bootstrap';
 import { Donor } from '../../../src/clinical/clinical-entities';
 import { donorDao } from '../../../src/clinical/donor-repo';
 import {
@@ -78,8 +78,6 @@ const schemaVersion = '1.0';
 const stubFilesDir = __dirname + `/stub_clinical_files`;
 
 const RXNORM_DB = 'rxnorm';
-const RXNORM_USER = 'clinical';
-const RXNORM_PASS = 'password';
 
 describe('Submission Api', () => {
 	let dbUrl = ``;
@@ -99,7 +97,7 @@ describe('Submission Api', () => {
 					.withExposedPorts(3306)
 					.start();
 				console.log('mongo test container started');
-				await bootstrap.run({
+				await run({
 					mongoPassword() {
 						return '';
 					},
@@ -395,11 +393,10 @@ describe('Submission Api', () => {
 				return err;
 			}
 
-			const dbConnection = await bootstrap.createConnection(dbUrl);
+			const dbConnection = await createConnection(dbUrl);
 			const existingDonors = await dbConnection
 				.collection('donors')
 				.findOne<ActiveRegistration | null>({});
-			console.log(JSON.stringify(existingDonors));
 			const response1 = await chai
 				.request(app)
 				.post('/submission/program/ABCD-EF/registration')
@@ -474,7 +471,7 @@ describe('Submission Api', () => {
 				.end(async (err: any, res: any) => {
 					try {
 						res.should.have.status(201);
-						const conn = await bootstrap.createConnection(dbUrl);
+						const conn = await createConnection(dbUrl);
 						const savedRegistration = await conn
 							.collection('activeregistrations')
 							.findOne<ActiveRegistration | null>({});
@@ -765,7 +762,7 @@ describe('Submission Api', () => {
 				.attach('clinicalFiles', file, 'donor.tsv')
 				.end(async (err: any, res: any) => {
 					res.should.have.status(200);
-					const conn = await bootstrap.createConnection(dbUrl);
+					const conn = await createConnection(dbUrl);
 					const savedSubmission = await conn
 						.collection('activesubmissions')
 						.findOne<ActiveClinicalSubmission | null>({});
@@ -2163,17 +2160,14 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dbUrl: 
 		);
 	});
 
-	const conn = await bootstrap.createConnection(dbUrl);
-	const actualDonors: any[] | null = await conn
-		.collection('donors')
-		.find({})
-		.sort('donorId', 1)
-		.toArray();
+	const conn = await createConnection(dbUrl);
+	const donorCursor = await conn.collection('donors').find<Donor>({}, { sort: { donorId: 1 } });
+	const actualDonors = await donorCursor.toArray();
 	await conn.close();
 
-	chai.expect(actualDonors?.length).to.eq(4);
+	chai.expect(actualDonors.length).to.eq(4);
 	// ids are not in sequence so we check that they are in range only.
-	actualDonors?.forEach((ad) => {
+	actualDonors.forEach((ad) => {
 		chai.expect(ad.donorId).to.be.gte(baseDonorId);
 		const specimensIdInRangeCount = ad.specimens.filter(
 			(sp: any) => sp.specimenId >= baseSpecimenId,
@@ -2185,7 +2179,6 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dbUrl: 
 			chai.expect(samplesWithIdInRangeCount).to.eq(sp.samples.length);
 		});
 	});
-
 	expectedDonors.forEach((dr, i) => {
 		dr = JSON.parse(JSON.stringify(dr)) as Donor;
 		const actualDonor = actualDonors?.find((d) => d.submitterId == dr.submitterId);
@@ -2197,7 +2190,7 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dbUrl: 
 	}
 }
 
-function assertSameDonorWithoutGeneratedIds(actual: Donor, expected: Donor) {
+function assertSameDonorWithoutGeneratedIds(actual: Donor | undefined, expected: Donor) {
 	chai
 		.expect(actual)
 		.excludingEvery([
@@ -2221,10 +2214,9 @@ function assertSameDonorWithoutGeneratedIds(actual: Donor, expected: Donor) {
 
 async function assertUploadOKRegistrationCreated(res: any, dbUrl: string) {
 	res.should.have.status(201);
-	const conn = await bootstrap.createConnection(dbUrl);
-	const savedRegistration = await conn
-		.collection('activeregistrations')
-		.findOne<ActiveRegistration | null>({});
+	const conn = await createConnection(dbUrl);
+	const collection = conn.collection('activeregistrations');
+	const savedRegistration = await collection.findOne<ActiveRegistration | null>({});
 	await conn.close();
 	if (!savedRegistration) {
 		throw new Error("saved registration shouldn't be null");
