@@ -139,7 +139,7 @@ const performCommitSubmission = async (
 
 	try {
 		// write each updated donor to the db
-		await donorDao.updateAll(updatedDonors.map((dto) => F(dto)));
+		await donorDao.updateAll(updatedDonors);
 
 		// If the save completed without error, we can delete the active registration
 		submissionRepository.deleteByProgramId(activeSubmission.programId);

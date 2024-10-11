@@ -215,6 +215,12 @@ describe('schema migration api', () => {
 					egoUrl() {
 						return '';
 					},
+					tokenUrl(): string {
+						return process.env.TOKEN_URL || '';
+					},
+					idServiceUrl(): string {
+						return process.env.ID_SERVICE_URL || '';
+					},
 					egoClientId() {
 						return '';
 					},

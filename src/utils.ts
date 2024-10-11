@@ -125,6 +125,10 @@ export namespace ControllerUtils {
 		return res.status(422).send({ message });
 	};
 
+	export const unableToGenerateId = (res: Response, message: string) => {
+		return res.status(500).send({ message });
+	};
+
 	export const invalidBatch = (
 		res: Response,
 		batchErrors: SubmissionBatchError | SubmissionBatchError[],
@@ -201,6 +205,17 @@ export namespace Errors {
 	export class TSVParseError extends Error {
 		constructor(msg?: string) {
 			super(msg || `TSV file is formatted incorrectly`);
+		}
+	}
+
+	export class IdGenerationError extends Error {
+		constructor(msg: string) {
+			super(msg);
+		}
+	}
+	export class NetworkError extends Error {
+		constructor(msg: string) {
+			super(msg);
 		}
 	}
 }

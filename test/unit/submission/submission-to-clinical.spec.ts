@@ -133,10 +133,7 @@ describe('submission-to-clinical', () => {
 			[deepFreeze.DeepReadonly<Partial<Donor>>],
 			Promise<deepFreeze.DeepReadonly<Donor>>
 		>;
-		let updateDonorStub: sinon.SinonStub<
-			[deepFreeze.DeepReadonly<Donor>],
-			Promise<deepFreeze.DeepReadonly<Donor>>
-		>;
+		let updateDonorStub: sinon.SinonStub<[Donor], Promise<deepFreeze.DeepReadonly<Donor>>>;
 		let missingEntityRepoGetByProgramStub: sinon.SinonStub<
 			[string],
 			Promise<Result<MissingEntityException>>
