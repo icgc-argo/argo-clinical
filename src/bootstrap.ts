@@ -175,7 +175,6 @@ export const run = async (config: AppConfig) => {
 
 	// RxNorm Db
 	try {
-		// TODO: Fix RxNorm
 		setupRxNormConnection(config.rxNormDbProperties());
 	} catch (error) {
 		console.error('Error at setupRxNormConnection');
