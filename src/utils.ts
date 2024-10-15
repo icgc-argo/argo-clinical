@@ -17,14 +17,13 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import fs from 'fs';
-import { Response, Request } from 'express';
 import deepFreeze from 'deep-freeze';
-import mongoose from 'mongoose';
+import { Request, Response } from 'express';
+import fs from 'fs';
 import jwt from 'jsonwebtoken';
-import { SubmissionBatchError } from './submission/submission-entities';
 import _ from 'lodash';
-import { isArray } from 'util';
+import mongoose from 'mongoose';
+import { SubmissionBatchError } from './submission/submission-entities';
 
 const fsPromises = fs.promises;
 
@@ -207,10 +206,7 @@ export namespace Errors {
 
 export namespace MongooseUtils {
 	export const toPojo = (doc: mongoose.Document) => {
-		const pojo = doc.toObject();
-		if (pojo._id) {
-			pojo._id = pojo._id.toString();
-		}
+		const pojo = doc.toObject({ flattenObjectIds: true });
 		return pojo;
 	};
 }
@@ -313,7 +309,7 @@ export function deepFind(obj: any, path: string) {
 	let result: any[] = [];
 
 	for (let i = 0; i < paths.length; ++i) {
-		if (_.isArray(current)) {
+		if (Array.isArray(current)) {
 			const r = current
 				.map((e) => {
 					return deepFind(e, paths.slice(i).join('.'));
@@ -335,7 +331,7 @@ export function deepFind(obj: any, path: string) {
 }
 
 export function isValueEqual(value: any, other: any) {
-	if (isArray(value) && isArray(other)) {
+	if (Array.isArray(value) && Array.isArray(other)) {
 		return _.difference(value, other).length === 0; // check equal, ignore order
 	}
 

@@ -17,28 +17,28 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import * as submission from './submission-service';
-import * as persistedConfig from './persisted-config/service';
-import * as submission2Clinical from './submission-to-clinical/submission-to-clinical';
 import { Request, Response } from 'express';
-import { TsvUtils, ControllerUtils, Errors } from '../utils';
+import * as fs from 'fs';
+import _ from 'lodash';
+import {
+	HasFullWriteAccess,
+	HasProgramWriteAccess,
+	queryHasProgramWriteAccess,
+} from '../decorators';
 import { loggerFor } from '../logger';
+import { ControllerUtils, Errors, TsvUtils } from '../utils';
+import * as persistedConfig from './persisted-config/service';
 import {
 	CreateRegistrationCommand,
+	LegacyICGCImportRecord,
 	MultiClinicalSubmissionCommand,
 	NewClinicalEntity,
 	SubmissionBatchError,
 	SubmissionBatchErrorTypes,
-	LegacyICGCImportRecord,
 } from './submission-entities';
-import {
-	queryHasProgramWriteAccess,
-	HasFullWriteAccess,
-	HasProgramWriteAccess,
-} from '../decorators';
-import _ from 'lodash';
 import { batchErrorMessage } from './submission-error-messages';
-import * as fs from 'fs';
+import * as submission from './submission-service';
+import * as submission2Clinical from './submission-to-clinical/submission-to-clinical';
 
 const L = loggerFor(__filename);
 const fsPromises = fs.promises;

@@ -17,58 +17,53 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// using import fails when running the test
-// import * as chai from "chai";
+import { MongoDBContainer } from '@testcontainers/mongodb';
+import { MySqlContainer } from '@testcontainers/mysql';
 import chai from 'chai';
-import mongo from 'mongodb';
-import fs from 'fs';
-// needed for types
+import chaiExclude from 'chai-exclude';
 import 'chai-http';
 import 'deep-equal-in-any-order';
+import fs from 'fs';
+import _ from 'lodash';
 import 'mocha';
 import mongoose from 'mongoose';
-import { GenericContainer, Wait } from 'testcontainers';
 import app from '../../../src/app';
-import * as bootstrap from '../../../src/bootstrap';
-import * as pool from '../../../src/rxnorm/pool';
-import {
-	cleanCollection,
-	insertData,
-	emptyDonorDocument,
-	resetCounters,
-	generateDonor,
-	assertDbCollectionEmpty,
-	findInDb,
-	createDonorDoc,
-	createtRxNormTables,
-	insertRxNormDrug,
-	updateData,
-} from '../testutils';
-import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN, JWT_ABCDEF, JWT_WXYZEF } from '../test.jwt';
-import {
-	ActiveRegistration,
-	ActiveClinicalSubmission,
-	SampleRegistrationFieldsEnum,
-	SUBMISSION_STATE,
-	DataValidationErrors,
-	SubmissionBatchErrorTypes,
-	ClinicalEntities,
-	ValidateSubmissionResult,
-} from '../../../src/submission/submission-entities';
+import { createConnection, run } from '../../../src/bootstrap';
+import { Donor } from '../../../src/clinical/clinical-entities';
+import { donorDao } from '../../../src/clinical/donor-repo';
 import {
 	ClinicalEntitySchemaNames,
 	DonorFieldsEnum,
-	ClinicalUniqueIdentifier,
-	PrimaryDiagnosisFieldsEnum,
 	FollowupFieldsEnum,
+	PrimaryDiagnosisFieldsEnum,
 	TreatmentFieldsEnum,
 } from '../../../src/common-model/entities';
+import * as pool from '../../../src/rxnorm/pool';
+import {
+	ActiveClinicalSubmission,
+	ActiveRegistration,
+	ClinicalEntities,
+	DataValidationErrors,
+	SUBMISSION_STATE,
+	SampleRegistrationFieldsEnum,
+	SubmissionBatchErrorTypes,
+	ValidateSubmissionResult,
+} from '../../../src/submission/submission-entities';
 import { TsvUtils } from '../../../src/utils';
-import { donorDao } from '../../../src/clinical/donor-repo';
-import { Donor } from '../../../src/clinical/clinical-entities';
-import AdmZip from 'adm-zip';
-import _ from 'lodash';
-import chaiExclude from 'chai-exclude';
+import { JWT_ABCDEF, JWT_CLINICALSVCADMIN, JWT_WXYZEF, TEST_PUB_KEY } from '../test.jwt';
+import {
+	assertDbCollectionEmpty,
+	cleanCollection,
+	createDonorDoc,
+	createtRxNormTables,
+	emptyDonorDocument,
+	findInDb,
+	generateDonor,
+	insertData,
+	insertRxNormDrug,
+	resetCounters,
+	updateData,
+} from '../testutils';
 
 chai.use(require('chai-http'));
 chai.use(require('deep-equal-in-any-order'));
@@ -83,27 +78,26 @@ const schemaVersion = '1.0';
 const stubFilesDir = __dirname + `/stub_clinical_files`;
 
 const RXNORM_DB = 'rxnorm';
-const RXNORM_USER = 'clinical';
-const RXNORM_PASS = 'password';
 
 describe('Submission Api', () => {
-	let dburl = ``;
+	let dbUrl = ``;
 	let mongoContainer: any;
 	let mysqlContainer: any;
 	// will run when all tests are finished
 	before(() => {
 		return (async () => {
 			try {
-				mongoContainer = await new GenericContainer('mongo', '4.0').withExposedPorts(27017).start();
-				mysqlContainer = await new GenericContainer('mysql', '5.7')
-					.withEnv('MYSQL_DATABASE', RXNORM_DB)
-					.withEnv('MYSQL_USER', RXNORM_USER)
-					.withEnv('MYSQL_ROOT_PASSWORD', RXNORM_PASS)
-					.withEnv('MYSQL_PASSWORD', RXNORM_PASS)
+				mongoContainer = await new MongoDBContainer('mongo:6.0.1').withExposedPorts(27017).start();
+				dbUrl = `${mongoContainer.getConnectionString()}/clinical`;
+				mysqlContainer = await new MySqlContainer()
+					.withDatabase('rxnorm')
+					.withUsername('clinical')
+					.withRootPassword('password')
+					.withUserPassword('password')
 					.withExposedPorts(3306)
 					.start();
 				console.log('mongo test container started');
-				await bootstrap.run({
+				await run({
 					mongoPassword() {
 						return '';
 					},
@@ -111,10 +105,7 @@ describe('Submission Api', () => {
 						return '';
 					},
 					mongoUrl: () => {
-						dburl = `mongodb://${mongoContainer.getContainerIpAddress()}:${mongoContainer.getMappedPort(
-							27017,
-						)}/clinical`;
-						return dburl;
+						return dbUrl;
 					},
 					initialSchemaVersion() {
 						return schemaVersion;
@@ -159,10 +150,10 @@ describe('Submission Api', () => {
 					rxNormDbProperties() {
 						return {
 							database: RXNORM_DB,
-							user: RXNORM_USER,
-							password: RXNORM_PASS,
+							user: mysqlContainer.getUsername(),
+							password: mysqlContainer.getUserPassword(),
 							timeout: 5000,
-							host: mysqlContainer.getContainerIpAddress(),
+							host: mysqlContainer.getHost(),
 							port: mysqlContainer.getMappedPort(3306),
 						};
 					},
@@ -199,7 +190,7 @@ describe('Submission Api', () => {
 
 	describe('registration', function() {
 		this.beforeEach(async () => {
-			await clearCollections(dburl, ['donors', 'activeregistrations', 'counters']);
+			await clearCollections(dbUrl, ['donors', 'activeregistrations', 'counters']);
 		});
 
 		it('should return 200 and empty json if no registration found', function(done) {
@@ -284,7 +275,7 @@ describe('Submission Api', () => {
 				.attach('registrationFile', file, `${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`)
 				.end(async (err: any, res: any) => {
 					try {
-						await assertUploadOKRegistrationCreated(res, dburl);
+						await assertUploadOKRegistrationCreated(res, dbUrl);
 						const reg1Id = res.body.registration._id;
 						chai
 							.request(app)
@@ -292,7 +283,7 @@ describe('Submission Api', () => {
 							.auth(JWT_ABCDEF, { type: 'bearer' })
 							.end(async (err: any, res: any) => {
 								try {
-									await assertFirstCommitDonorsCreatedInDB(res, rows, dburl);
+									await assertFirstCommitDonorsCreatedInDB(res, rows, dbUrl);
 									chai
 										.request(app)
 										.post('/submission/program/ABCD-EF/registration')
@@ -305,7 +296,7 @@ describe('Submission Api', () => {
 										)
 										.end(async (err: any, res: any) => {
 											try {
-												await assertUploadOKRegistrationCreated(res, dburl);
+												await assertUploadOKRegistrationCreated(res, dbUrl);
 												const regId = res.body.registration._id;
 												chai
 													.request(app)
@@ -355,7 +346,7 @@ describe('Submission Api', () => {
 				.attach('registrationFile', file, `${ClinicalEntitySchemaNames.REGISTRATION}.1.tsv`)
 				.end(async (err: any, res: any) => {
 					try {
-						await assertUploadOKRegistrationCreated(res, dburl);
+						await assertUploadOKRegistrationCreated(res, dbUrl);
 						const reg1Id = res.body.registration._id;
 						chai
 							.request(app)
@@ -363,7 +354,7 @@ describe('Submission Api', () => {
 							.auth(JWT_ABCDEF, { type: 'bearer' })
 							.end(async (err: any, res: any) => {
 								try {
-									await assertFirstCommitDonorsCreatedInDB(res, rows, dburl);
+									await assertFirstCommitDonorsCreatedInDB(res, rows, dbUrl);
 									chai
 										.request(app)
 										.delete(
@@ -401,12 +392,11 @@ describe('Submission Api', () => {
 			} catch (err) {
 				return err;
 			}
-			const conn = await mongo.connect(dburl);
-			const existingDonors: ActiveRegistration | null = await conn
-				.db('clinical')
+
+			const dbConnection = await createConnection(dbUrl);
+			const existingDonors = await dbConnection
 				.collection('donors')
-				.findOne({});
-			console.log(JSON.stringify(existingDonors));
+				.findOne<ActiveRegistration | null>({});
 			const response1 = await chai
 				.request(app)
 				.post('/submission/program/ABCD-EF/registration')
@@ -427,13 +417,13 @@ describe('Submission Api', () => {
 					}
 				});
 
-			await assertUploadOKRegistrationCreated(response1, dburl);
+			await assertUploadOKRegistrationCreated(response1, dbUrl);
 			const reg1Id = response1.body.registration._id;
 			const commit1Response = await chai
 				.request(app)
 				.post(`/submission/program/ABCD-EF/registration/${reg1Id}/commit`)
 				.auth(JWT_ABCDEF, { type: 'bearer' });
-			await assertFirstCommitDonorsCreatedInDB(commit1Response, rows, dburl);
+			await assertFirstCommitDonorsCreatedInDB(commit1Response, rows, dbUrl);
 			const reg2Response = await chai
 				.request(app)
 				.post('/submission/program/ABCD-EF/registration')
@@ -456,7 +446,7 @@ describe('Submission Api', () => {
 						return err;
 					}
 				});
-			await assertUploadOKRegistrationCreated(reg2Response, dburl);
+			await assertUploadOKRegistrationCreated(reg2Response, dbUrl);
 			const reg2Id = reg2Response.body.registration._id;
 			const commit2 = await chai
 				.request(app)
@@ -481,11 +471,10 @@ describe('Submission Api', () => {
 				.end(async (err: any, res: any) => {
 					try {
 						res.should.have.status(201);
-						const conn = await mongo.connect(dburl);
-						const savedRegistration: ActiveRegistration | null = await conn
-							.db('clinical')
+						const conn = await createConnection(dbUrl);
+						const savedRegistration = await conn
 							.collection('activeregistrations')
-							.findOne({});
+							.findOne<ActiveRegistration | null>({});
 						await conn.close();
 						if (!savedRegistration) {
 							throw new Error("saved registration shouldn't be null");
@@ -506,7 +495,7 @@ describe('Submission Api', () => {
 		});
 
 		it('should not accept invalid registration tsv and clear existing active registration', async () => {
-			await insertData(dburl, 'activeregistrations', ABCD_REGISTRATION_DOC);
+			await insertData(dbUrl, 'activeregistrations', ABCD_REGISTRATION_DOC);
 			let file: Buffer;
 			try {
 				file = fs.readFileSync(
@@ -528,7 +517,7 @@ describe('Submission Api', () => {
 						successful: false,
 					});
 				});
-			await assertDbCollectionEmpty(dburl, 'activeregistration');
+			await assertDbCollectionEmpty(dbUrl, 'activeregistration');
 		});
 
 		it('should not accept invalid file names', (done) => {
@@ -605,7 +594,7 @@ describe('Submission Api', () => {
 		});
 
 		it('Registration should return 200 if deleted existing registration', async () => {
-			const registrationId = await insertData(dburl, 'activeregistrations', ABCD_REGISTRATION_DOC);
+			const registrationId = await insertData(dbUrl, 'activeregistrations', ABCD_REGISTRATION_DOC);
 			await chai
 				.request(app)
 				.delete('/submission/program/ABCD-EF/registration/' + registrationId)
@@ -617,13 +606,13 @@ describe('Submission Api', () => {
 						throw err;
 					}
 				});
-			await assertDbCollectionEmpty(dburl, 'activeregistration');
+			await assertDbCollectionEmpty(dbUrl, 'activeregistration');
 		});
 	});
 
 	describe('icgc import', function() {
 		this.beforeEach(async () => {
-			await clearCollections(dburl, ['donors', 'counters']);
+			await clearCollections(dbUrl, ['donors', 'counters']);
 		});
 
 		it('should import legacy samples file', async () => {
@@ -707,7 +696,7 @@ describe('Submission Api', () => {
 	});
 
 	describe('clinical-submission: upload', function() {
-		this.beforeEach(async () => await clearCollections(dburl, ['donors', 'activesubmissions']));
+		this.beforeEach(async () => await clearCollections(dbUrl, ['donors', 'activesubmissions']));
 		it('should return 200 and empty json for no activesubmisison in program', (done) => {
 			chai
 				.request(app)
@@ -773,11 +762,10 @@ describe('Submission Api', () => {
 				.attach('clinicalFiles', file, 'donor.tsv')
 				.end(async (err: any, res: any) => {
 					res.should.have.status(200);
-					const conn = await mongo.connect(dburl);
-					const savedSubmission: ActiveClinicalSubmission | null = await conn
-						.db('clinical')
+					const conn = await createConnection(dbUrl);
+					const savedSubmission = await conn
 						.collection('activesubmissions')
-						.findOne({});
+						.findOne<ActiveClinicalSubmission | null>({});
 					await conn.close();
 					if (!savedSubmission) {
 						throw new Error("saved submission shouldn't be null");
@@ -847,7 +835,7 @@ describe('Submission Api', () => {
 				clinicalEntities: { donor: [{ submitterId: 123 }] },
 			};
 
-			await insertData(dburl, 'activesubmissions', SUBMISSION);
+			await insertData(dbUrl, 'activesubmissions', SUBMISSION);
 			const files: Buffer[] = [];
 			try {
 				files.push(fs.readFileSync(stubFilesDir + '/donor.invalid.tsv'));
@@ -860,7 +848,7 @@ describe('Submission Api', () => {
 				.auth(JWT_ABCDEF, { type: 'bearer' })
 				.attach('clinicalFiles', files[0], 'donor.invalid.tsv');
 
-			const dbRead = await findInDb(dburl, 'activesubmissions', {
+			const dbRead = await findInDb(dbUrl, 'activesubmissions', {
 				programId: 'ABCD-EF',
 			});
 			chai
@@ -926,7 +914,7 @@ describe('Submission Api', () => {
 			}
 			// insert donor into db
 			await createDonorDoc(
-				dburl,
+				dbUrl,
 				emptyDonorDocument({
 					submitterId: 'ICGC_0001',
 					donorId: 1,
@@ -995,7 +983,7 @@ describe('Submission Api', () => {
 				return err;
 			}
 			// insert donor into db
-			await insertData(dburl, 'donors', {
+			await insertData(dbUrl, 'donors', {
 				followUps: [],
 				schemaMetadata: {
 					isValid: true,
@@ -1163,8 +1151,8 @@ describe('Submission Api', () => {
 		};
 
 		this.beforeEach(async () => {
-			await clearCollections(dburl, ['donors', 'activesubmissions']);
-			donor = await generateDonor(dburl, programId, 'ICGC_0001');
+			await clearCollections(dbUrl, ['donors', 'activesubmissions']);
+			donor = await generateDonor(dbUrl, programId, 'ICGC_0001');
 		});
 		it('should return 401 if no auth is provided', (done) => {
 			chai
@@ -1203,7 +1191,7 @@ describe('Submission Api', () => {
 				clinicalEntities: { donor: [{ submitterId: 123 }] },
 			};
 
-			await insertData(dburl, 'activesubmissions', SUBMISSION_PENDING_APPROVAL);
+			await insertData(dbUrl, 'activesubmissions', SUBMISSION_PENDING_APPROVAL);
 			return chai
 				.request(app)
 				.delete(`/submission/program/ABCD-EF/clinical/asdf/donor`)
@@ -1220,7 +1208,7 @@ describe('Submission Api', () => {
 				clinicalEntities: { donor: [{ submitterId: 123 }] },
 			};
 
-			await insertData(dburl, 'activesubmissions', SUBMISSION);
+			await insertData(dbUrl, 'activesubmissions', SUBMISSION);
 			return chai
 				.request(app)
 				.delete(`/submission/program/ABCD-EF/clinical/asdf/donor`)
@@ -1230,7 +1218,7 @@ describe('Submission Api', () => {
 					chai.expect(res.text, 'Response should be empty object').to.equal('{}');
 					chai.expect(res.type, 'Response should be json type').to.equal('application/json');
 
-					const dbRead = await findInDb(dburl, 'activesubmissions', {
+					const dbRead = await findInDb(dbUrl, 'activesubmissions', {
 						programId: 'ABCD-EF',
 					});
 					chai.expect(dbRead.length).to.equal(0);
@@ -1257,7 +1245,7 @@ describe('Submission Api', () => {
 					chai.expect(res.text, 'Response should be empty object').to.equal('{}');
 					chai.expect(res.type, 'Response should be json type').to.equal('application/json');
 
-					const dbRead = await findInDb(dburl, 'activesubmissions', {
+					const dbRead = await findInDb(dbUrl, 'activesubmissions', {
 						programId: 'ABCD-EF',
 					});
 					chai
@@ -1276,7 +1264,7 @@ describe('Submission Api', () => {
 					chai.expect(res.body.clinicalEntities.donor).to.be.undefined;
 					chai.expect(res.body.clinicalEntities.specimen).to.exist;
 
-					const dbRead = await findInDb(dburl, 'activesubmissions', {
+					const dbRead = await findInDb(dbUrl, 'activesubmissions', {
 						programId: 'ABCD-EF',
 					});
 					chai.expect(dbRead[0].clinicalEntities.donor).to.be.undefined;
@@ -1290,8 +1278,8 @@ describe('Submission Api', () => {
 		let donor: any;
 		let submissionVersion: string;
 		this.beforeEach(async () => {
-			await clearCollections(dburl, ['donors', 'activesubmissions']);
-			donor = await generateDonor(dburl, programId, 'ICGC_0001');
+			await clearCollections(dbUrl, ['donors', 'activesubmissions']);
+			donor = await generateDonor(dbUrl, programId, 'ICGC_0001');
 		});
 
 		const uploadSubmission = async (fileName: string = 'donor.tsv') => {
@@ -1386,10 +1374,10 @@ describe('Submission Api', () => {
 					res.should.have.status(200);
 					res.body.should.eql({});
 					// check activesubmission removed
-					await assertDbCollectionEmpty(dburl, 'activesubmissions');
+					await assertDbCollectionEmpty(dbUrl, 'activesubmissions');
 
 					// check donor merge
-					const [updatedDonor] = await findInDb(dburl, 'donors', {
+					const [updatedDonor] = await findInDb(dbUrl, 'donors', {
 						programId: programId,
 						submitterId: 'ICGC_0001',
 					});
@@ -1417,7 +1405,6 @@ describe('Submission Api', () => {
 			const files: Buffer[] = [];
 			let req = chai
 				.request(app)
-				// .post(`/submission/program/${programId}/clinical/upload`)
 				.post('/submission/program/ABCD-EF/clinical/submissionUpload')
 				.auth(JWT_CLINICALSVCADMIN, { type: 'bearer' });
 
@@ -1466,8 +1453,8 @@ describe('Submission Api', () => {
 		};
 
 		this.beforeEach(async () => {
-			await clearCollections(dburl, ['donors', 'activesubmissions']);
-			donor = await generateDonor(dburl, programId, 'ICGC_0001');
+			await clearCollections(dbUrl, ['donors', 'activesubmissions']);
+			donor = await generateDonor(dbUrl, programId, 'ICGC_0001');
 		});
 
 		it('should return 401 if no auth is provided', (done) => {
@@ -1554,10 +1541,10 @@ describe('Submission Api', () => {
 			]);
 			await validateSubmission();
 			await commitActiveSubmission();
-			const [donorBeforeUpdate] = (await findInDb(dburl, 'donors', {
+			const [donorBeforeUpdate] = await findInDb(dbUrl, 'donors', {
 				programId: programId,
 				submitterId: 'ICGC_0001',
-			})) as Donor[];
+			});
 
 			const entityBase = { program_id: programId, submitter_donor_id: 'ICGC_0001' };
 
@@ -1604,10 +1591,10 @@ describe('Submission Api', () => {
 				'family_history_update.tsv',
 			]);
 
-			const [submission] = (await findInDb(dburl, 'activesubmissions', {
+			const [submission] = await findInDb(dbUrl, 'activesubmissions', {
 				programId: programId,
 				submitterId: 'ICGC_0001',
-			})) as Donor[];
+			});
 
 			await validateSubmission();
 			validateResult.submission?.clinicalEntities.treatment.dataWarnings.length.should.eq(1);
@@ -1625,7 +1612,7 @@ describe('Submission Api', () => {
 
 			await commitActiveSubmission();
 
-			const [donorBeforeApproveCommit] = await findInDb(dburl, 'donors', {
+			const [donorBeforeApproveCommit] = await findInDb(dbUrl, 'donors', {
 				programId: programId,
 				submitterId: 'ICGC_0001',
 			});
@@ -1646,11 +1633,11 @@ describe('Submission Api', () => {
 				.then(async (res: any) => {
 					res.should.have.status(200);
 					res.body.should.be.empty;
-					await assertDbCollectionEmpty(dburl, 'activesubmissions');
-					const [updatedDonor] = (await findInDb(dburl, 'donors', {
+					await assertDbCollectionEmpty(dbUrl, 'activesubmissions');
+					const [updatedDonor] = await findInDb(dbUrl, 'donors', {
 						programId: programId,
 						submitterId: 'ICGC_0001',
-					})) as Donor[];
+					});
 
 					// ** merge shouldn't have mutated clinical entities except for the ones being updated **
 					const donorBeforeUpdates = _.omit(donorBeforeApproveCommit, [
@@ -1762,7 +1749,7 @@ describe('Submission Api', () => {
 			]);
 			await validateSubmission();
 			await commitActiveSubmission();
-			const [DonorBeforeUpdate] = await findInDb(dburl, 'donors', donorFilter);
+			const [DonorBeforeUpdate] = await findInDb(dbUrl, 'donors', donorFilter);
 
 			DonorBeforeUpdate.completionStats.coreCompletion.should.deep.include({
 				donor: 1,
@@ -1793,7 +1780,7 @@ describe('Submission Api', () => {
 				},
 			];
 
-			await updateData(dburl, 'donors', DonorBeforeUpdate, donorFilter);
+			await updateData(dbUrl, 'donors', DonorBeforeUpdate, donorFilter);
 			await uploadSubmissionWithUpdates([
 				'donor-with-updates.tsv',
 				'follow_up.tsv',
@@ -1808,8 +1795,8 @@ describe('Submission Api', () => {
 				.then(async (res: any) => {
 					res.should.have.status(200);
 					res.body.should.be.empty;
-					await assertDbCollectionEmpty(dburl, 'activesubmissions');
-					const [UpdatedDonor] = await findInDb(dburl, 'donors', donorFilter);
+					await assertDbCollectionEmpty(dbUrl, 'activesubmissions');
+					const [UpdatedDonor] = await findInDb(dbUrl, 'donors', donorFilter);
 
 					UpdatedDonor.completionStats.coreCompletion.should.deep.include({
 						donor: 1,
@@ -1822,7 +1809,7 @@ describe('Submission Api', () => {
 		});
 		it('TC-SMUIDAV should mark updated invalid donors as valid when they are approved', async () => {
 			await createDonorDoc(
-				dburl,
+				dbUrl,
 				emptyDonorDocument({
 					submitterId: 'ICGC_0002',
 					programId,
@@ -1841,7 +1828,7 @@ describe('Submission Api', () => {
 				}),
 			);
 			await createDonorDoc(
-				dburl,
+				dbUrl,
 				emptyDonorDocument({
 					submitterId: 'ICGC_0003',
 					programId,
@@ -1886,15 +1873,15 @@ describe('Submission Api', () => {
 					res.body.should.be.empty;
 
 					// check activesubmission removed
-					await assertDbCollectionEmpty(dburl, 'activesubmissions');
+					await assertDbCollectionEmpty(dbUrl, 'activesubmissions');
 
 					// check donor merge
-					const [updatedDonor]: Donor[] = await findInDb(dburl, 'donors', {
+					const [updatedDonor] = await findInDb(dbUrl, 'donors', {
 						programId: programId,
 						submitterId: 'ICGC_0002',
 					});
 
-					const [updatedDonor2]: Donor[] = await findInDb(dburl, 'donors', {
+					const [updatedDonor2] = await findInDb(dbUrl, 'donors', {
 						programId: programId,
 						submitterId: 'ICGC_0003',
 					});
@@ -1933,7 +1920,7 @@ describe('Submission Api', () => {
 		const progarmId: string = 'ABCD-EF';
 		const subVersion: string = 'a-ver-sion';
 		this.beforeEach(async () => {
-			await clearCollections(dburl, ['donors', 'activesubmissions']);
+			await clearCollections(dbUrl, ['donors', 'activesubmissions']);
 		});
 		it('should return 403 if the user is not DCC Admin or in correct program', (done) => {
 			chai
@@ -1956,7 +1943,7 @@ describe('Submission Api', () => {
 				});
 		});
 		it('should not allow reopening if not PENDING_APPROVAL', async () => {
-			await insertData(dburl, 'activesubmissions', {
+			await insertData(dbUrl, 'activesubmissions', {
 				state: 'OPEN',
 				programId: progarmId,
 				version: subVersion,
@@ -1971,7 +1958,7 @@ describe('Submission Api', () => {
 				});
 		});
 		it('should allow reopening submission that is PENDING_APPROVAL', async () => {
-			await insertData(dburl, 'activesubmissions', {
+			await insertData(dbUrl, 'activesubmissions', {
 				state: 'PENDING_APPROVAL',
 				programId: progarmId,
 				version: subVersion,
@@ -2140,7 +2127,7 @@ async function asserCommitExistingSamplesOK(res: any) {
 	);
 }
 
-async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dburl: string) {
+async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dbUrl: string) {
 	res.should.have.status(200);
 	const expectedDonors: any[] = [];
 	rows.forEach((r, idx) => {
@@ -2173,13 +2160,9 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dburl: 
 		);
 	});
 
-	const conn = await mongo.connect(dburl);
-	const actualDonors: any[] | null = await conn
-		.db('clinical')
-		.collection('donors')
-		.find({})
-		.sort('donorId', 1)
-		.toArray();
+	const conn = await createConnection(dbUrl);
+	const donorCursor = await conn.collection('donors').find<Donor>({}, { sort: { donorId: 1 } });
+	const actualDonors = await donorCursor.toArray();
 	await conn.close();
 
 	chai.expect(actualDonors.length).to.eq(4);
@@ -2196,10 +2179,9 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dburl: 
 			chai.expect(samplesWithIdInRangeCount).to.eq(sp.samples.length);
 		});
 	});
-
 	expectedDonors.forEach((dr, i) => {
 		dr = JSON.parse(JSON.stringify(dr)) as Donor;
-		const actualDonor = actualDonors.find((d) => d.submitterId == dr.submitterId);
+		const actualDonor = actualDonors?.find((d) => d.submitterId == dr.submitterId);
 		assertSameDonorWithoutGeneratedIds(actualDonor, dr);
 	});
 
@@ -2208,7 +2190,7 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dburl: 
 	}
 }
 
-function assertSameDonorWithoutGeneratedIds(actual: Donor, expected: Donor) {
+function assertSameDonorWithoutGeneratedIds(actual: Donor | undefined, expected: Donor) {
 	chai
 		.expect(actual)
 		.excludingEvery([
@@ -2230,13 +2212,11 @@ function assertSameDonorWithoutGeneratedIds(actual: Donor, expected: Donor) {
 		.to.deep.eq(expected);
 }
 
-async function assertUploadOKRegistrationCreated(res: any, dburl: string) {
+async function assertUploadOKRegistrationCreated(res: any, dbUrl: string) {
 	res.should.have.status(201);
-	const conn = await mongo.connect(dburl);
-	const savedRegistration: ActiveRegistration | null = await conn
-		.db('clinical')
-		.collection('activeregistrations')
-		.findOne({});
+	const conn = await createConnection(dbUrl);
+	const collection = conn.collection('activeregistrations');
+	const savedRegistration = await collection.findOne<ActiveRegistration | null>({});
 	await conn.close();
 	if (!savedRegistration) {
 		throw new Error("saved registration shouldn't be null");
@@ -2639,11 +2619,13 @@ const expectedRadiationBatchSubmissionSchemaErrors = [
 const INVALID_FILENAME_ERROR =
 	'Improperly named files cannot be uploaded or validated. Please retain the template file name and only append characters to the end (e.g. donor<_optional_extension>.tsv).';
 
-const clearCollections = async (dburl: string, collections: string[]) => {
+const clearCollections = async (dbUrl: string, collections: string[]) => {
 	try {
-		const promises = collections.map((collectionName) => cleanCollection(dburl, collectionName));
+		const promises = collections.map(
+			async (collectionName) => await cleanCollection(dbUrl, collectionName),
+		);
 		await Promise.all(promises);
-		await resetCounters(dburl);
+		await resetCounters(dbUrl);
 		return;
 	} catch (err) {
 		console.error(err);
