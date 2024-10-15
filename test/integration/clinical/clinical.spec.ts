@@ -25,6 +25,7 @@ import deepEqualInAnyOrder from 'deep-equal-in-any-order';
 import _ from 'lodash';
 import 'mocha';
 import mongoose from 'mongoose';
+import fs from 'node:fs/promises';
 import { Network } from 'testcontainers';
 import app from '../../../src/app';
 import * as bootstrap from '../../../src/bootstrap';
@@ -327,11 +328,16 @@ describe('clinical Api', () => {
 							data.push(chunk);
 						});
 						res.on('end', () => {
-							callBack(undefined, new AdmZip(Buffer.concat(data)));
+							callBack(undefined, Buffer.concat(data));
 						});
 					})
-					.end((err: any, res: any) => {
-						const zipFile = res.body as AdmZip;
+					.end(async (err: any, res: any) => {
+						const buffer = res.body as Buffer;
+
+						const fileName = `./${programId}_Test_Clinical_Data.zip`;
+						await fs.writeFile(fileName, buffer);
+
+						const zipFile = new AdmZip(fileName);
 
 						// check files are present
 						const fileNames: string[] = zipFile.getEntries().map((file) => file.name);
@@ -357,6 +363,7 @@ describe('clinical Api', () => {
 								.expect(fileRecords.map((r) => _.pickBy(r, notEmpty))) // ignore empty fields
 								.to.deep.equalInAnyOrder(donorEntityRecords);
 						});
+						await fs.unlink(fileName);
 
 						return done();
 					});
