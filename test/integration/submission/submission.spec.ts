@@ -20,55 +20,55 @@
 // using import fails when running the test
 // import * as chai from "chai";
 import chai from 'chai';
-import mongo from 'mongodb';
 import fs from 'fs';
+import mongo from 'mongodb';
 // needed for types
+import AdmZip from 'adm-zip';
+import chaiExclude from 'chai-exclude';
 import 'chai-http';
 import 'deep-equal-in-any-order';
+import _ from 'lodash';
 import 'mocha';
 import mongoose from 'mongoose';
 import { GenericContainer, Wait } from 'testcontainers';
 import app from '../../../src/app';
 import * as bootstrap from '../../../src/bootstrap';
-import * as pool from '../../../src/rxnorm/pool';
-import {
-	cleanCollection,
-	insertData,
-	emptyDonorDocument,
-	resetCounters,
-	generateDonor,
-	assertDbCollectionEmpty,
-	findInDb,
-	createDonorDoc,
-	createtRxNormTables,
-	insertRxNormDrug,
-	updateData,
-} from '../testutils';
-import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN, JWT_ABCDEF, JWT_WXYZEF } from '../test.jwt';
-import {
-	ActiveRegistration,
-	ActiveClinicalSubmission,
-	SampleRegistrationFieldsEnum,
-	SUBMISSION_STATE,
-	DataValidationErrors,
-	SubmissionBatchErrorTypes,
-	ClinicalEntities,
-	ValidateSubmissionResult,
-} from '../../../src/submission/submission-entities';
+import { Donor } from '../../../src/clinical/clinical-entities';
+import { donorDao } from '../../../src/clinical/donor-repo';
 import {
 	ClinicalEntitySchemaNames,
-	DonorFieldsEnum,
 	ClinicalUniqueIdentifier,
-	PrimaryDiagnosisFieldsEnum,
+	DonorFieldsEnum,
 	FollowupFieldsEnum,
+	PrimaryDiagnosisFieldsEnum,
 	TreatmentFieldsEnum,
 } from '../../../src/common-model/entities';
+import * as pool from '../../../src/rxnorm/pool';
+import {
+	ActiveClinicalSubmission,
+	ActiveRegistration,
+	ClinicalEntities,
+	DataValidationErrors,
+	SUBMISSION_STATE,
+	SampleRegistrationFieldsEnum,
+	SubmissionBatchErrorTypes,
+	ValidateSubmissionResult,
+} from '../../../src/submission/submission-entities';
 import { TsvUtils } from '../../../src/utils';
-import { donorDao } from '../../../src/clinical/donor-repo';
-import { Donor } from '../../../src/clinical/clinical-entities';
-import AdmZip from 'adm-zip';
-import _ from 'lodash';
-import chaiExclude from 'chai-exclude';
+import { JWT_ABCDEF, JWT_CLINICALSVCADMIN, JWT_WXYZEF, TEST_PUB_KEY } from '../test.jwt';
+import {
+	assertDbCollectionEmpty,
+	cleanCollection,
+	createDonorDoc,
+	createtRxNormTables,
+	emptyDonorDocument,
+	findInDb,
+	generateDonor,
+	insertData,
+	insertRxNormDrug,
+	resetCounters,
+	updateData,
+} from '../testutils';
 
 chai.use(require('chai-http'));
 chai.use(require('deep-equal-in-any-order'));

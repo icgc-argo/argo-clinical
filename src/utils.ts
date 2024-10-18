@@ -17,14 +17,14 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import fs from 'fs';
-import { Response, Request } from 'express';
 import deepFreeze from 'deep-freeze';
-import mongoose from 'mongoose';
+import { Request, Response } from 'express';
+import fs from 'fs';
 import jwt from 'jsonwebtoken';
-import { SubmissionBatchError } from './submission/submission-entities';
 import _ from 'lodash';
+import mongoose from 'mongoose';
 import { isArray } from 'util';
+import { SubmissionBatchError } from './submission/submission-entities';
 
 const fsPromises = fs.promises;
 

@@ -17,12 +17,12 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import mongo from 'mongodb';
-import _ from 'lodash';
 import chai from 'chai';
+import _ from 'lodash';
+import mongo from 'mongodb';
 import * as mysql from 'mysql';
-import { Donor } from '../../src/clinical/clinical-entities';
 import * as utils from 'util';
+import { Donor } from '../../src/clinical/clinical-entities';
 
 export const clearCollections = async (dburl: string, collections: string[]) => {
 	try {

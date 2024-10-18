@@ -17,13 +17,26 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { Donor } from './clinical-entities';
-import { ClinicalDataQuery, ClinicalDonorEntityQuery } from './types';
-import { getRequiredDonorFieldsForEntityTypes } from '../common-model/functions';
+import { DeepReadonly } from 'deep-freeze';
 import mongoose, { PaginateModel } from 'mongoose';
 import mongoosePaginate from 'mongoose-paginate-v2';
-import { DeepReadonly } from 'deep-freeze';
+import { getRequiredDonorFieldsForEntityTypes } from '../common-model/functions';
 import { F, MongooseUtils, notEmpty } from '../utils';
+import { Donor } from './clinical-entities';
+import {
+	BiomarkerSchema,
+	ComorbiditySchema,
+	DonorDocument,
+	DonorSchema,
+	ExposureSchema,
+	FamilyHistorySchema,
+	FollowUpSchema,
+	PrimaryDiagnosisSchema,
+	SampleSchema,
+	SpecimenSchema,
+	TreatmentSchema,
+} from './schemas';
+import { ClinicalDataQuery, ClinicalDonorEntityQuery } from './types';
 
 export const SUBMITTER_ID = 'submitterId';
 export const SPECIMEN_SUBMITTER_ID = 'specimen.submitterId';
@@ -111,7 +124,6 @@ export interface DonorRepository {
 	create(donor: DeepReadonly<Partial<Donor>>): Promise<DeepReadonly<Donor>>;
 	update(donor: DeepReadonly<Donor>): Promise<DeepReadonly<Donor>>;
 	updateAll(donors: DeepReadonly<Donor>[]): Promise<DeepReadonly<Donor>[]>;
-	countBy(filter: any): Promise<number>;
 }
 
 // Mongoose implementation of the DonorRepository
@@ -123,9 +135,6 @@ export const donorDao: DonorRepository = {
 		await mongoose.connection.db
 			.collection('donors')
 			.findOneAndUpdate({ donorId: donor.donorId }, { $set: donor });
-	},
-	async countBy(filter: any) {
-		return await DonorModel.count(filter).exec();
 	},
 
 	async deleteByProgramId(programId: string): Promise<void> {
@@ -525,126 +534,6 @@ async function findByProgramIdOmitMongoDocId(
 
 	return F(result as Donor[]);
 }
-
-type DonorDocument = mongoose.Document & Donor;
-
-const SampleSchema = new mongoose.Schema(
-	{
-		sampleId: { type: Number, index: true, unique: true },
-		sampleType: { type: String },
-		submitterId: { type: String, required: true },
-	},
-	{ _id: false },
-);
-
-const SpecimenSchema = new mongoose.Schema(
-	{
-		specimenId: { type: Number, index: true, unique: true },
-		specimenTissueSource: { type: String },
-		clinicalInfo: {},
-		tumourNormalDesignation: String,
-		specimenType: String,
-		submitterId: { type: String, required: true },
-		samples: [SampleSchema],
-	},
-	{ _id: false, minimize: false }, // minimize false is to avoid omitting clinicalInfo:{}
-);
-
-const TherapySchema = new mongoose.Schema(
-	{
-		clinicalInfo: {},
-		therapyType: { type: String, required: true },
-	},
-	{ _id: false },
-);
-
-const TreatmentSchema = new mongoose.Schema(
-	{
-		clinicalInfo: {},
-		treatmentId: { type: Number },
-		therapies: [TherapySchema],
-	},
-	{ _id: false },
-);
-TreatmentSchema.index({ treatmentId: 1 }, { unique: true, sparse: true });
-const FollowUpSchema = new mongoose.Schema(
-	{
-		followUpId: { type: Number },
-		clinicalInfo: {},
-	},
-	{ _id: false },
-);
-FollowUpSchema.index({ followUpId: 1 }, { unique: true, sparse: true });
-const PrimaryDiagnosisSchema = new mongoose.Schema(
-	{
-		primaryDiagnosisId: { type: Number },
-		clinicalInfo: {},
-	},
-	{ _id: false },
-);
-
-PrimaryDiagnosisSchema.index({ primaryDiagnosisId: 1 }, { unique: true, sparse: true });
-
-const FamilyHistorySchema = new mongoose.Schema(
-	{
-		familyHistoryId: { type: Number },
-		clinicalInfo: {},
-	},
-	{ _id: false },
-);
-
-FamilyHistorySchema.index({ familyHistoryId: 1 }, { unique: true, sparse: true });
-
-const ExposureSchema = new mongoose.Schema(
-	{
-		exposureId: { type: Number },
-		clinicalInfo: {},
-	},
-	{ _id: false },
-);
-
-ExposureSchema.index({ exposureId: 1 }, { unique: true, sparse: true });
-
-const BiomarkerSchema = new mongoose.Schema(
-	{
-		biomarkerId: { type: Number },
-		clinicalInfo: {},
-	},
-	{ _id: false },
-);
-
-BiomarkerSchema.index({ biomarkerId: 1 }, { unique: true, sparse: true });
-
-const ComorbiditySchema = new mongoose.Schema(
-	{
-		comorbidityId: { type: Number },
-		clinicalInfo: {},
-	},
-	{ _id: false },
-);
-
-ComorbiditySchema.index({ comorbidityId: 1 }, { unique: true, sparse: true });
-
-const DonorSchema = new mongoose.Schema(
-	{
-		donorId: { type: Number, index: true, unique: true },
-		gender: { type: String, required: true },
-		submitterId: { type: String, required: true },
-		programId: { type: String, required: true },
-		specimens: [SpecimenSchema],
-		clinicalInfo: {},
-		primaryDiagnoses: [PrimaryDiagnosisSchema],
-		familyHistory: [FamilyHistorySchema],
-		comorbidity: [ComorbiditySchema],
-		followUps: [FollowUpSchema],
-		treatments: [TreatmentSchema],
-		exposure: [ExposureSchema],
-		biomarker: [BiomarkerSchema],
-		schemaMetadata: {},
-		completionStats: {},
-	},
-	{ timestamps: true, minimize: false }, // minimize false is to avoid omitting clinicalInfo:{}
-);
 
 DonorSchema.index({ submitterId: 1, programId: 1 }, { unique: true });
 DonorSchema.index({ 'specimens.submitterId': 1, programId: 1 }, { unique: true });
