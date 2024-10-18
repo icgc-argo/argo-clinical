@@ -111,7 +111,6 @@ export interface DonorRepository {
 	create(donor: DeepReadonly<Partial<Donor>>): Promise<DeepReadonly<Donor>>;
 	update(donor: DeepReadonly<Donor>): Promise<DeepReadonly<Donor>>;
 	updateAll(donors: DeepReadonly<Donor>[]): Promise<DeepReadonly<Donor>[]>;
-	countBy(filter: any): Promise<number>;
 }
 
 // Mongoose implementation of the DonorRepository
@@ -123,9 +122,6 @@ export const donorDao: DonorRepository = {
 		await mongoose.connection.db
 			.collection('donors')
 			.findOneAndUpdate({ donorId: donor.donorId }, { $set: donor });
-	},
-	async countBy(filter: any) {
-		return await DonorModel.count(filter).exec();
 	},
 
 	async deleteByProgramId(programId: string): Promise<void> {
