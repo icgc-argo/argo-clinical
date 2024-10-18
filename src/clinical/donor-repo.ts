@@ -17,13 +17,13 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { Donor } from './clinical-entities';
-import { ClinicalDataQuery, ClinicalDonorEntityQuery } from './types';
-import { getRequiredDonorFieldsForEntityTypes } from '../common-model/functions';
+import { DeepReadonly } from 'deep-freeze';
 import mongoose, { PaginateModel } from 'mongoose';
 import mongoosePaginate from 'mongoose-paginate-v2';
-import { DeepReadonly } from 'deep-freeze';
+import { getRequiredDonorFieldsForEntityTypes } from '../common-model/functions';
 import { F, MongooseUtils, notEmpty } from '../utils';
+import { Donor } from './clinical-entities';
+import { ClinicalDataQuery, ClinicalDonorEntityQuery } from './types';
 
 export const SUBMITTER_ID = 'submitterId';
 export const SPECIMEN_SUBMITTER_ID = 'specimen.submitterId';
