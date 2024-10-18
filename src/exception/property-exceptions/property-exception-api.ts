@@ -110,12 +110,6 @@ class ExceptionController {
 	@HasFullWriteAccess()
 	async createEntityException(req: Request, res: Response) {
 		const programId = req.params.programId;
-		const programException = await programExceptionRepository.find(programId);
-
-		if (programException?.exceptions?.length) {
-			L.debug('program exception exists already');
-			return res.status(400).send('Program exception already exists');
-		}
 
 		const records = await parseTSV(req.file.path);
 		// validate tsv structure using cols, does not validate field data
