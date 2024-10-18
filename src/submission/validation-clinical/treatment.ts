@@ -17,29 +17,29 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {
-	SubmissionValidationError,
-	SubmittedClinicalRecord,
-	DataValidationErrors,
-	SubmissionValidationOutput,
-	DonorVitalStatusValues,
-} from '../submission-entities';
+import { DeepReadonly } from 'deep-freeze';
+import _ from 'lodash';
+import { Donor, FollowUp, Treatment } from '../../clinical/clinical-entities';
 import {
 	ClinicalEntitySchemaNames,
+	ClinicalTherapySchemaNames,
+	ClinicalTherapyType,
 	ClinicalUniqueIdentifier,
 	TreatmentFieldsEnum,
-	ClinicalTherapyType,
-	ClinicalTherapySchemaNames,
 } from '../../common-model/entities';
-import { DeepReadonly } from 'deep-freeze';
-import { getTreatmentDetailException } from '../../exception/treatment-detail-exceptions/service';
-import { Donor, Treatment, FollowUp } from '../../clinical/clinical-entities';
-import * as utils from './utils';
-import _ from 'lodash';
 import {
-	getSingleClinicalObjectFromDonor,
 	getClinicalObjectsFromDonor,
+	getSingleClinicalObjectFromDonor,
 } from '../../common-model/functions';
+import { getTreatmentDetailException } from '../../exception/treatment-detail-exceptions/service';
+import {
+	DataValidationErrors,
+	DonorVitalStatusValues,
+	SubmissionValidationError,
+	SubmissionValidationOutput,
+	SubmittedClinicalRecord,
+} from '../submission-entities';
+import * as utils from './utils';
 import { checkClinicalEntityDoesntBelongToOtherDonor, checkRelatedEntityExists } from './utils';
 
 export const validate = async (

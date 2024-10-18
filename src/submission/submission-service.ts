@@ -30,14 +30,14 @@ import {
 	Specimen,
 } from '../clinical/clinical-entities';
 import {
-	donorDao,
 	DONOR_DOCUMENT_FIELDS,
 	FindByProgramAndSubmitterFilter,
+	donorDao,
 } from '../clinical/donor-repo';
 import {
 	ClinicalEntitySchemaNames,
 	DonorFieldsEnum,
-	TherapyRxNormFields,
+	TherapyRxNormFieldsEnum,
 } from '../common-model/entities';
 import * as dictionaryManager from '../dictionary/manager';
 import { schemaFilter } from '../exception/property-exceptions/validation';
@@ -79,12 +79,12 @@ import {
 	RegistrationStat,
 	RegistrationStats,
 	RevalidateClinicalSubmissionCommand,
+	SUBMISSION_STATE,
 	SampleRegistrationFieldsEnum,
 	SubmissionBatchError,
 	SubmissionBatchErrorTypes,
 	SubmissionValidationError,
 	SubmissionValidationUpdate,
-	SUBMISSION_STATE,
 	SubmittedRegistrationRecord,
 	ValidateSubmissionResult,
 } from './submission-entities';
@@ -918,9 +918,18 @@ export namespace operations {
 				);
 				errorsAccumulator = errorsAccumulator.concat(programIdError);
 
-				// special case for therapies where we need to populate the rxnorm Ids, only do this step
-				// if the record is valid so far to avoid spending alot of time here
-				if (errorsAccumulator.length == 0 && isRxNormTherapy(command.clinicalType)) {
+				// Records using alternate Drug DB fields should skip RxNorm validation
+				// Drug DB field validation is handled downstream in validation-clinical/therapy.ts
+				const { drug_database, drug_term, drug_id } = processedRecord;
+				const hasDrugDbFields = Boolean(drug_database || drug_id || drug_term);
+
+				// Special case for therapies where we need to populate the rxnorm Ids
+				// Only do this step if the record is valid so far to avoid spending alot of time here
+				if (
+					errorsAccumulator.length == 0 &&
+					isRxNormTherapy(command.clinicalType) &&
+					!hasDrugDbFields
+				) {
 					const result = await validateRxNormFields(processedRecord, index, schemaName);
 					if (result.error != undefined) {
 						errorsAccumulator = errorsAccumulator.concat([result.error]);
@@ -971,9 +980,9 @@ export namespace operations {
 		}
 		const recordWithRxNormPopulated = _.cloneDeep(r) as Record<string, any>;
 		// we replace the drug name to normalize the case
-		recordWithRxNormPopulated[TherapyRxNormFields.drug_name] =
+		recordWithRxNormPopulated[TherapyRxNormFieldsEnum.drug_name] =
 			rxnormConceptLookupResult.rxNormRecord.str;
-		recordWithRxNormPopulated[TherapyRxNormFields.drug_rxnormid] =
+		recordWithRxNormPopulated[TherapyRxNormFieldsEnum.drug_rxnormid] =
 			rxnormConceptLookupResult.rxNormRecord.rxcui;
 		return {
 			record: recordWithRxNormPopulated as dictionaryEntities.TypedDataRecord,
@@ -989,12 +998,12 @@ export namespace operations {
 		error: SubmissionValidationError | undefined;
 	}> {
 		// if the id is provided we do a look up and double check against the name (if provided)
-		if (isNotAbsent(therapyRecord[TherapyRxNormFields.drug_rxnormid] as string)) {
-			const rxcui = therapyRecord[TherapyRxNormFields.drug_rxnormid] as string;
+		if (isNotAbsent(therapyRecord[TherapyRxNormFieldsEnum.drug_rxnormid] as string)) {
+			const rxcui = therapyRecord[TherapyRxNormFieldsEnum.drug_rxnormid] as string;
 			const rxRecords = await dbRxNormService.lookupByRxcui(rxcui.trim());
 			if (_.isEmpty(rxRecords)) {
 				const error: SubmissionValidationError = {
-					fieldName: TherapyRxNormFields.drug_rxnormid,
+					fieldName: TherapyRxNormFieldsEnum.drug_rxnormid,
 					index: index,
 					info: {},
 					message: validationErrorMessage(DataValidationErrors.THERAPY_RXNORM_RXCUI_NOT_FOUND),
@@ -1009,7 +1018,7 @@ export namespace operations {
 			const matchingRecord = rxRecords.find(
 				(rx) =>
 					rx.str.toLowerCase().trim() ==
-					(therapyRecord[TherapyRxNormFields.drug_name] as string).toLowerCase().trim(),
+					(therapyRecord[TherapyRxNormFieldsEnum.drug_name] as string).toLowerCase().trim(),
 			);
 
 			if (matchingRecord != undefined) {
@@ -1021,7 +1030,7 @@ export namespace operations {
 
 			const foundNames = rxRecords.map((r) => r.str);
 			const error: SubmissionValidationError = {
-				fieldName: TherapyRxNormFields.drug_rxnormid,
+				fieldName: TherapyRxNormFieldsEnum.drug_rxnormid,
 				index: index,
 				info: {},
 				message: validationErrorMessage(DataValidationErrors.THERAPY_RXNORM_DRUG_NAME_INVALID, {
@@ -1038,7 +1047,7 @@ export namespace operations {
 		// nothing was provided
 		// this shouldn't happen unless the schema is not validating correctly
 		const error: SubmissionValidationError = {
-			fieldName: TherapyRxNormFields.drug_rxnormid,
+			fieldName: TherapyRxNormFieldsEnum.drug_rxnormid,
 			index: index,
 			info: {},
 			message: `an rxcui id or drug name is required`,
