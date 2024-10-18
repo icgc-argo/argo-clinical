@@ -17,7 +17,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import mysql from 'mysql';
+import mysql from 'mysql2/promise';
 
 let pool: mysql.Pool;
 
@@ -26,7 +26,7 @@ export function initPool(args: {
 	user: string;
 	password: string;
 	database: string;
-	timeout: number;
+	timeout?: number;
 	port: number;
 }) {
 	pool = mysql.createPool({

@@ -17,18 +17,16 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// using import fails when running the test
-import chai from 'chai';
-// needed for types
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
+import { MongoDBContainer } from '@testcontainers/mongodb';
 import { promisify } from 'bluebird';
+import chai from 'chai';
 import 'chai-http';
 import _ from 'lodash';
 import 'mocha';
 import mongoose from 'mongoose';
-import { GenericContainer } from 'testcontainers';
 import * as manager from '../../../src/dictionary/manager';
-import { cleanCollection, findInDb, updateData } from '../testutils';
+import { cleanCollection, findInDb } from '../testutils';
 const ServerMock: any = require('mock-http-server') as any;
 
 chai.use(require('chai-http'));
@@ -36,31 +34,22 @@ chai.should();
 
 describe('manager', () => {
 	let mongoContainer: any;
-	let dburl = ``;
+	let dbUrl = ``;
 	const schemaName = 'ARGO Clinical Submission';
 	const server = new ServerMock({ host: 'localhost', port: 54321 });
 	const startServerPromise = promisify(server.start);
-
-	// we don't do a full bootstrap here like other integration tests, this test is meant to be
-	// lectern client specific and agnostic of clinical so it can be isolated without dependencies on argo
-	const prep = async (mongoUrl: string) => {
-		await mongoose.connect(mongoUrl, {
-			// https://mongoosejs.com/docs/deprecations.html
-			useNewUrlParser: true,
-			useFindAndModify: false,
-		});
-	};
 
 	// will run when all tests are finished
 	before(() => {
 		return (async () => {
 			try {
-				mongoContainer = await new GenericContainer('mongo', '4.0').withExposedPorts(27017).start();
+				mongoContainer = await new MongoDBContainer('mongo:6.0.1').withExposedPorts(27017).start();
+				dbUrl = await mongoContainer.getConnectionString();
 				console.log('mongo test container started');
-				dburl = `mongodb://${mongoContainer.getContainerIpAddress()}:${mongoContainer.getMappedPort(
-					27017,
-				)}/clinical`;
-				await prep(dburl);
+
+				// we don't do a full bootstrap here like other integration tests, this test is meant to be
+				// lectern client specific and agnostic of clinical so it can be isolated without dependencies on argo
+				await mongoose.connect(dbUrl, { directConnection: true });
 				await startServerPromise();
 			} catch (err) {
 				console.error('Lectern Client : before >>>>>>>>>>>', err);
@@ -75,7 +64,9 @@ describe('manager', () => {
 		await mongoContainer.stop();
 	});
 
-	beforeEach(async () => await cleanCollection(dburl, 'dataschemas'));
+	beforeEach(async () => {
+		await cleanCollection(dbUrl, 'dataschemas');
+	});
 
 	it('should load schema in db', async function() {
 		// has to be done in every test to reset the state of the manager
@@ -100,7 +91,7 @@ describe('manager', () => {
 		} catch (er) {
 			return er;
 		}
-		const dbSchema = (await findInDb(dburl, 'dataschemas', {})) as any[];
+		const dbSchema = (await findInDb(dbUrl, 'dataschemas', {})) as any[];
 		chai.expect(dbSchema).to.not.be.undefined;
 		chai.expect(dbSchema.length).to.eq(1);
 		chai.expect(dbSchema[0].name).to.eq(schemaName);
@@ -146,7 +137,7 @@ describe('manager', () => {
 			return er;
 		}
 
-		const dbSchema = (await findInDb(dburl, 'dataschemas', {})) as any[];
+		const dbSchema = (await findInDb(dbUrl, 'dataschemas', {})) as any[];
 		chai.expect(dbSchema).to.not.be.undefined;
 		// Manager now adds the latest Dictionary, rather than replacing
 		chai.expect(dbSchema.length).to.eq(2);

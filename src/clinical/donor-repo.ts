@@ -43,6 +43,11 @@ export const SPECIMEN_SUBMITTER_ID = 'specimen.submitterId';
 export const SPECIMEN_SAMPLE_SUBMITTER_ID = 'specimen.sample.submitterId';
 const AutoIncrement = require('mongoose-sequence')(mongoose);
 
+const DonorModel = mongoose.model<DonorDocument, PaginateModel<DonorDocument>>(
+	'Donor',
+	DonorSchema,
+);
+
 export enum DONOR_DOCUMENT_FIELDS {
 	SUBMITTER_ID = 'submitterId',
 	DONOR_ID = 'donorId',
@@ -69,6 +74,7 @@ const DONOR_ENTITY_CORE_FIELDS = [
 	'clinicalInfo',
 	'updatedAt',
 ];
+
 const DONOR_SEARCH_CORE_FIELDS = ['donorId', 'submitterId', 'programId', 'clinicalInfo'];
 
 export type FindByProgramAndSubmitterFilter = DeepReadonly<{
@@ -126,14 +132,18 @@ export interface DonorRepository {
 	updateAll(donors: DeepReadonly<Donor>[]): Promise<DeepReadonly<Donor>[]>;
 }
 
+// TODO: Correct this
+type DonorRecord = Omit<Donor, '_id'>;
+
 // Mongoose implementation of the DonorRepository
 export const donorDao: DonorRepository = {
 	async insertDonors(donors: Donor[]) {
-		await mongoose.connection.db.collection('donors').insertMany(donors);
+		const records = donors.map((donor) => donor as DonorRecord);
+		await mongoose.connection.db?.collection('donors').insertMany(records);
 	},
 	async updateDonor(donor: Donor) {
-		await mongoose.connection.db
-			.collection('donors')
+		await mongoose?.connection?.db
+			?.collection('donors')
 			.findOneAndUpdate({ donorId: donor.donorId }, { $set: donor });
 	},
 
@@ -535,6 +545,8 @@ async function findByProgramIdOmitMongoDocId(
 	return F(result as Donor[]);
 }
 
+ComorbiditySchema.index({ comorbidityId: 1 }, { unique: true, sparse: true });
+
 DonorSchema.index({ submitterId: 1, programId: 1 }, { unique: true });
 DonorSchema.index({ 'specimens.submitterId': 1, programId: 1 }, { unique: true });
 DonorSchema.index({ 'specimens.samples.submitterId': 1, programId: 1 }, { unique: true });
@@ -596,7 +608,3 @@ TreatmentSchema.plugin(AutoIncrement, {
 	inc_field: 'treatmentId',
 	start_seq: 1,
 });
-
-export let DonorModel = mongoose.model<DonorDocument>('Donor', DonorSchema) as PaginateModel<
-	DonorDocument
->;
