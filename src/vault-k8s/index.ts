@@ -17,9 +17,9 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import vault from 'node-vault';
 import { promises } from 'fs';
-let vaultClient: vault.Client;
+import vault from 'node-vault';
+let vaultClient: vault.client;
 
 async function login() {
 	// if the app provided a token in the env use that
