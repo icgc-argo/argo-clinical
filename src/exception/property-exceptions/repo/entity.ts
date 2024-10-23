@@ -111,7 +111,6 @@ const entityExceptionRepository = {
 		try {
 			// first found document, or null
 			const doc = await EntityExceptionModel.findOne({ programId }).lean<EntityException>(true);
-			if (!doc) throw new Error();
 			return doc;
 		} catch (e) {
 			L.error('Failed to find program exception', e);

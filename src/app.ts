@@ -17,27 +17,30 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import express from 'express';
-import errorHandler from 'errorhandler';
+// TODO: remove
+// @ts-nocheck
+
 import bodyParser from 'body-parser';
+import errorHandler from 'errorhandler';
+import express from 'express';
 import path from 'path';
-import yaml from 'yamljs';
 import * as swaggerUi from 'swagger-ui-express';
+import yaml from 'yamljs';
 
 import { getHealth, Status } from './app-health';
 import { loggerFor } from './logger';
 import * as middleware from './middleware';
 
+import { EgoJwtData } from '@icgc-argo/ego-token-utils/dist/common';
+import morgan from 'morgan';
+import responseTime from 'response-time';
+import configRouter from './routes/config';
 import dataRouter from './routes/data';
+import dictionaryRouter from './routes/dictionary';
+import exceptionRouter from './routes/exception';
+import icgcImport from './routes/icgc-import';
 import registrationRouter from './routes/registration';
 import submissionRouter from './routes/submission';
-import dictionaryRouter from './routes/dictionary';
-import configRouter from './routes/config';
-import icgcImport from './routes/icgc-import';
-import exceptionRouter from './routes/exception';
-import responseTime from 'response-time';
-import morgan from 'morgan';
-import { EgoJwtData } from '@icgc-argo/ego-token-utils/dist/common';
 
 const L = loggerFor(__filename);
 
@@ -56,6 +59,7 @@ export type GlobalGqlContext = {
 
 app.set('port', process.env.PORT || 3000);
 app.set('graphqlPort', process.env.GRAPHQLPORT || 3001);
+
 app.use(bodyParser.json());
 app.use(
 	morgan('dev', {

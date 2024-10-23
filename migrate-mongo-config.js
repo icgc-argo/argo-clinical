@@ -23,36 +23,35 @@ dotenv.config();
 
 let auth = undefined;
 if (process.env.CLINICAL_DB_USERNAME && process.env.CLINICAL_DB_PASSWORD) {
-  auth = {
-    username: process.env.CLINICAL_DB_USERNAME,
-    password: process.env.CLINICAL_DB_PASSWORD,
-  };
+	auth = {
+		username: process.env.CLINICAL_DB_USERNAME,
+		password: process.env.CLINICAL_DB_PASSWORD,
+	};
 }
 
 const config = {
-  mongodb: {
-    url: process.env.CLINICAL_DB_URL,
-    databaseName: 'clinical',
-    options: {
-      auth: auth,
-      useNewUrlParser: true, // removes a deprecation warning when connecting
-      useUnifiedTopology: true, // removes a deprecating warning when connecting
-    },
-  },
+	mongodb: {
+		url: process.env.CLINICAL_DB_URL,
+		databaseName: 'clinical',
+		options: {
+			auth: auth,
+			useUnifiedTopology: true, // removes a deprecating warning when connecting
+		},
+	},
 
-  // The migrations dir, can be an relative or absolute path. Only edit this when really necessary.
-  migrationsDir: 'migrations',
+	// The migrations dir, can be an relative or absolute path. Only edit this when really necessary.
+	migrationsDir: 'migrations',
 
-  // The mongodb collection where the applied changes are stored. Only edit this when really necessary.
-  changelogCollectionName: 'changelog',
+	// The mongodb collection where the applied changes are stored. Only edit this when really necessary.
+	changelogCollectionName: 'changelog',
 };
 
 // create secure version of config to log
 const configCopy = JSON.parse(JSON.stringify(config)); // a hack to deep copy
 if (configCopy.mongodb.options.auth) {
-  console.log('hiding auth..');
-  configCopy.mongodb.options.auth.username = configCopy.mongodb.options.auth.username.length;
-  configCopy.mongodb.options.auth.password = configCopy.mongodb.options.auth.password.length;
+	console.log('hiding auth..');
+	configCopy.mongodb.options.auth.username = configCopy.mongodb.options.auth.username.length;
+	configCopy.mongodb.options.auth.password = configCopy.mongodb.options.auth.password.length;
 }
 console.log(JSON.stringify(configCopy));
 
