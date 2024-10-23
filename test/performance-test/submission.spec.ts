@@ -20,27 +20,27 @@
 // using import fails when running the test
 // import * as chai from "chai";
 const dotEnvPath = __dirname + '/performance.env';
+import chai from 'chai';
+import fs from 'fs';
 import path from 'path';
 require('dotenv').config({ path: dotEnvPath });
 console.log('env cpus: ' + process.env.ALLOWED_CPUS);
-import chai from 'chai';
-import fs from 'fs';
 // needed for types
 import 'chai-http';
 import 'mocha';
-import winston from 'winston';
 import mongoose from 'mongoose';
 import { GenericContainer, Wait } from 'testcontainers';
+import winston from 'winston';
 import app from '../../src/app';
 import * as bootstrap from '../../src/bootstrap';
-import { cleanCollection, resetCounters } from '../integration/testutils';
-import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN } from '../integration/test.jwt';
+import { ClinicalEntitySchemaNames } from '../../src/common-model/entities';
 import {
 	CreateRegistrationResult,
 	CreateSubmissionResult,
 	ValidateSubmissionResult,
 } from '../../src/submission/submission-entities';
-import { ClinicalEntitySchemaNames } from '../../src/common-model/entities';
+import { JWT_CLINICALSVCADMIN, TEST_PUB_KEY } from '../integration/test.jwt';
+import { cleanCollection, resetCounters } from '../integration/testutils';
 
 // create a different logger to avoid noise from application
 const L = winston.createLogger({

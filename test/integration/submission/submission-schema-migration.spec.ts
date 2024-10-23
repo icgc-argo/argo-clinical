@@ -17,36 +17,36 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
 import app from '../../../src/app';
 import * as bootstrap from '../../../src/bootstrap';
+import { Donor } from '../../../src/clinical/clinical-entities';
 import {
 	ClinicalEntitySchemaNames,
-	PrimaryDiagnosisFieldsEnum,
 	DonorFieldsEnum,
+	PrimaryDiagnosisFieldsEnum,
 	SpecimenFieldsEnum,
 } from '../../../src/common-model/entities';
-import { SampleRegistrationFieldsEnum } from '../../../src/submission/submission-entities';
-import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
 import {
 	DictionaryMigration,
 	MigrationStage,
 } from '../../../src/submission/migration/migration-entities';
-import { Donor } from '../../../src/clinical/clinical-entities';
+import { SampleRegistrationFieldsEnum } from '../../../src/submission/submission-entities';
 import {
-	getInstance,
 	ClinicalProgramUpdateMessage,
+	getInstance,
 } from '../../../src/submission/submission-updates-messenger';
 
 import chai from 'chai';
 import 'chai-http';
 import 'deep-equal-in-any-order';
+import _ from 'lodash';
 import 'mocha';
 import mongoose from 'mongoose';
-import { spy, SinonSpy } from 'sinon';
+import { SinonSpy, spy } from 'sinon';
 import { GenericContainer } from 'testcontainers';
-import { findInDb, insertData, emptyDonorDocument, clearCollections } from '../testutils';
-import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN } from '../test.jwt';
-import _ from 'lodash';
+import { JWT_CLINICALSVCADMIN, TEST_PUB_KEY } from '../test.jwt';
+import { clearCollections, emptyDonorDocument, findInDb, insertData } from '../testutils';
 
 chai.use(require('chai-http'));
 chai.use(require('deep-equal-in-any-order'));

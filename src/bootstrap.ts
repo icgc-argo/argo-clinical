@@ -17,18 +17,18 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import { promisify } from 'bluebird';
 import mongoose from 'mongoose';
-import { loggerFor } from './logger';
-import { AppConfig, initConfigs, JWT_TOKEN_PUBLIC_KEY, RxNormDbConfig } from './config';
-import * as dictionaryManager from './dictionary/manager';
-import * as utils from './utils';
+import { Pool } from 'mysql';
 import fetch from 'node-fetch';
 import { setStatus, Status } from './app-health';
+import { AppConfig, initConfigs, JWT_TOKEN_PUBLIC_KEY, RxNormDbConfig } from './config';
+import * as dictionaryManager from './dictionary/manager';
+import { loggerFor } from './logger';
+import { initPool } from './rxnorm/pool';
 import * as persistedConfig from './submission/persisted-config/service';
 import * as submissionUpdatesMessenger from './submission/submission-updates-messenger';
-import { initPool } from './rxnorm/pool';
-import { promisify } from 'bluebird';
-import { Pool } from 'mysql';
+import * as utils from './utils';
 
 const L = loggerFor(__filename);
 

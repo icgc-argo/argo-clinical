@@ -17,14 +17,14 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-export interface RxNormService {
-	lookupByRxcui(rxcui: string): Promise<RxNormConcept[]>;
-}
-
 // https://www.nlm.nih.gov/research/umls/rxnorm/docs/techdoc.html
 export interface RxNormConcept {
 	// RXCUI field
 	rxcui: string;
 	// STR field
 	str: string;
+}
+
+export interface RxNormService {
+	lookupByRxcui(rxcui: string): Promise<RxNormConcept[]>;
 }

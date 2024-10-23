@@ -19,25 +19,25 @@
 
 import chai from 'chai';
 // needed for typescript
+import AdmZip from 'adm-zip';
 import 'chai-http';
+import deepEqualInAnyOrder from 'deep-equal-in-any-order';
+import _ from 'lodash';
 import 'mocha';
+import mongoose from 'mongoose';
 import { GenericContainer } from 'testcontainers';
 import app from '../../../src/app';
 import * as bootstrap from '../../../src/bootstrap';
-import {
-	cleanCollection,
-	insertData,
-	assertDbCollectionEmpty,
-	emptyDonorDocument,
-} from '../testutils';
-import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN, JWT_ABCDEF } from '../test.jwt';
-import mongoose from 'mongoose';
-import AdmZip from 'adm-zip';
 import { ClinicalEntitySchemaNames } from '../../../src/common-model/entities';
-import { TsvUtils, notEmpty } from '../../../src/utils';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../../../src/common-model/functions';
-import deepEqualInAnyOrder from 'deep-equal-in-any-order';
-import _ from 'lodash';
+import { TsvUtils, notEmpty } from '../../../src/utils';
+import { JWT_ABCDEF, JWT_CLINICALSVCADMIN, TEST_PUB_KEY } from '../test.jwt';
+import {
+	assertDbCollectionEmpty,
+	cleanCollection,
+	emptyDonorDocument,
+	insertData,
+} from '../testutils';
 
 chai.use(require('chai-http'));
 chai.use(deepEqualInAnyOrder);
