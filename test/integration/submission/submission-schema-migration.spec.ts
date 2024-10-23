@@ -18,6 +18,8 @@
  */
 
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
+import { MongoDBContainer } from '@testcontainers/mongodb';
+import { MySqlContainer } from '@testcontainers/mysql';
 import app from '../../../src/app';
 import * as bootstrap from '../../../src/bootstrap';
 import { Donor } from '../../../src/clinical/clinical-entities';
@@ -44,7 +46,7 @@ import _ from 'lodash';
 import 'mocha';
 import mongoose from 'mongoose';
 import { SinonSpy, spy } from 'sinon';
-import { GenericContainer } from 'testcontainers';
+import { Network } from 'testcontainers';
 import { JWT_CLINICALSVCADMIN, TEST_PUB_KEY } from '../test.jwt';
 import { clearCollections, emptyDonorDocument, findInDb, insertData } from '../testutils';
 
@@ -61,7 +63,8 @@ describe('schema migration api', () => {
 	let sendProgramUpdatedMessageFunc: SinonSpy<[ClinicalProgramUpdateMessage], Promise<void>>;
 	let mongoContainer: any;
 	let mysqlContainer: any;
-	let dburl = ``;
+	let testNetwork: any;
+	let dbUrl = ``;
 
 	const programId = 'ABCD-EF';
 	const donor: Donor = emptyDonorDocument({
@@ -136,18 +139,21 @@ describe('schema migration api', () => {
 	before(() => {
 		return (async () => {
 			try {
-				const mongoContainerPromise = new GenericContainer('mongo', '4.0')
+				testNetwork = await new Network().start();
+				mongoContainer = await new MongoDBContainer('mongo:6.0.1')
+					.withNetwork(testNetwork)
 					.withExposedPorts(27017)
 					.start();
-				const mysqlContainerPromise = new GenericContainer('mysql', '5.7')
-					.withEnv('MYSQL_DATABASE', 'rxnorm')
-					.withEnv('MYSQL_USER', 'clinical')
-					.withEnv('MYSQL_ROOT_PASSWORD', 'password')
-					.withEnv('MYSQL_PASSWORD', 'password')
+				dbUrl = `${mongoContainer.getConnectionString()}/clinical`;
+				mysqlContainer = await new MySqlContainer()
+					.withNetwork(testNetwork)
+					.withDatabase('rxnorm')
+					.withUsername('clinical')
+					.withRootPassword('password')
+					.withUserPassword('password')
 					.withExposedPorts(3306)
 					.start();
-				mongoContainer = await mongoContainerPromise;
-				mysqlContainer = await mysqlContainerPromise;
+
 				console.log('db test containers started');
 				await bootstrap.run({
 					mongoPassword() {
@@ -157,10 +163,7 @@ describe('schema migration api', () => {
 						return '';
 					},
 					mongoUrl: () => {
-						dburl = `mongodb://${mongoContainer.getContainerIpAddress()}:${mongoContainer.getMappedPort(
-							27017,
-						)}/clinical`;
-						return dburl;
+						return dbUrl;
 					},
 					initialSchemaVersion() {
 						return startingSchemaVersion;
@@ -205,10 +208,10 @@ describe('schema migration api', () => {
 					rxNormDbProperties() {
 						return {
 							database: 'rxnorm',
-							user: 'clinical',
-							password: 'password',
+							user: mysqlContainer.getUsername(),
+							password: mysqlContainer.getUserPassword(),
 							timeout: 5000,
-							host: mysqlContainer.getContainerIpAddress(),
+							host: mysqlContainer.getHost(),
 							port: mysqlContainer.getMappedPort(3306),
 						};
 					},
@@ -233,12 +236,13 @@ describe('schema migration api', () => {
 		await mongoose.disconnect();
 		await mongoContainer.stop();
 		await mysqlContainer.stop();
+		await testNetwork.stop();
 	});
 
 	beforeEach(async () => {
-		await clearCollections(dburl, ['donors', 'dictionarymigrations', 'dataschemas']);
-		await insertData(dburl, 'donors', donor);
-		await insertData(dburl, 'donors', donor2);
+		await clearCollections(dbUrl, ['donors', 'dictionarymigrations', 'dataschemas']);
+		await insertData(dbUrl, 'donors', donor);
+		await insertData(dbUrl, 'donors', donor2);
 		// reset the base schema since tests can load new one
 		await bootstrap.loadSchema(schemaName, startingSchemaVersion);
 		sendProgramUpdatedMessageFunc = spy(getInstance(), 'sendProgramUpdatedMessage');
@@ -253,11 +257,7 @@ describe('schema migration api', () => {
 
 	const assertSuccessfulMigration = async (res: any, version: string) => {
 		res.should.have.status(200);
-		const schema = (await findInDb(
-			dburl,
-			'dataschemas',
-			{},
-		)) as dictionaryEntities.SchemasDictionary[];
+		const schema = await findInDb(dbUrl, 'dataschemas', {});
 		schema[0].version.should.eq(version);
 	};
 
@@ -343,11 +343,11 @@ describe('schema migration api', () => {
 					hasMissingEntityException: false,
 				},
 			});
-			await insertData(dburl, 'donors', donorInvalidWithNewSchema);
+			await insertData(dbUrl, 'donors', donorInvalidWithNewSchema);
 			await migrateSyncTo('4.0').then((res: any) => {
 				res.should.have.status(200);
 			});
-			const updatedDonor = await findInDb(dburl, 'donors', {});
+			const updatedDonor = await findInDb(dbUrl, 'donors', {});
 
 			// donor 1 stats after migration, added entity completion
 			chai.expect(updatedDonor[0].completionStats.coreCompletion).to.deep.include({
@@ -407,7 +407,7 @@ describe('schema migration api', () => {
 			});
 
 			const res = await getAllMigrationDocs();
-			const donors = await findInDb(dburl, 'donors', {});
+			const donors = await findInDb(dbUrl, 'donors', {});
 
 			const [migration] = res.body;
 			assertNoMigrationErrors(res, VERSION);
@@ -436,11 +436,7 @@ describe('schema migration api', () => {
 			const VERSION = '9.0';
 			await migrateSyncTo(VERSION).then(async (res: any) => {
 				res.should.have.status(200);
-				const schema = (await findInDb(
-					dburl,
-					'dataschemas',
-					{},
-				)) as dictionaryEntities.SchemasDictionary[];
+				const schema = await findInDb(dbUrl, 'dataschemas', {});
 				// migration will fail
 				schema[0].version.should.eq(startingSchemaVersion);
 			});
@@ -571,24 +567,20 @@ describe('schema migration api', () => {
 
 	describe('dry run migration api', () => {
 		it('should report donor validation errors', async () => {
-			await insertData(dburl, 'donors', newSchemaInvalidDonor);
+			await insertData(dbUrl, 'donors', newSchemaInvalidDonor);
 
 			await dryRunMigrateTo('7.0').then(async (res: any) => {
 				res.should.have.status(200);
 				const migration = res.body as DictionaryMigration;
 				migration.should.not.be.undefined;
-				const migrations = (await findInDb(
-					dburl,
-					'dictionarymigrations',
-					{},
-				)) as DictionaryMigration[];
+				const migrations = await findInDb(dbUrl, 'dictionarymigrations', {});
 				migrations.should.not.be.empty;
 				migrations[0].should.not.be.undefined;
 				const dbMigration = migrations[0];
 				if (!dbMigration._id) {
 					throw new Error('migration in db with no id');
 				}
-				dbMigration._id = dbMigration._id.toString();
+
 				// we convert to json string to normalize dates
 				const normalizedDbMigration = JSON.parse(JSON.stringify(dbMigration));
 				normalizedDbMigration.should.deep.include(migration);

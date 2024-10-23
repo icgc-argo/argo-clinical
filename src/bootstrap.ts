@@ -17,9 +17,8 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { promisify } from 'bluebird';
 import mongoose from 'mongoose';
-import { Pool } from 'mysql';
+import { Pool } from 'mysql2/promise';
 import fetch from 'node-fetch';
 import { setStatus, Status } from './app-health';
 import { AppConfig, initConfigs, JWT_TOKEN_PUBLIC_KEY, RxNormDbConfig } from './config';
@@ -68,6 +67,7 @@ const connectToDb = async (
 		await connect(delayMillis, mongoUrl, username, password);
 	} catch (err) {
 		L.error('failed to connect', err);
+		throw err;
 	}
 };
 
@@ -75,31 +75,29 @@ async function connect(delayMillis: number, mongoUrl: string, username: string, 
 	try {
 		// https://mongoosejs.com/docs/connections.html
 		await mongoose.connect(mongoUrl, {
-			autoReconnect: true,
-			// http://mongodb.github.io/node-mongodb-native/3.1/reference/faq/
-			socketTimeoutMS: 10000,
-			connectTimeoutMS: 30000,
-			keepAlive: true,
-			reconnectTries: 10,
-			reconnectInterval: 3000,
-			bufferCommands: false,
-			bufferMaxEntries: 0,
+			directConnection: true,
 			user: username,
 			pass: password,
-			// https://mongoosejs.com/docs/deprecations.html
-			useNewUrlParser: true,
-			useFindAndModify: false,
-			useCreateIndex: true,
+			socketTimeoutMS: 10000,
 		});
+
 		L.debug('mongoose connected');
 	} catch (err) {
-		L.error('failed to connect to mongo', err);
+		console.error('Failed to connect to Mongo');
+		console.error(err);
 		setStatus('db', { status: Status.ERROR });
 		setTimeout(() => {
 			L.debug('retrying to connect to mongo');
 			connect(delayMillis, mongoUrl, username, password);
 		}, delayMillis);
 	}
+}
+
+export async function createConnection(dbUrl: string) {
+	return mongoose.createConnection(`${dbUrl}`, {
+		directConnection: true,
+		socketTimeoutMS: 10000,
+	});
 }
 
 const setJwtPublicKey = (keyUrl: string) => {
@@ -135,15 +133,15 @@ const setJwtPublicKey = (keyUrl: string) => {
 	getKey(1);
 };
 
-const setupRxNormConnection = (conf: RxNormDbConfig) => {
-	if (!conf.host) return;
+const setupRxNormConnection = (config: RxNormDbConfig) => {
+	if (!config.host) return;
 	const pool = initPool({
-		database: conf.database,
-		host: conf.host,
-		password: conf.password,
-		user: conf.user,
-		port: conf.port,
-		timeout: conf.timeout,
+		database: config.database,
+		host: config.host,
+		password: config.password,
+		user: config.user,
+		port: config.port,
+		timeout: config.timeout,
 	});
 	pool.on('connection', () => setStatus('rxNormDb', { status: Status.OK }));
 
@@ -156,8 +154,8 @@ const setupRxNormConnection = (conf: RxNormDbConfig) => {
 
 async function pingRxNorm(pool: Pool) {
 	try {
-		const query = promisify(pool.query).bind(pool);
-		await query('select 1');
+		const connection = await pool.getConnection();
+		await connection.query('select 1');
 		setStatus('rxNormDb', { status: Status.OK });
 	} catch (err) {
 		L.error('cannot get connection to rxnorm', err);
@@ -176,7 +174,12 @@ export const run = async (config: AppConfig) => {
 	}
 
 	// RxNorm Db
-	setupRxNormConnection(config.rxNormDbProperties());
+	try {
+		setupRxNormConnection(config.rxNormDbProperties());
+	} catch (error) {
+		console.error('Error at setupRxNormConnection');
+		console.error(error);
+	}
 
 	// setup messenger with kafka configs
 	const kafkaProps = config.kafkaProperties();
@@ -201,11 +204,9 @@ export const run = async (config: AppConfig) => {
 	// close app connections on termination
 	const gracefulExit = async () => {
 		await submissionUpdatesMessenger.getInstance().closeOpenConnections();
+		await mongoose.connection.close();
 
-		await mongoose.connection.close(function() {
-			L.debug('Mongoose default connection is disconnected through app termination');
-		});
-
+		L.debug('Mongoose default connection is disconnected through app termination');
 		process.exit(0);
 	};
 
