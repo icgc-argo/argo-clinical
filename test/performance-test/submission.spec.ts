@@ -37,6 +37,7 @@ import {
 } from '../../src/submission/submission-entities';
 import { JWT_CLINICALSVCADMIN, TEST_PUB_KEY } from '../integration/test.jwt';
 import { cleanCollection, resetCounters } from '../integration/testutils';
+
 const dotEnvPath = __dirname + '/performance.env';
 require('dotenv').config({ path: dotEnvPath });
 console.log('env cpus: ' + process.env.ALLOWED_CPUS);

@@ -46,7 +46,7 @@ import _ from 'lodash';
 import 'mocha';
 import mongoose from 'mongoose';
 import { SinonSpy, spy } from 'sinon';
-import { GenericContainer, Network } from 'testcontainers';
+import { Network } from 'testcontainers';
 import { JWT_CLINICALSVCADMIN, TEST_PUB_KEY } from '../test.jwt';
 import { clearCollections, emptyDonorDocument, findInDb, insertData } from '../testutils';
 
