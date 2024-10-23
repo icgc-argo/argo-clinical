@@ -25,7 +25,7 @@ import fs from 'fs';
 import 'mocha';
 import mongoose from 'mongoose';
 import path from 'path';
-import { GenericContainer, Wait } from 'testcontainers';
+import { Wait } from 'testcontainers';
 import winston from 'winston';
 import app from '../../src/app';
 import * as bootstrap from '../../src/bootstrap';
