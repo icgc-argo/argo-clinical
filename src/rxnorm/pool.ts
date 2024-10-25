@@ -18,24 +18,25 @@
  */
 
 import mysql from 'mysql2/promise';
+import { RxNormDbConfig } from '../config';
 
 let pool: mysql.Pool;
 
-export function initPool(args: {
-	host: string;
-	user: string;
-	password: string;
-	database: string;
-	timeout?: number;
-	port: number;
-}) {
+export function initPool({
+	host,
+	user,
+	password,
+	database,
+	timeout: connectTimeout,
+	port,
+}: RxNormDbConfig) {
 	pool = mysql.createPool({
-		connectTimeout: args.timeout,
-		database: args.database,
-		user: args.user,
-		password: args.password,
-		port: args.port,
-		host: args.host,
+		connectTimeout,
+		database,
+		user,
+		password,
+		port,
+		host,
 	});
 	return pool;
 }
