@@ -132,17 +132,16 @@ export interface DonorRepository {
 	updateAll(donors: DeepReadonly<Donor>[]): Promise<DeepReadonly<Donor>[]>;
 }
 
-// TODO: Correct this
-type DonorRecord = Omit<Donor, '_id'>;
-
 // Mongoose implementation of the DonorRepository
 export const donorDao: DonorRepository = {
 	async insertDonors(donors: Donor[]) {
+		// TODO: Review this
+		type DonorRecord = Omit<Donor, '_id'>;
 		const records = donors.map((donor) => donor as DonorRecord);
 		await mongoose.connection.db?.collection('donors').insertMany(records);
 	},
 	async updateDonor(donor: Donor) {
-		await mongoose?.connection?.db
+		await mongoose?.connection.db
 			?.collection('donors')
 			.findOneAndUpdate({ donorId: donor.donorId }, { $set: donor });
 	},
