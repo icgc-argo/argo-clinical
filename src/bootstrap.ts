@@ -82,8 +82,7 @@ async function connect(delayMillis: number, mongoUrl: string, username: string, 
 
 		L.debug('mongoose connected');
 	} catch (err) {
-		console.error('Failed to connect to Mongo');
-		console.error(err);
+		L.error('failed to connect to mongo', err);
 		setStatus('db', { status: Status.ERROR });
 		setTimeout(() => {
 			L.debug('retrying to connect to mongo');
