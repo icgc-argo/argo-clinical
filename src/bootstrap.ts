@@ -67,7 +67,6 @@ const connectToDb = async (
 		await connect(delayMillis, mongoUrl, username, password);
 	} catch (err) {
 		L.error('failed to connect', err);
-		throw err;
 	}
 };
 
@@ -177,8 +176,7 @@ export const run = async (config: AppConfig) => {
 	try {
 		setupRxNormConnection(config.rxNormDbProperties());
 	} catch (error) {
-		console.error('Error at setupRxNormConnection');
-		console.error(error);
+		L.error('Error at setupRxNormConnection', error);
 	}
 
 	// setup messenger with kafka configs
