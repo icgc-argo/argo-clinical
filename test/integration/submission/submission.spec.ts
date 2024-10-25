@@ -167,14 +167,14 @@ describe('Submission Api', () => {
 						return '';
 					},
 				});
-				const connPool = pool.getPool();
-				await createtRxNormTables(connPool);
-				await insertRxNormDrug('423', 'drugA', connPool);
-				await insertRxNormDrug('423', 'drug A', connPool);
-				await insertRxNormDrug('423', 'Koolaid', connPool);
-				await insertRxNormDrug('22323', 'drug 2', connPool);
-				await insertRxNormDrug('22323', 'drug B', connPool);
-				await insertRxNormDrug('12', '123-H2O', connPool);
+				const connectionPool = pool.getPool();
+				await createtRxNormTables(connectionPool);
+				await insertRxNormDrug('423', 'drugA', connectionPool);
+				await insertRxNormDrug('423', 'drug A', connectionPool);
+				await insertRxNormDrug('423', 'Koolaid', connectionPool);
+				await insertRxNormDrug('22323', 'drug 2', connectionPool);
+				await insertRxNormDrug('22323', 'drug B', connectionPool);
+				await insertRxNormDrug('12', '123-H2O', connectionPool);
 			} catch (err) {
 				console.error('before >>>>>>>>>>>', err);
 				return err;
@@ -471,11 +471,11 @@ describe('Submission Api', () => {
 				.end(async (err: any, res: any) => {
 					try {
 						res.should.have.status(201);
-						const conn = await createConnection(dbUrl);
-						const savedRegistration = await conn
+						const connection = await createConnection(dbUrl);
+						const savedRegistration = await connection
 							.collection('activeregistrations')
 							.findOne<ActiveRegistration | null>({});
-						await conn.close();
+						await connection.close();
 						if (!savedRegistration) {
 							throw new Error("saved registration shouldn't be null");
 						}
@@ -762,11 +762,11 @@ describe('Submission Api', () => {
 				.attach('clinicalFiles', file, 'donor.tsv')
 				.end(async (err: any, res: any) => {
 					res.should.have.status(200);
-					const conn = await createConnection(dbUrl);
-					const savedSubmission = await conn
+					const connection = await createConnection(dbUrl);
+					const savedSubmission = await connection
 						.collection('activesubmissions')
 						.findOne<ActiveClinicalSubmission | null>({});
-					await conn.close();
+					await connection.close();
 					if (!savedSubmission) {
 						throw new Error("saved submission shouldn't be null");
 					}
@@ -2160,10 +2160,12 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dbUrl: 
 		);
 	});
 
-	const conn = await createConnection(dbUrl);
-	const donorCursor = await conn.collection('donors').find<Donor>({}, { sort: { donorId: 1 } });
+	const connection = await createConnection(dbUrl);
+	const donorCursor = await connection
+		.collection('donors')
+		.find<Donor>({}, { sort: { donorId: 1 } });
 	const actualDonors = await donorCursor.toArray();
-	await conn.close();
+	await connection.close();
 
 	chai.expect(actualDonors.length).to.eq(4);
 	// ids are not in sequence so we check that they are in range only.
@@ -2214,10 +2216,10 @@ function assertSameDonorWithoutGeneratedIds(actual: Donor | undefined, expected:
 
 async function assertUploadOKRegistrationCreated(res: any, dbUrl: string) {
 	res.should.have.status(201);
-	const conn = await createConnection(dbUrl);
-	const collection = conn.collection('activeregistrations');
+	const connection = await createConnection(dbUrl);
+	const collection = connection.collection('activeregistrations');
 	const savedRegistration = await collection.findOne<ActiveRegistration | null>({});
-	await conn.close();
+	await connection.close();
 	if (!savedRegistration) {
 		throw new Error("saved registration shouldn't be null");
 	}
