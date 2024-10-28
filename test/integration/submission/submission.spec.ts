@@ -92,7 +92,7 @@ describe('Submission Api', () => {
 				mongoContainer = await new MongoDBContainer('mongo:6.0.1').withExposedPorts(27017).start();
 				dbUrl = `${mongoContainer.getConnectionString()}/clinical`;
 				mysqlContainer = await new MySqlContainer()
-					.withDatabase('rxnorm')
+					.withDatabase(RXNORM_DB)
 					.withUsername(RXNORM_USER)
 					.withRootPassword(RXNORM_PASS)
 					.withUserPassword(RXNORM_PASS)
