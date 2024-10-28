@@ -54,6 +54,10 @@ chai.use(require('chai-http'));
 chai.use(require('deep-equal-in-any-order'));
 chai.should();
 
+const RXNORM_DB = 'rxnorm';
+const RXNORM_USER = 'clinical';
+const RXNORM_PASS = 'password';
+
 // legacy field name
 const PRESENTING_SYMPTOMS = 'presenting_symptoms';
 const schemaName = 'ARGO Clinical Submission';
@@ -147,10 +151,10 @@ describe('schema migration api', () => {
 				dbUrl = `${mongoContainer.getConnectionString()}/clinical`;
 				mysqlContainer = await new MySqlContainer()
 					.withNetwork(testNetwork)
-					.withDatabase('rxnorm')
-					.withUsername('clinical')
-					.withRootPassword('password')
-					.withUserPassword('password')
+					.withDatabase(RXNORM_DB)
+					.withUsername(RXNORM_USER)
+					.withRootPassword(RXNORM_PASS)
+					.withUserPassword(RXNORM_PASS)
 					.withExposedPorts(3306)
 					.start();
 
