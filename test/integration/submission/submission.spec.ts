@@ -78,6 +78,8 @@ const schemaVersion = '1.0';
 const stubFilesDir = __dirname + `/stub_clinical_files`;
 
 const RXNORM_DB = 'rxnorm';
+const RXNORM_USER = 'clinical';
+const RXNORM_PASS = 'password';
 
 describe('Submission Api', () => {
 	let dbUrl = ``;
@@ -91,9 +93,9 @@ describe('Submission Api', () => {
 				dbUrl = `${mongoContainer.getConnectionString()}/clinical`;
 				mysqlContainer = await new MySqlContainer()
 					.withDatabase('rxnorm')
-					.withUsername('clinical')
-					.withRootPassword('password')
-					.withUserPassword('password')
+					.withUsername(RXNORM_USER)
+					.withRootPassword(RXNORM_PASS)
+					.withUserPassword(RXNORM_PASS)
 					.withExposedPorts(3306)
 					.start();
 				console.log('mongo test container started');
