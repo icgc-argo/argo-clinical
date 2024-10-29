@@ -28,7 +28,7 @@ import _ from 'lodash';
 import 'mocha';
 import mongoose from 'mongoose';
 import app from '../../../src/app';
-import { createConnection, run } from '../../../src/bootstrap';
+import * as bootstrap from '../../../src/bootstrap';
 import { Donor } from '../../../src/clinical/clinical-entities';
 import { donorDao } from '../../../src/clinical/donor-repo';
 import {
@@ -99,7 +99,7 @@ describe('Submission Api', () => {
 					.withExposedPorts(3306)
 					.start();
 				console.log('mongo test container started');
-				await run({
+				await bootstrap.run({
 					mongoPassword() {
 						return '';
 					},
@@ -395,7 +395,7 @@ describe('Submission Api', () => {
 				return err;
 			}
 
-			const dbConnection = await createConnection(dbUrl);
+			const dbConnection = await bootstrap.createConnection(dbUrl);
 			const existingDonors = await dbConnection
 				.collection('donors')
 				.findOne<ActiveRegistration | null>({});
@@ -473,7 +473,7 @@ describe('Submission Api', () => {
 				.end(async (err: any, res: any) => {
 					try {
 						res.should.have.status(201);
-						const connection = await createConnection(dbUrl);
+						const connection = await bootstrap.createConnection(dbUrl);
 						const savedRegistration = await connection
 							.collection('activeregistrations')
 							.findOne<ActiveRegistration | null>({});
@@ -764,7 +764,7 @@ describe('Submission Api', () => {
 				.attach('clinicalFiles', file, 'donor.tsv')
 				.end(async (err: any, res: any) => {
 					res.should.have.status(200);
-					const connection = await createConnection(dbUrl);
+					const connection = await bootstrap.createConnection(dbUrl);
 					const savedSubmission = await connection
 						.collection('activesubmissions')
 						.findOne<ActiveClinicalSubmission | null>({});
@@ -2162,7 +2162,7 @@ async function assertFirstCommitDonorsCreatedInDB(res: any, rows: any[], dbUrl: 
 		);
 	});
 
-	const connection = await createConnection(dbUrl);
+	const connection = await bootstrap.createConnection(dbUrl);
 	const donorCursor = await connection
 		.collection('donors')
 		.find<Donor>({}, { sort: { donorId: 1 } });
@@ -2218,7 +2218,7 @@ function assertSameDonorWithoutGeneratedIds(actual: Donor | undefined, expected:
 
 async function assertUploadOKRegistrationCreated(res: any, dbUrl: string) {
 	res.should.have.status(201);
-	const connection = await createConnection(dbUrl);
+	const connection = await bootstrap.createConnection(dbUrl);
 	const collection = connection.collection('activeregistrations');
 	const savedRegistration = await collection.findOne<ActiveRegistration | null>({});
 	await connection.close();
