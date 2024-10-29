@@ -124,9 +124,7 @@ export const donorDao: DonorRepository = {
 		await DonorModel.insertMany(donors);
 	},
 	async updateDonor(donor: Donor) {
-		await mongoose?.connection.db
-			?.collection('donors')
-			.findOneAndUpdate({ donorId: donor.donorId }, { $set: donor });
+		await DonorModel.findOneAndUpdate({ donorId: donor.donorId }, { $set: donor });
 	},
 
 	async deleteByProgramId(programId: string): Promise<void> {
