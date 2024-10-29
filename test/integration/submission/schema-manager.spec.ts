@@ -88,7 +88,6 @@ describe('manager', () => {
 				status: 200,
 				headers: { 'content-type': 'application/json' },
 				body: () => {
-					console.log('in mock server reply');
 					return JSON.stringify(dictionaries);
 				},
 			},
@@ -124,7 +123,6 @@ describe('manager', () => {
 				status: 200,
 				headers: { 'content-type': 'application/json' },
 				body: (req: any) => {
-					console.log('in mock server reply');
 					if (req.query['version'] == '2.0') {
 						return JSON.stringify(dictionaryV2);
 					}
