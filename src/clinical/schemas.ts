@@ -118,6 +118,8 @@ export const ComorbiditySchema = new mongoose.Schema(
 	{ _id: false },
 );
 
+ComorbiditySchema.index({ comorbidityId: 1 }, { unique: true, sparse: true });
+
 export const DonorSchema = new mongoose.Schema(
 	{
 		donorId: { type: Number, index: true, unique: true },

@@ -544,8 +544,6 @@ async function findByProgramIdOmitMongoDocId(
 	return F(result as Donor[]);
 }
 
-ComorbiditySchema.index({ comorbidityId: 1 }, { unique: true, sparse: true });
-
 DonorSchema.index({ submitterId: 1, programId: 1 }, { unique: true });
 DonorSchema.index({ 'specimens.submitterId': 1, programId: 1 }, { unique: true });
 DonorSchema.index({ 'specimens.samples.submitterId': 1, programId: 1 }, { unique: true });
