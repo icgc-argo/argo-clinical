@@ -135,13 +135,14 @@ const setJwtPublicKey = (keyUrl: string) => {
 
 const setupRxNormConnection = (config: RxNormDbConfig) => {
 	if (!config.host) return;
+	const { database, host, password, user, port, connectTimeout } = config;
 	const pool = initPool({
-		database: config.database,
-		host: config.host,
-		password: config.password,
-		user: config.user,
-		port: config.port,
-		connectTimeout: config.connectTimeout,
+		database,
+		host,
+		password,
+		user,
+		port,
+		connectTimeout,
 	});
 	pool.on('connection', () => setStatus('rxNormDb', { status: Status.OK }));
 
