@@ -20,26 +20,25 @@ import { token } from 'morgan';
 
 console.time('boot time');
 // Has to import config before any other import uses the configurations
-import { AppConfig, RxNormDbConfig, KafkaConfigurations } from './config';
 import dotenv from 'dotenv';
+import { Server } from 'http';
+import { AppConfig, KafkaConfigurations, RxNormDbConfig } from './config';
+import * as vault from './vault-k8s';
 if (process.env.NODE_ENV !== 'PRODUCTION') {
 	console.debug('dotenv: ', dotenv.config());
 }
-import * as vault from './vault-k8s';
-import { Server } from 'http';
 // we import here to allow configs to fully load
-import * as bootstrap from './bootstrap';
-import app from './app';
-import { GlobalGqlContext } from './app';
 import { database, up } from 'migrate-mongo';
+import app, { GlobalGqlContext } from './app';
+import * as bootstrap from './bootstrap';
 
 import { ApolloServer, ContextFunction } from '@apollo/server';
 import {
 	StandaloneServerContextFunctionArgument,
 	startStandaloneServer,
 } from '@apollo/server/standalone';
-import schema from './schemas/index';
 import { EgoJwtData } from '@icgc-argo/ego-token-utils/dist/common';
+import schema from './schemas/index';
 
 let secrets: any = {};
 let server: Server;
@@ -130,7 +129,7 @@ let server: Server;
 				password: process.env.RXNORM_DB_PASSWORD || secrets.RXNORM_DB_PASSWORD || '',
 				user: process.env.RXNORM_DB_USER || secrets.RXNORM_DB_USER || 'clinical',
 				port: Number(process.env.RXNORM_DB_PORT) || 3306,
-				timeout: Number(process.env.RXNORM_DB_TIMEOUT_MILLIS) || 5 * 1000,
+				connectTimeout: Number(process.env.RXNORM_DB_TIMEOUT_MILLIS) || 5 * 1000,
 			};
 		},
 		egoUrl(): string {

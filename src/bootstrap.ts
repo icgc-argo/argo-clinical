@@ -141,7 +141,7 @@ const setupRxNormConnection = (config: RxNormDbConfig) => {
 		password: config.password,
 		user: config.user,
 		port: config.port,
-		timeout: config.timeout,
+		connectTimeout: config.connectTimeout,
 	});
 	pool.on('connection', () => setStatus('rxNormDb', { status: Status.OK }));
 

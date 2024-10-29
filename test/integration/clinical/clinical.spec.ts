@@ -162,11 +162,11 @@ describe('clinical Api', () => {
 					rxNormDbProperties() {
 						return {
 							database: '',
-							host: '',
-							password: '',
-							port: 0,
-							timeout: 0,
 							user: '',
+							password: '',
+							connectTimeout: 0,
+							host: '',
+							port: 0,
 						};
 					},
 					egoUrl() {

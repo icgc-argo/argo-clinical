@@ -144,7 +144,7 @@ describe('Submission Api', () => {
 							database: mysqlContainer.getDatabase(),
 							user: mysqlContainer.getUsername(),
 							password: mysqlContainer.getUserPassword(),
-							timeout: 5000,
+							connectTimeout: 5000,
 							host: mysqlContainer.getHost(),
 							port: mysqlContainer.getMappedPort(3306),
 						};

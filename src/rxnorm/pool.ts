@@ -22,14 +22,7 @@ import { RxNormDbConfig } from '../config';
 
 let pool: mysql.Pool;
 
-export function initPool({
-	host,
-	user,
-	password,
-	database,
-	timeout: connectTimeout,
-	port,
-}: RxNormDbConfig) {
+export function initPool({ host, user, password, database, connectTimeout, port }: RxNormDbConfig) {
 	pool = mysql.createPool({
 		connectTimeout,
 		database,
