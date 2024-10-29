@@ -19,29 +19,15 @@
 
 import { DeepReadonly } from 'deep-freeze';
 import mongoose, { PaginateModel } from 'mongoose';
-import mongoosePaginate from 'mongoose-paginate-v2';
 import { getRequiredDonorFieldsForEntityTypes } from '../common-model/functions';
 import { F, MongooseUtils, notEmpty } from '../utils';
 import { Donor } from './clinical-entities';
-import {
-	BiomarkerSchema,
-	ComorbiditySchema,
-	DonorDocument,
-	DonorSchema,
-	ExposureSchema,
-	FamilyHistorySchema,
-	FollowUpSchema,
-	PrimaryDiagnosisSchema,
-	SampleSchema,
-	SpecimenSchema,
-	TreatmentSchema,
-} from './schemas';
+import { DonorDocument, DonorSchema } from './schemas';
 import { ClinicalDataQuery, ClinicalDonorEntityQuery } from './types';
 
 export const SUBMITTER_ID = 'submitterId';
 export const SPECIMEN_SUBMITTER_ID = 'specimen.submitterId';
 export const SPECIMEN_SAMPLE_SUBMITTER_ID = 'specimen.sample.submitterId';
-const AutoIncrement = require('mongoose-sequence')(mongoose);
 
 const DonorModel = mongoose.model<DonorDocument, PaginateModel<DonorDocument>>(
 	'Donor',
@@ -543,65 +529,3 @@ async function findByProgramIdOmitMongoDocId(
 
 	return F(result as Donor[]);
 }
-
-DonorSchema.index({ submitterId: 1, programId: 1 }, { unique: true });
-DonorSchema.index({ 'specimens.submitterId': 1, programId: 1 }, { unique: true });
-DonorSchema.index({ 'specimens.samples.submitterId': 1, programId: 1 }, { unique: true });
-
-/**
- * These had to read from process env and not use the AppConfig
- * because these are global mongoose variables, they can't be called
- * multiple times, and that makes them hard to test because tests depend
- * on resetting the config and bootstraping but global variables keep their state.
- */
-DonorSchema.plugin(AutoIncrement, {
-	inc_field: 'donorId',
-	start_seq: process.env.DONOR_ID_SEED || 250000,
-});
-
-DonorSchema.plugin(mongoosePaginate);
-
-SpecimenSchema.plugin(AutoIncrement, {
-	inc_field: 'specimenId',
-	start_seq: process.env.SPECIMEN_ID_SEED || 210000,
-});
-
-SampleSchema.plugin(AutoIncrement, {
-	inc_field: 'sampleId',
-	start_seq: process.env.SAMPLE_ID_SEED || 610000,
-});
-
-FollowUpSchema.plugin(AutoIncrement, {
-	inc_field: 'followUpId',
-	start_seq: 1,
-});
-
-PrimaryDiagnosisSchema.plugin(AutoIncrement, {
-	inc_field: 'primaryDiagnosisId',
-	start_seq: 1,
-});
-
-FamilyHistorySchema.plugin(AutoIncrement, {
-	inc_field: 'familyHistoryId',
-	start_seq: 1,
-});
-
-ExposureSchema.plugin(AutoIncrement, {
-	inc_field: 'exposureId',
-	start_seq: 1,
-});
-
-BiomarkerSchema.plugin(AutoIncrement, {
-	inc_field: 'biomarkerId',
-	start_seq: 1,
-});
-
-ComorbiditySchema.plugin(AutoIncrement, {
-	inc_field: 'comorbidityId',
-	start_seq: 1,
-});
-
-TreatmentSchema.plugin(AutoIncrement, {
-	inc_field: 'treatmentId',
-	start_seq: 1,
-});
