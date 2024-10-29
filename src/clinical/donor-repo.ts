@@ -121,10 +121,7 @@ export interface DonorRepository {
 // Mongoose implementation of the DonorRepository
 export const donorDao: DonorRepository = {
 	async insertDonors(donors: Donor[]) {
-		// TODO: Review this
-		type DonorRecord = Omit<Donor, '_id'>;
-		const records = donors.map((donor) => donor as DonorRecord);
-		await mongoose.connection.db?.collection('donors').insertMany(records);
+		await DonorModel.insertMany(donors);
 	},
 	async updateDonor(donor: Donor) {
 		await mongoose?.connection.db
