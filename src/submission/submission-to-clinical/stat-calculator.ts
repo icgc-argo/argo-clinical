@@ -206,7 +206,7 @@ export const updateDonorsCompletionStats = async (
 	donors: (Donor | DeepReadonly<Donor>)[],
 ): Promise<Donor[]> => {
 	// Cache program exceptions so we don't need to repeatedly fetch them
-	const exceptionsCache = await createMissingEntityExceptionCache();
+	const exceptionsCache = createMissingEntityExceptionCache();
 
 	// clone each donor
 	const updatedDonorPromises = donors.map(
