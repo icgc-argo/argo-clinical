@@ -45,7 +45,7 @@ chai.should();
 
 describe('clinical Api', () => {
 	let mongoContainer: any;
-	let dburl = ``;
+	let dbUrl = ``;
 
 	const programId = 'PACA-AU';
 	const donorRegistrationRecord = {
@@ -102,10 +102,10 @@ describe('clinical Api', () => {
 		return (async () => {
 			try {
 				mongoContainer = await new GenericContainer('mongo', '4.0').withExposedPorts(27017).start();
-				dburl = `mongodb://${mongoContainer.getContainerIpAddress()}:${mongoContainer.getMappedPort(
+				dbUrl = `mongodb://${mongoContainer.getContainerIpAddress()}:${mongoContainer.getMappedPort(
 					27017,
 				)}/clinical`;
-				console.log(`mongo test container started ${dburl}`);
+				console.log(`mongo test container started ${dbUrl}`);
 				await bootstrap.run({
 					mongoPassword() {
 						return '';
@@ -114,7 +114,7 @@ describe('clinical Api', () => {
 						return '';
 					},
 					mongoUrl: () => {
-						return dburl;
+						return dbUrl;
 					},
 					initialSchemaVersion() {
 						return '1.0';
@@ -193,8 +193,8 @@ describe('clinical Api', () => {
 		const donor = emptyDonorDocument(donorDoc);
 		this.beforeEach(async () => {
 			try {
-				await cleanCollection(dburl, 'donors');
-				await insertData(dburl, 'donors', donor);
+				await cleanCollection(dbUrl, 'donors');
+				await insertData(dbUrl, 'donors', donor);
 				return;
 			} catch (err) {
 				console.error(err);
@@ -296,7 +296,7 @@ describe('clinical Api', () => {
 					.auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
 					.then(async (res: any) => {
 						res.should.have.status(200);
-						await assertDbCollectionEmpty(dburl, 'donors');
+						await assertDbCollectionEmpty(dbUrl, 'donors');
 					});
 			});
 			it('/clinical/donors should not allow delete without proper auth', async function() {
