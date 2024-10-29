@@ -78,6 +78,7 @@ async function connect(delayMillis: number, mongoUrl: string, username: string, 
 			user: username,
 			pass: password,
 			socketTimeoutMS: 10000,
+			connectTimeoutMS: 30000,
 		});
 
 		L.debug('mongoose connected');
@@ -95,6 +96,7 @@ export async function createConnection(dbUrl: string) {
 	return mongoose.createConnection(`${dbUrl}`, {
 		directConnection: true,
 		socketTimeoutMS: 10000,
+		connectTimeoutMS: 30000,
 	});
 }
 
