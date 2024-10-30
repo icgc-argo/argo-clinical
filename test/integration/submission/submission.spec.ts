@@ -17,27 +17,23 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// using import fails when running the test
-// import * as chai from "chai";
+import { MySqlContainer } from '@testcontainers/mysql';
 import chai from 'chai';
-import fs from 'fs';
-import mongo from 'mongodb';
-// needed for types
-import AdmZip from 'adm-zip';
 import chaiExclude from 'chai-exclude';
 import 'chai-http';
 import 'deep-equal-in-any-order';
+import fs from 'fs';
 import _ from 'lodash';
 import 'mocha';
+import mongo from 'mongodb';
 import mongoose from 'mongoose';
-import { GenericContainer, Wait } from 'testcontainers';
+import { GenericContainer } from 'testcontainers';
 import app from '../../../src/app';
 import * as bootstrap from '../../../src/bootstrap';
 import { Donor } from '../../../src/clinical/clinical-entities';
 import { donorDao } from '../../../src/clinical/donor-repo';
 import {
 	ClinicalEntitySchemaNames,
-	ClinicalUniqueIdentifier,
 	DonorFieldsEnum,
 	FollowupFieldsEnum,
 	PrimaryDiagnosisFieldsEnum,
@@ -94,12 +90,12 @@ describe('Submission Api', () => {
 	before(() => {
 		return (async () => {
 			try {
-				mongoContainer = await new GenericContainer('mongo', '4.0').withExposedPorts(27017).start();
-				mysqlContainer = await new GenericContainer('mysql', '5.7')
-					.withEnv('MYSQL_DATABASE', RXNORM_DB)
-					.withEnv('MYSQL_USER', RXNORM_USER)
-					.withEnv('MYSQL_ROOT_PASSWORD', RXNORM_PASS)
-					.withEnv('MYSQL_PASSWORD', RXNORM_PASS)
+				mongoContainer = await new GenericContainer('mongo:4.0').withExposedPorts(27017).start();
+				mysqlContainer = await new MySqlContainer()
+					.withDatabase(RXNORM_DB)
+					.withUsername(RXNORM_USER)
+					.withRootPassword(RXNORM_PASS)
+					.withUserPassword(RXNORM_PASS)
 					.withExposedPorts(3306)
 					.start();
 				console.log('mongo test container started');
@@ -161,8 +157,8 @@ describe('Submission Api', () => {
 							database: RXNORM_DB,
 							user: RXNORM_USER,
 							password: RXNORM_PASS,
-							timeout: 5000,
-							host: mysqlContainer.getContainerIpAddress(),
+							connectTimeout: 5000,
+							host: mysqlContainer.getHost(),
 							port: mysqlContainer.getMappedPort(3306),
 						};
 					},
@@ -176,14 +172,14 @@ describe('Submission Api', () => {
 						return '';
 					},
 				});
-				const connPool = pool.getPool();
-				await createtRxNormTables(connPool);
-				await insertRxNormDrug('423', 'drugA', connPool);
-				await insertRxNormDrug('423', 'drug A', connPool);
-				await insertRxNormDrug('423', 'Koolaid', connPool);
-				await insertRxNormDrug('22323', 'drug 2', connPool);
-				await insertRxNormDrug('22323', 'drug B', connPool);
-				await insertRxNormDrug('12', '123-H2O', connPool);
+				const connectionPool = pool.getPool();
+				await createtRxNormTables(connectionPool);
+				await insertRxNormDrug('423', 'drugA', connectionPool);
+				await insertRxNormDrug('423', 'drug A', connectionPool);
+				await insertRxNormDrug('423', 'Koolaid', connectionPool);
+				await insertRxNormDrug('22323', 'drug 2', connectionPool);
+				await insertRxNormDrug('22323', 'drug B', connectionPool);
+				await insertRxNormDrug('12', '123-H2O', connectionPool);
 			} catch (err) {
 				console.error('before >>>>>>>>>>>', err);
 				return err;
