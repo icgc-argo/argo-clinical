@@ -172,3 +172,7 @@ export async function findInDb(dbUrl: string, collection: string, filter: any) {
 	await conn.close();
 	return result;
 }
+
+export const RXNORM_DB = 'rxnorm';
+export const RXNORM_USER = 'clinical';
+export const RXNORM_PASS = 'password';

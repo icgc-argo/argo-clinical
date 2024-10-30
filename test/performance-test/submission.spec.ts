@@ -35,7 +35,13 @@ import {
 	ValidateSubmissionResult,
 } from '../../src/submission/submission-entities';
 import { JWT_CLINICALSVCADMIN, TEST_PUB_KEY } from '../integration/test.jwt';
-import { cleanCollection, resetCounters } from '../integration/testutils';
+import {
+	RXNORM_DB,
+	RXNORM_PASS,
+	RXNORM_USER,
+	cleanCollection,
+	resetCounters,
+} from '../integration/testutils';
 
 const dotEnvPath = __dirname + '/performance.env';
 require('dotenv').config({ path: dotEnvPath });
@@ -50,10 +56,6 @@ const L = winston.createLogger({
 chai.use(require('chai-http'));
 chai.use(require('deep-equal-in-any-order'));
 chai.should();
-
-const RXNORM_DB = 'rxnorm';
-const RXNORM_USER = 'clinical';
-const RXNORM_PASS = 'password';
 
 const clearCollections = async (dbUrl: string, collections: string[]) => {
 	try {
