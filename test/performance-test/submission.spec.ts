@@ -77,9 +77,7 @@ describe('Submission Api', () => {
 	before(() => {
 		return (async () => {
 			try {
-				const mongoContainerPromise = new GenericContainer('mongo:4.0')
-					.withExposedPorts(27017)
-					.start();
+				mongoContainer = new GenericContainer('mongo:4.0').withExposedPorts(27017).start();
 				mysqlContainer = await new MySqlContainer()
 					.withDatabase('rxnorm')
 					.withUsername('clinical')
