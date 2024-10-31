@@ -168,7 +168,7 @@ describe('Submission Api', () => {
 	after(async () => {
 		await mongoose.disconnect();
 		await mongoContainer.stop();
-		mysqlContainer.stop();
+		await mysqlContainer.stop();
 	});
 
 	describe('clinical submission', function() {
