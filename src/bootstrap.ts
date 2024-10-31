@@ -178,11 +178,7 @@ export const run = async (config: AppConfig) => {
 	}
 
 	// RxNorm Db
-	try {
-		await setupRxNormConnection(config.rxNormDbProperties());
-	} catch (error) {
-		L.error('Error at setupRxNormConnection', error);
-	}
+	await setupRxNormConnection(config.rxNormDbProperties());
 
 	// setup messenger with kafka configs
 	const kafkaProps = config.kafkaProperties();
