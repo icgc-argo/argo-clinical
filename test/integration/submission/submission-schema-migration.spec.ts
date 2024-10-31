@@ -48,15 +48,8 @@ import mongoose from 'mongoose';
 import { SinonSpy, spy } from 'sinon';
 import { GenericContainer } from 'testcontainers';
 import { JWT_CLINICALSVCADMIN, TEST_PUB_KEY } from '../test.jwt';
-import {
-	RXNORM_DB,
-	RXNORM_PASS,
-	RXNORM_USER,
-	clearCollections,
-	emptyDonorDocument,
-	findInDb,
-	insertData,
-} from '../testutils';
+import { RXNORM_DB, RXNORM_PASS, RXNORM_USER } from '../testConstants';
+import { clearCollections, emptyDonorDocument, findInDb, insertData } from '../testutils';
 
 chai.use(require('chai-http'));
 chai.use(require('deep-equal-in-any-order'));

@@ -52,10 +52,8 @@ import {
 } from '../../../src/submission/submission-entities';
 import { TsvUtils } from '../../../src/utils';
 import { JWT_ABCDEF, JWT_CLINICALSVCADMIN, JWT_WXYZEF, TEST_PUB_KEY } from '../test.jwt';
+import { RXNORM_DB, RXNORM_PASS, RXNORM_USER } from '../testConstants';
 import {
-	RXNORM_DB,
-	RXNORM_PASS,
-	RXNORM_USER,
 	assertDbCollectionEmpty,
 	cleanCollection,
 	createDonorDoc,

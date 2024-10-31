@@ -35,13 +35,8 @@ import {
 	ValidateSubmissionResult,
 } from '../../src/submission/submission-entities';
 import { JWT_CLINICALSVCADMIN, TEST_PUB_KEY } from '../integration/test.jwt';
-import {
-	RXNORM_DB,
-	RXNORM_PASS,
-	RXNORM_USER,
-	cleanCollection,
-	resetCounters,
-} from '../integration/testutils';
+import { RXNORM_DB, RXNORM_PASS, RXNORM_USER } from '../integration/testConstants';
+import { cleanCollection, resetCounters } from '../integration/testutils';
 
 const dotEnvPath = __dirname + '/performance.env';
 require('dotenv').config({ path: dotEnvPath });
