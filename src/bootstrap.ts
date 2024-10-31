@@ -19,7 +19,7 @@
 
 import { promisify } from 'bluebird';
 import mongoose from 'mongoose';
-import { Pool } from 'mysql';
+import { Pool } from 'mysql2/promise';
 import fetch from 'node-fetch';
 import { setStatus, Status } from './app-health';
 import { AppConfig, initConfigs, JWT_TOKEN_PUBLIC_KEY, RxNormDbConfig } from './config';
@@ -135,20 +135,21 @@ const setJwtPublicKey = (keyUrl: string) => {
 	getKey(1);
 };
 
-const setupRxNormConnection = (conf: RxNormDbConfig) => {
-	if (!conf.host) return;
+const setupRxNormConnection = async (config: RxNormDbConfig) => {
+	if (!config.host) return;
+	const { database, host, password, user, port, connectTimeout } = config;
 	const pool = initPool({
-		database: conf.database,
-		host: conf.host,
-		password: conf.password,
-		user: conf.user,
-		port: conf.port,
-		timeout: conf.timeout,
+		database,
+		host,
+		password,
+		user,
+		port,
+		connectTimeout,
 	});
 	pool.on('connection', () => setStatus('rxNormDb', { status: Status.OK }));
 
 	// check for rxnorm connection every 5 minutes
-	pingRxNorm(pool);
+	await pingRxNorm(pool);
 	setInterval(async () => {
 		await pingRxNorm(pool);
 	}, 5 * 60 * 1000);
@@ -156,8 +157,9 @@ const setupRxNormConnection = (conf: RxNormDbConfig) => {
 
 async function pingRxNorm(pool: Pool) {
 	try {
-		const query = promisify(pool.query).bind(pool);
-		await query('select 1');
+		const connection = await pool.getConnection();
+		await connection.query('select 1');
+		pool.releaseConnection(connection);
 		setStatus('rxNormDb', { status: Status.OK });
 	} catch (err) {
 		L.error('cannot get connection to rxnorm', err);
@@ -176,7 +178,7 @@ export const run = async (config: AppConfig) => {
 	}
 
 	// RxNorm Db
-	setupRxNormConnection(config.rxNormDbProperties());
+	await setupRxNormConnection(config.rxNormDbProperties());
 
 	// setup messenger with kafka configs
 	const kafkaProps = config.kafkaProperties();

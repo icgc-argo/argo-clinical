@@ -17,18 +17,13 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// using import fails when running the test
-// import * as chai from "chai";
-const dotEnvPath = __dirname + '/performance.env';
+import { MySqlContainer } from '@testcontainers/mysql';
 import chai from 'chai';
-import fs from 'fs';
-import path from 'path';
-require('dotenv').config({ path: dotEnvPath });
-console.log('env cpus: ' + process.env.ALLOWED_CPUS);
-// needed for types
 import 'chai-http';
+import fs from 'fs';
 import 'mocha';
 import mongoose from 'mongoose';
+import path from 'path';
 import { GenericContainer, Wait } from 'testcontainers';
 import winston from 'winston';
 import app from '../../src/app';
@@ -40,7 +35,12 @@ import {
 	ValidateSubmissionResult,
 } from '../../src/submission/submission-entities';
 import { JWT_CLINICALSVCADMIN, TEST_PUB_KEY } from '../integration/test.jwt';
+import { RXNORM_DB, RXNORM_PASS, RXNORM_USER } from '../integration/testConstants';
 import { cleanCollection, resetCounters } from '../integration/testutils';
+
+const dotEnvPath = __dirname + '/performance.env';
+require('dotenv').config({ path: dotEnvPath });
+console.log('env cpus: ' + process.env.ALLOWED_CPUS);
 
 // create a different logger to avoid noise from application
 const L = winston.createLogger({
@@ -74,21 +74,16 @@ describe('Submission Api', () => {
 	before(() => {
 		return (async () => {
 			try {
-				const mongoContainerPromise = new GenericContainer('mongo', '4.0')
-					.withExposedPorts(27017)
-					.start();
-				const mysqlContainerPromise = new GenericContainer('mysql', '5.7')
-					.withEnv('MYSQL_DATABASE', 'rxnorm')
-					.withEnv('MYSQL_USER', 'clinical')
-					.withEnv('MYSQL_ROOT_PASSWORD', 'password')
-					.withEnv('MYSQL_PASSWORD', 'password')
+				mongoContainer = new GenericContainer('mongo:4.0').withExposedPorts(27017).start();
+				mysqlContainer = await new MySqlContainer()
+					.withDatabase('rxnorm')
+					.withUsername('clinical')
+					.withRootPassword('password')
+					.withUserPassword('password')
 					.withWaitStrategy(Wait.forLogMessage('ready for connections.'))
 					.withExposedPorts(3306)
 					.start();
-				// start containers in parallel
-				const containers = await Promise.all([mongoContainerPromise, mysqlContainerPromise]);
-				mongoContainer = containers[0];
-				mysqlContainer = containers[1];
+
 				console.log('db test containers started');
 
 				await bootstrap.run({
@@ -146,11 +141,11 @@ describe('Submission Api', () => {
 					},
 					rxNormDbProperties() {
 						return {
-							database: 'rxnorm',
-							user: 'clinical',
-							password: 'password',
-							timeout: 5000,
-							host: mysqlContainer.getContainerIpAddress(),
+							database: RXNORM_DB,
+							user: RXNORM_USER,
+							password: RXNORM_PASS,
+							connectTimeout: 5000,
+							host: mysqlContainer.getHost(),
 							port: mysqlContainer.getMappedPort(3306),
 						};
 					},
@@ -173,7 +168,7 @@ describe('Submission Api', () => {
 	after(async () => {
 		await mongoose.disconnect();
 		await mongoContainer.stop();
-		mysqlContainer.stop();
+		await mysqlContainer.stop();
 	});
 
 	describe('clinical submission', function() {

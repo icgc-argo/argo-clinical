@@ -18,6 +18,8 @@
  */
 
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
+import { MySqlContainer } from '@testcontainers/mysql';
+import { Network } from 'testcontainers';
 import app from '../../../src/app';
 import * as bootstrap from '../../../src/bootstrap';
 import { Donor } from '../../../src/clinical/clinical-entities';
@@ -46,6 +48,7 @@ import mongoose from 'mongoose';
 import { SinonSpy, spy } from 'sinon';
 import { GenericContainer } from 'testcontainers';
 import { JWT_CLINICALSVCADMIN, TEST_PUB_KEY } from '../test.jwt';
+import { RXNORM_DB, RXNORM_PASS, RXNORM_USER } from '../testConstants';
 import { clearCollections, emptyDonorDocument, findInDb, insertData } from '../testutils';
 
 chai.use(require('chai-http'));
@@ -61,6 +64,7 @@ describe('schema migration api', () => {
 	let sendProgramUpdatedMessageFunc: SinonSpy<[ClinicalProgramUpdateMessage], Promise<void>>;
 	let mongoContainer: any;
 	let mysqlContainer: any;
+	let testNetwork: any;
 	let dbUrl = ``;
 
 	const programId = 'ABCD-EF';
@@ -136,18 +140,20 @@ describe('schema migration api', () => {
 	before(() => {
 		return (async () => {
 			try {
-				const mongoContainerPromise = new GenericContainer('mongo', '4.0')
+				testNetwork = await new Network().start();
+				const mongoContainerPromise = new GenericContainer('mongo:4.0')
 					.withExposedPorts(27017)
 					.start();
-				const mysqlContainerPromise = new GenericContainer('mysql', '5.7')
-					.withEnv('MYSQL_DATABASE', 'rxnorm')
-					.withEnv('MYSQL_USER', 'clinical')
-					.withEnv('MYSQL_ROOT_PASSWORD', 'password')
-					.withEnv('MYSQL_PASSWORD', 'password')
+				mysqlContainer = await new MySqlContainer()
+					.withNetwork(testNetwork)
+					.withDatabase(RXNORM_DB)
+					.withUsername(RXNORM_USER)
+					.withRootPassword(RXNORM_PASS)
+					.withUserPassword(RXNORM_PASS)
 					.withExposedPorts(3306)
 					.start();
 				mongoContainer = await mongoContainerPromise;
-				mysqlContainer = await mysqlContainerPromise;
+
 				console.log('db test containers started');
 				await bootstrap.run({
 					mongoPassword() {
@@ -204,11 +210,11 @@ describe('schema migration api', () => {
 					},
 					rxNormDbProperties() {
 						return {
-							database: 'rxnorm',
-							user: 'clinical',
-							password: 'password',
-							timeout: 5000,
-							host: mysqlContainer.getContainerIpAddress(),
+							database: RXNORM_DB,
+							user: RXNORM_USER,
+							password: RXNORM_PASS,
+							connectTimeout: 5000,
+							host: mysqlContainer.getHost(),
 							port: mysqlContainer.getMappedPort(3306),
 						};
 					},
@@ -233,6 +239,7 @@ describe('schema migration api', () => {
 		await mongoose.disconnect();
 		await mongoContainer.stop();
 		await mysqlContainer.stop();
+		await testNetwork.stop();
 	});
 
 	beforeEach(async () => {
