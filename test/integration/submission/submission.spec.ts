@@ -26,6 +26,7 @@ import 'deep-equal-in-any-order';
 import fs from 'fs';
 import _ from 'lodash';
 import 'mocha';
+import mongo from 'mongodb';
 import mongoose from 'mongoose';
 import app from '../../../src/app';
 import * as bootstrap from '../../../src/bootstrap';
