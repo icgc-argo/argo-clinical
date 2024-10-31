@@ -48,15 +48,12 @@ import mongoose from 'mongoose';
 import { SinonSpy, spy } from 'sinon';
 import { Network } from 'testcontainers';
 import { JWT_CLINICALSVCADMIN, TEST_PUB_KEY } from '../test.jwt';
+import { RXNORM_DB, RXNORM_PASS, RXNORM_USER } from '../testConstants';
 import { clearCollections, emptyDonorDocument, findInDb, insertData } from '../testutils';
 
 chai.use(require('chai-http'));
 chai.use(require('deep-equal-in-any-order'));
 chai.should();
-
-const RXNORM_DB = 'rxnorm';
-const RXNORM_USER = 'clinical';
-const RXNORM_PASS = 'password';
 
 // legacy field name
 const PRESENTING_SYMPTOMS = 'presenting_symptoms';
@@ -211,9 +208,9 @@ describe('schema migration api', () => {
 					},
 					rxNormDbProperties() {
 						return {
-							database: 'rxnorm',
-							user: mysqlContainer.getUsername(),
-							password: mysqlContainer.getUserPassword(),
+							database: RXNORM_DB,
+							user: RXNORM_USER,
+							password: RXNORM_PASS,
 							connectTimeout: 5000,
 							host: mysqlContainer.getHost(),
 							port: mysqlContainer.getMappedPort(3306),

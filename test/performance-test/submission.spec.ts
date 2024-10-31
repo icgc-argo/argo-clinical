@@ -36,6 +36,7 @@ import {
 	ValidateSubmissionResult,
 } from '../../src/submission/submission-entities';
 import { JWT_CLINICALSVCADMIN, TEST_PUB_KEY } from '../integration/test.jwt';
+import { RXNORM_DB, RXNORM_PASS, RXNORM_USER } from '../integration/testConstants';
 import { cleanCollection, resetCounters } from '../integration/testutils';
 
 const dotEnvPath = __dirname + '/performance.env';
@@ -141,9 +142,9 @@ describe('Submission Api', () => {
 					},
 					rxNormDbProperties() {
 						return {
-							database: mysqlContainer.getDatabase(),
-							user: mysqlContainer.getUsername(),
-							password: mysqlContainer.getUserPassword(),
+							database: RXNORM_DB,
+							user: RXNORM_USER,
+							password: RXNORM_PASS,
 							connectTimeout: 5000,
 							host: mysqlContainer.getHost(),
 							port: mysqlContainer.getMappedPort(3306),

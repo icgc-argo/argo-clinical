@@ -51,6 +51,7 @@ import {
 } from '../../../src/submission/submission-entities';
 import { TsvUtils } from '../../../src/utils';
 import { JWT_ABCDEF, JWT_CLINICALSVCADMIN, JWT_WXYZEF, TEST_PUB_KEY } from '../test.jwt';
+import { RXNORM_DB, RXNORM_PASS, RXNORM_USER } from '../testConstants';
 import {
 	assertDbCollectionEmpty,
 	cleanCollection,
@@ -76,10 +77,6 @@ const baseSpecimenId = 210000;
 const schemaName = 'ARGO Clinical Submission';
 const schemaVersion = '1.0';
 const stubFilesDir = __dirname + `/stub_clinical_files`;
-
-const RXNORM_DB = 'rxnorm';
-const RXNORM_USER = 'clinical';
-const RXNORM_PASS = 'password';
 
 describe('Submission Api', () => {
 	let dbUrl = ``;
@@ -152,8 +149,8 @@ describe('Submission Api', () => {
 					rxNormDbProperties() {
 						return {
 							database: RXNORM_DB,
-							user: mysqlContainer.getUsername(),
-							password: mysqlContainer.getUserPassword(),
+							user: RXNORM_USER,
+							password: RXNORM_PASS,
 							connectTimeout: 5000,
 							host: mysqlContainer.getHost(),
 							port: mysqlContainer.getMappedPort(3306),
