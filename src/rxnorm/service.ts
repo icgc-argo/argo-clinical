@@ -30,7 +30,9 @@ class MysqlRxNormService implements RxNormService {
 	async lookupByRxcui(rxcui: string): Promise<RxNormConcept[]> {
 		const pool = getPool();
 		const formattedQuery = mysql.format(rxcuiQuery, [rxcui]);
-		const [result] = await pool.query(formattedQuery);
+		const connection = await pool.getConnection();
+		const [result] = await connection.query(formattedQuery);
+		pool.releaseConnection(connection);
 
 		if (Array.isArray(result)) {
 			const records = result as RxNormRecord[];

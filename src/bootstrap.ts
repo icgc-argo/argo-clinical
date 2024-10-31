@@ -155,7 +155,9 @@ const setupRxNormConnection = async (config: RxNormDbConfig) => {
 
 async function pingRxNorm(pool: Pool) {
 	try {
-		await pool.query('select 1');
+		const connection = await pool.getConnection();
+		await connection.query('select 1');
+		pool.releaseConnection(connection);
 		setStatus('rxNormDb', { status: Status.OK });
 	} catch (err) {
 		L.error('cannot get connection to rxnorm', err);
