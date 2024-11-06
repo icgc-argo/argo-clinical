@@ -70,7 +70,7 @@ const programExceptionRepository = {
 	): Promise<ProgramException | null> {
 		L.debug(`finding program exception with id: ${JSON.stringify(programId)}`);
 		try {
-			const searchParams = {
+			const searchParams: Record<string, string> = {
 				programId,
 			};
 			if (optionalSearchParams?.exceptions.requested_core_field) {
