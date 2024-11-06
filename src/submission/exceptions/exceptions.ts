@@ -335,3 +335,23 @@ export async function getExceptionManifestRecords(
 
 	return exceptionManifest;
 }
+
+/**
+ * Boolean check for existence of exceptions for a specific field
+ *
+ * @param record
+ * @param field
+ * @returns boolean indicating if an exception exists
+ */
+export const checkForExceptions = async (record: any, field: any): Promise<boolean> => {
+	const programId = record['program_id'];
+	const additionalSearchParams = {
+		exceptions: { requested_core_field: field },
+	};
+
+	// retrieve submitted exceptions for program id (both program level and entity level)
+	const programException = await programExceptionRepository.find(programId, additionalSearchParams);
+	//const entityException = await entityExceptionRepository.find(programId);
+
+	return notEmpty(programException); // || notEmpty(entityException);
+};
