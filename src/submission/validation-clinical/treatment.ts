@@ -25,6 +25,7 @@ import {
 	ClinicalTherapySchemaNames,
 	ClinicalTherapyType,
 	ClinicalUniqueIdentifier,
+	DonorFieldsEnum,
 	TreatmentFieldsEnum,
 } from '../../common-model/entities';
 import {
@@ -41,6 +42,7 @@ import {
 } from '../submission-entities';
 import * as utils from './utils';
 import { checkClinicalEntityDoesntBelongToOtherDonor, checkRelatedEntityExists } from './utils';
+import { checkForExceptions } from '../exceptions/exceptions';
 
 export const validate = async (
 	treatmentRecord: DeepReadonly<SubmittedClinicalRecord>,
@@ -80,7 +82,13 @@ export const validate = async (
 	);
 
 	// treatment.treatment_start_interval must be smaller than donor.survival_time
-	if (treatmentRecord[TreatmentFieldsEnum.treatment_start_interval]) {
+	// skip validation if there is a donor.survival_time exception
+	const survivalTimeExceptionExists = await checkForExceptions(
+		treatmentRecord,
+		DonorFieldsEnum.survival_time,
+	);
+
+	if (!survivalTimeExceptionExists) {
 		const donorDataToValidateWith = utils.getDataFromDonorRecordOrDonor(
 			treatmentRecord,
 			mergedDonor,
