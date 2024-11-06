@@ -29,6 +29,7 @@ import {
 	ClinicalEntitySchemaNames,
 	SpecimenFieldsEnum,
 	PrimaryDiagnosisFieldsEnum,
+	DonorFieldsEnum,
 } from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, PrimaryDiagnosis, Specimen } from '../../clinical/clinical-entities';
@@ -37,6 +38,7 @@ import { isEmpty, notEmpty } from '../../utils';
 import { getEntitySubmitterIdFieldName } from '../../common-model/functions';
 import { checkRelatedEntityExists, getSpecimenFromDonor } from './utils';
 import _ from 'lodash';
+import { checkForExceptions } from '../exceptions/exceptions';
 
 const validatePercentTumour = (
 	submittedClinicalRecord: DeepReadonly<SubmittedClinicalRecord>,
@@ -214,15 +216,23 @@ export const validate = async (
 	checkRequiredFields(specimen, specimenRecord, mergedDonor, errors);
 
 	// validate time conflict if needed
-	const donorDataToValidateWith = utils.getDataFromDonorRecordOrDonor(
+	// skip validation if there is a donor.survival_time exception
+	const survivalTimeExceptionExists = await checkForExceptions(
 		specimenRecord,
-		mergedDonor,
-		errors,
-		SpecimenFieldsEnum.specimen_acquisition_interval,
+		DonorFieldsEnum.survival_time,
 	);
 
-	if (donorDataToValidateWith) {
-		checkTimeConflictWithDonor(donorDataToValidateWith, specimenRecord, errors);
+	if (!survivalTimeExceptionExists) {
+		const donorDataToValidateWith = utils.getDataFromDonorRecordOrDonor(
+			specimenRecord,
+			mergedDonor,
+			errors,
+			SpecimenFieldsEnum.specimen_acquisition_interval,
+		);
+
+		if (donorDataToValidateWith) {
+			checkTimeConflictWithDonor(donorDataToValidateWith, specimenRecord, errors);
+		}
 	}
 
 	validatePercentTumour(specimenRecord, errors);
