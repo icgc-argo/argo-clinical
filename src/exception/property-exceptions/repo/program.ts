@@ -72,8 +72,11 @@ const programExceptionRepository = {
 		try {
 			const searchParams = {
 				programId,
-				'exceptions.requested_core_field': optionalSearchParams?.exceptions.requested_core_field,
 			};
+			if (optionalSearchParams?.exceptions.requested_core_field) {
+				searchParams['exceptions.requested_core_field'] =
+					optionalSearchParams?.exceptions.requested_core_field;
+			}
 			const doc = await ProgramExceptionModel.findOne(searchParams).lean(true);
 			return doc;
 		} catch (e) {
