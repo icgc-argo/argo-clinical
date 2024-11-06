@@ -66,6 +66,8 @@ const EntityExceptionModel =
 	mongoose.models.EntityException ||
 	mongoose.model<EntityException>('EntityException', entityExceptionSchema);
 
+type OptionalSearchParams = Record<string, string>;
+
 const entityExceptionRepository = {
 	/**
 	 * Create or Update the entity exceptions for this program, setting the exceptions for the specified entity to the list of records provided.
@@ -105,11 +107,19 @@ const entityExceptionRepository = {
 		}
 	},
 
-	async find(programId: string): Promise<EntityException | null> {
+	async find(
+		programId: string,
+		optionalSearchParams?: OptionalSearchParams,
+	): Promise<EntityException | null> {
 		L.debug(`Finding entity exception with program id: ${JSON.stringify(programId)}`);
 		try {
+			const searchParams = {
+				programId,
+				...optionalSearchParams,
+			};
+
 			// first found document, or null
-			const doc = await EntityExceptionModel.findOne({ programId }).lean(true);
+			const doc = await EntityExceptionModel.findOne(searchParams).lean(true);
 			return doc;
 		} catch (e) {
 			L.error('Failed to find program exception', e);

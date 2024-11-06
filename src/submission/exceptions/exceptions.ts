@@ -44,6 +44,7 @@ import {
 	findDonorsBySubmitterIds,
 } from '../../clinical/clinical-service';
 import { notEmpty } from '../../utils';
+import { SubmittedClinicalRecord } from '../submission-entities';
 
 /**
  * query db for program or entity exceptions
@@ -341,17 +342,33 @@ export async function getExceptionManifestRecords(
  *
  * @param record
  * @param field
+ * @param schema
  * @returns boolean indicating if an exception exists
  */
-export const checkForExceptions = async (record: any, field: any): Promise<boolean> => {
-	const programId = record['program_id'];
-	const additionalSearchParams = {
+export const checkForExceptions = async (
+	record: DeepReadonly<SubmittedClinicalRecord>,
+	field: string,
+	schema: string,
+): Promise<boolean> => {
+	const programId = record['program_id'] as string;
+
+	const programAdditionalSearchParams = {
 		exceptions: { requested_core_field: field },
 	};
 
-	// retrieve submitted exceptions for program id (both program level and entity level)
-	const programException = await programExceptionRepository.find(programId, additionalSearchParams);
-	//const entityException = await entityExceptionRepository.find(programId);
+	const entityAdditionalSearchParams = {
+		[`${schema}.requested_core_field`]: field,
+	};
 
-	return notEmpty(programException); // || notEmpty(entityException);
+	// retrieve submitted exceptions for program id (both program level and entity level)
+	const programException = await programExceptionRepository.find(
+		programId,
+		programAdditionalSearchParams,
+	);
+	const entityException = await entityExceptionRepository.find(
+		programId,
+		entityAdditionalSearchParams,
+	);
+
+	return notEmpty(programException) || notEmpty(entityException);
 };

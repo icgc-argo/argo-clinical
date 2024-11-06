@@ -220,6 +220,7 @@ export const validate = async (
 	const survivalTimeExceptionExists = await checkForExceptions(
 		specimenRecord,
 		DonorFieldsEnum.survival_time,
+		'specimen',
 	);
 
 	if (!survivalTimeExceptionExists) {

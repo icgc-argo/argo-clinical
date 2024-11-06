@@ -136,6 +136,7 @@ export const validate = async (
 	const survivalTimeExceptionExists = await checkForExceptions(
 		followUpRecord,
 		DonorFieldsEnum.survival_time,
+		'follow_up',
 	);
 
 	if (!survivalTimeExceptionExists) {
