@@ -21,6 +21,8 @@ import mongoose from 'mongoose';
 import mongoosePaginate from 'mongoose-paginate-v2';
 import { Donor } from './clinical-entities';
 
+const AutoIncrement = require('mongoose-sequence')(mongoose);
+
 export const SampleSchema = new mongoose.Schema(
 	{
 		sampleId: { type: Number, index: true, unique: true },
@@ -139,4 +141,67 @@ export const DonorSchema = new mongoose.Schema(
 	{ timestamps: true, minimize: false }, // minimize false is to avoid omitting clinicalInfo:{}
 ).plugin(mongoosePaginate);
 
+DonorSchema.index({ submitterId: 1, programId: 1 }, { unique: true });
+DonorSchema.index({ 'specimens.submitterId': 1, programId: 1 }, { unique: true });
+DonorSchema.index({ 'specimens.samples.submitterId': 1, programId: 1 }, { unique: true });
+
 export type DonorDocument = mongoose.Document & Donor;
+
+/**
+ * These had to read from process env and not use the AppConfig
+ * because these are global mongoose variables, they can't be called
+ * multiple times, and that makes them hard to test because tests depend
+ * on resetting the config and bootstraping but global variables keep their state.
+ */
+
+DonorSchema.plugin(AutoIncrement, {
+	inc_field: 'donorId',
+	start_seq: process.env.DONOR_ID_SEED || 250000,
+});
+
+DonorSchema.plugin(mongoosePaginate);
+
+SpecimenSchema.plugin(AutoIncrement, {
+	inc_field: 'specimenId',
+	start_seq: process.env.SPECIMEN_ID_SEED || 210000,
+});
+
+SampleSchema.plugin(AutoIncrement, {
+	inc_field: 'sampleId',
+	start_seq: process.env.SAMPLE_ID_SEED || 610000,
+});
+
+FollowUpSchema.plugin(AutoIncrement, {
+	inc_field: 'followUpId',
+	start_seq: 1,
+});
+
+PrimaryDiagnosisSchema.plugin(AutoIncrement, {
+	inc_field: 'primaryDiagnosisId',
+	start_seq: 1,
+});
+
+FamilyHistorySchema.plugin(AutoIncrement, {
+	inc_field: 'familyHistoryId',
+	start_seq: 1,
+});
+
+ExposureSchema.plugin(AutoIncrement, {
+	inc_field: 'exposureId',
+	start_seq: 1,
+});
+
+BiomarkerSchema.plugin(AutoIncrement, {
+	inc_field: 'biomarkerId',
+	start_seq: 1,
+});
+
+ComorbiditySchema.plugin(AutoIncrement, {
+	inc_field: 'comorbidityId',
+	start_seq: 1,
+});
+
+TreatmentSchema.plugin(AutoIncrement, {
+	inc_field: 'treatmentId',
+	start_seq: 1,
+});
