@@ -21,7 +21,6 @@ import chai from 'chai';
 import _ from 'lodash';
 import mongo from 'mongodb';
 import mysql from 'mysql2/promise';
-import * as utils from 'util';
 import { Donor } from '../../src/clinical/clinical-entities';
 
 export const clearCollections = async (dbUrl: string, collections: string[]) => {
@@ -37,18 +36,26 @@ export const clearCollections = async (dbUrl: string, collections: string[]) => 
 };
 
 export const cleanCollection = async (dbUrl: string, collection: string): Promise<any> => {
-	const conn = await mongo.connect(dbUrl);
+	const connection = await mongo.connect(dbUrl);
 	try {
-		await conn
+		const collections = await connection
 			.db('clinical')
-			.collection(collection)
-			.remove({});
-		await conn.db('clinical').dropCollection(collection);
+			.listCollections()
+			.toArray();
+
+		if (collections.some((collectionRecord) => collectionRecord.name === collection)) {
+			await connection
+				.db('clinical')
+				.collection(collection)
+				.remove({});
+
+			await connection.db('clinical').dropCollection(collection);
+		}
 	} catch (err) {
 		console.error('failed to drop collection', collection, err);
 	}
-	await conn.db('clinical').createCollection(collection);
-	await conn.close();
+	await connection.db('clinical').createCollection(collection);
+	await connection.close();
 };
 
 export const resetCounters = async (dbUrl: string): Promise<any> => {
