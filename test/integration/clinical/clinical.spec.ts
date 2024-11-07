@@ -17,15 +17,15 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import chai from 'chai';
-// needed for typescript
+import { MongoDBContainer } from '@testcontainers/mongodb';
 import AdmZip from 'adm-zip';
+import chai from 'chai';
 import 'chai-http';
 import deepEqualInAnyOrder from 'deep-equal-in-any-order';
 import _ from 'lodash';
 import 'mocha';
 import mongoose from 'mongoose';
-import { GenericContainer } from 'testcontainers';
+import { Network } from 'testcontainers';
 import app from '../../../src/app';
 import * as bootstrap from '../../../src/bootstrap';
 import { ClinicalEntitySchemaNames } from '../../../src/common-model/entities';
@@ -45,6 +45,7 @@ chai.should();
 
 describe('clinical Api', () => {
 	let mongoContainer: any;
+	let testNetwork: any;
 	let dbUrl = ``;
 
 	const programId = 'PACA-AU';
@@ -101,10 +102,12 @@ describe('clinical Api', () => {
 	before(() => {
 		return (async () => {
 			try {
-				mongoContainer = await new GenericContainer('mongo:4.0').withExposedPorts(27017).start();
-				dbUrl = `mongodb://${mongoContainer.getContainerIpAddress()}:${mongoContainer.getMappedPort(
-					27017,
-				)}/clinical`;
+				testNetwork = await new Network().start();
+				mongoContainer = await new MongoDBContainer('mongo:4.0')
+					.withNetwork(testNetwork)
+					.withExposedPorts(27017)
+					.start();
+				dbUrl = `${mongoContainer.getConnectionString()}/clinical`;
 				console.log(`mongo test container started ${dbUrl}`);
 				await bootstrap.run({
 					mongoPassword() {

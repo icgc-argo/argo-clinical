@@ -17,6 +17,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import { MongoDBContainer } from '@testcontainers/mongodb';
 import { MySqlContainer } from '@testcontainers/mysql';
 import chai from 'chai';
 import 'chai-http';
@@ -24,7 +25,7 @@ import fs from 'fs';
 import 'mocha';
 import mongoose from 'mongoose';
 import path from 'path';
-import { GenericContainer, Wait } from 'testcontainers';
+import { Wait } from 'testcontainers';
 import winston from 'winston';
 import app from '../../src/app';
 import * as bootstrap from '../../src/bootstrap';
@@ -74,7 +75,7 @@ describe('Submission Api', () => {
 	before(() => {
 		return (async () => {
 			try {
-				mongoContainer = new GenericContainer('mongo:4.0').withExposedPorts(27017).start();
+				mongoContainer = await new MongoDBContainer('mongo:4.0').withExposedPorts(27017).start();
 				mysqlContainer = await new MySqlContainer()
 					.withDatabase('rxnorm')
 					.withUsername('clinical')
@@ -83,6 +84,7 @@ describe('Submission Api', () => {
 					.withWaitStrategy(Wait.forLogMessage('ready for connections.'))
 					.withExposedPorts(3306)
 					.start();
+				dbUrl = `${mongoContainer.getConnectionString()}/clinical`;
 
 				console.log('db test containers started');
 
@@ -94,9 +96,6 @@ describe('Submission Api', () => {
 						return '';
 					},
 					mongoUrl: () => {
-						dbUrl = `mongodb://${mongoContainer.getContainerIpAddress()}:${mongoContainer.getMappedPort(
-							27017,
-						)}/clinical`;
 						return dbUrl;
 					},
 					initialSchemaVersion() {

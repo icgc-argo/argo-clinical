@@ -17,6 +17,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import { MongoDBContainer } from '@testcontainers/mongodb';
 import { MySqlContainer } from '@testcontainers/mysql';
 import chai from 'chai';
 import chaiExclude from 'chai-exclude';
@@ -27,7 +28,6 @@ import _ from 'lodash';
 import 'mocha';
 import mongo from 'mongodb';
 import mongoose from 'mongoose';
-import { GenericContainer } from 'testcontainers';
 import app from '../../../src/app';
 import * as bootstrap from '../../../src/bootstrap';
 import { Donor } from '../../../src/clinical/clinical-entities';
@@ -87,7 +87,7 @@ describe('Submission Api', () => {
 	before(() => {
 		return (async () => {
 			try {
-				mongoContainer = await new GenericContainer('mongo:4.0').withExposedPorts(27017).start();
+				mongoContainer = await new MongoDBContainer('mongo:4.0').withExposedPorts(27017).start();
 				mysqlContainer = await new MySqlContainer()
 					.withDatabase(RXNORM_DB)
 					.withUsername(RXNORM_USER)
@@ -95,6 +95,7 @@ describe('Submission Api', () => {
 					.withUserPassword(RXNORM_PASS)
 					.withExposedPorts(3306)
 					.start();
+				dbUrl = `${mongoContainer.getConnectionString()}/clinical`;
 				console.log('mongo test container started');
 				await bootstrap.run({
 					mongoPassword() {
@@ -104,9 +105,6 @@ describe('Submission Api', () => {
 						return '';
 					},
 					mongoUrl: () => {
-						dbUrl = `mongodb://${mongoContainer.getContainerIpAddress()}:${mongoContainer.getMappedPort(
-							27017,
-						)}/clinical`;
 						return dbUrl;
 					},
 					initialSchemaVersion() {

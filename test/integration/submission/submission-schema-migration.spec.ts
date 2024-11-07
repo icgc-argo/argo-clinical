@@ -18,6 +18,7 @@
  */
 
 import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
+import { MongoDBContainer } from '@testcontainers/mongodb';
 import { MySqlContainer } from '@testcontainers/mysql';
 import { Network } from 'testcontainers';
 import app from '../../../src/app';
@@ -141,7 +142,8 @@ describe('schema migration api', () => {
 		return (async () => {
 			try {
 				testNetwork = await new Network().start();
-				const mongoContainerPromise = new GenericContainer('mongo:4.0')
+				mongoContainer = await new MongoDBContainer('mongo:4.0')
+					.withNetwork(testNetwork)
 					.withExposedPorts(27017)
 					.start();
 				mysqlContainer = await new MySqlContainer()
@@ -152,7 +154,7 @@ describe('schema migration api', () => {
 					.withUserPassword(RXNORM_PASS)
 					.withExposedPorts(3306)
 					.start();
-				mongoContainer = await mongoContainerPromise;
+				dbUrl = `${mongoContainer.getConnectionString()}/clinical`;
 
 				console.log('db test containers started');
 				await bootstrap.run({
@@ -163,9 +165,6 @@ describe('schema migration api', () => {
 						return '';
 					},
 					mongoUrl: () => {
-						dbUrl = `mongodb://${mongoContainer.getContainerIpAddress()}:${mongoContainer.getMappedPort(
-							27017,
-						)}/clinical`;
 						return dbUrl;
 					},
 					initialSchemaVersion() {
