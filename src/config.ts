@@ -59,9 +59,9 @@ export interface KafkaConfigurations {
 }
 export interface RxNormDbConfig {
 	host: string;
-	user?: string;
-	password?: string;
-	database?: string;
-	port?: number;
+	user: string;
+	password: string;
+	database: string;
+	port: number;
 	connectTimeout?: number;
 }
