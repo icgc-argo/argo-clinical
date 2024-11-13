@@ -134,7 +134,7 @@ const setJwtPublicKey = (keyUrl: string) => {
 	getKey(1);
 };
 
-const setupRxNormConnection = async (config: RxNormDbConfig) => {
+const setupRxNormConnection = (config: RxNormDbConfig) => {
 	if (!config.host) return;
 	const { database, host, password, user, port, connectTimeout } = config;
 	const pool = initPool({
@@ -147,7 +147,6 @@ const setupRxNormConnection = async (config: RxNormDbConfig) => {
 	});
 	pool.on('connection', () => setStatus('rxNormDb', { status: Status.OK }));
 
-	// check for rxnorm connection every 5 minutes
 	pingRxNorm(pool);
 };
 
@@ -158,6 +157,7 @@ async function pingRxNorm(pool: Pool) {
 		pool.releaseConnection(connection);
 		setStatus('rxNormDb', { status: Status.OK });
 
+		// check for rxnorm connection every 5 minutes
 		setTimeout(pingRxNorm, 5 * 60 * 1000);
 	} catch (err) {
 		L.error('cannot get connection to rxnorm', err);
