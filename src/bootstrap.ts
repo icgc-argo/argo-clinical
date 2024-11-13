@@ -148,10 +148,7 @@ const setupRxNormConnection = async (config: RxNormDbConfig) => {
 	pool.on('connection', () => setStatus('rxNormDb', { status: Status.OK }));
 
 	// check for rxnorm connection every 5 minutes
-	await pingRxNorm(pool);
-	setInterval(async () => {
-		await pingRxNorm(pool);
-	}, 5 * 60 * 1000);
+	pingRxNorm(pool);
 };
 
 async function pingRxNorm(pool: Pool) {
@@ -160,6 +157,8 @@ async function pingRxNorm(pool: Pool) {
 		await connection.query('select 1');
 		pool.releaseConnection(connection);
 		setStatus('rxNormDb', { status: Status.OK });
+
+		setTimeout(pingRxNorm, 5 * 60 * 1000);
 	} catch (err) {
 		L.error('cannot get connection to rxnorm', err);
 		setStatus('rxNormDb', { status: Status.ERROR });
@@ -177,7 +176,7 @@ export const run = async (config: AppConfig) => {
 	}
 
 	// RxNorm Db
-	await setupRxNormConnection(config.rxNormDbProperties());
+	setupRxNormConnection(config.rxNormDbProperties());
 
 	// setup messenger with kafka configs
 	const kafkaProps = config.kafkaProperties();
