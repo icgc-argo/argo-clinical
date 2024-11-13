@@ -352,6 +352,8 @@ export const checkForExceptions = async (
 ): Promise<boolean> => {
 	const programId = record['program_id'] as string;
 
+	if (!programId) return false;
+
 	const programAdditionalSearchParams = {
 		exceptions: { requested_core_field: field },
 	};
