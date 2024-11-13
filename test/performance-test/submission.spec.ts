@@ -70,7 +70,7 @@ const schemaVersion = '1.0';
 describe('Submission Api', () => {
 	let mongoContainer: any;
 	let mysqlContainer: any;
-	let dbUrl = ``;
+	let dbUrl = '';
 	// will run when all tests are finished
 	before(() => {
 		return (async () => {

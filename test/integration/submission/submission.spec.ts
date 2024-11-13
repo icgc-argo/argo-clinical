@@ -80,7 +80,7 @@ const schemaVersion = '1.0';
 const stubFilesDir = __dirname + `/stub_clinical_files`;
 
 describe('Submission Api', () => {
-	let dbUrl = ``;
+	let dbUrl = '';
 	let mongoContainer: any;
 	let mysqlContainer: any;
 	// will run when all tests are finished

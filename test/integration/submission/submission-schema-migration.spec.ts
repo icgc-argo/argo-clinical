@@ -47,7 +47,6 @@ import _ from 'lodash';
 import 'mocha';
 import mongoose from 'mongoose';
 import { SinonSpy, spy } from 'sinon';
-import { GenericContainer } from 'testcontainers';
 import { JWT_CLINICALSVCADMIN, TEST_PUB_KEY } from '../test.jwt';
 import { RXNORM_DB, RXNORM_PASS, RXNORM_USER } from '../testConstants';
 import { clearCollections, emptyDonorDocument, findInDb, insertData } from '../testutils';
@@ -66,7 +65,7 @@ describe('schema migration api', () => {
 	let mongoContainer: any;
 	let mysqlContainer: any;
 	let testNetwork: any;
-	let dbUrl = ``;
+	let dbUrl = '';
 
 	const programId = 'ABCD-EF';
 	const donor: Donor = emptyDonorDocument({

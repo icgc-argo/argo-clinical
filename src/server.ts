@@ -16,29 +16,29 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-import { token } from 'morgan';
 
 console.time('boot time');
 // Has to import config before any other import uses the configurations
 import dotenv from 'dotenv';
 import { Server } from 'http';
-import { AppConfig, KafkaConfigurations, RxNormDbConfig } from './config';
-import * as vault from './vault-k8s';
+
 if (process.env.NODE_ENV !== 'PRODUCTION') {
 	console.debug('dotenv: ', dotenv.config());
 }
-// we import here to allow configs to fully load
-import { database, up } from 'migrate-mongo';
-import app, { GlobalGqlContext } from './app';
-import * as bootstrap from './bootstrap';
 
+// we import here to allow configs to fully load
 import { ApolloServer, ContextFunction } from '@apollo/server';
 import {
 	StandaloneServerContextFunctionArgument,
 	startStandaloneServer,
 } from '@apollo/server/standalone';
 import { EgoJwtData } from '@icgc-argo/ego-token-utils/dist/common';
+import { database, up } from 'migrate-mongo';
+import app, { GlobalGqlContext } from './app';
+import * as bootstrap from './bootstrap';
+import { AppConfig, KafkaConfigurations, RxNormDbConfig } from './config';
 import schema from './schemas/index';
+import * as vault from './vault-k8s';
 
 let secrets: any = {};
 let server: Server;

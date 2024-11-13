@@ -34,7 +34,7 @@ chai.should();
 
 describe('manager', () => {
 	let mongoContainer: any;
-	let dbUrl = ``;
+	let dbUrl = '';
 	const schemaName = 'ARGO Clinical Submission';
 	const server = new ServerMock({ host: 'localhost', port: 54321 });
 	const startServerPromise = promisify(server.start);

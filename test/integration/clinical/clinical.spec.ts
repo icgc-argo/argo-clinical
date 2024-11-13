@@ -46,7 +46,7 @@ chai.should();
 describe('clinical Api', () => {
 	let mongoContainer: any;
 	let testNetwork: any;
-	let dbUrl = ``;
+	let dbUrl = '';
 
 	const programId = 'PACA-AU';
 	const donorRegistrationRecord = {
