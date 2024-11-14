@@ -157,7 +157,7 @@ async function pingRxNorm(pool: Pool) {
 		pool.releaseConnection(connection);
 		setStatus('rxNormDb', { status: Status.OK });
 
-		// check for rxnorm connection every 5 minutes
+		// Recursively checks for rxnorm connection every 5 minutes
 		setTimeout(pingRxNorm, 5 * 60 * 1000);
 	} catch (err) {
 		L.error('cannot get connection to rxnorm', err);
