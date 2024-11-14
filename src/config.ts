@@ -63,5 +63,5 @@ export interface RxNormDbConfig {
 	password: string;
 	database: string;
 	port: number;
-	timeout: number;
+	connectTimeout?: number;
 }

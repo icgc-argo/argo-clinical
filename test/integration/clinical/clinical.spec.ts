@@ -17,27 +17,27 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import chai from 'chai';
-// needed for typescript
-import 'chai-http';
-import 'mocha';
-import { GenericContainer } from 'testcontainers';
-import app from '../../../src/app';
-import * as bootstrap from '../../../src/bootstrap';
-import {
-	cleanCollection,
-	insertData,
-	assertDbCollectionEmpty,
-	emptyDonorDocument,
-} from '../testutils';
-import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN, JWT_ABCDEF } from '../test.jwt';
-import mongoose from 'mongoose';
+import { MongoDBContainer } from '@testcontainers/mongodb';
 import AdmZip from 'adm-zip';
-import { ClinicalEntitySchemaNames } from '../../../src/common-model/entities';
-import { TsvUtils, notEmpty } from '../../../src/utils';
-import { getClinicalEntitiesFromDonorBySchemaName } from '../../../src/common-model/functions';
+import chai from 'chai';
+import 'chai-http';
 import deepEqualInAnyOrder from 'deep-equal-in-any-order';
 import _ from 'lodash';
+import 'mocha';
+import mongoose from 'mongoose';
+import { Network } from 'testcontainers';
+import app from '../../../src/app';
+import * as bootstrap from '../../../src/bootstrap';
+import { ClinicalEntitySchemaNames } from '../../../src/common-model/entities';
+import { getClinicalEntitiesFromDonorBySchemaName } from '../../../src/common-model/functions';
+import { TsvUtils, notEmpty } from '../../../src/utils';
+import { JWT_ABCDEF, JWT_CLINICALSVCADMIN, TEST_PUB_KEY } from '../test.jwt';
+import {
+	assertDbCollectionEmpty,
+	cleanCollection,
+	emptyDonorDocument,
+	insertData,
+} from '../testutils';
 
 chai.use(require('chai-http'));
 chai.use(deepEqualInAnyOrder);
@@ -45,7 +45,8 @@ chai.should();
 
 describe('clinical Api', () => {
 	let mongoContainer: any;
-	let dburl = ``;
+	let testNetwork: any;
+	let dbUrl = '';
 
 	const programId = 'PACA-AU';
 	const donorRegistrationRecord = {
@@ -101,11 +102,13 @@ describe('clinical Api', () => {
 	before(() => {
 		return (async () => {
 			try {
-				mongoContainer = await new GenericContainer('mongo', '4.0').withExposedPorts(27017).start();
-				dburl = `mongodb://${mongoContainer.getContainerIpAddress()}:${mongoContainer.getMappedPort(
-					27017,
-				)}/clinical`;
-				console.log(`mongo test container started ${dburl}`);
+				testNetwork = await new Network().start();
+				mongoContainer = await new MongoDBContainer('mongo:4.0')
+					.withNetwork(testNetwork)
+					.withExposedPorts(27017)
+					.start();
+				dbUrl = `${mongoContainer.getConnectionString()}/clinical`;
+				console.log(`mongo test container started ${dbUrl}`);
 				await bootstrap.run({
 					mongoPassword() {
 						return '';
@@ -114,7 +117,7 @@ describe('clinical Api', () => {
 						return '';
 					},
 					mongoUrl: () => {
-						return dburl;
+						return dbUrl;
 					},
 					initialSchemaVersion() {
 						return '1.0';
@@ -162,7 +165,7 @@ describe('clinical Api', () => {
 							host: '',
 							password: '',
 							port: 0,
-							timeout: 0,
+							connectTimeout: 0,
 							user: '',
 						};
 					},
@@ -193,8 +196,8 @@ describe('clinical Api', () => {
 		const donor = emptyDonorDocument(donorDoc);
 		this.beforeEach(async () => {
 			try {
-				await cleanCollection(dburl, 'donors');
-				await insertData(dburl, 'donors', donor);
+				await cleanCollection(dbUrl, 'donors');
+				await insertData(dbUrl, 'donors', donor);
 				return;
 			} catch (err) {
 				console.error(err);
@@ -296,7 +299,7 @@ describe('clinical Api', () => {
 					.auth(JWT_CLINICALSVCADMIN, { type: 'bearer' })
 					.then(async (res: any) => {
 						res.should.have.status(200);
-						await assertDbCollectionEmpty(dburl, 'donors');
+						await assertDbCollectionEmpty(dbUrl, 'donors');
 					});
 			});
 			it('/clinical/donors should not allow delete without proper auth', async function() {

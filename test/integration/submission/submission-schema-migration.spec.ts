@@ -17,36 +17,39 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
+import { MongoDBContainer } from '@testcontainers/mongodb';
+import { MySqlContainer } from '@testcontainers/mysql';
+import { Network } from 'testcontainers';
 import app from '../../../src/app';
 import * as bootstrap from '../../../src/bootstrap';
+import { Donor } from '../../../src/clinical/clinical-entities';
 import {
 	ClinicalEntitySchemaNames,
-	PrimaryDiagnosisFieldsEnum,
 	DonorFieldsEnum,
+	PrimaryDiagnosisFieldsEnum,
 	SpecimenFieldsEnum,
 } from '../../../src/common-model/entities';
-import { SampleRegistrationFieldsEnum } from '../../../src/submission/submission-entities';
-import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
 import {
 	DictionaryMigration,
 	MigrationStage,
 } from '../../../src/submission/migration/migration-entities';
-import { Donor } from '../../../src/clinical/clinical-entities';
+import { SampleRegistrationFieldsEnum } from '../../../src/submission/submission-entities';
 import {
-	getInstance,
 	ClinicalProgramUpdateMessage,
+	getInstance,
 } from '../../../src/submission/submission-updates-messenger';
 
 import chai from 'chai';
 import 'chai-http';
 import 'deep-equal-in-any-order';
+import _ from 'lodash';
 import 'mocha';
 import mongoose from 'mongoose';
-import { spy, SinonSpy } from 'sinon';
-import { GenericContainer } from 'testcontainers';
-import { findInDb, insertData, emptyDonorDocument, clearCollections } from '../testutils';
-import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN } from '../test.jwt';
-import _ from 'lodash';
+import { SinonSpy, spy } from 'sinon';
+import { JWT_CLINICALSVCADMIN, TEST_PUB_KEY } from '../test.jwt';
+import { RXNORM_DB, RXNORM_PASS, RXNORM_USER } from '../testConstants';
+import { clearCollections, emptyDonorDocument, findInDb, insertData } from '../testutils';
 
 chai.use(require('chai-http'));
 chai.use(require('deep-equal-in-any-order'));
@@ -61,7 +64,8 @@ describe('schema migration api', () => {
 	let sendProgramUpdatedMessageFunc: SinonSpy<[ClinicalProgramUpdateMessage], Promise<void>>;
 	let mongoContainer: any;
 	let mysqlContainer: any;
-	let dburl = ``;
+	let testNetwork: any;
+	let dbUrl = '';
 
 	const programId = 'ABCD-EF';
 	const donor: Donor = emptyDonorDocument({
@@ -136,18 +140,21 @@ describe('schema migration api', () => {
 	before(() => {
 		return (async () => {
 			try {
-				const mongoContainerPromise = new GenericContainer('mongo', '4.0')
+				testNetwork = await new Network().start();
+				mongoContainer = await new MongoDBContainer('mongo:4.0')
+					.withNetwork(testNetwork)
 					.withExposedPorts(27017)
 					.start();
-				const mysqlContainerPromise = new GenericContainer('mysql', '5.7')
-					.withEnv('MYSQL_DATABASE', 'rxnorm')
-					.withEnv('MYSQL_USER', 'clinical')
-					.withEnv('MYSQL_ROOT_PASSWORD', 'password')
-					.withEnv('MYSQL_PASSWORD', 'password')
+				mysqlContainer = await new MySqlContainer()
+					.withNetwork(testNetwork)
+					.withDatabase(RXNORM_DB)
+					.withUsername(RXNORM_USER)
+					.withRootPassword(RXNORM_PASS)
+					.withUserPassword(RXNORM_PASS)
 					.withExposedPorts(3306)
 					.start();
-				mongoContainer = await mongoContainerPromise;
-				mysqlContainer = await mysqlContainerPromise;
+				dbUrl = `${mongoContainer.getConnectionString()}/clinical`;
+
 				console.log('db test containers started');
 				await bootstrap.run({
 					mongoPassword() {
@@ -157,10 +164,7 @@ describe('schema migration api', () => {
 						return '';
 					},
 					mongoUrl: () => {
-						dburl = `mongodb://${mongoContainer.getContainerIpAddress()}:${mongoContainer.getMappedPort(
-							27017,
-						)}/clinical`;
-						return dburl;
+						return dbUrl;
 					},
 					initialSchemaVersion() {
 						return startingSchemaVersion;
@@ -204,11 +208,11 @@ describe('schema migration api', () => {
 					},
 					rxNormDbProperties() {
 						return {
-							database: 'rxnorm',
-							user: 'clinical',
-							password: 'password',
-							timeout: 5000,
-							host: mysqlContainer.getContainerIpAddress(),
+							database: RXNORM_DB,
+							user: RXNORM_USER,
+							password: RXNORM_PASS,
+							connectTimeout: 5000,
+							host: mysqlContainer.getHost(),
 							port: mysqlContainer.getMappedPort(3306),
 						};
 					},
@@ -233,12 +237,13 @@ describe('schema migration api', () => {
 		await mongoose.disconnect();
 		await mongoContainer.stop();
 		await mysqlContainer.stop();
+		await testNetwork.stop();
 	});
 
 	beforeEach(async () => {
-		await clearCollections(dburl, ['donors', 'dictionarymigrations', 'dataschemas']);
-		await insertData(dburl, 'donors', donor);
-		await insertData(dburl, 'donors', donor2);
+		await clearCollections(dbUrl, ['donors', 'dictionarymigrations', 'dataschemas']);
+		await insertData(dbUrl, 'donors', donor);
+		await insertData(dbUrl, 'donors', donor2);
 		// reset the base schema since tests can load new one
 		await bootstrap.loadSchema(schemaName, startingSchemaVersion);
 		sendProgramUpdatedMessageFunc = spy(getInstance(), 'sendProgramUpdatedMessage');
@@ -254,7 +259,7 @@ describe('schema migration api', () => {
 	const assertSuccessfulMigration = async (res: any, version: string) => {
 		res.should.have.status(200);
 		const schema = (await findInDb(
-			dburl,
+			dbUrl,
 			'dataschemas',
 			{},
 		)) as dictionaryEntities.SchemasDictionary[];
@@ -343,11 +348,11 @@ describe('schema migration api', () => {
 					hasMissingEntityException: false,
 				},
 			});
-			await insertData(dburl, 'donors', donorInvalidWithNewSchema);
+			await insertData(dbUrl, 'donors', donorInvalidWithNewSchema);
 			await migrateSyncTo('4.0').then((res: any) => {
 				res.should.have.status(200);
 			});
-			const updatedDonor = await findInDb(dburl, 'donors', {});
+			const updatedDonor = await findInDb(dbUrl, 'donors', {});
 
 			// donor 1 stats after migration, added entity completion
 			chai.expect(updatedDonor[0].completionStats.coreCompletion).to.deep.include({
@@ -407,7 +412,7 @@ describe('schema migration api', () => {
 			});
 
 			const res = await getAllMigrationDocs();
-			const donors = await findInDb(dburl, 'donors', {});
+			const donors = await findInDb(dbUrl, 'donors', {});
 
 			const [migration] = res.body;
 			assertNoMigrationErrors(res, VERSION);
@@ -437,7 +442,7 @@ describe('schema migration api', () => {
 			await migrateSyncTo(VERSION).then(async (res: any) => {
 				res.should.have.status(200);
 				const schema = (await findInDb(
-					dburl,
+					dbUrl,
 					'dataschemas',
 					{},
 				)) as dictionaryEntities.SchemasDictionary[];
@@ -571,14 +576,14 @@ describe('schema migration api', () => {
 
 	describe('dry run migration api', () => {
 		it('should report donor validation errors', async () => {
-			await insertData(dburl, 'donors', newSchemaInvalidDonor);
+			await insertData(dbUrl, 'donors', newSchemaInvalidDonor);
 
 			await dryRunMigrateTo('7.0').then(async (res: any) => {
 				res.should.have.status(200);
 				const migration = res.body as DictionaryMigration;
 				migration.should.not.be.undefined;
 				const migrations = (await findInDb(
-					dburl,
+					dbUrl,
 					'dictionarymigrations',
 					{},
 				)) as DictionaryMigration[];

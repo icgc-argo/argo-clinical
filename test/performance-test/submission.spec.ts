@@ -17,30 +17,31 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// using import fails when running the test
-// import * as chai from "chai";
-const dotEnvPath = __dirname + '/performance.env';
-import path from 'path';
-require('dotenv').config({ path: dotEnvPath });
-console.log('env cpus: ' + process.env.ALLOWED_CPUS);
+import { MongoDBContainer } from '@testcontainers/mongodb';
+import { MySqlContainer } from '@testcontainers/mysql';
 import chai from 'chai';
-import fs from 'fs';
-// needed for types
 import 'chai-http';
+import fs from 'fs';
 import 'mocha';
-import winston from 'winston';
 import mongoose from 'mongoose';
-import { GenericContainer, Wait } from 'testcontainers';
+import path from 'path';
+import { Wait } from 'testcontainers';
+import winston from 'winston';
 import app from '../../src/app';
 import * as bootstrap from '../../src/bootstrap';
-import { cleanCollection, resetCounters } from '../integration/testutils';
-import { TEST_PUB_KEY, JWT_CLINICALSVCADMIN } from '../integration/test.jwt';
+import { ClinicalEntitySchemaNames } from '../../src/common-model/entities';
 import {
 	CreateRegistrationResult,
 	CreateSubmissionResult,
 	ValidateSubmissionResult,
 } from '../../src/submission/submission-entities';
-import { ClinicalEntitySchemaNames } from '../../src/common-model/entities';
+import { JWT_CLINICALSVCADMIN, TEST_PUB_KEY } from '../integration/test.jwt';
+import { RXNORM_DB, RXNORM_PASS, RXNORM_USER } from '../integration/testConstants';
+import { cleanCollection, resetCounters } from '../integration/testutils';
+
+const dotEnvPath = __dirname + '/performance.env';
+require('dotenv').config({ path: dotEnvPath });
+console.log('env cpus: ' + process.env.ALLOWED_CPUS);
 
 // create a different logger to avoid noise from application
 const L = winston.createLogger({
@@ -52,11 +53,11 @@ chai.use(require('chai-http'));
 chai.use(require('deep-equal-in-any-order'));
 chai.should();
 
-const clearCollections = async (dburl: string, collections: string[]) => {
+const clearCollections = async (dbUrl: string, collections: string[]) => {
 	try {
-		const promises = collections.map((collectionName) => cleanCollection(dburl, collectionName));
+		const promises = collections.map((collectionName) => cleanCollection(dbUrl, collectionName));
 		await Promise.all(promises);
-		await resetCounters(dburl);
+		await resetCounters(dbUrl);
 		return;
 	} catch (err) {
 		console.error(err);
@@ -69,26 +70,22 @@ const schemaVersion = '1.0';
 describe('Submission Api', () => {
 	let mongoContainer: any;
 	let mysqlContainer: any;
-	let dburl = ``;
+	let dbUrl = '';
 	// will run when all tests are finished
 	before(() => {
 		return (async () => {
 			try {
-				const mongoContainerPromise = new GenericContainer('mongo', '4.0')
-					.withExposedPorts(27017)
-					.start();
-				const mysqlContainerPromise = new GenericContainer('mysql', '5.7')
-					.withEnv('MYSQL_DATABASE', 'rxnorm')
-					.withEnv('MYSQL_USER', 'clinical')
-					.withEnv('MYSQL_ROOT_PASSWORD', 'password')
-					.withEnv('MYSQL_PASSWORD', 'password')
+				mongoContainer = await new MongoDBContainer('mongo:4.0').withExposedPorts(27017).start();
+				mysqlContainer = await new MySqlContainer()
+					.withDatabase('rxnorm')
+					.withUsername('clinical')
+					.withRootPassword('password')
+					.withUserPassword('password')
 					.withWaitStrategy(Wait.forLogMessage('ready for connections.'))
 					.withExposedPorts(3306)
 					.start();
-				// start containers in parallel
-				const containers = await Promise.all([mongoContainerPromise, mysqlContainerPromise]);
-				mongoContainer = containers[0];
-				mysqlContainer = containers[1];
+				dbUrl = `${mongoContainer.getConnectionString()}/clinical`;
+
 				console.log('db test containers started');
 
 				await bootstrap.run({
@@ -99,10 +96,7 @@ describe('Submission Api', () => {
 						return '';
 					},
 					mongoUrl: () => {
-						dburl = `mongodb://${mongoContainer.getContainerIpAddress()}:${mongoContainer.getMappedPort(
-							27017,
-						)}/clinical`;
-						return dburl;
+						return dbUrl;
 					},
 					initialSchemaVersion() {
 						return schemaVersion;
@@ -146,11 +140,11 @@ describe('Submission Api', () => {
 					},
 					rxNormDbProperties() {
 						return {
-							database: 'rxnorm',
-							user: 'clinical',
-							password: 'password',
-							timeout: 5000,
-							host: mysqlContainer.getContainerIpAddress(),
+							database: RXNORM_DB,
+							user: RXNORM_USER,
+							password: RXNORM_PASS,
+							connectTimeout: 5000,
+							host: mysqlContainer.getHost(),
 							port: mysqlContainer.getMappedPort(3306),
 						};
 					},
@@ -173,14 +167,14 @@ describe('Submission Api', () => {
 	after(async () => {
 		await mongoose.disconnect();
 		await mongoContainer.stop();
-		mysqlContainer.stop();
+		await mysqlContainer.stop();
 	});
 
 	describe('clinical submission', function() {
 		const num = 3000;
 
 		this.beforeEach(async () => {
-			await clearCollections(dburl, [
+			await clearCollections(dbUrl, [
 				'donors',
 				'activeregistrations',
 				'activesubmissions',
