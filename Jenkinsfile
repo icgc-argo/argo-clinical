@@ -23,6 +23,6 @@ pipelineRDPCClinical(
     dockerRegistry: "ghcr.io",
     dockerRepo: "icgc-argo/clinical",
     gitRepo: "icgc-argo/argo-clinical",
-    testCommand: "npm ci && npm run unit-test",
+    testCommand: "npm ci && npm run unit-test && npm run int-test",
     helmRelease: "clinical"
 )
