@@ -81,25 +81,16 @@ export const validate = async (
 		true,
 	);
 
-	// treatment.treatment_start_interval must be smaller than donor.survival_time
-	// skip validation if there is a donor.survival_time exception
-	const survivalTimeExceptionExists = await checkForExceptions(
+	const donorDataToValidateWith = utils.getSurvivalDataFromDonor(
 		treatmentRecord,
-		DonorFieldsEnum.survival_time,
-		'treatment',
+		mergedDonor,
+		TreatmentFieldsEnum.treatment_start_interval,
 	);
 
-	if (!survivalTimeExceptionExists) {
-		const donorDataToValidateWith = utils.getDataFromDonorRecordOrDonor(
-			treatmentRecord,
-			mergedDonor,
-			errors,
-			TreatmentFieldsEnum.treatment_start_interval,
-		);
-
-		if (donorDataToValidateWith) {
-			checkDonorTimeConflict(donorDataToValidateWith, treatmentRecord, errors);
-		}
+	if (donorDataToValidateWith) {
+		// If there is no survival time information then we can't do our time validations.
+		// This is possible when there is an exception on survival time
+		checkDonorTimeConflict(donorDataToValidateWith, treatmentRecord, errors);
 	}
 
 	// Find existing follow ups for this donor

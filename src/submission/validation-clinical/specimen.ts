@@ -215,25 +215,16 @@ export const validate = async (
 	// validate allowed/unallowed fields
 	checkRequiredFields(specimen, specimenRecord, mergedDonor, errors);
 
-	// validate time conflict if needed
-	// skip validation if there is a donor.survival_time exception
-	const survivalTimeExceptionExists = await checkForExceptions(
+	const donorDataToValidateWith = utils.getSurvivalDataFromDonor(
 		specimenRecord,
-		DonorFieldsEnum.survival_time,
-		'specimen',
+		mergedDonor,
+		SpecimenFieldsEnum.specimen_acquisition_interval,
 	);
 
-	if (!survivalTimeExceptionExists) {
-		const donorDataToValidateWith = utils.getDataFromDonorRecordOrDonor(
-			specimenRecord,
-			mergedDonor,
-			errors,
-			SpecimenFieldsEnum.specimen_acquisition_interval,
-		);
-
-		if (donorDataToValidateWith) {
-			checkTimeConflictWithDonor(donorDataToValidateWith, specimenRecord, errors);
-		}
+	if (donorDataToValidateWith) {
+		// If there is no survival time information then we can't do our time validations.
+		// This is possible when there is an exception on survival times
+		checkTimeConflictWithDonor(donorDataToValidateWith, specimenRecord, errors);
 	}
 
 	validatePercentTumour(specimenRecord, errors);

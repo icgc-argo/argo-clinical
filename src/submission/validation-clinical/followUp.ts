@@ -37,6 +37,16 @@ import { getEntitySubmitterIdFieldName } from '../../common-model/functions';
 import * as utils from './utils';
 import { checkForExceptions } from '../exceptions/exceptions';
 
+/**
+ * !Mutates the errors array if an error is found!
+ *
+ * Validates time conflict for `interval_of_followup` compared to the donor's survival_time.
+ * If there is an error we push an error to the `errors` array.
+ *
+ * @param donorDataToValidateWith
+ * @param followUpRecord
+ * @param errors
+ */
 const checkDonorTimeConflict = (
 	donorDataToValidateWith: { [k: string]: any },
 	followUpRecord: DeepReadonly<SubmittedClinicalRecord>,
@@ -58,6 +68,17 @@ const checkDonorTimeConflict = (
 	}
 };
 
+/**
+ * !Mutates the errors array if an error is found!
+ *
+ * Validates time conflict for `treatment_start_interval` compared to the donor's survival_time.
+ * If there is an error we push an error to the `errors` array.
+ *
+ * @param followUpRecord
+ * @param treatment
+ * @param errors
+ * @returns
+ */
 function checkTreatmentTimeConflict(
 	followUpRecord: DeepReadonly<SubmittedClinicalRecord>,
 	treatment: DeepReadonly<Treatment>,
@@ -131,26 +152,11 @@ export const validate = async (
 		false,
 	);
 
-	// Follow_up.interval_of_followup must be less than Donor.survival_time:
-	// skip validation if there is a donor.survival_time exception
-	const survivalTimeExceptionExists = await checkForExceptions(
+	const donorDataToValidateWith = utils.getSurvivalDataFromDonor(
 		followUpRecord,
-		DonorFieldsEnum.survival_time,
-		'follow_up',
+		mergedDonor,
+		FollowupFieldsEnum.interval_of_followup,
 	);
-
-	if (!survivalTimeExceptionExists) {
-		const donorDataToValidateWith = utils.getDataFromDonorRecordOrDonor(
-			followUpRecord,
-			mergedDonor,
-			errors,
-			FollowupFieldsEnum.interval_of_followup,
-		);
-
-		if (donorDataToValidateWith) {
-			checkDonorTimeConflict(donorDataToValidateWith, followUpRecord, errors);
-		}
-	}
 
 	const entitySubmitterIdField = getEntitySubmitterIdFieldName(ClinicalEntitySchemaNames.TREATMENT);
 	const treatment = utils.getRelatedEntityByFK(
@@ -159,7 +165,12 @@ export const validate = async (
 		mergedDonor,
 	) as DeepReadonly<Treatment>;
 
-	checkTreatmentTimeConflict(followUpRecord, treatment, errors);
+	if (donorDataToValidateWith) {
+		// If there is no survival time information then we can't do our time validations.
+		// This is possible when there is an exception on survival time
+		checkDonorTimeConflict(donorDataToValidateWith, followUpRecord, errors);
+		checkTreatmentTimeConflict(followUpRecord, treatment, errors);
+	}
 
 	const followUpClinicalInfo = getExistingFollowUp(existentDonor, followUpRecord);
 	// adding new follow up to this donor ?
