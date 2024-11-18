@@ -105,11 +105,19 @@ const entityExceptionRepository = {
 		}
 	},
 
-	async find(programId: string): Promise<EntityException | null> {
+	async find(
+		programId: string,
+		optionalSearchParams?: Record<string, string>,
+	): Promise<EntityException | null> {
 		L.debug(`Finding entity exception with program id: ${JSON.stringify(programId)}`);
 		try {
+			const searchParams = {
+				programId,
+				...optionalSearchParams,
+			};
+
 			// first found document, or null
-			const doc = await EntityExceptionModel.findOne({ programId }).lean(true);
+			const doc = await EntityExceptionModel.findOne(searchParams).lean(true);
 			return doc;
 		} catch (e) {
 			L.error('Failed to find program exception', e);

@@ -516,43 +516,30 @@ export function getRelatedEntityByFK(
 	return entity;
 }
 
-export const getDataFromDonorRecordOrDonor = (
+/**
+ * Get vitalStatus and survivalTime from a donor. Return undefined if either are missing.
+ */
+export const getSurvivalDataFromDonor = (
 	submittedRecord: DeepReadonly<SubmittedClinicalRecord>,
 	donor: DeepReadonly<Donor>,
-	errors: SubmissionValidationError[],
 	fieldName: ClinicalFields,
-) => {
-	let missingDonorFields: string[] = [];
+): undefined | { donorVitalStatus: string; donorSurvivalTime: number } => {
 	let donorVitalStatus: string = '';
 	let donorSurvivalTime: number = NaN;
 	const donorDataSource = donor.clinicalInfo || {};
 
 	if (_.isEmpty(donorDataSource)) {
-		missingDonorFields = [DonorFieldsEnum.vital_status, DonorFieldsEnum.survival_time];
+		return undefined;
 	} else {
 		donorVitalStatus = (donorDataSource[DonorFieldsEnum.vital_status] as string) || '';
 		donorSurvivalTime = Number(donorDataSource[DonorFieldsEnum.survival_time]) || NaN;
 
 		if (isEmptyString(donorVitalStatus)) {
-			missingDonorFields.push(DonorFieldsEnum.vital_status);
+			return undefined;
 		}
 		if (donorVitalStatus.toString().toLowerCase() === 'deceased' && isNaN(donorSurvivalTime)) {
-			missingDonorFields.push(DonorFieldsEnum.survival_time);
+			return undefined;
 		}
-	}
-
-	if (missingDonorFields.length > 0) {
-		errors.push(
-			buildSubmissionError(
-				submittedRecord,
-				DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
-				fieldName,
-				{
-					missingField: missingDonorFields.map((s) => ClinicalEntitySchemaNames.DONOR + '.' + s),
-				},
-			),
-		);
-		return undefined;
 	}
 
 	return { donorVitalStatus, donorSurvivalTime };
