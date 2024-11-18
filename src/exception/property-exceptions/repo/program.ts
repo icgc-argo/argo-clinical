@@ -67,9 +67,9 @@ const programExceptionRepository = {
 			const searchParams: Record<string, string> = {
 				programId,
 			};
-			if (optionalSearchParams?.exceptions.requested_core_field) {
+			if (optionalSearchParams?.requested_core_field) {
 				searchParams['exceptions.requested_core_field'] =
-					optionalSearchParams?.exceptions.requested_core_field;
+					optionalSearchParams?.requested_core_field;
 			}
 			const doc = await ProgramExceptionModel.findOne(searchParams).lean(true);
 			return doc;
