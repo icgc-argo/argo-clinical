@@ -38,7 +38,6 @@ import { isEmpty, notEmpty } from '../../utils';
 import { getEntitySubmitterIdFieldName } from '../../common-model/functions';
 import { checkRelatedEntityExists, getSpecimenFromDonor } from './utils';
 import _ from 'lodash';
-import { checkForExceptions } from '../exceptions/exceptions';
 
 const validatePercentTumour = (
 	submittedClinicalRecord: DeepReadonly<SubmittedClinicalRecord>,

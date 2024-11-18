@@ -42,7 +42,6 @@ import {
 } from '../submission-entities';
 import * as utils from './utils';
 import { checkClinicalEntityDoesntBelongToOtherDonor, checkRelatedEntityExists } from './utils';
-import { checkForExceptions } from '../exceptions/exceptions';
 
 export const validate = async (
 	treatmentRecord: DeepReadonly<SubmittedClinicalRecord>,

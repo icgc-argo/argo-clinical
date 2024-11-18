@@ -345,18 +345,20 @@ export async function getExceptionManifestRecords(
  * @param schema
  * @returns boolean indicating if an exception exists
  */
-export const checkForExceptions = async (
-	record: DeepReadonly<SubmittedClinicalRecord>,
-	field: string,
-	schema: string,
-): Promise<boolean> => {
+export const checkForExceptions = async ({
+	record,
+	field,
+	schema,
+}: {
+	record: DeepReadonly<SubmittedClinicalRecord>;
+	field: string;
+	schema: string;
+}): Promise<boolean> => {
 	const programId = record['program_id'] as string;
 
 	if (!programId) return false;
 
-	const programAdditionalSearchParams = {
-		exceptions: { requested_core_field: field },
-	};
+	const programAdditionalSearchParams = { requested_core_field: field };
 
 	const entityAdditionalSearchParams = {
 		[`${schema}.requested_core_field`]: field,

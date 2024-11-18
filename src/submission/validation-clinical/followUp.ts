@@ -35,7 +35,6 @@ import _ from 'lodash';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../../common-model/functions';
 import { getEntitySubmitterIdFieldName } from '../../common-model/functions';
 import * as utils from './utils';
-import { checkForExceptions } from '../exceptions/exceptions';
 
 /**
  * !Mutates the errors array if an error is found!

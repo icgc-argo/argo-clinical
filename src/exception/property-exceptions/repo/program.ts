@@ -40,12 +40,6 @@ const ProgramExceptionModel =
 	mongoose.models.ProgramException ||
 	mongoose.model<ProgramException>('ProgramException', programExceptionSchema);
 
-type OptionalSearchParams = {
-	exceptions: Partial<{
-		requested_core_field: string;
-	}>;
-};
-
 const programExceptionRepository = {
 	async save(exception: ProgramException): Promise<ProgramException> {
 		L.debug(`Creating new program exception with: ${JSON.stringify(exception)}`);
@@ -66,7 +60,7 @@ const programExceptionRepository = {
 
 	async find(
 		programId: string,
-		optionalSearchParams?: OptionalSearchParams,
+		optionalSearchParams?: { requested_core_field?: string },
 	): Promise<ProgramException | null> {
 		L.debug(`finding program exception with id: ${JSON.stringify(programId)}`);
 		try {
