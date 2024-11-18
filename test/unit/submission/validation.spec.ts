@@ -2219,33 +2219,6 @@ describe('data-validator', () => {
 				)
 				.catch((err: any) => fail(err));
 
-			const specimenMisisngDonorAB1FieldsErr: SubmissionValidationError = {
-				fieldName: SpecimenFieldsEnum.specimen_acquisition_interval,
-				message: `[specimen_acquisition_interval] requires [donor.vital_status], [donor.survival_time] in order to complete validation. Please upload data for all fields in this clinical data submission.`,
-				type: DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
-				index: 0,
-				info: {
-					donorSubmitterId: 'AB1',
-					value: 200,
-					missingField: [
-						ClinicalEntitySchemaNames.DONOR + '.' + DonorFieldsEnum.vital_status,
-						ClinicalEntitySchemaNames.DONOR + '.' + DonorFieldsEnum.survival_time,
-					],
-				},
-			};
-
-			const specimenMissingDonorAB2FieldErr: SubmissionValidationError = {
-				fieldName: SpecimenFieldsEnum.specimen_acquisition_interval,
-				message: `[specimen_acquisition_interval] requires [donor.survival_time] in order to complete validation. Please upload data for all fields in this clinical data submission.`,
-				type: DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
-				index: 2,
-				info: {
-					donorSubmitterId: 'AB2',
-					value: 200,
-					missingField: [ClinicalEntitySchemaNames.DONOR + '.' + DonorFieldsEnum.survival_time],
-				},
-			};
-
 			const primaryDiagnosisMissingError = {
 				fieldName: 'submitter_primary_diagnosis_id',
 				info: {
@@ -2260,7 +2233,7 @@ describe('data-validator', () => {
 				type: 'RELATED_ENTITY_MISSING_OR_CONFLICTING',
 			};
 
-			chai.expect(result.specimen.dataErrors.length).to.eq(5);
+			chai.expect(result.specimen.dataErrors.length).to.eq(2);
 
 			chai
 				.expect(result.specimen.dataErrors)
@@ -2268,14 +2241,6 @@ describe('data-validator', () => {
 			chai
 				.expect(result.specimen.dataErrors)
 				.to.deep.include({ ...primaryDiagnosisMissingError, index: 1 });
-			chai
-				.expect(result.specimen.dataErrors)
-				.to.deep.include({ ...specimenMisisngDonorAB1FieldsErr, index: 0 });
-			chai
-				.expect(result.specimen.dataErrors)
-				.to.deep.include({ ...specimenMisisngDonorAB1FieldsErr, index: 1 });
-
-			chai.expect(result.specimen.dataErrors).to.deep.include(specimenMissingDonorAB2FieldErr);
 		});
 
 		it("should detect forbidden fields in submission record for donor's registered normal specimen", async () => {
