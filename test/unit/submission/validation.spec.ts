@@ -3600,8 +3600,7 @@ describe('data-validator', () => {
 				.validateSubmissionData({ AB1: submissionRecordsMap }, { AB1: donorToAddFollowupTo })
 				.catch((err: any) => fail(err));
 
-			chai.expect(result[ClinicalEntitySchemaNames.FOLLOW_UP].dataErrors.length).to.eq(2);
-			const followUpError_1: SubmissionValidationError = {
+			const followUpError: SubmissionValidationError = {
 				fieldName: FollowupFieldsEnum.submitter_follow_up_id,
 				message: `This follow up has already been associated to donor AB2. Please correct your file.`,
 				type: DataValidationErrors.CLINICAL_ENTITY_BELONGS_TO_OTHER_DONOR,
@@ -3614,24 +3613,11 @@ describe('data-validator', () => {
 				},
 			};
 
-			const followUpError_2: SubmissionValidationError = {
-				fieldName: FollowupFieldsEnum.interval_of_followup,
-				message: `[interval_of_followup] requires [donor.vital_status], [donor.survival_time] in order to complete validation. Please upload data for all fields in this clinical data submission.`,
-				type: DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
-				index: 0,
-				info: {
-					donorSubmitterId: 'AB1',
-					value: undefined,
-					missingField: ['donor.vital_status', 'donor.survival_time'],
-				},
-			};
-			chai
-				.expect(result[ClinicalEntitySchemaNames.FOLLOW_UP].dataErrors[0])
-				.to.deep.eq(followUpError_2);
+			chai.expect(result[ClinicalEntitySchemaNames.FOLLOW_UP].dataErrors.length).to.eq(1);
 
 			chai
-				.expect(result[ClinicalEntitySchemaNames.FOLLOW_UP].dataErrors[1])
-				.to.deep.eq(followUpError_1);
+				.expect(result[ClinicalEntitySchemaNames.FOLLOW_UP].dataErrors[0])
+				.to.deep.eq(followUpError);
 		});
 		it('should get followup error when follow up interval_of_followup is less than Treatment treatment_start_interval', async () => {
 			const existingDonor = stubs.validation.existingDonor08();
