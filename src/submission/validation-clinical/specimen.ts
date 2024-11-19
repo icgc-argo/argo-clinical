@@ -29,6 +29,7 @@ import {
 	ClinicalEntitySchemaNames,
 	SpecimenFieldsEnum,
 	PrimaryDiagnosisFieldsEnum,
+	DonorFieldsEnum,
 } from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, PrimaryDiagnosis, Specimen } from '../../clinical/clinical-entities';
@@ -213,15 +214,15 @@ export const validate = async (
 	// validate allowed/unallowed fields
 	checkRequiredFields(specimen, specimenRecord, mergedDonor, errors);
 
-	// validate time conflict if needed
-	const donorDataToValidateWith = utils.getDataFromDonorRecordOrDonor(
+	const donorDataToValidateWith = utils.getSurvivalDataFromDonor(
 		specimenRecord,
 		mergedDonor,
-		errors,
 		SpecimenFieldsEnum.specimen_acquisition_interval,
 	);
 
 	if (donorDataToValidateWith) {
+		// If there is no survival time information then we can't do our time validations.
+		// This is possible when there is an exception on survival times
 		checkTimeConflictWithDonor(donorDataToValidateWith, specimenRecord, errors);
 	}
 

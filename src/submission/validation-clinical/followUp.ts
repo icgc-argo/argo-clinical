@@ -24,100 +24,60 @@ import {
 	SubmissionValidationOutput,
 	DonorVitalStatusValues,
 } from '../submission-entities';
-import { ClinicalEntitySchemaNames, FollowupFieldsEnum } from '../../common-model/entities';
+import {
+	ClinicalEntitySchemaNames,
+	DonorFieldsEnum,
+	FollowupFieldsEnum,
+} from '../../common-model/entities';
 import { DeepReadonly } from 'deep-freeze';
 import { Donor, Treatment } from '../../clinical/clinical-entities';
 import _ from 'lodash';
 import { getClinicalEntitiesFromDonorBySchemaName } from '../../common-model/functions';
 import { getEntitySubmitterIdFieldName } from '../../common-model/functions';
 import * as utils from './utils';
-export const validate = async (
+
+/**
+ * !Mutates the errors array if an error is found!
+ *
+ * Validates time conflict for `interval_of_followup` compared to the donor's survival_time.
+ * If there is an error we push an error to the `errors` array.
+ *
+ * @param donorDataToValidateWith
+ * @param followUpRecord
+ * @param errors
+ */
+const checkDonorTimeConflict = (
+	donorDataToValidateWith: { [k: string]: any },
 	followUpRecord: DeepReadonly<SubmittedClinicalRecord>,
-	existentDonor: DeepReadonly<Donor>,
-	mergedDonor: Donor,
-): Promise<SubmissionValidationOutput> => {
-	// ***Basic pre-check (to prevent execution if missing required variables)***
-	if (!followUpRecord || !existentDonor) {
-		throw new Error("Can't call this function without followup records");
-	}
-	const errors: SubmissionValidationError[] = [];
-
-	// check if a primary diagnosis is specified that it exists
-	utils.checkRelatedEntityExists(
-		ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
-		followUpRecord,
-		ClinicalEntitySchemaNames.FOLLOW_UP,
-		mergedDonor,
-		errors,
-		false,
-	);
-
-	// check if a treatment is specified that it exists
-	utils.checkRelatedEntityExists(
-		ClinicalEntitySchemaNames.TREATMENT,
-		followUpRecord,
-		ClinicalEntitySchemaNames.FOLLOW_UP,
-		mergedDonor,
-		errors,
-		false,
-	);
-
-	// Follow_up.interval_of_followup must be less than Donor.survival_time:
-	const donorDataToValidateWith = utils.getDataFromDonorRecordOrDonor(
-		followUpRecord,
-		mergedDonor,
-		errors,
-		FollowupFieldsEnum.interval_of_followup,
-	);
-
-	const checkDonorTimeConflict = (
-		donorDataToValidateWith: { [k: string]: any },
-		followUpRecord: DeepReadonly<SubmittedClinicalRecord>,
-		errors: SubmissionValidationError[],
-	) => {
-		if (
-			donorDataToValidateWith.donorVitalStatus === DonorVitalStatusValues.deceased &&
-			donorDataToValidateWith.donorSurvivalTime <
-				followUpRecord[FollowupFieldsEnum.interval_of_followup]
-		) {
-			errors.push(
-				utils.buildSubmissionError(
-					followUpRecord,
-					DataValidationErrors.FOLLOW_UP_DONOR_TIME_CONFLICT,
-					FollowupFieldsEnum.interval_of_followup,
-					{},
-				),
-			);
-		}
-	};
-
-	if (donorDataToValidateWith) {
-		checkDonorTimeConflict(donorDataToValidateWith, followUpRecord, errors);
-	}
-
-	const entitySubmitterIdField = getEntitySubmitterIdFieldName(ClinicalEntitySchemaNames.TREATMENT);
-	const treatment = utils.getRelatedEntityByFK(
-		ClinicalEntitySchemaNames.TREATMENT,
-		followUpRecord[entitySubmitterIdField] as string,
-		mergedDonor,
-	) as DeepReadonly<Treatment>;
-
-	checkTreatmentTimeConflict(followUpRecord, treatment, errors);
-
-	const followUpClinicalInfo = getExistingFollowUp(existentDonor, followUpRecord);
-	// adding new follow up to this donor ?
-	if (!followUpClinicalInfo) {
-		// check it is unique in this program
-		await utils.checkClinicalEntityDoesntBelongToOtherDonor(
-			ClinicalEntitySchemaNames.FOLLOW_UP,
-			followUpRecord,
-			existentDonor,
-			errors,
+	errors: SubmissionValidationError[],
+) => {
+	if (
+		donorDataToValidateWith.donorVitalStatus === DonorVitalStatusValues.deceased &&
+		donorDataToValidateWith.donorSurvivalTime <
+			followUpRecord[FollowupFieldsEnum.interval_of_followup]
+	) {
+		errors.push(
+			utils.buildSubmissionError(
+				followUpRecord,
+				DataValidationErrors.FOLLOW_UP_DONOR_TIME_CONFLICT,
+				FollowupFieldsEnum.interval_of_followup,
+				{},
+			),
 		);
 	}
-	return { errors };
 };
 
+/**
+ * !Mutates the errors array if an error is found!
+ *
+ * Validates time conflict for `treatment_start_interval` compared to the donor's survival_time.
+ * If there is an error we push an error to the `errors` array.
+ *
+ * @param followUpRecord
+ * @param treatment
+ * @param errors
+ * @returns
+ */
 function checkTreatmentTimeConflict(
 	followUpRecord: DeepReadonly<SubmittedClinicalRecord>,
 	treatment: DeepReadonly<Treatment>,
@@ -159,3 +119,68 @@ function getExistingFollowUp(
 	}
 	return undefined;
 }
+
+export const validate = async (
+	followUpRecord: DeepReadonly<SubmittedClinicalRecord>,
+	existentDonor: DeepReadonly<Donor>,
+	mergedDonor: Donor,
+): Promise<SubmissionValidationOutput> => {
+	// ***Basic pre-check (to prevent execution if missing required variables)***
+	if (!followUpRecord || !existentDonor) {
+		throw new Error("Can't call this function without followup records");
+	}
+	const errors: SubmissionValidationError[] = [];
+
+	// check if a primary diagnosis is specified that it exists
+	utils.checkRelatedEntityExists(
+		ClinicalEntitySchemaNames.PRIMARY_DIAGNOSIS,
+		followUpRecord,
+		ClinicalEntitySchemaNames.FOLLOW_UP,
+		mergedDonor,
+		errors,
+		false,
+	);
+
+	// check if a treatment is specified that it exists
+	utils.checkRelatedEntityExists(
+		ClinicalEntitySchemaNames.TREATMENT,
+		followUpRecord,
+		ClinicalEntitySchemaNames.FOLLOW_UP,
+		mergedDonor,
+		errors,
+		false,
+	);
+
+	const donorDataToValidateWith = utils.getSurvivalDataFromDonor(
+		followUpRecord,
+		mergedDonor,
+		FollowupFieldsEnum.interval_of_followup,
+	);
+
+	const entitySubmitterIdField = getEntitySubmitterIdFieldName(ClinicalEntitySchemaNames.TREATMENT);
+	const treatment = utils.getRelatedEntityByFK(
+		ClinicalEntitySchemaNames.TREATMENT,
+		followUpRecord[entitySubmitterIdField] as string,
+		mergedDonor,
+	) as DeepReadonly<Treatment>;
+
+	if (donorDataToValidateWith) {
+		// If there is no survival time information then we can't do our time validations.
+		// This is possible when there is an exception on survival time
+		checkDonorTimeConflict(donorDataToValidateWith, followUpRecord, errors);
+		checkTreatmentTimeConflict(followUpRecord, treatment, errors);
+	}
+
+	const followUpClinicalInfo = getExistingFollowUp(existentDonor, followUpRecord);
+	// adding new follow up to this donor ?
+	if (!followUpClinicalInfo) {
+		// check it is unique in this program
+		await utils.checkClinicalEntityDoesntBelongToOtherDonor(
+			ClinicalEntitySchemaNames.FOLLOW_UP,
+			followUpRecord,
+			existentDonor,
+			errors,
+		);
+	}
+	return { errors };
+};

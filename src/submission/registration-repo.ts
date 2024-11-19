@@ -17,13 +17,13 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { ActiveRegistration, SampleRegistrationFieldsEnum } from './submission-entities';
-import { InternalError } from './errors';
+import { DeepReadonly } from 'deep-freeze';
+import _ from 'lodash';
+import mongoose from 'mongoose';
 import { loggerFor } from '../logger';
 import { F, MongooseUtils } from '../utils';
-import _ from 'lodash';
-import { DeepReadonly } from 'deep-freeze';
-import mongoose from 'mongoose';
+import { InternalError } from './errors';
+import { ActiveRegistration, SampleRegistrationFieldsEnum } from './submission-entities';
 const L = loggerFor(__filename);
 
 export interface RegistrationRepository {

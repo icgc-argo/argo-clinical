@@ -176,7 +176,6 @@ const NEW_SPEC_ATTR_CONFLICT =
 	'You are trying to register the same specimen with different values.';
 
 describe('data-validator', () => {
-	let donorDaoCountByStub: sinon.SinonStub<[any], any>;
 	let donorDaoFindBySpecimenSubmitterIdAndProgramIdStub: sinon.SinonStub<[any], any>;
 	let donorDaoFindBySampleSubmitterIdAndProgramIdStub: sinon.SinonStub<[any], any>;
 	let donorDaoFindByClinicalEntitySubmitterIdAndProgramIdStub: sinon.SinonStub<[any, any], any>;
@@ -188,7 +187,6 @@ describe('data-validator', () => {
 	>;
 
 	beforeEach((done) => {
-		donorDaoCountByStub = sinon.stub(donorDao, 'countBy');
 		donorDaoFindBySpecimenSubmitterIdAndProgramIdStub = sinon.stub(
 			donorDao,
 			'findBySpecimenSubmitterIdAndProgramId',
@@ -224,7 +222,6 @@ describe('data-validator', () => {
 	});
 
 	afterEach((done) => {
-		donorDaoCountByStub.restore();
 		donorDaoFindBySpecimenSubmitterIdAndProgramIdStub.restore();
 		donorDaoFindBySampleSubmitterIdAndProgramIdStub.restore();
 		donorDaoFindByClinicalEntitySubmitterIdAndProgramIdStub.restore();
@@ -236,7 +233,6 @@ describe('data-validator', () => {
 
 	describe('registration-validation', () => {
 		it('should detect invalid program id', async () => {
-			donorDaoCountByStub.returns(Promise.resolve(0));
 			// test call
 			const result = await usingInvalidProgramId(
 				ClinicalEntitySchemaNames.REGISTRATION,
@@ -260,7 +256,6 @@ describe('data-validator', () => {
 		});
 
 		it('should detect gender update', async () => {
-			donorDaoCountByStub.returns(Promise.resolve(0));
 			const existingDonorMock: Donor = stubs.validation.existingDonor01();
 
 			// test call
@@ -295,7 +290,6 @@ describe('data-validator', () => {
 		});
 
 		it('should detect specimen type update', async () => {
-			donorDaoCountByStub.returns(Promise.resolve(0));
 			const existingDonorMock: Donor = stubs.validation.existingDonor01();
 
 			// test call
@@ -330,7 +324,6 @@ describe('data-validator', () => {
 		});
 
 		it('should detect tumourNormalDesignation update', async () => {
-			donorDaoCountByStub.returns(Promise.resolve(0));
 			const existingDonorMock: Donor = stubs.validation.existingDonor01();
 
 			// test call
@@ -365,7 +358,6 @@ describe('data-validator', () => {
 		});
 
 		it('should detect sampleType update', async () => {
-			donorDaoCountByStub.returns(Promise.resolve(0));
 			const existingDonorMock: Donor = stubs.validation.existingDonor01();
 
 			// test call
@@ -400,7 +392,6 @@ describe('data-validator', () => {
 		});
 
 		it('should detect sampleType, specimenTissueSource,tnd, gender update togather', async () => {
-			donorDaoCountByStub.returns(Promise.resolve(0));
 			const existingDonorMock: Donor = stubs.validation.existingDonor01();
 			const valid2ndRecord: CreateRegistrationRecord = {
 				donorSubmitterId: 'AB11',
@@ -622,7 +613,6 @@ describe('data-validator', () => {
 
 		// different donor different specimen same sample id
 		it('should detect sample id conflict between new registrations', async () => {
-			donorDaoCountByStub.returns(Promise.resolve(0));
 			// test call
 			const result = await dv.validateRegistrationData(
 				[
@@ -690,7 +680,6 @@ describe('data-validator', () => {
 
 		// different donors & samples same specimen Id
 		it('should detect specimen conflict between new registrations', async () => {
-			donorDaoCountByStub.returns(Promise.resolve(0));
 			// test call
 			const result = await dv.validateRegistrationData(
 				[
@@ -772,7 +761,6 @@ describe('data-validator', () => {
 
 		// same donor same specimen different specimen type
 		it('should detect specimen type conflict for same new donor', async () => {
-			donorDaoCountByStub.returns(Promise.resolve(0));
 			// test call
 			const result = await dv.validateRegistrationData(
 				[
@@ -852,7 +840,6 @@ describe('data-validator', () => {
 
 		// same donor same specimen different specimen type
 		it('should detect sample type conflict for same new specimen & sample Id', async () => {
-			donorDaoCountByStub.returns(Promise.resolve(0));
 			// test call
 			const result = await dv.validateRegistrationData(
 				[
@@ -931,7 +918,6 @@ describe('data-validator', () => {
 		});
 
 		it('should detect gender conflict in new donors', async () => {
-			donorDaoCountByStub.returns(Promise.resolve(0));
 			// test call
 			const result = await dv.validateRegistrationData(
 				[
@@ -1010,7 +996,6 @@ describe('data-validator', () => {
 		});
 
 		it('should detect sample id conflict for same donor & different specimen Id', async () => {
-			donorDaoCountByStub.returns(Promise.resolve(0));
 			// test call
 			const result = await dv.validateRegistrationData(
 				[
@@ -1089,7 +1074,6 @@ describe('data-validator', () => {
 		});
 
 		it('should detect sample type conflict for same new specimen & sample Id', async () => {
-			donorDaoCountByStub.returns(Promise.resolve(0));
 			// test call
 			const result = await dv.validateRegistrationData(
 				[
@@ -1169,7 +1153,6 @@ describe('data-validator', () => {
 
 		// records with same donor, specimen & sample submitter_id
 		it('should detect duplicate registration records', async () => {
-			donorDaoCountByStub.returns(Promise.resolve(0));
 			const result = await dv.validateRegistrationData(
 				[
 					{
@@ -2236,33 +2219,6 @@ describe('data-validator', () => {
 				)
 				.catch((err: any) => fail(err));
 
-			const specimenMisisngDonorAB1FieldsErr: SubmissionValidationError = {
-				fieldName: SpecimenFieldsEnum.specimen_acquisition_interval,
-				message: `[specimen_acquisition_interval] requires [donor.vital_status], [donor.survival_time] in order to complete validation. Please upload data for all fields in this clinical data submission.`,
-				type: DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
-				index: 0,
-				info: {
-					donorSubmitterId: 'AB1',
-					value: 200,
-					missingField: [
-						ClinicalEntitySchemaNames.DONOR + '.' + DonorFieldsEnum.vital_status,
-						ClinicalEntitySchemaNames.DONOR + '.' + DonorFieldsEnum.survival_time,
-					],
-				},
-			};
-
-			const specimenMissingDonorAB2FieldErr: SubmissionValidationError = {
-				fieldName: SpecimenFieldsEnum.specimen_acquisition_interval,
-				message: `[specimen_acquisition_interval] requires [donor.survival_time] in order to complete validation. Please upload data for all fields in this clinical data submission.`,
-				type: DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
-				index: 2,
-				info: {
-					donorSubmitterId: 'AB2',
-					value: 200,
-					missingField: [ClinicalEntitySchemaNames.DONOR + '.' + DonorFieldsEnum.survival_time],
-				},
-			};
-
 			const primaryDiagnosisMissingError = {
 				fieldName: 'submitter_primary_diagnosis_id',
 				info: {
@@ -2277,7 +2233,7 @@ describe('data-validator', () => {
 				type: 'RELATED_ENTITY_MISSING_OR_CONFLICTING',
 			};
 
-			chai.expect(result.specimen.dataErrors.length).to.eq(5);
+			chai.expect(result.specimen.dataErrors.length).to.eq(2);
 
 			chai
 				.expect(result.specimen.dataErrors)
@@ -2285,14 +2241,6 @@ describe('data-validator', () => {
 			chai
 				.expect(result.specimen.dataErrors)
 				.to.deep.include({ ...primaryDiagnosisMissingError, index: 1 });
-			chai
-				.expect(result.specimen.dataErrors)
-				.to.deep.include({ ...specimenMisisngDonorAB1FieldsErr, index: 0 });
-			chai
-				.expect(result.specimen.dataErrors)
-				.to.deep.include({ ...specimenMisisngDonorAB1FieldsErr, index: 1 });
-
-			chai.expect(result.specimen.dataErrors).to.deep.include(specimenMissingDonorAB2FieldErr);
 		});
 
 		it("should detect forbidden fields in submission record for donor's registered normal specimen", async () => {
@@ -3652,8 +3600,7 @@ describe('data-validator', () => {
 				.validateSubmissionData({ AB1: submissionRecordsMap }, { AB1: donorToAddFollowupTo })
 				.catch((err: any) => fail(err));
 
-			chai.expect(result[ClinicalEntitySchemaNames.FOLLOW_UP].dataErrors.length).to.eq(2);
-			const followUpError_1: SubmissionValidationError = {
+			const followUpError: SubmissionValidationError = {
 				fieldName: FollowupFieldsEnum.submitter_follow_up_id,
 				message: `This follow up has already been associated to donor AB2. Please correct your file.`,
 				type: DataValidationErrors.CLINICAL_ENTITY_BELONGS_TO_OTHER_DONOR,
@@ -3666,24 +3613,11 @@ describe('data-validator', () => {
 				},
 			};
 
-			const followUpError_2: SubmissionValidationError = {
-				fieldName: FollowupFieldsEnum.interval_of_followup,
-				message: `[interval_of_followup] requires [donor.vital_status], [donor.survival_time] in order to complete validation. Please upload data for all fields in this clinical data submission.`,
-				type: DataValidationErrors.NOT_ENOUGH_INFO_TO_VALIDATE,
-				index: 0,
-				info: {
-					donorSubmitterId: 'AB1',
-					value: undefined,
-					missingField: ['donor.vital_status', 'donor.survival_time'],
-				},
-			};
-			chai
-				.expect(result[ClinicalEntitySchemaNames.FOLLOW_UP].dataErrors[0])
-				.to.deep.eq(followUpError_2);
+			chai.expect(result[ClinicalEntitySchemaNames.FOLLOW_UP].dataErrors.length).to.eq(1);
 
 			chai
-				.expect(result[ClinicalEntitySchemaNames.FOLLOW_UP].dataErrors[1])
-				.to.deep.eq(followUpError_1);
+				.expect(result[ClinicalEntitySchemaNames.FOLLOW_UP].dataErrors[0])
+				.to.deep.eq(followUpError);
 		});
 		it('should get followup error when follow up interval_of_followup is less than Treatment treatment_start_interval', async () => {
 			const existingDonor = stubs.validation.existingDonor08();

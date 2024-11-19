@@ -17,18 +17,16 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// using import fails when running the test
+import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
+import { MongoDBContainer } from '@testcontainers/mongodb';
+import { promisify } from 'bluebird';
 import chai from 'chai';
-// needed for types
 import 'chai-http';
+import _ from 'lodash';
 import 'mocha';
 import mongoose from 'mongoose';
-import { GenericContainer } from 'testcontainers';
-import { cleanCollection, findInDb, updateData } from '../testutils';
-import _ from 'lodash';
 import * as manager from '../../../src/dictionary/manager';
-import { promisify } from 'bluebird';
-import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
+import { cleanCollection, findInDb } from '../testutils';
 const ServerMock: any = require('mock-http-server') as any;
 
 chai.use(require('chai-http'));
@@ -36,7 +34,7 @@ chai.should();
 
 describe('manager', () => {
 	let mongoContainer: any;
-	let dburl = ``;
+	let dbUrl = '';
 	const schemaName = 'ARGO Clinical Submission';
 	const server = new ServerMock({ host: 'localhost', port: 54321 });
 	const startServerPromise = promisify(server.start);
@@ -55,12 +53,9 @@ describe('manager', () => {
 	before(() => {
 		return (async () => {
 			try {
-				mongoContainer = await new GenericContainer('mongo', '4.0').withExposedPorts(27017).start();
-				console.log('mongo test container started');
-				dburl = `mongodb://${mongoContainer.getContainerIpAddress()}:${mongoContainer.getMappedPort(
-					27017,
-				)}/clinical`;
-				await prep(dburl);
+				mongoContainer = await new MongoDBContainer('mongo:4.0').withExposedPorts(27017).start();
+				dbUrl = `${mongoContainer.getConnectionString()}/clinical`;
+				await prep(dbUrl);
 				await startServerPromise();
 			} catch (err) {
 				console.error('Lectern Client : before >>>>>>>>>>>', err);
@@ -75,7 +70,7 @@ describe('manager', () => {
 		await mongoContainer.stop();
 	});
 
-	beforeEach(async () => await cleanCollection(dburl, 'dataschemas'));
+	beforeEach(async () => await cleanCollection(dbUrl, 'dataschemas'));
 
 	it('should load schema in db', async function() {
 		// has to be done in every test to reset the state of the manager
@@ -88,7 +83,6 @@ describe('manager', () => {
 				status: 200,
 				headers: { 'content-type': 'application/json' },
 				body: () => {
-					console.log('in mock server reply');
 					return JSON.stringify(dictionaries);
 				},
 			},
@@ -100,7 +94,7 @@ describe('manager', () => {
 		} catch (er) {
 			return er;
 		}
-		const dbSchema = (await findInDb(dburl, 'dataschemas', {})) as any[];
+		const dbSchema = (await findInDb(dbUrl, 'dataschemas', {})) as any[];
 		chai.expect(dbSchema).to.not.be.undefined;
 		chai.expect(dbSchema.length).to.eq(1);
 		chai.expect(dbSchema[0].name).to.eq(schemaName);
@@ -124,7 +118,6 @@ describe('manager', () => {
 				status: 200,
 				headers: { 'content-type': 'application/json' },
 				body: (req: any) => {
-					console.log('in mock server reply');
 					if (req.query['version'] == '2.0') {
 						return JSON.stringify(dictionaryV2);
 					}
@@ -146,7 +139,7 @@ describe('manager', () => {
 			return er;
 		}
 
-		const dbSchema = (await findInDb(dburl, 'dataschemas', {})) as any[];
+		const dbSchema = (await findInDb(dbUrl, 'dataschemas', {})) as any[];
 		chai.expect(dbSchema).to.not.be.undefined;
 		// Manager now adds the latest Dictionary, rather than replacing
 		chai.expect(dbSchema.length).to.eq(2);

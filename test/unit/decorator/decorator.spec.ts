@@ -17,9 +17,9 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { ProtectTestEndpoint } from '../../../src/decorators/index';
-import { initConfigs } from '../../../src/config';
 import chai from 'chai';
+import { initConfigs } from '../../../src/config';
+import { ProtectTestEndpoint } from '../../../src/decorators/index';
 
 describe('decorator', () => {
 	before(() => {
@@ -79,7 +79,7 @@ describe('decorator', () => {
 					host: '',
 					password: '',
 					port: 0,
-					timeout: 0,
+					connectTimeout: 0,
 					user: '',
 				};
 			},

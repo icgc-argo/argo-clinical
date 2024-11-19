@@ -58,10 +58,20 @@ const programExceptionRepository = {
 		}
 	},
 
-	async find(programId: string): Promise<ProgramException | null> {
+	async find(
+		programId: string,
+		optionalSearchParams?: { requested_core_field?: string },
+	): Promise<ProgramException | null> {
 		L.debug(`finding program exception with id: ${JSON.stringify(programId)}`);
 		try {
-			const doc = await ProgramExceptionModel.findOne({ programId }).lean(true);
+			const searchParams: Record<string, string> = {
+				programId,
+			};
+			if (optionalSearchParams?.requested_core_field) {
+				searchParams['exceptions.requested_core_field'] =
+					optionalSearchParams?.requested_core_field;
+			}
+			const doc = await ProgramExceptionModel.findOne(searchParams).lean(true);
 			return doc;
 		} catch (e) {
 			L.error('failed to find program exception', e);

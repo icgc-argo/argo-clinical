@@ -17,18 +17,17 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import mongo from 'mongodb';
-import _ from 'lodash';
 import chai from 'chai';
-import * as mysql from 'mysql';
+import _ from 'lodash';
+import mongo from 'mongodb';
+import mysql from 'mysql2/promise';
 import { Donor } from '../../src/clinical/clinical-entities';
-import * as utils from 'util';
 
-export const clearCollections = async (dburl: string, collections: string[]) => {
+export const clearCollections = async (dbUrl: string, collections: string[]) => {
 	try {
-		const promises = collections.map((collectionName) => cleanCollection(dburl, collectionName));
+		const promises = collections.map((collectionName) => cleanCollection(dbUrl, collectionName));
 		await Promise.all(promises);
-		await resetCounters(dburl);
+		await resetCounters(dbUrl);
 		return;
 	} catch (err) {
 		console.error(err);
@@ -36,23 +35,31 @@ export const clearCollections = async (dburl: string, collections: string[]) => 
 	}
 };
 
-export const cleanCollection = async (dburl: string, collection: string): Promise<any> => {
-	const conn = await mongo.connect(dburl);
+export const cleanCollection = async (dbUrl: string, collection: string): Promise<any> => {
+	const connection = await mongo.connect(dbUrl);
 	try {
-		await conn
+		const collections = await connection
 			.db('clinical')
-			.collection(collection)
-			.remove({});
-		await conn.db('clinical').dropCollection(collection);
+			.listCollections()
+			.toArray();
+
+		if (collections.some((collectionRecord) => collectionRecord.name === collection)) {
+			await connection
+				.db('clinical')
+				.collection(collection)
+				.remove({});
+
+			await connection.db('clinical').dropCollection(collection);
+		}
 	} catch (err) {
 		console.error('failed to drop collection', collection, err);
 	}
-	await conn.db('clinical').createCollection(collection);
-	await conn.close();
+	await connection.db('clinical').createCollection(collection);
+	await connection.close();
 };
 
-export const resetCounters = async (dburl: string): Promise<any> => {
-	const conn = await mongo.connect(dburl);
+export const resetCounters = async (dbUrl: string): Promise<any> => {
+	const conn = await mongo.connect(dbUrl);
 	await conn
 		.db('clinical')
 		.collection('counters')
@@ -61,11 +68,11 @@ export const resetCounters = async (dburl: string): Promise<any> => {
 };
 
 export const insertData = async (
-	dburl: string,
+	dbUrl: string,
 	collection: string,
 	document: any,
 ): Promise<any> => {
-	const conn = await mongo.connect(dburl);
+	const conn = await mongo.connect(dbUrl);
 	await conn
 		.db('clinical')
 		.collection(collection)
@@ -75,8 +82,7 @@ export const insertData = async (
 };
 
 export async function execMysqlQuery(sql: string, pool: mysql.Pool) {
-	const query = utils.promisify(pool.query).bind(pool);
-	await query(sql);
+	await pool.query(sql);
 }
 
 export async function createtRxNormTables(pool: mysql.Pool) {
@@ -89,12 +95,12 @@ export async function insertRxNormDrug(id: string, name: string, pool: mysql.Poo
 }
 
 export const updateData = async (
-	dburl: string,
+	dbUrl: string,
 	collection: string,
 	document: any,
 	filter: any = {},
 ): Promise<any> => {
-	const conn = await mongo.connect(dburl);
+	const conn = await mongo.connect(dbUrl);
 	await conn
 		.db('clinical')
 		.collection(collection)
@@ -132,13 +138,13 @@ export const emptyDonorDocument = (overrides?: Partial<Donor>) => {
 	return _.merge(donor, overrides);
 };
 
-export const createDonorDoc = async (dburl: string, donorDoc: Donor) => {
-	await insertData(dburl, 'donors', donorDoc);
+export const createDonorDoc = async (dbUrl: string, donorDoc: Donor) => {
+	await insertData(dbUrl, 'donors', donorDoc);
 	return donorDoc;
 };
 
 export const generateDonor = async (
-	dburl: string,
+	dbUrl: string,
 	programId: string,
 	submitterDonorId?: string,
 ) => {
@@ -149,11 +155,11 @@ export const generateDonor = async (
 		programId,
 		donorId: Date.now(),
 	});
-	return createDonorDoc(dburl, doc);
+	return createDonorDoc(dbUrl, doc);
 };
 
-export async function assertDbCollectionEmpty(dburl: string, collection: string) {
-	const conn = await mongo.connect(dburl);
+export async function assertDbCollectionEmpty(dbUrl: string, collection: string) {
+	const conn = await mongo.connect(dbUrl);
 	const count = await conn
 		.db('clinical')
 		.collection(collection)
@@ -162,8 +168,8 @@ export async function assertDbCollectionEmpty(dburl: string, collection: string)
 	chai.expect(count).to.eq(0);
 }
 
-export async function findInDb(dburl: string, collection: string, filter: any) {
-	const conn = await mongo.connect(dburl);
+export async function findInDb(dbUrl: string, collection: string, filter: any) {
+	const conn = await mongo.connect(dbUrl);
 	const result = await conn
 		.db('clinical')
 		.collection(collection)
