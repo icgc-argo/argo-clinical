@@ -156,13 +156,15 @@ async function pingRxNorm(pool: Pool) {
 		await connection.query('select 1');
 		pool.releaseConnection(connection);
 		setStatus('rxNormDb', { status: Status.OK });
-
-		// Recursively checks for rxnorm connection every 5 minutes
-		setTimeout(pingRxNorm, 5 * 60 * 1000);
 	} catch (err) {
 		L.error('cannot get connection to rxnorm', err);
 		setStatus('rxNormDb', { status: Status.ERROR });
 	}
+
+	// Recursively checks for rxnorm connection every 5 minutes
+	setTimeout(() => {
+		pingRxNorm(pool);
+	}, 5 * 60 * 1000);
 }
 
 export const run = async (config: AppConfig) => {
