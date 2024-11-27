@@ -158,7 +158,9 @@ async function pingRxNorm(pool: Pool) {
 		setStatus('rxNormDb', { status: Status.OK });
 
 		// Recursively checks for rxnorm connection every 5 minutes
-		setTimeout(pingRxNorm, 5 * 60 * 1000);
+		setTimeout(() => {
+			pingRxNorm(pool);
+		}, 5 * 60 * 1000);
 	} catch (err) {
 		L.error('cannot get connection to rxnorm', err);
 		setStatus('rxNormDb', { status: Status.ERROR });
