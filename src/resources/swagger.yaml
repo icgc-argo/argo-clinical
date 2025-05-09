@@ -1021,7 +1021,7 @@ paths:
   /exception/sample:
     get:
       tags:
-        - 'Exception - Sample'
+        - Exception - Single Specimen Sample
       summary: Get sample exception
       responses:
         '200':
@@ -1030,7 +1030,7 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
     post:
       tags:
-        - 'Exception - Sample'
+        - Exception - Single Specimen Sample
       summary: Upload program exception files
       requestBody:
         required: true
@@ -1043,8 +1043,6 @@ paths:
           description: 'successful upload'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
-        '422':
-          description: 'unsuccessful validation on file'
 
   /clinical/donors/tsv:
     post:
@@ -1531,6 +1529,8 @@ tags:
     description: Uploading, Deleting, Retrieving missing entity exceptions
   - name: Exception - Treatment Details
     description: Uploading, Deleting, Retrieving treatment detail exceptions
+  - name: Exception - Single Specimen Sample
+    description: Create, Update, Retrieve single specimen sample exception
   - name: Clinical Data
     description: ''
   - name: ICGC Import
