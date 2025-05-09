@@ -23,32 +23,12 @@ import * as singleSpecimenExceptionRepo from './repo';
 
 /**
  * Creates a short lived caching object that will store missing entity exceptions hashed by programId.
- * This provides access to the MissingEntityExceptions stored in the database with caching by programId
- * so that many donors can be checked for exceptions without having to make repeated database queries.
  *
  * It is built for use with the `stat-calculator.ts` function `updateSingleDonorCompletionStats`.
- *
- * @example
- * ```
- * const cache = createMissingEntityExceptionCache();
- *
- * // will fetch exceptions for program, or return cached list.
- * const programDonorsWithException = await cache.getProgramExceptionDonors(someProgramId);
- *
- * // boolean value indicating if a donor has an exception, checked against cache
- * const donorHasMissingEntityException = await cache.donorHasException(donor);
- * ```
- *
- * @returns
  */
 export const createSingleSpecimenExceptionCache = () => {
 	let singleSpecimenExceptions: string[] | undefined = undefined;
 
-	/**
-	 * Retrieve list of submitterDonorIds that have the MissingEntityException for a specific program
-	 * @param programId
-	 * @returns
-	 */
 	const getSingleSpecimenProgramIds = async (): Promise<string[]> => {
 		if (singleSpecimenExceptions) {
 			return singleSpecimenExceptions;
