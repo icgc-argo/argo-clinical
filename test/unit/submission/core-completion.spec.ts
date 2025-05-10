@@ -48,7 +48,7 @@ const specimens: Specimen[] = [
 	},
 ];
 
-describe.only('Core completion calculation for specimen', () => {
+describe('Core completion calculation for specimen', () => {
 	it('calculate correctly without an exception', () => {
 		const result = calculateSpecimenCompletionStats(specimens, false);
 		chai.expect(result.coreCompletionPercentage).to.eq(0.75);
