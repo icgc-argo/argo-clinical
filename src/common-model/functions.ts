@@ -255,6 +255,7 @@ export const filterTumourNormalRecords = (recordArray: Specimen[], type: string)
 
 export const calculateSpecimenCompletionStats = (
 	donorSpecimenData: Specimen[],
+	hasSingleSpecimenException: boolean,
 ): SpecimenCoreCompletion => {
 	const normalRegisteredSamples = filterTumourNormalRecords(donorSpecimenData, 'Normal');
 	const tumourRegisteredSamples = filterTumourNormalRecords(donorSpecimenData, 'Tumour');
@@ -281,7 +282,9 @@ export const calculateSpecimenCompletionStats = (
 			? 0
 			: tumourSubmissions / tumourRegistrations;
 
-	const coreCompletionPercentage = (normalSpecimensPercentage + tumourSpecimensPercentage) / 2;
+	const coreCompletionPercentage = hasSingleSpecimenException
+		? tumourSpecimensPercentage
+		: (normalSpecimensPercentage + tumourSpecimensPercentage) / 2;
 
 	const completionValues = {
 		coreCompletionPercentage,
