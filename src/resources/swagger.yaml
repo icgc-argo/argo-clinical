@@ -1021,7 +1021,7 @@ paths:
   /exception/sample:
     get:
       tags:
-        - Exception - Single Specimen Sample
+        - 'Exception - Single Specimen Sample'
       summary: Get sample exception
       responses:
         '200':
@@ -1030,7 +1030,7 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
     post:
       tags:
-        - Exception - Single Specimen Sample
+        - 'Exception - Single Specimen Sample'
       summary: Upload program exception files
       requestBody:
         required: true
@@ -2174,5 +2174,8 @@ components:
         programIds:
           description: 'Array of strings of program ids.'
           type: array
+          items:
+            type: string
+            default: []
       example:
         programIds: ['TEST-CA', 'TEST-IE']
