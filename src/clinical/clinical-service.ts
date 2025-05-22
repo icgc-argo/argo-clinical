@@ -200,6 +200,15 @@ export const getClinicalData = async (programId: string) => {
 	return data;
 };
 
+const getSingleSpecimenExceptions = async () => {
+	const result = await getExceptions();
+	if (result.success) {
+		return result.data;
+	} else {
+		throw Error('Database failure retrieving single specimen exceptions.');
+	}
+};
+
 export const getPaginatedClinicalData = async (programId: string, query: ClinicalDataQuery) => {
 	if (!programId) throw new Error('Missing programId!');
 
@@ -222,7 +231,7 @@ export const getPaginatedClinicalData = async (programId: string, query: Clinica
 		? ClinicalDataSortTypes.invalidEntity
 		: ClinicalDataSortTypes.columnSort;
 
-	const singleSpecimenExceptions = await getExceptions();
+	const singleSpecimenExceptions = await getSingleSpecimenExceptions();
 
 	const taskToRun = WorkerTasks.ExtractEntityDataFromDonors;
 	const taskArgs = [
@@ -256,7 +265,7 @@ export const getDonorEntityData = async (donorIds: number[]) => {
 		sort: 'donorId',
 	};
 
-	const singleSpecimenExceptions = await getExceptions();
+	const singleSpecimenExceptions = await getSingleSpecimenExceptions();
 
 	const taskToRun = WorkerTasks.ExtractEntityDataFromDonors;
 	const taskArgs = [
