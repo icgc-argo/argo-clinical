@@ -49,6 +49,7 @@ import {
 	NewSchemaVerificationResult,
 } from './migration-entities';
 import { migrationRepo } from './migration-repo';
+import { createSingleSpecimenExceptionCache } from '../../exception/sample-exceptions/sample-exception-cache';
 
 const L = loggerFor(__filename);
 
@@ -489,10 +490,11 @@ export namespace MigrationManager {
 					continue;
 				} else {
 					if (!dryRun) {
-						const updatedDonor = await updateSingleDonorCompletionStats(
-							donor,
-							missingEntityExceptionCache,
-						);
+						const exceptionsCache = {
+							misssingEntityExceptionCache: createMissingEntityExceptionCache(),
+							singleSpecimenCache: createSingleSpecimenExceptionCache(),
+						};
+						const updatedDonor = await updateSingleDonorCompletionStats(donor, exceptionsCache);
 
 						const validDonor = await markDonorAsValid(updatedDonor, migrationId, newSchema.version);
 						updateSetOfProgramsWithChanges(donor, validDonor, programsWithChanges);

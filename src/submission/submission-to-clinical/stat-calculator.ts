@@ -31,6 +31,10 @@ import {
 	MissingEntityExceptionCache,
 	createMissingEntityExceptionCache,
 } from '../../exception/missing-entity-exceptions/missing-entity-exception-cache';
+import {
+	SingleSpecimenExceptionCache,
+	createSingleSpecimenExceptionCache,
+} from '../../exception/sample-exceptions/sample-exception-cache';
 
 type CoreClinicalSchemaName =
 	| ClinicalEntitySchemaNames.DONOR
@@ -105,18 +109,20 @@ const getEmptyCoreStats = (): CompletionStats => ({
  * The individual core entities will still be calculated so the current list of complete entities for this donor will still be known.
  *
  * @param donor
- * @param hasMissingEntityException - Indicates if this donor has been given an exception to allow it to be core complete while missing select core entities
+ * @param exceptions
+ * @param exceptions.hasMissingEntityException - Indicates if this donor has been given an exception to allow it to be core complete while missing select core entities
+ * @param exceptions.hasSingleSpecimenException - Indicates if there is an exception to allow just the tumour specimen sample
  * @returns
  */
 export const calculateDonorCoreCompletionStats = (
 	donor: Donor,
-	hasMissingEntityException: boolean,
+	exceptions: { hasMissingEntityException: boolean; hasSingleSpecimenException: boolean },
 ): CompletionStats => {
 	const updatedCompletionStats: CompletionStats = donor.completionStats
 		? cloneDeep(donor.completionStats)
 		: getEmptyCoreStats();
 
-	updatedCompletionStats.hasMissingEntityException = hasMissingEntityException;
+	updatedCompletionStats.hasMissingEntityException = exceptions?.hasMissingEntityException;
 
 	// update completion state for each core entity
 	Array.from(coreClinicalSchemaNamesSet).forEach((clinicalType) => {
@@ -124,7 +130,10 @@ export const calculateDonorCoreCompletionStats = (
 			// Specimen completion calculation requires performing counting of DNA samples only
 			const filteredDonorSpecimens = donor.specimens.filter(filterHasDnaSample);
 
-			const { coreCompletionPercentage } = calculateSpecimenCompletionStats(filteredDonorSpecimens);
+			const { coreCompletionPercentage } = calculateSpecimenCompletionStats(
+				filteredDonorSpecimens,
+				exceptions?.hasSingleSpecimenException,
+			);
 
 			const statsPropertyName = schemaNameToCoreCompletenessStat[clinicalType];
 			updatedCompletionStats.coreCompletion[statsPropertyName] = coreCompletionPercentage;
@@ -143,7 +152,7 @@ export const calculateDonorCoreCompletionStats = (
 			? 1
 			: getCoreCompletionPercentage(
 					updatedCompletionStats.coreCompletion,
-					hasMissingEntityException,
+					exceptions?.hasMissingEntityException,
 			  );
 
 	updatedCompletionStats.coreCompletionDate = getCoreCompletionDate(donor, updatedCompletionStats);
@@ -177,17 +186,32 @@ export const calculateDonorCoreCompletionStats = (
  *
  * @param donor
  * @param exceptionsCache
+ * @param exceptionsCache.misssingEntityExceptionCache
+ * @param exceptionsCache.singleSpecimenCache
  * @returns
  */
 export const updateSingleDonorCompletionStats = async (
 	donor: Donor | DeepReadonly<Donor>,
-	exceptionsCache: MissingEntityExceptionCache,
+	exceptionsCache: {
+		misssingEntityExceptionCache: MissingEntityExceptionCache;
+		singleSpecimenCache: SingleSpecimenExceptionCache;
+	},
 ): Promise<Donor> => {
 	const clonedDonor = cloneDeep(donor) as Donor;
 
-	const hasException = await exceptionsCache.donorHasException(clonedDonor);
+	const hasMissingEntityException = await exceptionsCache.misssingEntityExceptionCache.donorHasException(
+		clonedDonor,
+	);
 
-	const completionStats = calculateDonorCoreCompletionStats(clonedDonor, hasException);
+	const hasSingleSpecimenException = await exceptionsCache.singleSpecimenCache.donorHasException(
+		clonedDonor,
+	);
+
+	const completionStats = calculateDonorCoreCompletionStats(clonedDonor, {
+		hasMissingEntityException,
+		hasSingleSpecimenException,
+	});
+
 	clonedDonor.completionStats = completionStats;
 	return clonedDonor;
 };
@@ -205,8 +229,11 @@ export const updateSingleDonorCompletionStats = async (
 export const updateDonorsCompletionStats = async (
 	donors: (Donor | DeepReadonly<Donor>)[],
 ): Promise<Donor[]> => {
-	// Cache program exceptions so we don't need to repeatedly fetch them
-	const exceptionsCache = createMissingEntityExceptionCache();
+	// Cache exceptions so we don't need to repeatedly fetch them
+	const exceptionsCache = {
+		misssingEntityExceptionCache: createMissingEntityExceptionCache(),
+		singleSpecimenCache: createSingleSpecimenExceptionCache(),
+	};
 
 	// clone each donor
 	const updatedDonorPromises = donors.map((donor) =>

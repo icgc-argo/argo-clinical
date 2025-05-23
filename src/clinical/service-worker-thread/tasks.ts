@@ -315,6 +315,7 @@ function extractEntityDataFromDonors(
 	paginationQuery: PaginationQuery,
 	sortType: ClinicalDataSortType,
 	errors: ClinicalErrorsResponseRecord[],
+	singleSpecimenExceptions: string[],
 ) {
 	let clinicalEntityData: EntityClinicalInfo[] = [];
 
@@ -350,10 +351,17 @@ function extractEntityDataFromDonors(
 	});
 
 	const completionStats: CompletionDisplayRecord[] = donors
-		.map(({ completionStats, donorId, specimens: donorSpecimenRecords }) => {
+		.map(({ completionStats, donorId, specimens: donorSpecimenRecords, programId }) => {
 			// Add display data for Specimen Normal/Tumour completion stats
 			const filteredSpecimenData = donorSpecimenRecords?.filter(filterHasDnaSample) || [];
-			const specimens = { specimens: calculateSpecimenCompletionStats(filteredSpecimenData) };
+
+			const hasSingleSpecimenException = singleSpecimenExceptions.includes(programId);
+			const specimens = {
+				specimens: calculateSpecimenCompletionStats(
+					filteredSpecimenData,
+					hasSingleSpecimenException,
+				),
+			};
 
 			const completionRecord: CompletionDisplayRecord | undefined =
 				completionStats && donorId

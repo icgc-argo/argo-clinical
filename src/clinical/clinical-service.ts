@@ -58,6 +58,7 @@ import {
 	ClinicalDonorEntityQuery,
 	PaginationQuery,
 } from './types';
+import { getExceptions } from '../exception/sample-exceptions/repo';
 
 const L = loggerFor(__filename);
 
@@ -199,6 +200,15 @@ export const getClinicalData = async (programId: string) => {
 	return data;
 };
 
+const getSingleSpecimenExceptions = async () => {
+	const result = await getExceptions();
+	if (result.success) {
+		return result.data;
+	} else {
+		throw Error('Database failure retrieving single specimen exceptions.');
+	}
+};
+
 export const getPaginatedClinicalData = async (programId: string, query: ClinicalDataQuery) => {
 	if (!programId) throw new Error('Missing programId!');
 
@@ -221,6 +231,8 @@ export const getPaginatedClinicalData = async (programId: string, query: Clinica
 		? ClinicalDataSortTypes.invalidEntity
 		: ClinicalDataSortTypes.columnSort;
 
+	const singleSpecimenExceptions = await getSingleSpecimenExceptions();
+
 	const taskToRun = WorkerTasks.ExtractEntityDataFromDonors;
 	const taskArgs = [
 		donors as Donor[],
@@ -230,6 +242,7 @@ export const getPaginatedClinicalData = async (programId: string, query: Clinica
 		query,
 		sortType,
 		clinicalErrors,
+		singleSpecimenExceptions,
 	];
 
 	// Return paginated data
@@ -252,8 +265,19 @@ export const getDonorEntityData = async (donorIds: number[]) => {
 		sort: 'donorId',
 	};
 
+	const singleSpecimenExceptions = await getSingleSpecimenExceptions();
+
 	const taskToRun = WorkerTasks.ExtractEntityDataFromDonors;
-	const taskArgs = [donors, totalDonors, allSchemasWithFields, allEntityNames, paginationQuery];
+	const taskArgs = [
+		donors,
+		totalDonors,
+		allSchemasWithFields,
+		allEntityNames,
+		paginationQuery,
+		undefined,
+		undefined,
+		singleSpecimenExceptions,
+	];
 
 	// Return paginated data
 	const data = await runTaskInWorkerThread<{ clinicalEntities: ClinicalEntityData[] }>(
