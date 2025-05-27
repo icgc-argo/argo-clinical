@@ -17,19 +17,16 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import deepFreeze, { DeepReadonly } from 'deep-freeze';
-import { Result } from 'express-validator';
+import { DeepReadonly } from 'deep-freeze';
 import { Donor } from '../clinical/clinical-entities';
 import { updateDonorsCompletionStats } from '../submission/submission-to-clinical/stat-calculator';
-import { success, failure } from '../utils/results';
 import { donorDao as donorRepo } from '../clinical/donor-repo';
 import { loggerFor } from '../logger';
 
 const L = loggerFor(__filename);
 
-export const recalcCoreCompletionForProgram = async (
-	programId: string,
-): Promise<Result<DeepReadonly<Donor>>> => {
+// this is run async after request
+export const recalcCoreCompletionForProgram = async (programId: string) => {
 	try {
 		// keep mongo doc ids, important for updates
 		const donors = await donorRepo.findByProgramId(programId, {}, false);
@@ -37,8 +34,7 @@ export const recalcCoreCompletionForProgram = async (
 			((donors || []) as unknown) as DeepReadonly<Donor>[],
 		);
 
-		const savedDonors = await donorRepo.updateAll(updatedDonors);
-		return success(savedDonors);
+		await donorRepo.updateAll(updatedDonors);
 	} catch (error) {
 		const message = `Error thrown while updating donor core completion data for program ${programId}`;
 		L.error(message, error);
