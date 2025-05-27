@@ -17,10 +17,21 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import { recalcCoreCompletionForProgram } from '../coreComplete';
 import { createOrUpdate } from './repo';
 
 export const create = async ({ programIds }: { programIds: string[] }) => {
 	const uniqueExceptions = Array.from(new Set(programIds));
-	const result = createOrUpdate(uniqueExceptions);
+	const result = await createOrUpdate(uniqueExceptions);
+
+	if (result.success) {
+		const programIds = result.data.programIds;
+		// Intentionally no await here:
+		// We want this to run asynchronously after we return a response for this request. Consider this a post processing step.
+		// Same process as missing entity exception
+		programIds.forEach((programId) => {
+			recalcCoreCompletionForProgram(programId);
+		});
+	}
 	return result;
 };
