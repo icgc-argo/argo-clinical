@@ -17,21 +17,47 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import { difference } from 'lodash';
 import { recalcCoreCompletionForProgram } from '../coreComplete';
-import { createOrUpdate } from './repo';
+import { createOrUpdate, getExceptions } from './repo';
+import { failure } from '../../utils/results';
+
+/**
+ * [newArray], [oldArray] => [updates array]
+ * [], [a] => [a]
+ * [a], [a] => [a]
+ * [b], [a] => [b]
+ * [b], [a,b] => [a]
+ */
+const getDiff = (oldArray: string[], newArray: string[]) => {
+	if (newArray.length === 0) {
+		return oldArray;
+	} else if (newArray.length === 1) {
+		return newArray;
+	} else {
+		return difference(newArray, oldArray);
+	}
+};
 
 export const create = async ({ programIds }: { programIds: string[] }) => {
 	const uniqueExceptions = Array.from(new Set(programIds));
-	const result = await createOrUpdate(uniqueExceptions);
+	const oldExceptionsResult = await getExceptions();
+	const newExceptionsResult = await createOrUpdate(uniqueExceptions);
 
-	if (result.success) {
-		const programIds = result.data.programIds;
+	if (oldExceptionsResult.success && newExceptionsResult.success) {
+		// program ids to update
+		const programIdsToUpdate = getDiff(
+			oldExceptionsResult.data,
+			newExceptionsResult.data.programIds,
+		);
+
 		// Intentionally no await here:
 		// We want this to run asynchronously after we return a response for this request. Consider this a post processing step.
 		// Same process as missing entity exception
-		programIds.forEach((programId) => {
+		programIdsToUpdate.forEach((programId) => {
 			recalcCoreCompletionForProgram(programId);
 		});
+		return newExceptionsResult;
 	}
-	return result;
+	return failure('Failed to create new sample exception.');
 };
