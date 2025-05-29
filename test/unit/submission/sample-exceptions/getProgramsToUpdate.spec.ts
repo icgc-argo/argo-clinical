@@ -19,7 +19,7 @@
 import chai from 'chai';
 import { getProgramsToUpdate } from '../../../../src/exception/sample-exceptions/service';
 
-describe.only('Sample specimen exception', () => {
+describe('Sample specimen exception', () => {
 	describe('calculates program ids to update', () => {
 		it('existing empty array, update is empty array', () => {
 			const update: string[] = [];
