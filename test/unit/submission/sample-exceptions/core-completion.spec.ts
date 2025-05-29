@@ -18,8 +18,8 @@
  */
 import chai from 'chai';
 
-import { Specimen } from '../../../src/clinical/clinical-entities';
-import { calculateSpecimenCompletionStats } from '../../../src/common-model/functions';
+import { Specimen } from '../../../../src/clinical/clinical-entities';
+import { calculateSpecimenCompletionStats } from '../../../../src/common-model/functions';
 
 const specimens: Specimen[] = [
 	{

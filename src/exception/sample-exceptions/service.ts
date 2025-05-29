@@ -17,10 +17,41 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { createOrUpdate } from './repo';
+import { union } from 'lodash';
+import { recalcCoreCompletionForProgram } from '../coreComplete';
+import { createOrUpdate, getExceptions } from './repo';
+import { failure } from '../../utils/results';
+
+/**
+ * Returns an array of program ids to update
+ *
+ * [new exception program ids], [old exception program ids] => [program ids to recalc]
+ */
+export const getProgramsToUpdate = (oldArray: string[], newArray: string[]) => {
+	return union(oldArray, newArray);
+};
 
 export const create = async ({ programIds }: { programIds: string[] }) => {
 	const uniqueExceptions = Array.from(new Set(programIds));
-	const result = createOrUpdate(uniqueExceptions);
-	return result;
+	const oldExceptionsResult = await getExceptions();
+
+	// update exceptions
+	const newExceptionsResult = await createOrUpdate(uniqueExceptions);
+
+	if (oldExceptionsResult.success && newExceptionsResult.success) {
+		// program ids to update
+		const programIdsToUpdate = getProgramsToUpdate(
+			oldExceptionsResult.data,
+			newExceptionsResult.data.programIds,
+		);
+
+		// Intentionally no await here:
+		// We want this to run asynchronously after we return a response for this request. Consider this a post processing step.
+		// Same process as missing entity exception
+		programIdsToUpdate.forEach((programId) => {
+			recalcCoreCompletionForProgram(programId);
+		});
+		return newExceptionsResult;
+	}
+	return failure('Failed to create new sample exception.');
 };
