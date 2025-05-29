@@ -25,7 +25,12 @@ import { loggerFor } from '../logger';
 
 const L = loggerFor(__filename);
 
-// this is run async after request
+/**
+ * Recalculates core completion percentage for a provided program id
+ * Updates donors in database with updated core completion
+ *
+ * @param programId
+ */
 export const recalcCoreCompletionForProgram = async (programId: string) => {
 	try {
 		// keep mongo doc ids, important for updates

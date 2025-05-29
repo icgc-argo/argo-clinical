@@ -17,36 +17,30 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { difference } from 'lodash';
+import { union } from 'lodash';
 import { recalcCoreCompletionForProgram } from '../coreComplete';
 import { createOrUpdate, getExceptions } from './repo';
 import { failure } from '../../utils/results';
 
 /**
- * [newArray], [oldArray] => [updates array]
- * [], [a] => [a]
- * [a], [a] => [a]
- * [b], [a] => [b]
- * [b], [a,b] => [a]
+ * Returns an array of program ids to update
+ *
+ * [new exception program ids], [old exception program ids] => [program ids to recalc]
  */
-const getDiff = (oldArray: string[], newArray: string[]) => {
-	if (newArray.length === 0) {
-		return oldArray;
-	} else if (newArray.length === 1) {
-		return newArray;
-	} else {
-		return difference(newArray, oldArray);
-	}
+export const getProgramsToUpdate = (oldArray: string[], newArray: string[]) => {
+	return union(oldArray, newArray);
 };
 
 export const create = async ({ programIds }: { programIds: string[] }) => {
 	const uniqueExceptions = Array.from(new Set(programIds));
 	const oldExceptionsResult = await getExceptions();
+
+	// update exceptions
 	const newExceptionsResult = await createOrUpdate(uniqueExceptions);
 
 	if (oldExceptionsResult.success && newExceptionsResult.success) {
 		// program ids to update
-		const programIdsToUpdate = getDiff(
+		const programIdsToUpdate = getProgramsToUpdate(
 			oldExceptionsResult.data,
 			newExceptionsResult.data.programIds,
 		);
