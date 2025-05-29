@@ -272,10 +272,11 @@ export const calculateSpecimenCompletionStats = (
 	const normalSubmissions = normalSubmittedRecords.length;
 	const tumourSubmissions = tumourSubmittedRecords.length;
 
-	const normalSpecimensPercentage =
-		normalRegistrations === 0 || normalSubmissions === 0
-			? 0
-			: normalSubmissions / normalRegistrations;
+	const normalSpecimensPercentage = hasSingleSpecimenException
+		? 1
+		: normalRegistrations === 0 || normalSubmissions === 0
+		? 0
+		: normalSubmissions / normalRegistrations;
 
 	const tumourSpecimensPercentage =
 		tumourRegistrations === 0 || tumourSubmissions === 0
