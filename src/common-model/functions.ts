@@ -272,10 +272,18 @@ export const calculateSpecimenCompletionStats = (
 	const normalSubmissions = normalSubmittedRecords.length;
 	const tumourSubmissions = tumourSubmittedRecords.length;
 
-	const normalSpecimensPercentage =
-		normalRegistrations === 0 || normalSubmissions === 0
-			? 0
-			: normalSubmissions / normalRegistrations;
+	/**
+	 * if there is an exception:
+	 * - sets normalSpecimensPercentage to 1
+	 * - UI reads core complete as having errors if set to 0
+	 * - normalRegistrations and normalSubmissions are 0
+	 *
+	 */
+	const normalSpecimensPercentage = hasSingleSpecimenException
+		? 1
+		: normalRegistrations === 0 || normalSubmissions === 0
+		? 0
+		: normalSubmissions / normalRegistrations;
 
 	const tumourSpecimensPercentage =
 		tumourRegistrations === 0 || tumourSubmissions === 0
