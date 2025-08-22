@@ -78,7 +78,10 @@ class SchemaManager {
 	};
 
 	getCurrentName = (): string => {
-		// This does not need to use this.getCurrent() since we have no situation where the name will update
+		// Unlike the other getters in this class, this one can be synchronous because it does not require
+		// to use this.getCurrent(). Since this is only returning the Dictionary name, and the dictionary name
+		// once set will never change (migrations keep dictionary name the same) we can return the local
+		// value without checking for the latest dictionary.
 		return this.currentSchemaDictionary.name;
 	};
 
