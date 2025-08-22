@@ -32,6 +32,7 @@ import { getClinicalEntitiesFromDonorBySchemaName } from '../common-model/functi
 import { loggerFor } from '../logger';
 import { MigrationManager } from '../submission/migration/migration-manager';
 import { schemaRepo } from './repo';
+import { migrationRepo } from '../submission/migration/migration-repo';
 const L = loggerFor(__filename);
 
 let manager: SchemaManager;
@@ -50,11 +51,34 @@ class SchemaManager {
 
 	constructor(private schemaServiceUrl: string) {}
 
+	/**
+	 * This will get the currently in use dictionary version. This call will double check with the db
+	 * to see if there has been a successful migration that has changed the current version, and if so
+	 * it will update the current version to the dictionary from the latest migration. This update will
+	 * read the dictionary data either from the DB, or from Lectern if it is not in the DB yet.
+	 *
+	 * @throws An error if no data for the latest dictionary can be found
+	 *
+	 * @returns the current dictionary according to the lateset migration in the DB
+	 */
 	getCurrent = async (): Promise<dictionaryEntities.SchemasDictionary> => {
+		const latestMigration = await migrationRepo.getLatestSuccessful();
+		if (!latestMigration) {
+			return this.currentSchemaDictionary;
+		}
+		if (latestMigration.toVersion === this.currentSchemaDictionary.version) {
+			return this.currentSchemaDictionary;
+		}
+		const newDictionary = await this.loadSchemaAndSave(
+			this.currentSchemaDictionary.name,
+			latestMigration.toVersion,
+		);
+		this.currentSchemaDictionary = newSchema;
 		return this.currentSchemaDictionary;
 	};
 
 	getCurrentName = (): string => {
+		// This does not need to use this.getCurrent() since we have no situation where the name will update
 		return this.currentSchemaDictionary.name;
 	};
 
@@ -170,6 +194,11 @@ class SchemaManager {
 		return result;
 	};
 
+	/**
+	 * Fetches schema from lectern server and then saves it to `this.currentSchemaDictionary`.
+	 *
+	 * @throws Throws an error if fetch fails.
+	 */
 	loadAndSaveNewVersion = async (
 		name: string,
 		newVersion: string,
@@ -186,6 +215,11 @@ class SchemaManager {
 		return this.currentSchemaDictionary;
 	};
 
+	/**
+	 * Fetches schema from lectern server,
+	 *
+	 * @throws Throws an error if fetch fails.
+	 */
 	loadSchemaByVersion = async (
 		name: string,
 		version: string,
@@ -203,23 +237,20 @@ class SchemaManager {
 		}
 	};
 
+	/**
+	 * Loads new schema data from the DB. If the data is not available in the DB, attempts to fetch
+	 * the data from lectern. If the data is found, this will create a new DB entry and set the current
+	 * dictionary with that data.
+	 *
+	 * @throws Error when the fetch fails to return the new dictionary, or when a db write fails
+	 */
 	loadSchemaAndSave = async (
 		name: string,
-		initialVersion: string,
+		version: string,
 	): Promise<dictionaryEntities.SchemasDictionary> => {
-		L.debug(`in loadSchema ${initialVersion}`);
-		if (!initialVersion) {
-			throw new Error('initial version cannot be empty.');
-		}
-		const storedSchema = await schemaRepo.get(name, {});
-		if (storedSchema === undefined) {
-			L.info(`schema not found in db`);
-			this.currentSchemaDictionary = {
-				schemas: [],
-				name: name,
-				version: initialVersion,
-			};
-		} else {
+		L.debug(`in loadSchema ${version}`);
+		const storedSchema = await schemaRepo.get(name, { requestedVersion: version });
+		if (storedSchema) {
 			L.info(`schema found in db`);
 			this.currentSchemaDictionary = storedSchema;
 		}
@@ -247,8 +278,10 @@ class SchemaManager {
 		return this.currentSchemaDictionary;
 	};
 
+	/**
+	 * Initiate new migration to new schema version
+	 */
 	updateSchemaVersion = async (toVersion: string, updater: string, sync?: boolean) => {
-		// submit the migration request
 		const currentDictionaryVersion = await this.getCurrentVersion();
 		return await MigrationManager.submitMigration(
 			currentDictionaryVersion,
