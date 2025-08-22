@@ -207,7 +207,7 @@ class SchemaManager {
 		newVersion: string,
 	): Promise<dictionaryEntities.SchemasDictionary> => {
 		const newSchema = await this.loadSchemaByVersion(name, newVersion);
-		if (newSchema == undefined) {
+		if (newSchema === undefined) {
 			throw new Error("couldn't save/update new schema, schema is undefined.");
 		}
 		const result = await schemaRepo.createOrUpdate(newSchema);
