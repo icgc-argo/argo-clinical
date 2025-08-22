@@ -346,4 +346,12 @@ export function instance() {
 
 export function create(schemaServiceUrl: string) {
 	manager = new SchemaManager(schemaServiceUrl);
+	manager
+		.getCurrent()
+		.catch((e) =>
+			L.error(
+				'Was unable to retrieve latest Schemas during initialization of SchemaManager.',
+				undefined,
+			),
+		);
 }
