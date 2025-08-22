@@ -73,7 +73,7 @@ class SchemaManager {
 			this.currentSchemaDictionary.name,
 			latestMigration.toVersion,
 		);
-		this.currentSchemaDictionary = newSchema;
+		this.currentSchemaDictionary = newDictionary;
 		return this.currentSchemaDictionary;
 	};
 
@@ -253,29 +253,24 @@ class SchemaManager {
 		if (storedSchema) {
 			L.info(`schema found in db`);
 			this.currentSchemaDictionary = storedSchema;
+			return storedSchema;
 		}
 
 		// if the schema is not complete we need to load it from the
 		// schema service (lectern)
-		if (
-			!this.currentSchemaDictionary.schemas ||
-			this.currentSchemaDictionary.schemas.length === 0
-		) {
-			L.debug(`fetching schema from schema service.`);
-			const result = await this.loadSchemaByVersion(name, this.currentSchemaDictionary.version);
-			if (result == undefined) {
-				throw new Error("couldn't save/update new schema, schema is undefined.");
-			}
-			L.info(`fetched schema ${result.version}`);
-			this.currentSchemaDictionary.schemas = result.schemas;
-			const saved = await schemaRepo.createOrUpdate(this.currentSchemaDictionary);
-			if (!saved) {
-				throw new Error("couldn't save/update new schema");
-			}
-			L.info(`schema saved in db`);
-			return saved;
+		L.debug(`fetching schema from schema service.`);
+		const result = await this.loadSchemaByVersion(name, version);
+		if (result == undefined) {
+			throw new Error("couldn't save/update new schema, schema is undefined.");
 		}
-		return this.currentSchemaDictionary;
+		L.info(`fetched schema ${result.version}`);
+		this.currentSchemaDictionary = result;
+		const saved = await schemaRepo.createOrUpdate(this.currentSchemaDictionary);
+		if (!saved) {
+			throw new Error("couldn't save/update new schema");
+		}
+		L.info(`schema saved in db`);
+		return saved;
 	};
 
 	/**
