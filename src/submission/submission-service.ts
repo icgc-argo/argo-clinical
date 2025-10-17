@@ -97,6 +97,9 @@ import {
 } from './validation-clinical/utils';
 import * as dataValidator from './validation-clinical/validation';
 import { checkUniqueRecords, validateSubmissionData } from './validation-clinical/validation';
+import programExceptionRepository from '../exception/property-exceptions/repo/program';
+import entityExceptionRepository from '../exception/property-exceptions/repo/entity';
+import { ProgramException, EntityException } from '../exception/property-exceptions/types';
 
 const L = loggerFor(__filename);
 
@@ -872,6 +875,7 @@ export namespace operations {
 		let errorsAccumulator: DeepReadonly<SubmissionValidationError[]> = [];
 		const validRecordsAccumulator: any[] = [];
 
+		// cache rxNorm once before iterating records
 		let rxNormCache: Map<string, RxNormConcept[]> | undefined;
 		if (isRxNormTherapy(command.clinicalType)) {
 			const rxNormIds = new Set<string>();
@@ -893,6 +897,25 @@ export namespace operations {
 			}
 		}
 
+		// cache exceptions for program before iterating records
+		let exceptionsCache:
+			| {
+					programException: ProgramException | null;
+					entityException: EntityException | null;
+			  }
+			| undefined;
+
+		if (featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
+			L.debug(`Preload exceptions for program ${command.programId}`);
+			const exceptionCacheStart = Date.now();
+
+			const programException = await programExceptionRepository.find(command.programId);
+			const entityException = await entityExceptionRepository.find(command.programId);
+
+			exceptionsCache = { programException, entityException };
+			L.debug(`Exception cache loaded in ${Date.now() - exceptionCacheStart}ms`);
+		}
+
 		await Promise.all(
 			command.records.map(async (record, index) => {
 				let processedRecord: any = {};
@@ -902,7 +925,7 @@ export namespace operations {
 
 				if (schemaResult.validationErrors.length > 0) {
 					let validationErrors = [...schemaResult.validationErrors];
-					if (featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
+					if (featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED && exceptionsCache) {
 						const exceptionStart = Date.now();
 						/***
 						 * Checking if a valid exception exists and the record value matches it
@@ -912,11 +935,11 @@ export namespace operations {
 						 * Normalizing is setting the value to start Upper case and to trim whitespace
 						 */
 						const { filteredErrors, normalizedRecord } = await checkForProgramAndEntityExceptions({
-							programId: command.programId,
 							record: schemaResult.processedRecord,
 							schemaName,
 							entitySchema,
 							validationErrors: [...schemaResult.validationErrors],
+							exceptionsCache,
 						});
 						L.debug(`[Record ${index}] Exception check: ${Date.now() - exceptionStart}ms`);
 

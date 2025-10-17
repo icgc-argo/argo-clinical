@@ -47,7 +47,7 @@ import { notEmpty } from '../../utils';
 import { SubmittedClinicalRecord } from '../submission-entities';
 
 /**
- * query db for program or entity exceptions
+ * query db for program and entity exceptions
  * @param programId
  * @returns program and donor level exceptions for this programId
  */
@@ -200,21 +200,30 @@ export const checkForProgramAndEntityExceptions = async ({
 	schemaName,
 	entitySchema,
 	validationErrors,
+	exceptionsCache,
 }: {
 	programId: string;
 	record: DeepReadonly<TypedDataRecord>;
 	schemaName: ClinicalEntitySchemaNames;
 	entitySchema: dictionaryEntities.SchemaDefinition | undefined;
 	validationErrors: dictionaryEntities.SchemaValidationError[];
+	exceptionsCache?: {
+		programException: ProgramException | null;
+		entityException: EntityException | null;
+	};
 }) => {
 	const filteredErrors: dictionaryEntities.SchemaValidationError[] = [];
 	let normalizedRecord = record;
 
 	// retrieve submitted exceptions for program id (both program level and entity level)
-	const { programException, entityException } = await queryForExceptions(programId);
+	const exceptions = exceptionsCache
+		? exceptionsCache
+		: programId
+		? await queryForExceptions(programId)
+		: undefined;
 
 	// if there are submitted exceptions for this program, check if they match record values
-	if (!(programException || entityException)) {
+	if (!(exceptions?.programException || exceptions?.entityException)) {
 		return { filteredErrors: validationErrors, normalizedRecord };
 	}
 
@@ -247,8 +256,8 @@ export const checkForProgramAndEntityExceptions = async ({
 
 			const valueHasException = validateFieldValueWithExceptions({
 				record,
-				programException,
-				entityException,
+				programException: exceptions.programException,
+				entityException: exceptions.entityException,
 				schemaName,
 				validationErrorFieldName: validationError.fieldName,
 				fieldValue: normalizedFieldValue,
