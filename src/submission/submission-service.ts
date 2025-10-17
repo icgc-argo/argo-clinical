@@ -872,7 +872,7 @@ export namespace operations {
 		let errorsAccumulator: DeepReadonly<SubmissionValidationError[]> = [];
 		const validRecordsAccumulator: any[] = [];
 
-		let rxNormCache: Map<string, RxNormConcept[]> | null = null;
+		let rxNormCache: Map<string, RxNormConcept[]> | undefined;
 		if (isRxNormTherapy(command.clinicalType)) {
 			const rxNormIds = new Set<string>();
 
@@ -992,7 +992,7 @@ export namespace operations {
 		r: dictionaryEntities.TypedDataRecord,
 		index: number,
 		therapyType: ClinicalEntitySchemaNames,
-		rxNormCache: Map<string, RxNormConcept[]> | null,
+		rxNormCache: Map<string, RxNormConcept[]> | undefined,
 	): Promise<{
 		record: dictionaryEntities.TypedDataRecord | undefined;
 		error: SubmissionValidationError | undefined;
@@ -1024,7 +1024,7 @@ export namespace operations {
 	async function lookupRxNormConcept(
 		therapyRecord: dictionaryEntities.TypedDataRecord,
 		index: number,
-		rxNormCache: Map<string, RxNormConcept[]> | null,
+		rxNormCache: Map<string, RxNormConcept[]> | undefined,
 	): Promise<{
 		rxNormRecord: RxNormConcept | undefined;
 		error: SubmissionValidationError | undefined;
