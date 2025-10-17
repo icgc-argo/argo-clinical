@@ -55,7 +55,7 @@ import {
 	notEmpty,
 	toString,
 } from '../utils';
-import { checkForProgramAndEntityExceptions } from './exceptions/exceptions';
+import { checkForProgramAndEntityExceptions, queryForExceptions } from './exceptions/exceptions';
 import { registrationRepository } from './registration-repo';
 import {
 	ActiveClinicalSubmission,
@@ -908,11 +908,7 @@ export namespace operations {
 		if (featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
 			L.debug(`Preload exceptions for program ${command.programId}`);
 			const exceptionCacheStart = Date.now();
-
-			const programException = await programExceptionRepository.find(command.programId);
-			const entityException = await entityExceptionRepository.find(command.programId);
-
-			exceptionsCache = { programException, entityException };
+			exceptionsCache = await queryForExceptions(command.programId);
 			L.debug(`Exception cache loaded in ${Date.now() - exceptionCacheStart}ms`);
 		}
 
