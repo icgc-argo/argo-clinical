@@ -202,7 +202,7 @@ export const checkForProgramAndEntityExceptions = async ({
 	validationErrors,
 	exceptionsCache,
 }: {
-	programId: string;
+	programId?: string;
 	record: DeepReadonly<TypedDataRecord>;
 	schemaName: ClinicalEntitySchemaNames;
 	entitySchema: dictionaryEntities.SchemaDefinition | undefined;
