@@ -193,6 +193,7 @@ const isValidNumericExceptionType = (
  * @param programId
  * @param record
  * @param schemaValidationErrors
+ * @param exceptionsCache optional cache of exceptions db query
  */
 export const checkForProgramAndEntityExceptions = async ({
 	programId,
@@ -215,7 +216,12 @@ export const checkForProgramAndEntityExceptions = async ({
 	const filteredErrors: dictionaryEntities.SchemaValidationError[] = [];
 	let normalizedRecord = record;
 
-	// retrieve submitted exceptions for program id (both program level and entity level)
+	/*
+	 * retrieve submitted exceptions for program id (both program level and entity level)
+	 *
+	 * if exceptionsCache is provided, reads from it (no write)
+	 * else, queries exception db using programId
+	 */
 	const exceptions = exceptionsCache
 		? exceptionsCache
 		: programId
