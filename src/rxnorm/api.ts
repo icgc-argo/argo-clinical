@@ -26,5 +26,5 @@ export interface RxNormConcept {
 }
 
 export interface RxNormService {
-	lookupByRxcui(rxcui: string): Promise<RxNormConcept[]>;
+	lookupBulkByRxcui(rxcui: string[]): Promise<Map<string, RxNormConcept[]>>;
 }
