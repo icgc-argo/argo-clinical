@@ -55,7 +55,7 @@ import {
 	notEmpty,
 	toString,
 } from '../utils';
-import { checkForProgramAndEntityExceptions } from './exceptions/exceptions';
+import { checkForProgramAndEntityExceptions, queryForExceptions } from './exceptions/exceptions';
 import { registrationRepository } from './registration-repo';
 import {
 	ActiveClinicalSubmission,
@@ -97,6 +97,9 @@ import {
 } from './validation-clinical/utils';
 import * as dataValidator from './validation-clinical/validation';
 import { checkUniqueRecords, validateSubmissionData } from './validation-clinical/validation';
+import programExceptionRepository from '../exception/property-exceptions/repo/program';
+import entityExceptionRepository from '../exception/property-exceptions/repo/entity';
+import { ProgramException, EntityException } from '../exception/property-exceptions/types';
 
 const L = loggerFor(__filename);
 
@@ -872,6 +875,43 @@ export namespace operations {
 		let errorsAccumulator: DeepReadonly<SubmissionValidationError[]> = [];
 		const validRecordsAccumulator: any[] = [];
 
+		// cache rxNorm once before iterating records
+		let rxNormCache: Map<string, RxNormConcept[]> | undefined;
+		if (isRxNormTherapy(command.clinicalType)) {
+			const rxNormIds = new Set<string>();
+
+			// collect unique RxCUIs from records
+			command.records.forEach((record) => {
+				const rxcui = record[TherapyRxNormFieldsEnum.drug_rxnormid];
+				if (rxcui && !Array.isArray(rxcui) && !isEmptyString(rxcui)) {
+					rxNormIds.add(rxcui.trim());
+				}
+			});
+
+			// ONE database query for ALL RxCUIs
+			if (rxNormIds.size > 0) {
+				L.debug(`Pre-loading ${rxNormIds.size} unique RxNorm IDs...`);
+				const cacheStart = Date.now();
+				rxNormCache = await dbRxNormService.lookupBulkByRxcui(Array.from(rxNormIds));
+				L.debug(`RxNorm cache loaded in ${Date.now() - cacheStart}ms`);
+			}
+		}
+
+		// cache exceptions for program before iterating records
+		let exceptionsCache:
+			| {
+					programException: ProgramException | null;
+					entityException: EntityException | null;
+			  }
+			| undefined;
+
+		if (featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
+			L.debug(`Preload exceptions for program ${command.programId}`);
+			const exceptionCacheStart = Date.now();
+			exceptionsCache = await queryForExceptions(command.programId);
+			L.debug(`Exception cache loaded in ${Date.now() - exceptionCacheStart}ms`);
+		}
+
 		await Promise.all(
 			command.records.map(async (record, index) => {
 				let processedRecord: any = {};
@@ -881,8 +921,8 @@ export namespace operations {
 
 				if (schemaResult.validationErrors.length > 0) {
 					let validationErrors = [...schemaResult.validationErrors];
-
-					if (featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED) {
+					if (featureFlags.FEATURE_SUBMISSION_EXCEPTIONS_ENABLED && exceptionsCache) {
+						const exceptionStart = Date.now();
 						/***
 						 * Checking if a valid exception exists and the record value matches it
 						 * If there's a match, we allow the value to pass schema validation
@@ -891,12 +931,14 @@ export namespace operations {
 						 * Normalizing is setting the value to start Upper case and to trim whitespace
 						 */
 						const { filteredErrors, normalizedRecord } = await checkForProgramAndEntityExceptions({
-							programId: command.programId,
 							record: schemaResult.processedRecord,
 							schemaName,
 							entitySchema,
 							validationErrors: [...schemaResult.validationErrors],
+							exceptionsCache,
 						});
+						L.debug(`[Record ${index}] Exception check: ${Date.now() - exceptionStart}ms`);
+
 						validationErrors = filteredErrors;
 						processedRecord = normalizedRecord;
 					}
@@ -930,7 +972,14 @@ export namespace operations {
 					isRxNormTherapy(command.clinicalType) &&
 					!hasDrugDbFields
 				) {
-					const result = await validateRxNormFields(processedRecord, index, schemaName);
+					const rxStart = Date.now();
+					const result = await validateRxNormFields(
+						processedRecord,
+						index,
+						schemaName,
+						rxNormCache,
+					);
+					L.debug(`[Record ${index}] RxNorm: ${Date.now() - rxStart}ms`);
 					if (result.error != undefined) {
 						errorsAccumulator = errorsAccumulator.concat([result.error]);
 					}
@@ -962,11 +1011,12 @@ export namespace operations {
 		r: dictionaryEntities.TypedDataRecord,
 		index: number,
 		therapyType: ClinicalEntitySchemaNames,
+		rxNormCache: Map<string, RxNormConcept[]> | undefined,
 	): Promise<{
 		record: dictionaryEntities.TypedDataRecord | undefined;
 		error: SubmissionValidationError | undefined;
 	}> {
-		const rxnormConceptLookupResult = await lookupRxNormConcept(r, index);
+		const rxnormConceptLookupResult = await lookupRxNormConcept(r, index, rxNormCache);
 		if (rxnormConceptLookupResult.error != undefined) {
 			rxnormConceptLookupResult.error.info = getValidationErrorInfoObject(
 				therapyType,
@@ -993,6 +1043,7 @@ export namespace operations {
 	async function lookupRxNormConcept(
 		therapyRecord: dictionaryEntities.TypedDataRecord,
 		index: number,
+		rxNormCache: Map<string, RxNormConcept[]> | undefined,
 	): Promise<{
 		rxNormRecord: RxNormConcept | undefined;
 		error: SubmissionValidationError | undefined;
@@ -1000,7 +1051,8 @@ export namespace operations {
 		// if the id is provided we do a look up and double check against the name (if provided)
 		if (isNotAbsent(therapyRecord[TherapyRxNormFieldsEnum.drug_rxnormid] as string)) {
 			const rxcui = therapyRecord[TherapyRxNormFieldsEnum.drug_rxnormid] as string;
-			const rxRecords = await dbRxNormService.lookupByRxcui(rxcui.trim());
+			const rxRecords = rxNormCache?.get(rxcui.trim()) || [];
+
 			if (_.isEmpty(rxRecords)) {
 				const error: SubmissionValidationError = {
 					fieldName: TherapyRxNormFieldsEnum.drug_rxnormid,

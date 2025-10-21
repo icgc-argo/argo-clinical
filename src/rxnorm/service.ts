@@ -20,30 +20,52 @@
 import mysql from 'mysql2/promise';
 import { RxNormConcept, RxNormService } from './api';
 import { getPool } from './pool';
+import { loggerFor } from '../logger';
 
-// we take the first one orderd alphabetically
-const rxcuiQuery = 'select RXCUI, STR from RXNCONSO where RXCUI = ? order by STR asc';
+const L = loggerFor(__filename);
 
 type RxNormRecord = { RXCUI: string; STR: string };
 
 class MysqlRxNormService implements RxNormService {
-	async lookupByRxcui(rxcui: string): Promise<RxNormConcept[]> {
+	async lookupBulkByRxcui(rxcuis: string[]): Promise<Map<string, RxNormConcept[]>> {
+		if (rxcuis.length === 0) {
+			return new Map();
+		}
+
+		const lookupBulkStart = Date.now();
+
 		const pool = getPool();
-		const formattedQuery = mysql.format(rxcuiQuery, [rxcui]);
+
+		const bulkQuery = 'SELECT RXCUI, STR FROM RXNCONSO WHERE RXCUI IN (?) ORDER BY STR ASC';
+		const formattedQuery = mysql.format(bulkQuery, [rxcuis]);
 
 		const connection = await pool.getConnection();
 		const [result] = await connection.query(formattedQuery);
 		pool.releaseConnection(connection);
 
+		L.debug(`lookupBulkByRxcui: ${Date.now() - lookupBulkStart}ms for ${rxcuis.length} rxcuis`);
+
+		/**
+		 * one RXCUI can have many string representations
+		 * eg. 239 - Aclarubicin, 239 Aclarubicin (substance) (public data)
+		 */
+		const resultMap = new Map<string, RxNormConcept[]>();
+
 		if (Array.isArray(result)) {
 			const records = result as RxNormRecord[];
-			return records.map((r) => ({
-				rxcui: r['RXCUI'],
-				str: r['STR'],
-			}));
-		} else {
-			return new Array<RxNormConcept>();
+			records.forEach((r) => {
+				const rxcui = r['RXCUI'];
+				if (!resultMap.has(rxcui)) {
+					resultMap.set(rxcui, []);
+				}
+				resultMap.get(rxcui)!.push({
+					rxcui: r['RXCUI'],
+					str: r['STR'],
+				});
+			});
 		}
+
+		return resultMap;
 	}
 }
 
