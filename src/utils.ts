@@ -23,7 +23,7 @@ import fs from 'fs';
 import jwt from 'jsonwebtoken';
 import _ from 'lodash';
 import mongoose from 'mongoose';
-import { isArray } from 'util';
+import { config } from './config';
 import { SubmissionBatchError } from './submission/submission-entities';
 
 const fsPromises = fs.promises;
@@ -163,13 +163,28 @@ export namespace DonorUtils {
 	export const specimenIdPrefix = 'SP';
 	export const sampleIdPrefix = 'SA';
 
-	export const parseDonorId = (stringId: string): number =>
-		Number(stringId.replace(donorIdPrefix, ''));
-	export const prefixDonorId = (donorId: number): string => `${donorIdPrefix}${donorId}`;
+	const applyDatacenterPrefix = (entityId: string): string => {
+		const datacenterPrefix = config.getConfig().datacenterPrefix();
+		return datacenterPrefix ? `${datacenterPrefix}-${entityId}` : entityId;
+	};
+
+	export const parseDonorId = (stringId: string): number => {
+		const datacenterPrefix = config.getConfig().datacenterPrefix();
+		const withoutDatacenterPrefix =
+			datacenterPrefix && stringId.startsWith(`${datacenterPrefix}-`)
+				? stringId.slice(datacenterPrefix.length + 1)
+				: stringId;
+		return Number(withoutDatacenterPrefix.replace(donorIdPrefix, ''));
+	};
+
+	export const prefixDonorId = (donorId: number): string =>
+		applyDatacenterPrefix(`${donorIdPrefix}${donorId}`);
 
 	export const prefixSpecimenId = (specimenId: number): string =>
-		`${specimenIdPrefix}${specimenId}`;
-	export const prefixSampleId = (sampleId: number): string => `${sampleIdPrefix}${sampleId}`;
+		applyDatacenterPrefix(`${specimenIdPrefix}${specimenId}`);
+
+	export const prefixSampleId = (sampleId: number): string =>
+		applyDatacenterPrefix(`${sampleIdPrefix}${sampleId}`);
 }
 
 export namespace Checks {
@@ -335,7 +350,7 @@ export function deepFind(obj: any, path: string) {
 }
 
 export function isValueEqual(value: any, other: any) {
-	if (isArray(value) && isArray(other)) {
+	if (Array.isArray(value) && Array.isArray(other)) {
 		return _.difference(value, other).length === 0; // check equal, ignore order
 	}
 
@@ -353,3 +368,20 @@ export function convertToTrimmedString(
 }
 
 export const F = deepFreeze;
+
+// generic terms
+const DOCUMENT_TYPE = 'documentType';
+const INDEX = 'index';
+const TYPE = 'type';
+export const requiredConfigProperties = {
+	DOCUMENT_TYPE,
+	INDEX,
+} as const;
+
+export const arrangerConfigProperties = {
+	...requiredConfigProperties,
+};
+
+type AllConfigs =
+	// Arranger will fail without these
+	typeof requiredConfigProperties & Partial<{ x: string }>;

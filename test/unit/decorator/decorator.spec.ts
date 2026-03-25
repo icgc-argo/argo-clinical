@@ -92,6 +92,9 @@ describe('decorator', () => {
 			egoClientSecret() {
 				return '';
 			},
+			datacenterPrefix() {
+				return '';
+			},
 		});
 	});
 

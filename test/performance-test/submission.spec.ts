@@ -157,6 +157,9 @@ describe('Submission Api', () => {
 					egoClientSecret() {
 						return '';
 					},
+					datacenterPrefix() {
+						return undefined;
+					},
 				});
 			} catch (err) {
 				return err;
