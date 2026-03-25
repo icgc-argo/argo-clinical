@@ -17,8 +17,8 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
-import { SchemaValidationErrorTypes } from '@overturebio-stack/lectern-client/lib/schema-entities';
+import { entities as dictionaryEntities } from '@overture-stack/lectern-client';
+import { SchemaValidationErrorTypes } from '@overture-stack/lectern-client/lib/schema-entities';
 import chai from 'chai';
 import sinon from 'sinon';
 import { ClinicalEntitySchemaNames } from '../../../src/common-model/entities';

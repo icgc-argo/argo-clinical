@@ -20,7 +20,7 @@
 import { migrationDiffs } from './stub-diffs';
 import _ from 'lodash';
 import fs from 'fs';
-import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
+import { entities as dictionaryEntities } from '@overture-stack/lectern-client';
 import legacyStubSchemas from '../../stub-schema.json';
 import { ClinicalEntitySchemaNames } from '../../../../src/common-model/entities';
 import * as fieldNames from './fields';

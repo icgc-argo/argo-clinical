@@ -40,6 +40,7 @@ export interface AppConfig {
 	egoUrl(): string;
 	egoClientId(): string;
 	egoClientSecret(): string;
+	datacenterPrefix(): string | undefined;
 }
 
 class ConfigManager {

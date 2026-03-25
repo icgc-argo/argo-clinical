@@ -20,8 +20,8 @@
 import {
 	entities as dictionaryEntities,
 	functions as dictionaryService,
-} from '@overturebio-stack/lectern-client';
-import { ValueType } from '@overturebio-stack/lectern-client/lib/schema-entities';
+} from '@overture-stack/lectern-client';
+import { ValueType } from '@overture-stack/lectern-client/lib/schema-entities';
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 import { Status, setStatus } from '../../app-health';

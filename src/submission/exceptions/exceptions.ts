@@ -17,8 +17,8 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
-import { TypedDataRecord } from '@overturebio-stack/lectern-client/lib/schema-entities';
+import { entities as dictionaryEntities } from '@overture-stack/lectern-client';
+import { TypedDataRecord } from '@overture-stack/lectern-client/lib/schema-entities';
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 import {

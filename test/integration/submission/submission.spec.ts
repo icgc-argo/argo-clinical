@@ -166,6 +166,9 @@ describe('Submission Api', () => {
 					egoClientSecret() {
 						return '';
 					},
+					datacenterPrefix() {
+						return undefined;
+					},
 				});
 				const connectionPool = pool.getPool();
 				await createtRxNormTables(connectionPool);

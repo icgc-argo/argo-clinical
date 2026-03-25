@@ -141,6 +141,9 @@ let server: Server;
 		egoClientSecret(): string {
 			return process.env.EGO_CLIENT_SECRET || secrets.EGO_CLIENT_SECRET || '';
 		},
+		datacenterPrefix(): string | undefined {
+			return process.env.DATACENTER_ID_PREFIX;
+		},
 	};
 
 	let connection: any;

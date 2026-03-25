@@ -23,7 +23,7 @@ import {
 	restClient as dictionaryRestClient,
 	functions as dictionaryService,
 	parallel,
-} from '@overturebio-stack/lectern-client';
+} from '@overture-stack/lectern-client';
 import { DeepReadonly } from 'deep-freeze';
 import _ from 'lodash';
 import { Donor } from '../clinical/clinical-entities';

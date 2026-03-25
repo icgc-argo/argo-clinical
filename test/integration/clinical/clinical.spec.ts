@@ -178,6 +178,9 @@ describe('clinical Api', () => {
 					egoClientSecret() {
 						return '';
 					},
+					datacenterPrefix() {
+						return undefined;
+					},
 				});
 			} catch (err) {
 				console.error('before >>>>>>>>>>>', err);

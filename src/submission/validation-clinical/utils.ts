@@ -43,7 +43,7 @@ import {
 	SubmissionErrorBaseInfo,
 } from '../submission-error-messages';
 import _ from 'lodash';
-import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
+import { entities as dictionaryEntities } from '@overture-stack/lectern-client';
 import { Donor, ClinicalInfo, Specimen } from '../../clinical/clinical-entities';
 import {
 	getSingleClinicalEntityFromDonorBySchemaName,
