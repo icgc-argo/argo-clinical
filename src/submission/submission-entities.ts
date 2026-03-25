@@ -17,7 +17,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
+import { entities as dictionaryEntities } from '@overture-stack/lectern-client';
 import { DeepReadonly } from 'deep-freeze';
 import {
 	BiomarkerFieldsEnum,

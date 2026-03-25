@@ -45,7 +45,7 @@ import {
 } from '../../common-model/entities';
 import { donorDao } from '../../clinical/donor-repo';
 import { DeepReadonly } from 'deep-freeze';
-import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
+import { entities as dictionaryEntities } from '@overture-stack/lectern-client';
 import { submissionValidator } from './index';
 import { validationErrorMessage } from '../submission-error-messages';
 import {

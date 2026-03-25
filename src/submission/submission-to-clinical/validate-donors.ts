@@ -22,7 +22,7 @@ import { Donor } from '../../clinical/clinical-entities';
 
 import { loggerFor } from '../../logger';
 import { cloneDeep } from 'lodash';
-import { SchemasDictionary } from '@overturebio-stack/lectern-client/lib/schema-entities';
+import { SchemasDictionary } from '@overture-stack/lectern-client/lib/schema-entities';
 const L = loggerFor(__filename);
 
 /**

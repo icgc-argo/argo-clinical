@@ -20,7 +20,7 @@
 import * as manager from './manager';
 import { Request, Response } from 'express';
 import { loggerFor } from '../logger';
-import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
+import { entities as dictionaryEntities } from '@overture-stack/lectern-client';
 import { setStatus, Status } from '../app-health';
 import { ControllerUtils } from '../utils';
 import { ClinicalEntitySchemaNames } from '../common-model/entities';

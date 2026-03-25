@@ -18,7 +18,7 @@
  */
 
 import mongoose from 'mongoose';
-import { entities as dictionaryEntities } from '@overturebio-stack/lectern-client';
+import { entities as dictionaryEntities } from '@overture-stack/lectern-client';
 import { loggerFor } from '../logger';
 import { MongooseUtils } from '../utils';
 const L = loggerFor(__filename);
