@@ -113,7 +113,6 @@ const ActiveRegistrationSchema = new mongoose.Schema(
 	{ timestamps: true, minimize: false },
 );
 
-export const ActiveRegistrationModel = mongoose.model<ActiveRegistrationDocument>(
-	'ActiveRegistration',
-	ActiveRegistrationSchema,
-);
+export const ActiveRegistrationModel =
+	(mongoose.models.ActiveRegistration as mongoose.Model<ActiveRegistrationDocument>) ||
+	mongoose.model<ActiveRegistrationDocument>('ActiveRegistration', ActiveRegistrationSchema);

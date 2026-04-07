@@ -30,10 +30,9 @@ const missingEntityExceptionSchema = new mongoose.Schema<MissingEntityException>
 });
 
 // check if model exists already to account for file watchers eg. test runner with live reload
-const MissingEntityExceptionModel = mongoose.model<MissingEntityException>(
-	'MissingEntityException',
-	missingEntityExceptionSchema,
-);
+const MissingEntityExceptionModel =
+	(mongoose.models.MissingEntityException as mongoose.Model<MissingEntityException>) ||
+	mongoose.model<MissingEntityException>('MissingEntityException', missingEntityExceptionSchema);
 
 /**
  * Save the provided exception. If an exception for this program exists then it will be overwritten with this value.

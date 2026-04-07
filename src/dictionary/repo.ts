@@ -97,7 +97,6 @@ const DataSchemaMongooseSchema = new mongoose.Schema(
 	{ timestamps: true },
 );
 
-export const DataSchemaModel = mongoose.model<DataSchemaDocument>(
-	'dataschema',
-	DataSchemaMongooseSchema,
-);
+export const DataSchemaModel =
+	(mongoose.models.dataschema as mongoose.Model<DataSchemaDocument>) ||
+	mongoose.model<DataSchemaDocument>('dataschema', DataSchemaMongooseSchema);
