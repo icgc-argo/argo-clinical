@@ -165,13 +165,13 @@ export namespace DonorUtils {
 
 	const applyDatacenterPrefix = (entityId: string): string => {
 		const datacenterPrefix = config.getConfig().datacenterPrefix();
-		return datacenterPrefix ? `${datacenterPrefix}-${entityId}` : entityId;
+		return datacenterPrefix ? `${datacenterPrefix}${entityId}` : entityId;
 	};
 
 	export const parseDonorId = (stringId: string): number => {
 		const datacenterPrefix = config.getConfig().datacenterPrefix();
 		const withoutDatacenterPrefix =
-			datacenterPrefix && stringId.startsWith(`${datacenterPrefix}-`)
+			datacenterPrefix && stringId.startsWith(`${datacenterPrefix}`)
 				? stringId.slice(datacenterPrefix.length + 1)
 				: stringId;
 		return Number(withoutDatacenterPrefix.replace(donorIdPrefix, ''));
