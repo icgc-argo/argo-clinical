@@ -73,7 +73,6 @@ const PersistedConfigurationSchema = new mongoose.Schema(
 	{ timestamps: true, minimize: false },
 );
 
-export const PersistedConfigurationModel = mongoose.model<ConfigurationDocument>(
-	'PersistedConfiguration',
-	PersistedConfigurationSchema,
-);
+export const PersistedConfigurationModel =
+	(mongoose.models.PersistedConfiguration as mongoose.Model<ConfigurationDocument>) ||
+	mongoose.model<ConfigurationDocument>('PersistedConfiguration', PersistedConfigurationSchema);

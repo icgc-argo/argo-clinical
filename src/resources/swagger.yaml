@@ -20,6 +20,23 @@ paths:
               schema:
                 type: object
 
+  /configs/id-prefix:
+    get:
+      tags:
+        - Configurations
+      summary: Get the Datacenter ID Prefix used by this Clinical Service
+      responses:
+        '200':
+          description: 'JSON object with idPrefix field'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  idPrefix:
+                    type: string
+                    description: 'Datacenter ID Prefix that will be added before Donor, Specimen, and Sample IDs. If no prefix is set for this server, this will return an empty string.'
+
   /submission/configs:
     get:
       tags:
@@ -1513,6 +1530,8 @@ servers:
 tags:
   - name: Health
     description: Service status monitoring
+  - name: Configurations
+    description: Service configurations
   - name: Submission Configurations
     description: Submission Service Configurations
   - name: Dictionary

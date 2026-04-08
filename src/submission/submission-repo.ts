@@ -189,7 +189,6 @@ ActiveSubmissionSchema.pre('findOneAndUpdate', function(next) {
 	next();
 });
 
-export const ActiveSubmissionModel = mongoose.model<ActiveClinicalSubmissionDocument>(
-	'ActiveSubmission',
-	ActiveSubmissionSchema,
-);
+export const ActiveSubmissionModel =
+	(mongoose.models.ActiveSubmission as mongoose.Model<ActiveClinicalSubmissionDocument>) ||
+	mongoose.model<ActiveClinicalSubmissionDocument>('ActiveSubmission', ActiveSubmissionSchema);

@@ -32,7 +32,8 @@ import dataRouter from './routes/data';
 import registrationRouter from './routes/registration';
 import submissionRouter from './routes/submission';
 import dictionaryRouter from './routes/dictionary';
-import configRouter from './routes/config';
+import configsRouter from './routes/configs';
+import submissionConfigsRouter from './routes/persistedConfigs';
 import icgcImport from './routes/icgc-import';
 import exceptionRouter from './routes/exception';
 import responseTime from 'response-time';
@@ -94,7 +95,8 @@ app.use(
 );
 
 /** Attach Routers */
-app.use('/submission/configs', configRouter);
+app.use('/configs', configsRouter);
+app.use('/submission/configs', submissionConfigsRouter);
 app.use('/submission/program/:programId/registration', registrationRouter);
 app.use('/submission/program/:programId/clinical', submissionRouter);
 app.use('/submission/icgc-import', icgcImport);

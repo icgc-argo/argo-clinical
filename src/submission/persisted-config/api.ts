@@ -20,6 +20,8 @@
 import { ControllerUtils } from '../../utils';
 import { HasFullWriteAccess } from '../../decorators';
 import { Request, Response } from 'express';
+
+import { config } from '../../config';
 import * as service from './service';
 
 class PersistedConfigController {

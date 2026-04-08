@@ -142,7 +142,7 @@ let server: Server;
 			return process.env.EGO_CLIENT_SECRET || secrets.EGO_CLIENT_SECRET || '';
 		},
 		datacenterPrefix(): string | undefined {
-			return process.env.DATACENTER_ID_PREFIX;
+			return process.env.DATACENTER_ID_PREFIX ? `${process.env.DATACENTER_ID_PREFIX}-` : '';
 		},
 	};
 

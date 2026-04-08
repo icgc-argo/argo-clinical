@@ -68,9 +68,9 @@ export type FindPaginatedProgramFilter = {
 	donorId?: { $in: '' };
 };
 
-const DonorModel = mongoose.model<DonorDocument>('Donor', DonorSchema) as PaginateModel<
-	DonorDocument
->;
+const DonorModel =
+	(mongoose.models.Donor as PaginateModel<DonorDocument>) ||
+	(mongoose.model<DonorDocument>('Donor', DonorSchema) as PaginateModel<DonorDocument>);
 
 export interface DonorRepository {
 	findByClinicalEntitySubmitterIdAndProgramId(

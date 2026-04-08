@@ -34,10 +34,9 @@ const sampleExceptionExceptionSchema = new mongoose.Schema<SampleException>({
 });
 
 // check if model exists already to account for file watchers eg. test runner with live reload
-const SampleExceptionModel = mongoose.model<SampleException>(
-	'SampleException',
-	sampleExceptionExceptionSchema,
-);
+const SampleExceptionModel =
+	(mongoose.models.SampleException as mongoose.Model<SampleException>) ||
+	mongoose.model<SampleException>('SampleException', sampleExceptionExceptionSchema);
 
 export const getExceptions = async () => {
 	try {

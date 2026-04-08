@@ -30,10 +30,12 @@ const treatmentDetailExceptionSchema = new mongoose.Schema<TreatmentDetailExcept
 });
 
 // check if model exists already to account for file watchers eg. test runner with live reload
-const TreatmentDetailExceptionModel = mongoose.model<TreatmentDetailException>(
-	'TreatmentDetailException',
-	treatmentDetailExceptionSchema,
-);
+const TreatmentDetailExceptionModel =
+	(mongoose.models.TreatmentDetailException as mongoose.Model<TreatmentDetailException>) ||
+	mongoose.model<TreatmentDetailException>(
+		'TreatmentDetailException',
+		treatmentDetailExceptionSchema,
+	);
 
 /**
  * Save the provided exception. If an exception for this program exists then it will be overwritten with this value.

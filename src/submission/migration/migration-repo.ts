@@ -117,7 +117,6 @@ const DictionaryMigrationSchema = new mongoose.Schema(
 	{ timestamps: true, minimize: false },
 );
 
-export const DictionaryMigrationModel = mongoose.model<DictionaryMigrationDocument>(
-	'DictionaryMigration',
-	DictionaryMigrationSchema,
-);
+export const DictionaryMigrationModel =
+	(mongoose.models.DictionaryMigration as mongoose.Model<DictionaryMigrationDocument>) ||
+	mongoose.model<DictionaryMigrationDocument>('DictionaryMigration', DictionaryMigrationSchema);
