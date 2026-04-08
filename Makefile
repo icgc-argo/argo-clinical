@@ -9,7 +9,7 @@ debug:
 
 #run the docker compose file
 dcompose:
-	docker-compose -f compose/docker-compose.yaml up --force-recreate -d
+	docker compose -f compose/docker-compose.yaml up --force-recreate -d
 	# we need to sleep for db containers to start
 	sleep 20
 
@@ -25,14 +25,14 @@ test-submission:
 	npx mocha --exit --timeout 30000 -r ts-node/register test/integration/submission/submission.spec.ts
 
 stop:
-	docker-compose  -f compose/docker-compose.yaml down --remove-orphans 
+	docker compose  -f compose/docker-compose.yaml down --remove-orphans 
 
 # stop db and delete clinical db only 
 purge:
-	docker-compose -f compose/docker-compose.yaml down
+	docker compose -f compose/docker-compose.yaml down
 	# we don't want to remove the rxnorm import
 	docker volume rm clinical_db_vol
 
 # delete. everything.
 nuke:
-	docker-compose  -f compose/docker-compose.yaml down --volumes --remove-orphans 
+	docker compose  -f compose/docker-compose.yaml down --volumes --remove-orphans 
