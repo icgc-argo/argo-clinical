@@ -172,7 +172,7 @@ export namespace DonorUtils {
 		const datacenterPrefix = config.getConfig().datacenterPrefix();
 		const withoutDatacenterPrefix =
 			datacenterPrefix && stringId.startsWith(`${datacenterPrefix}`)
-				? stringId.slice(datacenterPrefix.length + 1)
+				? stringId.slice(datacenterPrefix.length)
 				: stringId;
 		return Number(withoutDatacenterPrefix.replace(donorIdPrefix, ''));
 	};
