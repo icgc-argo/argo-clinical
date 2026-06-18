@@ -137,7 +137,7 @@
 		"node-fetch": "^2.6.7",
 		"node-vault": "^0.10.2",
 		"node-worker-threads-pool": "^1.2.2",
-		"nodemailer": "^6.9.15",
+		"nodemailer": "^9.0.1",
 		"promise-tools": "^2.1.0",
 		"response-time": "^2.3.2",
 		"swagger-ui-express": "^4.3.0",
